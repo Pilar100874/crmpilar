@@ -80,15 +80,15 @@ import imgSalesSmoke from '@/assets/presets/preset-sales-smoke-podium.jpg';
 
 export const ALL_REF_BLOCKS = [
   { id: 'productImageSelect', label: 'Produto', emoji: '📦' },
-  { id: 'galleryInfluencer', label: 'Influencer', emoji: '👤' },
-  { id: 'galleryLogo', label: 'Logo / Marca', emoji: '🏷️' },
-  { id: 'galleryRoupa', label: 'Roupa / Vestuário', emoji: '👗' },
-  { id: 'galleryPose', label: 'Ref. Pose', emoji: '🤸' },
-  { id: 'galleryAmbiente', label: 'Ref. Ambiente', emoji: '🏔️' },
-  { id: 'galleryEstilo', label: 'Ref. Estilo', emoji: '🎨' },
-  { id: 'galleryTextura', label: 'Textura / Material', emoji: '🧱' },
-  { id: 'galleryPaleta', label: 'Paleta de Cores', emoji: '🎨' },
-  { id: 'imageInput', label: 'Imagem de Referência', emoji: '🖼️' },
+  { id: 'galleryInfluencer', label: 'Galeria · Influencer', emoji: '👤' },
+  { id: 'galleryLogo', label: 'Galeria · Logo / Marca', emoji: '🏷️' },
+  { id: 'galleryRoupa', label: 'Galeria · Roupa / Vestuário', emoji: '👗' },
+  { id: 'galleryPose', label: 'Galeria · Pose', emoji: '🤸' },
+  { id: 'galleryAmbiente', label: 'Galeria · Ambiente', emoji: '🏔️' },
+  { id: 'galleryEstilo', label: 'Galeria · Estilo', emoji: '🎨' },
+  { id: 'galleryTextura', label: 'Galeria · Textura / Material', emoji: '🧱' },
+  { id: 'galleryPaleta', label: 'Galeria · Paleta de Cores', emoji: '🎨' },
+  { id: 'imageInput', label: 'Galeria · Salvas', emoji: '🖼️' },
 ];
 
 
