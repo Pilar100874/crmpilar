@@ -25,6 +25,7 @@ import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Spark
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
+import { migrateLegacyNodes } from './migrateLegacyNodes';
 import StudioNodeComponent from './StudioNodeComponent';
 import StudioCustomEdge from './StudioCustomEdge';
 import StudioNodeLibrary from './StudioNodeLibrary';
@@ -915,7 +916,9 @@ const AICreativeStudioInner: React.FC = () => {
 
   const handleOpenWorkflow = useCallback((workflow: SavedWorkflow) => {
     nodeResultStore.clearAll();
-    setNodes((workflow.nodes_data as StudioNode[]) as any);
+    const rawNodes = (workflow.nodes_data as StudioNode[]) || [];
+    const migrated = migrateLegacyNodes(rawNodes);
+    setNodes(migrated as any);
     setEdges((workflow.edges_data as StudioEdge[]) as any);
     setSelectedNode(null);
     setCurrentWorkflowId(workflow.id);

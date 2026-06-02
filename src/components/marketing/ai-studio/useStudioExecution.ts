@@ -614,40 +614,33 @@ export function useStudioExecution() {
       case 'galleryPose':
       case 'galleryRoupa':
       case 'gallerySalvas': {
+        // Bloco unificado: usa config.categoria se definida (novo modelo),
+        // senão deriva do tipo legado (compatibilidade com projetos antigos).
+        const categoria: string =
+          (config.categoria as string) ||
+          (type === 'gallerySalvas' ? 'salvas' : type.replace('gallery', '').toLowerCase());
+        const roleByCategoria: Record<string, string> = {
+          influencer: '[PESSOA/INFLUENCER - NÃO ALTERAR] Você DEVE reproduzir esta pessoa EXATAMENTE como aparece: mesmo rosto, tom de pele, cabelo, traços faciais e aparência geral. NÃO mude a identidade, etnia, cor de cabelo ou características faciais desta pessoa de forma alguma.',
+          ambiente: '[AMBIENTE - REFERÊNCIA FLEXÍVEL] Use este cenário/ambiente como inspiração para o fundo e ambientação. Você pode ser criativo e adaptar o ambiente livremente, mantendo apenas a essência geral (interno/externo, clima, iluminação).',
+          estilo: 'Use este estilo visual como referência artística para a imagem gerada (cores, mood, estética).',
+          paleta: 'Use esta paleta de cores como referência para as cores dominantes na imagem.',
+          textura: 'Use esta textura/material como referência para os materiais e superfícies na imagem.',
+          logo: '[LOGO - NÃO ALTERAR] Reproduza este logo/marca EXATAMENTE como aparece, sem modificar cores, tipografia ou elementos gráficos.',
+          pose: 'Use esta pose/composição corporal como referência para a posição da pessoa na imagem.',
+          roupa: '[ROUPA - NÃO ALTERAR] Você DEVE manter esta roupa/vestuário EXATAMENTE como aparece na referência: mesma cor, padrão, estampa, corte e estilo. NÃO substitua, modifique ou reimagine a peça de roupa.',
+          salvas: 'Use esta imagem salva como referência visual para a geração.',
+        };
         if (config.selectedImageUrl) {
-          const roleMap: Record<string, string> = {
-            galleryInfluencer: '[PESSOA/INFLUENCER - NÃO ALTERAR] Você DEVE reproduzir esta pessoa EXATAMENTE como aparece: mesmo rosto, tom de pele, cabelo, traços faciais e aparência geral. NÃO mude a identidade, etnia, cor de cabelo ou características faciais desta pessoa de forma alguma.',
-            galleryAmbiente: '[AMBIENTE - REFERÊNCIA FLEXÍVEL] Use este cenário/ambiente como inspiração para o fundo e ambientação. Você pode ser criativo e adaptar o ambiente livremente, mantendo apenas a essência geral (interno/externo, clima, iluminação).',
-            galleryEstilo: 'Use este estilo visual como referência artística para a imagem gerada (cores, mood, estética).',
-            galleryPaleta: 'Use esta paleta de cores como referência para as cores dominantes na imagem.',
-            galleryTextura: 'Use esta textura/material como referência para os materiais e superfícies na imagem.',
-            galleryLogo: '[LOGO - NÃO ALTERAR] Reproduza este logo/marca EXATAMENTE como aparece, sem modificar cores, tipografia ou elementos gráficos.',
-            galleryPose: 'Use esta pose/composição corporal como referência para a posição da pessoa na imagem.',
-            galleryRoupa: '[ROUPA - NÃO ALTERAR] Você DEVE manter esta roupa/vestuário EXATAMENTE como aparece na referência: mesma cor, padrão, estampa, corte e estilo. NÃO substitua, modifique ou reimagine a peça de roupa.',
-            gallerySalvas: 'Use esta imagem salva como referência visual para a geração.',
-          };
-          return { 
-            imageUrls: [config.selectedImageUrl], 
+          return {
+            imageUrls: [config.selectedImageUrl],
             imageUrl: config.selectedImageUrl,
-            _referenceRole: type.replace('gallery', '').toLowerCase(),
-            _referenceDesc: roleMap[type] || 'Use esta imagem como referência visual.',
+            _referenceRole: categoria,
+            _referenceDesc: roleByCategoria[categoria] || 'Use esta imagem como referência visual.',
           };
         }
         // If downstream has randomPick, skip validation - randomPick will load its own images
         if (allEdges && allNodes && hasDownstreamRandomPick(node.id, allEdges, allNodes)) {
-          const skipRoleMap: Record<string, string> = {
-            galleryInfluencer: '[PESSOA/INFLUENCER - NÃO ALTERAR] Reproduza a pessoa EXATAMENTE como aparece.',
-            galleryAmbiente: '[AMBIENTE - REFERÊNCIA FLEXÍVEL] Use como inspiração para o cenário.',
-            galleryEstilo: 'Use como referência de estilo visual.',
-            galleryPaleta: 'Use como referência de paleta de cores.',
-            galleryTextura: 'Use como referência de textura.',
-            galleryLogo: '[LOGO - NÃO ALTERAR] Reproduza o logo EXATAMENTE.',
-            galleryPose: 'Use como referência de pose.',
-            galleryRoupa: '[ROUPA - NÃO ALTERAR] Mantenha a roupa EXATAMENTE como aparece.',
-            gallerySalvas: 'Use como referência visual.',
-          };
-          const role = type.replace('gallery', '').toLowerCase();
-          return { _referenceRole: role, _referenceDesc: skipRoleMap[type] || 'Referência visual.', _skipNoImage: true };
+          return { _referenceRole: categoria, _referenceDesc: roleByCategoria[categoria] || 'Referência visual.', _skipNoImage: true };
         }
         // Optional block — return null to skip silently
         return null;
