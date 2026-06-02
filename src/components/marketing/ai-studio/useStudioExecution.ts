@@ -1426,6 +1426,23 @@ export function useStudioExecution() {
             });
 
             const sceneDuration = Math.min(10, Math.max(5, Number(scene.duration) || 5));
+            // Collect text content blocks (e.g. título/subtítulo/corpo) connected to this videoGen
+            const textContentInputs = inputs
+              .filter((i) => i?.textContent && (i.textContent.title || i.textContent.subtitle || i.textContent.body))
+              .map((i) => i.textContent);
+            const textContentBlock = textContentInputs.length > 0
+              ? [
+                  `\n\n📝 [CONTEÚDO DE TEXTO — RENDERIZAR EXATAMENTE COMO FORNECIDO, SEM TRADUZIR OU ALTERAR]`,
+                  ...textContentInputs.map((tc) => [
+                    tc.title ? `• Título: "${tc.title}"` : '',
+                    tc.subtitle ? `• Subtítulo: "${tc.subtitle}"` : '',
+                    tc.body ? `• Corpo: "${tc.body}"` : '',
+                  ].filter(Boolean).join('\n')),
+                  `⚠️ Estes textos DEVEM aparecer visualmente no vídeo em todas as cenas relevantes. NÃO renderize as palavras "Título", "Subtítulo" ou "Corpo" como rótulos — apenas o conteúdo entre aspas.`,
+                ].join('\n')
+              : '';
+            const extraText = (combinedInput || '').trim();
+
             const scenePromptParts = [
               `🎬 CENA ${scene.n} de ${scenes.length} (parte de um roteiro maior — esta cena é INDEPENDENTE e será unida às outras na pós-produção).`,
               ``,
@@ -1438,6 +1455,8 @@ export function useStudioExecution() {
               scene.ambientSound ? `\n🌬️ AMBIENTE SONORO: ${scene.ambientSound}` : '',
               (scene.sfx && scene.sfx.length) ? `\n💥 SFX: ${scene.sfx.join(', ')}` : '',
               globalNotes ? `\n📝 OBSERVAÇÕES GERAIS DO ROTEIRO: ${globalNotes}` : '',
+              textContentBlock,
+              extraText && !textContentBlock ? `\n\n📝 CONTEXTO ADICIONAL: ${extraText}` : '',
               `\n⏱️ Duração: ${sceneDuration}s. Gere APENAS esta cena, não o roteiro inteiro.`,
               fidelityLockMS,
               viPromptMS ? `\n\n🎨 [IDENTIDADE VISUAL DA MARCA]\n${viPromptMS}${VI_FOCUS_DIRECTIVE}` : '',
