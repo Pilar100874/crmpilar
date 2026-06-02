@@ -422,21 +422,6 @@ export const NODE_CATEGORIES: NodeCategory[] = [
       },
     ],
   },
-  {
-    id: 'output',
-    label: 'Saída',
-    icon: '📤',
-    nodes: [
-      {
-        type: 'output',
-        label: 'Resultado Final',
-        description: 'Visualize e exporte o resultado',
-        icon: '📤',
-        color: '#64748b',
-        defaultConfig: { format: 'auto' },
-      },
-    ],
-  },
 ];
 
 export const getNodeMeta = (type: StudioNodeType) => {
