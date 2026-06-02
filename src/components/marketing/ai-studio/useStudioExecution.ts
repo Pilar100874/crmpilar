@@ -1500,6 +1500,7 @@ export function useStudioExecution() {
               text: `🎬 Vídeo gerado (1 cena)`,
               _isVideo: true,
               _sceneUrls: sceneVideoUrls,
+              _sceneDurations: sceneDurationsApplied,
             };
           }
 
@@ -1528,9 +1529,13 @@ export function useStudioExecution() {
             const unifiedUrl = await uploadConcatVideo(unifiedBlob, estabIdMS || '', supabase);
             return {
               videoUrl: unifiedUrl,
+              _finalVideoUrl: unifiedUrl,
               text: `🎬 Vídeo unificado gerado a partir de ${sceneVideoUrls.length} cenas`,
               _isVideo: true,
               _sceneUrls: sceneVideoUrls,
+              _sceneDurations: sceneDurationsApplied,
+              _sceneTransition: sceneTransition,
+              _sceneTransitionDuration: sceneTransitionDuration,
               _unified: true,
             };
           } catch (concatErr: any) {
@@ -1542,6 +1547,9 @@ export function useStudioExecution() {
               text: `⚠️ ${sceneVideoUrls.length} cenas geradas, mas a união falhou. URLs individuais salvas.`,
               _isVideo: true,
               _sceneUrls: sceneVideoUrls,
+              _sceneDurations: sceneDurationsApplied,
+              _sceneTransition: sceneTransition,
+              _sceneTransitionDuration: sceneTransitionDuration,
               _unified: false,
             };
           }
