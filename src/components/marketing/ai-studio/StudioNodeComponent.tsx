@@ -14,6 +14,7 @@ import GallerySelectInline from './GallerySelectInline';
 import MediaGallerySelectInline from './MediaGallerySelectInline';
 import { GalleryCategoryId } from './StudioGalleryManager';
 import VideoTrimmer from './VideoTrimmer';
+import { regenerateSceneVideo } from './studioVideoClient';
 import { 
   Loader2, Play, Maximize2, Image as ImageIcon, Film, Music, Type, 
   MoreHorizontal, GripVertical, Mic, Wand2, FileText, Clapperboard,
@@ -770,6 +771,8 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const [sceneJoinTransition, setSceneJoinTransition] = useState<string>(() => nodeData.config?.sceneTransition || 'fade');
   const [isReprocessingFinal, setIsReprocessingFinal] = useState(false);
   const [reprocessProgress, setReprocessProgress] = useState('');
+  const [regenSceneIdx, setRegenSceneIdx] = useState<number | null>(null);
+  const [regenSceneProgress, setRegenSceneProgress] = useState('');
   const IconComponent = nodeIconMap[nodeData.type] || Play;
   const gradient = nodeGradientMap[nodeData.type] || 'from-muted-foreground/20 to-zinc-500/20';
   const iconColor = nodeIconColorMap[nodeData.type] || 'text-muted-foreground';
@@ -1111,6 +1114,42 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
       setReprocessProgress('');
     }
   }, [activeResult, id, nodeData.config?.sceneTransitionDuration, sceneJoinTransition, sceneUrlsKey]);
+
+  const handleRegenerateScene = useCallback(async (sceneIndex: number) => {
+    const regenParamsList: Record<string, any>[] | undefined = activeResult?._sceneRegenParams;
+    if (!regenParamsList || !regenParamsList[sceneIndex]) {
+      toast.error('Não foi possível refazer: parâmetros da cena indisponíveis. Re-execute o bloco para habilitar.');
+      return;
+    }
+    setRegenSceneIdx(sceneIndex);
+    setRegenSceneProgress('Iniciando nova geração...');
+    try {
+      const newUrl = await regenerateSceneVideo(
+        regenParamsList[sceneIndex],
+        (p) => setRegenSceneProgress(p.message || 'Renderizando...'),
+      );
+      const newSceneUrls = [...sceneUrls];
+      newSceneUrls[sceneIndex] = newUrl;
+      const updatedResult = {
+        ...(activeResult || {}),
+        _sceneUrls: newSceneUrls,
+        // Invalida o vídeo final unido — o usuário precisa reprocessar
+        _finalVideoUrl: undefined,
+        videoUrl: newSceneUrls[0],
+        _unified: false,
+        text: `🎬 Cena ${sceneIndex + 1} refeita. Clique em "Reprocessar final" para unir novamente.`,
+      };
+      nodeResultStore.setResult(id, updatedResult);
+      dispatchResultUpdate(id, updatedResult);
+      toast.success(`✅ Cena ${sceneIndex + 1} refeita com sucesso!`);
+    } catch (err: any) {
+      console.error('[Studio] Erro ao refazer cena:', err);
+      toast.error(`Falha ao refazer cena ${sceneIndex + 1}: ${err.message || String(err)}`);
+    } finally {
+      setRegenSceneIdx(null);
+      setRegenSceneProgress('');
+    }
+  }, [activeResult, id, sceneUrls, sceneUrlsKey]);
 
   return (
     <>
@@ -2140,23 +2179,39 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
             {hasMultiSceneResult ? (
               <div className="px-3 pb-3 pt-1 space-y-3">
                 <div className="space-y-2">
-                  {sceneUrls.map((url, idx) => (
+                  {sceneUrls.map((url, idx) => {
+                    const isRegenerating = regenSceneIdx === idx;
+                    const hasRegenParams = Array.isArray(activeResult?._sceneRegenParams) && !!activeResult._sceneRegenParams[idx];
+                    return (
                     <div key={`${url}-${idx}`} className="rounded-xl overflow-hidden border border-border/50 bg-muted/20" style={{ boxShadow: `0 4px 20px -4px ${accent}14` }}>
-                      <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-border/40">
+                      <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-border/40 gap-2">
                         <span className="text-[10px] font-semibold text-foreground/80">Cena {idx + 1}</span>
-                        <a
-                          href={url}
-                          download={`cena-${idx + 1}.mp4`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onPointerDown={(e) => e.stopPropagation()}
-                          onMouseDown={(e) => e.stopPropagation()}
-                          onClick={(e) => e.stopPropagation()}
-                          className="p-1 rounded-md bg-background/80 hover:bg-background transition-colors"
-                          title="Baixar cena"
-                        >
-                          <Download className="h-3 w-3" />
-                        </a>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleRegenerateScene(idx); }}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            disabled={isRegenerating || regenSceneIdx !== null || !hasRegenParams}
+                            className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/15 hover:bg-primary/25 text-primary text-[10px] font-semibold transition-colors disabled:opacity-50"
+                            title={hasRegenParams ? 'Refazer apenas esta cena' : 'Re-execute o bloco para habilitar a refação individual'}
+                          >
+                            {isRegenerating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Repeat className="h-3 w-3" />}
+                            Refazer
+                          </button>
+                          <a
+                            href={url}
+                            download={`cena-${idx + 1}.mp4`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => e.stopPropagation()}
+                            className="p-1 rounded-md bg-background/80 hover:bg-background transition-colors"
+                            title="Baixar cena"
+                          >
+                            <Download className="h-3 w-3" />
+                          </a>
+                        </div>
                       </div>
                       <video
                         src={url}
@@ -2166,8 +2221,12 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                         className="w-full object-cover studio-video-no-fullscreen"
                         style={{ maxHeight: 180 }}
                       />
+                      {isRegenerating && (
+                        <p className="px-2.5 py-1.5 text-[10px] text-muted-foreground border-t border-border/30 break-words">{regenSceneProgress}</p>
+                      )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {hasFinalJoinedVideo && (

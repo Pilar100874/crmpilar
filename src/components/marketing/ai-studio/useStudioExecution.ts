@@ -1400,6 +1400,7 @@ export function useStudioExecution() {
 
           const sceneVideoUrls: string[] = [];
           const sceneDurationsApplied: number[] = [];
+          const sceneRegenParams: Record<string, any>[] = [];
 
           // 🔒 TRAVA DE FIDELIDADE — aplicada em TODAS as cenas quando há referências visuais
           const hasProductRefMS = orderedImageRolesMS.some(r => /produto/i.test(r));
@@ -1482,6 +1483,7 @@ export function useStudioExecution() {
               }
               sceneVideoUrls.push(sceneResult.videoUrl);
               sceneDurationsApplied.push(sceneDuration);
+              sceneRegenParams.push(sceneParams);
               nodeResultStore.setResult(node.id, {
                 text: `✅ Cena ${s + 1}/${scenes.length} pronta. ${s + 1 < scenes.length ? 'Iniciando próxima cena...' : 'Preparando união final...'}`,
                 _multiSceneProgress: { current: s + 1, total: scenes.length, urls: [...sceneVideoUrls] },
@@ -1501,6 +1503,7 @@ export function useStudioExecution() {
               _isVideo: true,
               _sceneUrls: sceneVideoUrls,
               _sceneDurations: sceneDurationsApplied,
+              _sceneRegenParams: sceneRegenParams,
             };
           }
 
@@ -1535,6 +1538,7 @@ export function useStudioExecution() {
               _isVideo: true,
               _sceneUrls: sceneVideoUrls,
               _sceneDurations: sceneDurationsApplied,
+              _sceneRegenParams: sceneRegenParams,
               _sceneTransition: sceneTransition,
               _sceneTransitionDuration: sceneTransitionDuration,
               _unified: true,
@@ -1549,6 +1553,7 @@ export function useStudioExecution() {
               _isVideo: true,
               _sceneUrls: sceneVideoUrls,
               _sceneDurations: sceneDurationsApplied,
+              _sceneRegenParams: sceneRegenParams,
               _sceneTransition: sceneTransition,
               _sceneTransitionDuration: sceneTransitionDuration,
               _unified: false,
