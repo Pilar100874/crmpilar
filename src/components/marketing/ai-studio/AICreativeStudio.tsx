@@ -1262,15 +1262,12 @@ const AICreativeStudioInner: React.FC = () => {
         // Add new ref blocks
         const ts = Date.now();
         const addedNodes: StudioNode[] = [];
-        blocksToAdd.forEach((blockType, idx) => {
-          const bm = BLOCK_META[blockType];
-          if (!bm) return;
-          const nodeMeta = getNodeMeta(bm.type as any);
+        specsToAdd.forEach((spec, idx) => {
           const refNode: StudioNode = {
-            id: `${bm.type}_${ts}_${idx}`,
+            id: `${spec.type}_${ts}_${idx}`,
             type: 'studioNode',
             position: { x: 100, y: 400 + (existingRefNodeIds.size + idx) * 200 },
-            data: { label: bm.labelPrefix, type: bm.type as any, config: nodeMeta?.defaultConfig ? { ...nodeMeta.defaultConfig } : {} },
+            data: { label: spec.label, type: spec.type as any, config: { ...spec.config } },
           };
           addedNodes.push(refNode);
         });
@@ -1286,8 +1283,8 @@ const AICreativeStudioInner: React.FC = () => {
           for (const re of refEdges) {
             const refNode = currentNodes.find(n => n.id === re.source);
             if (refNode) {
-              const nodeType = (refNode.data as any).type;
-              if (BLOCK_META[nodeType] && !newRefBlocks.includes(nodeType)) {
+              const k = getRefKeyOfNode(refNode);
+              if (k && !newRefKeys.has(k)) {
                 existingRefNodeIds.add(refNode.id);
               }
             }
@@ -1296,21 +1293,23 @@ const AICreativeStudioInner: React.FC = () => {
 
         let updatedEdges = eds.filter(e => !existingRefNodeIds.has(e.source));
 
-        // Add edges for new blocks
+        // Add edges for new blocks — match exactly the IDs gerados acima
         const ts = Date.now();
-        const blocksToAdd = newRefBlocks.filter(bt => {
-          if (!processNodeId) return false;
+        const presentKeys = new Set<string>();
+        if (processNodeId) {
           const refEdges = eds.filter(e => e.target === processNodeId && e.source !== reloadingPresetNodeId);
-          return !refEdges.some(re => {
+          for (const re of refEdges) {
             const refNode = currentNodes.find(n => n.id === re.source);
-            return refNode && (refNode.data as any).type === bt;
-          });
-        });
-
-        blocksToAdd.forEach((blockType, idx) => {
-          const bm = BLOCK_META[blockType];
-          if (!bm || !processNodeId) return;
-          const newNodeId = `${bm.type}_${ts}_${idx}`;
+            if (refNode) {
+              const k = getRefKeyOfNode(refNode);
+              if (k) presentKeys.add(k);
+            }
+          }
+        }
+        const specsToConnect = resolvedNewRefs.filter((r) => !presentKeys.has(r.key));
+        specsToConnect.forEach((spec, idx) => {
+          if (!processNodeId) return;
+          const newNodeId = `${spec.type}_${ts}_${idx}`;
           updatedEdges.push({
             id: `e_${newNodeId}_${processNodeId}`,
             source: newNodeId,
@@ -1323,6 +1322,7 @@ const AICreativeStudioInner: React.FC = () => {
 
         return updatedEdges;
       });
+
 
       setReloadingPresetNodeId(null);
       setPresetInitialSelections(undefined);
