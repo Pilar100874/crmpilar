@@ -6,21 +6,8 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
-// Tentativa de carregar bundle local (Vite serve). Se falhar, usamos CDNs.
-async function tryLoadLocalUrls(): Promise<{ coreURL: string; wasmURL: string } | null> {
-  try {
-    const [coreMod, wasmMod] = await Promise.all([
-      // @ts-ignore
-      import('@ffmpeg/core/dist/umd/ffmpeg-core.js?url'),
-      // @ts-ignore
-      import('@ffmpeg/core/dist/umd/ffmpeg-core.wasm?url'),
-    ]);
-    return { coreURL: (coreMod as any).default, wasmURL: (wasmMod as any).default };
-  } catch (err) {
-    console.warn('[videoConcat] Bundle local ffmpeg indisponível:', err);
-    return null;
-  }
-}
+// Carregamento local desabilitado: @ffmpeg/core não expõe deep imports via package exports.
+// Usamos apenas CDNs (com fallback entre vários provedores).
 
 let _ffmpegInstance: FFmpeg | null = null;
 let _loadingPromise: Promise<FFmpeg> | null = null;
