@@ -396,6 +396,19 @@ const AICreativeStudioInner: React.FC = () => {
     return () => window.removeEventListener('studio-node-config-update', handler);
   }, [updateNodeConfig]);
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { nodeId, result } = (e as CustomEvent).detail;
+      setNodes((nds) => nds.map((n) => {
+        if (n.id !== nodeId) return n;
+        const d = n.data as StudioNodeData;
+        return { ...n, data: { ...d, result: { ...(d.result || {}), ...result } } };
+      }));
+    };
+    window.addEventListener('studio-node-result-update', handler);
+    return () => window.removeEventListener('studio-node-result-update', handler);
+  }, [setNodes]);
+
   const deleteSelected = useCallback(() => {
     if (selectedNode) {
       setNodes((nds) => nds.filter((n) => n.id !== selectedNode.id));
