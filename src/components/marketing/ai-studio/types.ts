@@ -211,17 +211,9 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         defaultConfig: { selectedImageUrl: '', selectedImageName: '', galleryImageId: '' },
       },
       {
-        type: 'textStyle',
-        label: 'Estilo de Texto',
-        description: 'Configure estilo visual de texto para aplicar na imagem',
-        icon: '🔤',
-        color: '#e11d48',
-        defaultConfig: { text: 'SEU TEXTO AQUI', fontFamily: 'Montserrat', fontSize: 48, fontWeight: 'bold', color: '#ffffff', bgColor: '', align: 'center', shadow: true, outline: true },
-      },
-      {
         type: 'textContent',
         label: 'Conteúdo de Texto',
-        description: 'Título, subtítulo e corpo com estilos prontos',
+        description: 'Título, subtítulo e corpo com estilos prontos — usado também como texto a renderizar em imagens/vídeos',
         icon: '📝',
         color: '#7c3aed',
         defaultConfig: { 
@@ -234,14 +226,6 @@ export const NODE_CATEGORIES: NodeCategory[] = [
           bodyFont: 'Inter', bodySize: 24, bodyWeight: 'normal', bodyColor: '#666666',
           textAlign: 'center',
         },
-      },
-      {
-        type: 'imageCaption',
-        label: 'Texto da Imagem (Título/Subtítulo)',
-        description: 'Define título e subtítulo OBRIGATÓRIOS que a IA deve renderizar na imagem/vídeo, sem alterar o texto',
-        icon: '🔠',
-        color: '#db2777',
-        defaultConfig: { title: '', subtitle: '', aiSuggest: false, suggestContext: '' },
       },
       {
         type: 'videoScript',
