@@ -771,6 +771,8 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const [sceneJoinTransition, setSceneJoinTransition] = useState<string>(() => nodeData.config?.sceneTransition || 'fade');
   const [isReprocessingFinal, setIsReprocessingFinal] = useState(false);
   const [reprocessProgress, setReprocessProgress] = useState('');
+  const [regenSceneIdx, setRegenSceneIdx] = useState<number | null>(null);
+  const [regenSceneProgress, setRegenSceneProgress] = useState('');
   const IconComponent = nodeIconMap[nodeData.type] || Play;
   const gradient = nodeGradientMap[nodeData.type] || 'from-muted-foreground/20 to-zinc-500/20';
   const iconColor = nodeIconColorMap[nodeData.type] || 'text-muted-foreground';
