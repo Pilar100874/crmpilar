@@ -1125,17 +1125,37 @@ const AICreativeStudioInner: React.FC = () => {
     if (reloadingPresetNodeId) {
       const newRefBlocks = preset.referenceBlocks || [];
 
-      const BLOCK_META: Record<string, { labelPrefix: string; type: string }> = {
-        'productImageSelect': { labelPrefix: '📦 Produto', type: 'productImageSelect' },
-        'galleryInfluencer': { labelPrefix: '👤 Influencer', type: 'galleryInfluencer' },
-        'galleryLogo': { labelPrefix: '🏷️ Logo', type: 'galleryLogo' },
-        'galleryRoupa': { labelPrefix: '👗 Roupa', type: 'galleryRoupa' },
-        'galleryPose': { labelPrefix: '🤸 Pose', type: 'galleryPose' },
-        'galleryAmbiente': { labelPrefix: '🏔️ Ambiente', type: 'galleryAmbiente' },
-        'galleryEstilo': { labelPrefix: '🎨 Estilo', type: 'galleryEstilo' },
-        'galleryTextura': { labelPrefix: '🧱 Textura', type: 'galleryTextura' },
-        'galleryPaleta': { labelPrefix: '🎨 Paleta', type: 'galleryPaleta' },
-        'imageInput': { labelPrefix: '🖼️ Referência', type: 'imageInput' },
+      // Resolve cada ID semântico do preset para o tipo de bloco unificado real
+      // que será criado no canvas (multiProductSelect, multiImageRef, multiVideoRef
+      // ou gallerySalvas com categoria). Para galerias, a "identidade" do bloco
+      // passa a ser `gallerySalvas:<categoria>` em vez do tipo puro.
+      type RefSpec = { id: string; type: string; label: string; config: Record<string, any>; key: string };
+      const resolvedNewRefs: RefSpec[] = newRefBlocks
+        .map((id) => {
+          const spec = resolveReferenceBlockSpec(id);
+          if (!spec) return null;
+          const key =
+            spec.type === 'gallerySalvas'
+              ? `gallerySalvas:${spec.config.categoria}`
+              : spec.type;
+          return { id, ...spec, key };
+        })
+        .filter(Boolean) as RefSpec[];
+      const newRefKeys = new Set(resolvedNewRefs.map((r) => r.key));
+
+      // Identifica um nó já existente como bloco de referência e devolve a sua "key"
+      const getRefKeyOfNode = (n: any): string | null => {
+        const t = (n.data as any).type as string;
+        const cfg = (n.data as any).config || {};
+        if (t === 'multiProductSelect' || t === 'productImageSelect') return 'multiProductSelect';
+        if (t === 'multiImageRef' || t === 'imageInput') return 'multiImageRef';
+        if (t === 'multiVideoRef' || t === 'videoInput') return 'multiVideoRef';
+        if (t === 'gallerySalvas') return `gallerySalvas:${cfg.categoria || 'salvas'}`;
+        if (t && t.startsWith('gallery')) {
+          const cat = t.replace('gallery', '').toLowerCase();
+          return `gallerySalvas:${cat || 'salvas'}`;
+        }
+        return null;
       };
 
       // Find the process node connected to this textInput (use ref for fresh state)
@@ -1145,18 +1165,18 @@ const AICreativeStudioInner: React.FC = () => {
       const processNodeId = connectedEdge?.target;
 
       setNodes((nds) => {
-        // Get existing ref block types connected to the same process node
+        // Get existing ref block keys connected to the same process node
         const existingRefNodeIds = new Set<string>();
-        const existingRefTypes = new Set<string>();
+        const existingRefKeys = new Set<string>();
         if (processNodeId) {
           const refEdges = currentEdges.filter(e => e.target === processNodeId && e.source !== reloadingPresetNodeId);
           for (const re of refEdges) {
             const refNode = nds.find(n => n.id === re.source);
             if (refNode) {
-              const nodeType = (refNode.data as any).type;
-              if (BLOCK_META[nodeType]) {
+              const k = getRefKeyOfNode(refNode);
+              if (k) {
                 existingRefNodeIds.add(refNode.id);
-                existingRefTypes.add(nodeType);
+                existingRefKeys.add(k);
               }
             }
           }
@@ -1167,15 +1187,16 @@ const AICreativeStudioInner: React.FC = () => {
         for (const nodeId of existingRefNodeIds) {
           const node = nds.find(n => n.id === nodeId);
           if (node) {
-            const nodeType = (node.data as any).type;
-            if (!newRefBlocks.includes(nodeType)) {
+            const k = getRefKeyOfNode(node);
+            if (k && !newRefKeys.has(k)) {
               blocksToRemove.add(nodeId);
             }
           }
         }
 
         // Blocks to add (not already present)
-        const blocksToAdd = newRefBlocks.filter(bt => !existingRefTypes.has(bt));
+        const specsToAdd = resolvedNewRefs.filter((r) => !existingRefKeys.has(r.key));
+
 
         let updatedNodes = nds
           .filter(n => !blocksToRemove.has(n.id))
