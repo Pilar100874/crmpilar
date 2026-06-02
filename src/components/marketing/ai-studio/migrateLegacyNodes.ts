@@ -31,16 +31,22 @@ export function migrateLegacyNodes(nodes: StudioNode[]): StudioNode[] {
     if (t && t.startsWith('gallery')) {
       const categoria = GALLERY_TYPE_TO_CATEGORIA[t] || 'salvas';
       if (t === 'gallerySalvas' && cfg.categoria) return node; // já migrado
+      const catLabels: Record<string, string> = {
+        influencer: '👤 Influencer', logo: '🏷️ Logo', roupa: '👗 Roupa',
+        pose: '🤸 Pose', ambiente: '🏔️ Ambiente', estilo: '🎨 Estilo',
+        textura: '🧱 Textura', paleta: '🎨 Paleta', salvas: '🖼️ Salvas',
+      };
       return {
         ...node,
         data: {
           ...node.data,
           type: 'gallerySalvas',
-          label: 'Galeria de Referência',
+          label: `Galeria · ${catLabels[categoria] || categoria}`,
           config: { ...cfg, categoria },
         },
       };
     }
+
 
     // 2) imageInput → multiImageRef (config compatível)
     if (t === 'imageInput') {
