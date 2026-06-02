@@ -14,9 +14,9 @@ let _loadingPromise: Promise<FFmpeg> | null = null;
 
 const FFMPEG_BASES = [
   '/ffmpeg',
-  'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd',
-  'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd',
-  'https://fastly.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd',
+  'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm',
+  'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm',
+  'https://fastly.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm',
 ];
 
 async function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
@@ -29,6 +29,8 @@ async function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise
 async function loadFromBase(baseURL: string, onProgress?: (p: ConcatProgress) => void): Promise<FFmpeg> {
   const ffmpeg = new FFmpeg();
   onProgress?.({ stage: 'loading', message: baseURL.startsWith('/') ? 'Carregando motor local de vídeo…' : 'Tentando motor de vídeo alternativo…' });
+  // O worker do @ffmpeg/ffmpeg roda como módulo ESM no Vite. Por isso o core
+  // também precisa ser ESM; a versão UMD carrega via importScripts e falha em module worker.
   const coreURL = await withTimeout(toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'), 30000, 'componentes de vídeo');
   const wasmURL = await withTimeout(toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'), 60000, 'componentes de vídeo');
   await withTimeout(ffmpeg.load({ coreURL, wasmURL }), 45000, 'componentes de vídeo');
