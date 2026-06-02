@@ -461,7 +461,7 @@ Retorne EXCLUSIVAMENTE um JSON válido:
     "melhor_horario": "",
     "legenda_sugerida": "",
     "cenas_ai_video": [
-      { "ordem": 1, "duracao_segundos": 5, "tipo_camera": "handheld", "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "texto_overlay": "", "transicao_para_proxima": "cut", "trilha_sonora": "", "intensidade_trilha": "média", "sfx": [], "ambiente_sonoro": "", "tom_voz": "" }
+      { "ordem": 1, "duracao_segundos": 5, "tipo_camera": "handheld", "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "texto_overlay": "", "transicao_para_proxima": "cut", "trilha_sonora": "", "intensidade_trilha": "média", "sfx": [], "ambiente_sonoro": "", "tom_voz": "", "texto_audio": "" }
     ],
     "audio_global": { "estilo_musical": "", "referencia_trilha": "", "bpm_alvo": 0, "tom_voz_padrao": "", "idioma": "pt-BR", "mix_notes": "" }
   }],
@@ -651,7 +651,7 @@ Retorne EXCLUSIVAMENTE um JSON válido:
   "audio": {"trilha_sonora": {"genero": "", "mood": ""}, "efeitos_sonoros": [""], "ritmo_edicao": ""},
   "formatos": [{"plataforma": "", "aspecto": "", "duracao_total_segundos": 0, "adaptacoes": ""}],
   "cenas_ai_video": [
-    { "ordem": 1, "duracao_segundos": 5, "tipo_camera": "slow push-in", "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "texto_overlay": "", "transicao_para_proxima": "cut", "trilha_sonora": "", "intensidade_trilha": "média", "sfx": [], "ambiente_sonoro": "", "tom_voz": "" }
+    { "ordem": 1, "duracao_segundos": 5, "tipo_camera": "slow push-in", "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "texto_overlay": "", "transicao_para_proxima": "cut", "trilha_sonora": "", "intensidade_trilha": "média", "sfx": [], "ambiente_sonoro": "", "tom_voz": "", "texto_audio": "" }
   ],
   "audio_global": { "estilo_musical": "", "referencia_trilha": "", "bpm_alvo": 0, "tom_voz_padrao": "", "idioma": "pt-BR", "mix_notes": "" }
 }`
