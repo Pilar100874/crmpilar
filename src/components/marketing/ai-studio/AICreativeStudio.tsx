@@ -25,7 +25,7 @@ import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Spark
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
-import { migrateLegacyNodes } from './migrateLegacyNodes';
+import { migrateLegacyNodes, resolveReferenceBlockSpec } from './migrateLegacyNodes';
 import StudioNodeComponent from './StudioNodeComponent';
 import StudioCustomEdge from './StudioCustomEdge';
 import StudioNodeLibrary from './StudioNodeLibrary';
