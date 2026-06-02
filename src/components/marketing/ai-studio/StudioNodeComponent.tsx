@@ -4,7 +4,7 @@ import { GalleryFolderTabs } from '@/components/ui/GalleryFolderTabs';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from '@xyflow/react';
 import { StudioNodeData, getNodeMeta } from './types';
 import { useVisualIdentityActive } from './VisualIdentityPanel';
-import { useNodeResult } from './useNodeResults';
+import { nodeResultStore, useNodeResult } from './useNodeResults';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
@@ -184,9 +184,24 @@ const nodeAccentMap: Record<string, string> = {
 // Blocks that REQUIRE paid external APIs (no free alternative)
 const PAID_ONLY_BLOCKS: Set<string> = new Set(['musicGen', 'lipSync', 'videoMerge']);
 
+const SCENE_TRANSITION_OPTIONS = [
+  { value: 'fade', label: 'Fade suave' },
+  { value: 'dissolve', label: 'Dissolver' },
+  { value: 'wipeleft', label: 'Cortina esquerda' },
+  { value: 'wiperight', label: 'Cortina direita' },
+  { value: 'slideleft', label: 'Deslizar esquerda' },
+  { value: 'slideright', label: 'Deslizar direita' },
+  { value: 'circleopen', label: 'Círculo abre' },
+  { value: 'radial', label: 'Radial' },
+];
+
 // Helper: dispatch config update via custom event (avoids prop drilling through ReactFlow)
 const dispatchConfigUpdate = (nodeId: string, config: Record<string, any>) => {
   window.dispatchEvent(new CustomEvent('studio-node-config-update', { detail: { nodeId, config } }));
+};
+
+const dispatchResultUpdate = (nodeId: string, result: Record<string, any>) => {
+  window.dispatchEvent(new CustomEvent('studio-node-result-update', { detail: { nodeId, result } }));
 };
 
 // Inline product image selector component
@@ -752,6 +767,9 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const [videoPreviewOpen, setVideoPreviewOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSavingToGallery, setIsSavingToGallery] = useState(false);
+  const [sceneJoinTransition, setSceneJoinTransition] = useState<string>(() => nodeData.config?.sceneTransition || 'fade');
+  const [isReprocessingFinal, setIsReprocessingFinal] = useState(false);
+  const [reprocessProgress, setReprocessProgress] = useState('');
   const IconComponent = nodeIconMap[nodeData.type] || Play;
   const gradient = nodeGradientMap[nodeData.type] || 'from-muted-foreground/20 to-zinc-500/20';
   const iconColor = nodeIconColorMap[nodeData.type] || 'text-muted-foreground';
@@ -794,6 +812,10 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const resultText = typeof activeResult === 'string'
     ? activeResult
     : activeResult?.text;
+  const sceneUrls: string[] = Array.isArray(activeResult?._sceneUrls) ? activeResult._sceneUrls : [];
+  const hasMultiSceneResult = nodeData.type === 'videoGen' && sceneUrls.length > 1;
+  const sceneUrlsKey = sceneUrls.join('|');
+  const hasFinalJoinedVideo = hasMultiSceneResult && !!resultVideo && activeResult?._unified !== false;
   const hasResult = !!(resultImage || resultVideo || resultAudio || resultText || resultFrames || activeResult?.slideImages?.length);
   const multiSceneProgress = activeResult?._multiSceneProgress as { current?: number; total?: number; urls?: string[] } | undefined;
   const videoProgress = activeResult?._videoProgress as {
@@ -807,6 +829,10 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     ? Math.round((((multiSceneProgress.urls?.length || 0) + ((pollPercent || 0) / 100)) / multiSceneProgress.total) * 100)
     : undefined;
   const processingPercent = Math.max(3, Math.min(100, scenePercent ?? pollPercent ?? 12));
+
+  useEffect(() => {
+    setSceneJoinTransition(activeResult?._sceneTransition || nodeData.config?.sceneTransition || 'fade');
+  }, [activeResult?._sceneTransition, nodeData.config?.sceneTransition]);
 
   // Stabilize frames reference to avoid flickering re-renders
   const stableFramesRef = useRef<string[]>([]);
@@ -841,7 +867,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
       const t3 = setTimeout(() => updateNodeInternals(id), 500);
       return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
     }
-  }, [hasResult, activeProcessing, resultImage, resultVideo, resultAudio, resultText, id, updateNodeInternals]);
+  }, [hasResult, activeProcessing, resultImage, resultVideo, resultAudio, resultText, hasMultiSceneResult, hasFinalJoinedVideo, id, updateNodeInternals]);
 
   const nodeWidth = (resultImage || resultVideo || resultAudio || (nodeData.type === 'imageInput' && nodeData.config?.images?.length > 0) || (nodeData.type === 'multiImageRef' && nodeData.config?.images?.length > 0) || (nodeData.type === 'videoInput' && nodeData.config?.videos?.length > 0) || (nodeData.type === 'multiVideoRef' && nodeData.config?.videos?.length > 0) || (nodeData.type === 'productImageSelect' && nodeData.config?.selectedImageUrl) || (isGalleryType && nodeData.config?.selectedImageUrl) || (nodeData.type === 'mediaGallery' && nodeData.config?.selectedUrl)) ? 340 : 280;
 
@@ -1036,6 +1062,55 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
       setIsSavingToGallery(false);
     }
   }, [id, nodeData.type, nodeData.label, downloadAsBlob]);
+
+  const handleReprocessFinalVideo = useCallback(async () => {
+    if (sceneUrls.length < 2) {
+      toast.error('É necessário ter pelo menos 2 cenas para refazer a união.');
+      return;
+    }
+    const estabId = localStorage.getItem('estabelecimentoId') || '';
+    const transitionDuration = Number(activeResult?._sceneTransitionDuration || nodeData.config?.sceneTransitionDuration || 0.5);
+    const sceneDurations = Array.isArray(activeResult?._sceneDurations) && activeResult._sceneDurations.length === sceneUrls.length
+      ? activeResult._sceneDurations
+      : undefined;
+
+    setIsReprocessingFinal(true);
+    setReprocessProgress('Preparando nova união...');
+    try {
+      const { concatVideos, uploadConcatVideo } = await import('./videoConcat');
+      const blob = await concatVideos(
+        sceneUrls,
+        (p) => setReprocessProgress(p.message || 'Unindo cenas...'),
+        {
+          transition: sceneJoinTransition as any,
+          transitionDurationSec: transitionDuration,
+          sceneDurationsSec: sceneDurations,
+        },
+      );
+      const finalUrl = await uploadConcatVideo(blob, estabId, supabase);
+      const updatedResult = {
+        ...(activeResult || {}),
+        videoUrl: finalUrl,
+        _finalVideoUrl: finalUrl,
+        text: `🎬 Vídeo final reprocessado com efeito ${SCENE_TRANSITION_OPTIONS.find((o) => o.value === sceneJoinTransition)?.label || sceneJoinTransition}`,
+        _isVideo: true,
+        _sceneUrls: sceneUrls,
+        _sceneDurations: sceneDurations,
+        _sceneTransition: sceneJoinTransition,
+        _sceneTransitionDuration: transitionDuration,
+        _unified: true,
+      };
+      nodeResultStore.setResult(id, updatedResult);
+      dispatchResultUpdate(id, updatedResult);
+      toast.success('✅ União final reprocessada!');
+    } catch (err: any) {
+      console.error('[Studio] Erro ao reprocessar união final:', err);
+      toast.error('Falha ao reprocessar união final: ' + (err.message || String(err)));
+    } finally {
+      setIsReprocessingFinal(false);
+      setReprocessProgress('');
+    }
+  }, [activeResult, id, nodeData.config?.sceneTransitionDuration, sceneJoinTransition, sceneUrlsKey]);
 
   return (
     <>
@@ -2062,7 +2137,154 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                  </div>
               )}
 
-            {resultVideo && (
+            {hasMultiSceneResult ? (
+              <div className="px-3 pb-3 pt-1 space-y-3">
+                <div className="space-y-2">
+                  {sceneUrls.map((url, idx) => (
+                    <div key={`${url}-${idx}`} className="rounded-xl overflow-hidden border border-border/50 bg-muted/20" style={{ boxShadow: `0 4px 20px -4px ${accent}14` }}>
+                      <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-border/40">
+                        <span className="text-[10px] font-semibold text-foreground/80">Cena {idx + 1}</span>
+                        <a
+                          href={url}
+                          download={`cena-${idx + 1}.mp4`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 rounded-md bg-background/80 hover:bg-background transition-colors"
+                          title="Baixar cena"
+                        >
+                          <Download className="h-3 w-3" />
+                        </a>
+                      </div>
+                      <video
+                        src={url}
+                        controls
+                        controlsList="nofullscreen nodownload"
+                        disablePictureInPicture
+                        className="w-full object-cover studio-video-no-fullscreen"
+                        style={{ maxHeight: 180 }}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {hasFinalJoinedVideo && (
+                  <div className="rounded-xl overflow-hidden border border-primary/40 bg-primary/5 relative" style={{ boxShadow: `0 8px 24px -8px ${accent}30` }}>
+                    <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-primary/20">
+                      <span className="text-[10px] font-bold text-primary">Vídeo final unido</span>
+                      <div className="flex gap-1">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onPointerDown={(e) => e.stopPropagation()}
+                              onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                              className="p-1 rounded-md bg-background/80 hover:bg-background transition-colors"
+                              title="Download final"
+                            >
+                              <Download className="h-3 w-3" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={async () => {
+                              try {
+                                const resp = await fetch(resultVideo);
+                                const originalBlob = await resp.blob();
+                                const mp4Blob = await convertVideoToWhatsappMp4(originalBlob);
+                                triggerDownload(mp4Blob, `studio-final-${id}.mp4`);
+                              } catch {
+                                toast.error('Não foi possível baixar o vídeo final.');
+                              }
+                            }}>
+                              <Volume2 className="h-3.5 w-3.5 mr-2" /> Com áudio
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={async () => {
+                              try {
+                                const resp = await fetch(resultVideo);
+                                const originalBlob = await resp.blob();
+                                const mp4Blob = await removeAudioFromVideo(originalBlob);
+                                triggerDownload(mp4Blob, `studio-final-${id}_sem-audio.mp4`);
+                              } catch {
+                                toast.error('Não foi possível remover o áudio.');
+                              }
+                            }}>
+                              <VolumeX className="h-3.5 w-3.5 mr-2" /> Sem áudio
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setVideoPreviewOpen(true); }}
+                          className="p-1 rounded-md bg-background/80 hover:bg-background transition-colors"
+                          title="Expandir final"
+                        >
+                          <Maximize2 className="h-3 w-3" />
+                        </button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onPointerDown={(e) => e.stopPropagation()}
+                              onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                              disabled={isSavingToGallery}
+                              className="p-1 rounded-md bg-emerald-600/80 hover:bg-emerald-600 transition-colors disabled:opacity-60"
+                              title="Salvar final na galeria"
+                            >
+                              {isSavingToGallery ? <Loader2 className="h-3 w-3 text-white animate-spin" /> : <Save className="h-3 w-3 text-white" />}
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={() => resultVideo && handleSaveVideoToGallery(resultVideo, true)}>
+                              <Volume2 className="h-3.5 w-3.5 mr-2" /> Salvar com áudio
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => resultVideo && handleSaveVideoToGallery(resultVideo, false)}>
+                              <VolumeX className="h-3.5 w-3.5 mr-2" /> Salvar sem áudio
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                    <video
+                      src={resultVideo}
+                      controls
+                      controlsList="nofullscreen nodownload"
+                      disablePictureInPicture
+                      className="w-full object-cover studio-video-no-fullscreen"
+                      style={{ maxHeight: 210 }}
+                      onDoubleClick={(e) => { e.preventDefault(); setVideoPreviewOpen(true); }}
+                    />
+                  </div>
+                )}
+
+                <div className="rounded-xl border border-border/50 bg-muted/20 p-2.5 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={sceneJoinTransition}
+                      onChange={(e) => setSceneJoinTransition(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      disabled={isReprocessingFinal}
+                      className="nodrag nowheel flex-1 h-8 px-2 text-[11px] rounded-lg bg-background/80 border border-border/50 focus:outline-none focus:ring-1 focus:ring-primary/40"
+                    >
+                      {SCENE_TRANSITION_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleReprocessFinalVideo(); }}
+                      disabled={isReprocessingFinal}
+                      className="h-8 px-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60 text-[11px] font-semibold flex items-center gap-1.5"
+                    >
+                      {isReprocessingFinal ? <Loader2 className="h-3 w-3 animate-spin" /> : <Repeat className="h-3 w-3" />}
+                      Reprocessar final
+                    </button>
+                  </div>
+                  {(isReprocessingFinal || reprocessProgress) && (
+                    <p className="text-[10px] text-muted-foreground leading-snug break-words whitespace-pre-wrap">{reprocessProgress}</p>
+                  )}
+                </div>
+              </div>
+            ) : resultVideo && (
               <div className="relative group px-3 pb-3 pt-1">
                 <div 
                   className="rounded-xl overflow-hidden border border-border/50 relative"

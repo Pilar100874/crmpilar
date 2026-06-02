@@ -1500,8 +1500,12 @@ export function useStudioExecution() {
               text: `🎬 Vídeo gerado (1 cena)`,
               _isVideo: true,
               _sceneUrls: sceneVideoUrls,
+              _sceneDurations: sceneDurationsApplied,
             };
           }
+
+          const sceneTransition = (config.sceneTransition || 'fade') as any;
+          const sceneTransitionDuration = Number(config.sceneTransitionDuration) || 0.5;
 
           try {
             nodeResultStore.setResult(node.id, {
@@ -1509,8 +1513,6 @@ export function useStudioExecution() {
               _multiSceneProgress: { current: scenes.length, total: scenes.length, urls: sceneVideoUrls },
             });
             const { concatVideos, uploadConcatVideo } = await import('./videoConcat');
-            const sceneTransition = (config.sceneTransition || 'fade') as any;
-            const sceneTransitionDuration = Number(config.sceneTransitionDuration) || 0.5;
             const unifiedBlob = await concatVideos(
               sceneVideoUrls,
               (p) => {
@@ -1528,9 +1530,13 @@ export function useStudioExecution() {
             const unifiedUrl = await uploadConcatVideo(unifiedBlob, estabIdMS || '', supabase);
             return {
               videoUrl: unifiedUrl,
+              _finalVideoUrl: unifiedUrl,
               text: `🎬 Vídeo unificado gerado a partir de ${sceneVideoUrls.length} cenas`,
               _isVideo: true,
               _sceneUrls: sceneVideoUrls,
+              _sceneDurations: sceneDurationsApplied,
+              _sceneTransition: sceneTransition,
+              _sceneTransitionDuration: sceneTransitionDuration,
               _unified: true,
             };
           } catch (concatErr: any) {
@@ -1542,6 +1548,9 @@ export function useStudioExecution() {
               text: `⚠️ ${sceneVideoUrls.length} cenas geradas, mas a união falhou. URLs individuais salvas.`,
               _isVideo: true,
               _sceneUrls: sceneVideoUrls,
+              _sceneDurations: sceneDurationsApplied,
+              _sceneTransition: sceneTransition,
+              _sceneTransitionDuration: sceneTransitionDuration,
               _unified: false,
             };
           }
