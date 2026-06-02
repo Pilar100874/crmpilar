@@ -1387,11 +1387,42 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
 
         {/* Gallery select inline display */}
         {isGalleryType && (
-          <GallerySelectInline
-            categoria={(nodeData.config?.categoria as GalleryCategoryId) || galleryCategoryMap[nodeData.type] || 'salvas'}
-            config={nodeData.config}
-            onUpdate={handleInlineUpdate}
-          />
+          <>
+            {/* Categoria picker — só aparece para o bloco unificado gallerySalvas */}
+            {nodeData.type === 'gallerySalvas' && (
+              <div className="px-3 pt-1 pb-1">
+                <label className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold">Categoria</label>
+                <select
+                  value={(nodeData.config?.categoria as string) || 'salvas'}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    handleInlineUpdate('categoria', e.target.value);
+                    // limpa seleção anterior ao trocar categoria
+                    handleInlineUpdate('selectedImageUrl', '');
+                    handleInlineUpdate('selectedImageName', '');
+                    handleInlineUpdate('galleryImageId', '');
+                  }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  className="w-full h-7 mt-1 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-primary/40"
+                >
+                  <option value="salvas">📁 Imagens Salvas</option>
+                  <option value="influencer">👤 Influencer (prioridade alta — pessoa)</option>
+                  <option value="logo">⭐ Logo / Marca (não alterar)</option>
+                  <option value="roupa">👗 Roupa / Vestuário (não alterar)</option>
+                  <option value="pose">🤸 Pose / Composição</option>
+                  <option value="ambiente">🏔️ Ambiente / Cenário</option>
+                  <option value="estilo">🎨 Estilo Visual</option>
+                  <option value="paleta">🎨 Paleta de Cores</option>
+                  <option value="textura">🧱 Textura / Material</option>
+                </select>
+              </div>
+            )}
+            <GallerySelectInline
+              categoria={(nodeData.config?.categoria as GalleryCategoryId) || galleryCategoryMap[nodeData.type] || 'salvas'}
+              config={nodeData.config}
+              onUpdate={handleInlineUpdate}
+            />
+          </>
         )}
 
         {/* Media Gallery inline selector */}
