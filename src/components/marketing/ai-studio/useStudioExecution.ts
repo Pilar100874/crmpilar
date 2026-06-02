@@ -440,7 +440,10 @@ export function useStudioExecution() {
     const formatPlatform = formatInput?._formatPlatform;
     const formatContentType = formatInput?._formatContentType;
 
-    const systemPrompts = inputs.filter((i) => i?._isSystemPrompt).map((i) => i.text);
+    const systemPrompts = inputs
+      .filter((i) => i?._isSystemPrompt || i?._systemPrompt)
+      .map((i) => i._isSystemPrompt ? i.text : i._systemPrompt)
+      .filter(Boolean);
     const systemPrompt = systemPrompts.length > 0 ? systemPrompts.join('\n') : undefined;
 
     // Collect TEXT LOCK directives from imageCaption nodes — these MUST be rendered exactly as provided
