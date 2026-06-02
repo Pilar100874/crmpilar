@@ -1115,6 +1115,42 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     }
   }, [activeResult, id, nodeData.config?.sceneTransitionDuration, sceneJoinTransition, sceneUrlsKey]);
 
+  const handleRegenerateScene = useCallback(async (sceneIndex: number) => {
+    const regenParamsList: Record<string, any>[] | undefined = activeResult?._sceneRegenParams;
+    if (!regenParamsList || !regenParamsList[sceneIndex]) {
+      toast.error('Não foi possível refazer: parâmetros da cena indisponíveis. Re-execute o bloco para habilitar.');
+      return;
+    }
+    setRegenSceneIdx(sceneIndex);
+    setRegenSceneProgress('Iniciando nova geração...');
+    try {
+      const newUrl = await regenerateSceneVideo(
+        regenParamsList[sceneIndex],
+        (p) => setRegenSceneProgress(p.message || 'Renderizando...'),
+      );
+      const newSceneUrls = [...sceneUrls];
+      newSceneUrls[sceneIndex] = newUrl;
+      const updatedResult = {
+        ...(activeResult || {}),
+        _sceneUrls: newSceneUrls,
+        // Invalida o vídeo final unido — o usuário precisa reprocessar
+        _finalVideoUrl: undefined,
+        videoUrl: newSceneUrls[0],
+        _unified: false,
+        text: `🎬 Cena ${sceneIndex + 1} refeita. Clique em "Reprocessar final" para unir novamente.`,
+      };
+      nodeResultStore.setResult(id, updatedResult);
+      dispatchResultUpdate(id, updatedResult);
+      toast.success(`✅ Cena ${sceneIndex + 1} refeita com sucesso!`);
+    } catch (err: any) {
+      console.error('[Studio] Erro ao refazer cena:', err);
+      toast.error(`Falha ao refazer cena ${sceneIndex + 1}: ${err.message || String(err)}`);
+    } finally {
+      setRegenSceneIdx(null);
+      setRegenSceneProgress('');
+    }
+  }, [activeResult, id, sceneUrls, sceneUrlsKey]);
+
   return (
     <>
     <div
