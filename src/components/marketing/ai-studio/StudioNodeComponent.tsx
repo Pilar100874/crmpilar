@@ -1061,6 +1061,55 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     }
   }, [id, nodeData.type, nodeData.label, downloadAsBlob]);
 
+  const handleReprocessFinalVideo = useCallback(async () => {
+    if (sceneUrls.length < 2) {
+      toast.error('É necessário ter pelo menos 2 cenas para refazer a união.');
+      return;
+    }
+    const estabId = localStorage.getItem('estabelecimentoId') || '';
+    const transitionDuration = Number(activeResult?._sceneTransitionDuration || nodeData.config?.sceneTransitionDuration || 0.5);
+    const sceneDurations = Array.isArray(activeResult?._sceneDurations) && activeResult._sceneDurations.length === sceneUrls.length
+      ? activeResult._sceneDurations
+      : undefined;
+
+    setIsReprocessingFinal(true);
+    setReprocessProgress('Preparando nova união...');
+    try {
+      const { concatVideos, uploadConcatVideo } = await import('./videoConcat');
+      const blob = await concatVideos(
+        sceneUrls,
+        (p) => setReprocessProgress(p.message || 'Unindo cenas...'),
+        {
+          transition: sceneJoinTransition as any,
+          transitionDurationSec: transitionDuration,
+          sceneDurationsSec: sceneDurations,
+        },
+      );
+      const finalUrl = await uploadConcatVideo(blob, estabId, supabase);
+      const updatedResult = {
+        ...(activeResult || {}),
+        videoUrl: finalUrl,
+        _finalVideoUrl: finalUrl,
+        text: `🎬 Vídeo final reprocessado com efeito ${SCENE_TRANSITION_OPTIONS.find((o) => o.value === sceneJoinTransition)?.label || sceneJoinTransition}`,
+        _isVideo: true,
+        _sceneUrls: sceneUrls,
+        _sceneDurations: sceneDurations,
+        _sceneTransition: sceneJoinTransition,
+        _sceneTransitionDuration: transitionDuration,
+        _unified: true,
+      };
+      nodeResultStore.setResult(id, updatedResult);
+      dispatchResultUpdate(id, updatedResult);
+      toast.success('✅ União final reprocessada!');
+    } catch (err: any) {
+      console.error('[Studio] Erro ao reprocessar união final:', err);
+      toast.error('Falha ao reprocessar união final: ' + (err.message || String(err)));
+    } finally {
+      setIsReprocessingFinal(false);
+      setReprocessProgress('');
+    }
+  }, [activeResult, id, nodeData.config?.sceneTransitionDuration, sceneJoinTransition, sceneUrls]);
+
   return (
     <>
     <div
