@@ -744,6 +744,7 @@ export function useStudioExecution() {
             const parts = [`CENA ${s.n}${s.duration ? ` (${s.duration}s)` : ''}: ${s.description}`];
             if (s.cameraMovement) parts.push(`  • Câmera: ${s.cameraMovement}`);
             if (s.narration) parts.push(`  • Narração: ${s.narration}`);
+            if (s.audioText) parts.push(`  • Texto do áudio: ${s.audioText}`);
             if (s.voiceTone) parts.push(`  • Tom de voz: ${s.voiceTone}`);
             if (s.soundtrack) parts.push(`  • Trilha: ${s.soundtrack}${s.soundtrackIntensity ? ` (intensidade ${s.soundtrackIntensity})` : ''}`);
             if (s.ambientSound) parts.push(`  • Ambiente sonoro: ${s.ambientSound}`);
