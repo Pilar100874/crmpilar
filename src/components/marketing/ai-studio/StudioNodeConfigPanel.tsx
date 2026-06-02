@@ -15,6 +15,31 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  SOUNDTRACK_PRESETS,
+  SOUNDTRACK_INTENSITIES,
+  VOICE_TONES,
+  AMBIENT_SOUNDS,
+  SFX_PRESETS,
+} from './audioPresets';
+
+// Helper para renderizar <datalist> reutilizáveis para os campos de áudio
+const AudioDatalists = () => (
+  <>
+    <datalist id="audio-preset-soundtrack">
+      {SOUNDTRACK_PRESETS.map((v) => <option key={v} value={v} />)}
+    </datalist>
+    <datalist id="audio-preset-voice">
+      {VOICE_TONES.map((v) => <option key={v} value={v} />)}
+    </datalist>
+    <datalist id="audio-preset-ambient">
+      {AMBIENT_SOUNDS.map((v) => <option key={v} value={v} />)}
+    </datalist>
+    <datalist id="audio-preset-sfx">
+      {SFX_PRESETS.map((v) => <option key={v} value={v} />)}
+    </datalist>
+  </>
+);
 
 interface Props {
   node: StudioNode;
@@ -528,6 +553,7 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
       sfx: Array.isArray(s.sfx) && s.sfx.length ? s.sfx : (s.sfx ? [String(s.sfx)] : globalSfx),
       ambientSound: s.ambiente_sonoro || s.ambiente || '',
       voiceTone: s.tom_voz || globalVoiceTone,
+      audioText: s.texto_audio || s.audio_texto || s.narracao_voz || '',
     });
 
     // 1) Formato novo: cenas_ai_video (preferido — já pronto p/ AI Studio)
@@ -727,6 +753,7 @@ function ReelScriptStrategyImporter({ onImport }: { onImport: (scenes: any[], la
       sfx: Array.isArray(s.sfx) ? s.sfx : (s.sfx ? [String(s.sfx)] : []),
       ambientSound: s.ambiente_sonoro || '',
       voiceTone: s.tom_voz || '',
+      audioText: s.texto_audio || s.audio_texto || s.narracao_voz || '',
     })).filter((s: any) => s.description || s.narration);
 
 
@@ -2731,20 +2758,35 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   />
                   <div className="rounded-md border border-amber-500/20 bg-amber-500/5 p-2 space-y-1.5">
                     <div className="text-[10px] font-bold text-amber-400">🎵 Áudio & Sound Design</div>
+                    <AudioDatalists />
+                    <Textarea
+                      value={s.audioText || ''}
+                      onChange={(e) => updateScene(idx, { audioText: e.target.value })}
+                      placeholder="📝 Texto do áudio (o que será falado/cantado na cena)"
+                      rows={2}
+                      className="text-[11px]"
+                    />
                     <Input
+                      list="audio-preset-soundtrack"
                       value={s.soundtrack || ''}
                       onChange={(e) => updateScene(idx, { soundtrack: e.target.value })}
                       placeholder="Trilha (ex: lo-fi calmo, épico orquestral, house 120bpm)"
                       className="h-7 text-[11px]"
                     />
                     <div className="grid grid-cols-2 gap-2">
-                      <Input
+                      <Select
                         value={s.soundtrackIntensity || ''}
-                        onChange={(e) => updateScene(idx, { soundtrackIntensity: e.target.value })}
-                        placeholder="Intensidade"
-                        className="h-7 text-[11px]"
-                      />
+                        onValueChange={(v) => updateScene(idx, { soundtrackIntensity: v })}
+                      >
+                        <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="Intensidade" /></SelectTrigger>
+                        <SelectContent>
+                          {SOUNDTRACK_INTENSITIES.map((opt) => (
+                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <Input
+                        list="audio-preset-voice"
                         value={s.voiceTone || ''}
                         onChange={(e) => updateScene(idx, { voiceTone: e.target.value })}
                         placeholder="Tom de voz"
@@ -2752,12 +2794,14 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                       />
                     </div>
                     <Input
+                      list="audio-preset-ambient"
                       value={s.ambientSound || ''}
                       onChange={(e) => updateScene(idx, { ambientSound: e.target.value })}
                       placeholder="Ambiente sonoro (café, vento, rua...)"
                       className="h-7 text-[11px]"
                     />
                     <Input
+                      list="audio-preset-sfx"
                       value={Array.isArray(s.sfx) ? s.sfx.join(', ') : (s.sfx || '')}
                       onChange={(e) => updateScene(idx, { sfx: e.target.value.split(',').map((x: string) => x.trim()).filter(Boolean) })}
                       placeholder="SFX separados por vírgula (whoosh, click, passos...)"
@@ -2887,20 +2931,35 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   />
                   <div className="rounded-md border border-amber-500/20 bg-amber-500/5 p-2 space-y-1.5">
                     <div className="text-[10px] font-bold text-amber-400">🎵 Áudio & Sound Design</div>
+                    <AudioDatalists />
+                    <Textarea
+                      value={s.audioText || ''}
+                      onChange={(e) => updateScene(idx, { audioText: e.target.value })}
+                      placeholder="📝 Texto do áudio (o que será falado/cantado na cena)"
+                      rows={2}
+                      className="text-[11px]"
+                    />
                     <Input
+                      list="audio-preset-soundtrack"
                       value={s.soundtrack || ''}
                       onChange={(e) => updateScene(idx, { soundtrack: e.target.value })}
                       placeholder="Trilha (estilo musical)"
                       className="h-7 text-[11px]"
                     />
                     <div className="grid grid-cols-2 gap-2">
-                      <Input
+                      <Select
                         value={s.soundtrackIntensity || ''}
-                        onChange={(e) => updateScene(idx, { soundtrackIntensity: e.target.value })}
-                        placeholder="Intensidade"
-                        className="h-7 text-[11px]"
-                      />
+                        onValueChange={(v) => updateScene(idx, { soundtrackIntensity: v })}
+                      >
+                        <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="Intensidade" /></SelectTrigger>
+                        <SelectContent>
+                          {SOUNDTRACK_INTENSITIES.map((opt) => (
+                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <Input
+                        list="audio-preset-voice"
                         value={s.voiceTone || ''}
                         onChange={(e) => updateScene(idx, { voiceTone: e.target.value })}
                         placeholder="Tom de voz"
@@ -2908,12 +2967,14 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                       />
                     </div>
                     <Input
+                      list="audio-preset-ambient"
                       value={s.ambientSound || ''}
                       onChange={(e) => updateScene(idx, { ambientSound: e.target.value })}
                       placeholder="Ambiente sonoro"
                       className="h-7 text-[11px]"
                     />
                     <Input
+                      list="audio-preset-sfx"
                       value={Array.isArray(s.sfx) ? s.sfx.join(', ') : (s.sfx || '')}
                       onChange={(e) => updateScene(idx, { sfx: e.target.value.split(',').map((x: string) => x.trim()).filter(Boolean) })}
                       placeholder="SFX (vírgula): whoosh, click..."

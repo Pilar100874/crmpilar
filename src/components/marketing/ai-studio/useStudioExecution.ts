@@ -731,6 +731,7 @@ export function useStudioExecution() {
             sfx: Array.isArray(s?.sfx) ? s.sfx : (s?.sfx ? [String(s.sfx)] : []),
             ambientSound: (s?.ambientSound || '').trim(),
             voiceTone: (s?.voiceTone || '').trim(),
+            audioText: (s?.audioText || '').trim(),
           }))
           .filter((s) => s.description || s.narration);
         const globalNotes = (config.globalNotes || '').trim();
@@ -743,6 +744,7 @@ export function useStudioExecution() {
             const parts = [`CENA ${s.n}${s.duration ? ` (${s.duration}s)` : ''}: ${s.description}`];
             if (s.cameraMovement) parts.push(`  • Câmera: ${s.cameraMovement}`);
             if (s.narration) parts.push(`  • Narração: ${s.narration}`);
+            if (s.audioText) parts.push(`  • Texto do áudio: ${s.audioText}`);
             if (s.voiceTone) parts.push(`  • Tom de voz: ${s.voiceTone}`);
             if (s.soundtrack) parts.push(`  • Trilha: ${s.soundtrack}${s.soundtrackIntensity ? ` (intensidade ${s.soundtrackIntensity})` : ''}`);
             if (s.ambientSound) parts.push(`  • Ambiente sonoro: ${s.ambientSound}`);
@@ -1367,7 +1369,7 @@ export function useStudioExecution() {
 
           const scenes = videoScriptInput.videoScript.scenes as Array<{
             n: number; description: string; duration: number; narration: string; cameraMovement: string;
-            soundtrack?: string; soundtrackIntensity?: string; sfx?: string[]; ambientSound?: string; voiceTone?: string;
+            soundtrack?: string; soundtrackIntensity?: string; sfx?: string[]; ambientSound?: string; voiceTone?: string; audioText?: string;
           }>;
 
           const globalNotes = (videoScriptInput.videoScript.globalNotes || '').trim();
@@ -1430,6 +1432,7 @@ export function useStudioExecution() {
               `📝 DESCRIÇÃO DA CENA: ${scene.description}`,
               scene.cameraMovement ? `\n🎥 MOVIMENTO DE CÂMERA: ${scene.cameraMovement}` : '',
               scene.narration ? `\n🔊 NARRAÇÃO: ${scene.narration}` : '',
+              scene.audioText ? `\n📝 TEXTO DO ÁUDIO (fala/letra exata): "${scene.audioText}"` : '',
               scene.voiceTone ? `\n🎙️ TOM DE VOZ: ${scene.voiceTone}` : '',
               scene.soundtrack ? `\n🎵 TRILHA SONORA: ${scene.soundtrack}${scene.soundtrackIntensity ? ` (intensidade ${scene.soundtrackIntensity})` : ''}` : '',
               scene.ambientSound ? `\n🌬️ AMBIENTE SONORO: ${scene.ambientSound}` : '',
