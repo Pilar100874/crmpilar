@@ -1117,7 +1117,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     }
   }, [activeResult, id, nodeData.config?.sceneTransitionDuration, sceneJoinTransition, sceneUrlsKey]);
 
-  const handleRegenerateScene = useCallback(async (sceneIndex: number) => {
+  const handleRegenerateScene = useCallback(async (sceneIndex: number, adjustment?: string) => {
     const regenParamsList: Record<string, any>[] | undefined = activeResult?._sceneRegenParams;
     if (!regenParamsList || !regenParamsList[sceneIndex]) {
       toast.error('Não foi possível refazer: parâmetros da cena indisponíveis. Re-execute o bloco para habilitar.');
@@ -1126,20 +1126,32 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     setRegenSceneIdx(sceneIndex);
     setRegenSceneProgress('Iniciando nova geração...');
     try {
+      const baseParams = regenParamsList[sceneIndex];
+      const adj = (adjustment || '').trim();
+      const mergedParams = adj
+        ? {
+            ...baseParams,
+            prompt: `${baseParams.prompt || ''}\n\n[AJUSTES SOLICITADOS PELO USUÁRIO — APLIQUE COM PRIORIDADE]: ${adj}`.trim(),
+          }
+        : baseParams;
       const newUrl = await regenerateSceneVideo(
-        regenParamsList[sceneIndex],
+        mergedParams,
         (p) => setRegenSceneProgress(p.message || 'Renderizando...'),
       );
       const newSceneUrls = [...sceneUrls];
       newSceneUrls[sceneIndex] = newUrl;
+      // Persiste o prompt ajustado para futuras refacões da mesma cena
+      const newRegenParams = [...regenParamsList];
+      if (adj) newRegenParams[sceneIndex] = mergedParams;
       const updatedResult = {
         ...(activeResult || {}),
         _sceneUrls: newSceneUrls,
+        _sceneRegenParams: newRegenParams,
         // Invalida o vídeo final unido — o usuário precisa reprocessar
         _finalVideoUrl: undefined,
         videoUrl: newSceneUrls[0],
         _unified: false,
-        text: `🎬 Cena ${sceneIndex + 1} refeita. Clique em "Reprocessar final" para unir novamente.`,
+        text: `🎬 Cena ${sceneIndex + 1} refeita${adj ? ' com ajustes' : ''}. Clique em "Reprocessar final" para unir novamente.`,
       };
       nodeResultStore.setResult(id, updatedResult);
       dispatchResultUpdate(id, updatedResult);
@@ -1150,8 +1162,11 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     } finally {
       setRegenSceneIdx(null);
       setRegenSceneProgress('');
+      setRegenPromptOpenIdx(null);
+      setRegenAdjustText('');
     }
   }, [activeResult, id, sceneUrls, sceneUrlsKey]);
+
 
   return (
     <>
