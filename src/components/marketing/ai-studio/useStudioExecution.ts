@@ -1369,7 +1369,7 @@ export function useStudioExecution() {
 
           const scenes = videoScriptInput.videoScript.scenes as Array<{
             n: number; description: string; duration: number; narration: string; cameraMovement: string;
-            soundtrack?: string; soundtrackIntensity?: string; sfx?: string[]; ambientSound?: string; voiceTone?: string;
+            soundtrack?: string; soundtrackIntensity?: string; sfx?: string[]; ambientSound?: string; voiceTone?: string; audioText?: string;
           }>;
 
           const globalNotes = (videoScriptInput.videoScript.globalNotes || '').trim();
