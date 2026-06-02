@@ -15,31 +15,95 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ListPlus } from 'lucide-react';
 import {
   SOUNDTRACK_PRESETS,
   SOUNDTRACK_INTENSITIES,
   VOICE_TONES,
   AMBIENT_SOUNDS,
   SFX_PRESETS,
+  type AudioPreset,
 } from './audioPresets';
 
-// Helper para renderizar <datalist> reutilizáveis para os campos de áudio
-const AudioDatalists = () => (
-  <>
-    <datalist id="audio-preset-soundtrack">
-      {SOUNDTRACK_PRESETS.map((v) => <option key={v} value={v} />)}
-    </datalist>
-    <datalist id="audio-preset-voice">
-      {VOICE_TONES.map((v) => <option key={v} value={v} />)}
-    </datalist>
-    <datalist id="audio-preset-ambient">
-      {AMBIENT_SOUNDS.map((v) => <option key={v} value={v} />)}
-    </datalist>
-    <datalist id="audio-preset-sfx">
-      {SFX_PRESETS.map((v) => <option key={v} value={v} />)}
-    </datalist>
-  </>
-);
+// Botão "Ver opções" que abre um popover com presets explicados.
+// `multi=true` permite selecionar várias opções (ex: SFX), separadas por vírgula.
+// `multi=false` substitui o valor atual pela opção escolhida (ex: trilha, tom de voz).
+function PresetPickerButton({
+  presets,
+  value,
+  onChange,
+  multi = false,
+  title,
+}: {
+  presets: AudioPreset[];
+  value: string;
+  onChange: (v: string) => void;
+  multi?: boolean;
+  title: string;
+}) {
+  const selected = multi
+    ? value.split(',').map((s) => s.trim()).filter(Boolean)
+    : [value.trim()].filter(Boolean);
+  const isSelected = (v: string) => selected.includes(v);
+  const toggle = (v: string) => {
+    if (multi) {
+      const set = new Set(selected);
+      if (set.has(v)) set.delete(v); else set.add(v);
+      onChange(Array.from(set).join(', '));
+    } else {
+      onChange(isSelected(v) ? '' : v);
+    }
+  };
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-[10px] gap-1 text-amber-300 hover:text-amber-200 hover:bg-amber-500/10"
+        >
+          <ListPlus className="h-3 w-3" />
+          Opções
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-[340px] p-2 max-h-[320px] overflow-y-auto">
+        <div className="text-[11px] font-bold mb-1.5 text-foreground">
+          {title} {multi && <span className="text-muted-foreground font-normal">(escolha 1+)</span>}
+        </div>
+        <div className="space-y-1">
+          {presets.map((p) => {
+            const sel = isSelected(p.value);
+            return (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => toggle(p.value)}
+                className={`w-full text-left rounded-md border p-2 transition-colors ${
+                  sel
+                    ? 'border-amber-500/60 bg-amber-500/10'
+                    : 'border-border/40 hover:border-amber-500/40 hover:bg-muted/40'
+                }`}
+              >
+                <div className="flex items-start gap-2">
+                  {multi && (
+                    <Checkbox checked={sel} className="mt-0.5 pointer-events-none" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[11px] font-semibold">{p.value}</div>
+                    <div className="text-[10px] text-muted-foreground leading-snug">{p.description}</div>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 interface Props {
   node: StudioNode;
