@@ -6,13 +6,14 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
-// Carregamento local desabilitado: @ffmpeg/core não expõe deep imports via package exports.
-// Usamos apenas CDNs (com fallback entre vários provedores).
+// O core do FFmpeg fica em /public/ffmpeg para não depender de CDNs no navegador.
+// Mantemos CDNs apenas como último fallback caso os arquivos estáticos não carreguem.
 
 let _ffmpegInstance: FFmpeg | null = null;
 let _loadingPromise: Promise<FFmpeg> | null = null;
 
-const CDN_BASES = [
+const FFMPEG_BASES = [
+  '/ffmpeg',
   'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd',
   'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd',
   'https://fastly.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd',
@@ -27,10 +28,10 @@ async function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise
 
 async function loadFromBase(baseURL: string, onProgress?: (p: ConcatProgress) => void): Promise<FFmpeg> {
   const ffmpeg = new FFmpeg();
-  onProgress?.({ stage: 'loading', message: 'Preparando ferramentas de vídeo…' });
+  onProgress?.({ stage: 'loading', message: baseURL.startsWith('/') ? 'Carregando motor local de vídeo…' : 'Tentando motor de vídeo alternativo…' });
   const coreURL = await withTimeout(toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'), 30000, 'componentes de vídeo');
   const wasmURL = await withTimeout(toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'), 60000, 'componentes de vídeo');
-  await withTimeout(ffmpeg.load({ coreURL, wasmURL }), 30000, 'componentes de vídeo');
+  await withTimeout(ffmpeg.load({ coreURL, wasmURL }), 45000, 'componentes de vídeo');
   return ffmpeg;
 }
 
@@ -40,7 +41,7 @@ async function getFFmpeg(onProgress?: (p: ConcatProgress) => void): Promise<FFmp
 
   _loadingPromise = (async () => {
     let lastErr: any;
-    for (const base of CDN_BASES) {
+    for (const base of FFMPEG_BASES) {
       try {
         const ff = await loadFromBase(base, onProgress);
         _ffmpegInstance = ff;
