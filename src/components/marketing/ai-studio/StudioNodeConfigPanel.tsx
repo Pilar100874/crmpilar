@@ -553,6 +553,7 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
       sfx: Array.isArray(s.sfx) && s.sfx.length ? s.sfx : (s.sfx ? [String(s.sfx)] : globalSfx),
       ambientSound: s.ambiente_sonoro || s.ambiente || '',
       voiceTone: s.tom_voz || globalVoiceTone,
+      audioText: s.texto_audio || s.audio_texto || s.narracao_voz || '',
     });
 
     // 1) Formato novo: cenas_ai_video (preferido — já pronto p/ AI Studio)
