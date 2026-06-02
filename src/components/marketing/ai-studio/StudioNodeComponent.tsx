@@ -4,7 +4,7 @@ import { GalleryFolderTabs } from '@/components/ui/GalleryFolderTabs';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from '@xyflow/react';
 import { StudioNodeData, getNodeMeta } from './types';
 import { useVisualIdentityActive } from './VisualIdentityPanel';
-import { useNodeResult } from './useNodeResults';
+import { nodeResultStore, useNodeResult } from './useNodeResults';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
@@ -183,6 +183,17 @@ const nodeAccentMap: Record<string, string> = {
 };
 // Blocks that REQUIRE paid external APIs (no free alternative)
 const PAID_ONLY_BLOCKS: Set<string> = new Set(['musicGen', 'lipSync', 'videoMerge']);
+
+const SCENE_TRANSITION_OPTIONS = [
+  { value: 'fade', label: 'Fade suave' },
+  { value: 'dissolve', label: 'Dissolver' },
+  { value: 'wipeleft', label: 'Cortina esquerda' },
+  { value: 'wiperight', label: 'Cortina direita' },
+  { value: 'slideleft', label: 'Deslizar esquerda' },
+  { value: 'slideright', label: 'Deslizar direita' },
+  { value: 'circleopen', label: 'Círculo abre' },
+  { value: 'radial', label: 'Radial' },
+];
 
 // Helper: dispatch config update via custom event (avoids prop drilling through ReactFlow)
 const dispatchConfigUpdate = (nodeId: string, config: Record<string, any>) => {
