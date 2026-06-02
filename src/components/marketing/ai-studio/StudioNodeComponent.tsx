@@ -200,6 +200,10 @@ const dispatchConfigUpdate = (nodeId: string, config: Record<string, any>) => {
   window.dispatchEvent(new CustomEvent('studio-node-config-update', { detail: { nodeId, config } }));
 };
 
+const dispatchResultUpdate = (nodeId: string, result: Record<string, any>) => {
+  window.dispatchEvent(new CustomEvent('studio-node-result-update', { detail: { nodeId, result } }));
+};
+
 // Inline product image selector component
 const ProductImageSelectInline: React.FC<{ config: Record<string, any>; onUpdate: (key: string, value: any) => void }> = ({ config, onUpdate }) => {
   const [products, setProducts] = useState<any[]>([]);
