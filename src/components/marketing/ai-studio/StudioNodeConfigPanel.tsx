@@ -2929,20 +2929,35 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   />
                   <div className="rounded-md border border-amber-500/20 bg-amber-500/5 p-2 space-y-1.5">
                     <div className="text-[10px] font-bold text-amber-400">🎵 Áudio & Sound Design</div>
+                    <AudioDatalists />
+                    <Textarea
+                      value={s.audioText || ''}
+                      onChange={(e) => updateScene(idx, { audioText: e.target.value })}
+                      placeholder="📝 Texto do áudio (o que será falado/cantado na cena)"
+                      rows={2}
+                      className="text-[11px]"
+                    />
                     <Input
+                      list="audio-preset-soundtrack"
                       value={s.soundtrack || ''}
                       onChange={(e) => updateScene(idx, { soundtrack: e.target.value })}
                       placeholder="Trilha (estilo musical)"
                       className="h-7 text-[11px]"
                     />
                     <div className="grid grid-cols-2 gap-2">
-                      <Input
+                      <Select
                         value={s.soundtrackIntensity || ''}
-                        onChange={(e) => updateScene(idx, { soundtrackIntensity: e.target.value })}
-                        placeholder="Intensidade"
-                        className="h-7 text-[11px]"
-                      />
+                        onValueChange={(v) => updateScene(idx, { soundtrackIntensity: v })}
+                      >
+                        <SelectTrigger className="h-7 text-[11px]"><SelectValue placeholder="Intensidade" /></SelectTrigger>
+                        <SelectContent>
+                          {SOUNDTRACK_INTENSITIES.map((opt) => (
+                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <Input
+                        list="audio-preset-voice"
                         value={s.voiceTone || ''}
                         onChange={(e) => updateScene(idx, { voiceTone: e.target.value })}
                         placeholder="Tom de voz"
@@ -2950,12 +2965,14 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                       />
                     </div>
                     <Input
+                      list="audio-preset-ambient"
                       value={s.ambientSound || ''}
                       onChange={(e) => updateScene(idx, { ambientSound: e.target.value })}
                       placeholder="Ambiente sonoro"
                       className="h-7 text-[11px]"
                     />
                     <Input
+                      list="audio-preset-sfx"
                       value={Array.isArray(s.sfx) ? s.sfx.join(', ') : (s.sfx || '')}
                       onChange={(e) => updateScene(idx, { sfx: e.target.value.split(',').map((x: string) => x.trim()).filter(Boolean) })}
                       placeholder="SFX (vírgula): whoosh, click..."
