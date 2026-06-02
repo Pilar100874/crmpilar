@@ -14,6 +14,7 @@ import GallerySelectInline from './GallerySelectInline';
 import MediaGallerySelectInline from './MediaGallerySelectInline';
 import { GalleryCategoryId } from './StudioGalleryManager';
 import VideoTrimmer from './VideoTrimmer';
+import { regenerateSceneVideo } from './studioVideoClient';
 import { 
   Loader2, Play, Maximize2, Image as ImageIcon, Film, Music, Type, 
   MoreHorizontal, GripVertical, Mic, Wand2, FileText, Clapperboard,
