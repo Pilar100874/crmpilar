@@ -1366,16 +1366,16 @@ const AICreativeStudioInner: React.FC = () => {
 
     if (targetType === 'productComposite') {
       const personNode: StudioNode = {
-        id: `imageInput_person_${ts}`,
+        id: `multiImageRef_person_${ts}`,
         type: 'studioNode',
         position: { x: 50, y: 100 },
-        data: { label: '📷 Foto da Pessoa', type: 'imageInput', config: {} },
+        data: { label: '📷 Foto da Pessoa', type: 'multiImageRef', config: { images: [], referenceRole: 'pessoa' } },
       };
       const productNode: StudioNode = {
-        id: `imageInput_product_${ts}`,
+        id: `multiProductSelect_${ts}`,
         type: 'studioNode',
         position: { x: 50, y: 350 },
-        data: { label: '🛍️ Foto do Produto', type: 'imageInput', config: {} },
+        data: { label: '🛍️ Produtos', type: 'multiProductSelect', config: { products: [] } },
       };
       const promptNode: StudioNode = {
         id: `textInput_${ts}`,
@@ -1420,30 +1420,17 @@ const AICreativeStudioInner: React.FC = () => {
           { id: `e_${inputNode.id}_${processNode.id}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'studioEdge' },
         );
 
-        // Add reference blocks for each variation
+        // Add reference blocks for each variation (usa blocos UNIFICADOS)
         if (targetType === 'imageGen' || targetType === 'videoGen') {
           const refBlocks = preset.referenceBlocks || [];
-          const blockMeta: Record<string, { labelPrefix: string; type: string }> = {
-            'productImageSelect': { labelPrefix: '📦 Produto', type: 'productImageSelect' },
-            'galleryInfluencer': { labelPrefix: '👤 Influencer', type: 'galleryInfluencer' },
-            'galleryLogo': { labelPrefix: '🏷️ Logo', type: 'galleryLogo' },
-            'galleryRoupa': { labelPrefix: '👗 Roupa', type: 'galleryRoupa' },
-            'galleryPose': { labelPrefix: '🤸 Pose', type: 'galleryPose' },
-            'galleryAmbiente': { labelPrefix: '🏔️ Ambiente', type: 'galleryAmbiente' },
-            'galleryEstilo': { labelPrefix: '🎨 Estilo', type: 'galleryEstilo' },
-            'galleryTextura': { labelPrefix: '🧱 Textura', type: 'galleryTextura' },
-            'galleryPaleta': { labelPrefix: '🎨 Paleta', type: 'galleryPaleta' },
-            'imageInput': { labelPrefix: '🖼️ Referência', type: 'imageInput' },
-          };
-          refBlocks.forEach((blockType, idx) => {
-            const bm = blockMeta[blockType];
-            if (!bm) return;
-            const nodeMeta = getNodeMeta(bm.type as any);
+          refBlocks.forEach((blockId, idx) => {
+            const spec = resolveReferenceBlockSpec(blockId);
+            if (!spec) return;
             const refNode: StudioNode = {
-              id: `${bm.type}_v${vIdx}_${ts}_${idx}`,
+              id: `${spec.type}_v${vIdx}_${ts}_${idx}`,
               type: 'studioNode',
               position: { x: 100, y: yPos + 120 + idx * 100 },
-              data: { label: bm.labelPrefix, type: bm.type as any, config: nodeMeta?.defaultConfig ? { ...nodeMeta.defaultConfig } : {} },
+              data: { label: spec.label, type: spec.type as any, config: { ...spec.config } },
             };
             newNodes.push(refNode);
             newEdges.push(
@@ -1472,29 +1459,14 @@ const AICreativeStudioInner: React.FC = () => {
 
       if (targetType === 'imageGen' || targetType === 'videoGen') {
         const refBlocks = preset.referenceBlocks || [];
-        
-        const blockMeta: Record<string, { labelPrefix: string; type: string }> = {
-          'productImageSelect': { labelPrefix: '📦 Produto', type: 'productImageSelect' },
-          'galleryInfluencer': { labelPrefix: '👤 Influencer', type: 'galleryInfluencer' },
-          'galleryLogo': { labelPrefix: '🏷️ Logo', type: 'galleryLogo' },
-          'galleryRoupa': { labelPrefix: '👗 Roupa', type: 'galleryRoupa' },
-          'galleryPose': { labelPrefix: '🤸 Pose', type: 'galleryPose' },
-          'galleryAmbiente': { labelPrefix: '🏔️ Ambiente', type: 'galleryAmbiente' },
-          'galleryEstilo': { labelPrefix: '🎨 Estilo', type: 'galleryEstilo' },
-          'galleryTextura': { labelPrefix: '🧱 Textura', type: 'galleryTextura' },
-          'galleryPaleta': { labelPrefix: '🎨 Paleta', type: 'galleryPaleta' },
-          'imageInput': { labelPrefix: '🖼️ Referência', type: 'imageInput' },
-        };
-
-        refBlocks.forEach((blockType, idx) => {
-          const bm = blockMeta[blockType];
-          if (!bm) return;
-          const nodeMeta = getNodeMeta(bm.type as any);
+        refBlocks.forEach((blockId, idx) => {
+          const spec = resolveReferenceBlockSpec(blockId);
+          if (!spec) return;
           const refNode: StudioNode = {
-            id: `${bm.type}_${ts}_${idx}`,
+            id: `${spec.type}_${ts}_${idx}`,
             type: 'studioNode',
             position: { x: 100, y: 400 + idx * 200 },
-            data: { label: bm.labelPrefix, type: bm.type as any, config: nodeMeta?.defaultConfig ? { ...nodeMeta.defaultConfig } : {} },
+            data: { label: spec.label, type: spec.type as any, config: { ...spec.config } },
           };
           newNodes.push(refNode);
           newEdges.push(
@@ -1503,6 +1475,7 @@ const AICreativeStudioInner: React.FC = () => {
         });
       }
     }
+
 
     applyPresetToCanvas(newNodes, newEdges, preset.name, false);
   }, [setNodes, setEdges, reloadingPresetNodeId]);
