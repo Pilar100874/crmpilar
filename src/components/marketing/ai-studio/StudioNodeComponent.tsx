@@ -812,6 +812,8 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const resultText = typeof activeResult === 'string'
     ? activeResult
     : activeResult?.text;
+  const sceneUrls: string[] = Array.isArray(activeResult?._sceneUrls) ? activeResult._sceneUrls : [];
+  const hasMultiSceneResult = nodeData.type === 'videoGen' && sceneUrls.length > 1;
   const hasResult = !!(resultImage || resultVideo || resultAudio || resultText || resultFrames || activeResult?.slideImages?.length);
   const multiSceneProgress = activeResult?._multiSceneProgress as { current?: number; total?: number; urls?: string[] } | undefined;
   const videoProgress = activeResult?._videoProgress as {
@@ -825,6 +827,10 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     ? Math.round((((multiSceneProgress.urls?.length || 0) + ((pollPercent || 0) / 100)) / multiSceneProgress.total) * 100)
     : undefined;
   const processingPercent = Math.max(3, Math.min(100, scenePercent ?? pollPercent ?? 12));
+
+  useEffect(() => {
+    setSceneJoinTransition(activeResult?._sceneTransition || nodeData.config?.sceneTransition || 'fade');
+  }, [activeResult?._sceneTransition, nodeData.config?.sceneTransition]);
 
   // Stabilize frames reference to avoid flickering re-renders
   const stableFramesRef = useRef<string[]>([]);
