@@ -915,7 +915,9 @@ const AICreativeStudioInner: React.FC = () => {
 
   const handleOpenWorkflow = useCallback((workflow: SavedWorkflow) => {
     nodeResultStore.clearAll();
-    setNodes((workflow.nodes_data as StudioNode[]) as any);
+    const rawNodes = (workflow.nodes_data as StudioNode[]) || [];
+    const migrated = migrateLegacyNodes(rawNodes);
+    setNodes(migrated as any);
     setEdges((workflow.edges_data as StudioEdge[]) as any);
     setSelectedNode(null);
     setCurrentWorkflowId(workflow.id);
