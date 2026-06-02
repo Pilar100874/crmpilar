@@ -6,13 +6,14 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
-// Carregamento local desabilitado: @ffmpeg/core não expõe deep imports via package exports.
-// Usamos apenas CDNs (com fallback entre vários provedores).
+// O core do FFmpeg fica em /public/ffmpeg para não depender de CDNs no navegador.
+// Mantemos CDNs apenas como último fallback caso os arquivos estáticos não carreguem.
 
 let _ffmpegInstance: FFmpeg | null = null;
 let _loadingPromise: Promise<FFmpeg> | null = null;
 
-const CDN_BASES = [
+const FFMPEG_BASES = [
+  '/ffmpeg',
   'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd',
   'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd',
   'https://fastly.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd',
@@ -27,10 +28,10 @@ async function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise
 
 async function loadFromBase(baseURL: string, onProgress?: (p: ConcatProgress) => void): Promise<FFmpeg> {
   const ffmpeg = new FFmpeg();
-  onProgress?.({ stage: 'loading', message: 'Preparando ferramentas de vídeo…' });
+  onProgress?.({ stage: 'loading', message: baseURL.startsWith('/') ? 'Carregando motor local de vídeo…' : 'Tentando motor de vídeo alternativo…' });
   const coreURL = await withTimeout(toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'), 30000, 'componentes de vídeo');
   const wasmURL = await withTimeout(toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'), 60000, 'componentes de vídeo');
-  await withTimeout(ffmpeg.load({ coreURL, wasmURL }), 30000, 'componentes de vídeo');
+  await withTimeout(ffmpeg.load({ coreURL, wasmURL }), 45000, 'componentes de vídeo');
   return ffmpeg;
 }
 
@@ -40,7 +41,7 @@ async function getFFmpeg(onProgress?: (p: ConcatProgress) => void): Promise<FFmp
 
   _loadingPromise = (async () => {
     let lastErr: any;
-    for (const base of CDN_BASES) {
+    for (const base of FFMPEG_BASES) {
       try {
         const ff = await loadFromBase(base, onProgress);
         _ffmpegInstance = ff;
@@ -148,6 +149,8 @@ export async function concatVideos(
   const transition = options?.transition && options.transition !== 'none' ? options.transition : null;
   const transitionDur = Math.min(1.5, Math.max(0.2, options?.transitionDurationSec ?? 0.5));
   const durations = options?.sceneDurationsSec;
+  let filesForConcat = normalizedFiles;
+  const filesToDelete = new Set<string>(normalizedFiles);
 
   // 3a) Caminho com TRANSIÇÕES (xfade)
   if (transition && durations && durations.length === urls.length) {
@@ -203,13 +206,46 @@ export async function concatVideos(
       return blob;
     } catch (xfadeErr: any) {
       console.warn('[videoConcat] Falha ao aplicar transições, caindo para concat simples:', xfadeErr);
-      onProgress?.({ stage: 'encoding', message: 'Transição indisponível, unindo cenas de forma simples…' });
+      onProgress?.({ stage: 'encoding', message: 'Transição avançada indisponível, aplicando fade seguro…' });
+      try {
+        const fadedFiles: string[] = [];
+        for (let i = 0; i < normalizedFiles.length; i++) {
+          const out = `fade${i}.mp4`;
+          const fadeOutAt = Math.max(0, (durations[i] || 5) - transitionDur);
+          const vf = [
+            i > 0 ? `fade=t=in:st=0:d=${transitionDur.toFixed(2)}` : null,
+            i < normalizedFiles.length - 1 ? `fade=t=out:st=${fadeOutAt.toFixed(2)}:d=${transitionDur.toFixed(2)}` : null,
+          ].filter(Boolean).join(',') || 'null';
+          const af = [
+            i > 0 ? `afade=t=in:st=0:d=${transitionDur.toFixed(2)}` : null,
+            i < normalizedFiles.length - 1 ? `afade=t=out:st=${fadeOutAt.toFixed(2)}:d=${transitionDur.toFixed(2)}` : null,
+          ].filter(Boolean).join(',') || 'anull';
+          await ffmpeg.exec([
+            '-i', normalizedFiles[i],
+            '-vf', vf,
+            '-af', af,
+            '-c:v', 'libx264',
+            '-preset', 'ultrafast',
+            '-crf', '23',
+            '-c:a', 'aac',
+            '-b:a', '128k',
+            '-pix_fmt', 'yuv420p',
+            out,
+          ]);
+          fadedFiles.push(out);
+          filesToDelete.add(out);
+        }
+        filesForConcat = fadedFiles;
+      } catch (fadeErr) {
+        console.warn('[videoConcat] Falha no fade seguro, unindo cenas normalizadas:', fadeErr);
+        onProgress?.({ stage: 'encoding', message: 'Fade indisponível, unindo cenas normalizadas…' });
+      }
       // Continua para o caminho 3b
     }
   }
 
   // 3b) Concat simples via demuxer (sem transição)
-  const listContent = normalizedFiles.map((f) => `file '${f}'`).join('\n');
+  const listContent = filesForConcat.map((f) => `file '${f}'`).join('\n');
   await ffmpeg.writeFile('concat.txt', new TextEncoder().encode(listContent));
 
   onProgress?.({ stage: 'encoding', message: 'Unindo cenas em vídeo único…' });
@@ -226,7 +262,7 @@ export async function concatVideos(
   const ab = u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength) as ArrayBuffer;
   const blob = new Blob([ab], { type: 'video/mp4' });
 
-  for (const f of normalizedFiles) { try { await ffmpeg.deleteFile(f); } catch {} }
+  for (const f of filesToDelete) { try { await ffmpeg.deleteFile(f); } catch {} }
   try { await ffmpeg.deleteFile('concat.txt'); } catch {}
   try { await ffmpeg.deleteFile('output.mp4'); } catch {}
 
