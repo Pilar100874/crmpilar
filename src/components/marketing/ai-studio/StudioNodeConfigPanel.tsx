@@ -260,6 +260,9 @@ function AudioSoundDesignSection({
       </Row>
     </div>
   );
+}
+
+
 
 interface Props {
   node: StudioNode;
