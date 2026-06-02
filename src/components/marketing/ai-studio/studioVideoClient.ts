@@ -92,7 +92,7 @@ export async function regenerateSceneVideo(
   for (let attempt = 0; attempt < totalPolls; attempt += 1) {
     await new Promise((r) => setTimeout(r, 5000));
     const poll = await callEdge(fetchAction, {
-      estabelecimentoId: params.estabelecimentoId,
+      estabelecimentoId: (params as any).estabelecimentoId,
       taskId,
     }, 60000);
     if (poll?.error) throw new Error(poll.error);
