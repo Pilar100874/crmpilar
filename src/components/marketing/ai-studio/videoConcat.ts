@@ -6,21 +6,8 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
-// Tentativa de carregar bundle local (Vite serve). Se falhar, usamos CDNs.
-async function tryLoadLocalUrls(): Promise<{ coreURL: string; wasmURL: string } | null> {
-  try {
-    const [coreMod, wasmMod] = await Promise.all([
-      // @ts-ignore
-      import('@ffmpeg/core/dist/umd/ffmpeg-core.js?url'),
-      // @ts-ignore
-      import('@ffmpeg/core/dist/umd/ffmpeg-core.wasm?url'),
-    ]);
-    return { coreURL: (coreMod as any).default, wasmURL: (wasmMod as any).default };
-  } catch (err) {
-    console.warn('[videoConcat] Bundle local ffmpeg indisponível:', err);
-    return null;
-  }
-}
+// Carregamento local desabilitado: @ffmpeg/core não expõe deep imports via package exports.
+// Usamos apenas CDNs (com fallback entre vários provedores).
 
 let _ffmpegInstance: FFmpeg | null = null;
 let _loadingPromise: Promise<FFmpeg> | null = null;
@@ -38,17 +25,6 @@ async function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise
   ]);
 }
 
-async function loadLocal(onProgress?: (p: ConcatProgress) => void): Promise<FFmpeg> {
-  const urls = await tryLoadLocalUrls();
-  if (!urls) throw new Error('Bundle local indisponível');
-  const ffmpeg = new FFmpeg();
-  onProgress?.({ stage: 'loading', message: 'Preparando ferramentas de vídeo (local)…' });
-  const coreURL = await withTimeout(toBlobURL(urls.coreURL, 'text/javascript'), 30000, 'componentes de vídeo locais');
-  const wasmURL = await withTimeout(toBlobURL(urls.wasmURL, 'application/wasm'), 60000, 'componentes de vídeo locais');
-  await withTimeout(ffmpeg.load({ coreURL, wasmURL }), 30000, 'componentes de vídeo locais');
-  return ffmpeg;
-}
-
 async function loadFromBase(baseURL: string, onProgress?: (p: ConcatProgress) => void): Promise<FFmpeg> {
   const ffmpeg = new FFmpeg();
   onProgress?.({ stage: 'loading', message: 'Preparando ferramentas de vídeo…' });
@@ -63,16 +39,6 @@ async function getFFmpeg(onProgress?: (p: ConcatProgress) => void): Promise<FFmp
   if (_loadingPromise) return _loadingPromise;
 
   _loadingPromise = (async () => {
-    // 1) Tenta local primeiro (Vite serve os arquivos do node_modules)
-    try {
-      const ff = await loadLocal(onProgress);
-      _ffmpegInstance = ff;
-      return ff;
-    } catch (err) {
-      console.warn('[videoConcat] Falha ao carregar ffmpeg local, tentando CDNs:', err);
-      onProgress?.({ stage: 'loading', message: 'Fallback para CDN…' });
-    }
-    // 2) Fallback para CDNs
     let lastErr: any;
     for (const base of CDN_BASES) {
       try {
