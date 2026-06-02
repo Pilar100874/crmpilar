@@ -502,8 +502,11 @@ export function useStudioExecution() {
     const orderedImageRoles = bucketedImages.flatMap((b) => b.urls.map(() => roleLabelsMap[b.role] || 'REFERENCE'));
 
     switch (type) {
-      case 'textInput':
+      case 'textInput': {
+        const sp = (config.systemPrompt || '').trim();
+        if (sp) return { text: config.text || '', _systemPrompt: sp };
         return config.text || '';
+      }
 
       case 'systemPrompt':
         return { _isSystemPrompt: true, text: config.systemPrompt || '' };
