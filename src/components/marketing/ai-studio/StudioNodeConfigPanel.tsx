@@ -753,6 +753,7 @@ function ReelScriptStrategyImporter({ onImport }: { onImport: (scenes: any[], la
       sfx: Array.isArray(s.sfx) ? s.sfx : (s.sfx ? [String(s.sfx)] : []),
       ambientSound: s.ambiente_sonoro || '',
       voiceTone: s.tom_voz || '',
+      audioText: s.texto_audio || s.audio_texto || s.narracao_voz || '',
     })).filter((s: any) => s.description || s.narration);
 
 
