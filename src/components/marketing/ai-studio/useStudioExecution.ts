@@ -1432,6 +1432,7 @@ export function useStudioExecution() {
               `📝 DESCRIÇÃO DA CENA: ${scene.description}`,
               scene.cameraMovement ? `\n🎥 MOVIMENTO DE CÂMERA: ${scene.cameraMovement}` : '',
               scene.narration ? `\n🔊 NARRAÇÃO: ${scene.narration}` : '',
+              scene.audioText ? `\n📝 TEXTO DO ÁUDIO (fala/letra exata): "${scene.audioText}"` : '',
               scene.voiceTone ? `\n🎙️ TOM DE VOZ: ${scene.voiceTone}` : '',
               scene.soundtrack ? `\n🎵 TRILHA SONORA: ${scene.soundtrack}${scene.soundtrackIntensity ? ` (intensidade ${scene.soundtrackIntensity})` : ''}` : '',
               scene.ambientSound ? `\n🌬️ AMBIENTE SONORO: ${scene.ambientSound}` : '',
