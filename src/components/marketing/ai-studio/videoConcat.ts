@@ -5,6 +5,11 @@
  */
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
+// Local bundle (Vite serve) — evita CDNs bloqueadas/instáveis
+// @ts-ignore
+import localCoreURL from '@ffmpeg/core/dist/umd/ffmpeg-core.js?url';
+// @ts-ignore
+import localWasmURL from '@ffmpeg/core/dist/umd/ffmpeg-core.wasm?url';
 
 let _ffmpegInstance: FFmpeg | null = null;
 let _loadingPromise: Promise<FFmpeg> | null = null;
@@ -22,6 +27,16 @@ async function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise
   ]);
 }
 
+async function loadLocal(onProgress?: (p: ConcatProgress) => void): Promise<FFmpeg> {
+  const ffmpeg = new FFmpeg();
+  onProgress?.({ stage: 'loading', message: 'Preparando ferramentas de vídeo (local)…' });
+  // Converte para blob URL para satisfazer requisito same-origin do worker
+  const coreURL = await withTimeout(toBlobURL(localCoreURL as string, 'text/javascript'), 30000, 'componentes de vídeo locais');
+  const wasmURL = await withTimeout(toBlobURL(localWasmURL as string, 'application/wasm'), 60000, 'componentes de vídeo locais');
+  await withTimeout(ffmpeg.load({ coreURL, wasmURL }), 30000, 'componentes de vídeo locais');
+  return ffmpeg;
+}
+
 async function loadFromBase(baseURL: string, onProgress?: (p: ConcatProgress) => void): Promise<FFmpeg> {
   const ffmpeg = new FFmpeg();
   onProgress?.({ stage: 'loading', message: 'Preparando ferramentas de vídeo…' });
@@ -36,6 +51,16 @@ async function getFFmpeg(onProgress?: (p: ConcatProgress) => void): Promise<FFmp
   if (_loadingPromise) return _loadingPromise;
 
   _loadingPromise = (async () => {
+    // 1) Tenta local primeiro (Vite serve os arquivos do node_modules)
+    try {
+      const ff = await loadLocal(onProgress);
+      _ffmpegInstance = ff;
+      return ff;
+    } catch (err) {
+      console.warn('[videoConcat] Falha ao carregar ffmpeg local, tentando CDNs:', err);
+      onProgress?.({ stage: 'loading', message: 'Fallback para CDN…' });
+    }
+    // 2) Fallback para CDNs
     let lastErr: any;
     for (const base of CDN_BASES) {
       try {
@@ -54,6 +79,7 @@ async function getFFmpeg(onProgress?: (p: ConcatProgress) => void): Promise<FFmp
 
   return _loadingPromise;
 }
+
 
 export interface ConcatProgress {
   stage: 'loading' | 'downloading' | 'encoding' | 'done';
