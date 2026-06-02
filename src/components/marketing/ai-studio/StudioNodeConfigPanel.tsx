@@ -63,7 +63,7 @@ function PresetPickerButton({
           type="button"
           variant="ghost"
           size="sm"
-          className="h-7 px-2 text-[10px] gap-1 text-amber-300 hover:text-amber-200 hover:bg-amber-500/10"
+          className="h-7 px-2 text-[10px] gap-1 text-primary hover:text-primary hover:bg-primary/10"
         >
           <ListPlus className="h-3 w-3" />
           Opções
@@ -83,8 +83,8 @@ function PresetPickerButton({
                 onClick={() => toggle(p.value)}
                 className={`w-full text-left rounded-md border p-2 transition-colors ${
                   sel
-                    ? 'border-amber-500/60 bg-amber-500/10'
-                    : 'border-border/40 hover:border-amber-500/40 hover:bg-muted/40'
+                    ? 'border-primary/60 bg-primary/10'
+                    : 'border-border/40 hover:border-primary/40 hover:bg-muted/40'
                 }`}
               >
                 <div className="flex items-start gap-2">
@@ -128,7 +128,7 @@ function AudioSoundDesignSection({
   }) => (
     <div className="space-y-1">
       <div className="flex items-center justify-between gap-2">
-        <Label className="text-[10px] text-amber-200/80">{label}</Label>
+        <Label className="text-[10px] text-foreground/80 font-semibold">{label}</Label>
         {picker}
       </div>
       {children}
@@ -136,8 +136,8 @@ function AudioSoundDesignSection({
     </div>
   );
   return (
-    <div className="rounded-md border border-amber-500/20 bg-amber-500/5 p-2 space-y-2">
-      <div className="text-[10px] font-bold text-amber-400">🎵 Áudio & Sound Design</div>
+    <div className="rounded-md border border-primary/30 bg-primary/5 p-2 space-y-2">
+      <div className="text-[11px] font-bold text-primary">🎵 Áudio & Sound Design</div>
 
       <Row
         label="📝 Texto do áudio"
