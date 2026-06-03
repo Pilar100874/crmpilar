@@ -502,15 +502,16 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       if (cfg[`${k}Mode`] === "ai") {
         aiFields.push({
           key: k,
-          label: k === "title" ? "TÍTULO" : k === "subtitle" ? "SUBTÍTULO" : "CORPO",
+          label: k === "title" ? "principal (maior destaque)" : k === "subtitle" ? "secundário (menor)" : "complementar (menor ainda)",
           hint: (cfg[`${k}AIHint`] || "").trim(),
         });
       }
     });
     if (!aiFields.length) return "";
     return [
-      "TEXTOS A SEREM GERADOS PELA IA (escreva você mesmo, em Português Brasileiro, curtos e legíveis):",
-      ...aiFields.map((f) => `- ${f.label}${f.hint ? ` — orientação: ${f.hint}` : ""}`),
+      "TEXTOS A SEREM CRIADOS PELA IA (escreva você mesmo, em Português Brasileiro, curtos e legíveis):",
+      ...aiFields.map((f) => `- Texto ${f.label}${f.hint ? ` — orientação: ${f.hint}` : ""}`),
+      "Renderize APENAS o CONTEÚDO desses textos na imagem. PROIBIDO escrever rótulos como 'TÍTULO', 'SUBTÍTULO', 'CORPO', 'TITLE', 'SUBTITLE', 'BODY' ou similar na arte final.",
       "Esses textos devem ser coerentes com o tipo de conteúdo, produto e influencer (quando houver), e renderizados de forma legível na imagem com hierarquia visual clara.",
     ].join("\n");
   };
