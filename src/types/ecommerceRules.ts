@@ -57,7 +57,7 @@ export interface EcommerceBlockDefinition {
   description: string;
   icon: string;
   color: string;
-  category: "sistema" | "condicao_carrinho" | "condicao_cliente" | "condicao_temporal" | "condicao_cupom" | "logica" | "acao_desconto" | "acao_frete" | "acao_propaganda" | "acao_pagamento";
+  category: "sistema" | "condicao_carrinho" | "condicao_cliente" | "condicao_temporal" | "condicao_cupom" | "logica" | "acao_desconto" | "acao_frete" | "acao_propaganda" | "acao_pagamento" | "gatilho_comportamento" | "acao_recuperacao";
   defaultData?: Record<string, any>;
 }
 
@@ -387,6 +387,36 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
     },
   },
 
+  // ─── Gatilhos de Comportamento (mapa de calor) ────────────────
+  {
+    type: "gatilho_tempo_em_tela",
+    label: "Gatilho: tempo em tela",
+    description: "Dispara quando um visitante (sistema ou loja) fica X minutos em uma tela específica",
+    icon: "Timer",
+    color: "#f97316",
+    category: "gatilho_comportamento",
+    defaultData: { escopo: "ecommerce", rota: "/ecommerce", tempoMinutos: 5 },
+  },
+  {
+    type: "gatilho_carrinho_abandonado",
+    label: "Gatilho: carrinho abandonado",
+    description: "Dispara quando o carrinho fica X minutos sem checkout (com itens dentro)",
+    icon: "ShoppingCart",
+    color: "#f97316",
+    category: "gatilho_comportamento",
+    defaultData: { tempoMinutos: 30, valorMinimo: 0 },
+  },
+
+  // ─── Ações de Recuperação ─────────────────────────────────────
+  {
+    type: "acao_enviar_lembrete_carrinho",
+    label: "Enviar lembrete de carrinho",
+    description: "Envia mensagem (e-mail/WhatsApp) com link do carrinho para o cliente recuperar a compra",
+    icon: "Mail",
+    color: "#10b981",
+    category: "acao_recuperacao",
+    defaultData: { canal: "email", assunto: "Você esqueceu algo no seu carrinho!", mensagem: "Olá! Seus itens te esperam. Conclua sua compra agora." },
+  },
 ];
 
 export interface EcommerceRuleNode {
