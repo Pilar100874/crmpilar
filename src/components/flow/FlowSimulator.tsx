@@ -2462,36 +2462,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
 
     // === content_type: coleta o objetivo do criativo do usuário ===
-    // === ask_influencer: usuário envia URL/texto da foto ===
-    if (currentBlockType === "ask_influencer_upload" && currentNodeId) {
-      const node = nodes.find((n) => n.id === currentNodeId);
-      const cfg = (node?.data as any)?.config || {};
-      const raw = input.trim();
-      setInput("");
-      let url = "";
-      if (selectedFile) {
-        try { url = await uploadSimulatorReferenceImage(selectedFile); } catch {}
-        setSelectedFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-      } else if (/^https?:\/\//i.test(raw)) {
-        url = raw;
-      } else if (raw) {
-        addSystemMessage("⚠️ Envie uma URL válida (http/https) ou anexe um arquivo.");
-        return;
-      }
-      if (url) {
-        simNodeStateRef.current[currentNodeId] = { ...(simNodeStateRef.current[currentNodeId] || {}), influencerImageUrl: url };
-        const v = normalizeVarName(cfg.outputVariable || "influencer_image_url");
-        const newCtx = { ...contextRef.current, [v]: url };
-        contextRef.current = newCtx; setContext(newCtx); onContextChange?.(newCtx);
-        addBotMediaMessage(url, "image", "Influencer", currentNodeId);
-        addSuccessMessage("✅ Influencer registrado.");
-      }
-      setIsWaitingInput(false); setCurrentBlockType(null);
-      const next = getNextNode(currentNodeId);
-      if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
-      return;
-    }
+    // === ask_influencer_upload removido — apenas galeria ===
 
     // === ask_product_image: input para os 3 métodos ===
     if (currentBlockType === "ask_product_image_input" && currentNodeId) {
