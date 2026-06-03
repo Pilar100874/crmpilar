@@ -511,6 +511,12 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
     marketing_automation: 'Automação de Marketing'
   };
 
+  const getBuilderOrigin = () => embedded ? '/atendimento-config?tab=bot-criar' : `${location.pathname}${location.search}`;
+
+  const openBuilder = (url: string) => {
+    navigate(url, { state: { from: getBuilderOrigin() } });
+  };
+
   return (
     <div className={`${embedded ? '' : 'p-4 sm:p-6 md:p-8 '}space-y-4 md:space-y-8 animate-fade-in bg-background dark:bg-background min-h-full`}>
         {!embedded && (
@@ -587,7 +593,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                         blocksCount={bot.flow_data?.nodes?.length || 0}
                         menuOpen={openMenuId === bot.id}
                         onMenuOpenChange={(open) => setOpenMenuId(open ? bot.id : null)}
-                        onEdit={() => navigate(`/bot-builder?id=${bot.id}`, { state: { from: location.pathname + location.search } })}
+                        onEdit={() => openBuilder(`/bot-builder?id=${bot.id}`)}
                         onRename={() => {
                           setSelectedBot(bot);
                           setRenameName(bot.name);
@@ -603,7 +609,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                         }}
                         onToggleActive={() => handleToggleActive(bot.id, bot.active)}
                         onDelete={() => handleDeleteBot(bot.id, bot.name)}
-                        onOpenEditor={() => navigate(`/bot-builder?id=${bot.id}`, { state: { from: location.pathname + location.search } })}
+                        onOpenEditor={() => openBuilder(`/bot-builder?id=${bot.id}`)}
                         customContent={
                           <>
                             <div className="flex items-center gap-2 flex-wrap">
