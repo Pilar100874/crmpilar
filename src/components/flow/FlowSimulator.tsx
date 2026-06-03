@@ -1889,6 +1889,21 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         break;
       }
 
+      case "text_content": {
+        const t = (config.title || "").trim();
+        const s = (config.subtitle || "").trim();
+        const b = (config.body || "").trim();
+        const parts = [t && `Título: "${t}"`, s && `Subtítulo: "${s}"`, b && `Texto: "${b}"`].filter(Boolean);
+        addSystemMessage(`📝 Conteúdo de Texto fixado para o próximo Gerar Mídia IA${parts.length ? ` — ${parts.join(" · ")}` : ""}.`);
+        safeSetTimeout(() => {
+          const nextNode = getNextNode(node.id);
+          if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+        }, 400);
+        break;
+      }
+
+
+
       default:
         addSystemMessage(`▶️ Executando: ${blockDef.label}`);
         safeSetTimeout(() => {
