@@ -2438,14 +2438,26 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         addBotMessage(queue[nextIdx].prompt, currentNodeId);
         return;
       }
-      // Concluiu — log e avança
+      // Concluiu — mostra confirmação dos textos coletados
       const v = state.resolvedTextContent || {};
-      const parts = [v.title && `Título: "${v.title}"`, v.subtitle && `Subtítulo: "${v.subtitle}"`, v.body && `Texto: "${v.body}"`].filter(Boolean);
-      addSystemMessage(`📝 Conteúdo de Texto coletado${parts.length ? ` — ${parts.join(" · ")}` : ""}.`);
-      const tcNodeId = currentNodeId;
-      setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
-      const nextNode = getNextNode(tcNodeId);
-      if (nextNode) safeSetTimeout(() => { setCurrentNodeId(nextNode.id); executeNode(nextNode); }, 400);
+      const summary = [
+        v.title ? `• Título: "${v.title}"` : null,
+        v.subtitle ? `• Subtítulo: "${v.subtitle}"` : null,
+        v.body ? `• Texto: "${v.body}"` : null,
+      ].filter(Boolean).join("\n");
+      setMessages((prev) => [...prev, {
+        id: uid(),
+        sender: "bot",
+        text: `📝 Confirme os textos:\n${summary || "(nenhum texto informado)"}`,
+        timestamp: new Date(),
+        nodeId: currentNodeId,
+        buttons: [
+          { text: "✅ Confirmar", value: "confirmar", buttonId: "tc_confirm" },
+          { text: "✏️ Editar", value: "editar", buttonId: "tc_edit" },
+        ],
+      }]);
+      setCurrentBlockType("text_content_confirm");
+      setIsWaitingInput(true);
       return;
     }
 
