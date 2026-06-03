@@ -499,7 +499,7 @@ export const FlowNode = memo((props: any) => {
         
         {!isStartBlock && (
           <ContextMenuItem
-            onClick={() => setDeleteDialogOpen(true)}
+            onClick={() => data.onDelete?.(id)}
             className="text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer"
           >
             <Trash2 className="w-4 h-4 mr-2" />
@@ -508,29 +508,6 @@ export const FlowNode = memo((props: any) => {
         )}
       </ContextMenuContent>
     </ContextMenu>
-    
-    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-          <AlertDialogDescription>
-            Tem certeza que deseja excluir este bloco? Esta ação não pode ser desfeita.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={() => {
-              data.onDelete?.(id);
-              setDeleteDialogOpen(false);
-            }}
-            className="bg-red-600 hover:bg-red-700"
-          >
-            Excluir
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
   </>
   );
 });
