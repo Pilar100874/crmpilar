@@ -3591,7 +3591,6 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         const askQueue = [
           { field: "title" as const, prompt: "Qual o título que devo colocar na imagem?" },
           { field: "subtitle" as const, prompt: "Qual o subtítulo? (digite '-' para deixar em branco)" },
-          { field: "body" as const, prompt: "Quer adicionar um texto extra na imagem? (digite ou responda 'não')" },
         ];
         simNodeStateRef.current[currentNodeId] = {
           ...(simNodeStateRef.current[currentNodeId] || {}),
@@ -3606,11 +3605,12 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         return;
       }
       // ai
-      addBotMessage("Me conte em poucas palavras o que a imagem deve comunicar (produto, oferta, tom, público...). A IA vai gerar 2 sugestões para você escolher.", currentNodeId);
+      addBotMessage("Que tipo de informação você quer transmitir na imagem? (ex.: oferta de Black Friday em smartphones, convite para evento de lançamento, divulgação de novo serviço...)", currentNodeId);
       setCurrentBlockType("text_content_ai_brief");
       setIsWaitingInput(true);
       return;
     }
+
 
     // === text_content (novo): escolha de sugestão da IA / loop ===
     if (currentBlockType === "text_content_ai_pick" && currentNodeId) {
