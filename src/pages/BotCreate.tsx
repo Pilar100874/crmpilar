@@ -360,7 +360,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
 
       // Navegar para o builder com o nome do bot como parâmetro
       const whatsappTypeParam = selectedCanal === 'whatsapp' ? `&whatsapp_type=${selectedWhatsAppType}` : '';
-      navigate(`/bot-builder?name=${encodeURIComponent(newBotName.trim())}&description=${encodeURIComponent(newBotDescription.trim())}&canais=${encodeURIComponent(JSON.stringify([selectedCanal]))}${whatsappTypeParam}`, { state: { from: location.pathname + location.search } });
+      openBuilder(`/bot-builder?name=${encodeURIComponent(newBotName.trim())}&description=${encodeURIComponent(newBotDescription.trim())}&canais=${encodeURIComponent(JSON.stringify([selectedCanal]))}${whatsappTypeParam}`);
       setNewBotDialogOpen(false);
       setNewBotName("");
       setNewBotDescription("");
