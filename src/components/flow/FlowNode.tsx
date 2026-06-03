@@ -36,7 +36,7 @@ export const FlowNode = memo((props: any) => {
   const { data, selected, id } = props;
   const blockDef = BLOCK_DEFINITIONS.find((b) => b.type === data.type);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  
   const isStartBlock = data.type === 'inicio';
   
   if (!blockDef) return null;
