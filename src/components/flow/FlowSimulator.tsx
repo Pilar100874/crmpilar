@@ -3077,6 +3077,100 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const handleButtonClick = (button: { text: string; value: string; buttonId?: string; keywords?: string[] }, nodeId?: string) => {
     console.log("🔘 Button clicked:", { button, nodeId, pendingVariable, currentBlockType });
 
+    // === ask_influencer: yes/no ===
+    if (currentBlockType === "ask_influencer_choice" && currentNodeId) {
+      addUserMessage(button.text);
+      const node = nodes.find((n) => n.id === currentNodeId);
+      const cfg = (node?.data as any)?.config || {};
+      if (button.value === "sim") {
+        addBotMessage(interpolateVariables(cfg.uploadPrompt || "Envie a foto do influencer (URL ou arquivo).", contextRef.current), currentNodeId);
+        setCurrentBlockType("ask_influencer_upload");
+        setIsWaitingInput(true);
+        return;
+      }
+      setIsWaitingInput(false); setCurrentBlockType(null);
+      const next = getNextNode(currentNodeId);
+      if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+      return;
+    }
+
+    // === ask_product_image: yes/no + escolha de método ===
+    if (currentBlockType === "ask_product_image_choice" && currentNodeId) {
+      addUserMessage(button.text);
+      const node = nodes.find((n) => n.id === currentNodeId);
+      const cfg = (node?.data as any)?.config || {};
+      if (button.value === "sim") {
+        setMessages((prev) => [...prev, {
+          id: uid(), sender: "bot", text: "Como você quer fornecer a imagem do produto?", timestamp: new Date(), nodeId: currentNodeId,
+          buttons: [
+            { text: "🔢 Digitar código do produto", value: "code", buttonId: "pim_code" },
+            { text: "📷 Enviar foto (URL/arquivo)", value: "photo", buttonId: "pim_photo" },
+            { text: "✍️ Descrever em texto", value: "text", buttonId: "pim_text" },
+          ],
+        }]);
+        setCurrentBlockType("ask_product_image_method");
+        setIsWaitingInput(true);
+        return;
+      }
+      setIsWaitingInput(false); setCurrentBlockType(null);
+      const next = getNextNode(currentNodeId);
+      if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+      return;
+    }
+    if (currentBlockType === "ask_product_image_method" && currentNodeId) {
+      addUserMessage(button.text);
+      const node = nodes.find((n) => n.id === currentNodeId);
+      const cfg = (node?.data as any)?.config || {};
+      const method = button.value;
+      const prompts: Record<string, string> = {
+        code: cfg.codePrompt || "Digite o código (ou nome) do produto:",
+        photo: cfg.photoPrompt || "Envie a URL da foto do produto:",
+        text: cfg.textPrompt || "Descreva o produto em texto:",
+      };
+      addBotMessage(interpolateVariables(prompts[method] || prompts.text, contextRef.current), currentNodeId);
+      simNodeStateRef.current[currentNodeId] = { ...(simNodeStateRef.current[currentNodeId] || {}), pimMethod: method };
+      setCurrentBlockType("ask_product_image_input");
+      setIsWaitingInput(true);
+      return;
+    }
+    // === confirmação de imagem do produto ===
+    if (currentBlockType === "ask_product_image_confirm" && currentNodeId) {
+      addUserMessage(button.text);
+      const node = nodes.find((n) => n.id === currentNodeId);
+      const cfg = (node?.data as any)?.config || {};
+      const state = simNodeStateRef.current[currentNodeId] || {};
+      if (button.value === "refazer") {
+        addSystemMessage("🔄 Vamos refazer.");
+        executeNode(node!);
+        return;
+      }
+      const imgVar = normalizeVarName(cfg.outputImageVariable || "produto_imagem_url");
+      const descVar = normalizeVarName(cfg.outputDescVariable || "produto_descricao");
+      const newCtx = { ...contextRef.current };
+      if (state.productImageUrl) newCtx[imgVar] = state.productImageUrl;
+      if (state.productDescription) newCtx[descVar] = state.productDescription;
+      contextRef.current = newCtx; setContext(newCtx); onContextChange?.(newCtx);
+      addSuccessMessage("✅ Produto confirmado.");
+      setIsWaitingInput(false); setCurrentBlockType(null);
+      const next = getNextNode(currentNodeId);
+      if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+      return;
+    }
+    // === confirmação dos textos coletados ===
+    if (currentBlockType === "text_content_confirm" && currentNodeId) {
+      addUserMessage(button.text);
+      const node = nodes.find((n) => n.id === currentNodeId);
+      if (button.value === "editar") {
+        addSystemMessage("✏️ Vamos refazer os textos.");
+        executeNode(node!);
+        return;
+      }
+      setIsWaitingInput(false); setCurrentBlockType(null);
+      const next = getNextNode(currentNodeId);
+      if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+      return;
+    }
+
     // === content_type: clique em opção pré-definida ===
     if (currentBlockType === "content_type_ask" && currentNodeId) {
       addUserMessage(button.text);
