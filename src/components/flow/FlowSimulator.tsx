@@ -541,6 +541,15 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const aiTextDirective = buildAITextDirective(node.id);
     const upstreamPieca = findUpstreamPiecaRefs(node.id);
 
+    // Regra GLOBAL: nada além do título/subtítulo definidos (ou nada de texto, se não houver).
+    const hasAnyText = !!(lockedTextDirective || aiTextDirective);
+    const noExtraTextDirective = hasAnyText
+      ? "REGRA ABSOLUTA DE TEXTO NA IMAGEM: renderize SOMENTE os textos especificados acima (título/subtítulo). PROIBIDO acrescentar QUALQUER outro texto, palavra, frase, slogan, call-to-action, hashtag, URL, telefone, endereço, preço, percentual, número, código, rótulo (como 'TÍTULO', 'SUBTÍTULO', 'TITLE', 'SUBTITLE'), legenda, marca d'água ou assinatura. Apenas o conteúdo textual listado, nada mais."
+      : "REGRA ABSOLUTA DE TEXTO NA IMAGEM: NÃO escreva NENHUM texto na imagem. Sem palavras, frases, slogans, hashtags, URLs, telefones, endereços, preços, percentuais, números, códigos, rótulos, legendas, marcas d'água ou assinaturas. Imagem 100% sem texto.";
+
+    // Regra GLOBAL: logo da empresa sempre presente na peça.
+    const logoMandatoryDirective = "LOGO DA EMPRESA (OBRIGATÓRIO): incorpore o LOGO da empresa fornecido como referência na peça final, de forma elegante, legível e bem posicionada (geralmente em um canto), preservando fielmente cores, formas e proporções originais do logo. NÃO recrie, NÃO redesenhe, NÃO traduza, NÃO altere o logo — use-o tal qual a referência.";
+
     const imageRefSource = config.imageRefSource || "user";
     const imageAspectRatio = config.aspectRatio || (config.preset === "story_vertical" ? "9:16" : "1:1");
 
@@ -643,10 +652,35 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       }
     }
 
+    // 🏷️ LOGO SEMPRE PRESENTE: busca o logo da empresa e injeta como referência,
+    // a menos que o preset já tenha definido um logo explícito.
+    try {
+      if (!presetRolesFilled.has("galleryLogo")) {
+        const estIdForLogo = await getEstabelecimentoId();
+        if (estIdForLogo) {
+          const { data: ecomCfg } = await supabase
+            .from("ecommerce_config")
+            .select("logo_url")
+            .eq("estabelecimento_id", estIdForLogo)
+            .maybeSingle();
+          const logoUrl = (ecomCfg as any)?.logo_url || "";
+          if (logoUrl && logoUrl !== refImageUrl && !extraRefs.some((r) => r.url === logoUrl)) {
+            extraRefs.push({ key: "galleryLogo", url: logoUrl });
+            addSystemMessage(`🏷️ Logo da empresa adicionado como referência obrigatória.`);
+          } else if (!logoUrl) {
+            addSystemMessage(`⚠️ Logo da empresa não configurado em E-commerce → Branding. A peça será gerada sem o logo.`);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("[FlowSimulator] Falha ao buscar logo da empresa:", e);
+    }
+
     const styleSource = config.styleSource || "visual_identity";
     const styleLabel = styleSource === "visual_identity"
       ? "Identidade Visual da marca"
       : (styleSource === "preset" && config.preset ? `preset "${config.preset}"` : "estilo padrão");
+
 
     const mediaType: "image" | "video" = (config.mediaType === "video") ? "video" : "image";
 
@@ -698,6 +732,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         contentTypeDirective ? `\n\n${contentTypeDirective}` : "",
         lockedTextDirective ? `\n\n${lockedTextDirective}` : "",
         aiTextDirective ? `\n\n${aiTextDirective}` : "",
+        `\n\n${noExtraTextDirective}`,
+        `\n\n${logoMandatoryDirective}`,
         upstreamPieca.productDescription ? `\n\nPRODUTO (descrição do usuário): ${upstreamPieca.productDescription}` : "",
         audioScript ? `\n[NARRAÇÃO — fale exatamente este texto em Português Brasileiro]: ${audioScript}` : "",
         `\nFormato ${imageAspectRatio}.`,
@@ -812,7 +848,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           totalAttempts++;
           const { data, error } = await supabase.functions.invoke("bot-generate-ai-media", {
             body: {
-              prompt: `${userPrompt}${contentTypeDirective ? `\n\n${contentTypeDirective}` : ""}${lockedTextDirective ? `\n\n${lockedTextDirective}` : ""}${aiTextDirective ? `\n\n${aiTextDirective}` : ""}${upstreamPieca.productDescription ? `\n\nPRODUTO (descrição do usuário): ${upstreamPieca.productDescription}` : ""}\n\nGere somente a opção ${optionIndex + 1} de ${variations}. Mantenha o mesmo briefing, identidade visual e formato ${imageAspectRatio}; varie apenas ângulo, enquadramento ou composição.${contentTypeDirective ? " Respeite ESTRITAMENTE o TIPO DE CONTEÚDO definido acima." : ""}${lockedTextDirective ? " O TEXTO renderizado na imagem deve ser EXATAMENTE o especificado — não varie, não traduza, não invente." : ""}${aiTextDirective ? " Para os textos marcados como GERAR PELA IA, crie textos curtos coerentes em PT-BR." : ""}`,
+              prompt: `${userPrompt}${contentTypeDirective ? `\n\n${contentTypeDirective}` : ""}${lockedTextDirective ? `\n\n${lockedTextDirective}` : ""}${aiTextDirective ? `\n\n${aiTextDirective}` : ""}\n\n${noExtraTextDirective}\n\n${logoMandatoryDirective}${upstreamPieca.productDescription ? `\n\nPRODUTO (descrição do usuário): ${upstreamPieca.productDescription}` : ""}\n\nGere somente a opção ${optionIndex + 1} de ${variations}. Mantenha o mesmo briefing, identidade visual e formato ${imageAspectRatio}; varie apenas ângulo, enquadramento ou composição.${contentTypeDirective ? " Respeite ESTRITAMENTE o TIPO DE CONTEÚDO definido acima." : ""}${lockedTextDirective ? " O TEXTO renderizado na imagem deve ser EXATAMENTE o especificado — não varie, não traduza, não invente." : ""}${aiTextDirective ? " Para os textos marcados como GERAR PELA IA, crie textos curtos coerentes em PT-BR." : ""} O LOGO da empresa DEVE aparecer na peça final.`,
               basePrompt,
               variations: 1,
               styleSource,
