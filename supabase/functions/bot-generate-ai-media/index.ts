@@ -217,16 +217,26 @@ serve(async (req) => {
         ? `COMPOSIÇÃO OBRIGATÓRIA: combine TODAS as referências acima em UMA única cena coesa. Preserve fielmente todos os elementos das referências.`
         : "";
 
+    const absoluteNoExtraTextRule = [
+      "REGRA GLOBAL INVIOLÁVEL SOBRE TEXTO NA ARTE:",
+      "- Nunca escreva na imagem qualquer texto que venha da identidade visual, exemplos da marca, referências visuais, embalagem, preset, campanha, slogan, assinatura, URL, telefone, endereço, preço, percentual, hashtag, selo, etiqueta, botão ou marca d'água.",
+      "- Se o briefing permitir texto, escreva APENAS o conteúdo exato do título e/ou subtítulo informado pelo usuário no prompt principal.",
+      "- Se não houver título/subtítulo explícitos no prompt principal, a imagem deve ficar totalmente sem texto, exceto o logo usado como elemento visual.",
+      "- O logo pode aparecer como imagem de referência, mas não recrie nem adicione textos soltos ao redor dele.",
+      "- Proibido texto decorativo, microtexto, letras aleatórias, palavras falsas ou textos genéricos para preencher layout.",
+    ].join("\n");
+
     const finalPrompt = [
       "TAREFA: gerar exatamente UMA imagem publicitária por chamada para WhatsApp.",
       prompt ? `PEDIDO DO USUÁRIO — siga isto como briefing principal: ${prompt}` : "",
       basePrompt ? `INSTRUÇÕES FIXAS DO BLOCO: ${basePrompt}` : "",
+      absoluteNoExtraTextRule,
       refDescriptionLines ? `REFERÊNCIAS ESTRITAS (na ordem em que foram enviadas):\n${refDescriptionLines}` : "",
       compositionDirective,
-      styleGuidance ? `IDENTIDADE VISUAL DA MARCA — preserve cores, tom, linguagem, composição, fotografia e personalidade: ${styleGuidance}` : "",
+      styleGuidance ? `IDENTIDADE VISUAL DA MARCA — use somente cores, tom, composição, fotografia e personalidade visual. IGNORE qualquer texto, slogan, palavra, número, URL, telefone, preço, etiqueta ou chamada que exista nessa identidade: ${styleGuidance}` : "",
       viReferenceImages.length > 0 ? "REFERÊNCIAS DA MARCA (após as estritas): definem identidade visual, paleta, iluminação e acabamento — NÃO substituem produto/pessoa." : "",
       `FORMATO OBRIGATÓRIO: gere todas as imagens no mesmo tamanho e proporção ${aspectRatio}. Não altere a proporção entre variações.`,
-      "Não ignore o pedido do usuário. Não crie assunto aleatório. Resultado premium, realista, pronto para marketing. Textos em Português Brasileiro se houver.",
+      "Não ignore o pedido do usuário. Não crie assunto aleatório. Resultado premium, realista, pronto para marketing. Não adicione textos além dos explicitamente autorizados.",
     ].filter(Boolean).join("\n\n");
 
 
@@ -257,7 +267,7 @@ serve(async (req) => {
       const placement = (hasProduct && hasPerson)
         ? `\n\nPOSICIONAMENTO DESTA VARIAÇÃO (obrigatório): ${placementHints[variationIndex % placementHints.length]}.`
         : "";
-      const varyHint = `\n\nVARIAÇÃO ${variationIndex + 1} de ${variationsCount}: mantenha o mesmo briefing, identidade visual e referências; mude apenas ângulo, enquadramento e composição.${placement}\n\nLEMBRETE FINAL: ${hasProduct && hasPerson ? "o PRODUTO e o INFLUENCIADOR precisam aparecer JUNTOS nesta imagem — sem exceção." : "siga rigorosamente as referências."}`;
+      const varyHint = `\n\nVARIAÇÃO ${variationIndex + 1} de ${variationsCount}: mantenha o mesmo briefing, identidade visual e referências; mude apenas ângulo, enquadramento e composição.${placement}\n\nLEMBRETE FINAL: ${hasProduct && hasPerson ? "o PRODUTO e o INFLUENCIADOR precisam aparecer JUNTOS nesta imagem — sem exceção." : "siga rigorosamente as referências."} Não adicione nenhum texto além do título/subtítulo explicitamente autorizado no briefing principal.`;
       const messages = [{
         role: "user",
         content: [
@@ -271,7 +281,7 @@ serve(async (req) => {
           const data = await callGateway(LOVABLE_API_KEY, {
             model: attempt >= 3 && selectedModel !== "google/gemini-2.5-flash-image" ? "google/gemini-2.5-flash-image" : selectedModel,
             messages: [
-              { role: "system", content: "Você é um diretor de arte e compositor fotográfico. Siga rigorosamente o briefing do usuário, use referências visuais quando existirem e preserve a identidade visual da marca." },
+              { role: "system", content: "Você é um diretor de arte e compositor fotográfico. Siga rigorosamente o briefing do usuário e use referências visuais quando existirem. Preserve apenas o visual da identidade da marca; nunca copie nem invente textos da identidade visual. Na arte final, texto só pode ser o título/subtítulo explicitamente autorizado." },
               ...messages,
             ],
             modalities: ["image", "text"],
