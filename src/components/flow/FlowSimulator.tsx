@@ -3971,6 +3971,30 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             onChange={handleFileSelect}
             className="hidden"
           />
+
+          {/* Controles globais disponíveis em qualquer bloco */}
+          <div className="flex gap-2 mb-2 justify-end">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleCancelFlow}
+              className={`text-xs h-7 px-3 ${channel === 'telegram' ? 'text-gray-300 hover:text-white hover:bg-[#2B5278]' : 'text-muted-foreground hover:text-destructive'}`}
+              title="Cancelar roteiro atual"
+            >
+              ❌ Cancelar
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleReset}
+              className={`text-xs h-7 px-3 ${channel === 'telegram' ? 'text-gray-300 hover:text-white hover:bg-[#2B5278]' : 'text-muted-foreground hover:text-primary'}`}
+              title="Reiniciar do começo"
+            >
+              🔁 Voltar ao início
+            </Button>
+          </div>
+
+
           
           <div className="flex gap-2">
             {/* Botão de anexar arquivo - sempre visível */}
