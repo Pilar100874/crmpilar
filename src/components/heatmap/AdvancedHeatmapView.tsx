@@ -594,7 +594,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
   );
 }
 
-function RouteSelector({ routes, value, onChange, titles }: { routes: string[]; value: string; onChange: (v: string) => void; titles: Record<string, string> }) {
+function RouteSelector({ routes, value, onChange, titles = {} }: { routes: string[]; value: string; onChange: (v: string) => void; titles?: Record<string, string> }) {
   return (
     <div className="flex items-center gap-2">
       <Select value={value} onValueChange={onChange}>
