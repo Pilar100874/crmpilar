@@ -3572,16 +3572,17 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       }
       // Sim → escolha do método
       setMessages((prev) => [...prev, {
-        id: uid(), sender: "bot", text: "Como você quer definir os textos?", timestamp: new Date(), nodeId: currentNodeId,
+        id: uid(), sender: "bot", text: "Quer que a IA crie sugestões automaticamente ou prefere digitar?", timestamp: new Date(), nodeId: currentNodeId,
         buttons: [
-          { text: "✍️ Eu digito", value: "type", buttonId: "tc_m_type" },
           { text: "✨ IA sugere para mim", value: "ai", buttonId: "tc_m_ai" },
+          { text: "✍️ Eu digito", value: "type", buttonId: "tc_m_type" },
         ],
       }]);
       setCurrentBlockType("text_content_method");
       setIsWaitingInput(true);
       return;
     }
+
 
     // === text_content (novo): escolha entre digitar ou IA ===
     if (currentBlockType === "text_content_method" && currentNodeId) {
