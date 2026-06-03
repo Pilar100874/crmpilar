@@ -34,6 +34,16 @@ export default function MapaCalorSistema() {
   const [rows, setRows] = useState<UsageRow[]>([]);
   const [usuarios, setUsuarios] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [estabId, setEstabId] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) return;
+      const { data: u } = await supabase.from("usuarios").select("estabelecimento_id").eq("auth_user_id", auth.user.id).maybeSingle();
+      if (u?.estabelecimento_id) setEstabId(u.estabelecimento_id);
+    })();
+  }, []);
 
   useEffect(() => {
     let mounted = true;
