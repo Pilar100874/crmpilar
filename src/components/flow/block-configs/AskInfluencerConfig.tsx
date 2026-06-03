@@ -15,8 +15,8 @@ export const AskInfluencerConfig = ({ config, handleConfigChange }: Props) => {
         <Info className="h-4 w-4 text-purple-600" />
         <AlertDescription className="text-xs">
           Pergunta ao usuário se a peça terá um <strong>influencer</strong>. Em caso afirmativo,
-          oferece duas opções: <strong>escolher da Galeria</strong> (categoria Influencers) ou
-          <strong> enviar foto/URL</strong>. A imagem vai para o bloco <strong>Gerar Mídia IA</strong> como referência (papel INFLUENCER).
+          apresenta a <strong>Galeria de Influencers</strong> cadastrados para seleção direta.
+          A imagem vai para o bloco <strong>Gerar Mídia IA</strong> como referência (papel INFLUENCER).
         </AlertDescription>
       </Alert>
 
@@ -29,15 +29,6 @@ export const AskInfluencerConfig = ({ config, handleConfigChange }: Props) => {
           value={config.askQuestion || ""}
           onChange={(e) => handleConfigChange("askQuestion", e.target.value)}
           placeholder="A peça terá um influencer?"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-xs">Pergunta para enviar a foto</Label>
-        <Input
-          value={config.uploadPrompt || ""}
-          onChange={(e) => handleConfigChange("uploadPrompt", e.target.value)}
-          placeholder="Envie a foto do influencer (URL ou arquivo)."
         />
       </div>
 
