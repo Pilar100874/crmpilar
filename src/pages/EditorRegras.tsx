@@ -665,20 +665,44 @@ function EditorRegrasContent() {
     });
   }, []);
 
-  // Rastrear mudanças em nodes e edges
-  useEffect(() => {
-    // Ignora a inicialização
-    if (nodes.length === 0 && edges.length === 0) return;
-    setHasUnsavedChanges(true);
-  }, [nodes.length, edges.length]);
+  // Rastrear mudanças via snapshot (ignora posições/callbacks)
+  const baselineSignatureRef = useRef<string | null>(null);
+  const buildSignature = useCallback(() => {
+    return JSON.stringify({
+      n: nodes.map((n) => ({
+        id: n.id,
+        type: (n.data as any).type,
+        label: (n.data as any).label,
+        config: (n.data as any).config,
+        note: (n.data as any).note,
+      })),
+      e: edges.map((e) => ({ s: e.source, t: e.target, sh: e.sourceHandle, th: e.targetHandle })),
+      name: nomeRegra,
+      ativo: isAtiva,
+      prioridade,
+    });
+  }, [nodes, edges, nomeRegra, isAtiva, prioridade]);
 
-  // Rastrear mudanças nos campos do formulário
   useEffect(() => {
-    // Só marca como alterado se já tiver carregado uma regra
-    if (currentRegraId) {
-      setHasUnsavedChanges(true);
+    const sig = buildSignature();
+    // Aguarda a primeira carga de nodes para estabelecer baseline
+    if (baselineSignatureRef.current === null) {
+      if (nodes.length > 0) {
+        baselineSignatureRef.current = sig;
+        setHasUnsavedChanges(false);
+      }
+      return;
     }
-  }, [nomeRegra]);
+    setHasUnsavedChanges(sig !== baselineSignatureRef.current);
+  }, [buildSignature, nodes.length]);
+
+  // Reseta baseline após salvar com sucesso
+  useEffect(() => {
+    if (!hasUnsavedChanges && baselineSignatureRef.current !== null) {
+      baselineSignatureRef.current = buildSignature();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSaving]);
 
   return (
     <WorkflowBuilderLayout
