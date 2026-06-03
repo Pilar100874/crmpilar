@@ -32,7 +32,7 @@ interface EventRow {
   created_at: string;
 }
 
-export function AdvancedHeatmapView({ scope, title, description }: { scope: Scope; title: string; description: string }) {
+export function AdvancedHeatmapView({ scope, title, description, estabelecimentoId }: { scope: Scope; title: string; description: string; estabelecimentoId?: string | null }) {
   const [period, setPeriod] = useState<Period>("7");
   const [device, setDevice] = useState<DeviceFilter>("all");
   const [visitorFilter, setVisitorFilter] = useState<"all" | "new" | "returning">("all");
@@ -43,6 +43,12 @@ export function AdvancedHeatmapView({ scope, title, description }: { scope: Scop
   // Period comparison
   const [comparePrev, setComparePrev] = useState(false);
   const [prevRows, setPrevRows] = useState<EventRow[]>([]);
+  // Screenshot background
+  const [showBg, setShowBg] = useState(true);
+  const [bgUrl, setBgUrl] = useState<string | null>(null);
+  const [bgVw, setBgVw] = useState<number | null>(null);
+  const [bgVh, setBgVh] = useState<number | null>(null);
+  const [capturing, setCapturing] = useState(false);
 
   useEffect(() => {
     let mounted = true;
