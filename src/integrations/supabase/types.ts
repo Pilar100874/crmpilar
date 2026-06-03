@@ -3899,6 +3899,99 @@ export type Database = {
           },
         ]
       }
+      ecom_active_carts: {
+        Row: {
+          created_at: string
+          customer_email: string | null
+          customer_id: string | null
+          customer_phone: string | null
+          estabelecimento_id: string
+          id: string
+          item_count: number
+          items: Json
+          last_activity_at: string
+          recovery_triggered_at: string | null
+          session_id: string
+          status: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_email?: string | null
+          customer_id?: string | null
+          customer_phone?: string | null
+          estabelecimento_id: string
+          id?: string
+          item_count?: number
+          items?: Json
+          last_activity_at?: string
+          recovery_triggered_at?: string | null
+          session_id: string
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string | null
+          customer_id?: string | null
+          customer_phone?: string | null
+          estabelecimento_id?: string
+          id?: string
+          item_count?: number
+          items?: Json
+          last_activity_at?: string
+          recovery_triggered_at?: string | null
+          session_id?: string
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ecom_usage_events: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          duration_ms: number
+          estabelecimento_id: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          page_title: string | null
+          product_id: string | null
+          route: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          duration_ms?: number
+          estabelecimento_id: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          page_title?: string | null
+          product_id?: string | null
+          route: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          duration_ms?: number
+          estabelecimento_id?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          page_title?: string | null
+          product_id?: string | null
+          route?: string
+          session_id?: string
+        }
+        Relationships: []
+      }
       ecommerce_anuncios: {
         Row: {
           ativo: boolean | null
@@ -5628,6 +5721,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      heatmap_triggers: {
+        Row: {
+          acao: Json
+          ativo: boolean
+          config: Json
+          created_at: string
+          escopo: string
+          estabelecimento_id: string
+          id: string
+          nome: string
+          tipo: string
+          total_disparos: number
+          ultima_execucao_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          acao?: Json
+          ativo?: boolean
+          config?: Json
+          created_at?: string
+          escopo?: string
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          tipo: string
+          total_disparos?: number
+          ultima_execucao_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          acao?: Json
+          ativo?: boolean
+          config?: Json
+          created_at?: string
+          escopo?: string
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          tipo?: string
+          total_disparos?: number
+          ultima_execucao_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       historico_precos_concorrentes: {
         Row: {
@@ -13214,6 +13352,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      usage_events: {
+        Row: {
+          created_at: string
+          duration_ms: number
+          ended_at: string
+          estabelecimento_id: string
+          id: string
+          idle_ms: number
+          page_title: string | null
+          route: string
+          started_at: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number
+          ended_at?: string
+          estabelecimento_id: string
+          id?: string
+          idle_ms?: number
+          page_title?: string | null
+          route: string
+          started_at?: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number
+          ended_at?: string
+          estabelecimento_id?: string
+          id?: string
+          idle_ms?: number
+          page_title?: string | null
+          route?: string
+          started_at?: string
+          usuario_id?: string
+        }
+        Relationships: []
       }
       user_activity_tracking: {
         Row: {
