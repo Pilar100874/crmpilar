@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Palette, CreditCard, Workflow, Truck, FileText, Megaphone, Settings2, PanelBottom, Home, ToggleLeft, Package, Ticket, Building2, Mail } from "lucide-react";
+import { ArrowLeft, Palette, CreditCard, Workflow, Truck, FileText, Megaphone, Settings2, PanelBottom, Home, ToggleLeft, Package, Ticket, Building2, Mail, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
@@ -122,6 +122,15 @@ const configSections = [
     url: "/ecommerce-config/newsletter",
     color: "text-pink-500",
     bg: "bg-pink-500/10",
+  },
+  {
+    id: "mapa-calor",
+    title: "Mapa de Calor",
+    description: "Veja telas mais visitadas, tempo de uso e carrinhos abandonados",
+    icon: Flame,
+    url: "/ecommerce-config/mapa-calor",
+    color: "text-orange-500",
+    bg: "bg-orange-500/10",
   },
 ];
 
