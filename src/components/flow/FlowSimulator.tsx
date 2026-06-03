@@ -389,7 +389,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     promocao: {
       label: "Promoção",
       rule:
-        "OBJETIVO: peça PROMOCIONAL/COMERCIAL com foco em CONVERSÃO. Estética de varejo, energética, com hierarquia visual forte. PERMITIDO e ENCORAJADO usar selos/badges de oferta, cores vibrantes, contraste alto, palavras como 'OFERTA', 'PROMOÇÃO' (somente se vierem do bloco Conteúdo de Texto; NÃO invente preços nem percentuais que não foram fornecidos). Sensação de urgência.",
+        "OBJETIVO: peça PROMOCIONAL/COMERCIAL com foco em CONVERSÃO. Estética de varejo, energética, com hierarquia visual forte. Use cores vibrantes e contraste alto, mas NÃO crie selos/badges com texto, palavras como 'OFERTA'/'PROMOÇÃO', preços ou percentuais se esses conteúdos não estiverem exatamente no título/subtítulo fornecidos. Sensação de urgência apenas visual, sem texto extra.",
     },
     institucional: {
       label: "Institucional",
@@ -399,12 +399,12 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     evento: {
       label: "Evento",
       rule:
-        "OBJETIVO: CONVITE/ANÚNCIO de evento. Estética de pôster/flyer com forte hierarquia tipográfica. Destaque visual para nome do evento, data e local quando fornecidos. Atmosfera coerente com o tema do evento.",
+        "OBJETIVO: CONVITE/ANÚNCIO de evento. Estética de pôster/flyer com forte hierarquia visual. Só destaque nome do evento, data ou local se esses conteúdos estiverem exatamente no título/subtítulo fornecidos. Atmosfera coerente com o tema do evento, sem texto extra.",
     },
     lancamento: {
       label: "Lançamento",
       rule:
-        "OBJETIVO: peça de LANÇAMENTO de produto/serviço. Estética premium e dramática, iluminação cinematográfica, produto em primeiro plano. Selo 'NOVO' ou 'LANÇAMENTO' em destaque é permitido. Sensação de novidade e expectativa. Sem apelo promocional/desconto.",
+        "OBJETIVO: peça de LANÇAMENTO de produto/serviço. Estética premium e dramática, iluminação cinematográfica, produto em primeiro plano. NÃO use selo textual como 'NOVO' ou 'LANÇAMENTO' a menos que essa palavra esteja exatamente no título/subtítulo fornecidos. Sensação de novidade e expectativa apenas visual. Sem apelo promocional/desconto.",
     },
     educacional: {
       label: "Educacional / Informativo",
@@ -551,8 +551,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     // Regra GLOBAL: nada além do título/subtítulo definidos (ou nada de texto, se não houver).
     const hasAnyText = !!(lockedTextDirective || aiTextDirective);
     const noExtraTextDirective = hasAnyText
-      ? "REGRA ABSOLUTA DE TEXTO NA IMAGEM: renderize SOMENTE os textos especificados acima (título/subtítulo). PROIBIDO acrescentar QUALQUER outro texto, palavra, frase, slogan, call-to-action, hashtag, URL, telefone, endereço, preço, percentual, número, código, rótulo (como 'TÍTULO', 'SUBTÍTULO', 'TITLE', 'SUBTITLE'), legenda, marca d'água ou assinatura. Apenas o conteúdo textual listado, nada mais."
-      : "REGRA ABSOLUTA DE TEXTO NA IMAGEM: NÃO escreva NENHUM texto na imagem. Sem palavras, frases, slogans, hashtags, URLs, telefones, endereços, preços, percentuais, números, códigos, rótulos, legendas, marcas d'água ou assinaturas. Imagem 100% sem texto.";
+      ? "REGRA ABSOLUTA DE TEXTO NA IMAGEM: renderize SOMENTE os textos especificados acima (título/subtítulo). PROIBIDO acrescentar QUALQUER outro texto, palavra, frase, slogan, call-to-action, hashtag, URL, telefone, endereço, preço, percentual, número, código, rótulo (como 'TÍTULO', 'SUBTÍTULO', 'TITLE', 'SUBTITLE'), legenda, marca d'água ou assinatura. NÃO copie nem invente textos vindos da identidade visual, referências, embalagens, exemplos, marca, campanha ou preset. Não use texto decorativo, microtexto, textos falsos, letras aleatórias, placas, botões, selos ou etiquetas. Apenas o conteúdo textual listado, nada mais."
+      : "REGRA ABSOLUTA DE TEXTO NA IMAGEM: NÃO escreva NENHUM texto na imagem. Sem palavras, frases, slogans, hashtags, URLs, telefones, endereços, preços, percentuais, números, códigos, rótulos, legendas, marcas d'água ou assinaturas. NÃO copie nem invente textos vindos da identidade visual, referências, embalagens, exemplos, marca, campanha ou preset. Não use texto decorativo, microtexto, textos falsos, letras aleatórias, placas, botões, selos ou etiquetas. Imagem 100% sem texto.";
 
     // Regra GLOBAL: logo da empresa sempre presente na peça.
     const logoMandatoryDirective = "LOGO DA EMPRESA (OBRIGATÓRIO): incorpore o LOGO da empresa fornecido como referência na peça final, de forma elegante, legível e bem posicionada (geralmente em um canto), preservando fielmente cores, formas e proporções originais do logo. NÃO recrie, NÃO redesenhe, NÃO traduza, NÃO altere o logo — use-o tal qual a referência.";
