@@ -503,8 +503,6 @@ function BotBuilderContent() {
     [setNodes]
   );
 
-  const [deleteNodeConfirm, setDeleteNodeConfirm] = useState<{ open: boolean; nodeId: string | null }>({ open: false, nodeId: null });
-
   const handleDeleteNode = useCallback(
     (nodeId: string) => {
       const nodeToDelete = nodes.find(n => n.id === nodeId);
@@ -516,20 +514,13 @@ function BotBuilderContent() {
         });
         return;
       }
-      setDeleteNodeConfirm({ open: true, nodeId });
+      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+      setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+      setSelectedNode((prev) => (prev && prev.id === nodeId ? null : prev));
+      toast.success("Bloco e conexões excluídos!");
     },
-    [nodes]
+    [nodes, setNodes, setEdges]
   );
-
-  const confirmDeleteNode = useCallback(() => {
-    const nodeId = deleteNodeConfirm.nodeId;
-    if (!nodeId) return;
-    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
-    setSelectedNode((prev) => (prev && prev.id === nodeId ? null : prev));
-    setDeleteNodeConfirm({ open: false, nodeId: null });
-    toast.success("Bloco excluído!");
-  }, [deleteNodeConfirm.nodeId, setNodes, setEdges]);
 
   const handleNodesDelete = useCallback(
     (deleted: Node[]) => {
@@ -1577,14 +1568,8 @@ function BotBuilderContent() {
           description="Tem certeza que deseja excluir este bot? Esta ação não pode ser desfeita."
         />
 
-        {/* Dialog de confirmação de exclusão de bloco */}
-        <DeleteConfirmDialog
-          open={deleteNodeConfirm.open}
-          onOpenChange={(open) => setDeleteNodeConfirm((prev) => ({ ...prev, open }))}
-          onConfirm={confirmDeleteNode}
-          title="Excluir bloco"
-          description="Tem certeza que deseja excluir este bloco? As conexões com ele também serão removidas."
-        />
+
+
 
         {/* Dialog de confirmação ao sair */}
         <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
