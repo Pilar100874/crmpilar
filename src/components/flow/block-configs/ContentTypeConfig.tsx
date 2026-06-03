@@ -4,14 +4,30 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Megaphone, Info, MessageCircleQuestion } from "lucide-react";
+import { Megaphone, Info, MessageCircleQuestion, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import divulgacaoRef from "@/assets/content-type/divulgacao.jpg";
+import promocaoRef from "@/assets/content-type/promocao.jpg";
+import institucionalRef from "@/assets/content-type/institucional.jpg";
+import eventoRef from "@/assets/content-type/evento.jpg";
+import lancamentoRef from "@/assets/content-type/lancamento.jpg";
+import educacionalRef from "@/assets/content-type/educacional.jpg";
 
 interface ContentTypeConfigProps {
   config: any;
   handleConfigChange: (key: string, value: any) => void;
 }
 
-export const CONTENT_TYPE_OPTIONS: Array<{ value: string; label: string; description: string }> = [
+export const CONTENT_TYPE_PREVIEWS: Record<string, string> = {
+  divulgacao: divulgacaoRef,
+  promocao: promocaoRef,
+  institucional: institucionalRef,
+  evento: eventoRef,
+  lancamento: lancamentoRef,
+  educacional: educacionalRef,
+};
+
+export const CONTENT_TYPE_OPTIONS: Array<{ value: string; label: string; description: string; preview?: string }> = [
   {
     value: "divulgacao",
     label: "Divulgação",
