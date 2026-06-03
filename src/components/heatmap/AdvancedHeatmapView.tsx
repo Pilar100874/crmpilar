@@ -594,12 +594,26 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
   );
 }
 
-function RouteSelector({ routes, value, onChange }: { routes: string[]; value: string; onChange: (v: string) => void }) {
+function RouteSelector({ routes, value, onChange, titles }: { routes: string[]; value: string; onChange: (v: string) => void; titles: Record<string, string> }) {
   return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-full md:w-[500px]"><SelectValue placeholder="Selecione uma rota" /></SelectTrigger>
-      <SelectContent>{routes.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-    </Select>
+    <div className="flex items-center gap-2">
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className="w-full md:w-[500px]"><SelectValue placeholder="Selecione uma tela" /></SelectTrigger>
+        <SelectContent>
+          {routes.map((r) => (
+            <SelectItem key={r} value={r}>
+              <span className="font-medium">{prettyName(r, titles)}</span>
+              <span className="text-muted-foreground font-mono text-[10px] ml-2">{r}</span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {value && (
+        <a href={value} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline" title="Abrir tela em nova janela">
+          <ExternalLink className="h-3.5 w-3.5" /> Abrir
+        </a>
+      )}
+    </div>
   );
 }
 
