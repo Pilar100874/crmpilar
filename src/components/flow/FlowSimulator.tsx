@@ -2511,6 +2511,59 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
   };
 
+  // Gera N amostras de imagem do produto (fundo transparente) a partir da descrição em texto
+  const generateProductSamples = async (nodeId: string, description: string) => {
+    setIsWaitingInput(false);
+    addSystemMessage("🎨 Gerando 3 amostras de imagem do produto (fundo transparente)…");
+    try {
+      const estId = await getEstabelecimentoId();
+      const { data, error } = await supabase.functions.invoke("bot-generate-product-samples", {
+        body: { description, count: 3, estabelecimentoId: estId || "" },
+      });
+      if (error) throw new Error(error.message || "Falha na função");
+      const images: string[] = Array.isArray(data?.images) ? data.images : [];
+      if (!images.length) throw new Error(data?.error || "Nenhuma imagem retornada");
+
+      const st = simNodeStateRef.current[nodeId] || {};
+      st.productSamples = images;
+      st.productDescription = description;
+      simNodeStateRef.current[nodeId] = st;
+
+      images.forEach((url, i) => addBotMediaMessage(url, "image", `Opção ${i + 1}`, nodeId));
+
+      const buttons = images.map((_, i) => ({
+        text: `✅ Usar opção ${i + 1}`,
+        value: `pick_${i}`,
+        buttonId: `pim_s_${i}`,
+      }));
+      buttons.push({ text: "🔄 Gerar mais 3", value: "regen", buttonId: "pim_s_regen" });
+      buttons.push({ text: "❌ Cancelar", value: "cancel", buttonId: "pim_s_cancel" });
+
+      setMessages((prev) => [...prev, {
+        id: uid(), sender: "bot",
+        text: "Escolha uma das opções, gere mais 3 amostras ou cancele:",
+        timestamp: new Date(), nodeId,
+        buttons,
+      }]);
+      setCurrentBlockType("ask_product_image_text_pick");
+      setIsWaitingInput(true);
+    } catch (e: any) {
+      addSystemMessage(`❌ Erro ao gerar amostras: ${e?.message || e}`);
+      setMessages((prev) => [...prev, {
+        id: uid(), sender: "bot",
+        text: "Quer tentar de novo?",
+        timestamp: new Date(), nodeId,
+        buttons: [
+          { text: "🔄 Tentar novamente", value: "regen", buttonId: "pim_s_regen_err" },
+          { text: "❌ Cancelar", value: "cancel", buttonId: "pim_s_cancel_err" },
+        ],
+      }]);
+      setCurrentBlockType("ask_product_image_text_pick");
+      setIsWaitingInput(true);
+    }
+  };
+
+
   const handleSendMessage = async () => {
     // Para ask_file, processar o arquivo
     if (currentBlockType === "ask_file" && selectedFile) {
