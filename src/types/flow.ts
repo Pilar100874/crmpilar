@@ -586,13 +586,14 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   {
     type: "ask_influencer",
     label: "Influencer?",
-    description: "Pergunta se a peça terá influencer; se sim, coleta a foto de referência.",
+    description: "Pergunta se a peça terá influencer; se sim, usa o influencer fixo configurado no bloco.",
     icon: "UserSquare2",
     color: "text-purple-600",
     defaultData: {
       askQuestion: "A peça terá um influencer?",
-      uploadPrompt: "Envie a foto/referência do influencer (URL ou arquivo).",
       outputVariable: "influencer_image_url",
+      fixedInfluencerId: "",
+      fixedInfluencerUrl: "",
     },
   },
   // Imagem do produto — 3 opções com confirmação
