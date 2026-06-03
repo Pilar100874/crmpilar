@@ -2090,10 +2090,24 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           }, 400);
         } else {
           const prompt = interpolateVariables(
-            config.askPrompt || "Qual o objetivo da peça? (divulgacao, promocao, institucional, evento, lancamento, educacional)",
+            config.askPrompt || "Qual o objetivo da peça? Toque em uma das opções abaixo:",
             contextRef.current,
           );
-          addBotMessage(prompt, node.id);
+          const ctButtons = Object.entries(CONTENT_TYPE_DIRECTIVES)
+            .filter(([k]) => k !== "custom")
+            .map(([key, meta], idx) => ({
+              text: meta.label,
+              value: key,
+              buttonId: `ct_${idx}`,
+            }));
+          setMessages((prev) => [...prev, {
+            id: uid(),
+            sender: "bot",
+            text: prompt,
+            timestamp: new Date(),
+            nodeId: node.id,
+            buttons: ctButtons,
+          }]);
           setIsWaitingInput(true);
           setCurrentBlockType("content_type_ask");
           setPendingVariable(`__ct_${node.id}`);
