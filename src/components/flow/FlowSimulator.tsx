@@ -2391,6 +2391,61 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
   };
 
+  // Gera 2 sugestões de textos via IA para o bloco text_content
+  const generateTextContentSuggestions = async (nodeId: string, brief: string) => {
+    setIsWaitingInput(false);
+    addSystemMessage("✨ Gerando sugestões de textos com IA...");
+    try {
+      const ct = findUpstreamContentType(nodeId);
+      const { data, error } = await supabase.functions.invoke("bot-suggest-text-content", {
+        body: { briefing: brief, contentType: ct?.type || "", count: 2 },
+      });
+      if (error) throw new Error(error.message || "Falha na função");
+      if (!data?.success || !Array.isArray(data?.suggestions) || data.suggestions.length === 0) {
+        throw new Error(data?.error || "Sem sugestões retornadas");
+      }
+      const suggestions = data.suggestions.slice(0, 2);
+      const st = simNodeStateRef.current[nodeId] || {};
+      st.aiSuggestions = suggestions;
+      simNodeStateRef.current[nodeId] = st;
+      suggestions.forEach((s: any, i: number) => {
+        const lines = [
+          `✨ Opção ${i + 1}`,
+          s.title && `• Título: "${s.title}"`,
+          s.subtitle && `• Subtítulo: "${s.subtitle}"`,
+          s.body && `• Texto: "${s.body}"`,
+        ].filter(Boolean).join("\n");
+        addBotMessage(lines, nodeId);
+      });
+      setMessages((prev) => [...prev, {
+        id: uid(), sender: "bot",
+        text: "Escolha uma opção, peça novas sugestões ou cancele:",
+        timestamp: new Date(), nodeId,
+        buttons: [
+          { text: "✅ Usar opção 1", value: "pick_0", buttonId: "tc_ai_p0" },
+          { text: "✅ Usar opção 2", value: "pick_1", buttonId: "tc_ai_p1" },
+          { text: "🔄 Gerar novas sugestões", value: "regen", buttonId: "tc_ai_regen" },
+          { text: "❌ Cancelar", value: "cancel", buttonId: "tc_ai_cancel" },
+        ],
+      }]);
+      setCurrentBlockType("text_content_ai_pick");
+      setIsWaitingInput(true);
+    } catch (e: any) {
+      addSystemMessage(`❌ Erro ao gerar sugestões: ${e?.message || e}`);
+      setMessages((prev) => [...prev, {
+        id: uid(), sender: "bot",
+        text: "Quer tentar de novo?",
+        timestamp: new Date(), nodeId,
+        buttons: [
+          { text: "🔄 Tentar novamente", value: "regen", buttonId: "tc_ai_regen_err" },
+          { text: "❌ Cancelar", value: "cancel", buttonId: "tc_ai_cancel_err" },
+        ],
+      }]);
+      setCurrentBlockType("text_content_ai_pick");
+      setIsWaitingInput(true);
+    }
+  };
+
   const handleSendMessage = async () => {
     // Para ask_file, processar o arquivo
     if (currentBlockType === "ask_file" && selectedFile) {
