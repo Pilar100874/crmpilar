@@ -6,6 +6,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Activity, Clock, Users, Flame, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { AdvancedHeatmapView } from "@/components/heatmap/AdvancedHeatmapView";
+
 
 type Period = "1" | "7" | "30";
 
