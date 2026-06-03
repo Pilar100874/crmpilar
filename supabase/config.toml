@@ -293,3 +293,6 @@ verify_jwt = false
 
 [functions.generate-agent-card]
 verify_jwt = false
+
+[functions.bot-suggest-text-content]
+verify_jwt = false

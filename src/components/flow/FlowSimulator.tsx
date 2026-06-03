@@ -316,14 +316,16 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
   };
 
-  // Resolve os valores de um bloco text_content levando em conta valores fixos
-  // OU valores capturados em tempo de execução (modo "ask").
+  // Resolve os valores de um bloco text_content. Sempre prefere o runtime
+  // (definido pelo novo fluxo Sim/Não → Digitar/IA) se existir; senão usa
+  // o valor fixo configurado no bloco.
   const resolveTextContentValues = (tcNodeId: string, cfg: any) => {
-    const runtime = simNodeStateRef.current[tcNodeId]?.resolvedTextContent || {};
+    const runtime = simNodeStateRef.current[tcNodeId]?.resolvedTextContent;
     const pick = (key: "title" | "subtitle" | "body") => {
-      if (key === "body" && cfg[`bodyEnabled`] === false) return "";
-      const mode = cfg[`${key}Mode`] === "ask" ? "ask" : "fixed";
-      if (mode === "ask") return (runtime[key] || "").toString().trim();
+      if (runtime && runtime[key] !== undefined) {
+        return (runtime[key] || "").toString().trim();
+      }
+      if (key === "body" && cfg["bodyEnabled"] === false) return "";
       return interpolateVariables(cfg[key] || "", contextRef.current).trim();
     };
     return { title: pick("title"), subtitle: pick("subtitle"), body: pick("body") };
@@ -2136,52 +2138,43 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       }
 
       case "text_content": {
-        // Monta a fila de campos que precisam ser pedidos ao usuário
-        const askQueue: Array<{ field: "title" | "subtitle" | "body"; prompt: string }> = [];
-        const tryAsk = (field: "title" | "subtitle" | "body", defaultPrompt: string) => {
-          if (field === "body" && config.bodyEnabled === false) return;
-          if (config[`${field}Mode`] === "ask") {
-            const prompt = interpolateVariables(
-              config[`${field}AskPrompt`] || defaultPrompt,
-              contextRef.current,
-            );
-            askQueue.push({ field, prompt });
-          }
-        };
-        tryAsk("title", "Qual o título que devo colocar na imagem?");
-        tryAsk("subtitle", "Qual o subtítulo que devo colocar na imagem?");
-        tryAsk("body", "Quer adicionar um texto extra na imagem? (digite ou responda 'não')");
-
-        // Inicializa estado runtime para este nó
-        simNodeStateRef.current[node.id] = {
-          ...(simNodeStateRef.current[node.id] || {}),
-          resolvedTextContent: {
-            title: config.titleMode === "ask" ? "" : (config.title || ""),
-            subtitle: config.subtitleMode === "ask" ? "" : (config.subtitle || ""),
-            body: config.bodyEnabled === false
-              ? ""
-              : (config.bodyMode === "ask" ? "" : (config.body || "")),
-          },
-          textContentAskQueue: askQueue,
-          textContentAskIndex: 0,
-        };
-
-        if (askQueue.length === 0) {
-          const v = simNodeStateRef.current[node.id].resolvedTextContent;
-          const parts = [v.title && `Título: "${v.title}"`, v.subtitle && `Subtítulo: "${v.subtitle}"`, v.body && `Texto: "${v.body}"`].filter(Boolean);
-          addSystemMessage(`📝 Conteúdo de Texto fixado para o próximo Gerar Mídia IA${parts.length ? ` — ${parts.join(" · ")}` : ""}.`);
+        // Se o designer pré-configurou textos fixos (sem nenhum modo "ask"/"ai"),
+        // aplica direto sem perguntar (mantém comportamento legado).
+        const modes = ["title", "subtitle", "body"].map((k) => config[`${k}Mode`] || "fixed");
+        const allFixed = modes.every((m) => m === "fixed");
+        const hasAnyFixedValue = !!(
+          (config.title && config.title.trim()) ||
+          (config.subtitle && config.subtitle.trim()) ||
+          (config.body && config.body.trim())
+        );
+        if (allFixed && hasAnyFixedValue) {
+          simNodeStateRef.current[node.id] = {
+            ...(simNodeStateRef.current[node.id] || {}),
+            resolvedTextContent: {
+              title: config.title || "",
+              subtitle: config.subtitle || "",
+              body: config.bodyEnabled === false ? "" : (config.body || ""),
+            },
+          };
+          addSystemMessage(`📝 Conteúdo de Texto fixado para o próximo Gerar Mídia IA.`);
           safeSetTimeout(() => {
             const nextNode = getNextNode(node.id);
             if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
           }, 400);
-        } else {
-          // Pergunta o primeiro campo
-          addBotMessage(askQueue[0].prompt, node.id);
-          setIsWaitingInput(true);
-          setCurrentBlockType("text_content_ask");
-          setPendingVariable(`__tc_${node.id}`);
-          setCurrentNodeId(node.id);
+          break;
         }
+
+        // Novo fluxo: pergunta Sim/Não antes de qualquer coisa
+        setMessages((prev) => [...prev, {
+          id: uid(), sender: "bot", text: "Você quer colocar textos na imagem?", timestamp: new Date(), nodeId: node.id,
+          buttons: [
+            { text: "✅ Sim", value: "sim", buttonId: "tc_yes" },
+            { text: "❌ Não", value: "nao", buttonId: "tc_no" },
+          ],
+        }]);
+        setIsWaitingInput(true);
+        setCurrentBlockType("text_content_yesno");
+        setCurrentNodeId(node.id);
         break;
       }
 
@@ -2398,6 +2391,61 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
   };
 
+  // Gera 2 sugestões de textos via IA para o bloco text_content
+  const generateTextContentSuggestions = async (nodeId: string, brief: string) => {
+    setIsWaitingInput(false);
+    addSystemMessage("✨ Gerando sugestões de textos com IA...");
+    try {
+      const ct = findUpstreamContentType(nodeId);
+      const { data, error } = await supabase.functions.invoke("bot-suggest-text-content", {
+        body: { briefing: brief, contentType: ct?.type || "", count: 2 },
+      });
+      if (error) throw new Error(error.message || "Falha na função");
+      if (!data?.success || !Array.isArray(data?.suggestions) || data.suggestions.length === 0) {
+        throw new Error(data?.error || "Sem sugestões retornadas");
+      }
+      const suggestions = data.suggestions.slice(0, 2);
+      const st = simNodeStateRef.current[nodeId] || {};
+      st.aiSuggestions = suggestions;
+      simNodeStateRef.current[nodeId] = st;
+      suggestions.forEach((s: any, i: number) => {
+        const lines = [
+          `✨ Opção ${i + 1}`,
+          s.title && `• Título: "${s.title}"`,
+          s.subtitle && `• Subtítulo: "${s.subtitle}"`,
+          s.body && `• Texto: "${s.body}"`,
+        ].filter(Boolean).join("\n");
+        addBotMessage(lines, nodeId);
+      });
+      setMessages((prev) => [...prev, {
+        id: uid(), sender: "bot",
+        text: "Escolha uma opção, peça novas sugestões ou cancele:",
+        timestamp: new Date(), nodeId,
+        buttons: [
+          { text: "✅ Usar opção 1", value: "pick_0", buttonId: "tc_ai_p0" },
+          { text: "✅ Usar opção 2", value: "pick_1", buttonId: "tc_ai_p1" },
+          { text: "🔄 Gerar novas sugestões", value: "regen", buttonId: "tc_ai_regen" },
+          { text: "❌ Cancelar", value: "cancel", buttonId: "tc_ai_cancel" },
+        ],
+      }]);
+      setCurrentBlockType("text_content_ai_pick");
+      setIsWaitingInput(true);
+    } catch (e: any) {
+      addSystemMessage(`❌ Erro ao gerar sugestões: ${e?.message || e}`);
+      setMessages((prev) => [...prev, {
+        id: uid(), sender: "bot",
+        text: "Quer tentar de novo?",
+        timestamp: new Date(), nodeId,
+        buttons: [
+          { text: "🔄 Tentar novamente", value: "regen", buttonId: "tc_ai_regen_err" },
+          { text: "❌ Cancelar", value: "cancel", buttonId: "tc_ai_cancel_err" },
+        ],
+      }]);
+      setCurrentBlockType("text_content_ai_pick");
+      setIsWaitingInput(true);
+    }
+  };
+
   const handleSendMessage = async () => {
     // Para ask_file, processar o arquivo
     if (currentBlockType === "ask_file" && selectedFile) {
@@ -2461,8 +2509,21 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       return;
     }
 
+    // === text_content (IA): briefing digitado pelo usuário ===
+    if (currentBlockType === "text_content_ai_brief" && currentNodeId) {
+      const brief = input.trim();
+      setInput("");
+      if (!brief) return;
+      const st = simNodeStateRef.current[currentNodeId] || {};
+      st.aiBrief = brief;
+      simNodeStateRef.current[currentNodeId] = st;
+      await generateTextContentSuggestions(currentNodeId, brief);
+      return;
+    }
+
     // === content_type: coleta o objetivo do criativo do usuário ===
     // === ask_influencer_upload removido — apenas galeria ===
+
 
     // === ask_product_image: input para os 3 métodos ===
     if (currentBlockType === "ask_product_image_input" && currentNodeId) {
@@ -3307,7 +3368,105 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
       return;
     }
-    // === confirmação dos textos coletados ===
+    // === text_content (novo): Sim/Não inicial ===
+    if (currentBlockType === "text_content_yesno" && currentNodeId) {
+      addUserMessage(button.text);
+      if (button.value === "nao") {
+        simNodeStateRef.current[currentNodeId] = {
+          ...(simNodeStateRef.current[currentNodeId] || {}),
+          resolvedTextContent: { title: "", subtitle: "", body: "" },
+        };
+        addSuccessMessage("✅ Seguindo sem textos na imagem.");
+        setIsWaitingInput(false); setCurrentBlockType(null);
+        const next = getNextNode(currentNodeId);
+        if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+        return;
+      }
+      // Sim → escolha do método
+      setMessages((prev) => [...prev, {
+        id: uid(), sender: "bot", text: "Como você quer definir os textos?", timestamp: new Date(), nodeId: currentNodeId,
+        buttons: [
+          { text: "✍️ Eu digito", value: "type", buttonId: "tc_m_type" },
+          { text: "✨ IA sugere para mim", value: "ai", buttonId: "tc_m_ai" },
+        ],
+      }]);
+      setCurrentBlockType("text_content_method");
+      setIsWaitingInput(true);
+      return;
+    }
+
+    // === text_content (novo): escolha entre digitar ou IA ===
+    if (currentBlockType === "text_content_method" && currentNodeId) {
+      addUserMessage(button.text);
+      if (button.value === "type") {
+        const askQueue = [
+          { field: "title" as const, prompt: "Qual o título que devo colocar na imagem?" },
+          { field: "subtitle" as const, prompt: "Qual o subtítulo? (digite '-' para deixar em branco)" },
+          { field: "body" as const, prompt: "Quer adicionar um texto extra na imagem? (digite ou responda 'não')" },
+        ];
+        simNodeStateRef.current[currentNodeId] = {
+          ...(simNodeStateRef.current[currentNodeId] || {}),
+          resolvedTextContent: { title: "", subtitle: "", body: "" },
+          textContentAskQueue: askQueue,
+          textContentAskIndex: 0,
+        };
+        addBotMessage(askQueue[0].prompt, currentNodeId);
+        setCurrentBlockType("text_content_ask");
+        setPendingVariable(`__tc_${currentNodeId}`);
+        setIsWaitingInput(true);
+        return;
+      }
+      // ai
+      addBotMessage("Me conte em poucas palavras o que a imagem deve comunicar (produto, oferta, tom, público...). A IA vai gerar 2 sugestões para você escolher.", currentNodeId);
+      setCurrentBlockType("text_content_ai_brief");
+      setIsWaitingInput(true);
+      return;
+    }
+
+    // === text_content (novo): escolha de sugestão da IA / loop ===
+    if (currentBlockType === "text_content_ai_pick" && currentNodeId) {
+      addUserMessage(button.text);
+      const st = simNodeStateRef.current[currentNodeId] || {};
+      if (button.value === "cancel") {
+        st.resolvedTextContent = { title: "", subtitle: "", body: "" };
+        simNodeStateRef.current[currentNodeId] = st;
+        addSystemMessage("❌ Sugestões canceladas. Seguindo sem textos.");
+        setIsWaitingInput(false); setCurrentBlockType(null);
+        const next = getNextNode(currentNodeId);
+        if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+        return;
+      }
+      if (button.value === "regen") {
+        const brief = st.aiBrief || "";
+        if (!brief) {
+          addBotMessage("Por favor, me conte novamente o briefing:", currentNodeId);
+          setCurrentBlockType("text_content_ai_brief");
+          setIsWaitingInput(true);
+          return;
+        }
+        generateTextContentSuggestions(currentNodeId, brief);
+        return;
+      }
+      if (typeof button.value === "string" && button.value.startsWith("pick_")) {
+        const idx = Number(button.value.split("_")[1]);
+        const pick = (st.aiSuggestions || [])[idx];
+        if (!pick) { addSystemMessage("⚠️ Opção inválida."); return; }
+        st.resolvedTextContent = {
+          title: pick.title || "",
+          subtitle: pick.subtitle || "",
+          body: pick.body || "",
+        };
+        simNodeStateRef.current[currentNodeId] = st;
+        addSuccessMessage(`✅ Opção ${idx + 1} selecionada.`);
+        setIsWaitingInput(false); setCurrentBlockType(null);
+        const next = getNextNode(currentNodeId);
+        if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+        return;
+      }
+      return;
+    }
+
+    // === confirmação dos textos coletados (modo "Eu digito") ===
     if (currentBlockType === "text_content_confirm" && currentNodeId) {
       addUserMessage(button.text);
       const node = nodes.find((n) => n.id === currentNodeId);
@@ -3520,6 +3679,18 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, msg]);
+  };
+
+  const handleCancelFlow = () => {
+    timeoutsRef.current.forEach((t) => clearTimeout(t));
+    timeoutsRef.current = [];
+    setIsWaitingInput(false);
+    setCurrentBlockType(null);
+    setPendingVariable(null);
+    setInput("");
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    addSystemMessage("❌ Roteiro cancelado. Clique em 'Voltar ao início' para reiniciar.");
   };
 
   const handleReset = () => {
@@ -3800,6 +3971,30 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             onChange={handleFileSelect}
             className="hidden"
           />
+
+          {/* Controles globais disponíveis em qualquer bloco */}
+          <div className="flex gap-2 mb-2 justify-end">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleCancelFlow}
+              className={`text-xs h-7 px-3 ${channel === 'telegram' ? 'text-gray-300 hover:text-white hover:bg-[#2B5278]' : 'text-muted-foreground hover:text-destructive'}`}
+              title="Cancelar roteiro atual"
+            >
+              ❌ Cancelar
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleReset}
+              className={`text-xs h-7 px-3 ${channel === 'telegram' ? 'text-gray-300 hover:text-white hover:bg-[#2B5278]' : 'text-muted-foreground hover:text-primary'}`}
+              title="Reiniciar do começo"
+            >
+              🔁 Voltar ao início
+            </Button>
+          </div>
+
+
           
           <div className="flex gap-2">
             {/* Botão de anexar arquivo - sempre visível */}
