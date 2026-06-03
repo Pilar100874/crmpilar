@@ -128,7 +128,7 @@ export default function MapaCalorSistema() {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Flame className="h-6 w-6 text-orange-500" /> Mapa de Calor do Sistema
           </h1>
@@ -136,6 +136,7 @@ export default function MapaCalorSistema() {
             Telas mais usadas, tempo de uso por usuário e tempo ocioso.
           </p>
         </div>
+        <HeatmapConfigDialog scope="sistema" estabelecimentoId={estabId} />
       </div>
 
       <Tabs defaultValue="advanced">
