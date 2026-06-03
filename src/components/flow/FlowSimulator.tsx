@@ -2632,9 +2632,15 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           return;
         }
       } else {
-        // text
+        // text → gera 3 amostras com fundo transparente e pede para o usuário escolher
         if (!raw) { addSystemMessage("⚠️ Descreva o produto."); return; }
         description = raw;
+        simNodeStateRef.current[currentNodeId] = {
+          ...state,
+          productDescription: description,
+        };
+        await generateProductSamples(currentNodeId, description);
+        return;
       }
 
       simNodeStateRef.current[currentNodeId] = {
