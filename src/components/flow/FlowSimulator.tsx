@@ -2938,6 +2938,24 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
   const handleButtonClick = (button: { text: string; value: string; buttonId?: string; keywords?: string[] }, nodeId?: string) => {
     console.log("🔘 Button clicked:", { button, nodeId, pendingVariable, currentBlockType });
+
+    // === content_type: clique em opção pré-definida ===
+    if (currentBlockType === "content_type_ask" && currentNodeId) {
+      addUserMessage(button.text);
+      const matched = button.value;
+      simNodeStateRef.current[currentNodeId] = {
+        ...(simNodeStateRef.current[currentNodeId] || {}),
+        resolvedContentType: { contentType: matched },
+      };
+      const meta = CONTENT_TYPE_DIRECTIVES[matched];
+      addSystemMessage(`🎯 Tipo de Conteúdo definido: ${meta?.label || matched}.`);
+      const ctNodeId = currentNodeId;
+      setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
+      const nextNode = getNextNode(ctNodeId);
+      if (nextNode) safeSetTimeout(() => { setCurrentNodeId(nextNode.id); executeNode(nextNode); }, 400);
+      return;
+    }
+
     
     // Para keyword_options, extrair o texto sem o número
     let displayText = button.text;
