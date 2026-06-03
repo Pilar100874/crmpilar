@@ -2231,7 +2231,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
         // Novo fluxo: pergunta Sim/Não antes de qualquer coisa
         setMessages((prev) => [...prev, {
-          id: uid(), sender: "bot", text: "Você quer colocar textos na imagem?", timestamp: new Date(), nodeId: node.id,
+          id: uid(), sender: "bot", text: "Você quer usar título e subtítulo na imagem?", timestamp: new Date(), nodeId: node.id,
           buttons: [
             { text: "✅ Sim", value: "sim", buttonId: "tc_yes" },
             { text: "❌ Não", value: "nao", buttonId: "tc_no" },
@@ -2463,13 +2463,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     try {
       const ct = findUpstreamContentType(nodeId);
       const { data, error } = await supabase.functions.invoke("bot-suggest-text-content", {
-        body: { briefing: brief, contentType: ct?.type || "", count: 2 },
+        body: { briefing: brief, contentType: ct?.type || "", count: 3, fieldsOnly: ["title", "subtitle"] },
       });
       if (error) throw new Error(error.message || "Falha na função");
       if (!data?.success || !Array.isArray(data?.suggestions) || data.suggestions.length === 0) {
         throw new Error(data?.error || "Sem sugestões retornadas");
       }
-      const suggestions = data.suggestions.slice(0, 2);
+      const suggestions = data.suggestions.slice(0, 3);
       const st = simNodeStateRef.current[nodeId] || {};
       st.aiSuggestions = suggestions;
       simNodeStateRef.current[nodeId] = st;
@@ -2478,23 +2478,27 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           `✨ Opção ${i + 1}`,
           s.title && `• Título: "${s.title}"`,
           s.subtitle && `• Subtítulo: "${s.subtitle}"`,
-          s.body && `• Texto: "${s.body}"`,
         ].filter(Boolean).join("\n");
         addBotMessage(lines, nodeId);
       });
+      const pickButtons = suggestions.map((_: any, i: number) => ({
+        text: `✅ Usar opção ${i + 1}`,
+        value: `pick_${i}`,
+        buttonId: `tc_ai_p${i}`,
+      }));
       setMessages((prev) => [...prev, {
         id: uid(), sender: "bot",
         text: "Escolha uma opção, peça novas sugestões ou cancele:",
         timestamp: new Date(), nodeId,
         buttons: [
-          { text: "✅ Usar opção 1", value: "pick_0", buttonId: "tc_ai_p0" },
-          { text: "✅ Usar opção 2", value: "pick_1", buttonId: "tc_ai_p1" },
+          ...pickButtons,
           { text: "🔄 Gerar novas sugestões", value: "regen", buttonId: "tc_ai_regen" },
           { text: "❌ Cancelar", value: "cancel", buttonId: "tc_ai_cancel" },
         ],
       }]);
       setCurrentBlockType("text_content_ai_pick");
       setIsWaitingInput(true);
+
     } catch (e: any) {
       addSystemMessage(`❌ Erro ao gerar sugestões: ${e?.message || e}`);
       setMessages((prev) => [...prev, {
@@ -3572,16 +3576,17 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       }
       // Sim → escolha do método
       setMessages((prev) => [...prev, {
-        id: uid(), sender: "bot", text: "Como você quer definir os textos?", timestamp: new Date(), nodeId: currentNodeId,
+        id: uid(), sender: "bot", text: "Quer que a IA crie sugestões automaticamente ou prefere digitar?", timestamp: new Date(), nodeId: currentNodeId,
         buttons: [
-          { text: "✍️ Eu digito", value: "type", buttonId: "tc_m_type" },
           { text: "✨ IA sugere para mim", value: "ai", buttonId: "tc_m_ai" },
+          { text: "✍️ Eu digito", value: "type", buttonId: "tc_m_type" },
         ],
       }]);
       setCurrentBlockType("text_content_method");
       setIsWaitingInput(true);
       return;
     }
+
 
     // === text_content (novo): escolha entre digitar ou IA ===
     if (currentBlockType === "text_content_method" && currentNodeId) {
@@ -3590,7 +3595,6 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         const askQueue = [
           { field: "title" as const, prompt: "Qual o título que devo colocar na imagem?" },
           { field: "subtitle" as const, prompt: "Qual o subtítulo? (digite '-' para deixar em branco)" },
-          { field: "body" as const, prompt: "Quer adicionar um texto extra na imagem? (digite ou responda 'não')" },
         ];
         simNodeStateRef.current[currentNodeId] = {
           ...(simNodeStateRef.current[currentNodeId] || {}),
@@ -3605,11 +3609,12 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         return;
       }
       // ai
-      addBotMessage("Me conte em poucas palavras o que a imagem deve comunicar (produto, oferta, tom, público...). A IA vai gerar 2 sugestões para você escolher.", currentNodeId);
+      addBotMessage("Que tipo de informação você quer transmitir na imagem? (ex.: oferta de Black Friday em smartphones, convite para evento de lançamento, divulgação de novo serviço...)", currentNodeId);
       setCurrentBlockType("text_content_ai_brief");
       setIsWaitingInput(true);
       return;
     }
+
 
     // === text_content (novo): escolha de sugestão da IA / loop ===
     if (currentBlockType === "text_content_ai_pick" && currentNodeId) {

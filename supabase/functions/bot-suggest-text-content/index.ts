@@ -15,7 +15,9 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const briefing: string = (body.briefing || '').toString().trim();
     const contentType: string = (body.contentType || '').toString().trim();
-    const count: number = Math.max(2, Math.min(4, parseInt(body.count) || 2));
+    const count: number = Math.max(2, Math.min(5, parseInt(body.count) || 3));
+    const fieldsOnly: string[] = Array.isArray(body.fieldsOnly) ? body.fieldsOnly : [];
+    const onlyTitleSubtitle = fieldsOnly.length > 0 && fieldsOnly.every((f) => f === "title" || f === "subtitle");
 
     if (!briefing) throw new Error('Briefing vazio');
 
@@ -23,13 +25,13 @@ Deno.serve(async (req) => {
 
 REGRAS:
 - Gere EXATAMENTE ${count} variações distintas entre si (tons, ângulos ou abordagens diferentes).
-- Cada variação contém: title (TÍTULO - chamada principal, no máximo 6 palavras), subtitle (SUBTÍTULO - reforço, no máximo 10 palavras) e body (TEXTO COMPLEMENTAR opcional, no máximo 12 palavras; pode ser string vazia).
+- Cada variação contém: title (TÍTULO - chamada principal, no máximo 6 palavras), subtitle (SUBTÍTULO - reforço, no máximo 10 palavras)${onlyTitleSubtitle ? '' : ' e body (TEXTO COMPLEMENTAR opcional, no máximo 12 palavras; pode ser string vazia)'}.
 - Português brasileiro. Sem emojis. Sem aspas dentro dos textos.
 - Frases curtas e diretas — imagens renderizam mal frases longas.
 ${contentType ? `- Tipo de conteúdo: "${contentType}". Adapte o tom (promocao=urgência/oferta, institucional=sóbrio, divulgacao=aspiracional, lancamento=premium/novidade, evento=convite, educacional=informativo).` : ''}
 
 RETORNE APENAS JSON válido no formato:
-{"suggestions":[{"title":"...","subtitle":"...","body":"..."}, ...]}`;
+{"suggestions":[{"title":"...","subtitle":"..."${onlyTitleSubtitle ? '' : ',"body":"..."'}}, ...]}`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
