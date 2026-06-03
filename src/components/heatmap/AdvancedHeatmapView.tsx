@@ -273,10 +273,21 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
               {browsers.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
             </SelectContent>
           </Select>
-          <label className="flex items-center gap-2 text-sm cursor-pointer ml-auto">
-            <input type="checkbox" checked={comparePrev} onChange={(e) => setComparePrev(e.target.checked)} />
-            Comparar com período anterior
-          </label>
+          <div className="flex items-center gap-2 ml-auto">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" checked={comparePrev} onChange={(e) => setComparePrev(e.target.checked)} />
+              Comparar período
+            </label>
+            <div className="flex items-center gap-2 border-l pl-3">
+              <ImageIcon className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">Fundo da tela</span>
+              <Switch checked={showBg} onCheckedChange={setShowBg} />
+            </div>
+            <Button size="sm" variant="outline" onClick={handleCaptureCurrent} disabled={capturing}>
+              {capturing ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Camera className="h-3.5 w-3.5 mr-1" />}
+              Capturar tela atual
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
