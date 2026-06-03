@@ -1,7 +1,7 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Package, Info } from "lucide-react";
+import { Package, Info, Image } from "lucide-react";
 
 interface Props {
   config: any;
@@ -78,6 +78,25 @@ export const AskProductImageConfig = ({ config, handleConfigChange }: Props) => 
             placeholder="produto_descricao"
           />
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="flex items-center gap-2 text-xs">
+          <Image className="h-3.5 w-3.5 text-amber-600" />
+          Quantidade de amostras a gerar
+        </Label>
+        <Input
+          type="number"
+          min={1}
+          max={6}
+          value={config.sampleCount ?? 3}
+          onChange={(e) => {
+            const v = parseInt(e.target.value);
+            handleConfigChange("sampleCount", Number.isNaN(v) ? 3 : Math.max(1, Math.min(6, v)));
+          }}
+          placeholder="3"
+        />
+        <p className="text-[10px] text-muted-foreground">Mínimo 1, máximo 6. Padrão: 3.</p>
       </div>
     </div>
   );

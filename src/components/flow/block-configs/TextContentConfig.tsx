@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Type, Info, Sparkles, MessageCircleQuestion, Lock, ListChecks, Plus, Trash2 } from "lucide-react";
+import { Type, Info, Sparkles, MessageCircleQuestion, Lock, ListChecks, Plus, Trash2, Hash } from "lucide-react";
 
 interface TextContentConfigProps {
   config: any;
@@ -296,6 +296,27 @@ export const TextContentConfig = ({ config, handleConfigChange }: TextContentCon
           </SelectContent>
         </Select>
       </div>
+
+      {blockMode !== "fixed" && (
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2 text-xs">
+            <Hash className="h-3.5 w-3.5 text-violet-600" />
+            Quantidade de sugestões geradas por IA
+          </Label>
+          <Input
+            type="number"
+            min={2}
+            max={5}
+            value={config.suggestionCount ?? 3}
+            onChange={(e) => {
+              const v = parseInt(e.target.value);
+              handleConfigChange("suggestionCount", Number.isNaN(v) ? 3 : Math.max(2, Math.min(5, v)));
+            }}
+            placeholder="3"
+          />
+          <p className="text-[10px] text-muted-foreground">Mínimo 2, máximo 5. Padrão: 3.</p>
+        </div>
+      )}
 
       {blockMode === "fixed" && (
         <>
