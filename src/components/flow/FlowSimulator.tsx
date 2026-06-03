@@ -14,6 +14,12 @@ import { BLOCK_DEFINITIONS } from "@/types/flow";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
+interface SocialLink {
+  platform: string; // instagram | facebook | tiktok | linkedin | twitter | youtube
+  url: string;
+  label?: string;
+}
+
 interface Message {
   id: string;
   sender: "user" | "bot" | "system" | "success";
@@ -26,6 +32,7 @@ interface Message {
   isListButton?: boolean;
   listButtonText?: string;
   listSections?: Array<{ title: string; items: Array<{ label: string; value: string; description?: string }> }>;
+  socialLinks?: SocialLink[];
 }
 
 interface FlowSimulatorProps {
