@@ -358,16 +358,17 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const b = (tc.body || "").trim();
     if (!t && !s && !b) return "";
     const lines: string[] = [];
-    if (t) lines.push(`- TÍTULO: "${t}"`);
-    if (s) lines.push(`- SUBTÍTULO: "${s}"`);
-    if (b) lines.push(`- CORPO: "${b}"`);
+    if (t) lines.push(`  • Texto principal (maior destaque): ${t}`);
+    if (s) lines.push(`  • Texto secundário (menor): ${s}`);
+    if (b) lines.push(`  • Texto complementar (menor ainda): ${b}`);
     return [
       "TEXTO OBRIGATÓRIO NA IMAGEM (REGRA INVIOLÁVEL):",
-      "Renderize EXATAMENTE os textos abaixo na imagem, com ortografia, acentuação e pontuação idênticas.",
+      "Renderize na imagem APENAS os CONTEÚDOS de texto listados abaixo, com ortografia, acentuação e pontuação idênticas.",
+      "PROIBIDO escrever na imagem as palavras 'TÍTULO', 'SUBTÍTULO', 'CORPO', 'TITLE', 'SUBTITLE', 'BODY' nem qualquer outro rótulo/label — esses nomes são apenas referência de hierarquia, NÃO devem aparecer na arte final.",
       "NÃO traduza, NÃO altere, NÃO invente, NÃO acrescente, NÃO substitua, NÃO abrevie.",
-      "NÃO inclua nenhum outro texto, palavra, slogan, marca d'água ou número além destes:",
+      "NÃO inclua nenhum outro texto, palavra, slogan, marca d'água ou número além dos conteúdos abaixo:",
       ...lines,
-      "Hierarquia visual: título em maior destaque, subtítulo secundário, corpo (se houver) menor. Tipografia legível e bem posicionada.",
+      "Hierarquia visual: o primeiro item em maior destaque, os seguintes em tamanho decrescente. Tipografia legível e bem posicionada.",
     ].join("\n");
   };
 
@@ -501,15 +502,16 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       if (cfg[`${k}Mode`] === "ai") {
         aiFields.push({
           key: k,
-          label: k === "title" ? "TÍTULO" : k === "subtitle" ? "SUBTÍTULO" : "CORPO",
+          label: k === "title" ? "principal (maior destaque)" : k === "subtitle" ? "secundário (menor)" : "complementar (menor ainda)",
           hint: (cfg[`${k}AIHint`] || "").trim(),
         });
       }
     });
     if (!aiFields.length) return "";
     return [
-      "TEXTOS A SEREM GERADOS PELA IA (escreva você mesmo, em Português Brasileiro, curtos e legíveis):",
-      ...aiFields.map((f) => `- ${f.label}${f.hint ? ` — orientação: ${f.hint}` : ""}`),
+      "TEXTOS A SEREM CRIADOS PELA IA (escreva você mesmo, em Português Brasileiro, curtos e legíveis):",
+      ...aiFields.map((f) => `- Texto ${f.label}${f.hint ? ` — orientação: ${f.hint}` : ""}`),
+      "Renderize APENAS o CONTEÚDO desses textos na imagem. PROIBIDO escrever rótulos como 'TÍTULO', 'SUBTÍTULO', 'CORPO', 'TITLE', 'SUBTITLE', 'BODY' ou similar na arte final.",
       "Esses textos devem ser coerentes com o tipo de conteúdo, produto e influencer (quando houver), e renderizados de forma legível na imagem com hierarquia visual clara.",
     ].join("\n");
   };
