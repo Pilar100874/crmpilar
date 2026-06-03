@@ -109,3 +109,7 @@ export { ApiLoopConfig } from './ApiLoopConfig';
 
 // Catálogo de produtos
 export { ProductSearchSelectConfig } from './ProductSearchSelectConfig';
+
+// Conteúdo de Texto (para Gerar Mídia IA)
+export { TextContentConfig } from './TextContentConfig';
+
