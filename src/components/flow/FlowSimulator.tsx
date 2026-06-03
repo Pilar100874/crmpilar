@@ -4226,7 +4226,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                                   className="flex items-center gap-3 p-2.5 rounded-lg border border-border bg-background hover:bg-muted/50 transition-all group"
                                 >
                                   <div className={`h-9 w-9 rounded-lg bg-gradient-to-br ${grad} flex items-center justify-center text-white shadow-sm flex-shrink-0`}>
-                                    <Icon className="h-4.5 w-4.5" />
+                                    <Icon className="h-4 w-4" />
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <p className="text-xs font-semibold text-foreground">{sl.label || sl.platform}</p>
