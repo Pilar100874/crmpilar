@@ -503,6 +503,8 @@ function BotBuilderContent() {
     [setNodes]
   );
 
+  const [deleteNodeConfirm, setDeleteNodeConfirm] = useState<{ open: boolean; nodeId: string | null }>({ open: false, nodeId: null });
+
   const handleDeleteNode = useCallback(
     (nodeId: string) => {
       const nodeToDelete = nodes.find(n => n.id === nodeId);
@@ -514,13 +516,20 @@ function BotBuilderContent() {
         });
         return;
       }
-      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-      setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
-      setSelectedNode((prev) => (prev && prev.id === nodeId ? null : prev));
-      toast.success("Bloco e conexões excluídos!");
+      setDeleteNodeConfirm({ open: true, nodeId });
     },
-    [nodes, setNodes, setEdges]
+    [nodes]
   );
+
+  const confirmDeleteNode = useCallback(() => {
+    const nodeId = deleteNodeConfirm.nodeId;
+    if (!nodeId) return;
+    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+    setSelectedNode((prev) => (prev && prev.id === nodeId ? null : prev));
+    setDeleteNodeConfirm({ open: false, nodeId: null });
+    toast.success("Bloco e conexões excluídos!");
+  }, [deleteNodeConfirm.nodeId, setNodes, setEdges]);
 
   const handleNodesDelete = useCallback(
     (deleted: Node[]) => {
