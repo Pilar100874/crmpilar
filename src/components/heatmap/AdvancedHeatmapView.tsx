@@ -563,7 +563,7 @@ function RouteSelector({ routes, value, onChange }: { routes: string[]; value: s
   );
 }
 
-function HeatmapPanel({ width, height, points, radius, maxOpacity }: { width: number; height: number; points: { x: number; y: number }[]; radius?: number; maxOpacity?: number }) {
+function HeatmapPanel({ width, height, points, radius, maxOpacity, bgUrl }: { width: number; height: number; points: { x: number; y: number }[]; radius?: number; maxOpacity?: number; bgUrl?: string | null }) {
   return (
     <div className="relative bg-gradient-to-br from-muted/30 to-muted/10 rounded border" style={{ width: "100%", maxWidth: width, aspectRatio: `${width}/${height}` }}>
       <div className="absolute inset-0 grid grid-cols-12 grid-rows-8 opacity-10 pointer-events-none">
