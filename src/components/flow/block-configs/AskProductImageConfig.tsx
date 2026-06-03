@@ -1,7 +1,7 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Package, Info } from "lucide-react";
+import { Package, Info, Image } from "lucide-react";
 
 interface Props {
   config: any;
