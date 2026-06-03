@@ -5722,6 +5722,54 @@ export type Database = {
           },
         ]
       }
+      heatmap_config: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          estabelecimento_id: string
+          id: string
+          scope: string
+          track_click: boolean
+          track_dead_click: boolean
+          track_form_field: boolean
+          track_move: boolean
+          track_quick_back: boolean
+          track_rage_click: boolean
+          track_scroll: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          estabelecimento_id: string
+          id?: string
+          scope: string
+          track_click?: boolean
+          track_dead_click?: boolean
+          track_form_field?: boolean
+          track_move?: boolean
+          track_quick_back?: boolean
+          track_rage_click?: boolean
+          track_scroll?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          estabelecimento_id?: string
+          id?: string
+          scope?: string
+          track_click?: boolean
+          track_dead_click?: boolean
+          track_form_field?: boolean
+          track_move?: boolean
+          track_quick_back?: boolean
+          track_rage_click?: boolean
+          track_scroll?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       heatmap_triggers: {
         Row: {
           acao: Json
