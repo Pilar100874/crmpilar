@@ -4195,6 +4195,51 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                       {msg.sender === "user" && <User className="w-4 h-4 mt-0.5" />}
                       <div className="flex-1">
                         {msg.text && <p className="text-sm whitespace-pre-wrap">{formatText(msg.text)}</p>}
+
+                        {msg.socialLinks && msg.socialLinks.length > 0 && (
+                          <div className="mt-3 grid grid-cols-1 gap-2">
+                            {msg.socialLinks.map((sl, i) => {
+                              const iconMap: Record<string, any> = {
+                                instagram: Instagram,
+                                facebook: Facebook,
+                                tiktok: Music2,
+                                linkedin: Linkedin,
+                                twitter: Twitter,
+                                youtube: Youtube,
+                              };
+                              const colorMap: Record<string, string> = {
+                                instagram: "from-pink-500 to-purple-500",
+                                facebook: "from-blue-600 to-blue-500",
+                                tiktok: "from-foreground to-foreground/80",
+                                linkedin: "from-blue-700 to-blue-600",
+                                twitter: "from-foreground to-foreground/80",
+                                youtube: "from-red-600 to-red-500",
+                              };
+                              const Icon = iconMap[sl.platform] || ExternalLink;
+                              const grad = colorMap[sl.platform] || "from-primary to-primary/80";
+                              return (
+                                <a
+                                  key={`${sl.platform}_${i}`}
+                                  href={sl.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-3 p-2.5 rounded-lg border border-border bg-background hover:bg-muted/50 transition-all group"
+                                >
+                                  <div className={`h-9 w-9 rounded-lg bg-gradient-to-br ${grad} flex items-center justify-center text-white shadow-sm flex-shrink-0`}>
+                                    <Icon className="h-4.5 w-4.5" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-semibold text-foreground">{sl.label || sl.platform}</p>
+                                    <p className="text-[10px] text-muted-foreground truncate">{sl.url}</p>
+                                  </div>
+                                  <ExternalLink className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary flex-shrink-0" />
+                                </a>
+                              );
+                            })}
+                          </div>
+                        )}
+
+
                         
                         {msg.isListButton && msg.listSections && (
                           <div className="mt-3">
