@@ -512,19 +512,21 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
   };
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 space-y-4 md:space-y-8 animate-fade-in bg-background dark:bg-background min-h-full">
-        <div>
-          <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-            <SubMenuHeader 
-              title="Bot"
-              onOpenSubmenu={() => openSubmenu("Bot Test")}
-            />
-            <h1 className="text-base sm:text-lg font-bold text-foreground">Criar Bot</h1>
+    <div className={`${embedded ? '' : 'p-4 sm:p-6 md:p-8 '}space-y-4 md:space-y-8 animate-fade-in bg-background dark:bg-background min-h-full`}>
+        {!embedded && (
+          <div>
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+              <SubMenuHeader 
+                title="Bot"
+                onOpenSubmenu={() => openSubmenu("Bot Test")}
+              />
+              <h1 className="text-base sm:text-lg font-bold text-foreground">Criar Bot</h1>
+            </div>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Crie e configure novos bots para automação de atendimento
+            </p>
           </div>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Crie e configure novos bots para automação de atendimento
-          </p>
-        </div>
+        )}
 
         {/* Card de criar novo bot */}
         <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-primary/30" onClick={() => setNewBotDialogOpen(true)}>
