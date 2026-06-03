@@ -3194,11 +3194,86 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       const node = nodes.find((n) => n.id === currentNodeId);
       const cfg = (node?.data as any)?.config || {};
       if (button.value === "sim") {
+        setMessages((prev) => [...prev, {
+          id: uid(), sender: "bot", text: "Como você quer escolher o influencer?", timestamp: new Date(), nodeId: currentNodeId,
+          buttons: [
+            { text: "📚 Escolher da Galeria", value: "gallery", buttonId: "infl_gallery" },
+            { text: "📤 Enviar foto / URL", value: "upload", buttonId: "infl_upload" },
+          ],
+        }]);
+        setCurrentBlockType("ask_influencer_method");
+        setIsWaitingInput(true);
+        return;
+      }
+      setIsWaitingInput(false); setCurrentBlockType(null);
+      const next = getNextNode(currentNodeId);
+      if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+      return;
+    }
+
+    // === ask_influencer: escolha entre galeria ou upload ===
+    if (currentBlockType === "ask_influencer_method" && currentNodeId) {
+      addUserMessage(button.text);
+      const node = nodes.find((n) => n.id === currentNodeId);
+      const cfg = (node?.data as any)?.config || {};
+      if (button.value === "upload") {
         addBotMessage(interpolateVariables(cfg.uploadPrompt || "Envie a foto do influencer (URL ou arquivo).", contextRef.current), currentNodeId);
         setCurrentBlockType("ask_influencer_upload");
         setIsWaitingInput(true);
         return;
       }
+      // gallery: busca influencers cadastrados
+      (async () => {
+        const estId = await getEstabelecimentoId();
+        let q = supabase.from("studio_gallery_images").select("id,nome,image_url,pasta").eq("categoria", "influencer").order("created_at", { ascending: false }).limit(24);
+        if (estId) q = q.eq("estabelecimento_id", estId);
+        const { data, error } = await q;
+        if (error || !data || data.length === 0) {
+          addSystemMessage("⚠️ Nenhum influencer cadastrado na galeria. Envie a foto manualmente.");
+          addBotMessage(interpolateVariables(cfg.uploadPrompt || "Envie a foto do influencer (URL ou arquivo).", contextRef.current), currentNodeId!);
+          setCurrentBlockType("ask_influencer_upload");
+          setIsWaitingInput(true);
+          return;
+        }
+        simNodeStateRef.current[currentNodeId!] = { ...(simNodeStateRef.current[currentNodeId!] || {}), influencerGallery: data };
+        addBotMessage(`Encontrei ${data.length} influencer(s). Veja as opções abaixo:`, currentNodeId!);
+        // Thumbnails
+        data.forEach((it: any, idx: number) => {
+          addBotMediaMessage(it.image_url, "image", it.nome || `Influencer ${idx + 1}`, currentNodeId!);
+        });
+        setMessages((prev) => [...prev, {
+          id: uid(), sender: "bot", text: "Selecione um influencer:", timestamp: new Date(), nodeId: currentNodeId!,
+          buttons: data.map((it: any, idx: number) => ({
+            text: `👤 ${it.nome || `Influencer ${idx + 1}`}`,
+            value: String(idx),
+            buttonId: `infl_gal_${idx}`,
+          })),
+        }]);
+        setCurrentBlockType("ask_influencer_gallery_select");
+        setIsWaitingInput(true);
+      })();
+      return;
+    }
+
+    // === ask_influencer: seleção de item da galeria ===
+    if (currentBlockType === "ask_influencer_gallery_select" && currentNodeId) {
+      addUserMessage(button.text);
+      const node = nodes.find((n) => n.id === currentNodeId);
+      const cfg = (node?.data as any)?.config || {};
+      const state = simNodeStateRef.current[currentNodeId] || {};
+      const list: any[] = state.influencerGallery || [];
+      const item = list[Number(button.value)];
+      if (!item) {
+        addSystemMessage("⚠️ Seleção inválida.");
+        return;
+      }
+      const url = item.image_url;
+      simNodeStateRef.current[currentNodeId] = { ...state, influencerImageUrl: url };
+      const v = normalizeVarName(cfg.outputVariable || "influencer_image_url");
+      const newCtx = { ...contextRef.current, [v]: url };
+      contextRef.current = newCtx; setContext(newCtx); onContextChange?.(newCtx);
+      addBotMediaMessage(url, "image", item.nome || "Influencer", currentNodeId);
+      addSuccessMessage(`✅ Influencer "${item.nome || "selecionado"}" registrado.`);
       setIsWaitingInput(false); setCurrentBlockType(null);
       const next = getNextNode(currentNodeId);
       if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
