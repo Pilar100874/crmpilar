@@ -417,7 +417,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
           <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} />
           <Card>
             <CardHeader>
-              <CardTitle>Mapa de cliques — {selectedRoute || "selecione uma rota"}</CardTitle>
+              <CardTitle>Mapa de cliques — {selectedRoute ? prettyName(selectedRoute, routeTitles) : "selecione uma tela"}</CardTitle>
               <CardDescription>{clickPoints.length} cliques mapeados (viewport médio {avgVw}×{avgVh})</CardDescription>
             </CardHeader>
             <CardContent>
@@ -452,7 +452,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
           <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} />
           <Card>
             <CardHeader>
-              <CardTitle>Movimento do mouse — {selectedRoute || "selecione"}</CardTitle>
+              <CardTitle>Movimento do mouse — {selectedRoute ? prettyName(selectedRoute, routeTitles) : "selecione uma tela"}</CardTitle>
               <CardDescription>{movePoints.length} amostras (1 a cada 250ms)</CardDescription>
             </CardHeader>
             <CardContent>
