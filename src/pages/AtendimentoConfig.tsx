@@ -408,6 +408,15 @@ export default function AtendimentoConfig() {
     setSearchParams({ tab: value });
   };
 
+  // Sanity: garante que nenhum lock de pointer-events ou scroll-lock fique preso
+  // (Radix Dialog/Popover em alguns casos deixa body bloqueado se for desmontado durante uma transição)
+  useEffect(() => {
+    try {
+      document.body.style.pointerEvents = '';
+      document.body.removeAttribute('data-scroll-locked');
+    } catch {}
+  }, [currentTab]);
+
   const currentTabItem = tabItems.find(t => t.id === currentTab) || tabItems[0];
   const CurrentIcon = currentTabItem.icon;
 
