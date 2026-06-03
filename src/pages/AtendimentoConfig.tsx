@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { 
   MessageSquareQuote,
   Paperclip,
@@ -393,9 +392,11 @@ function FilasManagerEmbedded({ estabelecimentoId }: { estabelecimentoId: string
 }
 
 export default function AtendimentoConfig() {
-  const [searchParams, setSearchParams] = useSearchParams();
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
-  const currentTab = searchParams.get('tab') || 'ferramentas';
+  const [currentTab, setCurrentTab] = useState(() => {
+    const tabFromUrl = new URLSearchParams(window.location.search).get('tab');
+    return tabItems.some(tab => tab.id === tabFromUrl) ? tabFromUrl! : 'ferramentas';
+  });
 
   const { data: estabelecimentoId } = useQuery({
     queryKey: ['user-estabelecimento-atendimento'],
@@ -405,7 +406,11 @@ export default function AtendimentoConfig() {
   });
 
   const handleTabChange = (value: string) => {
-    setSearchParams({ tab: value });
+    if (value === currentTab) return;
+    setCurrentTab(value);
+    const nextParams = new URLSearchParams(window.location.search);
+    nextParams.set('tab', value);
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}?${nextParams.toString()}`);
   };
 
   // Sanity: garante que nenhum lock de pointer-events ou scroll-lock fique preso
