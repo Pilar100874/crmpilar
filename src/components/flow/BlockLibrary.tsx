@@ -273,7 +273,7 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                       type="button"
                       onClick={() => window.dispatchEvent(new CustomEvent("workflow:add-template", { detail: { template: "peca_ia_criativa" } }))}
                       className="w-full ml-5 mt-2 p-2 rounded-2xl border border-dashed border-purple-500/40 bg-gradient-to-br from-purple-500/10 to-violet-500/5 hover:from-purple-500/20 hover:to-violet-500/10 transition-all text-left group"
-                      title="Insere o roteiro completo: Tipo → Influencer → Produto → Texto → Gerar Mídia IA"
+                      title="Insere o roteiro completo: Tipo → Influencer → Produto → Texto → Gerar Mídia IA → Publicar"
                     >
                       <div className="flex items-center gap-2">
                         <div className="p-1 rounded-md bg-purple-500/20 border border-purple-500/30">
@@ -284,7 +284,7 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                             ✨ Roteiro: Criar Peça com IA
                           </h4>
                           <p className="text-[9px] text-muted-foreground truncate">
-                            5 blocos conectados, prontos para usar
+                            6 blocos conectados, prontos para usar
                           </p>
                         </div>
                       </div>

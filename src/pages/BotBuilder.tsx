@@ -489,6 +489,14 @@ function BotBuilderContent() {
               basePrompt: "Crie uma peça gráfica profissional usando as referências fornecidas.",
             },
           },
+          {
+            type: "publish_social_post",
+            configOverride: {
+              platforms: ["instagram", "facebook"],
+              caption: "{{texto_legenda}}",
+              outputVariable: "post_publicado",
+            },
+          },
         ];
 
         const newNodes: Node[] = [];

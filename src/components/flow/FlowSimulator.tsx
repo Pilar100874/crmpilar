@@ -6,13 +6,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Send, RotateCcw, User, Bot, AlertCircle, CheckCircle } from "lucide-react";
+import { Send, RotateCcw, User, Bot, AlertCircle, CheckCircle, Instagram, Facebook, Music2, Linkedin, Twitter, Youtube, ExternalLink, CheckCheck, RefreshCw } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { validateEmail, validatePhone, validatePhoneFormat } from "@/lib/validators";
 import { maskCNPJ } from "@/lib/masks";
 import { BLOCK_DEFINITIONS } from "@/types/flow";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+
+interface SocialLink {
+  platform: string; // instagram | facebook | tiktok | linkedin | twitter | youtube
+  url: string;
+  label?: string;
+}
 
 interface Message {
   id: string;
@@ -26,6 +32,7 @@ interface Message {
   isListButton?: boolean;
   listButtonText?: string;
   listSections?: Array<{ title: string; items: Array<{ label: string; value: string; description?: string }> }>;
+  socialLinks?: SocialLink[];
 }
 
 interface FlowSimulatorProps {
@@ -2141,30 +2148,90 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       }
 
       case "publish_social_post": {
-        const platforms = (config.platforms || ["instagram"]).join(", ");
+        const selectedPlatforms: string[] = Array.isArray(config.platforms) && config.platforms.length > 0
+          ? config.platforms
+          : ["instagram"];
         const caption = interpolateVariables(config.caption || "", context);
         const mediaUrl = interpolateVariables(config.mediaUrl || "", context);
-        addSystemMessage(`📤 Publicando em: ${platforms}${mediaUrl ? "\n🖼️ " + mediaUrl : ""}${caption ? "\n📝 " + caption : ""}`);
+
+        addSystemMessage(`📤 Publicando em: ${selectedPlatforms.join(", ")}${mediaUrl ? "\n🖼️ " + mediaUrl : ""}${caption ? "\n📝 " + caption : ""}`);
+
         safeSetTimeout(() => {
-          const outputVar = normalizeVarName(config.outputVariable || "post_publicado");
           const fakeId = `sim_${Date.now()}`;
-          const fakeLink = `https://instagram.com/p/${fakeId}`;
-          const result = { id: fakeId, permalink: fakeLink, platforms: config.platforms };
+          // Gera um link por plataforma
+          const platformUrlBuilders: Record<string, (id: string) => string> = {
+            instagram: (id) => `https://instagram.com/p/${id}`,
+            facebook: (id) => `https://facebook.com/posts/${id}`,
+            tiktok: (id) => `https://tiktok.com/@usuario/video/${id}`,
+            linkedin: (id) => `https://linkedin.com/feed/update/${id}`,
+            twitter: (id) => `https://x.com/usuario/status/${id}`,
+            youtube: (id) => `https://youtube.com/watch?v=${id}`,
+          };
+          const platformLabels: Record<string, string> = {
+            instagram: "Instagram",
+            facebook: "Facebook",
+            tiktok: "TikTok",
+            linkedin: "LinkedIn",
+            twitter: "X (Twitter)",
+            youtube: "YouTube",
+          };
+
+          const links: SocialLink[] = selectedPlatforms.map((p) => ({
+            platform: p,
+            url: (platformUrlBuilders[p] || ((id) => `https://${p}.com/${id}`))(fakeId),
+            label: platformLabels[p] || p,
+          }));
+
+          const outputVar = normalizeVarName(config.outputVariable || "post_publicado");
+          const result = {
+            id: fakeId,
+            permalinks: links.reduce<Record<string, string>>((acc, l) => {
+              acc[l.platform] = l.url;
+              return acc;
+            }, {}),
+            platforms: selectedPlatforms,
+          };
           const newCtx = {
             ...contextRef.current,
             [outputVar]: result,
-            [`${outputVar}_permalink`]: fakeLink,
             [`${outputVar}_id`]: fakeId,
+            [`${outputVar}_permalink`]: links[0]?.url || "",
           };
           contextRef.current = newCtx;
           setContext(newCtx);
           onContextChange?.(newCtx);
-          addSuccessMessage(`✅ Publicado (simulado): ${fakeLink}`);
-          const nextNode = getNextNode(node.id);
-          if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+
+          // Mensagem com cards clicáveis (logo + link) de cada rede
+          setMessages((prev) => [...prev, {
+            id: uid(),
+            sender: "bot",
+            text: "✅ Publicado com sucesso! Toque em uma rede para ver o post:",
+            timestamp: new Date(),
+            nodeId: node.id,
+            socialLinks: links,
+          }]);
+
+          // Mensagem com opções Finalizar / Gerar novo
+          safeSetTimeout(() => {
+            setMessages((prev) => [...prev, {
+              id: uid(),
+              sender: "bot",
+              text: "O que deseja fazer agora?",
+              timestamp: new Date(),
+              nodeId: node.id,
+              buttons: [
+                { text: "✅ Finalizar", value: "finalizar", buttonId: "pub_done" },
+                { text: "🔁 Gerar nova peça", value: "regenerar", buttonId: "pub_regen" },
+              ],
+            }]);
+            setIsWaitingInput(true);
+            setCurrentBlockType("publish_social_done");
+            setCurrentNodeId(node.id);
+          }, 500);
         }, 1500);
         break;
       }
+
 
       case "send_whatsapp_to_number": {
         const phone = interpolateVariables(config.phoneNumber || "", context);
@@ -3396,6 +3463,48 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const handleButtonClick = (button: { text: string; value: string; buttonId?: string; keywords?: string[] }, nodeId?: string) => {
     console.log("🔘 Button clicked:", { button, nodeId, pendingVariable, currentBlockType });
 
+    // === publish_social_done: Finalizar ou Gerar novo ===
+    if (currentBlockType === "publish_social_done" && currentNodeId) {
+      addUserMessage(button.text);
+      setIsWaitingInput(false);
+      setCurrentBlockType(null);
+      if (button.value === "finalizar") {
+        addSuccessMessage("🎉 Roteiro finalizado com sucesso!");
+        const nextNode = getNextNode(currentNodeId);
+        if (nextNode) {
+          safeSetTimeout(() => { setCurrentNodeId(nextNode.id); executeNode(nextNode); }, 400);
+        }
+      } else if (button.value === "regenerar") {
+        // Procura o generate_ai_media mais próximo a montante e re-executa o fluxo a partir dele
+        const findUpstreamGenerate = (nid: string, visited = new Set<string>()): string | null => {
+          if (visited.has(nid)) return null;
+          visited.add(nid);
+          const incoming = edges.filter((e) => e.target === nid);
+          for (const e of incoming) {
+            const src = nodes.find((n) => n.id === e.source);
+            if (!src) continue;
+            if ((src.data as any)?.type === "generate_ai_media") return src.id;
+            const found = findUpstreamGenerate(src.id, visited);
+            if (found) return found;
+          }
+          return null;
+        };
+        const targetId = findUpstreamGenerate(currentNodeId);
+        if (targetId) {
+          const target = nodes.find((n) => n.id === targetId);
+          if (target) {
+            addSystemMessage("🔁 Gerando nova peça...");
+            safeSetTimeout(() => { setCurrentNodeId(target.id); executeNode(target); }, 400);
+          }
+        } else {
+          addSystemMessage("⚠️ Nenhum bloco 'Gerar Mídia IA' encontrado a montante para gerar novamente.");
+        }
+      }
+      return;
+    }
+
+
+
     // === ask_influencer: yes/no → usa influencer fixo ou galeria ===
     if (currentBlockType === "ask_influencer_choice" && currentNodeId) {
       addUserMessage(button.text);
@@ -4086,6 +4195,51 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                       {msg.sender === "user" && <User className="w-4 h-4 mt-0.5" />}
                       <div className="flex-1">
                         {msg.text && <p className="text-sm whitespace-pre-wrap">{formatText(msg.text)}</p>}
+
+                        {msg.socialLinks && msg.socialLinks.length > 0 && (
+                          <div className="mt-3 grid grid-cols-1 gap-2">
+                            {msg.socialLinks.map((sl, i) => {
+                              const iconMap: Record<string, any> = {
+                                instagram: Instagram,
+                                facebook: Facebook,
+                                tiktok: Music2,
+                                linkedin: Linkedin,
+                                twitter: Twitter,
+                                youtube: Youtube,
+                              };
+                              const colorMap: Record<string, string> = {
+                                instagram: "from-pink-500 to-purple-500",
+                                facebook: "from-blue-600 to-blue-500",
+                                tiktok: "from-foreground to-foreground/80",
+                                linkedin: "from-blue-700 to-blue-600",
+                                twitter: "from-foreground to-foreground/80",
+                                youtube: "from-red-600 to-red-500",
+                              };
+                              const Icon = iconMap[sl.platform] || ExternalLink;
+                              const grad = colorMap[sl.platform] || "from-primary to-primary/80";
+                              return (
+                                <a
+                                  key={`${sl.platform}_${i}`}
+                                  href={sl.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-3 p-2.5 rounded-lg border border-border bg-background hover:bg-muted/50 transition-all group"
+                                >
+                                  <div className={`h-9 w-9 rounded-lg bg-gradient-to-br ${grad} flex items-center justify-center text-white shadow-sm flex-shrink-0`}>
+                                    <Icon className="h-4 w-4" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-semibold text-foreground">{sl.label || sl.platform}</p>
+                                    <p className="text-[10px] text-muted-foreground truncate">{sl.url}</p>
+                                  </div>
+                                  <ExternalLink className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary flex-shrink-0" />
+                                </a>
+                              );
+                            })}
+                          </div>
+                        )}
+
+
                         
                         {msg.isListButton && msg.listSections && (
                           <div className="mt-3">
