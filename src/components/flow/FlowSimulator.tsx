@@ -578,6 +578,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         basePrompt ? `\n[INSTRUÇÕES FIXAS DO BLOCO]: ${basePrompt}` : "",
         styleSource === "preset" && config.preset ? `\n[ESTILO/PRESET]: ${config.presetName || config.preset}` : "",
         compositionDirective,
+        contentTypeDirective ? `\n\n${contentTypeDirective}` : "",
         lockedTextDirective ? `\n\n${lockedTextDirective}` : "",
         audioScript ? `\n[NARRAÇÃO — fale exatamente este texto em Português Brasileiro]: ${audioScript}` : "",
         `\nFormato ${imageAspectRatio}.`,
