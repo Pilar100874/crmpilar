@@ -596,7 +596,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           totalAttempts++;
           const { data, error } = await supabase.functions.invoke("bot-generate-ai-media", {
             body: {
-              prompt: `${userPrompt}\n\nGere somente a opção ${optionIndex + 1} de ${variations}. Mantenha o mesmo briefing, identidade visual e formato ${imageAspectRatio}; varie apenas ângulo, enquadramento ou composição.`,
+              prompt: `${userPrompt}${lockedTextDirective ? `\n\n${lockedTextDirective}` : ""}\n\nGere somente a opção ${optionIndex + 1} de ${variations}. Mantenha o mesmo briefing, identidade visual e formato ${imageAspectRatio}; varie apenas ângulo, enquadramento ou composição.${lockedTextDirective ? " O TEXTO renderizado na imagem deve ser EXATAMENTE o especificado acima — não varie, não traduza, não invente palavras." : ""}`,
               basePrompt,
               variations: 1,
               styleSource,
