@@ -2,8 +2,9 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Type, Info, MessageCircleQuestion } from "lucide-react";
+import { Type, Info, Sparkles, MessageCircleQuestion, Lock } from "lucide-react";
 
 interface TextContentConfigProps {
   config: any;
@@ -11,6 +12,7 @@ interface TextContentConfigProps {
 }
 
 type FieldKey = "title" | "subtitle" | "body";
+type FieldMode = "fixed" | "ask" | "ai";
 
 const FIELD_LABELS: Record<FieldKey, { label: string; placeholder: string; askDefault: string }> = {
   title: {
@@ -44,7 +46,8 @@ const FieldBlock = ({
   allowDisable?: boolean;
 }) => {
   const meta = FIELD_LABELS[fieldKey];
-  const mode: "fixed" | "ask" = config[`${fieldKey}Mode`] === "ask" ? "ask" : "fixed";
+  const rawMode = config[`${fieldKey}Mode`];
+  const mode: FieldMode = rawMode === "ai" ? "ai" : rawMode === "ask" ? "ask" : "fixed";
   const enabled = config[`${fieldKey}Enabled`] !== false;
 
   return (
@@ -67,19 +70,36 @@ const FieldBlock = ({
 
       {(!allowDisable || enabled) && (
         <>
-          <div className="flex items-center gap-2 pt-1">
-            <span className="text-[11px] text-muted-foreground">Dado fixo</span>
-            <Switch
-              checked={mode === "ask"}
-              onCheckedChange={(v) => handleConfigChange(`${fieldKey}Mode`, v ? "ask" : "fixed")}
-            />
-            <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-              <MessageCircleQuestion className="h-3 w-3" />
-              Pedir ao usuário
-            </span>
+          <div className="space-y-1 pt-1">
+            <Label className="text-[11px] text-muted-foreground">Origem do texto</Label>
+            <Select
+              value={mode}
+              onValueChange={(v) => handleConfigChange(`${fieldKey}Mode`, v)}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fixed">
+                  <span className="flex items-center gap-2 text-xs">
+                    <Lock className="h-3 w-3" /> Dado fixo (definido agora)
+                  </span>
+                </SelectItem>
+                <SelectItem value="ask">
+                  <span className="flex items-center gap-2 text-xs">
+                    <MessageCircleQuestion className="h-3 w-3" /> Pedir ao usuário
+                  </span>
+                </SelectItem>
+                <SelectItem value="ai">
+                  <span className="flex items-center gap-2 text-xs">
+                    <Sparkles className="h-3 w-3" /> Gerar por IA automaticamente
+                  </span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {mode === "fixed" ? (
+          {mode === "fixed" && (
             isTextarea ? (
               <Textarea
                 value={config[fieldKey] || ""}
@@ -94,7 +114,9 @@ const FieldBlock = ({
                 placeholder={meta.placeholder}
               />
             )
-          ) : (
+          )}
+
+          {mode === "ask" && (
             <div className="space-y-1">
               <Label className="text-[11px] text-muted-foreground">Pergunta enviada ao usuário</Label>
               <Input
@@ -104,6 +126,23 @@ const FieldBlock = ({
               />
               <p className="text-[10px] text-muted-foreground">
                 A resposta do usuário será usada exatamente como digitada na imagem gerada.
+              </p>
+            </div>
+          )}
+
+          {mode === "ai" && (
+            <div className="space-y-1">
+              <Label className="text-[11px] text-muted-foreground">
+                Briefing/contexto para a IA (opcional)
+              </Label>
+              <Input
+                value={config[`${fieldKey}AIHint`] || ""}
+                onChange={(e) => handleConfigChange(`${fieldKey}AIHint`, e.target.value)}
+                placeholder="Ex: tom de urgência, foco em desconto..."
+              />
+              <p className="text-[10px] text-muted-foreground">
+                A IA criará este texto automaticamente usando o tipo de conteúdo, produto e
+                contexto do fluxo.
               </p>
             </div>
           )}
@@ -120,9 +159,9 @@ export const TextContentConfig = ({ config, handleConfigChange }: TextContentCon
         <Info className="h-4 w-4 text-violet-600" />
         <AlertDescription className="text-xs">
           Conecte este bloco <strong>antes</strong> de um bloco "Gerar Mídia IA".
-          Cada campo pode ser <strong>fixo</strong> (você define agora) ou{" "}
-          <strong>pedido ao usuário</strong> em tempo real. O texto será renderizado
-          exatamente como definido/digitado — a IA não poderá alterar, traduzir ou inventar.
+          Cada campo pode ser <strong>fixo</strong>, <strong>pedido ao usuário</strong> ou
+          <strong> gerado pela IA</strong> automaticamente. Quando o usuário digitar, ele
+          confirma os textos antes de seguir.
         </AlertDescription>
       </Alert>
 
@@ -137,8 +176,8 @@ export const TextContentConfig = ({ config, handleConfigChange }: TextContentCon
       />
 
       <p className="text-[11px] text-muted-foreground">
-        Dica: use poucas palavras e ortografia já revisada — modelos de imagem
-        têm mais facilidade renderizando textos curtos e diretos.
+        Dica: para textos fixos ou digitados pelo usuário, use poucas palavras — modelos de
+        imagem renderizam melhor frases curtas e diretas.
       </p>
     </div>
   );
