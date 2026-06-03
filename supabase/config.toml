@@ -296,3 +296,6 @@ verify_jwt = false
 
 [functions.bot-suggest-text-content]
 verify_jwt = false
+
+[functions.bot-generate-product-samples]
+verify_jwt = false
