@@ -316,6 +316,19 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
   };
 
+  // Resolve os valores de um bloco text_content levando em conta valores fixos
+  // OU valores capturados em tempo de execução (modo "ask").
+  const resolveTextContentValues = (tcNodeId: string, cfg: any) => {
+    const runtime = simNodeStateRef.current[tcNodeId]?.resolvedTextContent || {};
+    const pick = (key: "title" | "subtitle" | "body") => {
+      if (key === "body" && cfg[`bodyEnabled`] === false) return "";
+      const mode = cfg[`${key}Mode`] === "ask" ? "ask" : "fixed";
+      if (mode === "ask") return (runtime[key] || "").toString().trim();
+      return interpolateVariables(cfg[key] || "", contextRef.current).trim();
+    };
+    return { title: pick("title"), subtitle: pick("subtitle"), body: pick("body") };
+  };
+
   // Procura recursivamente upstream por um bloco "text_content" conectado antes deste nó.
   const findUpstreamTextContent = (nodeId: string, visited = new Set<string>()): any | null => {
     if (visited.has(nodeId)) return null;
@@ -326,7 +339,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       if (!src) continue;
       const sd: any = src.data || {};
       if (sd.type === "text_content") {
-        return sd.config || {};
+        return resolveTextContentValues(src.id, sd.config || {});
       }
       // Permite "atravessar" no máximo 1 bloco intermediário leve (ex: send_message) — busca direta.
       const found = findUpstreamTextContent(src.id, visited);
@@ -334,6 +347,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
     return null;
   };
+
 
   const buildLockedTextDirective = (tc: any): string => {
     if (!tc) return "";
