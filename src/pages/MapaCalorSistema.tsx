@@ -127,6 +127,23 @@ export default function MapaCalorSistema() {
         </div>
       </div>
 
+      <Tabs defaultValue="advanced">
+        <TabsList>
+          <TabsTrigger value="advanced">🔥 Heatmap Avançado</TabsTrigger>
+          <TabsTrigger value="usage">Uso por Tela</TabsTrigger>
+          <TabsTrigger value="users">Usuários</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="advanced" className="mt-4">
+          <AdvancedHeatmapView
+            scope="sistema"
+            title="Análise Comportamental — Sistema Interno"
+            description="Cliques, movimento, scroll, frustração e segmentação por dispositivo/navegador."
+          />
+        </TabsContent>
+
+        <TabsContent value="usage" className="mt-4 space-y-4">
+
       <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
         <TabsList>
           <TabsTrigger value="1">Hoje</TabsTrigger>
@@ -135,6 +152,7 @@ export default function MapaCalorSistema() {
         </TabsList>
         <TabsContent value={period} />
       </Tabs>
+
 
       <div className="grid md:grid-cols-3 gap-4">
         <Card>
