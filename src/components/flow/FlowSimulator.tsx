@@ -3804,7 +3804,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         st.resolvedTextContent = {
           title: pick.title || "",
           subtitle: pick.subtitle || "",
-          body: pick.body || "",
+          body: "",
         };
         simNodeStateRef.current[currentNodeId] = st;
         addSuccessMessage(`✅ Opção ${idx + 1} selecionada.`);
