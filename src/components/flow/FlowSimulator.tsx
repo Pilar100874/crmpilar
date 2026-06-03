@@ -316,14 +316,16 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
   };
 
-  // Resolve os valores de um bloco text_content levando em conta valores fixos
-  // OU valores capturados em tempo de execução (modo "ask").
+  // Resolve os valores de um bloco text_content. Sempre prefere o runtime
+  // (definido pelo novo fluxo Sim/Não → Digitar/IA) se existir; senão usa
+  // o valor fixo configurado no bloco.
   const resolveTextContentValues = (tcNodeId: string, cfg: any) => {
-    const runtime = simNodeStateRef.current[tcNodeId]?.resolvedTextContent || {};
+    const runtime = simNodeStateRef.current[tcNodeId]?.resolvedTextContent;
     const pick = (key: "title" | "subtitle" | "body") => {
-      if (key === "body" && cfg[`bodyEnabled`] === false) return "";
-      const mode = cfg[`${key}Mode`] === "ask" ? "ask" : "fixed";
-      if (mode === "ask") return (runtime[key] || "").toString().trim();
+      if (runtime && runtime[key] !== undefined) {
+        return (runtime[key] || "").toString().trim();
+      }
+      if (key === "body" && cfg["bodyEnabled"] === false) return "";
       return interpolateVariables(cfg[key] || "", contextRef.current).trim();
     };
     return { title: pick("title"), subtitle: pick("subtitle"), body: pick("body") };
