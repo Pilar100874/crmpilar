@@ -7,6 +7,7 @@ import { Activity, Clock, Users, Flame, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AdvancedHeatmapView } from "@/components/heatmap/AdvancedHeatmapView";
+import { HeatmapConfigDialog } from "@/components/heatmap/HeatmapConfigDialog";
 
 
 type Period = "1" | "7" | "30";
@@ -33,6 +34,16 @@ export default function MapaCalorSistema() {
   const [rows, setRows] = useState<UsageRow[]>([]);
   const [usuarios, setUsuarios] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [estabId, setEstabId] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) return;
+      const { data: u } = await supabase.from("usuarios").select("estabelecimento_id").eq("auth_user_id", auth.user.id).maybeSingle();
+      if (u?.estabelecimento_id) setEstabId(u.estabelecimento_id);
+    })();
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -117,7 +128,7 @@ export default function MapaCalorSistema() {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Flame className="h-6 w-6 text-orange-500" /> Mapa de Calor do Sistema
           </h1>
@@ -125,6 +136,7 @@ export default function MapaCalorSistema() {
             Telas mais usadas, tempo de uso por usuário e tempo ocioso.
           </p>
         </div>
+        <HeatmapConfigDialog scope="sistema" estabelecimentoId={estabId} />
       </div>
 
       <Tabs defaultValue="advanced">

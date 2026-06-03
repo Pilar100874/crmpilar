@@ -77,6 +77,28 @@ function getSelector(el: Element | null): string {
  * Unified interaction tracker — captures click (incl. rage/dead), move (throttled),
  * scroll depth, quick back navigation. Batches inserts every ~5s.
  */
+interface HeatmapConfig {
+  enabled: boolean;
+  track_click: boolean;
+  track_move: boolean;
+  track_scroll: boolean;
+  track_rage_click: boolean;
+  track_dead_click: boolean;
+  track_quick_back: boolean;
+  track_form_field: boolean;
+}
+
+const DEFAULT_CFG: HeatmapConfig = {
+  enabled: true,
+  track_click: true,
+  track_move: true,
+  track_scroll: true,
+  track_rage_click: true,
+  track_dead_click: true,
+  track_quick_back: true,
+  track_form_field: true,
+};
+
 export function useInteractionTracker(scope: Scope, estabelecimentoIdHint?: string | null) {
   const location = useLocation();
   const bufferRef = useRef<Buffered[]>([]);
@@ -84,11 +106,22 @@ export function useInteractionTracker(scope: Scope, estabelecimentoIdHint?: stri
     usuario_id: null,
     estabelecimento_id: estabelecimentoIdHint ?? null,
   });
+  const cfgRef = useRef<HeatmapConfig>(DEFAULT_CFG);
   const enterAtRef = useRef<number>(Date.now());
   const currentRouteRef = useRef<string>(location.pathname);
   const maxScrollRef = useRef<number>(0);
   const lastClickRef = useRef<{ sel: string; t: number; count: number } | null>(null);
   const isNewVisitorRef = useRef<boolean>(false);
+
+  const loadConfig = async (estabId: string) => {
+    const { data } = await supabase
+      .from("heatmap_config" as any)
+      .select("*")
+      .eq("estabelecimento_id", estabId)
+      .eq("scope", scope)
+      .maybeSingle();
+    if (data) cfgRef.current = { ...DEFAULT_CFG, ...(data as any) };
+  };
 
   // load context once
   useEffect(() => {
@@ -108,8 +141,10 @@ export function useInteractionTracker(scope: Scope, estabelecimentoIdHint?: stri
           .maybeSingle();
         if (!mounted || !u) return;
         ctxRef.current = { usuario_id: u.id, estabelecimento_id: u.estabelecimento_id };
+        await loadConfig(u.estabelecimento_id);
       } else if (estabelecimentoIdHint) {
         ctxRef.current = { usuario_id: null, estabelecimento_id: estabelecimentoIdHint };
+        await loadConfig(estabelecimentoIdHint);
       }
     })();
     return () => {
@@ -123,6 +158,18 @@ export function useInteractionTracker(scope: Scope, estabelecimentoIdHint?: stri
   ) => {
     const estab = ctxRef.current.estabelecimento_id;
     if (!estab) return;
+    const c = cfgRef.current;
+    if (!c.enabled) return;
+    const allowed: Record<EventType, boolean> = {
+      click: c.track_click,
+      move: c.track_move,
+      scroll: c.track_scroll,
+      rage_click: c.track_rage_click,
+      dead_click: c.track_dead_click,
+      quick_back: c.track_quick_back,
+      form_field: c.track_form_field,
+    };
+    if (!allowed[type]) return;
     bufferRef.current.push({
       scope,
       session_id: getSessionId(scope),

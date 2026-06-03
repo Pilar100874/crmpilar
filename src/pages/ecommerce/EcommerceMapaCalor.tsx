@@ -6,12 +6,24 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ArrowLeft, Flame, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AdvancedHeatmapView } from "@/components/heatmap/AdvancedHeatmapView";
+import { HeatmapConfigDialog } from "@/components/heatmap/HeatmapConfigDialog";
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function EcommerceMapaCalor() {
   const navigate = useNavigate();
   const [carts, setCarts] = useState<any[]>([]);
+  const [estabId, setEstabId] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) return;
+      const { data: u } = await supabase.from("usuarios").select("estabelecimento_id").eq("auth_user_id", auth.user.id).maybeSingle();
+      if (u?.estabelecimento_id) setEstabId(u.estabelecimento_id);
+    })();
+  }, []);
+
 
   useEffect(() => {
     let mounted = true;
@@ -36,7 +48,7 @@ export default function EcommerceMapaCalor() {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Flame className="h-6 w-6 text-orange-500" /> Mapa de Calor — Loja Virtual
           </h1>
@@ -44,6 +56,7 @@ export default function EcommerceMapaCalor() {
             Comportamento dos visitantes, carrinhos abandonados e análise de frustração.
           </p>
         </div>
+        <HeatmapConfigDialog scope="ecommerce" estabelecimentoId={estabId} />
       </div>
 
       <Tabs defaultValue="advanced">
