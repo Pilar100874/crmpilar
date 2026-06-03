@@ -13,6 +13,17 @@ const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", curren
 export default function EcommerceMapaCalor() {
   const navigate = useNavigate();
   const [carts, setCarts] = useState<any[]>([]);
+  const [estabId, setEstabId] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) return;
+      const { data: u } = await supabase.from("usuarios").select("estabelecimento_id").eq("auth_user_id", auth.user.id).maybeSingle();
+      if (u?.estabelecimento_id) setEstabId(u.estabelecimento_id);
+    })();
+  }, []);
+
 
   useEffect(() => {
     let mounted = true;
