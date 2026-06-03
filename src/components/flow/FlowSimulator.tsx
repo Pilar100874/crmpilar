@@ -3492,7 +3492,48 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
       return;
     }
-    // === text_content (modo opções): usuário escolheu uma das opções pré-definidas ===
+    // === ask_product_image (texto): escolha de amostra IA / regenerar / cancelar ===
+    if (currentBlockType === "ask_product_image_text_pick" && currentNodeId) {
+      addUserMessage(button.text);
+      const node = nodes.find((n) => n.id === currentNodeId);
+      const cfg = (node?.data as any)?.config || {};
+      const st = simNodeStateRef.current[currentNodeId] || {};
+
+      if (button.value === "cancel") {
+        addSystemMessage("❌ Geração cancelada.");
+        setIsWaitingInput(false); setCurrentBlockType(null);
+        return;
+      }
+      if (button.value === "regen") {
+        const desc = st.productDescription || "";
+        if (!desc) {
+          addSystemMessage("⚠️ Sem descrição para regenerar.");
+          return;
+        }
+        generateProductSamples(currentNodeId, desc);
+        return;
+      }
+      if (typeof button.value === "string" && button.value.startsWith("pick_")) {
+        const idx = Number(button.value.split("_")[1]);
+        const url = (st.productSamples || [])[idx];
+        if (!url) { addSystemMessage("⚠️ Opção inválida."); return; }
+        const imgVar = normalizeVarName(cfg.outputImageVariable || "produto_imagem_url");
+        const descVar = normalizeVarName(cfg.outputDescVariable || "produto_descricao");
+        const newCtx = { ...contextRef.current, [imgVar]: url };
+        if (st.productDescription) newCtx[descVar] = st.productDescription;
+        contextRef.current = newCtx; setContext(newCtx); onContextChange?.(newCtx);
+        st.productImageUrl = url;
+        simNodeStateRef.current[currentNodeId] = st;
+        addSuccessMessage(`✅ Opção ${idx + 1} selecionada.`);
+        setIsWaitingInput(false); setCurrentBlockType(null);
+        const next = getNextNode(currentNodeId);
+        if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+        return;
+      }
+      return;
+    }
+
+
     if (currentBlockType === "text_content_options_pick" && currentNodeId) {
       addUserMessage(button.text);
       const st = simNodeStateRef.current[currentNodeId] || {};
