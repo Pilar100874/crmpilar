@@ -2454,8 +2454,21 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       return;
     }
 
+    // === text_content (IA): briefing digitado pelo usuário ===
+    if (currentBlockType === "text_content_ai_brief" && currentNodeId) {
+      const brief = input.trim();
+      setInput("");
+      if (!brief) return;
+      const st = simNodeStateRef.current[currentNodeId] || {};
+      st.aiBrief = brief;
+      simNodeStateRef.current[currentNodeId] = st;
+      await generateTextContentSuggestions(currentNodeId, brief);
+      return;
+    }
+
     // === content_type: coleta o objetivo do criativo do usuário ===
     // === ask_influencer_upload removido — apenas galeria ===
+
 
     // === ask_product_image: input para os 3 métodos ===
     if (currentBlockType === "ask_product_image_input" && currentNodeId) {
