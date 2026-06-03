@@ -270,8 +270,8 @@ export const FlowNode = memo((props: any) => {
               {!isStartBlock && (
                 <DropdownMenuItem
                   onClick={() => {
-                    setDeleteDialogOpen(true);
                     setDropdownOpen(false);
+                    data.onDelete?.(id);
                   }}
                   className="text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer"
                 >
