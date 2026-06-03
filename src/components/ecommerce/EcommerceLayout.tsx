@@ -24,6 +24,8 @@ import EcommerceWebchatWidget from "@/components/ecommerce/EcommerceWebchatWidge
 import EcommerceWhatsappWidget from "@/components/ecommerce/EcommerceWhatsappWidget";
 import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 import { useEcommerceCategories } from "@/hooks/useEcommerceCategories";
+import { useEcomTracker, upsertActiveCart } from "@/hooks/useEcomTracker";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 
