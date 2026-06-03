@@ -3368,7 +3368,105 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
       return;
     }
-    // === confirmação dos textos coletados ===
+    // === text_content (novo): Sim/Não inicial ===
+    if (currentBlockType === "text_content_yesno" && currentNodeId) {
+      addUserMessage(button.text);
+      if (button.value === "nao") {
+        simNodeStateRef.current[currentNodeId] = {
+          ...(simNodeStateRef.current[currentNodeId] || {}),
+          resolvedTextContent: { title: "", subtitle: "", body: "" },
+        };
+        addSuccessMessage("✅ Seguindo sem textos na imagem.");
+        setIsWaitingInput(false); setCurrentBlockType(null);
+        const next = getNextNode(currentNodeId);
+        if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+        return;
+      }
+      // Sim → escolha do método
+      setMessages((prev) => [...prev, {
+        id: uid(), sender: "bot", text: "Como você quer definir os textos?", timestamp: new Date(), nodeId: currentNodeId,
+        buttons: [
+          { text: "✍️ Eu digito", value: "type", buttonId: "tc_m_type" },
+          { text: "✨ IA sugere para mim", value: "ai", buttonId: "tc_m_ai" },
+        ],
+      }]);
+      setCurrentBlockType("text_content_method");
+      setIsWaitingInput(true);
+      return;
+    }
+
+    // === text_content (novo): escolha entre digitar ou IA ===
+    if (currentBlockType === "text_content_method" && currentNodeId) {
+      addUserMessage(button.text);
+      if (button.value === "type") {
+        const askQueue = [
+          { field: "title" as const, prompt: "Qual o título que devo colocar na imagem?" },
+          { field: "subtitle" as const, prompt: "Qual o subtítulo? (digite '-' para deixar em branco)" },
+          { field: "body" as const, prompt: "Quer adicionar um texto extra na imagem? (digite ou responda 'não')" },
+        ];
+        simNodeStateRef.current[currentNodeId] = {
+          ...(simNodeStateRef.current[currentNodeId] || {}),
+          resolvedTextContent: { title: "", subtitle: "", body: "" },
+          textContentAskQueue: askQueue,
+          textContentAskIndex: 0,
+        };
+        addBotMessage(askQueue[0].prompt, currentNodeId);
+        setCurrentBlockType("text_content_ask");
+        setPendingVariable(`__tc_${currentNodeId}`);
+        setIsWaitingInput(true);
+        return;
+      }
+      // ai
+      addBotMessage("Me conte em poucas palavras o que a imagem deve comunicar (produto, oferta, tom, público...). A IA vai gerar 2 sugestões para você escolher.", currentNodeId);
+      setCurrentBlockType("text_content_ai_brief");
+      setIsWaitingInput(true);
+      return;
+    }
+
+    // === text_content (novo): escolha de sugestão da IA / loop ===
+    if (currentBlockType === "text_content_ai_pick" && currentNodeId) {
+      addUserMessage(button.text);
+      const st = simNodeStateRef.current[currentNodeId] || {};
+      if (button.value === "cancel") {
+        st.resolvedTextContent = { title: "", subtitle: "", body: "" };
+        simNodeStateRef.current[currentNodeId] = st;
+        addSystemMessage("❌ Sugestões canceladas. Seguindo sem textos.");
+        setIsWaitingInput(false); setCurrentBlockType(null);
+        const next = getNextNode(currentNodeId);
+        if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+        return;
+      }
+      if (button.value === "regen") {
+        const brief = st.aiBrief || "";
+        if (!brief) {
+          addBotMessage("Por favor, me conte novamente o briefing:", currentNodeId);
+          setCurrentBlockType("text_content_ai_brief");
+          setIsWaitingInput(true);
+          return;
+        }
+        generateTextContentSuggestions(currentNodeId, brief);
+        return;
+      }
+      if (typeof button.value === "string" && button.value.startsWith("pick_")) {
+        const idx = Number(button.value.split("_")[1]);
+        const pick = (st.aiSuggestions || [])[idx];
+        if (!pick) { addSystemMessage("⚠️ Opção inválida."); return; }
+        st.resolvedTextContent = {
+          title: pick.title || "",
+          subtitle: pick.subtitle || "",
+          body: pick.body || "",
+        };
+        simNodeStateRef.current[currentNodeId] = st;
+        addSuccessMessage(`✅ Opção ${idx + 1} selecionada.`);
+        setIsWaitingInput(false); setCurrentBlockType(null);
+        const next = getNextNode(currentNodeId);
+        if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+        return;
+      }
+      return;
+    }
+
+    // === confirmação dos textos coletados (modo "Eu digito") ===
     if (currentBlockType === "text_content_confirm" && currentNodeId) {
       addUserMessage(button.text);
       const node = nodes.find((n) => n.id === currentNodeId);
