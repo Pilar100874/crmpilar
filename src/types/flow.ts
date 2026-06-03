@@ -46,7 +46,9 @@ export type NodeType =
   | "generate_ai_media"
   | "send_whatsapp_to_number"
   | "api_loop"
-  | "product_search_select";
+  | "product_search_select"
+  | "text_content";
+
 
 export interface BlockDefinition {
   type: NodeType;
