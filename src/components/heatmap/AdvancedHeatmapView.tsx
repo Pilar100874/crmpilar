@@ -565,10 +565,15 @@ function RouteSelector({ routes, value, onChange }: { routes: string[]; value: s
 
 function HeatmapPanel({ width, height, points, radius, maxOpacity, bgUrl }: { width: number; height: number; points: { x: number; y: number }[]; radius?: number; maxOpacity?: number; bgUrl?: string | null }) {
   return (
-    <div className="relative bg-gradient-to-br from-muted/30 to-muted/10 rounded border" style={{ width: "100%", maxWidth: width, aspectRatio: `${width}/${height}` }}>
-      <div className="absolute inset-0 grid grid-cols-12 grid-rows-8 opacity-10 pointer-events-none">
-        {Array.from({ length: 96 }).map((_, i) => <div key={i} className="border border-foreground/20" />)}
-      </div>
+    <div className="relative bg-gradient-to-br from-muted/30 to-muted/10 rounded border overflow-hidden" style={{ width: "100%", maxWidth: width, aspectRatio: `${width}/${height}` }}>
+      {bgUrl && (
+        <img src={bgUrl} alt="" className="absolute inset-0 w-full h-full object-cover object-top opacity-90 pointer-events-none select-none" draggable={false} />
+      )}
+      {!bgUrl && (
+        <div className="absolute inset-0 grid grid-cols-12 grid-rows-8 opacity-10 pointer-events-none">
+          {Array.from({ length: 96 }).map((_, i) => <div key={i} className="border border-foreground/20" />)}
+        </div>
+      )}
       <HeatmapCanvas points={points} width={width} height={height} radius={radius} maxOpacity={maxOpacity} className="rounded" />
       {points.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">Sem dados ainda. Aguardando interações...</div>
