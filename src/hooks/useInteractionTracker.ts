@@ -158,6 +158,18 @@ export function useInteractionTracker(scope: Scope, estabelecimentoIdHint?: stri
   ) => {
     const estab = ctxRef.current.estabelecimento_id;
     if (!estab) return;
+    const c = cfgRef.current;
+    if (!c.enabled) return;
+    const allowed: Record<EventType, boolean> = {
+      click: c.track_click,
+      move: c.track_move,
+      scroll: c.track_scroll,
+      rage_click: c.track_rage_click,
+      dead_click: c.track_dead_click,
+      quick_back: c.track_quick_back,
+      form_field: c.track_form_field,
+    };
+    if (!allowed[type]) return;
     bufferRef.current.push({
       scope,
       session_id: getSessionId(scope),
