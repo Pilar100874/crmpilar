@@ -2138,52 +2138,43 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       }
 
       case "text_content": {
-        // Monta a fila de campos que precisam ser pedidos ao usuário
-        const askQueue: Array<{ field: "title" | "subtitle" | "body"; prompt: string }> = [];
-        const tryAsk = (field: "title" | "subtitle" | "body", defaultPrompt: string) => {
-          if (field === "body" && config.bodyEnabled === false) return;
-          if (config[`${field}Mode`] === "ask") {
-            const prompt = interpolateVariables(
-              config[`${field}AskPrompt`] || defaultPrompt,
-              contextRef.current,
-            );
-            askQueue.push({ field, prompt });
-          }
-        };
-        tryAsk("title", "Qual o título que devo colocar na imagem?");
-        tryAsk("subtitle", "Qual o subtítulo que devo colocar na imagem?");
-        tryAsk("body", "Quer adicionar um texto extra na imagem? (digite ou responda 'não')");
-
-        // Inicializa estado runtime para este nó
-        simNodeStateRef.current[node.id] = {
-          ...(simNodeStateRef.current[node.id] || {}),
-          resolvedTextContent: {
-            title: config.titleMode === "ask" ? "" : (config.title || ""),
-            subtitle: config.subtitleMode === "ask" ? "" : (config.subtitle || ""),
-            body: config.bodyEnabled === false
-              ? ""
-              : (config.bodyMode === "ask" ? "" : (config.body || "")),
-          },
-          textContentAskQueue: askQueue,
-          textContentAskIndex: 0,
-        };
-
-        if (askQueue.length === 0) {
-          const v = simNodeStateRef.current[node.id].resolvedTextContent;
-          const parts = [v.title && `Título: "${v.title}"`, v.subtitle && `Subtítulo: "${v.subtitle}"`, v.body && `Texto: "${v.body}"`].filter(Boolean);
-          addSystemMessage(`📝 Conteúdo de Texto fixado para o próximo Gerar Mídia IA${parts.length ? ` — ${parts.join(" · ")}` : ""}.`);
+        // Se o designer pré-configurou textos fixos (sem nenhum modo "ask"/"ai"),
+        // aplica direto sem perguntar (mantém comportamento legado).
+        const modes = ["title", "subtitle", "body"].map((k) => config[`${k}Mode`] || "fixed");
+        const allFixed = modes.every((m) => m === "fixed");
+        const hasAnyFixedValue = !!(
+          (config.title && config.title.trim()) ||
+          (config.subtitle && config.subtitle.trim()) ||
+          (config.body && config.body.trim())
+        );
+        if (allFixed && hasAnyFixedValue) {
+          simNodeStateRef.current[node.id] = {
+            ...(simNodeStateRef.current[node.id] || {}),
+            resolvedTextContent: {
+              title: config.title || "",
+              subtitle: config.subtitle || "",
+              body: config.bodyEnabled === false ? "" : (config.body || ""),
+            },
+          };
+          addSystemMessage(`📝 Conteúdo de Texto fixado para o próximo Gerar Mídia IA.`);
           safeSetTimeout(() => {
             const nextNode = getNextNode(node.id);
             if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
           }, 400);
-        } else {
-          // Pergunta o primeiro campo
-          addBotMessage(askQueue[0].prompt, node.id);
-          setIsWaitingInput(true);
-          setCurrentBlockType("text_content_ask");
-          setPendingVariable(`__tc_${node.id}`);
-          setCurrentNodeId(node.id);
+          break;
         }
+
+        // Novo fluxo: pergunta Sim/Não antes de qualquer coisa
+        setMessages((prev) => [...prev, {
+          id: uid(), sender: "bot", text: "Você quer colocar textos na imagem?", timestamp: new Date(), nodeId: node.id,
+          buttons: [
+            { text: "✅ Sim", value: "sim", buttonId: "tc_yes" },
+            { text: "❌ Não", value: "nao", buttonId: "tc_no" },
+          ],
+        }]);
+        setIsWaitingInput(true);
+        setCurrentBlockType("text_content_yesno");
+        setCurrentNodeId(node.id);
         break;
       }
 
