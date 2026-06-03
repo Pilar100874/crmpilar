@@ -404,6 +404,8 @@ export const PropertiesPanel = ({
         return <BlockConfigs.ProductSearchSelectConfig {...configProps} />;
       case "text_content":
         return <BlockConfigs.TextContentConfig {...configProps} />;
+      case "content_type":
+        return <BlockConfigs.ContentTypeConfig {...configProps} />;
 
 
       case "start":

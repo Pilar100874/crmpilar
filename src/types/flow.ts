@@ -47,7 +47,8 @@ export type NodeType =
   | "send_whatsapp_to_number"
   | "api_loop"
   | "product_search_select"
-  | "text_content";
+  | "text_content"
+  | "content_type";
 
 
 export interface BlockDefinition {
@@ -563,6 +564,20 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       title: "",
       subtitle: "",
       body: "",
+    },
+  },
+  // Tipo de Conteúdo (define objetivo/estilo para Gerar Mídia IA)
+  {
+    type: "content_type",
+    label: "Tipo de Conteúdo",
+    description: "Define o objetivo do criativo (Divulgação, Promoção, Institucional...) para guiar o bloco Gerar Mídia IA.",
+    icon: "Megaphone",
+    color: "text-pink-600",
+    defaultData: {
+      contentType: "divulgacao",
+      mode: "fixed", // "fixed" | "ask"
+      askPrompt: "Qual o objetivo da peça? (divulgacao, promocao, institucional, evento, lancamento, educacional)",
+      customGuidance: "",
     },
   },
 ];
