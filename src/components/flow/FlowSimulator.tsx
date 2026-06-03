@@ -358,16 +358,17 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const b = (tc.body || "").trim();
     if (!t && !s && !b) return "";
     const lines: string[] = [];
-    if (t) lines.push(`- TÍTULO: "${t}"`);
-    if (s) lines.push(`- SUBTÍTULO: "${s}"`);
-    if (b) lines.push(`- CORPO: "${b}"`);
+    if (t) lines.push(`  • Texto principal (maior destaque): ${t}`);
+    if (s) lines.push(`  • Texto secundário (menor): ${s}`);
+    if (b) lines.push(`  • Texto complementar (menor ainda): ${b}`);
     return [
       "TEXTO OBRIGATÓRIO NA IMAGEM (REGRA INVIOLÁVEL):",
-      "Renderize EXATAMENTE os textos abaixo na imagem, com ortografia, acentuação e pontuação idênticas.",
+      "Renderize na imagem APENAS os CONTEÚDOS de texto listados abaixo, com ortografia, acentuação e pontuação idênticas.",
+      "PROIBIDO escrever na imagem as palavras 'TÍTULO', 'SUBTÍTULO', 'CORPO', 'TITLE', 'SUBTITLE', 'BODY' nem qualquer outro rótulo/label — esses nomes são apenas referência de hierarquia, NÃO devem aparecer na arte final.",
       "NÃO traduza, NÃO altere, NÃO invente, NÃO acrescente, NÃO substitua, NÃO abrevie.",
-      "NÃO inclua nenhum outro texto, palavra, slogan, marca d'água ou número além destes:",
+      "NÃO inclua nenhum outro texto, palavra, slogan, marca d'água ou número além dos conteúdos abaixo:",
       ...lines,
-      "Hierarquia visual: título em maior destaque, subtítulo secundário, corpo (se houver) menor. Tipografia legível e bem posicionada.",
+      "Hierarquia visual: o primeiro item em maior destaque, os seguintes em tamanho decrescente. Tipografia legível e bem posicionada.",
     ].join("\n");
   };
 
