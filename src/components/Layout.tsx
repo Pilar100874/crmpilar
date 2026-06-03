@@ -66,6 +66,7 @@ import { useAtalhos } from "@/hooks/useAtalhos";
 import { useAvisosSistema } from "@/hooks/useAvisosSistema";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { useActivityTracking } from "@/hooks/useActivityTracking";
+import { useUsageTracker } from "@/hooks/useUsageTracker";
 // useAutoScreenShare removido - agora usamos extensão do Chrome
 import * as LucideIcons from "lucide-react";
 
@@ -173,6 +174,7 @@ const menuItems: MenuItem[] = [
       { id: "TV Veículos", title: "Dashboard Veículos", url: "/tv/veiculos", icon: LucideIcons.Truck },
     ]
   },
+  { id: "Mapa de Calor", title: "Mapa de Calor", url: "/mapa-calor-sistema", icon: LucideIcons.Flame },
   { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
 ];
 
@@ -223,6 +225,8 @@ export default function Layout({ children }: LayoutProps) {
   const toggleTheme = () => setIsDarkMode(prev => !prev);
   // Tracking de atividade do usuário em tempo real
   useActivityTracking();
+  // Tracking de uso para Mapa de Calor do Sistema
+  useUsageTracker();
   
   // Auto screen share removido - agora usamos extensão do Chrome
 

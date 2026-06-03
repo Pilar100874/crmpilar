@@ -24,6 +24,7 @@ import EcommerceWebchatWidget from "@/components/ecommerce/EcommerceWebchatWidge
 import EcommerceWhatsappWidget from "@/components/ecommerce/EcommerceWhatsappWidget";
 import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 import { useEcommerceCategories } from "@/hooks/useEcommerceCategories";
+import { useEcomTracker, upsertActiveCart } from "@/hooks/useEcomTracker";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -58,6 +59,37 @@ export default function EcommerceLayout() {
   const [isFromSystem] = useState(() => !!localStorage.getItem("estabelecimentoId"));
   const isB2BRoute = location.pathname.includes("/b2b");
   const isCatalogMode = isB2BRoute ? branding.modo_catalogo_b2b : branding.modo_catalogo_b2c;
+  const [estabId, setEstabId] = useState<string | null>(() => localStorage.getItem("estabelecimentoId"));
+  useEffect(() => {
+    if (estabId) return;
+    (async () => {
+      const mod = await import("@/lib/estabelecimentoUtils");
+      const id = await mod.getEstabelecimentoId();
+      if (id) setEstabId(id);
+    })();
+  }, [estabId]);
+
+  // Mapa de calor do e-commerce: rastreia pageviews e tempo
+  useEcomTracker(estabId);
+
+  // Snapshot do carrinho para detecção de abandono
+  const { items: cartItems, totalPrice } = useCart() as any;
+  useEffect(() => {
+    if (!estabId) return;
+    const items = Array.isArray(cartItems)
+      ? cartItems.map((it: any) => ({
+          id: String(it.id || it.produto_id || ""),
+          nome: String(it.nome || it.name || ""),
+          qtd: Number(it.quantidade || it.quantity || 1),
+          preco: Number(it.preco || it.price || 0),
+        }))
+      : [];
+    upsertActiveCart({
+      estabelecimento_id: estabId,
+      items,
+      total: Number(totalPrice || items.reduce((s, i) => s + i.qtd * i.preco, 0)),
+    });
+  }, [estabId, cartItems, totalPrice]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
