@@ -15,8 +15,8 @@ export const AskInfluencerConfig = ({ config, handleConfigChange }: Props) => {
         <Info className="h-4 w-4 text-purple-600" />
         <AlertDescription className="text-xs">
           Pergunta ao usuário se a peça terá um <strong>influencer</strong>. Em caso afirmativo,
-          coleta a foto/URL e disponibiliza para o bloco <strong>Gerar Mídia IA</strong> como
-          referência (papel INFLUENCER).
+          oferece duas opções: <strong>escolher da Galeria</strong> (categoria Influencers) ou
+          <strong> enviar foto/URL</strong>. A imagem vai para o bloco <strong>Gerar Mídia IA</strong> como referência (papel INFLUENCER).
         </AlertDescription>
       </Alert>
 
