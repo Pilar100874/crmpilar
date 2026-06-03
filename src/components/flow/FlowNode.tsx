@@ -21,16 +21,15 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Pause, SkipForward, X, Database, MoreVertical, ArrowRight, Copy, Trash2, StickyNote } from "lucide-react";
+  Pause,
+  SkipForward,
+  X,
+  MoreVertical,
+  ArrowRight,
+  Copy,
+  Trash2,
+  StickyNote,
+} from "lucide-react";
 
 export const FlowNode = memo((props: any) => {
   const { data, selected, id } = props;
@@ -271,7 +270,7 @@ export const FlowNode = memo((props: any) => {
                 <DropdownMenuItem
                   onClick={() => {
                     setDropdownOpen(false);
-                    data.onDelete?.(id);
+                    window.setTimeout(() => data.onDelete?.(id), 0);
                   }}
                   className="text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer"
                 >
@@ -499,7 +498,7 @@ export const FlowNode = memo((props: any) => {
         
         {!isStartBlock && (
           <ContextMenuItem
-            onClick={() => data.onDelete?.(id)}
+            onClick={() => window.setTimeout(() => data.onDelete?.(id), 0)}
             className="text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer"
           >
             <Trash2 className="w-4 h-4 mr-2" />

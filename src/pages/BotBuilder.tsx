@@ -524,11 +524,15 @@ function BotBuilderContent() {
   const confirmDeleteNode = useCallback(() => {
     const nodeId = deleteNodeConfirm.nodeId;
     if (!nodeId) return;
-    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
-    setSelectedNode((prev) => (prev && prev.id === nodeId ? null : prev));
     setDeleteNodeConfirm({ open: false, nodeId: null });
-    toast.success("Bloco e conexões excluídos!");
+
+    window.setTimeout(() => {
+      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+      setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+      setSelectedNode((prev) => (prev && prev.id === nodeId ? null : prev));
+      document.body.style.pointerEvents = "";
+      toast.success("Bloco e conexões excluídos!");
+    }, 0);
   }, [deleteNodeConfirm.nodeId, setNodes, setEdges]);
 
   const handleNodesDelete = useCallback(
@@ -1579,7 +1583,7 @@ function BotBuilderContent() {
 
         <DeleteConfirmDialog
           open={deleteNodeConfirm.open}
-          onOpenChange={(open) => setDeleteNodeConfirm((prev) => ({ ...prev, open }))}
+          onOpenChange={(open) => setDeleteNodeConfirm((prev) => ({ open, nodeId: open ? prev.nodeId : null }))}
           onConfirm={confirmDeleteNode}
           title="Excluir bloco"
           description="Tem certeza que deseja excluir este bloco? As conexões com ele também serão removidas."
