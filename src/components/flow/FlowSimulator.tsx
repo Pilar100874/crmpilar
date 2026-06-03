@@ -2160,7 +2160,40 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
     addUserMessage(input);
 
-    // === Multi-step: blocos novos ===
+    // === text_content: coleta multi-campo (title / subtitle / body) do usuário ===
+    if (currentBlockType === "text_content_ask" && currentNodeId) {
+      const state = simNodeStateRef.current[currentNodeId] || {};
+      const queue: Array<{ field: "title" | "subtitle" | "body"; prompt: string }> = state.textContentAskQueue || [];
+      const idx: number = state.textContentAskIndex || 0;
+      const current = queue[idx];
+      if (current) {
+        const raw = input.trim();
+        // Para body, "não/nao/skip/-" significa pular
+        const isSkip = current.field === "body" && /^(nao|não|n|no|skip|-|nenhum|nada)$/i.test(raw);
+        const value = isSkip ? "" : raw;
+        state.resolvedTextContent = { ...(state.resolvedTextContent || {}), [current.field]: value };
+        state.textContentAskIndex = idx + 1;
+        simNodeStateRef.current[currentNodeId] = state;
+      }
+      setInput("");
+      const nextIdx = (state.textContentAskIndex ?? 0);
+      if (queue[nextIdx]) {
+        // Pergunta o próximo campo
+        addBotMessage(queue[nextIdx].prompt, currentNodeId);
+        return;
+      }
+      // Concluiu — log e avança
+      const v = state.resolvedTextContent || {};
+      const parts = [v.title && `Título: "${v.title}"`, v.subtitle && `Subtítulo: "${v.subtitle}"`, v.body && `Texto: "${v.body}"`].filter(Boolean);
+      addSystemMessage(`📝 Conteúdo de Texto coletado${parts.length ? ` — ${parts.join(" · ")}` : ""}.`);
+      const tcNodeId = currentNodeId;
+      setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
+      const nextNode = getNextNode(tcNodeId);
+      if (nextNode) safeSetTimeout(() => { setCurrentNodeId(nextNode.id); executeNode(nextNode); }, 400);
+      return;
+    }
+
+
     if (currentBlockType === "product_search_query" && currentNodeId) {
       const node = nodes.find(n => n.id === currentNodeId);
       const q = input.trim();
