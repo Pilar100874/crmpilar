@@ -56,34 +56,43 @@ export const AskInfluencerConfig = ({ config, handleConfigChange }: Props) => {
       <div className="space-y-2">
         <Label className="flex items-center gap-2">
           <UserSquare2 className="h-3.5 w-3.5 text-purple-600" />
-          Influencer fixo
+          Influencer fixo {selectedItem && <span className="text-xs text-muted-foreground">— {selectedItem.nome}</span>}
         </Label>
-        <Select
-          value={selectedId}
-          onValueChange={(v) => {
-            const item = influencers.find((i) => i.id === v);
-            handleConfigChange("fixedInfluencerId", v);
-            handleConfigChange("fixedInfluencerUrl", item?.image_url || "");
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder={loading ? "Carregando..." : "Selecione um influencer"} />
-          </SelectTrigger>
-          <SelectContent>
-            {influencers.map((it) => (
-              <SelectItem key={it.id} value={it.id}>
-                {it.nome || "Sem nome"}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {selectedItem && (
-          <div className="mt-2">
-            <img
-              src={selectedItem.image_url}
-              alt={selectedItem.nome || "Influencer"}
-              className="h-24 w-auto rounded-md border border-border object-cover"
-            />
+        {loading ? (
+          <p className="text-xs text-muted-foreground">Carregando influencers...</p>
+        ) : influencers.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Nenhum influencer encontrado na galeria.</p>
+        ) : (
+          <div className="grid grid-cols-3 gap-2 max-h-80 overflow-y-auto p-1">
+            {influencers.map((it) => {
+              const isSelected = it.id === selectedId;
+              return (
+                <button
+                  type="button"
+                  key={it.id}
+                  onClick={() => {
+                    handleConfigChange("fixedInfluencerId", it.id);
+                    handleConfigChange("fixedInfluencerUrl", it.image_url);
+                  }}
+                  className={cn(
+                    "relative aspect-square rounded-md overflow-hidden border-2 transition-all hover:opacity-90",
+                    isSelected ? "border-purple-600 ring-2 ring-purple-500/40" : "border-border"
+                  )}
+                  title={it.nome || "Sem nome"}
+                >
+                  <img
+                    src={it.image_url}
+                    alt={it.nome || "Influencer"}
+                    className="h-full w-full object-cover"
+                  />
+                  {isSelected && (
+                    <div className="absolute top-1 right-1 bg-purple-600 text-white rounded-full p-0.5">
+                      <Check className="h-3 w-3" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
