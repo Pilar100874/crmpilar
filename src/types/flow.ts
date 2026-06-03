@@ -47,7 +47,8 @@ export type NodeType =
   | "send_whatsapp_to_number"
   | "api_loop"
   | "product_search_select"
-  | "text_content";
+  | "text_content"
+  | "content_type";
 
 
 export interface BlockDefinition {
