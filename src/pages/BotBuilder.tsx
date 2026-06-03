@@ -452,6 +452,88 @@ function BotBuilderContent() {
     return () => window.removeEventListener("workflow:add-block", handler);
   }, [reactFlowInstance, setNodes]);
 
+  // Templates pré-montados (vários blocos + edges)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const template = (e as CustomEvent).detail?.template;
+      if (!template || !reactFlowWrapper.current || !reactFlowInstance) return;
+
+      if (template === "peca_ia_criativa") {
+        const bounds = reactFlowWrapper.current.getBoundingClientRect();
+        const origin = reactFlowInstance.screenToFlowPosition({
+          x: bounds.left + 120,
+          y: bounds.top + 120,
+        });
+
+        const sequence: Array<{ type: string; configOverride?: Record<string, any> }> = [
+          { type: "content_type", configOverride: { mode: "ask" } },
+          { type: "ask_influencer" },
+          { type: "ask_product_image" },
+          {
+            type: "text_content",
+            configOverride: {
+              titleMode: "ask",
+              subtitleMode: "ask",
+              bodyMode: "ai",
+              bodyEnabled: true,
+            },
+          },
+          {
+            type: "generate_ai_media",
+            configOverride: {
+              mediaType: "image",
+              styleSource: "visual_identity",
+              acceptText: false,
+              acceptImageRef: false,
+              variations: 4,
+              basePrompt: "Crie uma peça gráfica profissional usando as referências fornecidas.",
+            },
+          },
+        ];
+
+        const newNodes: Node[] = [];
+        const newEdges: Edge[] = [];
+        let prevId: string | null = null;
+
+        sequence.forEach((step, idx) => {
+          const def = BLOCK_DEFINITIONS.find((b) => b.type === step.type);
+          if (!def) return;
+          const id = getId();
+          const node: Node = {
+            id,
+            type: "custom",
+            position: { x: origin.x + idx * 320, y: origin.y },
+            data: {
+              label: def.label,
+              type: def.type,
+              config: {
+                ...JSON.parse(JSON.stringify(def.defaultData || {})),
+                ...(step.configOverride || {}),
+              },
+            },
+          };
+          newNodes.push(node);
+          if (prevId) {
+            newEdges.push({
+              id: `e_${prevId}_${id}`,
+              source: prevId,
+              target: id,
+              type: "smoothstep",
+              animated: true,
+            });
+          }
+          prevId = id;
+        });
+
+        setNodes((nds) => [...nds, ...newNodes]);
+        setEdges((eds) => [...eds, ...newEdges]);
+        toast.success("Roteiro 'Criar Peça com IA' adicionado!");
+      }
+    };
+    window.addEventListener("workflow:add-template", handler);
+    return () => window.removeEventListener("workflow:add-template", handler);
+  }, [reactFlowInstance, setNodes, setEdges]);
+
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
     event.dataTransfer.setData("application/reactflow", nodeType);
     event.dataTransfer.effectAllowed = "move";

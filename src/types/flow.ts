@@ -48,7 +48,9 @@ export type NodeType =
   | "api_loop"
   | "product_search_select"
   | "text_content"
-  | "content_type";
+  | "content_type"
+  | "ask_influencer"
+  | "ask_product_image";
 
 
 export interface BlockDefinition {
@@ -578,6 +580,35 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       mode: "fixed", // "fixed" | "ask"
       askPrompt: "Qual o objetivo da peça? (divulgacao, promocao, institucional, evento, lancamento, educacional)",
       customGuidance: "",
+    },
+  },
+  // Influencer (foto/referência) — entra como referência INFLUENCER no Gerar Mídia IA
+  {
+    type: "ask_influencer",
+    label: "Influencer?",
+    description: "Pergunta se a peça terá influencer; se sim, coleta a foto de referência.",
+    icon: "UserSquare2",
+    color: "text-purple-600",
+    defaultData: {
+      askQuestion: "A peça terá um influencer?",
+      uploadPrompt: "Envie a foto/referência do influencer (URL ou arquivo).",
+      outputVariable: "influencer_image_url",
+    },
+  },
+  // Imagem do produto — 3 opções com confirmação
+  {
+    type: "ask_product_image",
+    label: "Imagem do Produto?",
+    description: "Pergunta se a peça terá imagem do produto; se sim, oferece código do catálogo, upload ou descrição em texto, com confirmação.",
+    icon: "Package",
+    color: "text-amber-600",
+    defaultData: {
+      askQuestion: "A peça terá imagem do produto?",
+      codePrompt: "Digite o código (ou nome) do produto no sistema:",
+      photoPrompt: "Envie a foto do produto (URL ou arquivo).",
+      textPrompt: "Descreva o produto em texto:",
+      outputImageVariable: "produto_imagem_url",
+      outputDescVariable: "produto_descricao",
     },
   },
 ];

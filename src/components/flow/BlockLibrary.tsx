@@ -26,7 +26,7 @@ const blockCategories = [
     iconColor: "text-purple-600",
     iconHover: "group-hover:text-purple-700",
     textHover: "group-hover:text-purple-700",
-    blocks: ["ai_agent", "generate_ai_media", "text_content", "content_type"] as NodeType[],
+    blocks: ["ai_agent", "generate_ai_media", "text_content", "content_type", "ask_influencer", "ask_product_image"] as NodeType[],
   },
   {
     name: "Mensagens",
@@ -267,6 +267,29 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                       </Card>
                     );
                   })}
+
+                  {category.name === "IA" && !searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => window.dispatchEvent(new CustomEvent("workflow:add-template", { detail: { template: "peca_ia_criativa" } }))}
+                      className="w-full ml-5 mt-2 p-2 rounded-2xl border border-dashed border-purple-500/40 bg-gradient-to-br from-purple-500/10 to-violet-500/5 hover:from-purple-500/20 hover:to-violet-500/10 transition-all text-left group"
+                      title="Insere o roteiro completo: Tipo → Influencer → Produto → Texto → Gerar Mídia IA"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="p-1 rounded-md bg-purple-500/20 border border-purple-500/30">
+                          <Icons.Wand2 className="w-3 h-3 text-purple-700" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-semibold text-[11px] text-foreground group-hover:text-purple-700 truncate">
+                            ✨ Roteiro: Criar Peça com IA
+                          </h4>
+                          <p className="text-[9px] text-muted-foreground truncate">
+                            5 blocos conectados, prontos para usar
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  )}
                 </CollapsibleContent>
               </Collapsible>
             );

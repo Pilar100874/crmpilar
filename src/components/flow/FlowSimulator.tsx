@@ -436,6 +436,83 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     return null;
   };
 
+  // ====== Upstream "Influencer?" e "Imagem do Produto?" ======
+  // Procura recursivamente blocos ask_influencer / ask_product_image antes deste nó
+  // e devolve as URLs e descrições já confirmadas pelo usuário no simulador.
+  const findUpstreamPiecaRefs = (
+    nodeId: string,
+    visited = new Set<string>(),
+  ): { influencerUrl?: string; productUrl?: string; productDescription?: string } => {
+    const out: { influencerUrl?: string; productUrl?: string; productDescription?: string } = {};
+    if (visited.has(nodeId)) return out;
+    visited.add(nodeId);
+    const incoming = edges.filter((e) => e.target === nodeId);
+    for (const e of incoming) {
+      const src = nodes.find((n) => n.id === e.source);
+      if (!src) continue;
+      const sd: any = src.data || {};
+      const cfg = sd.config || {};
+      const state = simNodeStateRef.current[src.id] || {};
+      if (sd.type === "ask_influencer" && !out.influencerUrl) {
+        const v = state.influencerImageUrl
+          || (contextRef.current as any)?.[normalizeVarName(cfg.outputVariable || "influencer_image_url")];
+        if (v) out.influencerUrl = String(v);
+      }
+      if (sd.type === "ask_product_image") {
+        const url = state.productImageUrl
+          || (contextRef.current as any)?.[normalizeVarName(cfg.outputImageVariable || "produto_imagem_url")];
+        const desc = state.productDescription
+          || (contextRef.current as any)?.[normalizeVarName(cfg.outputDescVariable || "produto_descricao")];
+        if (url && !out.productUrl) out.productUrl = String(url);
+        if (desc && !out.productDescription) out.productDescription = String(desc);
+      }
+      const upstream = findUpstreamPiecaRefs(src.id, visited);
+      if (!out.influencerUrl && upstream.influencerUrl) out.influencerUrl = upstream.influencerUrl;
+      if (!out.productUrl && upstream.productUrl) out.productUrl = upstream.productUrl;
+      if (!out.productDescription && upstream.productDescription) out.productDescription = upstream.productDescription;
+    }
+    return out;
+  };
+
+  // Diretriz para textos marcados como "Gerar por IA" no bloco Conteúdo de Texto upstream
+  const buildAITextDirective = (nodeId: string): string => {
+    const visited = new Set<string>();
+    const walk = (id: string): any | null => {
+      if (visited.has(id)) return null;
+      visited.add(id);
+      const incoming = edges.filter((e) => e.target === id);
+      for (const e of incoming) {
+        const src = nodes.find((n) => n.id === e.source);
+        if (!src) continue;
+        const sd: any = src.data || {};
+        if (sd.type === "text_content") return sd.config || {};
+        const r = walk(src.id);
+        if (r) return r;
+      }
+      return null;
+    };
+    const cfg = walk(nodeId);
+    if (!cfg) return "";
+    const aiFields: Array<{ key: string; label: string; hint: string }> = [];
+    (["title", "subtitle", "body"] as const).forEach((k) => {
+      if (k === "body" && cfg.bodyEnabled === false) return;
+      if (cfg[`${k}Mode`] === "ai") {
+        aiFields.push({
+          key: k,
+          label: k === "title" ? "TÍTULO" : k === "subtitle" ? "SUBTÍTULO" : "CORPO",
+          hint: (cfg[`${k}AIHint`] || "").trim(),
+        });
+      }
+    });
+    if (!aiFields.length) return "";
+    return [
+      "TEXTOS A SEREM GERADOS PELA IA (escreva você mesmo, em Português Brasileiro, curtos e legíveis):",
+      ...aiFields.map((f) => `- ${f.label}${f.hint ? ` — orientação: ${f.hint}` : ""}`),
+      "Esses textos devem ser coerentes com o tipo de conteúdo, produto e influencer (quando houver), e renderizados de forma legível na imagem com hierarquia visual clara.",
+    ].join("\n");
+  };
+
+
   const buildContentTypeDirective = (ct: { type: string; guidance: string } | null): string => {
     if (!ct) return "";
     const meta = CONTENT_TYPE_DIRECTIVES[ct.type];
@@ -457,6 +534,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const basePrompt = interpolateVariables(config.basePrompt || "", contextRef.current).trim();
     const lockedTextDirective = buildLockedTextDirective(findUpstreamTextContent(node.id));
     const contentTypeDirective = buildContentTypeDirective(findUpstreamContentType(node.id));
+    const aiTextDirective = buildAITextDirective(node.id);
+    const upstreamPieca = findUpstreamPiecaRefs(node.id);
 
     const imageRefSource = config.imageRefSource || "user";
     const imageAspectRatio = config.aspectRatio || (config.preset === "story_vertical" ? "9:16" : "1:1");
@@ -466,6 +545,31 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     let refImageUrl: string | null = userRefImageUrl || null;
     let primaryRefKey: string = userRefImageUrl ? "usuario" : "";
     const extraRefs: Array<{ key: string; url: string }> = [];
+
+    // Injeta automaticamente as referências capturadas pelos blocos upstream do roteiro
+    // (Imagem do Produto / Influencer) — produto tem prioridade #1, influencer #2.
+    if (upstreamPieca.productUrl) {
+      if (!refImageUrl) {
+        refImageUrl = upstreamPieca.productUrl;
+        primaryRefKey = "productImageSelect";
+        addSystemMessage(`🛍️ Usando imagem do produto capturada no roteiro.`);
+        addBotMediaMessage(refImageUrl, "image", "Produto", node.id);
+      } else if (!extraRefs.some((r) => r.url === upstreamPieca.productUrl)) {
+        extraRefs.push({ key: "productImageSelect", url: upstreamPieca.productUrl });
+      }
+    }
+    if (upstreamPieca.influencerUrl) {
+      if (!refImageUrl) {
+        refImageUrl = upstreamPieca.influencerUrl;
+        primaryRefKey = "galleryInfluencer";
+        addSystemMessage(`👤 Usando foto do influencer capturada no roteiro.`);
+        addBotMediaMessage(refImageUrl, "image", "Influencer", node.id);
+      } else if (!extraRefs.some((r) => r.url === upstreamPieca.influencerUrl)) {
+        extraRefs.push({ key: "galleryInfluencer", url: upstreamPieca.influencerUrl });
+        addSystemMessage(`👤 Influencer adicionado como referência secundária.`);
+      }
+    }
+
 
     const _styleSourceForRefs = config.styleSource || "visual_identity";
     if (_styleSourceForRefs === "preset" && config.referenceInputs && typeof config.referenceInputs === "object") {
@@ -580,6 +684,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         compositionDirective,
         contentTypeDirective ? `\n\n${contentTypeDirective}` : "",
         lockedTextDirective ? `\n\n${lockedTextDirective}` : "",
+        aiTextDirective ? `\n\n${aiTextDirective}` : "",
+        upstreamPieca.productDescription ? `\n\nPRODUTO (descrição do usuário): ${upstreamPieca.productDescription}` : "",
         audioScript ? `\n[NARRAÇÃO — fale exatamente este texto em Português Brasileiro]: ${audioScript}` : "",
         `\nFormato ${imageAspectRatio}.`,
       ].filter(Boolean).join("");
@@ -693,7 +799,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           totalAttempts++;
           const { data, error } = await supabase.functions.invoke("bot-generate-ai-media", {
             body: {
-              prompt: `${userPrompt}${contentTypeDirective ? `\n\n${contentTypeDirective}` : ""}${lockedTextDirective ? `\n\n${lockedTextDirective}` : ""}\n\nGere somente a opção ${optionIndex + 1} de ${variations}. Mantenha o mesmo briefing, identidade visual e formato ${imageAspectRatio}; varie apenas ângulo, enquadramento ou composição.${contentTypeDirective ? " Respeite ESTRITAMENTE o TIPO DE CONTEÚDO definido acima (objetivo, presença/ausência de elementos promocionais)." : ""}${lockedTextDirective ? " O TEXTO renderizado na imagem deve ser EXATAMENTE o especificado acima — não varie, não traduza, não invente palavras." : ""}`,
+              prompt: `${userPrompt}${contentTypeDirective ? `\n\n${contentTypeDirective}` : ""}${lockedTextDirective ? `\n\n${lockedTextDirective}` : ""}${aiTextDirective ? `\n\n${aiTextDirective}` : ""}${upstreamPieca.productDescription ? `\n\nPRODUTO (descrição do usuário): ${upstreamPieca.productDescription}` : ""}\n\nGere somente a opção ${optionIndex + 1} de ${variations}. Mantenha o mesmo briefing, identidade visual e formato ${imageAspectRatio}; varie apenas ângulo, enquadramento ou composição.${contentTypeDirective ? " Respeite ESTRITAMENTE o TIPO DE CONTEÚDO definido acima." : ""}${lockedTextDirective ? " O TEXTO renderizado na imagem deve ser EXATAMENTE o especificado — não varie, não traduza, não invente." : ""}${aiTextDirective ? " Para os textos marcados como GERAR PELA IA, crie textos curtos coerentes em PT-BR." : ""}`,
               basePrompt,
               variations: 1,
               styleSource,
@@ -2116,6 +2222,38 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         break;
       }
 
+      case "ask_influencer": {
+        const q = interpolateVariables(config.askQuestion || "A peça terá um influencer?", contextRef.current);
+        setMessages((prev) => [...prev, {
+          id: uid(), sender: "bot", text: q, timestamp: new Date(), nodeId: node.id,
+          buttons: [
+            { text: "Sim", value: "sim", buttonId: "infl_yes" },
+            { text: "Não", value: "nao", buttonId: "infl_no" },
+          ],
+        }]);
+        setIsWaitingInput(true);
+        setCurrentBlockType("ask_influencer_choice");
+        setCurrentNodeId(node.id);
+        break;
+      }
+
+      case "ask_product_image": {
+        const q = interpolateVariables(config.askQuestion || "A peça terá imagem do produto?", contextRef.current);
+        setMessages((prev) => [...prev, {
+          id: uid(), sender: "bot", text: q, timestamp: new Date(), nodeId: node.id,
+          buttons: [
+            { text: "Sim", value: "sim", buttonId: "pim_yes" },
+            { text: "Não", value: "nao", buttonId: "pim_no" },
+          ],
+        }]);
+        setIsWaitingInput(true);
+        setCurrentBlockType("ask_product_image_choice");
+        setCurrentNodeId(node.id);
+        break;
+      }
+
+
+
 
       default:
         addSystemMessage(`▶️ Executando: ${blockDef.label}`);
@@ -2312,6 +2450,105 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
 
     // === content_type: coleta o objetivo do criativo do usuário ===
+    // === ask_influencer: usuário envia URL/texto da foto ===
+    if (currentBlockType === "ask_influencer_upload" && currentNodeId) {
+      const node = nodes.find((n) => n.id === currentNodeId);
+      const cfg = (node?.data as any)?.config || {};
+      const raw = input.trim();
+      setInput("");
+      let url = "";
+      if (selectedFile) {
+        try { url = await uploadSimulatorReferenceImage(selectedFile); } catch {}
+        setSelectedFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      } else if (/^https?:\/\//i.test(raw)) {
+        url = raw;
+      } else if (raw) {
+        addSystemMessage("⚠️ Envie uma URL válida (http/https) ou anexe um arquivo.");
+        return;
+      }
+      if (url) {
+        simNodeStateRef.current[currentNodeId] = { ...(simNodeStateRef.current[currentNodeId] || {}), influencerImageUrl: url };
+        const v = normalizeVarName(cfg.outputVariable || "influencer_image_url");
+        const newCtx = { ...contextRef.current, [v]: url };
+        contextRef.current = newCtx; setContext(newCtx); onContextChange?.(newCtx);
+        addBotMediaMessage(url, "image", "Influencer", currentNodeId);
+        addSuccessMessage("✅ Influencer registrado.");
+      }
+      setIsWaitingInput(false); setCurrentBlockType(null);
+      const next = getNextNode(currentNodeId);
+      if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+      return;
+    }
+
+    // === ask_product_image: input para os 3 métodos ===
+    if (currentBlockType === "ask_product_image_input" && currentNodeId) {
+      const node = nodes.find((n) => n.id === currentNodeId);
+      const state = simNodeStateRef.current[currentNodeId] || {};
+      const method = state.pimMethod || "text";
+      const raw = input.trim();
+      setInput("");
+      let imageUrl = "";
+      let description = "";
+
+      if (method === "code") {
+        const estId = await getEstabelecimentoId();
+        let q = supabase.from("produtos").select("id,nome,codigo,foto_url").eq("ativo", true).limit(1);
+        if (estId) q = q.eq("estabelecimento_id", estId);
+        // Tenta por código exato; se nada, por ilike no nome
+        const { data: byCode } = await q.eq("codigo", raw);
+        let prod: any = byCode?.[0];
+        if (!prod) {
+          let q2 = supabase.from("produtos").select("id,nome,codigo,foto_url").eq("ativo", true).ilike("nome", `%${raw}%`).limit(1);
+          if (estId) q2 = q2.eq("estabelecimento_id", estId);
+          const { data: byName } = await q2;
+          prod = byName?.[0];
+        }
+        if (!prod) {
+          addSystemMessage(`❌ Produto "${raw}" não encontrado. Tente outro código ou nome.`);
+          return;
+        }
+        imageUrl = prod.foto_url || "";
+        description = `${prod.nome}${prod.codigo ? ` (cód. ${prod.codigo})` : ""}`;
+        addSystemMessage(`✅ Produto encontrado: ${description}`);
+      } else if (method === "photo") {
+        if (selectedFile) {
+          try { imageUrl = await uploadSimulatorReferenceImage(selectedFile); } catch {}
+          setSelectedFile(null);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+        } else if (/^https?:\/\//i.test(raw)) {
+          imageUrl = raw;
+        } else {
+          addSystemMessage("⚠️ Envie uma URL válida ou anexe um arquivo.");
+          return;
+        }
+      } else {
+        // text
+        if (!raw) { addSystemMessage("⚠️ Descreva o produto."); return; }
+        description = raw;
+      }
+
+      simNodeStateRef.current[currentNodeId] = {
+        ...state,
+        productImageUrl: imageUrl || state.productImageUrl,
+        productDescription: description || state.productDescription,
+      };
+
+      // Mostra preview e pede confirmação
+      if (imageUrl) addBotMediaMessage(imageUrl, "image", description || "Produto", currentNodeId);
+      else addBotMessage(`📝 ${description}`, currentNodeId);
+      setMessages((prev) => [...prev, {
+        id: uid(), sender: "bot", text: "Está correto? Confirme ou refaça:", timestamp: new Date(), nodeId: currentNodeId,
+        buttons: [
+          { text: "✅ Confirmar", value: "confirmar", buttonId: "pim_confirm" },
+          { text: "🔄 Refazer", value: "refazer", buttonId: "pim_redo" },
+        ],
+      }]);
+      setCurrentBlockType("ask_product_image_confirm");
+      setIsWaitingInput(true);
+      return;
+    }
+
     if (currentBlockType === "content_type_ask" && currentNodeId) {
       const raw = input.trim().toLowerCase();
       const normalize = (s: string) => s
@@ -2938,6 +3175,100 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
   const handleButtonClick = (button: { text: string; value: string; buttonId?: string; keywords?: string[] }, nodeId?: string) => {
     console.log("🔘 Button clicked:", { button, nodeId, pendingVariable, currentBlockType });
+
+    // === ask_influencer: yes/no ===
+    if (currentBlockType === "ask_influencer_choice" && currentNodeId) {
+      addUserMessage(button.text);
+      const node = nodes.find((n) => n.id === currentNodeId);
+      const cfg = (node?.data as any)?.config || {};
+      if (button.value === "sim") {
+        addBotMessage(interpolateVariables(cfg.uploadPrompt || "Envie a foto do influencer (URL ou arquivo).", contextRef.current), currentNodeId);
+        setCurrentBlockType("ask_influencer_upload");
+        setIsWaitingInput(true);
+        return;
+      }
+      setIsWaitingInput(false); setCurrentBlockType(null);
+      const next = getNextNode(currentNodeId);
+      if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+      return;
+    }
+
+    // === ask_product_image: yes/no + escolha de método ===
+    if (currentBlockType === "ask_product_image_choice" && currentNodeId) {
+      addUserMessage(button.text);
+      const node = nodes.find((n) => n.id === currentNodeId);
+      const cfg = (node?.data as any)?.config || {};
+      if (button.value === "sim") {
+        setMessages((prev) => [...prev, {
+          id: uid(), sender: "bot", text: "Como você quer fornecer a imagem do produto?", timestamp: new Date(), nodeId: currentNodeId,
+          buttons: [
+            { text: "🔢 Digitar código do produto", value: "code", buttonId: "pim_code" },
+            { text: "📷 Enviar foto (URL/arquivo)", value: "photo", buttonId: "pim_photo" },
+            { text: "✍️ Descrever em texto", value: "text", buttonId: "pim_text" },
+          ],
+        }]);
+        setCurrentBlockType("ask_product_image_method");
+        setIsWaitingInput(true);
+        return;
+      }
+      setIsWaitingInput(false); setCurrentBlockType(null);
+      const next = getNextNode(currentNodeId);
+      if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+      return;
+    }
+    if (currentBlockType === "ask_product_image_method" && currentNodeId) {
+      addUserMessage(button.text);
+      const node = nodes.find((n) => n.id === currentNodeId);
+      const cfg = (node?.data as any)?.config || {};
+      const method = button.value;
+      const prompts: Record<string, string> = {
+        code: cfg.codePrompt || "Digite o código (ou nome) do produto:",
+        photo: cfg.photoPrompt || "Envie a URL da foto do produto:",
+        text: cfg.textPrompt || "Descreva o produto em texto:",
+      };
+      addBotMessage(interpolateVariables(prompts[method] || prompts.text, contextRef.current), currentNodeId);
+      simNodeStateRef.current[currentNodeId] = { ...(simNodeStateRef.current[currentNodeId] || {}), pimMethod: method };
+      setCurrentBlockType("ask_product_image_input");
+      setIsWaitingInput(true);
+      return;
+    }
+    // === confirmação de imagem do produto ===
+    if (currentBlockType === "ask_product_image_confirm" && currentNodeId) {
+      addUserMessage(button.text);
+      const node = nodes.find((n) => n.id === currentNodeId);
+      const cfg = (node?.data as any)?.config || {};
+      const state = simNodeStateRef.current[currentNodeId] || {};
+      if (button.value === "refazer") {
+        addSystemMessage("🔄 Vamos refazer.");
+        executeNode(node!);
+        return;
+      }
+      const imgVar = normalizeVarName(cfg.outputImageVariable || "produto_imagem_url");
+      const descVar = normalizeVarName(cfg.outputDescVariable || "produto_descricao");
+      const newCtx = { ...contextRef.current };
+      if (state.productImageUrl) newCtx[imgVar] = state.productImageUrl;
+      if (state.productDescription) newCtx[descVar] = state.productDescription;
+      contextRef.current = newCtx; setContext(newCtx); onContextChange?.(newCtx);
+      addSuccessMessage("✅ Produto confirmado.");
+      setIsWaitingInput(false); setCurrentBlockType(null);
+      const next = getNextNode(currentNodeId);
+      if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+      return;
+    }
+    // === confirmação dos textos coletados ===
+    if (currentBlockType === "text_content_confirm" && currentNodeId) {
+      addUserMessage(button.text);
+      const node = nodes.find((n) => n.id === currentNodeId);
+      if (button.value === "editar") {
+        addSystemMessage("✏️ Vamos refazer os textos.");
+        executeNode(node!);
+        return;
+      }
+      setIsWaitingInput(false); setCurrentBlockType(null);
+      const next = getNextNode(currentNodeId);
+      if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+      return;
+    }
 
     // === content_type: clique em opção pré-definida ===
     if (currentBlockType === "content_type_ask" && currentNodeId) {
