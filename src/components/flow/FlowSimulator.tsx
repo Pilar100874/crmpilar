@@ -534,6 +534,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const basePrompt = interpolateVariables(config.basePrompt || "", contextRef.current).trim();
     const lockedTextDirective = buildLockedTextDirective(findUpstreamTextContent(node.id));
     const contentTypeDirective = buildContentTypeDirective(findUpstreamContentType(node.id));
+    const aiTextDirective = buildAITextDirective(node.id);
+    const upstreamPieca = findUpstreamPiecaRefs(node.id);
 
     const imageRefSource = config.imageRefSource || "user";
     const imageAspectRatio = config.aspectRatio || (config.preset === "story_vertical" ? "9:16" : "1:1");
@@ -543,6 +545,31 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     let refImageUrl: string | null = userRefImageUrl || null;
     let primaryRefKey: string = userRefImageUrl ? "usuario" : "";
     const extraRefs: Array<{ key: string; url: string }> = [];
+
+    // Injeta automaticamente as referências capturadas pelos blocos upstream do roteiro
+    // (Imagem do Produto / Influencer) — produto tem prioridade #1, influencer #2.
+    if (upstreamPieca.productUrl) {
+      if (!refImageUrl) {
+        refImageUrl = upstreamPieca.productUrl;
+        primaryRefKey = "productImageSelect";
+        addSystemMessage(`🛍️ Usando imagem do produto capturada no roteiro.`);
+        addBotMediaMessage(refImageUrl, "image", "Produto", node.id);
+      } else if (!extraRefs.some((r) => r.url === upstreamPieca.productUrl)) {
+        extraRefs.push({ key: "productImageSelect", url: upstreamPieca.productUrl });
+      }
+    }
+    if (upstreamPieca.influencerUrl) {
+      if (!refImageUrl) {
+        refImageUrl = upstreamPieca.influencerUrl;
+        primaryRefKey = "galleryInfluencer";
+        addSystemMessage(`👤 Usando foto do influencer capturada no roteiro.`);
+        addBotMediaMessage(refImageUrl, "image", "Influencer", node.id);
+      } else if (!extraRefs.some((r) => r.url === upstreamPieca.influencerUrl)) {
+        extraRefs.push({ key: "galleryInfluencer", url: upstreamPieca.influencerUrl });
+        addSystemMessage(`👤 Influencer adicionado como referência secundária.`);
+      }
+    }
+
 
     const _styleSourceForRefs = config.styleSource || "visual_identity";
     if (_styleSourceForRefs === "preset" && config.referenceInputs && typeof config.referenceInputs === "object") {
