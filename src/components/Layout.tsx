@@ -67,6 +67,8 @@ import { useAvisosSistema } from "@/hooks/useAvisosSistema";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { useActivityTracking } from "@/hooks/useActivityTracking";
 import { useUsageTracker } from "@/hooks/useUsageTracker";
+import { useInteractionTracker } from "@/hooks/useInteractionTracker";
+
 // useAutoScreenShare removido - agora usamos extensão do Chrome
 import * as LucideIcons from "lucide-react";
 
