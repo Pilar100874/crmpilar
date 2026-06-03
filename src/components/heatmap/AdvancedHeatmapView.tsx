@@ -7,9 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { HeatmapCanvas } from "./HeatmapCanvas";
-import { MousePointerClick, Move, ChevronsDown, AlertTriangle, Users, Smartphone, Monitor, Tablet, Filter, Camera, Image as ImageIcon, Loader2 } from "lucide-react";
+import { MousePointerClick, Move, ChevronsDown, AlertTriangle, Users, Smartphone, Monitor, Tablet, Filter, Camera, Image as ImageIcon, Loader2, ExternalLink } from "lucide-react";
 import { captureAndUploadScreenshot, fetchScreenshot } from "@/lib/heatmapScreenshot";
 import { toast } from "sonner";
+
+function prettyName(route: string, titles: Record<string, string>): string {
+  if (titles[route]) return titles[route];
+  const seg = route.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean).pop() || "Início";
+  return seg.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 type Scope = "sistema" | "ecommerce";
 type Period = "1" | "7" | "30";
@@ -49,6 +55,24 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
   const [bgVw, setBgVw] = useState<number | null>(null);
   const [bgVh, setBgVh] = useState<number | null>(null);
   const [capturing, setCapturing] = useState(false);
+  const [routeTitles, setRouteTitles] = useState<Record<string, string>>({});
+
+  // Carrega títulos das rotas (usage_events) para sistema
+  useEffect(() => {
+    if (scope !== "sistema") return;
+    (async () => {
+      const { data } = await supabase
+        .from("usage_events" as any)
+        .select("route,page_title")
+        .not("page_title", "is", null)
+        .limit(2000);
+      const map: Record<string, string> = {};
+      ((data as any) || []).forEach((r: any) => {
+        if (r.page_title && !map[r.route]) map[r.route] = r.page_title;
+      });
+      setRouteTitles(map);
+    })();
+  }, [scope]);
 
   useEffect(() => {
     let mounted = true;
@@ -342,29 +366,45 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
               <table className="w-full text-sm">
                 <thead className="text-xs text-muted-foreground border-b">
                   <tr>
-                    <th className="text-left py-2 px-2">Rota</th>
+                    <th className="text-left py-2 px-2">Tela</th>
                     <th className="text-right py-2 px-2">Sessões</th>
                     <th className="text-right py-2 px-2">Cliques</th>
                     <th className="text-right py-2 px-2">Scroll médio</th>
                     <th className="text-right py-2 px-2">Rage</th>
                     <th className="text-right py-2 px-2">Dead</th>
                     <th className="text-right py-2 px-2">Quick back</th>
+                    <th className="text-right py-2 px-2 w-10"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {routeStats.slice(0, 30).map((r) => (
                     <tr key={r.route} className="border-b hover:bg-muted/40 cursor-pointer" onClick={() => setSelectedRoute(r.route)}>
-                      <td className="py-1.5 px-2 font-mono text-xs truncate max-w-[300px]">{r.route}</td>
+                      <td className="py-1.5 px-2 truncate max-w-[300px]">
+                        <div className="font-medium">{prettyName(r.route, routeTitles)}</div>
+                        <div className="font-mono text-[10px] text-muted-foreground truncate">{r.route}</div>
+                      </td>
                       <td className="text-right px-2">{r.sessionsCount}</td>
                       <td className="text-right px-2">{r.clicks}</td>
                       <td className="text-right px-2">{r.avgScroll}%</td>
                       <td className="text-right px-2 text-red-500">{r.rage || ""}</td>
                       <td className="text-right px-2 text-amber-500">{r.dead || ""}</td>
                       <td className="text-right px-2 text-purple-500">{r.quickBack || ""}</td>
+                      <td className="text-right px-2">
+                        <a
+                          href={r.route}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center text-muted-foreground hover:text-primary"
+                          title="Abrir tela em nova janela"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      </td>
                     </tr>
                   ))}
                   {routeStats.length === 0 && (
-                    <tr><td colSpan={7} className="text-center text-muted-foreground py-6">{loading ? "Carregando..." : "Sem dados no período"}</td></tr>
+                    <tr><td colSpan={8} className="text-center text-muted-foreground py-6">{loading ? "Carregando..." : "Sem dados no período"}</td></tr>
                   )}
                 </tbody>
               </table>
@@ -374,10 +414,10 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
 
         {/* Clicks heatmap */}
         <TabsContent value="clicks" className="space-y-4 mt-4">
-          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} />
+          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} />
           <Card>
             <CardHeader>
-              <CardTitle>Mapa de cliques — {selectedRoute || "selecione uma rota"}</CardTitle>
+              <CardTitle>Mapa de cliques — {selectedRoute ? prettyName(selectedRoute, routeTitles) : "selecione uma tela"}</CardTitle>
               <CardDescription>{clickPoints.length} cliques mapeados (viewport médio {avgVw}×{avgVh})</CardDescription>
             </CardHeader>
             <CardContent>
@@ -409,10 +449,10 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
 
         {/* Moves */}
         <TabsContent value="moves" className="space-y-4 mt-4">
-          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} />
+          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} />
           <Card>
             <CardHeader>
-              <CardTitle>Movimento do mouse — {selectedRoute || "selecione"}</CardTitle>
+              <CardTitle>Movimento do mouse — {selectedRoute ? prettyName(selectedRoute, routeTitles) : "selecione uma tela"}</CardTitle>
               <CardDescription>{movePoints.length} amostras (1 a cada 250ms)</CardDescription>
             </CardHeader>
             <CardContent>
@@ -432,7 +472,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
               {routeStats.filter((r) => r.avgScroll > 0).map((r) => (
                 <div key={r.route} className="space-y-1">
                   <div className="flex justify-between text-sm">
-                    <span className="font-mono text-xs truncate max-w-[60%]">{r.route}</span>
+                    <span className="truncate max-w-[60%]"><span className="font-medium">{prettyName(r.route, routeTitles)}</span> <span className="font-mono text-[10px] text-muted-foreground ml-1">{r.route}</span></span>
                     <span className="font-medium">{r.avgScroll}%</span>
                   </div>
                   <div className="h-2 bg-muted rounded overflow-hidden">
@@ -449,7 +489,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
 
         {/* Frustration */}
         <TabsContent value="frustration" className="space-y-4 mt-4">
-          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} />
+          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} />
           <div className="grid md:grid-cols-2 gap-4">
             <Card>
               <CardHeader><CardTitle className="text-red-500">Rage Clicks</CardTitle><CardDescription>Cliques repetidos rapidamente no mesmo elemento (sinal de frustração)</CardDescription></CardHeader>
@@ -554,12 +594,26 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
   );
 }
 
-function RouteSelector({ routes, value, onChange }: { routes: string[]; value: string; onChange: (v: string) => void }) {
+function RouteSelector({ routes, value, onChange, titles }: { routes: string[]; value: string; onChange: (v: string) => void; titles: Record<string, string> }) {
   return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-full md:w-[500px]"><SelectValue placeholder="Selecione uma rota" /></SelectTrigger>
-      <SelectContent>{routes.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-    </Select>
+    <div className="flex items-center gap-2">
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className="w-full md:w-[500px]"><SelectValue placeholder="Selecione uma tela" /></SelectTrigger>
+        <SelectContent>
+          {routes.map((r) => (
+            <SelectItem key={r} value={r}>
+              <span className="font-medium">{prettyName(r, titles)}</span>
+              <span className="text-muted-foreground font-mono text-[10px] ml-2">{r}</span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {value && (
+        <a href={value} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline" title="Abrir tela em nova janela">
+          <ExternalLink className="h-3.5 w-3.5" /> Abrir
+        </a>
+      )}
+    </div>
   );
 }
 
