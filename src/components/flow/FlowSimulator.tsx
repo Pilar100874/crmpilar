@@ -3681,6 +3681,18 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     setMessages((prev) => [...prev, msg]);
   };
 
+  const handleCancelFlow = () => {
+    timeoutsRef.current.forEach((t) => clearTimeout(t));
+    timeoutsRef.current = [];
+    setIsWaitingInput(false);
+    setCurrentBlockType(null);
+    setPendingVariable(null);
+    setInput("");
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    addSystemMessage("❌ Roteiro cancelado. Clique em 'Voltar ao início' para reiniciar.");
+  };
+
   const handleReset = () => {
     // Limpar todos os timeouts pendentes
     timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
