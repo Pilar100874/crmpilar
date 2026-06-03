@@ -1577,6 +1577,13 @@ function BotBuilderContent() {
           description="Tem certeza que deseja excluir este bot? Esta ação não pode ser desfeita."
         />
 
+        <DeleteConfirmDialog
+          open={deleteNodeConfirm.open}
+          onOpenChange={(open) => setDeleteNodeConfirm((prev) => ({ ...prev, open }))}
+          onConfirm={confirmDeleteNode}
+          title="Excluir bloco"
+          description="Tem certeza que deseja excluir este bloco? As conexões com ele também serão removidas."
+        />
 
 
 
