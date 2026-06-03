@@ -2494,22 +2494,27 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
   };
 
-  // Gera 2 sugestões de textos via IA para o bloco text_content
+  // Gera N sugestões de textos via IA para o bloco text_content
   const generateTextContentSuggestions = async (nodeId: string, brief: string) => {
+    const node = nodes.find((n) => n.id === nodeId);
+    const cfg = (node?.data as any)?.config || {};
+    const count = Math.max(2, Math.min(5, Number(cfg.suggestionCount) || 3));
+
     setIsWaitingInput(false);
-    addSystemMessage("✨ Gerando sugestões de textos com IA...");
+    addSystemMessage(`✨ Gerando ${count} sugestões de textos com IA...`);
     try {
       const ct = findUpstreamContentType(nodeId);
       const { data, error } = await supabase.functions.invoke("bot-suggest-text-content", {
-        body: { briefing: brief, contentType: ct?.type || "", count: 3, fieldsOnly: ["title", "subtitle"] },
+        body: { briefing: brief, contentType: ct?.type || "", count, fieldsOnly: ["title", "subtitle"] },
       });
       if (error) throw new Error(error.message || "Falha na função");
       if (!data?.success || !Array.isArray(data?.suggestions) || data.suggestions.length === 0) {
         throw new Error(data?.error || "Sem sugestões retornadas");
       }
-      const suggestions = data.suggestions.slice(0, 3);
+      const suggestions = data.suggestions.slice(0, count);
       const st = simNodeStateRef.current[nodeId] || {};
       st.aiSuggestions = suggestions;
+      st.suggestionCount = count;
       simNodeStateRef.current[nodeId] = st;
       suggestions.forEach((s: any, i: number) => {
         const lines = [
@@ -2526,11 +2531,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       }));
       setMessages((prev) => [...prev, {
         id: uid(), sender: "bot",
-        text: "Escolha uma opção, peça novas sugestões ou cancele:",
+        text: `Escolha uma opção, peça ${count} novas sugestões ou cancele:`,
         timestamp: new Date(), nodeId,
         buttons: [
           ...pickButtons,
-          { text: "🔄 Gerar novas sugestões", value: "regen", buttonId: "tc_ai_regen" },
+          { text: `🔄 Gerar ${count} novas sugestões`, value: "regen", buttonId: "tc_ai_regen" },
           { text: "❌ Cancelar", value: "cancel", buttonId: "tc_ai_cancel" },
         ],
       }]);
