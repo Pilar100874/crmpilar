@@ -3463,6 +3463,48 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const handleButtonClick = (button: { text: string; value: string; buttonId?: string; keywords?: string[] }, nodeId?: string) => {
     console.log("🔘 Button clicked:", { button, nodeId, pendingVariable, currentBlockType });
 
+    // === publish_social_done: Finalizar ou Gerar novo ===
+    if (currentBlockType === "publish_social_done" && currentNodeId) {
+      addUserMessage(button.text);
+      setIsWaitingInput(false);
+      setCurrentBlockType(null);
+      if (button.value === "finalizar") {
+        addSuccessMessage("🎉 Roteiro finalizado com sucesso!");
+        const nextNode = getNextNode(currentNodeId);
+        if (nextNode) {
+          safeSetTimeout(() => { setCurrentNodeId(nextNode.id); executeNode(nextNode); }, 400);
+        }
+      } else if (button.value === "regenerar") {
+        // Procura o generate_ai_media mais próximo a montante e re-executa o fluxo a partir dele
+        const findUpstreamGenerate = (nid: string, visited = new Set<string>()): string | null => {
+          if (visited.has(nid)) return null;
+          visited.add(nid);
+          const incoming = edges.filter((e) => e.target === nid);
+          for (const e of incoming) {
+            const src = nodes.find((n) => n.id === e.source);
+            if (!src) continue;
+            if ((src.data as any)?.type === "generate_ai_media") return src.id;
+            const found = findUpstreamGenerate(src.id, visited);
+            if (found) return found;
+          }
+          return null;
+        };
+        const targetId = findUpstreamGenerate(currentNodeId);
+        if (targetId) {
+          const target = nodes.find((n) => n.id === targetId);
+          if (target) {
+            addSystemMessage("🔁 Gerando nova peça...");
+            safeSetTimeout(() => { setCurrentNodeId(target.id); executeNode(target); }, 400);
+          }
+        } else {
+          addSystemMessage("⚠️ Nenhum bloco 'Gerar Mídia IA' encontrado a montante para gerar novamente.");
+        }
+      }
+      return;
+    }
+
+
+
     // === ask_influencer: yes/no → usa influencer fixo ou galeria ===
     if (currentBlockType === "ask_influencer_choice" && currentNodeId) {
       addUserMessage(button.text);
