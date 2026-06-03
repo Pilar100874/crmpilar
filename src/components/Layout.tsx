@@ -229,6 +229,8 @@ export default function Layout({ children }: LayoutProps) {
   useActivityTracking();
   // Tracking de uso para Mapa de Calor do Sistema
   useUsageTracker();
+  useInteractionTracker("sistema");
+
   
   // Auto screen share removido - agora usamos extensão do Chrome
 
