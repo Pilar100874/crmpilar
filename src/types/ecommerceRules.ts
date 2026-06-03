@@ -44,7 +44,12 @@ export type EcommerceRuleBlockType =
   | "acao_desconto_pix"
   | "acao_desconto_boleto"
   // Condicionais com múltiplas saídas
-  | "condicao_valor_pedido";
+  | "condicao_valor_pedido"
+  // Gatilhos de comportamento (mapa de calor)
+  | "gatilho_tempo_em_tela"
+  | "gatilho_carrinho_abandonado"
+  // Ações de recuperação
+  | "acao_enviar_lembrete_carrinho";
 
 export interface EcommerceBlockDefinition {
   type: EcommerceRuleBlockType;
