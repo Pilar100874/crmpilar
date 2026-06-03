@@ -2079,7 +2079,28 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         break;
       }
 
-
+      case "content_type": {
+        const mode = config.mode === "ask" ? "ask" : "fixed";
+        if (mode === "fixed") {
+          const meta = CONTENT_TYPE_DIRECTIVES[(config.contentType || "divulgacao").toLowerCase()];
+          addSystemMessage(`🎯 Tipo de Conteúdo definido: ${meta?.label || config.contentType} (aplicado ao próximo Gerar Mídia IA).`);
+          safeSetTimeout(() => {
+            const nextNode = getNextNode(node.id);
+            if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+          }, 400);
+        } else {
+          const prompt = interpolateVariables(
+            config.askPrompt || "Qual o objetivo da peça? (divulgacao, promocao, institucional, evento, lancamento, educacional)",
+            contextRef.current,
+          );
+          addBotMessage(prompt, node.id);
+          setIsWaitingInput(true);
+          setCurrentBlockType("content_type_ask");
+          setPendingVariable(`__ct_${node.id}`);
+          setCurrentNodeId(node.id);
+        }
+        break;
+      }
 
 
       default:
