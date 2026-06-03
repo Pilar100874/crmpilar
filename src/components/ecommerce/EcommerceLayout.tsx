@@ -25,7 +25,6 @@ import EcommerceWhatsappWidget from "@/components/ecommerce/EcommerceWhatsappWid
 import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 import { useEcommerceCategories } from "@/hooks/useEcommerceCategories";
 import { useEcomTracker, upsertActiveCart } from "@/hooks/useEcomTracker";
-import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -60,7 +59,15 @@ export default function EcommerceLayout() {
   const [isFromSystem] = useState(() => !!localStorage.getItem("estabelecimentoId"));
   const isB2BRoute = location.pathname.includes("/b2b");
   const isCatalogMode = isB2BRoute ? branding.modo_catalogo_b2b : branding.modo_catalogo_b2c;
-  const estabId = getEstabelecimentoId();
+  const [estabId, setEstabId] = useState<string | null>(() => localStorage.getItem("estabelecimentoId"));
+  useEffect(() => {
+    if (estabId) return;
+    (async () => {
+      const mod = await import("@/lib/estabelecimentoUtils");
+      const id = await mod.getEstabelecimentoId();
+      if (id) setEstabId(id);
+    })();
+  }, [estabId]);
 
   // Mapa de calor do e-commerce: rastreia pageviews e tempo
   useEcomTracker(estabId);
