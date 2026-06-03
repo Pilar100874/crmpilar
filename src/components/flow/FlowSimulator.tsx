@@ -2231,7 +2231,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
         // Novo fluxo: pergunta Sim/Não antes de qualquer coisa
         setMessages((prev) => [...prev, {
-          id: uid(), sender: "bot", text: "Você quer colocar textos na imagem?", timestamp: new Date(), nodeId: node.id,
+          id: uid(), sender: "bot", text: "Você quer usar título e subtítulo na imagem?", timestamp: new Date(), nodeId: node.id,
           buttons: [
             { text: "✅ Sim", value: "sim", buttonId: "tc_yes" },
             { text: "❌ Não", value: "nao", buttonId: "tc_no" },
