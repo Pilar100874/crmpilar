@@ -3424,6 +3424,29 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
       return;
     }
+    // === text_content (modo opções): usuário escolheu uma das opções pré-definidas ===
+    if (currentBlockType === "text_content_options_pick" && currentNodeId) {
+      addUserMessage(button.text);
+      const st = simNodeStateRef.current[currentNodeId] || {};
+      const opts: any[] = st.textContentOptions || [];
+      const idx = typeof button.value === "string" && button.value.startsWith("tco_")
+        ? Number(button.value.split("_")[1])
+        : -1;
+      const pick = opts[idx];
+      if (!pick) { addSystemMessage("⚠️ Opção inválida."); return; }
+      st.resolvedTextContent = {
+        title: pick.title || "",
+        subtitle: pick.subtitle || "",
+        body: pick.body || "",
+      };
+      simNodeStateRef.current[currentNodeId] = st;
+      addSuccessMessage(`✅ "${pick.label || `Opção ${idx + 1}`}" selecionada.`);
+      setIsWaitingInput(false); setCurrentBlockType(null);
+      const next = getNextNode(currentNodeId);
+      if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+      return;
+    }
+
     // === text_content (novo): Sim/Não inicial ===
     if (currentBlockType === "text_content_yesno" && currentNodeId) {
       addUserMessage(button.text);
