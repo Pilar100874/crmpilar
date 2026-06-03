@@ -2450,6 +2450,105 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
 
     // === content_type: coleta o objetivo do criativo do usuário ===
+    // === ask_influencer: usuário envia URL/texto da foto ===
+    if (currentBlockType === "ask_influencer_upload" && currentNodeId) {
+      const node = nodes.find((n) => n.id === currentNodeId);
+      const cfg = (node?.data as any)?.config || {};
+      const raw = input.trim();
+      setInput("");
+      let url = "";
+      if (selectedFile) {
+        try { url = await uploadSimulatorReferenceImage(selectedFile); } catch {}
+        setSelectedFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      } else if (/^https?:\/\//i.test(raw)) {
+        url = raw;
+      } else if (raw) {
+        addSystemMessage("⚠️ Envie uma URL válida (http/https) ou anexe um arquivo.");
+        return;
+      }
+      if (url) {
+        simNodeStateRef.current[currentNodeId] = { ...(simNodeStateRef.current[currentNodeId] || {}), influencerImageUrl: url };
+        const v = normalizeVarName(cfg.outputVariable || "influencer_image_url");
+        const newCtx = { ...contextRef.current, [v]: url };
+        contextRef.current = newCtx; setContext(newCtx); onContextChange?.(newCtx);
+        addBotMediaMessage(url, "image", "Influencer", currentNodeId);
+        addSuccessMessage("✅ Influencer registrado.");
+      }
+      setIsWaitingInput(false); setCurrentBlockType(null);
+      const next = getNextNode(currentNodeId);
+      if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+      return;
+    }
+
+    // === ask_product_image: input para os 3 métodos ===
+    if (currentBlockType === "ask_product_image_input" && currentNodeId) {
+      const node = nodes.find((n) => n.id === currentNodeId);
+      const state = simNodeStateRef.current[currentNodeId] || {};
+      const method = state.pimMethod || "text";
+      const raw = input.trim();
+      setInput("");
+      let imageUrl = "";
+      let description = "";
+
+      if (method === "code") {
+        const estId = await getEstabelecimentoId();
+        let q = supabase.from("produtos").select("id,nome,codigo,foto_url").eq("ativo", true).limit(1);
+        if (estId) q = q.eq("estabelecimento_id", estId);
+        // Tenta por código exato; se nada, por ilike no nome
+        const { data: byCode } = await q.eq("codigo", raw);
+        let prod: any = byCode?.[0];
+        if (!prod) {
+          let q2 = supabase.from("produtos").select("id,nome,codigo,foto_url").eq("ativo", true).ilike("nome", `%${raw}%`).limit(1);
+          if (estId) q2 = q2.eq("estabelecimento_id", estId);
+          const { data: byName } = await q2;
+          prod = byName?.[0];
+        }
+        if (!prod) {
+          addSystemMessage(`❌ Produto "${raw}" não encontrado. Tente outro código ou nome.`);
+          return;
+        }
+        imageUrl = prod.foto_url || "";
+        description = `${prod.nome}${prod.codigo ? ` (cód. ${prod.codigo})` : ""}`;
+        addSystemMessage(`✅ Produto encontrado: ${description}`);
+      } else if (method === "photo") {
+        if (selectedFile) {
+          try { imageUrl = await uploadSimulatorReferenceImage(selectedFile); } catch {}
+          setSelectedFile(null);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+        } else if (/^https?:\/\//i.test(raw)) {
+          imageUrl = raw;
+        } else {
+          addSystemMessage("⚠️ Envie uma URL válida ou anexe um arquivo.");
+          return;
+        }
+      } else {
+        // text
+        if (!raw) { addSystemMessage("⚠️ Descreva o produto."); return; }
+        description = raw;
+      }
+
+      simNodeStateRef.current[currentNodeId] = {
+        ...state,
+        productImageUrl: imageUrl || state.productImageUrl,
+        productDescription: description || state.productDescription,
+      };
+
+      // Mostra preview e pede confirmação
+      if (imageUrl) addBotMediaMessage(imageUrl, "image", description || "Produto", currentNodeId);
+      else addBotMessage(`📝 ${description}`, currentNodeId);
+      setMessages((prev) => [...prev, {
+        id: uid(), sender: "bot", text: "Está correto? Confirme ou refaça:", timestamp: new Date(), nodeId: currentNodeId,
+        buttons: [
+          { text: "✅ Confirmar", value: "confirmar", buttonId: "pim_confirm" },
+          { text: "🔄 Refazer", value: "refazer", buttonId: "pim_redo" },
+        ],
+      }]);
+      setCurrentBlockType("ask_product_image_confirm");
+      setIsWaitingInput(true);
+      return;
+    }
+
     if (currentBlockType === "content_type_ask" && currentNodeId) {
       const raw = input.trim().toLowerCase();
       const normalize = (s: string) => s
