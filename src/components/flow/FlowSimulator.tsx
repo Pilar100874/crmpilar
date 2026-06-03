@@ -732,6 +732,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         contentTypeDirective ? `\n\n${contentTypeDirective}` : "",
         lockedTextDirective ? `\n\n${lockedTextDirective}` : "",
         aiTextDirective ? `\n\n${aiTextDirective}` : "",
+        `\n\n${noExtraTextDirective}`,
+        `\n\n${logoMandatoryDirective}`,
         upstreamPieca.productDescription ? `\n\nPRODUTO (descrição do usuário): ${upstreamPieca.productDescription}` : "",
         audioScript ? `\n[NARRAÇÃO — fale exatamente este texto em Português Brasileiro]: ${audioScript}` : "",
         `\nFormato ${imageAspectRatio}.`,
