@@ -174,6 +174,7 @@ const menuItems: MenuItem[] = [
       { id: "TV Veículos", title: "Dashboard Veículos", url: "/tv/veiculos", icon: LucideIcons.Truck },
     ]
   },
+  { id: "Mapa de Calor", title: "Mapa de Calor", url: "/mapa-calor-sistema", icon: LucideIcons.Flame },
   { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
 ];
 
