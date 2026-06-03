@@ -563,9 +563,12 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     icon: "Type",
     color: "text-violet-600",
     defaultData: {
+      blockMode: "advanced", // "advanced" (atual: Sim/Não → digitar/IA) | "fixed" (usa texto direto) | "options" (usuário escolhe uma das opções pré-definidas)
       title: "",
       subtitle: "",
       body: "",
+      optionsPrompt: "Escolha um dos textos abaixo:",
+      options: [], // Array<{ id: string; label: string; title: string; subtitle: string; body: string }>
     },
   },
   // Tipo de Conteúdo (define objetivo/estilo para Gerar Mídia IA)
