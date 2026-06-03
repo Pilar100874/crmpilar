@@ -124,6 +124,47 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
     if (!selectedRoute && routeStats[0]) setSelectedRoute(routeStats[0].route);
   }, [routeStats, selectedRoute]);
 
+  // Carrega screenshot da rota selecionada
+  useEffect(() => {
+    let mounted = true;
+    if (!selectedRoute) {
+      setBgUrl(null);
+      return;
+    }
+    (async () => {
+      const s = await fetchScreenshot(scope, selectedRoute, estabelecimentoId ?? null);
+      if (!mounted) return;
+      if (s) {
+        setBgUrl(`${s.image_url}?t=${Date.now()}`);
+        setBgVw(s.vw);
+        setBgVh(s.vh);
+      } else {
+        setBgUrl(null);
+        setBgVw(null);
+        setBgVh(null);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [selectedRoute, scope, estabelecimentoId]);
+
+  const handleCaptureCurrent = async () => {
+    setCapturing(true);
+    try {
+      const res = await captureAndUploadScreenshot(scope, estabelecimentoId ?? null);
+      toast.success("Tela atual capturada! Selecione a rota para ver o fundo.");
+      // Se a rota atual coincide com a selecionada, atualiza
+      if (window.location.pathname === selectedRoute) {
+        setBgUrl(`${res.image_url}`);
+        setBgVw(res.vw);
+        setBgVh(res.vh);
+      }
+    } catch (e: any) {
+      toast.error("Falha ao capturar tela: " + (e?.message || e));
+    } finally {
+      setCapturing(false);
+    }
+  };
+
   const routeEvents = useMemo(() => filtered.filter((r) => r.route === selectedRoute), [filtered, selectedRoute]);
   const clickPoints = useMemo(() => routeEvents.filter((r) => r.event_type === "click" && r.x != null && r.y != null).map((r) => ({ x: r.x!, y: r.y! })), [routeEvents]);
   const movePoints = useMemo(() => routeEvents.filter((r) => r.event_type === "move" && r.x != null && r.y != null).map((r) => ({ x: r.x!, y: r.y! })), [routeEvents]);
