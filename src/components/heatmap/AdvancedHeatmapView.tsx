@@ -414,7 +414,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
 
         {/* Clicks heatmap */}
         <TabsContent value="clicks" className="space-y-4 mt-4">
-          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} />
+          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} />
           <Card>
             <CardHeader>
               <CardTitle>Mapa de cliques — {selectedRoute || "selecione uma rota"}</CardTitle>
@@ -449,7 +449,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
 
         {/* Moves */}
         <TabsContent value="moves" className="space-y-4 mt-4">
-          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} />
+          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} />
           <Card>
             <CardHeader>
               <CardTitle>Movimento do mouse — {selectedRoute || "selecione"}</CardTitle>
@@ -472,7 +472,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
               {routeStats.filter((r) => r.avgScroll > 0).map((r) => (
                 <div key={r.route} className="space-y-1">
                   <div className="flex justify-between text-sm">
-                    <span className="font-mono text-xs truncate max-w-[60%]">{r.route}</span>
+                    <span className="truncate max-w-[60%]"><span className="font-medium">{prettyName(r.route, routeTitles)}</span> <span className="font-mono text-[10px] text-muted-foreground ml-1">{r.route}</span></span>
                     <span className="font-medium">{r.avgScroll}%</span>
                   </div>
                   <div className="h-2 bg-muted rounded overflow-hidden">
@@ -489,7 +489,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
 
         {/* Frustration */}
         <TabsContent value="frustration" className="space-y-4 mt-4">
-          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} />
+          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} />
           <div className="grid md:grid-cols-2 gap-4">
             <Card>
               <CardHeader><CardTitle className="text-red-500">Rage Clicks</CardTitle><CardDescription>Cliques repetidos rapidamente no mesmo elemento (sinal de frustração)</CardDescription></CardHeader>
