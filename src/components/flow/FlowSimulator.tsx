@@ -643,10 +643,35 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       }
     }
 
+    // 🏷️ LOGO SEMPRE PRESENTE: busca o logo da empresa e injeta como referência,
+    // a menos que o preset já tenha definido um logo explícito.
+    try {
+      if (!presetRolesFilled.has("galleryLogo")) {
+        const estIdForLogo = await getEstabelecimentoId();
+        if (estIdForLogo) {
+          const { data: ecomCfg } = await supabase
+            .from("ecommerce_config")
+            .select("logo_url")
+            .eq("estabelecimento_id", estIdForLogo)
+            .maybeSingle();
+          const logoUrl = (ecomCfg as any)?.logo_url || "";
+          if (logoUrl && logoUrl !== refImageUrl && !extraRefs.some((r) => r.url === logoUrl)) {
+            extraRefs.push({ key: "galleryLogo", url: logoUrl });
+            addSystemMessage(`🏷️ Logo da empresa adicionado como referência obrigatória.`);
+          } else if (!logoUrl) {
+            addSystemMessage(`⚠️ Logo da empresa não configurado em E-commerce → Branding. A peça será gerada sem o logo.`);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("[FlowSimulator] Falha ao buscar logo da empresa:", e);
+    }
+
     const styleSource = config.styleSource || "visual_identity";
     const styleLabel = styleSource === "visual_identity"
       ? "Identidade Visual da marca"
       : (styleSource === "preset" && config.preset ? `preset "${config.preset}"` : "estilo padrão");
+
 
     const mediaType: "image" | "video" = (config.mediaType === "video") ? "video" : "image";
 
