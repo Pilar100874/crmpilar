@@ -405,7 +405,9 @@ export default function AtendimentoConfig() {
   });
 
   const handleTabChange = (value: string) => {
-    setSearchParams({ tab: value });
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('tab', value);
+    setSearchParams(nextParams, { replace: true });
   };
 
   // Sanity: garante que nenhum lock de pointer-events ou scroll-lock fique preso
