@@ -436,6 +436,83 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     return null;
   };
 
+  // ====== Upstream "Influencer?" e "Imagem do Produto?" ======
+  // Procura recursivamente blocos ask_influencer / ask_product_image antes deste nó
+  // e devolve as URLs e descrições já confirmadas pelo usuário no simulador.
+  const findUpstreamPiecaRefs = (
+    nodeId: string,
+    visited = new Set<string>(),
+  ): { influencerUrl?: string; productUrl?: string; productDescription?: string } => {
+    const out: { influencerUrl?: string; productUrl?: string; productDescription?: string } = {};
+    if (visited.has(nodeId)) return out;
+    visited.add(nodeId);
+    const incoming = edges.filter((e) => e.target === nodeId);
+    for (const e of incoming) {
+      const src = nodes.find((n) => n.id === e.source);
+      if (!src) continue;
+      const sd: any = src.data || {};
+      const cfg = sd.config || {};
+      const state = simNodeStateRef.current[src.id] || {};
+      if (sd.type === "ask_influencer" && !out.influencerUrl) {
+        const v = state.influencerImageUrl
+          || (contextRef.current as any)?.[normalizeVarName(cfg.outputVariable || "influencer_image_url")];
+        if (v) out.influencerUrl = String(v);
+      }
+      if (sd.type === "ask_product_image") {
+        const url = state.productImageUrl
+          || (contextRef.current as any)?.[normalizeVarName(cfg.outputImageVariable || "produto_imagem_url")];
+        const desc = state.productDescription
+          || (contextRef.current as any)?.[normalizeVarName(cfg.outputDescVariable || "produto_descricao")];
+        if (url && !out.productUrl) out.productUrl = String(url);
+        if (desc && !out.productDescription) out.productDescription = String(desc);
+      }
+      const upstream = findUpstreamPiecaRefs(src.id, visited);
+      if (!out.influencerUrl && upstream.influencerUrl) out.influencerUrl = upstream.influencerUrl;
+      if (!out.productUrl && upstream.productUrl) out.productUrl = upstream.productUrl;
+      if (!out.productDescription && upstream.productDescription) out.productDescription = upstream.productDescription;
+    }
+    return out;
+  };
+
+  // Diretriz para textos marcados como "Gerar por IA" no bloco Conteúdo de Texto upstream
+  const buildAITextDirective = (nodeId: string): string => {
+    const visited = new Set<string>();
+    const walk = (id: string): any | null => {
+      if (visited.has(id)) return null;
+      visited.add(id);
+      const incoming = edges.filter((e) => e.target === id);
+      for (const e of incoming) {
+        const src = nodes.find((n) => n.id === e.source);
+        if (!src) continue;
+        const sd: any = src.data || {};
+        if (sd.type === "text_content") return sd.config || {};
+        const r = walk(src.id);
+        if (r) return r;
+      }
+      return null;
+    };
+    const cfg = walk(nodeId);
+    if (!cfg) return "";
+    const aiFields: Array<{ key: string; label: string; hint: string }> = [];
+    (["title", "subtitle", "body"] as const).forEach((k) => {
+      if (k === "body" && cfg.bodyEnabled === false) return;
+      if (cfg[`${k}Mode`] === "ai") {
+        aiFields.push({
+          key: k,
+          label: k === "title" ? "TÍTULO" : k === "subtitle" ? "SUBTÍTULO" : "CORPO",
+          hint: (cfg[`${k}AIHint`] || "").trim(),
+        });
+      }
+    });
+    if (!aiFields.length) return "";
+    return [
+      "TEXTOS A SEREM GERADOS PELA IA (escreva você mesmo, em Português Brasileiro, curtos e legíveis):",
+      ...aiFields.map((f) => `- ${f.label}${f.hint ? ` — orientação: ${f.hint}` : ""}`),
+      "Esses textos devem ser coerentes com o tipo de conteúdo, produto e influencer (quando houver), e renderizados de forma legível na imagem com hierarquia visual clara.",
+    ].join("\n");
+  };
+
+
   const buildContentTypeDirective = (ct: { type: string; guidance: string } | null): string => {
     if (!ct) return "";
     const meta = CONTENT_TYPE_DIRECTIVES[ct.type];
