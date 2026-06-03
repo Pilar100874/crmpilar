@@ -26,7 +26,7 @@ const blockCategories = [
     iconColor: "text-purple-600",
     iconHover: "group-hover:text-purple-700",
     textHover: "group-hover:text-purple-700",
-    blocks: ["ai_agent", "generate_ai_media", "text_content"] as NodeType[],
+    blocks: ["ai_agent", "generate_ai_media", "text_content", "content_type"] as NodeType[],
   },
   {
     name: "Mensagens",
