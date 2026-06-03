@@ -6,6 +6,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ArrowLeft, Flame, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AdvancedHeatmapView } from "@/components/heatmap/AdvancedHeatmapView";
+import { HeatmapConfigDialog } from "@/components/heatmap/HeatmapConfigDialog";
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
