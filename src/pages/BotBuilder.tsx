@@ -948,6 +948,12 @@ function BotBuilderContent() {
   // Detectar mudanças não salvas (sem auto-save)
   useEffect(() => {
     const currentSig = getFlowSignature();
+    // Primeira execução: inicializa a baseline para evitar prompt de "sair do site"
+    if (lastSavedSignatureRef.current === null) {
+      lastSavedSignatureRef.current = currentSig;
+      setHasUnsavedChanges(false);
+      return;
+    }
     const changed = lastSavedSignatureRef.current !== currentSig;
     setHasUnsavedChanges(changed);
   }, [nodes, edges, flowVariables, currentBotName, currentBotDescription, getFlowSignature]);
