@@ -113,3 +113,7 @@ export { ProductSearchSelectConfig } from './ProductSearchSelectConfig';
 // Conteúdo de Texto (para Gerar Mídia IA)
 export { TextContentConfig } from './TextContentConfig';
 
+// Tipo de Conteúdo (Divulgação / Promoção / Institucional...)
+export { ContentTypeConfig } from './ContentTypeConfig';
+
+
