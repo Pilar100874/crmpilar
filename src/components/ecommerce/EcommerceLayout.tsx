@@ -73,6 +73,8 @@ export default function EcommerceLayout() {
 
   // Mapa de calor do e-commerce: rastreia pageviews e tempo
   useEcomTracker(estabId);
+  useInteractionTracker("ecommerce", estabId);
+
 
   // Snapshot do carrinho para detecção de abandono
   const { items: cartItems, totalPrice } = useCart() as any;
