@@ -55,6 +55,24 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
   const [bgVw, setBgVw] = useState<number | null>(null);
   const [bgVh, setBgVh] = useState<number | null>(null);
   const [capturing, setCapturing] = useState(false);
+  const [routeTitles, setRouteTitles] = useState<Record<string, string>>({});
+
+  // Carrega títulos das rotas (usage_events) para sistema
+  useEffect(() => {
+    if (scope !== "sistema") return;
+    (async () => {
+      const { data } = await supabase
+        .from("usage_events" as any)
+        .select("route,page_title")
+        .not("page_title", "is", null)
+        .limit(2000);
+      const map: Record<string, string> = {};
+      ((data as any) || []).forEach((r: any) => {
+        if (r.page_title && !map[r.route]) map[r.route] = r.page_title;
+      });
+      setRouteTitles(map);
+    })();
+  }, [scope]);
 
   useEffect(() => {
     let mounted = true;
