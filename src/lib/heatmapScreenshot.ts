@@ -7,10 +7,19 @@ export interface CaptureResult {
   vh: number;
 }
 
-/**
- * Captura a tela atual (document.body), envia ao storage e atualiza a tabela
- * heatmap_screenshots para a rota corrente. Idempotente por (scope, route, estab).
- */
+const BUCKET = "heatmap-screenshots";
+const SIGNED_TTL = 60 * 60 * 24 * 7; // 7 dias
+
+async function signedUrl(path: string): Promise<string> {
+  const { data } = await supabase.storage.from(BUCKET).createSignedUrl(path, SIGNED_TTL);
+  return data?.signedUrl || "";
+}
+
+function pathFor(scope: "sistema" | "ecommerce", estab: string | null, route: string) {
+  const safeRoute = route.replace(/[^a-zA-Z0-9-_]/g, "_") || "_root";
+  return `${scope}/${estab || "global"}/${safeRoute}.jpg`;
+}
+
 export async function captureAndUploadScreenshot(
   scope: "sistema" | "ecommerce",
   estabelecimentoId: string | null,
@@ -35,23 +44,20 @@ export async function captureAndUploadScreenshot(
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob falhou"))), "image/jpeg", 0.78),
   );
 
-  const safeRoute = route.replace(/[^a-zA-Z0-9-_]/g, "_") || "_root";
-  const path = `${scope}/${estabelecimentoId || "global"}/${safeRoute}.jpg`;
-
+  const path = pathFor(scope, estabelecimentoId, route);
   const { error: upErr } = await supabase.storage
-    .from("heatmap-screenshots")
+    .from(BUCKET)
     .upload(path, blob, { upsert: true, contentType: "image/jpeg", cacheControl: "60" });
   if (upErr) throw upErr;
 
-  const { data: pub } = supabase.storage.from("heatmap-screenshots").getPublicUrl(path);
-  const image_url = `${pub.publicUrl}?t=${Date.now()}`;
+  const image_url = await signedUrl(path);
 
   await supabase.from("heatmap_screenshots" as any).upsert(
     {
       scope,
       route,
       estabelecimento_id: estabelecimentoId,
-      image_url: pub.publicUrl,
+      image_url: path, // armazena o caminho; geramos URL assinada na leitura
       vw,
       vh,
     },
@@ -74,5 +80,9 @@ export async function fetchScreenshot(
   q = estabelecimentoId ? q.eq("estabelecimento_id", estabelecimentoId) : q.is("estabelecimento_id", null);
   const { data } = await q.maybeSingle();
   if (!data) return null;
-  return data as any;
+  const rec: any = data;
+  // image_url pode ser um path (novo) ou URL antiga; se contém "://", usa direto
+  const url = String(rec.image_url || "");
+  const image_url = url.includes("://") ? url : await signedUrl(url || pathFor(scope, estabelecimentoId, route));
+  return { image_url, vw: rec.vw, vh: rec.vh };
 }
