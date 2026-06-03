@@ -406,6 +406,10 @@ export const PropertiesPanel = ({
         return <BlockConfigs.TextContentConfig {...configProps} />;
       case "content_type":
         return <BlockConfigs.ContentTypeConfig {...configProps} />;
+      case "ask_influencer":
+        return <BlockConfigs.AskInfluencerConfig {...configProps} />;
+      case "ask_product_image":
+        return <BlockConfigs.AskProductImageConfig {...configProps} />;
 
 
       case "start":

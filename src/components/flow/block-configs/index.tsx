@@ -116,4 +116,10 @@ export { TextContentConfig } from './TextContentConfig';
 // Tipo de Conteúdo (Divulgação / Promoção / Institucional...)
 export { ContentTypeConfig } from './ContentTypeConfig';
 
+// Influencer (pergunta + upload de referência)
+export { AskInfluencerConfig } from './AskInfluencerConfig';
+
+// Imagem do Produto (pergunta + 3 opções + confirmação)
+export { AskProductImageConfig } from './AskProductImageConfig';
+
 
