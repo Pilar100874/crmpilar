@@ -552,4 +552,18 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       selectionPrompt: "Responda com o número do produto desejado:",
     },
   },
+  // Conteúdo de Texto (para Gerar Mídia IA - texto fixo na imagem)
+  {
+    type: "text_content",
+    label: "Conteúdo de Texto",
+    description: "Define título, subtítulo e corpo de texto que devem ser renderizados EXATAMENTE na imagem gerada pelo bloco Gerar Mídia IA seguinte.",
+    icon: "Type",
+    color: "text-violet-600",
+    defaultData: {
+      title: "",
+      subtitle: "",
+      body: "",
+    },
+  },
 ];
+
