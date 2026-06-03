@@ -3159,12 +3159,31 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const handleButtonClick = (button: { text: string; value: string; buttonId?: string; keywords?: string[] }, nodeId?: string) => {
     console.log("🔘 Button clicked:", { button, nodeId, pendingVariable, currentBlockType });
 
-    // === ask_influencer: yes/no → direto para galeria ===
+    // === ask_influencer: yes/no → usa influencer fixo ou galeria ===
     if (currentBlockType === "ask_influencer_choice" && currentNodeId) {
       addUserMessage(button.text);
       const node = nodes.find((n) => n.id === currentNodeId);
       const cfg = (node?.data as any)?.config || {};
       if (button.value === "sim") {
+        const fixedId = cfg.fixedInfluencerId || "";
+        const fixedUrl = cfg.fixedInfluencerUrl || "";
+        if (fixedId && fixedUrl) {
+          // Influencer fixo configurado no bloco — usa direto sem perguntar
+          simNodeStateRef.current[currentNodeId] = {
+            ...(simNodeStateRef.current[currentNodeId] || {}),
+            influencerImageUrl: fixedUrl,
+          };
+          const v = normalizeVarName(cfg.outputVariable || "influencer_image_url");
+          const newCtx = { ...contextRef.current, [v]: fixedUrl };
+          contextRef.current = newCtx; setContext(newCtx); onContextChange?.(newCtx);
+          addBotMediaMessage(fixedUrl, "image", "Influencer selecionado", currentNodeId);
+          addSuccessMessage("✅ Influencer fixo registrado automaticamente.");
+          setIsWaitingInput(false); setCurrentBlockType(null);
+          const next = getNextNode(currentNodeId);
+          if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
+          return;
+        }
+        // Sem influencer fixo — fallback para galeria
         (async () => {
           const estId = await getEstabelecimentoId();
           let q = supabase.from("studio_gallery_images").select("id,nome,image_url,pasta").eq("categoria", "influencer").order("created_at", { ascending: false }).limit(24);
