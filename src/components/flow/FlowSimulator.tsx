@@ -2555,12 +2555,16 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
   // Gera N amostras de imagem do produto (fundo transparente) a partir da descrição em texto
   const generateProductSamples = async (nodeId: string, description: string) => {
+    const node = nodes.find((n) => n.id === nodeId);
+    const cfg = (node?.data as any)?.config || {};
+    const count = Math.max(1, Math.min(6, Number(cfg.sampleCount) || 3));
+
     setIsWaitingInput(false);
-    addSystemMessage("🎨 Gerando 3 amostras de imagem do produto (fundo transparente)…");
+    addSystemMessage(`🎨 Gerando ${count} amostra${count > 1 ? 's' : ''} de imagem do produto (fundo transparente)…`);
     try {
       const estId = await getEstabelecimentoId();
       const { data, error } = await supabase.functions.invoke("bot-generate-product-samples", {
-        body: { description, count: 3, estabelecimentoId: estId || "" },
+        body: { description, count, estabelecimentoId: estId || "" },
       });
       if (error) throw new Error(error.message || "Falha na função");
       const images: string[] = Array.isArray(data?.images) ? data.images : [];
@@ -2569,6 +2573,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       const st = simNodeStateRef.current[nodeId] || {};
       st.productSamples = images;
       st.productDescription = description;
+      st.productSampleCount = count;
       simNodeStateRef.current[nodeId] = st;
 
       images.forEach((url, i) => addBotMediaMessage(url, "image", `Opção ${i + 1}`, nodeId));
@@ -2578,12 +2583,12 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         value: `pick_${i}`,
         buttonId: `pim_s_${i}`,
       }));
-      buttons.push({ text: "🔄 Gerar mais 3", value: "regen", buttonId: "pim_s_regen" });
+      buttons.push({ text: `🔄 Gerar mais ${count}`, value: "regen", buttonId: "pim_s_regen" });
       buttons.push({ text: "❌ Cancelar", value: "cancel", buttonId: "pim_s_cancel" });
 
       setMessages((prev) => [...prev, {
         id: uid(), sender: "bot",
-        text: "Escolha uma das opções, gere mais 3 amostras ou cancele:",
+        text: `Escolha uma das opções, gere mais ${count} amostra${count > 1 ? 's' : ''} ou cancele:`,
         timestamp: new Date(), nodeId,
         buttons,
       }]);
