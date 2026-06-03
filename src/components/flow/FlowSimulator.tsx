@@ -2222,6 +2222,38 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         break;
       }
 
+      case "ask_influencer": {
+        const q = interpolateVariables(config.askQuestion || "A peça terá um influencer?", contextRef.current);
+        setMessages((prev) => [...prev, {
+          id: uid(), sender: "bot", text: q, timestamp: new Date(), nodeId: node.id,
+          buttons: [
+            { text: "Sim", value: "sim", buttonId: "infl_yes" },
+            { text: "Não", value: "nao", buttonId: "infl_no" },
+          ],
+        }]);
+        setIsWaitingInput(true);
+        setCurrentBlockType("ask_influencer_choice");
+        setCurrentNodeId(node.id);
+        break;
+      }
+
+      case "ask_product_image": {
+        const q = interpolateVariables(config.askQuestion || "A peça terá imagem do produto?", contextRef.current);
+        setMessages((prev) => [...prev, {
+          id: uid(), sender: "bot", text: q, timestamp: new Date(), nodeId: node.id,
+          buttons: [
+            { text: "Sim", value: "sim", buttonId: "pim_yes" },
+            { text: "Não", value: "nao", buttonId: "pim_no" },
+          ],
+        }]);
+        setIsWaitingInput(true);
+        setCurrentBlockType("ask_product_image_choice");
+        setCurrentNodeId(node.id);
+        break;
+      }
+
+
+
 
       default:
         addSystemMessage(`▶️ Executando: ${blockDef.label}`);
