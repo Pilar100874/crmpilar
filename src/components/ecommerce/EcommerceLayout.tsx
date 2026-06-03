@@ -25,6 +25,8 @@ import EcommerceWhatsappWidget from "@/components/ecommerce/EcommerceWhatsappWid
 import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 import { useEcommerceCategories } from "@/hooks/useEcommerceCategories";
 import { useEcomTracker, upsertActiveCart } from "@/hooks/useEcomTracker";
+import { useInteractionTracker } from "@/hooks/useInteractionTracker";
+
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -71,6 +73,8 @@ export default function EcommerceLayout() {
 
   // Mapa de calor do e-commerce: rastreia pageviews e tempo
   useEcomTracker(estabId);
+  useInteractionTracker("ecommerce", estabId);
+
 
   // Snapshot do carrinho para detecção de abandono
   const { items: cartItems, totalPrice } = useCart() as any;

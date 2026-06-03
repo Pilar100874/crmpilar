@@ -5984,6 +5984,132 @@ export type Database = {
           },
         ]
       }
+      interaction_aggregates_daily: {
+        Row: {
+          avg_scroll_depth: number | null
+          created_at: string
+          day: string
+          dead_count: number
+          device: string
+          estabelecimento_id: string
+          event_type: string
+          grid_data: Json | null
+          id: string
+          quick_back_count: number
+          rage_count: number
+          route: string
+          scope: string
+          total_count: number
+          unique_sessions: number
+        }
+        Insert: {
+          avg_scroll_depth?: number | null
+          created_at?: string
+          day: string
+          dead_count?: number
+          device?: string
+          estabelecimento_id: string
+          event_type: string
+          grid_data?: Json | null
+          id?: string
+          quick_back_count?: number
+          rage_count?: number
+          route: string
+          scope: string
+          total_count?: number
+          unique_sessions?: number
+        }
+        Update: {
+          avg_scroll_depth?: number | null
+          created_at?: string
+          day?: string
+          dead_count?: number
+          device?: string
+          estabelecimento_id?: string
+          event_type?: string
+          grid_data?: Json | null
+          id?: string
+          quick_back_count?: number
+          rage_count?: number
+          route?: string
+          scope?: string
+          total_count?: number
+          unique_sessions?: number
+        }
+        Relationships: []
+      }
+      interaction_events: {
+        Row: {
+          browser: string | null
+          country: string | null
+          created_at: string
+          device: string | null
+          element_selector: string | null
+          element_text: string | null
+          estabelecimento_id: string
+          event_type: string
+          id: string
+          is_new_visitor: boolean | null
+          metadata: Json | null
+          referrer: string | null
+          route: string
+          scope: string
+          scroll_depth: number | null
+          session_id: string
+          usuario_id: string | null
+          vh: number | null
+          vw: number | null
+          x: number | null
+          y: number | null
+        }
+        Insert: {
+          browser?: string | null
+          country?: string | null
+          created_at?: string
+          device?: string | null
+          element_selector?: string | null
+          element_text?: string | null
+          estabelecimento_id: string
+          event_type: string
+          id?: string
+          is_new_visitor?: boolean | null
+          metadata?: Json | null
+          referrer?: string | null
+          route: string
+          scope?: string
+          scroll_depth?: number | null
+          session_id: string
+          usuario_id?: string | null
+          vh?: number | null
+          vw?: number | null
+          x?: number | null
+          y?: number | null
+        }
+        Update: {
+          browser?: string | null
+          country?: string | null
+          created_at?: string
+          device?: string | null
+          element_selector?: string | null
+          element_text?: string | null
+          estabelecimento_id?: string
+          event_type?: string
+          id?: string
+          is_new_visitor?: boolean | null
+          metadata?: Json | null
+          referrer?: string | null
+          route?: string
+          scope?: string
+          scroll_depth?: number | null
+          session_id?: string
+          usuario_id?: string | null
+          vh?: number | null
+          vw?: number | null
+          x?: number | null
+          y?: number | null
+        }
+        Relationships: []
+      }
       isocronas: {
         Row: {
           created_at: string | null
@@ -14435,6 +14561,7 @@ export type Database = {
         Returns: string
       }
       admins_present: { Args: never; Returns: boolean }
+      aggregate_heatmap_daily: { Args: never; Returns: undefined }
       auto_close_support_tickets: { Args: never; Returns: undefined }
       check_catalog_expiration: { Args: never; Returns: undefined }
       cleanup_old_agent_chat_sessions: { Args: never; Returns: undefined }

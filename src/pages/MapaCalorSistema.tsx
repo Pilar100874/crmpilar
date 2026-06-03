@@ -6,6 +6,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Activity, Clock, Users, Flame, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { AdvancedHeatmapView } from "@/components/heatmap/AdvancedHeatmapView";
+
 
 type Period = "1" | "7" | "30";
 
@@ -125,6 +127,23 @@ export default function MapaCalorSistema() {
         </div>
       </div>
 
+      <Tabs defaultValue="advanced">
+        <TabsList>
+          <TabsTrigger value="advanced">🔥 Heatmap Avançado</TabsTrigger>
+          <TabsTrigger value="usage">Uso por Tela</TabsTrigger>
+          <TabsTrigger value="users">Usuários</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="advanced" className="mt-4">
+          <AdvancedHeatmapView
+            scope="sistema"
+            title="Análise Comportamental — Sistema Interno"
+            description="Cliques, movimento, scroll, frustração e segmentação por dispositivo/navegador."
+          />
+        </TabsContent>
+
+        <TabsContent value="usage" className="mt-4 space-y-4">
+
       <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
         <TabsList>
           <TabsTrigger value="1">Hoje</TabsTrigger>
@@ -133,6 +152,7 @@ export default function MapaCalorSistema() {
         </TabsList>
         <TabsContent value={period} />
       </Tabs>
+
 
       <div className="grid md:grid-cols-3 gap-4">
         <Card>
@@ -195,59 +215,62 @@ export default function MapaCalorSistema() {
         </CardContent>
       </Card>
 
-      <div className="grid lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Ranking de Telas</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 max-h-[420px] overflow-y-auto">
-            {loading && <p className="text-muted-foreground text-sm">Carregando…</p>}
-            {!loading && routeStats.length === 0 && (
-              <p className="text-muted-foreground text-sm">Sem dados no período.</p>
-            )}
-            {routeStats.map((r) => (
-              <div key={r.route} className="flex items-center justify-between border-b pb-1 text-sm">
-                <div className="truncate">
-                  <div className="font-medium truncate">{r.title}</div>
-                  <div className="text-xs text-muted-foreground truncate">{r.route} · {r.visits} acessos</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-mono">{fmtMin(r.total)}</div>
-                  <div className="text-xs text-muted-foreground">ocioso: {fmtMin(r.idle)}</div>
-                </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Ranking de Telas</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 max-h-[420px] overflow-y-auto">
+          {loading && <p className="text-muted-foreground text-sm">Carregando…</p>}
+          {!loading && routeStats.length === 0 && (
+            <p className="text-muted-foreground text-sm">Sem dados no período.</p>
+          )}
+          {routeStats.map((r) => (
+            <div key={r.route} className="flex items-center justify-between border-b pb-1 text-sm">
+              <div className="truncate">
+                <div className="font-medium truncate">{r.title}</div>
+                <div className="text-xs text-muted-foreground truncate">{r.route} · {r.visits} acessos</div>
               </div>
-            ))}
-          </CardContent>
-        </Card>
+              <div className="text-right">
+                <div className="font-mono">{fmtMin(r.total)}</div>
+                <div className="text-xs text-muted-foreground">ocioso: {fmtMin(r.idle)}</div>
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+        </TabsContent>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Tempo por Usuário</CardTitle>
-            <CardDescription>Ativo × ocioso e última atividade</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2 max-h-[420px] overflow-y-auto">
-            {userStats.map((u) => {
-              const ativo = u.total - u.idle;
-              const lastMin = Math.floor((Date.now() - new Date(u.last).getTime()) / 60000);
-              const idleAlert = lastMin > 15;
-              return (
-                <div key={u.usuario_id} className="flex items-center justify-between border-b pb-1 text-sm">
-                  <div className="truncate">
-                    <div className="font-medium truncate">{usuarios[u.usuario_id] || u.usuario_id.slice(0, 8)}</div>
-                    <div className={`text-xs ${idleAlert ? "text-destructive" : "text-muted-foreground"}`}>
-                      sem interação há {lastMin}min
+        <TabsContent value="users" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tempo por Usuário</CardTitle>
+              <CardDescription>Ativo × ocioso e última atividade</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 max-h-[600px] overflow-y-auto">
+              {userStats.map((u) => {
+                const ativo = u.total - u.idle;
+                const lastMin = Math.floor((Date.now() - new Date(u.last).getTime()) / 60000);
+                const idleAlert = lastMin > 15;
+                return (
+                  <div key={u.usuario_id} className="flex items-center justify-between border-b pb-1 text-sm">
+                    <div className="truncate">
+                      <div className="font-medium truncate">{usuarios[u.usuario_id] || u.usuario_id.slice(0, 8)}</div>
+                      <div className={`text-xs ${idleAlert ? "text-destructive" : "text-muted-foreground"}`}>
+                        sem interação há {lastMin}min
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-mono">{fmtMin(ativo)} ativo</div>
+                      <div className="text-xs text-amber-500">{fmtMin(u.idle)} ocioso</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-mono">{fmtMin(ativo)} ativo</div>
-                    <div className="text-xs text-amber-500">{fmtMin(u.idle)} ocioso</div>
-                  </div>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-      </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
+
