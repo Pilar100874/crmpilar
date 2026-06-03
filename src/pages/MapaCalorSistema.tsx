@@ -7,6 +7,7 @@ import { Activity, Clock, Users, Flame, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AdvancedHeatmapView } from "@/components/heatmap/AdvancedHeatmapView";
+import { HeatmapConfigDialog } from "@/components/heatmap/HeatmapConfigDialog";
 
 
 type Period = "1" | "7" | "30";
