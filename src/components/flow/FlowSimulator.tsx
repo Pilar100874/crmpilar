@@ -541,6 +541,15 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const aiTextDirective = buildAITextDirective(node.id);
     const upstreamPieca = findUpstreamPiecaRefs(node.id);
 
+    // Regra GLOBAL: nada além do título/subtítulo definidos (ou nada de texto, se não houver).
+    const hasAnyText = !!(lockedTextDirective || aiTextDirective);
+    const noExtraTextDirective = hasAnyText
+      ? "REGRA ABSOLUTA DE TEXTO NA IMAGEM: renderize SOMENTE os textos especificados acima (título/subtítulo). PROIBIDO acrescentar QUALQUER outro texto, palavra, frase, slogan, call-to-action, hashtag, URL, telefone, endereço, preço, percentual, número, código, rótulo (como 'TÍTULO', 'SUBTÍTULO', 'TITLE', 'SUBTITLE'), legenda, marca d'água ou assinatura. Apenas o conteúdo textual listado, nada mais."
+      : "REGRA ABSOLUTA DE TEXTO NA IMAGEM: NÃO escreva NENHUM texto na imagem. Sem palavras, frases, slogans, hashtags, URLs, telefones, endereços, preços, percentuais, números, códigos, rótulos, legendas, marcas d'água ou assinaturas. Imagem 100% sem texto.";
+
+    // Regra GLOBAL: logo da empresa sempre presente na peça.
+    const logoMandatoryDirective = "LOGO DA EMPRESA (OBRIGATÓRIO): incorpore o LOGO da empresa fornecido como referência na peça final, de forma elegante, legível e bem posicionada (geralmente em um canto), preservando fielmente cores, formas e proporções originais do logo. NÃO recrie, NÃO redesenhe, NÃO traduza, NÃO altere o logo — use-o tal qual a referência.";
+
     const imageRefSource = config.imageRefSource || "user";
     const imageAspectRatio = config.aspectRatio || (config.preset === "story_vertical" ? "9:16" : "1:1");
 
