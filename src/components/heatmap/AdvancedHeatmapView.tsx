@@ -4,8 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { HeatmapCanvas } from "./HeatmapCanvas";
-import { MousePointerClick, Move, ChevronsDown, AlertTriangle, Users, Smartphone, Monitor, Tablet, Filter } from "lucide-react";
+import { MousePointerClick, Move, ChevronsDown, AlertTriangle, Users, Smartphone, Monitor, Tablet, Filter, Camera, Image as ImageIcon, Loader2 } from "lucide-react";
+import { captureAndUploadScreenshot, fetchScreenshot } from "@/lib/heatmapScreenshot";
+import { toast } from "sonner";
 
 type Scope = "sistema" | "ecommerce";
 type Period = "1" | "7" | "30";
@@ -28,7 +32,7 @@ interface EventRow {
   created_at: string;
 }
 
-export function AdvancedHeatmapView({ scope, title, description }: { scope: Scope; title: string; description: string }) {
+export function AdvancedHeatmapView({ scope, title, description, estabelecimentoId }: { scope: Scope; title: string; description: string; estabelecimentoId?: string | null }) {
   const [period, setPeriod] = useState<Period>("7");
   const [device, setDevice] = useState<DeviceFilter>("all");
   const [visitorFilter, setVisitorFilter] = useState<"all" | "new" | "returning">("all");
@@ -39,6 +43,12 @@ export function AdvancedHeatmapView({ scope, title, description }: { scope: Scop
   // Period comparison
   const [comparePrev, setComparePrev] = useState(false);
   const [prevRows, setPrevRows] = useState<EventRow[]>([]);
+  // Screenshot background
+  const [showBg, setShowBg] = useState(true);
+  const [bgUrl, setBgUrl] = useState<string | null>(null);
+  const [bgVw, setBgVw] = useState<number | null>(null);
+  const [bgVh, setBgVh] = useState<number | null>(null);
+  const [capturing, setCapturing] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -113,6 +123,47 @@ export function AdvancedHeatmapView({ scope, title, description }: { scope: Scop
   useEffect(() => {
     if (!selectedRoute && routeStats[0]) setSelectedRoute(routeStats[0].route);
   }, [routeStats, selectedRoute]);
+
+  // Carrega screenshot da rota selecionada
+  useEffect(() => {
+    let mounted = true;
+    if (!selectedRoute) {
+      setBgUrl(null);
+      return;
+    }
+    (async () => {
+      const s = await fetchScreenshot(scope, selectedRoute, estabelecimentoId ?? null);
+      if (!mounted) return;
+      if (s) {
+        setBgUrl(`${s.image_url}?t=${Date.now()}`);
+        setBgVw(s.vw);
+        setBgVh(s.vh);
+      } else {
+        setBgUrl(null);
+        setBgVw(null);
+        setBgVh(null);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [selectedRoute, scope, estabelecimentoId]);
+
+  const handleCaptureCurrent = async () => {
+    setCapturing(true);
+    try {
+      const res = await captureAndUploadScreenshot(scope, estabelecimentoId ?? null);
+      toast.success("Tela atual capturada! Selecione a rota para ver o fundo.");
+      // Se a rota atual coincide com a selecionada, atualiza
+      if (window.location.pathname === selectedRoute) {
+        setBgUrl(`${res.image_url}`);
+        setBgVw(res.vw);
+        setBgVh(res.vh);
+      }
+    } catch (e: any) {
+      toast.error("Falha ao capturar tela: " + (e?.message || e));
+    } finally {
+      setCapturing(false);
+    }
+  };
 
   const routeEvents = useMemo(() => filtered.filter((r) => r.route === selectedRoute), [filtered, selectedRoute]);
   const clickPoints = useMemo(() => routeEvents.filter((r) => r.event_type === "click" && r.x != null && r.y != null).map((r) => ({ x: r.x!, y: r.y! })), [routeEvents]);
@@ -222,10 +273,21 @@ export function AdvancedHeatmapView({ scope, title, description }: { scope: Scop
               {browsers.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
             </SelectContent>
           </Select>
-          <label className="flex items-center gap-2 text-sm cursor-pointer ml-auto">
-            <input type="checkbox" checked={comparePrev} onChange={(e) => setComparePrev(e.target.checked)} />
-            Comparar com período anterior
-          </label>
+          <div className="flex items-center gap-2 ml-auto">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" checked={comparePrev} onChange={(e) => setComparePrev(e.target.checked)} />
+              Comparar período
+            </label>
+            <div className="flex items-center gap-2 border-l pl-3">
+              <ImageIcon className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">Fundo da tela</span>
+              <Switch checked={showBg} onCheckedChange={setShowBg} />
+            </div>
+            <Button size="sm" variant="outline" onClick={handleCaptureCurrent} disabled={capturing}>
+              {capturing ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Camera className="h-3.5 w-3.5 mr-1" />}
+              Capturar tela atual
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -319,7 +381,7 @@ export function AdvancedHeatmapView({ scope, title, description }: { scope: Scop
               <CardDescription>{clickPoints.length} cliques mapeados (viewport médio {avgVw}×{avgVh})</CardDescription>
             </CardHeader>
             <CardContent>
-              <HeatmapPanel width={CANVAS_W} height={CANVAS_H} points={scale(clickPoints)} />
+              <HeatmapPanel width={CANVAS_W} height={CANVAS_H} points={scale(clickPoints)} bgUrl={showBg ? bgUrl : null} />
             </CardContent>
           </Card>
           <Card>
@@ -354,7 +416,7 @@ export function AdvancedHeatmapView({ scope, title, description }: { scope: Scop
               <CardDescription>{movePoints.length} amostras (1 a cada 250ms)</CardDescription>
             </CardHeader>
             <CardContent>
-              <HeatmapPanel width={CANVAS_W} height={CANVAS_H} points={scale(movePoints)} radius={40} />
+              <HeatmapPanel width={CANVAS_W} height={CANVAS_H} points={scale(movePoints)} radius={40} bgUrl={showBg ? bgUrl : null} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -392,13 +454,13 @@ export function AdvancedHeatmapView({ scope, title, description }: { scope: Scop
             <Card>
               <CardHeader><CardTitle className="text-red-500">Rage Clicks</CardTitle><CardDescription>Cliques repetidos rapidamente no mesmo elemento (sinal de frustração)</CardDescription></CardHeader>
               <CardContent>
-                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(ragePoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} />
+                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(ragePoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} bgUrl={showBg ? bgUrl : null} />
               </CardContent>
             </Card>
             <Card>
               <CardHeader><CardTitle className="text-amber-500">Dead Clicks</CardTitle><CardDescription>Cliques sem nenhuma reação na interface</CardDescription></CardHeader>
               <CardContent>
-                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(deadPoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} />
+                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(deadPoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} bgUrl={showBg ? bgUrl : null} />
               </CardContent>
             </Card>
           </div>
@@ -501,12 +563,17 @@ function RouteSelector({ routes, value, onChange }: { routes: string[]; value: s
   );
 }
 
-function HeatmapPanel({ width, height, points, radius, maxOpacity }: { width: number; height: number; points: { x: number; y: number }[]; radius?: number; maxOpacity?: number }) {
+function HeatmapPanel({ width, height, points, radius, maxOpacity, bgUrl }: { width: number; height: number; points: { x: number; y: number }[]; radius?: number; maxOpacity?: number; bgUrl?: string | null }) {
   return (
-    <div className="relative bg-gradient-to-br from-muted/30 to-muted/10 rounded border" style={{ width: "100%", maxWidth: width, aspectRatio: `${width}/${height}` }}>
-      <div className="absolute inset-0 grid grid-cols-12 grid-rows-8 opacity-10 pointer-events-none">
-        {Array.from({ length: 96 }).map((_, i) => <div key={i} className="border border-foreground/20" />)}
-      </div>
+    <div className="relative bg-gradient-to-br from-muted/30 to-muted/10 rounded border overflow-hidden" style={{ width: "100%", maxWidth: width, aspectRatio: `${width}/${height}` }}>
+      {bgUrl && (
+        <img src={bgUrl} alt="" className="absolute inset-0 w-full h-full object-cover object-top opacity-90 pointer-events-none select-none" draggable={false} />
+      )}
+      {!bgUrl && (
+        <div className="absolute inset-0 grid grid-cols-12 grid-rows-8 opacity-10 pointer-events-none">
+          {Array.from({ length: 96 }).map((_, i) => <div key={i} className="border border-foreground/20" />)}
+        </div>
+      )}
       <HeatmapCanvas points={points} width={width} height={height} radius={radius} maxOpacity={maxOpacity} className="rounded" />
       {points.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">Sem dados ainda. Aguardando interações...</div>

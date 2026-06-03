@@ -151,6 +151,7 @@ export default function MapaCalorSistema() {
             scope="sistema"
             title="Análise Comportamental — Sistema Interno"
             description="Cliques, movimento, scroll, frustração e segmentação por dispositivo/navegador."
+            estabelecimentoId={estabId}
           />
         </TabsContent>
 
