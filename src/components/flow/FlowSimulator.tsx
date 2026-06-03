@@ -2297,6 +2297,44 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       return;
     }
 
+    // === content_type: coleta o objetivo do criativo do usuário ===
+    if (currentBlockType === "content_type_ask" && currentNodeId) {
+      const raw = input.trim().toLowerCase();
+      const normalize = (s: string) => s
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z]/g, "");
+      const key = normalize(raw);
+      const aliasMap: Record<string, string> = {
+        divulgacao: "divulgacao", divulgar: "divulgacao", awareness: "divulgacao", marca: "divulgacao",
+        promocao: "promocao", promo: "promocao", oferta: "promocao", venda: "promocao", desconto: "promocao",
+        institucional: "institucional", branding: "institucional", marca2: "institucional",
+        evento: "evento", convite: "evento",
+        lancamento: "lancamento", launch: "lancamento", novo: "lancamento",
+        educacional: "educacional", informativo: "educacional", dica: "educacional", tutorial: "educacional",
+      };
+      const matched = aliasMap[key] || (CONTENT_TYPE_DIRECTIVES[key] ? key : "");
+      if (!matched) {
+        addSystemMessage("⚠️ Não reconheci o tipo. Use: divulgacao, promocao, institucional, evento, lancamento ou educacional.");
+        setInput("");
+        return;
+      }
+      simNodeStateRef.current[currentNodeId] = {
+        ...(simNodeStateRef.current[currentNodeId] || {}),
+        resolvedContentType: { contentType: matched },
+      };
+      const meta = CONTENT_TYPE_DIRECTIVES[matched];
+      addSystemMessage(`🎯 Tipo de Conteúdo definido: ${meta?.label || matched}.`);
+      const ctNodeId = currentNodeId;
+      setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
+      setInput("");
+      const nextNode = getNextNode(ctNodeId);
+      if (nextNode) safeSetTimeout(() => { setCurrentNodeId(nextNode.id); executeNode(nextNode); }, 400);
+      return;
+    }
+
+
+
+
 
     if (currentBlockType === "product_search_query" && currentNodeId) {
       const node = nodes.find(n => n.id === currentNodeId);
