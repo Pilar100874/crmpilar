@@ -71,7 +71,19 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
   useEffect(() => {
     loadBots();
     loadWhatsAppSessions();
-  }, []);
+    // Garante que nenhum overlay/dialog/popover fica preso ao montar (especialmente embedded)
+    if (embedded) {
+      setNewBotDialogOpen(false);
+      setDuplicateDialogOpen(false);
+      setRenameDialogOpen(false);
+      setOpenMenuId(null);
+      // Remove qualquer atributo data-scroll-locked deixado por Radix em casos extremos
+      try {
+        document.body.style.pointerEvents = '';
+        document.body.removeAttribute('data-scroll-locked');
+      } catch {}
+    }
+  }, [embedded]);
 
   useEffect(() => {
     // Carrega as sessões selecionadas para cada bot
