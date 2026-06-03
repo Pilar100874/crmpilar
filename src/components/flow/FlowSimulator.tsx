@@ -316,11 +316,52 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
   };
 
+  // Procura recursivamente upstream por um bloco "text_content" conectado antes deste nó.
+  const findUpstreamTextContent = (nodeId: string, visited = new Set<string>()): any | null => {
+    if (visited.has(nodeId)) return null;
+    visited.add(nodeId);
+    const incoming = edges.filter((e) => e.target === nodeId);
+    for (const e of incoming) {
+      const src = nodes.find((n) => n.id === e.source);
+      if (!src) continue;
+      const sd: any = src.data || {};
+      if (sd.type === "text_content") {
+        return sd.config || {};
+      }
+      // Permite "atravessar" no máximo 1 bloco intermediário leve (ex: send_message) — busca direta.
+      const found = findUpstreamTextContent(src.id, visited);
+      if (found) return found;
+    }
+    return null;
+  };
+
+  const buildLockedTextDirective = (tc: any): string => {
+    if (!tc) return "";
+    const t = (tc.title || "").trim();
+    const s = (tc.subtitle || "").trim();
+    const b = (tc.body || "").trim();
+    if (!t && !s && !b) return "";
+    const lines: string[] = [];
+    if (t) lines.push(`- TÍTULO: "${t}"`);
+    if (s) lines.push(`- SUBTÍTULO: "${s}"`);
+    if (b) lines.push(`- CORPO: "${b}"`);
+    return [
+      "TEXTO OBRIGATÓRIO NA IMAGEM (REGRA INVIOLÁVEL):",
+      "Renderize EXATAMENTE os textos abaixo na imagem, com ortografia, acentuação e pontuação idênticas.",
+      "NÃO traduza, NÃO altere, NÃO invente, NÃO acrescente, NÃO substitua, NÃO abrevie.",
+      "NÃO inclua nenhum outro texto, palavra, slogan, marca d'água ou número além destes:",
+      ...lines,
+      "Hierarquia visual: título em maior destaque, subtítulo secundário, corpo (se houver) menor. Tipografia legível e bem posicionada.",
+    ].join("\n");
+  };
+
   const runAIMediaGeneration = async (node: Node, prompt: string, userRefImageUrl?: string | null) => {
     const config = (node.data as any).config || {};
     const variations = Math.max(1, Math.min(6, parseInt(config.variations) || 4));
     const userPrompt = interpolateVariables(prompt || config.basePrompt || "criativo", contextRef.current).trim();
     const basePrompt = interpolateVariables(config.basePrompt || "", contextRef.current).trim();
+    const lockedTextDirective = buildLockedTextDirective(findUpstreamTextContent(node.id));
+
     const imageRefSource = config.imageRefSource || "user";
     const imageAspectRatio = config.aspectRatio || (config.preset === "story_vertical" ? "9:16" : "1:1");
 
@@ -441,9 +482,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         basePrompt ? `\n[INSTRUÇÕES FIXAS DO BLOCO]: ${basePrompt}` : "",
         styleSource === "preset" && config.preset ? `\n[ESTILO/PRESET]: ${config.presetName || config.preset}` : "",
         compositionDirective,
+        lockedTextDirective ? `\n\n${lockedTextDirective}` : "",
         audioScript ? `\n[NARRAÇÃO — fale exatamente este texto em Português Brasileiro]: ${audioScript}` : "",
         `\nFormato ${imageAspectRatio}.`,
       ].filter(Boolean).join("");
+
 
       addSystemMessage(`🎬 Gerando ${variations} vídeo(s) com IA · ${styleLabel} · modelo ${videoModel}${imageUrls.length ? ` · ${imageUrls.length} referência(s)` : ""}…`);
       addBotMessage(`⏳ Aguarde, criando ${variations} vídeo(s). Pode levar alguns minutos.`, node.id);
@@ -553,7 +596,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           totalAttempts++;
           const { data, error } = await supabase.functions.invoke("bot-generate-ai-media", {
             body: {
-              prompt: `${userPrompt}\n\nGere somente a opção ${optionIndex + 1} de ${variations}. Mantenha o mesmo briefing, identidade visual e formato ${imageAspectRatio}; varie apenas ângulo, enquadramento ou composição.`,
+              prompt: `${userPrompt}${lockedTextDirective ? `\n\n${lockedTextDirective}` : ""}\n\nGere somente a opção ${optionIndex + 1} de ${variations}. Mantenha o mesmo briefing, identidade visual e formato ${imageAspectRatio}; varie apenas ângulo, enquadramento ou composição.${lockedTextDirective ? " O TEXTO renderizado na imagem deve ser EXATAMENTE o especificado acima — não varie, não traduza, não invente palavras." : ""}`,
               basePrompt,
               variations: 1,
               styleSource,
@@ -1888,6 +1931,21 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         }, 1000);
         break;
       }
+
+      case "text_content": {
+        const t = (config.title || "").trim();
+        const s = (config.subtitle || "").trim();
+        const b = (config.body || "").trim();
+        const parts = [t && `Título: "${t}"`, s && `Subtítulo: "${s}"`, b && `Texto: "${b}"`].filter(Boolean);
+        addSystemMessage(`📝 Conteúdo de Texto fixado para o próximo Gerar Mídia IA${parts.length ? ` — ${parts.join(" · ")}` : ""}.`);
+        safeSetTimeout(() => {
+          const nextNode = getNextNode(node.id);
+          if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+        }, 400);
+        break;
+      }
+
+
 
       default:
         addSystemMessage(`▶️ Executando: ${blockDef.label}`);
