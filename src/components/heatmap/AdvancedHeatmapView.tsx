@@ -366,29 +366,45 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
               <table className="w-full text-sm">
                 <thead className="text-xs text-muted-foreground border-b">
                   <tr>
-                    <th className="text-left py-2 px-2">Rota</th>
+                    <th className="text-left py-2 px-2">Tela</th>
                     <th className="text-right py-2 px-2">Sessões</th>
                     <th className="text-right py-2 px-2">Cliques</th>
                     <th className="text-right py-2 px-2">Scroll médio</th>
                     <th className="text-right py-2 px-2">Rage</th>
                     <th className="text-right py-2 px-2">Dead</th>
                     <th className="text-right py-2 px-2">Quick back</th>
+                    <th className="text-right py-2 px-2 w-10"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {routeStats.slice(0, 30).map((r) => (
                     <tr key={r.route} className="border-b hover:bg-muted/40 cursor-pointer" onClick={() => setSelectedRoute(r.route)}>
-                      <td className="py-1.5 px-2 font-mono text-xs truncate max-w-[300px]">{r.route}</td>
+                      <td className="py-1.5 px-2 truncate max-w-[300px]">
+                        <div className="font-medium">{prettyName(r.route, routeTitles)}</div>
+                        <div className="font-mono text-[10px] text-muted-foreground truncate">{r.route}</div>
+                      </td>
                       <td className="text-right px-2">{r.sessionsCount}</td>
                       <td className="text-right px-2">{r.clicks}</td>
                       <td className="text-right px-2">{r.avgScroll}%</td>
                       <td className="text-right px-2 text-red-500">{r.rage || ""}</td>
                       <td className="text-right px-2 text-amber-500">{r.dead || ""}</td>
                       <td className="text-right px-2 text-purple-500">{r.quickBack || ""}</td>
+                      <td className="text-right px-2">
+                        <a
+                          href={r.route}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center text-muted-foreground hover:text-primary"
+                          title="Abrir tela em nova janela"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      </td>
                     </tr>
                   ))}
                   {routeStats.length === 0 && (
-                    <tr><td colSpan={7} className="text-center text-muted-foreground py-6">{loading ? "Carregando..." : "Sem dados no período"}</td></tr>
+                    <tr><td colSpan={8} className="text-center text-muted-foreground py-6">{loading ? "Carregando..." : "Sem dados no período"}</td></tr>
                   )}
                 </tbody>
               </table>
