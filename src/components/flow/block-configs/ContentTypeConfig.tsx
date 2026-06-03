@@ -100,26 +100,80 @@ export const ContentTypeConfig = ({ config, handleConfigChange }: ContentTypeCon
       </div>
 
       {mode === "fixed" ? (
-        <div className="space-y-2">
+        <div className="space-y-3">
           <Label className="flex items-center gap-2">
             <Megaphone className="h-3.5 w-3.5 text-pink-600" />
             Tipo de conteúdo
           </Label>
-          <Select
-            value={selected}
-            onValueChange={(v) => handleConfigChange("contentType", v)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {CONTENT_TYPE_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+
+          <div className="grid grid-cols-2 gap-2">
+            {CONTENT_TYPE_OPTIONS.filter((o) => o.value !== "custom").map((o) => {
+              const active = selected === o.value;
+              const img = CONTENT_TYPE_PREVIEWS[o.value];
+              return (
+                <button
+                  key={o.value}
+                  type="button"
+                  onClick={() => handleConfigChange("contentType", o.value)}
+                  className={cn(
+                    "relative group rounded-lg overflow-hidden border-2 transition-all text-left",
+                    active
+                      ? "border-pink-500 ring-2 ring-pink-500/30"
+                      : "border-border hover:border-pink-500/50"
+                  )}
+                >
+                  <div className="aspect-square bg-muted overflow-hidden">
+                    {img && (
+                      <img
+                        src={img}
+                        alt={`Referência visual: ${o.label}`}
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    )}
+                  </div>
+                  <div className="px-2 py-1.5 bg-background">
+                    <p className="text-[11px] font-medium leading-tight">{o.label}</p>
+                  </div>
+                  {active && (
+                    <div className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-pink-500 text-white flex items-center justify-center shadow">
+                      <Check className="h-3 w-3" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+            {/* Personalizado (sem preview) */}
+            {(() => {
+              const o = CONTENT_TYPE_OPTIONS.find((x) => x.value === "custom")!;
+              const active = selected === "custom";
+              return (
+                <button
+                  type="button"
+                  onClick={() => handleConfigChange("contentType", "custom")}
+                  className={cn(
+                    "relative rounded-lg overflow-hidden border-2 transition-all text-left",
+                    active
+                      ? "border-pink-500 ring-2 ring-pink-500/30"
+                      : "border-border hover:border-pink-500/50"
+                  )}
+                >
+                  <div className="aspect-square bg-gradient-to-br from-muted to-muted/40 flex items-center justify-center">
+                    <Megaphone className="h-8 w-8 text-muted-foreground/60" />
+                  </div>
+                  <div className="px-2 py-1.5 bg-background">
+                    <p className="text-[11px] font-medium leading-tight">{o.label}</p>
+                  </div>
+                  {active && (
+                    <div className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-pink-500 text-white flex items-center justify-center shadow">
+                      <Check className="h-3 w-3" />
+                    </div>
+                  )}
+                </button>
+              );
+            })()}
+          </div>
+
           {selectedMeta && (
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               {selectedMeta.description}
