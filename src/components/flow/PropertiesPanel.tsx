@@ -402,6 +402,9 @@ export const PropertiesPanel = ({
         return <BlockConfigs.ApiLoopConfig {...configProps} />;
       case "product_search_select":
         return <BlockConfigs.ProductSearchSelectConfig {...configProps} />;
+      case "text_content":
+        return <BlockConfigs.TextContentConfig {...configProps} />;
+
 
       case "start":
         return (
