@@ -2138,6 +2138,62 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       }
 
       case "text_content": {
+        const blockMode = config.blockMode === "fixed" || config.blockMode === "options" ? config.blockMode : "advanced";
+
+        // === MODO FIXO: aplica direto sem perguntar ===
+        if (blockMode === "fixed") {
+          simNodeStateRef.current[node.id] = {
+            ...(simNodeStateRef.current[node.id] || {}),
+            resolvedTextContent: {
+              title: config.title || "",
+              subtitle: config.subtitle || "",
+              body: config.bodyEnabled === false ? "" : (config.body || ""),
+            },
+          };
+          addSystemMessage(`📝 Conteúdo de Texto (fixo) aplicado ao próximo Gerar Mídia IA.`);
+          safeSetTimeout(() => {
+            const nextNode = getNextNode(node.id);
+            if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+          }, 400);
+          break;
+        }
+
+        // === MODO OPÇÕES: usuário escolhe uma das opções pré-definidas ===
+        if (blockMode === "options") {
+          const opts: any[] = Array.isArray(config.options) ? config.options : [];
+          if (opts.length === 0) {
+            addSystemMessage("⚠️ Bloco de texto em modo 'opções' sem opções configuradas. Seguindo sem textos.");
+            simNodeStateRef.current[node.id] = {
+              ...(simNodeStateRef.current[node.id] || {}),
+              resolvedTextContent: { title: "", subtitle: "", body: "" },
+            };
+            safeSetTimeout(() => {
+              const nextNode = getNextNode(node.id);
+              if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+            }, 400);
+            break;
+          }
+          simNodeStateRef.current[node.id] = {
+            ...(simNodeStateRef.current[node.id] || {}),
+            textContentOptions: opts,
+          };
+          setMessages((prev) => [...prev, {
+            id: uid(), sender: "bot",
+            text: config.optionsPrompt || "Escolha um dos textos abaixo:",
+            timestamp: new Date(), nodeId: node.id,
+            buttons: opts.map((o, i) => ({
+              text: o.label || `Opção ${i + 1}`,
+              value: `tco_${i}`,
+              buttonId: `tco_${i}`,
+            })),
+          }]);
+          setIsWaitingInput(true);
+          setCurrentBlockType("text_content_options_pick");
+          setCurrentNodeId(node.id);
+          break;
+        }
+
+        // === MODO AVANÇADO (legado) ===
         // Se o designer pré-configurou textos fixos (sem nenhum modo "ask"/"ai"),
         // aplica direto sem perguntar (mantém comportamento legado).
         const modes = ["title", "subtitle", "body"].map((k) => config[`${k}Mode`] || "fixed");
