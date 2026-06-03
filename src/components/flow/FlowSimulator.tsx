@@ -316,6 +316,19 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
   };
 
+  // Resolve os valores de um bloco text_content levando em conta valores fixos
+  // OU valores capturados em tempo de execução (modo "ask").
+  const resolveTextContentValues = (tcNodeId: string, cfg: any) => {
+    const runtime = simNodeStateRef.current[tcNodeId]?.resolvedTextContent || {};
+    const pick = (key: "title" | "subtitle" | "body") => {
+      if (key === "body" && cfg[`bodyEnabled`] === false) return "";
+      const mode = cfg[`${key}Mode`] === "ask" ? "ask" : "fixed";
+      if (mode === "ask") return (runtime[key] || "").toString().trim();
+      return interpolateVariables(cfg[key] || "", contextRef.current).trim();
+    };
+    return { title: pick("title"), subtitle: pick("subtitle"), body: pick("body") };
+  };
+
   // Procura recursivamente upstream por um bloco "text_content" conectado antes deste nó.
   const findUpstreamTextContent = (nodeId: string, visited = new Set<string>()): any | null => {
     if (visited.has(nodeId)) return null;
@@ -326,7 +339,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       if (!src) continue;
       const sd: any = src.data || {};
       if (sd.type === "text_content") {
-        return sd.config || {};
+        return resolveTextContentValues(src.id, sd.config || {});
       }
       // Permite "atravessar" no máximo 1 bloco intermediário leve (ex: send_message) — busca direta.
       const found = findUpstreamTextContent(src.id, visited);
@@ -334,6 +347,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
     return null;
   };
+
 
   const buildLockedTextDirective = (tc: any): string => {
     if (!tc) return "";
@@ -1933,17 +1947,55 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       }
 
       case "text_content": {
-        const t = (config.title || "").trim();
-        const s = (config.subtitle || "").trim();
-        const b = (config.body || "").trim();
-        const parts = [t && `Título: "${t}"`, s && `Subtítulo: "${s}"`, b && `Texto: "${b}"`].filter(Boolean);
-        addSystemMessage(`📝 Conteúdo de Texto fixado para o próximo Gerar Mídia IA${parts.length ? ` — ${parts.join(" · ")}` : ""}.`);
-        safeSetTimeout(() => {
-          const nextNode = getNextNode(node.id);
-          if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
-        }, 400);
+        // Monta a fila de campos que precisam ser pedidos ao usuário
+        const askQueue: Array<{ field: "title" | "subtitle" | "body"; prompt: string }> = [];
+        const tryAsk = (field: "title" | "subtitle" | "body", defaultPrompt: string) => {
+          if (field === "body" && config.bodyEnabled === false) return;
+          if (config[`${field}Mode`] === "ask") {
+            const prompt = interpolateVariables(
+              config[`${field}AskPrompt`] || defaultPrompt,
+              contextRef.current,
+            );
+            askQueue.push({ field, prompt });
+          }
+        };
+        tryAsk("title", "Qual o título que devo colocar na imagem?");
+        tryAsk("subtitle", "Qual o subtítulo que devo colocar na imagem?");
+        tryAsk("body", "Quer adicionar um texto extra na imagem? (digite ou responda 'não')");
+
+        // Inicializa estado runtime para este nó
+        simNodeStateRef.current[node.id] = {
+          ...(simNodeStateRef.current[node.id] || {}),
+          resolvedTextContent: {
+            title: config.titleMode === "ask" ? "" : (config.title || ""),
+            subtitle: config.subtitleMode === "ask" ? "" : (config.subtitle || ""),
+            body: config.bodyEnabled === false
+              ? ""
+              : (config.bodyMode === "ask" ? "" : (config.body || "")),
+          },
+          textContentAskQueue: askQueue,
+          textContentAskIndex: 0,
+        };
+
+        if (askQueue.length === 0) {
+          const v = simNodeStateRef.current[node.id].resolvedTextContent;
+          const parts = [v.title && `Título: "${v.title}"`, v.subtitle && `Subtítulo: "${v.subtitle}"`, v.body && `Texto: "${v.body}"`].filter(Boolean);
+          addSystemMessage(`📝 Conteúdo de Texto fixado para o próximo Gerar Mídia IA${parts.length ? ` — ${parts.join(" · ")}` : ""}.`);
+          safeSetTimeout(() => {
+            const nextNode = getNextNode(node.id);
+            if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+          }, 400);
+        } else {
+          // Pergunta o primeiro campo
+          addBotMessage(askQueue[0].prompt, node.id);
+          setIsWaitingInput(true);
+          setCurrentBlockType("text_content_ask");
+          setPendingVariable(`__tc_${node.id}`);
+          setCurrentNodeId(node.id);
+        }
         break;
       }
+
 
 
 
@@ -2108,7 +2160,40 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
     addUserMessage(input);
 
-    // === Multi-step: blocos novos ===
+    // === text_content: coleta multi-campo (title / subtitle / body) do usuário ===
+    if (currentBlockType === "text_content_ask" && currentNodeId) {
+      const state = simNodeStateRef.current[currentNodeId] || {};
+      const queue: Array<{ field: "title" | "subtitle" | "body"; prompt: string }> = state.textContentAskQueue || [];
+      const idx: number = state.textContentAskIndex || 0;
+      const current = queue[idx];
+      if (current) {
+        const raw = input.trim();
+        // Para body, "não/nao/skip/-" significa pular
+        const isSkip = current.field === "body" && /^(nao|não|n|no|skip|-|nenhum|nada)$/i.test(raw);
+        const value = isSkip ? "" : raw;
+        state.resolvedTextContent = { ...(state.resolvedTextContent || {}), [current.field]: value };
+        state.textContentAskIndex = idx + 1;
+        simNodeStateRef.current[currentNodeId] = state;
+      }
+      setInput("");
+      const nextIdx = (state.textContentAskIndex ?? 0);
+      if (queue[nextIdx]) {
+        // Pergunta o próximo campo
+        addBotMessage(queue[nextIdx].prompt, currentNodeId);
+        return;
+      }
+      // Concluiu — log e avança
+      const v = state.resolvedTextContent || {};
+      const parts = [v.title && `Título: "${v.title}"`, v.subtitle && `Subtítulo: "${v.subtitle}"`, v.body && `Texto: "${v.body}"`].filter(Boolean);
+      addSystemMessage(`📝 Conteúdo de Texto coletado${parts.length ? ` — ${parts.join(" · ")}` : ""}.`);
+      const tcNodeId = currentNodeId;
+      setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
+      const nextNode = getNextNode(tcNodeId);
+      if (nextNode) safeSetTimeout(() => { setCurrentNodeId(nextNode.id); executeNode(nextNode); }, 400);
+      return;
+    }
+
+
     if (currentBlockType === "product_search_query" && currentNodeId) {
       const node = nodes.find(n => n.id === currentNodeId);
       const q = input.trim();
