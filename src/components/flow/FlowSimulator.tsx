@@ -369,12 +369,94 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     ].join("\n");
   };
 
+  // ====== content_type (Tipo de Conteúdo: Divulgação / Promoção / Institucional...) ======
+  const CONTENT_TYPE_DIRECTIVES: Record<string, { label: string; rule: string }> = {
+    divulgacao: {
+      label: "Divulgação",
+      rule:
+        "OBJETIVO: peça de DIVULGAÇÃO/AWARENESS. Apresente o produto, serviço ou marca de forma atrativa, com estética convidativa e tom inspirador/lifestyle. PROIBIDO incluir preços, percentuais de desconto, selos de oferta, palavras como 'OFERTA', 'PROMOÇÃO', 'DESCONTO', '% OFF'. Composição mais leve, aspiracional, sem apelo de varejo.",
+    },
+    promocao: {
+      label: "Promoção",
+      rule:
+        "OBJETIVO: peça PROMOCIONAL/COMERCIAL com foco em CONVERSÃO. Estética de varejo, energética, com hierarquia visual forte. PERMITIDO e ENCORAJADO usar selos/badges de oferta, cores vibrantes, contraste alto, palavras como 'OFERTA', 'PROMOÇÃO' (somente se vierem do bloco Conteúdo de Texto; NÃO invente preços nem percentuais que não foram fornecidos). Sensação de urgência.",
+    },
+    institucional: {
+      label: "Institucional",
+      rule:
+        "OBJETIVO: peça INSTITUCIONAL/BRANDING. Estética sóbria, elegante, minimalista, corporativa. Tipografia refinada, paleta contida. PROIBIDO ar de varejo, selos de desconto, urgência, preços, percentuais ou linguagem promocional. Foco em credibilidade, valores e posicionamento da marca.",
+    },
+    evento: {
+      label: "Evento",
+      rule:
+        "OBJETIVO: CONVITE/ANÚNCIO de evento. Estética de pôster/flyer com forte hierarquia tipográfica. Destaque visual para nome do evento, data e local quando fornecidos. Atmosfera coerente com o tema do evento.",
+    },
+    lancamento: {
+      label: "Lançamento",
+      rule:
+        "OBJETIVO: peça de LANÇAMENTO de produto/serviço. Estética premium e dramática, iluminação cinematográfica, produto em primeiro plano. Selo 'NOVO' ou 'LANÇAMENTO' em destaque é permitido. Sensação de novidade e expectativa. Sem apelo promocional/desconto.",
+    },
+    educacional: {
+      label: "Educacional / Informativo",
+      rule:
+        "OBJETIVO: peça EDUCACIONAL/INFORMATIVA (dica, tutorial, conteúdo de valor). Estética clean e didática, hierarquia clara de informação, similar a um post de carrossel informativo. SEM apelo comercial agressivo, SEM preços, SEM ofertas.",
+    },
+    custom: {
+      label: "Personalizado",
+      rule: "",
+    },
+  };
+
+  const resolveContentTypeValue = (ctNodeId: string, cfg: any): { type: string; guidance: string } => {
+    const runtime = simNodeStateRef.current[ctNodeId]?.resolvedContentType;
+    const fromAsk = runtime?.contentType ? String(runtime.contentType).trim().toLowerCase() : "";
+    const fixed = (cfg.contentType || "divulgacao").toString().trim().toLowerCase();
+    const chosen = cfg.mode === "ask" ? (fromAsk || fixed) : fixed;
+    const normalized = CONTENT_TYPE_DIRECTIVES[chosen] ? chosen : "custom";
+    return {
+      type: normalized,
+      guidance: interpolateVariables(cfg.customGuidance || "", contextRef.current).trim(),
+    };
+  };
+
+  const findUpstreamContentType = (nodeId: string, visited = new Set<string>()): { type: string; guidance: string } | null => {
+    if (visited.has(nodeId)) return null;
+    visited.add(nodeId);
+    const incoming = edges.filter((e) => e.target === nodeId);
+    for (const e of incoming) {
+      const src = nodes.find((n) => n.id === e.source);
+      if (!src) continue;
+      const sd: any = src.data || {};
+      if (sd.type === "content_type") {
+        return resolveContentTypeValue(src.id, sd.config || {});
+      }
+      const found = findUpstreamContentType(src.id, visited);
+      if (found) return found;
+    }
+    return null;
+  };
+
+  const buildContentTypeDirective = (ct: { type: string; guidance: string } | null): string => {
+    if (!ct) return "";
+    const meta = CONTENT_TYPE_DIRECTIVES[ct.type];
+    const blocks: string[] = [];
+    if (meta?.rule) blocks.push(meta.rule);
+    if (ct.guidance) blocks.push(`ORIENTAÇÃO ADICIONAL OBRIGATÓRIA: ${ct.guidance}`);
+    if (!blocks.length) return "";
+    return [
+      `TIPO DE CONTEÚDO (REGRA INVIOLÁVEL — ${meta?.label || ct.type}):`,
+      ...blocks,
+      "Essas regras se sobrepõem ao estilo padrão do preset quando houver conflito.",
+    ].join("\n");
+  };
+
   const runAIMediaGeneration = async (node: Node, prompt: string, userRefImageUrl?: string | null) => {
     const config = (node.data as any).config || {};
     const variations = Math.max(1, Math.min(6, parseInt(config.variations) || 4));
     const userPrompt = interpolateVariables(prompt || config.basePrompt || "criativo", contextRef.current).trim();
     const basePrompt = interpolateVariables(config.basePrompt || "", contextRef.current).trim();
     const lockedTextDirective = buildLockedTextDirective(findUpstreamTextContent(node.id));
+    const contentTypeDirective = buildContentTypeDirective(findUpstreamContentType(node.id));
 
     const imageRefSource = config.imageRefSource || "user";
     const imageAspectRatio = config.aspectRatio || (config.preset === "story_vertical" ? "9:16" : "1:1");
