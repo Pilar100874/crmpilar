@@ -7,9 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { HeatmapCanvas } from "./HeatmapCanvas";
-import { MousePointerClick, Move, ChevronsDown, AlertTriangle, Users, Smartphone, Monitor, Tablet, Filter, Camera, Image as ImageIcon, Loader2 } from "lucide-react";
+import { MousePointerClick, Move, ChevronsDown, AlertTriangle, Users, Smartphone, Monitor, Tablet, Filter, Camera, Image as ImageIcon, Loader2, ExternalLink } from "lucide-react";
 import { captureAndUploadScreenshot, fetchScreenshot } from "@/lib/heatmapScreenshot";
 import { toast } from "sonner";
+
+function prettyName(route: string, titles: Record<string, string>): string {
+  if (titles[route]) return titles[route];
+  const seg = route.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean).pop() || "Início";
+  return seg.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 type Scope = "sistema" | "ecommerce";
 type Period = "1" | "7" | "30";
