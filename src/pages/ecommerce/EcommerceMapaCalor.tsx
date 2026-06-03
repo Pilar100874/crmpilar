@@ -70,6 +70,7 @@ export default function EcommerceMapaCalor() {
             scope="ecommerce"
             title="Análise Comportamental — Loja"
             description="Cliques, movimento, scroll, frustração e segmentação por dispositivo/navegador/origem."
+            estabelecimentoId={estabId}
           />
         </TabsContent>
 
