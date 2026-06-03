@@ -63,7 +63,7 @@ export default function EcommerceMapaCalor() {
         <TabsContent value="carts" className="mt-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><ShoppingCart className="h-5 w-5" /> Carrinhos abandonados (>30min sem atividade)</CardTitle>
+              <CardTitle className="flex items-center gap-2"><ShoppingCart className="h-5 w-5" /> Carrinhos abandonados (mais de 30min sem atividade)</CardTitle>
               <CardDescription>{abandonedCarts.length} carrinhos · valor potencial de recuperação</CardDescription>
             </CardHeader>
             <CardContent>
