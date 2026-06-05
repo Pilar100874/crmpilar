@@ -555,12 +555,18 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
           {step === 3 && (
             <div className="space-y-4 py-2">
               <div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <Label>Texto que será falado (locução)</Label>
-                  <Button size="sm" variant="ghost" onClick={generateScript} disabled={generatingScript}>
-                    {generatingScript ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Wand2 className="h-3.5 w-3.5 mr-1" />}
-                    Gerar com IA
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="outline" onClick={() => generateScript('enhance')} disabled={generatingScript || !script.trim()}>
+                      {generatingScript ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
+                      Enriquecer com IA
+                    </Button>
+                    <Button size="sm" variant="default" onClick={() => generateScript('generate')} disabled={generatingScript}>
+                      {generatingScript ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Wand2 className="h-3.5 w-3.5 mr-1" />}
+                      Gerar por IA
+                    </Button>
+                  </div>
                 </div>
                 <Textarea
                   rows={4}
