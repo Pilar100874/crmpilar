@@ -11,7 +11,8 @@ const BUCKET = "heatmap-screenshots";
 const SIGNED_TTL = 60 * 60 * 24 * 7; // 7 dias
 
 async function signedUrl(path: string): Promise<string> {
-  const { data } = await supabase.storage.from(BUCKET).createSignedUrl(path, SIGNED_TTL);
+  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, SIGNED_TTL);
+  if (error) return "";
   return data?.signedUrl || "";
 }
 
@@ -79,11 +80,15 @@ export async function fetchScreenshot(
     .eq("route", route);
   q = estabelecimentoId ? q.eq("estabelecimento_id", estabelecimentoId) : q.is("estabelecimento_id", null);
   const { data } = await q.maybeSingle();
-  if (!data) return null;
+  if (!data) {
+    const fallbackUrl = await signedUrl(pathFor(scope, estabelecimentoId, route));
+    return fallbackUrl ? { image_url: fallbackUrl, vw: 1440, vh: 900 } : null;
+  }
   const rec: any = data;
   const url = String(rec.image_url || "");
   const image_url = url.includes("://") ? url : await signedUrl(url || pathFor(scope, estabelecimentoId, route));
-  return { image_url, vw: rec.vw, vh: rec.vh };
+  if (!image_url) return null;
+  return { image_url, vw: rec.vw || 1440, vh: rec.vh || 900 };
 }
 
 /**
@@ -109,6 +114,7 @@ export async function captureRouteViaIframe(
   iframe.style.height = `${height}px`;
   iframe.style.border = "0";
   iframe.style.opacity = "0";
+  iframe.name = "heatmap-capture-frame";
   iframe.setAttribute("aria-hidden", "true");
   // não adicionamos query string para evitar quebrar rotas que não suportam
   iframe.src = route;

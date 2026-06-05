@@ -5770,6 +5770,42 @@ export type Database = {
         }
         Relationships: []
       }
+      heatmap_screenshots: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string | null
+          id: string
+          image_url: string
+          route: string
+          scope: string
+          updated_at: string
+          vh: number
+          vw: number
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id?: string | null
+          id?: string
+          image_url: string
+          route: string
+          scope?: string
+          updated_at?: string
+          vh?: number
+          vw?: number
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string | null
+          id?: string
+          image_url?: string
+          route?: string
+          scope?: string
+          updated_at?: string
+          vh?: number
+          vw?: number
+        }
+        Relationships: []
+      }
       heatmap_triggers: {
         Row: {
           acao: Json

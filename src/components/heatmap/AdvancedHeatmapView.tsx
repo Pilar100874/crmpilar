@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { HeatmapCanvas } from "./HeatmapCanvas";
-import { MousePointerClick, Move, ChevronsDown, AlertTriangle, Users, Smartphone, Monitor, Tablet, Filter, Camera, Image as ImageIcon, Loader2, ExternalLink, Maximize2, X } from "lucide-react";
-import { captureAndUploadScreenshot, captureRouteViaIframe, fetchScreenshot } from "@/lib/heatmapScreenshot";
+import { MousePointerClick, ChevronsDown, AlertTriangle, Users, Smartphone, Monitor, Tablet, Filter, Image as ImageIcon, Loader2, ExternalLink, Maximize2, X } from "lucide-react";
+import { captureRouteViaIframe, fetchScreenshot } from "@/lib/heatmapScreenshot";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
@@ -40,6 +40,7 @@ interface EventRow {
 }
 
 export function AdvancedHeatmapView({ scope, title, description, estabelecimentoId }: { scope: Scope; title: string; description: string; estabelecimentoId?: string | null }) {
+  const isEmbeddedCapture = typeof window !== "undefined" && window.name === "heatmap-capture-frame";
   const [period, setPeriod] = useState<Period>("7");
   const [device, setDevice] = useState<DeviceFilter>("all");
   const [visitorFilter, setVisitorFilter] = useState<"all" | "new" | "returning">("all");
@@ -152,6 +153,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
   // Carrega screenshot da rota selecionada; se não existir, captura via iframe automaticamente
   useEffect(() => {
     let mounted = true;
+    if (isEmbeddedCapture) return () => { mounted = false; };
     if (!selectedRoute) {
       setBgUrl(null);
       return;
@@ -185,7 +187,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
       }
     })();
     return () => { mounted = false; };
-  }, [selectedRoute, scope, estabelecimentoId, showBg]);
+  }, [selectedRoute, scope, estabelecimentoId, showBg, isEmbeddedCapture]);
 
 
 
@@ -454,7 +456,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
               <CardDescription>{movePoints.length} amostras (1 a cada 250ms)</CardDescription>
             </CardHeader>
             <CardContent>
-              <HeatmapPanel width={CANVAS_W} height={CANVAS_H} points={scale(movePoints)} radius={40} bgUrl={showBg ? bgUrl : null} />
+              <HeatmapPanel width={CANVAS_W} height={CANVAS_H} points={scale(movePoints)} radius={40} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -492,13 +494,13 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
             <Card>
               <CardHeader><CardTitle className="text-red-500">Rage Clicks</CardTitle><CardDescription>Cliques repetidos rapidamente no mesmo elemento (sinal de frustração)</CardDescription></CardHeader>
               <CardContent>
-                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(ragePoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} bgUrl={showBg ? bgUrl : null} />
+                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(ragePoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
               </CardContent>
             </Card>
             <Card>
               <CardHeader><CardTitle className="text-amber-500">Dead Clicks</CardTitle><CardDescription>Cliques sem nenhuma reação na interface</CardDescription></CardHeader>
               <CardContent>
-                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(deadPoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} bgUrl={showBg ? bgUrl : null} />
+                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(deadPoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
               </CardContent>
             </Card>
           </div>
@@ -597,15 +599,11 @@ function RouteSelector({
   value,
   onChange,
   titles = {},
-  onRecapture,
-  capturing,
 }: {
   routes: string[];
   value: string;
   onChange: (v: string) => void;
   titles?: Record<string, string>;
-  onRecapture?: () => void;
-  capturing?: boolean;
 }) {
   return (
     <div className="flex items-center gap-2 flex-wrap">
@@ -621,17 +619,9 @@ function RouteSelector({
         </SelectContent>
       </Select>
       {value && (
-        <>
-          {onRecapture && (
-            <Button size="sm" variant="outline" onClick={onRecapture} disabled={capturing} title="Recapturar fundo desta tela">
-              {capturing ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Camera className="h-3.5 w-3.5 mr-1" />}
-              Recapturar fundo
-            </Button>
-          )}
-          <a href={value} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline" title="Abrir tela em nova janela">
-            <ExternalLink className="h-3.5 w-3.5" /> Abrir
-          </a>
-        </>
+        <a href={value} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline" title="Abrir tela em nova janela">
+          <ExternalLink className="h-3.5 w-3.5" /> Abrir
+        </a>
       )}
     </div>
   );
