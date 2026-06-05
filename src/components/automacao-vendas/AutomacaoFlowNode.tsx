@@ -21,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreVertical, Copy, Trash2, StickyNote, HelpCircle } from "lucide-react";
+import { MoreVertical, Copy, Trash2, StickyNote, HelpCircle, Pause, SkipForward, X } from "lucide-react";
 import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
 import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
 
@@ -39,9 +39,18 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
   const label = String((data as any).label || blockDef.label || "");
   const note = (data as any).note;
 
+  const isBreakpoint = (data as any).isBreakpoint;
+  const isSkipped = (data as any).isSkipped;
+
   const getCardClassName = () => {
     const baseClass = "min-w-[260px] max-w-[300px] transition-all duration-200 shadow-lg";
-    
+
+    if (isBreakpoint) {
+      return `${baseClass} bg-card border-2 border-orange-500 ${selected ? "ring-2 ring-primary" : ""}`;
+    }
+    if (isSkipped) {
+      return `${baseClass} bg-card/60 border-2 border-border opacity-60 ${selected ? "ring-2 ring-primary" : ""}`;
+    }
     return `${baseClass} bg-card dark:bg-card border border-border ${
       selected 
         ? "ring-2 ring-primary border-primary" 
@@ -91,16 +100,21 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
                   Ajuda e exemplos
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => {
-                    (data as any).onAddNote?.(id);
-                    setDropdownOpen(false);
-                  }}
+                  onClick={() => { (data as any).onSetBreakpoint?.(id); setDropdownOpen(false); }}
                   className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
                 >
-                  <StickyNote className="w-4 h-4 mr-2 text-yellow-500" />
-                  {note ? "Editar Nota" : "Adicionar Nota"}
+                  <Pause className="w-4 h-4 mr-2 text-orange-500" />
+                  {isBreakpoint ? "Remover Pausa" : "Pausar Simulação Aqui"}
                 </DropdownMenuItem>
-                
+
+                <DropdownMenuItem
+                  onClick={() => { (data as any).onSetSkip?.(id); setDropdownOpen(false); }}
+                  className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
+                >
+                  <SkipForward className="w-4 h-4 mr-2 text-muted-foreground" />
+                  {isSkipped ? "Não Pular Bloco" : "Pular Este Bloco"}
+                </DropdownMenuItem>
+
                 <DropdownMenuItem
                   onClick={() => {
                     (data as any).onDuplicate?.(id);
@@ -111,7 +125,29 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
                   <Copy className="w-4 h-4 mr-2 text-primary" />
                   Duplicar Bloco
                 </DropdownMenuItem>
-                
+
+                <DropdownMenuItem
+                  onClick={() => {
+                    (data as any).onAddNote?.(id);
+                    setDropdownOpen(false);
+                  }}
+                  className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
+                >
+                  <StickyNote className="w-4 h-4 mr-2 text-yellow-500" />
+                  {note ? "Editar Nota" : "Adicionar Nota"}
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="bg-muted" />
+
+                <DropdownMenuItem
+                  onClick={() => { (data as any).onClearDebug?.(id); setDropdownOpen(false); }}
+                  disabled={!isBreakpoint && !isSkipped}
+                  className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <X className="w-4 h-4 mr-2 text-red-500" />
+                  Liberar Bloco
+                </DropdownMenuItem>
+
                 <DropdownMenuSeparator className="bg-muted" />
                 
                 {!isStartBlock && (
