@@ -515,6 +515,18 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BlockHelpDialog
+        open={helpOpen}
+        onOpenChange={setHelpOpen}
+        content={{
+          label: String(data.label || blockDef?.label || data.type),
+          description: String(blockDef?.description || data.type),
+          icon: blockDef?.icon,
+          color: blockDef?.color,
+          ...getBlockHelp("ads", data.type, String(data.label || blockDef?.label || data.type), String(blockDef?.description || data.type)),
+        }}
+      />
     </>
   );
 });
