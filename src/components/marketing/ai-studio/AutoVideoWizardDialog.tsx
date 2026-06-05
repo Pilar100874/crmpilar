@@ -144,19 +144,23 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
 
   const estabId = useMemo(() => localStorage.getItem('estabelecimentoId') || '', []);
 
-  // ---------- carregar produtos / influencers ----------
+  // ---------- carregar produtos / influencers / provedores ativos ----------
   useEffect(() => {
     if (!open) return;
     (async () => {
       if (!estabId) return;
-      const { data } = await supabase
-        .from('produtos')
-        .select('id, nome, codigo, foto_url')
-        .eq('estabelecimento_id', estabId)
-        .eq('ativo', true)
-        .order('nome')
-        .limit(300);
-      setProducts(data || []);
+      const [{ data: prods }, { data: keys }] = await Promise.all([
+        supabase.from('produtos').select('id, nome, codigo, foto_url').eq('estabelecimento_id', estabId).eq('ativo', true).order('nome').limit(300),
+        supabase.from('ai_api_keys').select('provider, is_active').eq('is_active', true),
+      ]);
+      setProducts(prods || []);
+      const active = new Set<string>((keys || []).map((k: any) => k.provider));
+      setActiveProviders(active);
+      // se o modelo atual não está disponível, escolhe o primeiro disponível
+      const available = AD_READY_VIDEO_MODELS.filter((m) => active.has(m.provider));
+      if (available.length && !available.find((m) => m.value === videoModel)) {
+        setVideoModel(available[0].value);
+      }
     })();
   }, [open, estabId]);
 
