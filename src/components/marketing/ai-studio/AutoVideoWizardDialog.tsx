@@ -394,6 +394,306 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
   const canNext1 = briefing.trim().length >= 8;
   const canNext2 = !!selectedProduct && (!includeInfluencer || !!selectedInfluencer) && !!videoModel;
 
+  const innerContent = (
+    <>
+      {/* stepper */}
+      <div className="flex items-center gap-2 px-1 pb-2">
+        {[1, 2, 3].map((s) => (
+          <div key={s} className="flex-1 flex items-center gap-2">
+            <div
+              className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                step === s
+                  ? 'bg-primary text-primary-foreground'
+                  : step > s
+                  ? 'bg-success text-success-foreground'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              {step > s ? <Check className="h-3.5 w-3.5" /> : s}
+            </div>
+            <div className="text-xs font-medium hidden sm:block">
+              {s === 1 ? 'Briefing' : s === 2 ? 'Produto & Modelo' : 'Narração & Gerar'}
+            </div>
+            {s < 3 && <div className="flex-1 h-px bg-border" />}
+          </div>
+        ))}
+      </div>
+
+      <ScrollArea className="flex-1 pr-3">
+        {/* STEP 1 */}
+        {step === 1 && (
+          <div className="space-y-4 py-2">
+            <div>
+              <Label>Descreva o vídeo que deseja</Label>
+              <Textarea
+                rows={6}
+                placeholder="Ex.: Vídeo promocional de 8s mostrando o tênis em primeiro plano, fundo de loft urbano, luz quente entrando pela janela, câmera orbital lenta…"
+                value={briefing}
+                onChange={(e) => setBriefing(e.target.value)}
+              />
+              <p className="text-[10px] text-muted-foreground mt-2">
+                ✨ A IA vai refinar este briefing automaticamente ao avançar para o próximo passo.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2 */}
+        {step === 2 && (
+          <div className="space-y-5 py-2">
+            <div>
+              <Label className="flex items-center gap-1.5"><Package className="h-3.5 w-3.5" /> Produto (obrigatório)</Label>
+              <Input
+                className="mt-1"
+                placeholder="Buscar produto por nome ou código…"
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+              />
+              <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-60 overflow-y-auto p-1">
+                {filteredProducts.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setSelectedProduct(p)}
+                    className={`group relative rounded-lg overflow-hidden border-2 transition-all text-left ${
+                      selectedProduct?.id === p.id ? 'border-primary ring-2 ring-primary/30' : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    {p.foto_url ? (
+                      <img src={p.foto_url} alt={p.nome} className="aspect-square w-full object-cover" />
+                    ) : (
+                      <div className="aspect-square w-full bg-muted flex items-center justify-center text-xs text-muted-foreground">sem foto</div>
+                    )}
+                    <div className="p-1.5 text-[10px] leading-tight truncate bg-card">{p.nome}</div>
+                  </button>
+                ))}
+                {filteredProducts.length === 0 && (
+                  <div className="col-span-full text-xs text-muted-foreground p-4 text-center">Nenhum produto encontrado.</div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2 text-sm font-semibold cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includeInfluencer}
+                  onChange={(e) => {
+                    setIncludeInfluencer(e.target.checked);
+                    if (!e.target.checked) {
+                      setSelectedInfluencer(null);
+                      setInfluencerSearch('');
+                    }
+                  }}
+                  className="h-4 w-4"
+                />
+                <User className="h-3.5 w-3.5" />
+                Incluir influencer na cena
+              </label>
+              {includeInfluencer && (
+                <div className="mt-2 space-y-2">
+                  <Input
+                    placeholder="Buscar influencer na galeria…"
+                    value={influencerSearch}
+                    onChange={(e) => setInfluencerSearch(e.target.value)}
+                    className="h-8 text-xs"
+                  />
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 max-h-40 overflow-y-auto p-1">
+                    {influencers
+                      .filter((i) =>
+                        !influencerSearch ||
+                        (i.nome || '').toLowerCase().includes(influencerSearch.toLowerCase())
+                      )
+                      .map((i) => (
+                      <button
+                        key={i.id}
+                        onClick={() => setSelectedInfluencer(i)}
+                        className={`rounded-lg overflow-hidden border-2 ${
+                          selectedInfluencer?.id === i.id ? 'border-primary ring-2 ring-primary/30' : 'border-border'
+                        }`}
+                      >
+                        <img src={i.image_url} alt={i.nome || ''} className="aspect-square w-full object-cover" />
+                      </button>
+                    ))}
+                    {influencers.length === 0 && (
+                      <div className="col-span-full text-xs text-muted-foreground p-3 text-center">
+                        Nenhum influencer salvo. Adicione na galeria do Studio, categoria <strong>Influencer</strong>.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <Label>Modelo de vídeo</Label>
+                <Select value={videoModel} onValueChange={setVideoModel}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {AD_READY_VIDEO_MODELS.filter((m) => activeProviders.has(m.provider)).map((m) => (
+                      <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                    ))}
+                    {AD_READY_VIDEO_MODELS.filter((m) => activeProviders.has(m.provider)).length === 0 && (
+                      <div className="px-3 py-2 text-xs text-muted-foreground">
+                        Nenhum provedor de vídeo ativo. Configure em Configurações → IA.
+                      </div>
+                    )}
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Somente modelos cinematográficos prontos para anúncio (estilo Higgsfield) com provedor ativo.
+                </p>
+              </div>
+              <div>
+                <Label>Proporção</Label>
+                <Select value={aspectRatio} onValueChange={(v) => setAspectRatio(v as any)}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="9:16">Vertical 9:16 (Reels/Stories)</SelectItem>
+                    <SelectItem value="16:9">Horizontal 16:9</SelectItem>
+                    <SelectItem value="1:1">Quadrado 1:1</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Duração</Label>
+                <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v) as 4 | 8)}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="4">4 segundos</SelectItem>
+                    <SelectItem value="8">8 segundos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3 */}
+        {step === 3 && (
+          <div className="space-y-4 py-2">
+            <div>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <Label>Texto que será falado (locução)</Label>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="outline" onClick={() => generateScript('enhance')} disabled={generatingScript || !script.trim()}>
+                    {generatingScript ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
+                    Enriquecer com IA
+                  </Button>
+                  <Button size="sm" variant="default" onClick={() => generateScript('generate')} disabled={generatingScript}>
+                    {generatingScript ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Wand2 className="h-3.5 w-3.5 mr-1" />}
+                    Gerar por IA
+                  </Button>
+                </div>
+              </div>
+              <Textarea
+                rows={4}
+                placeholder="Ex.: O novo tênis Pulse chegou. Conforto e estilo no mesmo passo."
+                value={script}
+                onChange={(e) => setScript(e.target.value)}
+              />
+              <div className="text-[10px] text-muted-foreground mt-1">
+                Deixe em branco se não quiser narração. Em modelos Veo 3+ a fala é nativa; nos demais, geramos TTS e combinamos no vídeo.
+              </div>
+            </div>
+
+            {!resultVideoUrl && (
+              <Button
+                onClick={handleGenerate}
+                disabled={generating}
+                className="w-full h-12 text-sm font-bold bg-gradient-to-r from-primary via-fuchsia-500 to-orange-400 text-white"
+              >
+                {generating ? (
+                  <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {progressMsg || 'Gerando…'}</>
+                ) : (
+                  <><Video className="h-4 w-4 mr-2" /> Gerar Vídeo</>
+                )}
+              </Button>
+            )}
+
+            {generating && (() => {
+              const pct = Math.min(98, Math.round((elapsedSec / Math.max(1, estimatedTotalSec)) * 100));
+              const remaining = Math.max(0, estimatedTotalSec - elapsedSec);
+              const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+              return (
+                <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-medium text-foreground">{progressMsg || 'Renderizando…'}</span>
+                    <span className="font-mono text-muted-foreground">{pct}%</span>
+                  </div>
+                  <Progress value={pct} className="h-2" />
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                    <span>Decorrido: <span className="font-mono">{fmt(elapsedSec)}</span></span>
+                    <span>Estimado restante: <span className="font-mono">~{fmt(remaining)}</span></span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {resultVideoUrl && (
+              <div className="space-y-3">
+                <div className="rounded-lg overflow-hidden border border-border bg-black">
+                  <video src={resultVideoUrl} controls autoPlay loop className="w-full max-h-[50vh]" />
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => { setResultVideoUrl(null); setResultBlob(null); }} className="flex-1">
+                    Gerar outro
+                  </Button>
+                  <Button onClick={handleSaveToGallery} disabled={saving} className="flex-1">
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                    Salvar na Galeria
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </ScrollArea>
+
+      <div className="flex flex-row sm:justify-between gap-2 mt-2 pt-2 border-t border-border">
+        <Button
+          variant="ghost"
+          disabled={step === 1 || generating}
+          onClick={() => setStep((s) => (Math.max(1, s - 1) as Step))}
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
+        </Button>
+        {step < 3 ? (
+          <Button
+            onClick={() => {
+              if (step === 1) {
+                enhanceBriefingSilently();
+              }
+              setStep((s) => (Math.min(3, s + 1) as Step));
+            }}
+            disabled={(step === 1 && !canNext1) || (step === 2 && !canNext2)}
+          >
+            Próximo <ArrowRight className="h-4 w-4 ml-1" />
+          </Button>
+        ) : (
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            <X className="h-4 w-4 mr-1" /> Fechar
+          </Button>
+        )}
+      </div>
+    </>
+  );
+
+  if (inline) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="flex items-center gap-2 mb-2">
+          <Sparkles className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-semibold">Assistente de Vídeo Automático</h2>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          Em 3 passos: descreva, escolha produto/influencer e narração — a IA gera o vídeo.
+        </p>
+        {innerContent}
+      </div>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[92vh] overflow-hidden flex flex-col">
@@ -406,261 +706,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
             Em 3 passos: descreva, escolha produto/influencer e narração — a IA gera o vídeo.
           </DialogDescription>
         </DialogHeader>
-
-        {/* stepper */}
-        <div className="flex items-center gap-2 px-1 pb-2">
-          {[1, 2, 3].map((s) => (
-            <div key={s} className="flex-1 flex items-center gap-2">
-              <div
-                className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                  step === s
-                    ? 'bg-primary text-primary-foreground'
-                    : step > s
-                    ? 'bg-success text-success-foreground'
-                    : 'bg-muted text-muted-foreground'
-                }`}
-              >
-                {step > s ? <Check className="h-3.5 w-3.5" /> : s}
-              </div>
-              <div className="text-xs font-medium hidden sm:block">
-                {s === 1 ? 'Briefing' : s === 2 ? 'Produto & Modelo' : 'Narração & Gerar'}
-              </div>
-              {s < 3 && <div className="flex-1 h-px bg-border" />}
-            </div>
-          ))}
-        </div>
-
-        <ScrollArea className="flex-1 pr-3">
-          {/* STEP 1 */}
-          {step === 1 && (
-            <div className="space-y-4 py-2">
-              <div>
-                <Label>Descreva o vídeo que deseja</Label>
-                <Textarea
-                  rows={6}
-                  placeholder="Ex.: Vídeo promocional de 8s mostrando o tênis em primeiro plano, fundo de loft urbano, luz quente entrando pela janela, câmera orbital lenta…"
-                  value={briefing}
-                  onChange={(e) => setBriefing(e.target.value)}
-                />
-                <p className="text-[10px] text-muted-foreground mt-2">
-                  ✨ A IA vai refinar este briefing automaticamente ao avançar para o próximo passo.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 2 */}
-          {step === 2 && (
-            <div className="space-y-5 py-2">
-              <div>
-                <Label className="flex items-center gap-1.5"><Package className="h-3.5 w-3.5" /> Produto (obrigatório)</Label>
-                <Input
-                  className="mt-1"
-                  placeholder="Buscar produto por nome ou código…"
-                  value={productSearch}
-                  onChange={(e) => setProductSearch(e.target.value)}
-                />
-                <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-60 overflow-y-auto p-1">
-                  {filteredProducts.map((p) => (
-                    <button
-                      key={p.id}
-                      onClick={() => setSelectedProduct(p)}
-                      className={`group relative rounded-lg overflow-hidden border-2 transition-all text-left ${
-                        selectedProduct?.id === p.id ? 'border-primary ring-2 ring-primary/30' : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      {p.foto_url ? (
-                        <img src={p.foto_url} alt={p.nome} className="aspect-square w-full object-cover" />
-                      ) : (
-                        <div className="aspect-square w-full bg-muted flex items-center justify-center text-xs text-muted-foreground">sem foto</div>
-                      )}
-                      <div className="p-1.5 text-[10px] leading-tight truncate bg-card">{p.nome}</div>
-                    </button>
-                  ))}
-                  {filteredProducts.length === 0 && (
-                    <div className="col-span-full text-xs text-muted-foreground p-4 text-center">Nenhum produto encontrado.</div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="flex items-center gap-2 text-sm font-semibold cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={includeInfluencer}
-                    onChange={(e) => {
-                      setIncludeInfluencer(e.target.checked);
-                      if (!e.target.checked) {
-                        setSelectedInfluencer(null);
-                        setInfluencerSearch('');
-                      }
-                    }}
-                    className="h-4 w-4"
-                  />
-                  <User className="h-3.5 w-3.5" />
-                  Incluir influencer na cena
-                </label>
-                {includeInfluencer && (
-                  <div className="mt-2 space-y-2">
-                    <Input
-                      placeholder="Buscar influencer na galeria…"
-                      value={influencerSearch}
-                      onChange={(e) => setInfluencerSearch(e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 max-h-40 overflow-y-auto p-1">
-                      {influencers
-                        .filter((i) =>
-                          !influencerSearch ||
-                          (i.nome || '').toLowerCase().includes(influencerSearch.toLowerCase())
-                        )
-                        .map((i) => (
-                        <button
-                          key={i.id}
-                          onClick={() => setSelectedInfluencer(i)}
-                          className={`rounded-lg overflow-hidden border-2 ${
-                            selectedInfluencer?.id === i.id ? 'border-primary ring-2 ring-primary/30' : 'border-border'
-                          }`}
-                        >
-                          <img src={i.image_url} alt={i.nome || ''} className="aspect-square w-full object-cover" />
-                        </button>
-                      ))}
-                      {influencers.length === 0 && (
-                        <div className="col-span-full text-xs text-muted-foreground p-3 text-center">
-                          Nenhum influencer salvo. Adicione na galeria do Studio, categoria <strong>Influencer</strong>.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <Label>Modelo de vídeo</Label>
-                  <Select value={videoModel} onValueChange={setVideoModel}>
-                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {AD_READY_VIDEO_MODELS.filter((m) => activeProviders.has(m.provider)).map((m) => (
-                        <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                      ))}
-                      {AD_READY_VIDEO_MODELS.filter((m) => activeProviders.has(m.provider)).length === 0 && (
-                        <div className="px-3 py-2 text-xs text-muted-foreground">
-                          Nenhum provedor de vídeo ativo. Configure em Configurações → IA.
-                        </div>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    Somente modelos cinematográficos prontos para anúncio (estilo Higgsfield) com provedor ativo.
-                  </p>
-                </div>
-                <div>
-                  <Label>Proporção</Label>
-                  <Select value={aspectRatio} onValueChange={(v) => setAspectRatio(v as any)}>
-                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="9:16">Vertical 9:16 (Reels/Stories)</SelectItem>
-                      <SelectItem value="16:9">Horizontal 16:9</SelectItem>
-                      <SelectItem value="1:1">Quadrado 1:1</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Duração</Label>
-                  <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v) as 4 | 8)}>
-                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="4">4 segundos</SelectItem>
-                      <SelectItem value="8">8 segundos</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 3 */}
-          {step === 3 && (
-            <div className="space-y-4 py-2">
-              <div>
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <Label>Texto que será falado (locução)</Label>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="outline" onClick={() => generateScript('enhance')} disabled={generatingScript || !script.trim()}>
-                      {generatingScript ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
-                      Enriquecer com IA
-                    </Button>
-                    <Button size="sm" variant="default" onClick={() => generateScript('generate')} disabled={generatingScript}>
-                      {generatingScript ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Wand2 className="h-3.5 w-3.5 mr-1" />}
-                      Gerar por IA
-                    </Button>
-                  </div>
-                </div>
-                <Textarea
-                  rows={4}
-                  placeholder="Ex.: O novo tênis Pulse chegou. Conforto e estilo no mesmo passo."
-                  value={script}
-                  onChange={(e) => setScript(e.target.value)}
-                />
-                <div className="text-[10px] text-muted-foreground mt-1">
-                  Deixe em branco se não quiser narração. Em modelos Veo 3+ a fala é nativa; nos demais, geramos TTS e combinamos no vídeo.
-                </div>
-              </div>
-
-              {!resultVideoUrl && (
-                <Button
-                  onClick={handleGenerate}
-                  disabled={generating}
-                  className="w-full h-12 text-sm font-bold bg-gradient-to-r from-primary via-fuchsia-500 to-orange-400 text-white"
-                >
-                  {generating ? (
-                    <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {progressMsg || 'Gerando…'}</>
-                  ) : (
-                    <><Video className="h-4 w-4 mr-2" /> Gerar Vídeo</>
-                  )}
-                </Button>
-              )}
-
-              {generating && (() => {
-                const pct = Math.min(98, Math.round((elapsedSec / Math.max(1, estimatedTotalSec)) * 100));
-                const remaining = Math.max(0, estimatedTotalSec - elapsedSec);
-                const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-                return (
-                  <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-medium text-foreground">{progressMsg || 'Renderizando…'}</span>
-                      <span className="font-mono text-muted-foreground">{pct}%</span>
-                    </div>
-                    <Progress value={pct} className="h-2" />
-                    <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                      <span>Decorrido: <span className="font-mono">{fmt(elapsedSec)}</span></span>
-                      <span>Estimado restante: <span className="font-mono">~{fmt(remaining)}</span></span>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {resultVideoUrl && (
-                <div className="space-y-3">
-                  <div className="rounded-lg overflow-hidden border border-border bg-black">
-                    <video src={resultVideoUrl} controls autoPlay loop className="w-full max-h-[50vh]" />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => { setResultVideoUrl(null); setResultBlob(null); }} className="flex-1">
-                      Gerar outro
-                    </Button>
-                    <Button onClick={handleSaveToGallery} disabled={saving} className="flex-1">
-                      {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                      Salvar na Galeria
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </ScrollArea>
-
+        {innerContent}
         <DialogFooter className="flex-row sm:justify-between gap-2">
           <Button
             variant="ghost"
@@ -673,7 +719,6 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
             <Button
               onClick={() => {
                 if (step === 1) {
-                  // dispara enriquecimento em background, sem bloquear UI
                   enhanceBriefingSilently();
                 }
                 setStep((s) => (Math.min(3, s + 1) as Step));
