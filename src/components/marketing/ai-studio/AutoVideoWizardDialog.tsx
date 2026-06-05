@@ -754,7 +754,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
                   if (modelMeta && !modelMeta.supportsImageRefs && hasRefs) {
                     return (
                       <div className="mt-2 text-[11px] text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-md p-2 leading-snug">
-                        ⚠️ Este modelo <strong>não aceita imagens de referência</strong>. Produto, influencer e identidade visual serão <strong>ignorados</strong>. Para preservá-los, escolha <strong>Seedance 2.0 (WaveSpeed)</strong>.
+                        ⚠️ Este modelo <strong>não aceita imagens de referência</strong>. Não vou avançar com produto, influencer ou identidade visual selecionados. Para preservá-los, escolha <strong>Seedance 2.0 (WaveSpeed)</strong>.
                       </div>
                     );
                   }
@@ -938,13 +938,8 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
                 const modelMeta = AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel);
                 const hasRefs = !!selectedProduct || (includeInfluencer && !!selectedInfluencer) || useVisualIdentity;
                 if (modelMeta && !modelMeta.supportsImageRefs && hasRefs) {
-                  const ok = window.confirm(
-                    `⚠️ O modelo "${modelMeta.label.split(' — ')[0]}" NÃO aceita imagens de referência.\n\n` +
-                    `Produto, influencer e identidade visual serão IGNORADOS — a cena será gerada apenas a partir do texto.\n\n` +
-                    `Recomendado: use o modelo Seedance 2.0 (WaveSpeed) para preservar a aparência do produto e do influencer.\n\n` +
-                    `Deseja continuar mesmo assim?`
-                  );
-                  if (!ok) return;
+                  toast.error(`O modelo ${modelMeta.label.split(' — ')[0]} não aceita produto, influencer ou identidade visual como referência. Escolha Seedance 2.0 (WaveSpeed) para avançar.`);
+                  return;
                 }
               }
               if (step === 1) {
