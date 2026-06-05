@@ -149,7 +149,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
     if (!selectedRoute && routeStats[0]) setSelectedRoute(routeStats[0].route);
   }, [routeStats, selectedRoute]);
 
-  // Carrega screenshot da rota selecionada
+  // Carrega screenshot da rota selecionada; se não existir, captura via iframe automaticamente
   useEffect(() => {
     let mounted = true;
     if (!selectedRoute) {
@@ -160,17 +160,48 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
       const s = await fetchScreenshot(scope, selectedRoute, estabelecimentoId ?? null);
       if (!mounted) return;
       if (s) {
-        setBgUrl(`${s.image_url}?t=${Date.now()}`);
+        setBgUrl(`${s.image_url}${s.image_url.includes("?") ? "&" : "?"}t=${Date.now()}`);
         setBgVw(s.vw);
         setBgVh(s.vh);
-      } else {
-        setBgUrl(null);
-        setBgVw(null);
-        setBgVh(null);
+        return;
+      }
+      // Sem screenshot: auto-captura silenciosa via iframe
+      setBgUrl(null);
+      setBgVw(null);
+      setBgVh(null);
+      if (!showBg) return;
+      try {
+        setCapturing(true);
+        const res = await captureRouteViaIframe(scope, estabelecimentoId ?? null, selectedRoute);
+        if (!mounted) return;
+        setBgUrl(res.image_url);
+        setBgVw(res.vw);
+        setBgVh(res.vh);
+      } catch (e: any) {
+        console.warn("[heatmap] auto-capture falhou:", e?.message || e);
+      } finally {
+        if (mounted) setCapturing(false);
       }
     })();
     return () => { mounted = false; };
-  }, [selectedRoute, scope, estabelecimentoId]);
+  }, [selectedRoute, scope, estabelecimentoId, showBg]);
+
+  const handleRecaptureSelected = async () => {
+    if (!selectedRoute) return;
+    setCapturing(true);
+    try {
+      const res = await captureRouteViaIframe(scope, estabelecimentoId ?? null, selectedRoute);
+      setBgUrl(`${res.image_url}${res.image_url.includes("?") ? "&" : "?"}t=${Date.now()}`);
+      setBgVw(res.vw);
+      setBgVh(res.vh);
+      toast.success("Tela capturada");
+    } catch (e: any) {
+      toast.error("Falha ao capturar: " + (e?.message || e));
+    } finally {
+      setCapturing(false);
+    }
+  };
+
 
   const handleCaptureCurrent = async () => {
     setCapturing(true);
