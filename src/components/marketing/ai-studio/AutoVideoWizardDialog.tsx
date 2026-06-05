@@ -811,11 +811,24 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
                       <SelectContent>
                         {availableTtsProviders.map((p) => (
                           <SelectItem key={p} value={p}>
-                            {p === 'elevenlabs' ? 'ElevenLabs (voz premium PT-BR)' : p === 'google' ? 'Google Gemini TTS' : 'OpenAI TTS'}
+                            {p === 'elevenlabs' ? 'ElevenLabs (voz premium PT-BR)'
+                              : p === 'google' ? 'Google Gemini TTS'
+                              : p === 'openai' ? 'OpenAI TTS'
+                              : 'WaveSpeed TTS (Spark / Kokoro / Dia)'}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    {ttsProvider === 'wavespeed' && (
+                      <Select value={wavespeedTtsModel} onValueChange={setWavespeedTtsModel}>
+                        <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="wavespeed-ai/dia-tts">Dia TTS (natural, multilíngue)</SelectItem>
+                          <SelectItem value="wavespeed-ai/spark-tts">Spark TTS (rápido)</SelectItem>
+                          <SelectItem value="wavespeed-ai/kokoro-tts">Kokoro TTS (leve)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
                     <p className="text-[10px] text-muted-foreground">
                       Apenas provedores com chave ativa aparecem aqui.
                     </p>
