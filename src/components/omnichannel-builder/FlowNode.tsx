@@ -383,6 +383,16 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BlockHelpDialog
+        open={helpOpen}
+        onOpenChange={setHelpOpen}
+        content={{
+          label: String(label || type),
+          description: String(type).replace(/_/g, ' '),
+          ...getBlockHelp("omnichannel", type, String(label || type), String(type).replace(/_/g, ' ')),
+        }}
+      />
     </>
   );
 });
