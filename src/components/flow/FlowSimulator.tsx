@@ -423,7 +423,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     },
   };
 
-  const resolveContentTypeValue = (ctNodeId: string, cfg: any): { type: string; guidance: string } => {
+  const resolveContentTypeValue = (ctNodeId: string, cfg: any): { type: string; guidance: string; useBadge: boolean } => {
     const runtime = simNodeStateRef.current[ctNodeId]?.resolvedContentType;
     const fromAsk = runtime?.contentType ? String(runtime.contentType).trim().toLowerCase() : "";
     const fixed = (cfg.contentType || "divulgacao").toString().trim().toLowerCase();
@@ -432,6 +432,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     return {
       type: normalized,
       guidance: interpolateVariables(cfg.customGuidance || "", contextRef.current).trim(),
+      useBadge: cfg.useBadge !== false,
     };
   };
 
