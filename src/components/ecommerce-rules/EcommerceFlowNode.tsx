@@ -66,7 +66,7 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
               </div>
             </div>
 
-            {!isStartBlock && (
+            {!isStartBlock ? (
               <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
                 <DropdownMenuTrigger asChild>
                   <button className="p-1 hover:bg-accent rounded transition-colors flex-shrink-0">
@@ -74,6 +74,9 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="z-50">
+                  <DropdownMenuItem onClick={() => { setDropdownOpen(false); setHelpOpen(true); }}>
+                    <HelpCircle className="w-4 h-4 mr-2" /> Ajuda e exemplos
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => { setDropdownOpen(false); (data as any).onDuplicate?.(id); }}>
                     <Copy className="w-4 h-4 mr-2" /> Duplicar
                   </DropdownMenuItem>
@@ -86,6 +89,14 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+            ) : (
+              <button
+                className="p-1 hover:bg-accent rounded transition-colors flex-shrink-0"
+                title="Ajuda e exemplos"
+                onClick={(e) => { e.stopPropagation(); setHelpOpen(true); }}
+              >
+                <HelpCircle className="w-4 h-4 text-muted-foreground" />
+              </button>
             )}
           </div>
 
