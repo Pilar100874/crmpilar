@@ -29,7 +29,10 @@ import {
   Copy,
   Trash2,
   StickyNote,
+  HelpCircle,
 } from "lucide-react";
+import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
+import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
 
 export const FlowNode = memo((props: any) => {
   const { data, selected, id } = props;
