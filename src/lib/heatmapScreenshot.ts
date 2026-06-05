@@ -114,6 +114,7 @@ export async function captureRouteViaIframe(
   iframe.style.height = `${height}px`;
   iframe.style.border = "0";
   iframe.style.opacity = "0";
+  iframe.name = "heatmap-capture-frame";
   iframe.setAttribute("aria-hidden", "true");
   // não adicionamos query string para evitar quebrar rotas que não suportam
   iframe.src = route;
