@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Sparkles, Video, ArrowLeft, ArrowRight, Save, Wand2, User, Package, Check, X } from 'lucide-react';
+import { Loader2, Sparkles, Video, ArrowLeft, ArrowRight, Save, Wand2, User, Package, Check, X, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Progress } from '@/components/ui/progress';
@@ -460,6 +460,74 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
     }
   }, [estabId, selectedProduct, briefing, script, videoModel, aspectRatio, duration, useVisualIdentity, includeInfluencer, selectedInfluencer]);
 
+  const [uploadingProduct, setUploadingProduct] = useState(false);
+  const [uploadingInfluencer, setUploadingInfluencer] = useState(false);
+
+  const uploadImageTo = useCallback(async (bucket: string, file: File): Promise<string> => {
+    const ext = (file.name.split('.').pop() || 'png').toLowerCase();
+    const path = `${estabId}/wizard_${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from(bucket).upload(path, file, {
+      contentType: file.type || 'image/png',
+      upsert: true,
+    });
+    if (error) throw error;
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+    return data.publicUrl;
+  }, [estabId]);
+
+  const handleProductUpload = useCallback(async (file: File) => {
+    if (!estabId) return toast.error('Estabelecimento não encontrado.');
+    setUploadingProduct(true);
+    try {
+      const url = await uploadImageTo('produtos', file);
+      const uploaded: ProductRow = {
+        id: `upload_${Date.now()}`,
+        nome: file.name.replace(/\.[^.]+$/, '') || 'Produto enviado',
+        codigo: null,
+        foto_url: url,
+      };
+      setProducts((prev) => [uploaded, ...prev]);
+      setSelectedProduct(uploaded);
+      toast.success('Produto enviado.');
+    } catch (e: any) {
+      toast.error('Erro ao enviar imagem: ' + (e.message || ''));
+    } finally {
+      setUploadingProduct(false);
+    }
+  }, [estabId, uploadImageTo]);
+
+  const handleInfluencerUpload = useCallback(async (file: File) => {
+    if (!estabId) return toast.error('Estabelecimento não encontrado.');
+    setUploadingInfluencer(true);
+    try {
+      const url = await uploadImageTo('studio-gallery', file);
+      // Persist in gallery for reuse
+      const { data: inserted } = await supabase
+        .from('studio_gallery_images')
+        .insert({
+          estabelecimento_id: estabId,
+          image_url: url,
+          categoria: 'influencer',
+          nome: file.name.replace(/\.[^.]+$/, '') || 'Influencer enviado',
+        })
+        .select('id, image_url, nome')
+        .single();
+      const row: InfluencerRow = inserted as any || {
+        id: `upload_${Date.now()}`,
+        image_url: url,
+        nome: file.name,
+      };
+      setInfluencers((prev) => [row, ...prev]);
+      setSelectedInfluencer(row);
+      toast.success('Influencer enviado.');
+    } catch (e: any) {
+      toast.error('Erro ao enviar imagem: ' + (e.message || ''));
+    } finally {
+      setUploadingInfluencer(false);
+    }
+  }, [estabId, uploadImageTo]);
+
+
   // ---------- render ----------
   const canNext1 = briefing.trim().length >= 8;
   const canNext2 = !!selectedProduct && (!includeInfluencer || !!selectedInfluencer) && !!videoModel;
@@ -513,12 +581,31 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
           <div className="space-y-5 py-2">
             <div>
               <Label className="flex items-center gap-1.5"><Package className="h-3.5 w-3.5" /> Produto (obrigatório)</Label>
-              <Input
-                className="mt-1"
-                placeholder="Buscar produto por nome ou código…"
-                value={productSearch}
-                onChange={(e) => setProductSearch(e.target.value)}
-              />
+              <div className="flex gap-2 mt-1">
+                <Input
+                  className="flex-1"
+                  placeholder="Buscar produto por nome ou código…"
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                />
+                <label className="shrink-0">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploadingProduct}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleProductUpload(f);
+                      e.currentTarget.value = '';
+                    }}
+                  />
+                  <span className="inline-flex items-center gap-1.5 h-10 px-3 rounded-full border-2 border-input bg-background hover:bg-accent hover:border-primary text-xs font-semibold cursor-pointer transition-colors">
+                    {uploadingProduct ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                    Enviar foto
+                  </span>
+                </label>
+              </div>
               <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-60 overflow-y-auto p-1">
                 {filteredProducts.map((p) => (
                   <button
@@ -561,12 +648,31 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
               </label>
               {includeInfluencer && (
                 <div className="mt-2 space-y-2">
-                  <Input
-                    placeholder="Buscar influencer na galeria…"
-                    value={influencerSearch}
-                    onChange={(e) => setInfluencerSearch(e.target.value)}
-                    className="h-8 text-xs"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Buscar influencer na galeria…"
+                      value={influencerSearch}
+                      onChange={(e) => setInfluencerSearch(e.target.value)}
+                      className="h-8 text-xs flex-1"
+                    />
+                    <label className="shrink-0">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={uploadingInfluencer}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleInfluencerUpload(f);
+                          e.currentTarget.value = '';
+                        }}
+                      />
+                      <span className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full border-2 border-input bg-background hover:bg-accent hover:border-primary text-[11px] font-semibold cursor-pointer transition-colors">
+                        {uploadingInfluencer ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                        Enviar foto
+                      </span>
+                    </label>
+                  </div>
                   <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 max-h-40 overflow-y-auto p-1">
                     {influencers
                       .filter((i) =>
