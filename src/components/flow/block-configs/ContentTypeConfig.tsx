@@ -75,6 +75,7 @@ export const ContentTypeConfig = ({ config, handleConfigChange }: ContentTypeCon
   const mode: "fixed" | "ask" = config.mode === "ask" ? "ask" : "fixed";
   const selected = config.contentType || "divulgacao";
   const selectedMeta = CONTENT_TYPE_OPTIONS.find((o) => o.value === selected);
+  const useBadge = config.useBadge !== false;
 
   return (
     <div className="space-y-4">
