@@ -277,7 +277,7 @@ export function WorkflowSimulator({
   if (!open) return null;
 
   return (
-    <div className="w-full sm:w-[420px] h-full border-l border-border bg-card flex flex-col">
+    <div className="w-[420px] shrink-0 h-full border-l border-border bg-card flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-border bg-gradient-to-br from-primary/10 to-primary/5">
         <div className="flex items-center gap-2 min-w-0">

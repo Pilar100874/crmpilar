@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
@@ -654,6 +654,21 @@ function AdsAutomationContent() {
     input.click();
   }, [setNodes, setEdges, reactFlowInstance, handleSetBreakpoint, handleSetSkip, handleDuplicate, handleDeleteNode, handleClearDebug, handleAddNote, handleToggleCollapse]);
 
+  const styledEdges = useMemo(() => edges.map((edge) => ({
+    ...edge,
+    style: {
+      stroke: edge.selected ? '#ea580c' : '#f97316',
+      strokeWidth: edge.selected ? 2.5 : 1.33,
+    },
+    markerEnd: {
+      type: 'arrowclosed' as any,
+      width: 20,
+      height: 20,
+      color: edge.selected ? '#ea580c' : '#f97316',
+    },
+    type: 'smoothstep',
+  })), [edges]);
+
   return (
     <div className="min-h-screen bg-background">
       {!isEditing ? (
@@ -887,20 +902,7 @@ function AdsAutomationContent() {
             <div className="flex-1 relative" ref={reactFlowWrapper}>
               <ReactFlow
                 nodes={nodes}
-                edges={edges.map((edge) => ({
-                  ...edge,
-                  style: {
-                    stroke: edge.selected ? '#ea580c' : '#f97316',
-                    strokeWidth: edge.selected ? 2.5 : 1.33,
-                  },
-                  markerEnd: {
-                    type: 'arrowclosed' as any,
-                    width: 20,
-                    height: 20,
-                    color: edge.selected ? '#ea580c' : '#f97316',
-                  },
-                  type: 'smoothstep',
-                }))}
+                edges={styledEdges}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
