@@ -556,7 +556,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const lockedTextDirective = buildLockedTextDirective(findUpstreamTextContent(node.id));
     const contentType = findUpstreamContentType(node.id);
     const contentTypeDirective = buildContentTypeDirective(contentType);
-    const contentTypeBadge = contentType ? CONTENT_TYPE_DIRECTIVES[contentType.type]?.badgeText : "";
+    const contentTypeBadge = contentType && contentType.useBadge ? CONTENT_TYPE_DIRECTIVES[contentType.type]?.badgeText : "";
     const aiTextDirective = buildAITextDirective(node.id);
     const upstreamPieca = findUpstreamPiecaRefs(node.id);
 
