@@ -240,7 +240,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
     try {
       // 1) Monta prompt enriquecido — Produto #1, Influencer #2 (memória do projeto)
       const refs: string[] = [selectedProduct.foto_url];
-      if (includeInfluencer && selectedInfluencer?.url) refs.push(selectedInfluencer.url);
+      if (includeInfluencer && selectedInfluencer?.image_url) refs.push(selectedInfluencer.image_url);
 
       const speechDirective = script
         ? `\n\nA cena deve incluir uma locução em português BR dizendo exatamente: "${script}". Mantenha sincronia natural com a imagem.`
