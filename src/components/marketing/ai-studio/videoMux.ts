@@ -46,5 +46,5 @@ export async function muxAudioWithVideo(
   try { await ff.deleteFile('out.mp4'); } catch {}
 
   onProgress?.({ stage: 'done', message: 'Concluído.' });
-  return new Blob([out], { type: 'video/mp4' });
+  return new Blob([out.buffer as ArrayBuffer], { type: 'video/mp4' });
 }
