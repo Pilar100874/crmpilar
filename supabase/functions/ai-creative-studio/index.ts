@@ -1072,9 +1072,14 @@ async function startVideoWavespeed(estabelecimentoId: string, params: any): Prom
         console.log(`[wavespeed-video] Using hero frame as starting image (VI=${_hasVI})`);
         params.imageUrls = [hero];
         params._heroFrameUsed = true;
+      } else if ((params.imageUrls || []).length > 1 || _roles.includes('PERSON/INFLUENCER - DO NOT MODIFY')) {
+        return { error: "Não foi possível compor a cena inicial com produto, influencer e/ou identidade visual. O modelo WaveSpeed recebe apenas uma imagem inicial; para não ignorar a influencer, a geração foi interrompida. Tente novamente ou use um modelo que aceite múltiplas referências." };
       }
     } catch (e) {
       console.warn(`[wavespeed-video] hero frame failed:`, (e as Error)?.message);
+      if ((params.imageUrls || []).length > 1 || _roles.includes('PERSON/INFLUENCER - DO NOT MODIFY')) {
+        return { error: "Falha ao preparar a referência com a influencer. O vídeo não foi gerado para evitar ignorar a pessoa selecionada." };
+      }
     }
   }
   const wsModelPath = WAVESPEED_VIDEO_MODEL_MAP[subModel];
@@ -2785,15 +2790,20 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
         if (provider === "wavespeed") {
           const apiKey = await fetchApiKey(estabId, "wavespeed");
           if (!apiKey) throw new Error("WaveSpeed API key not configured. Go to Settings → Paid APIs.");
-          const wsModel = (params.wavespeedModel as string) || "wavespeed-ai/dia-tts";
-          const allowed = ["wavespeed-ai/spark-tts", "wavespeed-ai/kokoro-tts", "wavespeed-ai/dia-tts"];
-          const modelPath = allowed.includes(wsModel) ? wsModel : "wavespeed-ai/dia-tts";
+          const wsModel = (params.wavespeedModel as string) || "wavespeed-ai/qwen3-tts/text-to-speech";
+          const allowed = ["wavespeed-ai/qwen3-tts/text-to-speech"];
+          const modelPath = allowed.includes(wsModel) ? wsModel : "wavespeed-ai/qwen3-tts/text-to-speech";
 
           // Submit
           const submitResp = await fetch(`https://api.wavespeed.ai/api/v3/${modelPath}`, {
             method: "POST",
             headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ text, language: params.lang || "pt" }),
+            body: JSON.stringify({
+              text,
+              language: params.lang || "Portuguese",
+              voice: params.voice || "Vivian",
+              style_instruction: params.styleInstruction || "Natural Brazilian Portuguese advertising narration, warm, clear and persuasive.",
+            }),
           });
           if (!submitResp.ok) {
             const t = await submitResp.text().catch(() => "");
