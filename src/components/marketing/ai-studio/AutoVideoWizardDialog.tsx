@@ -21,7 +21,7 @@ interface ProductRow {
 
 interface InfluencerRow {
   id: string;
-  url: string;
+  image_url: string;
   nome?: string | null;
 }
 
@@ -128,6 +128,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
   const [includeInfluencer, setIncludeInfluencer] = useState(false);
   const [influencers, setInfluencers] = useState<InfluencerRow[]>([]);
   const [selectedInfluencer, setSelectedInfluencer] = useState<InfluencerRow | null>(null);
+  const [influencerSearch, setInfluencerSearch] = useState('');
   const [videoModel, setVideoModel] = useState('google/veo-3.1-fast');
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16' | '1:1'>('9:16');
   const [duration, setDuration] = useState<4 | 8>(8);
@@ -165,7 +166,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
       if (!estabId) return;
       const { data } = await supabase
         .from('studio_gallery_images')
-        .select('id, url, nome')
+        .select('id, image_url, nome')
         .eq('estabelecimento_id', estabId)
         .eq('categoria', 'influencer')
         .order('created_at', { ascending: false })
@@ -240,7 +241,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
     try {
       // 1) Monta prompt enriquecido — Produto #1, Influencer #2 (memória do projeto)
       const refs: string[] = [selectedProduct.foto_url];
-      if (includeInfluencer && selectedInfluencer?.url) refs.push(selectedInfluencer.url);
+      if (includeInfluencer && selectedInfluencer?.image_url) refs.push(selectedInfluencer.image_url);
 
       const speechDirective = script
         ? `\n\nA cena deve incluir uma locução em português BR dizendo exatamente: "${script}". Mantenha sincronia natural com a imagem.`
@@ -258,7 +259,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
           duration,
           referenceImages: refs,
           productImageUrl: selectedProduct.foto_url,
-          influencerImageUrl: includeInfluencer ? selectedInfluencer?.url : undefined,
+          influencerImageUrl: includeInfluencer ? selectedInfluencer?.image_url : undefined,
           withAudio: true,
         },
         (m) => setProgressMsg(m),
@@ -444,30 +445,49 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
                   <input
                     type="checkbox"
                     checked={includeInfluencer}
-                    onChange={(e) => setIncludeInfluencer(e.target.checked)}
+                    onChange={(e) => {
+                      setIncludeInfluencer(e.target.checked);
+                      if (!e.target.checked) {
+                        setSelectedInfluencer(null);
+                        setInfluencerSearch('');
+                      }
+                    }}
                     className="h-4 w-4"
                   />
                   <User className="h-3.5 w-3.5" />
                   Incluir influencer na cena
                 </label>
                 {includeInfluencer && (
-                  <div className="mt-2 grid grid-cols-3 sm:grid-cols-6 gap-2 max-h-40 overflow-y-auto p-1">
-                    {influencers.map((i) => (
-                      <button
-                        key={i.id}
-                        onClick={() => setSelectedInfluencer(i)}
-                        className={`rounded-lg overflow-hidden border-2 ${
-                          selectedInfluencer?.id === i.id ? 'border-primary ring-2 ring-primary/30' : 'border-border'
-                        }`}
-                      >
-                        <img src={i.url} alt={i.nome || ''} className="aspect-square w-full object-cover" />
-                      </button>
-                    ))}
-                    {influencers.length === 0 && (
-                      <div className="col-span-full text-xs text-muted-foreground p-3 text-center">
-                        Nenhum influencer salvo. Adicione na galeria do Studio, categoria <strong>Influencer</strong>.
-                      </div>
-                    )}
+                  <div className="mt-2 space-y-2">
+                    <Input
+                      placeholder="Buscar influencer na galeria…"
+                      value={influencerSearch}
+                      onChange={(e) => setInfluencerSearch(e.target.value)}
+                      className="h-8 text-xs"
+                    />
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 max-h-40 overflow-y-auto p-1">
+                      {influencers
+                        .filter((i) =>
+                          !influencerSearch ||
+                          (i.nome || '').toLowerCase().includes(influencerSearch.toLowerCase())
+                        )
+                        .map((i) => (
+                        <button
+                          key={i.id}
+                          onClick={() => setSelectedInfluencer(i)}
+                          className={`rounded-lg overflow-hidden border-2 ${
+                            selectedInfluencer?.id === i.id ? 'border-primary ring-2 ring-primary/30' : 'border-border'
+                          }`}
+                        >
+                          <img src={i.image_url} alt={i.nome || ''} className="aspect-square w-full object-cover" />
+                        </button>
+                      ))}
+                      {influencers.length === 0 && (
+                        <div className="col-span-full text-xs text-muted-foreground p-3 text-center">
+                          Nenhum influencer salvo. Adicione na galeria do Studio, categoria <strong>Influencer</strong>.
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
