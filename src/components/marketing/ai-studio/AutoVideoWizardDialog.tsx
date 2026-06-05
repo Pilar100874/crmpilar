@@ -287,25 +287,37 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
       // 2) Se há narração e o modelo NÃO é Veo (que já gera áudio nativo), gera TTS + mux
       const modelHasNativeAudio = !!AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel)?.nativeAudio;
       if (script && !modelHasNativeAudio) {
-        try {
-          setProgressMsg('Gerando narração (TTS)…');
-          const audioRes = await callEdge('generate_audio', {
-            estabelecimentoId: estabId,
-            provider: 'elevenlabs',
-            text: script,
-            lang: 'pt',
-          }, 120000);
-          const audioUrl = audioRes?.audioUrl;
-          if (audioUrl) {
-            setProgressMsg('Combinando áudio e vídeo…');
-            finalBlob = await muxAudioWithVideo(videoUrl, audioUrl, (p) => {
-              if (p.message) setProgressMsg(p.message);
-            });
-            finalUrl = URL.createObjectURL(finalBlob);
+        // Escolhe provider TTS conforme as chaves ativas (sem hardcode em ElevenLabs)
+        const ttsProvider = activeProviders.has('elevenlabs')
+          ? 'elevenlabs'
+          : activeProviders.has('google')
+            ? 'google'
+            : activeProviders.has('openai')
+              ? 'openai'
+              : null;
+        if (!ttsProvider) {
+          toast.warning('Vídeo gerado sem narração: nenhuma API de TTS ativa (ElevenLabs, Google ou OpenAI). Configure em Ajustes → APIs.');
+        } else {
+          try {
+            setProgressMsg(`Gerando narração (TTS via ${ttsProvider})…`);
+            const audioRes = await callEdge('generate_audio', {
+              estabelecimentoId: estabId,
+              provider: ttsProvider,
+              text: script,
+              lang: 'pt',
+            }, 120000);
+            const audioUrl = audioRes?.audioUrl;
+            if (audioUrl) {
+              setProgressMsg('Combinando áudio e vídeo…');
+              finalBlob = await muxAudioWithVideo(videoUrl, audioUrl, (p) => {
+                if (p.message) setProgressMsg(p.message);
+              });
+              finalUrl = URL.createObjectURL(finalBlob);
+            }
+          } catch (audioErr: any) {
+            console.warn('[wizard] mux falhou, mantendo vídeo sem narração:', audioErr);
+            toast.warning('Vídeo gerado, mas a narração falhou: ' + (audioErr.message || ''));
           }
-        } catch (audioErr: any) {
-          console.warn('[wizard] mux falhou, mantendo vídeo sem narração:', audioErr);
-          toast.warning('Vídeo gerado, mas a narração falhou: ' + (audioErr.message || ''));
         }
       }
 
