@@ -271,6 +271,8 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
           prompt: composedPrompt,
           aspectRatio,
           duration,
+          // imageUrls é o nome esperado pelo edge function (1º item vira a imagem inicial do modelo image-to-video)
+          imageUrls: refs,
           referenceImages: refs,
           productImageUrl: selectedProduct.foto_url,
           influencerImageUrl: includeInfluencer ? selectedInfluencer?.image_url : undefined,
