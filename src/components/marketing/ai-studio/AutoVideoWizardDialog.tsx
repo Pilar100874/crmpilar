@@ -581,12 +581,31 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
           <div className="space-y-5 py-2">
             <div>
               <Label className="flex items-center gap-1.5"><Package className="h-3.5 w-3.5" /> Produto (obrigatório)</Label>
-              <Input
-                className="mt-1"
-                placeholder="Buscar produto por nome ou código…"
-                value={productSearch}
-                onChange={(e) => setProductSearch(e.target.value)}
-              />
+              <div className="flex gap-2 mt-1">
+                <Input
+                  className="flex-1"
+                  placeholder="Buscar produto por nome ou código…"
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                />
+                <label className="shrink-0">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploadingProduct}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleProductUpload(f);
+                      e.currentTarget.value = '';
+                    }}
+                  />
+                  <span className="inline-flex items-center gap-1.5 h-10 px-3 rounded-full border-2 border-input bg-background hover:bg-accent hover:border-primary text-xs font-semibold cursor-pointer transition-colors">
+                    {uploadingProduct ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                    Enviar foto
+                  </span>
+                </label>
+              </div>
               <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-60 overflow-y-auto p-1">
                 {filteredProducts.map((p) => (
                   <button
