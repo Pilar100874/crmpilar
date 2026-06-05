@@ -81,8 +81,91 @@ export async function fetchScreenshot(
   const { data } = await q.maybeSingle();
   if (!data) return null;
   const rec: any = data;
-  // image_url pode ser um path (novo) ou URL antiga; se contém "://", usa direto
   const url = String(rec.image_url || "");
   const image_url = url.includes("://") ? url : await signedUrl(url || pathFor(scope, estabelecimentoId, route));
   return { image_url, vw: rec.vw, vh: rec.vh };
+}
+
+/**
+ * Captura uma rota arbitrária do mesmo app via iframe oculto (same-origin)
+ * e faz upload. Usada para auto-capturar a tela ao selecioná-la no heatmap.
+ */
+export async function captureRouteViaIframe(
+  scope: "sistema" | "ecommerce",
+  estabelecimentoId: string | null,
+  route: string,
+  opts: { width?: number; height?: number; waitMs?: number } = {},
+): Promise<CaptureResult> {
+  const width = opts.width ?? 1440;
+  const height = opts.height ?? 900;
+  const waitMs = opts.waitMs ?? 2500;
+
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.left = "-10000px";
+  iframe.style.top = "0";
+  iframe.style.width = `${width}px`;
+  iframe.style.height = `${height}px`;
+  iframe.style.border = "0";
+  iframe.style.opacity = "0";
+  iframe.setAttribute("aria-hidden", "true");
+  iframe.src = route + (route.includes("?") ? "&" : "?") + "_hmcap=1";
+  document.body.appendChild(iframe);
+
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error("Timeout ao carregar a tela no iframe")), 20000);
+      iframe.addEventListener(
+        "load",
+        () => {
+          clearTimeout(t);
+          setTimeout(resolve, waitMs);
+        },
+        { once: true },
+      );
+    });
+
+    const doc = iframe.contentDocument;
+    if (!doc) throw new Error("Iframe sem documento acessível");
+    const target = doc.body;
+
+    const canvas = await html2canvas(target, {
+      backgroundColor: "#ffffff",
+      scale: 1,
+      useCORS: true,
+      logging: false,
+      windowWidth: width,
+      windowHeight: height,
+      width,
+      height: Math.min(target.scrollHeight || height, height * 3),
+    });
+
+    const blob: Blob = await new Promise((resolve, reject) =>
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob falhou"))), "image/jpeg", 0.78),
+    );
+
+    const path = pathFor(scope, estabelecimentoId, route);
+    const { error: upErr } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, blob, { upsert: true, contentType: "image/jpeg", cacheControl: "60" });
+    if (upErr) throw upErr;
+
+    const image_url = await signedUrl(path);
+
+    await supabase.from("heatmap_screenshots" as any).upsert(
+      {
+        scope,
+        route,
+        estabelecimento_id: estabelecimentoId,
+        image_url: path,
+        vw: width,
+        vh: height,
+      },
+      { onConflict: "scope,route,estabelecimento_id" },
+    );
+
+    return { image_url, vw: width, vh: height };
+  } finally {
+    iframe.remove();
+  }
 }

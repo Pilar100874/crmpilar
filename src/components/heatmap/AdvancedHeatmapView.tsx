@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { HeatmapCanvas } from "./HeatmapCanvas";
-import { MousePointerClick, Move, ChevronsDown, AlertTriangle, Users, Smartphone, Monitor, Tablet, Filter, Camera, Image as ImageIcon, Loader2, ExternalLink } from "lucide-react";
-import { captureAndUploadScreenshot, fetchScreenshot } from "@/lib/heatmapScreenshot";
+import { MousePointerClick, Move, ChevronsDown, AlertTriangle, Users, Smartphone, Monitor, Tablet, Filter, Camera, Image as ImageIcon, Loader2, ExternalLink, Maximize2, X } from "lucide-react";
+import { captureAndUploadScreenshot, captureRouteViaIframe, fetchScreenshot } from "@/lib/heatmapScreenshot";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 function prettyName(route: string, titles: Record<string, string>): string {
@@ -148,7 +149,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
     if (!selectedRoute && routeStats[0]) setSelectedRoute(routeStats[0].route);
   }, [routeStats, selectedRoute]);
 
-  // Carrega screenshot da rota selecionada
+  // Carrega screenshot da rota selecionada; se não existir, captura via iframe automaticamente
   useEffect(() => {
     let mounted = true;
     if (!selectedRoute) {
@@ -159,17 +160,48 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
       const s = await fetchScreenshot(scope, selectedRoute, estabelecimentoId ?? null);
       if (!mounted) return;
       if (s) {
-        setBgUrl(`${s.image_url}?t=${Date.now()}`);
+        setBgUrl(`${s.image_url}${s.image_url.includes("?") ? "&" : "?"}t=${Date.now()}`);
         setBgVw(s.vw);
         setBgVh(s.vh);
-      } else {
-        setBgUrl(null);
-        setBgVw(null);
-        setBgVh(null);
+        return;
+      }
+      // Sem screenshot: auto-captura silenciosa via iframe
+      setBgUrl(null);
+      setBgVw(null);
+      setBgVh(null);
+      if (!showBg) return;
+      try {
+        setCapturing(true);
+        const res = await captureRouteViaIframe(scope, estabelecimentoId ?? null, selectedRoute);
+        if (!mounted) return;
+        setBgUrl(res.image_url);
+        setBgVw(res.vw);
+        setBgVh(res.vh);
+      } catch (e: any) {
+        console.warn("[heatmap] auto-capture falhou:", e?.message || e);
+      } finally {
+        if (mounted) setCapturing(false);
       }
     })();
     return () => { mounted = false; };
-  }, [selectedRoute, scope, estabelecimentoId]);
+  }, [selectedRoute, scope, estabelecimentoId, showBg]);
+
+  const handleRecaptureSelected = async () => {
+    if (!selectedRoute) return;
+    setCapturing(true);
+    try {
+      const res = await captureRouteViaIframe(scope, estabelecimentoId ?? null, selectedRoute);
+      setBgUrl(`${res.image_url}${res.image_url.includes("?") ? "&" : "?"}t=${Date.now()}`);
+      setBgVw(res.vw);
+      setBgVh(res.vh);
+      toast.success("Tela capturada");
+    } catch (e: any) {
+      toast.error("Falha ao capturar: " + (e?.message || e));
+    } finally {
+      setCapturing(false);
+    }
+  };
+
 
   const handleCaptureCurrent = async () => {
     setCapturing(true);
@@ -414,7 +446,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
 
         {/* Clicks heatmap */}
         <TabsContent value="clicks" className="space-y-4 mt-4">
-          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} />
+          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} onRecapture={handleRecaptureSelected} capturing={capturing} />
           <Card>
             <CardHeader>
               <CardTitle>Mapa de cliques — {selectedRoute ? prettyName(selectedRoute, routeTitles) : "selecione uma tela"}</CardTitle>
@@ -449,7 +481,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
 
         {/* Moves */}
         <TabsContent value="moves" className="space-y-4 mt-4">
-          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} />
+          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} onRecapture={handleRecaptureSelected} capturing={capturing} />
           <Card>
             <CardHeader>
               <CardTitle>Movimento do mouse — {selectedRoute ? prettyName(selectedRoute, routeTitles) : "selecione uma tela"}</CardTitle>
@@ -489,7 +521,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
 
         {/* Frustration */}
         <TabsContent value="frustration" className="space-y-4 mt-4">
-          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} />
+          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} onRecapture={handleRecaptureSelected} capturing={capturing} />
           <div className="grid md:grid-cols-2 gap-4">
             <Card>
               <CardHeader><CardTitle className="text-red-500">Rage Clicks</CardTitle><CardDescription>Cliques repetidos rapidamente no mesmo elemento (sinal de frustração)</CardDescription></CardHeader>
@@ -594,9 +626,23 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
   );
 }
 
-function RouteSelector({ routes, value, onChange, titles = {} }: { routes: string[]; value: string; onChange: (v: string) => void; titles?: Record<string, string> }) {
+function RouteSelector({
+  routes,
+  value,
+  onChange,
+  titles = {},
+  onRecapture,
+  capturing,
+}: {
+  routes: string[];
+  value: string;
+  onChange: (v: string) => void;
+  titles?: Record<string, string>;
+  onRecapture?: () => void;
+  capturing?: boolean;
+}) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger className="w-full md:w-[500px]"><SelectValue placeholder="Selecione uma tela" /></SelectTrigger>
         <SelectContent>
@@ -609,17 +655,33 @@ function RouteSelector({ routes, value, onChange, titles = {} }: { routes: strin
         </SelectContent>
       </Select>
       {value && (
-        <a href={value} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline" title="Abrir tela em nova janela">
-          <ExternalLink className="h-3.5 w-3.5" /> Abrir
-        </a>
+        <>
+          {onRecapture && (
+            <Button size="sm" variant="outline" onClick={onRecapture} disabled={capturing} title="Recapturar fundo desta tela">
+              {capturing ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Camera className="h-3.5 w-3.5 mr-1" />}
+              Recapturar fundo
+            </Button>
+          )}
+          <a href={value} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline" title="Abrir tela em nova janela">
+            <ExternalLink className="h-3.5 w-3.5" /> Abrir
+          </a>
+        </>
       )}
     </div>
   );
 }
 
 function HeatmapPanel({ width, height, points, radius, maxOpacity, bgUrl }: { width: number; height: number; points: { x: number; y: number }[]; radius?: number; maxOpacity?: number; bgUrl?: string | null }) {
-  return (
-    <div className="relative bg-gradient-to-br from-muted/30 to-muted/10 rounded border overflow-hidden" style={{ width: "100%", maxWidth: width, aspectRatio: `${width}/${height}` }}>
+  const [fullscreen, setFullscreen] = useState(false);
+  const aspect = `${width}/${height}`;
+  const Panel = ({ w, h, big }: { w: number | string; h: number | string; big?: boolean }) => (
+    <div
+      className="relative bg-gradient-to-br from-muted/30 to-muted/10 rounded border overflow-hidden"
+      style={ big
+        ? { width: "100%", height: "100%" }
+        : { width: "100%", maxWidth: width, aspectRatio: aspect }
+      }
+    >
       {bgUrl && (
         <img src={bgUrl} alt="" className="absolute inset-0 w-full h-full object-cover object-top opacity-90 pointer-events-none select-none" draggable={false} />
       )}
@@ -628,10 +690,32 @@ function HeatmapPanel({ width, height, points, radius, maxOpacity, bgUrl }: { wi
           {Array.from({ length: 96 }).map((_, i) => <div key={i} className="border border-foreground/20" />)}
         </div>
       )}
-      <HeatmapCanvas points={points} width={width} height={height} radius={radius} maxOpacity={maxOpacity} className="rounded" />
+      <HeatmapCanvas points={points} width={typeof w === "number" ? w : width} height={typeof h === "number" ? h : height} radius={radius} maxOpacity={maxOpacity} className="rounded" />
       {points.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">Sem dados ainda. Aguardando interações...</div>
       )}
+      <Button
+        size="icon"
+        variant="secondary"
+        className="absolute top-2 right-2 h-8 w-8 shadow"
+        onClick={() => setFullscreen((v) => !v)}
+        title={big ? "Sair de tela cheia" : "Ver em tela cheia"}
+      >
+        {big ? <X className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+      </Button>
     </div>
+  );
+
+  return (
+    <>
+      <Panel w={width} h={height} />
+      <Dialog open={fullscreen} onOpenChange={setFullscreen}>
+        <DialogContent className="max-w-[98vw] w-[98vw] h-[95vh] p-2 sm:p-3">
+          <div className="w-full h-full">
+            <Panel w={width} h={height} big />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
