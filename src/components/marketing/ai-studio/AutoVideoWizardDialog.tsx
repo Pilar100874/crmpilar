@@ -304,8 +304,13 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
   const handleGenerate = useCallback(async () => {
     if (!estabId) return toast.error('Estabelecimento não encontrado.');
     if (!selectedProduct?.foto_url) return toast.error('Selecione um produto com foto.');
+    const visualIdentity = useVisualIdentity ? await getActiveVisualIdentity(estabId) : null;
+    if (useVisualIdentity && !visualIdentity) {
+      toast.error('Identidade visual da marca não encontrada ou sem prompt/imagens ativos. Configure a Identidade Visual ou desative esta opção antes de gerar.');
+      return;
+    }
     const modelMeta = AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel);
-    const hasProtectedRefs = !!selectedProduct || (includeInfluencer && !!selectedInfluencer) || useVisualIdentity;
+    const hasProtectedRefs = !!selectedProduct || (includeInfluencer && !!selectedInfluencer) || !!visualIdentity;
     if (modelMeta && !modelMeta.supportsImageRefs && hasProtectedRefs) {
       toast.error(`O modelo ${modelMeta.label.split(' — ')[0]} não aceita produto, influencer ou identidade visual como referência. Escolha Seedance 2.0 (WaveSpeed) antes de gerar.`);
       return;
@@ -322,7 +327,6 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
         refs.push(selectedInfluencer.image_url);
         imageRoles.push('PERSON/INFLUENCER - DO NOT MODIFY');
       }
-      const visualIdentity = useVisualIdentity ? await getActiveVisualIdentity(estabId) : null;
       if (visualIdentity?.images?.length) {
         refs.push(...visualIdentity.images);
         imageRoles.push(...visualIdentity.images.map(() => 'BRAND IDENTITY REFERENCE'));
