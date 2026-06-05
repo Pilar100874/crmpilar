@@ -11,6 +11,7 @@ import { Loader2, Sparkles, Video, ArrowLeft, ArrowRight, Save, Wand2, User, Pac
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Progress } from '@/components/ui/progress';
+import { Switch } from '@/components/ui/switch';
 import { muxAudioWithVideo } from './videoMux';
 
 interface ProductRow {
