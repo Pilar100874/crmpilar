@@ -165,13 +165,14 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
         setBgUrl(`${s.image_url}${s.image_url.includes("?") ? "&" : "?"}t=${Date.now()}`);
         setBgVw(s.vw);
         setBgVh(s.vh);
-        return;
+        if (!showBg) return;
+      } else {
+        setBgUrl(null);
+        setBgVw(null);
+        setBgVh(null);
+        if (!showBg) return;
       }
-      // Sem screenshot: auto-captura silenciosa via iframe
-      setBgUrl(null);
-      setBgVw(null);
-      setBgVh(null);
-      if (!showBg) return;
+      // Captura/atualiza automaticamente para corrigir fundos ausentes ou antigos.
       try {
         setCapturing(true);
         const res = await captureRouteViaIframe(scope, estabelecimentoId ?? null, selectedRoute);
@@ -629,7 +630,7 @@ function RouteSelector({
   );
 }
 
-function HeatmapPanel({ width, height, points, radius, maxOpacity, bgUrl, bgVw, bgVh }: { width: number; height: number; points: { x: number; y: number }[]; radius?: number; maxOpacity?: number; bgUrl?: string | null; bgVw?: number | null; bgVh?: number | null }) {
+function HeatmapPanel({ width, height, maxWidth, points, radius, maxOpacity, bgUrl, bgVw, bgVh }: { width: number; height: number; maxWidth?: number; points: { x: number; y: number }[]; radius?: number; maxOpacity?: number; bgUrl?: string | null; bgVw?: number | null; bgVh?: number | null }) {
   const [fullscreen, setFullscreen] = useState(false);
   // Em tela cheia: usa o aspect ratio real da tela capturada (igual ao usuário vê)
   const fsAspect = bgVw && bgVh ? `${bgVw}/${bgVh}` : `${width}/${height}`;
@@ -640,7 +641,7 @@ function HeatmapPanel({ width, height, points, radius, maxOpacity, bgUrl, bgVw, 
       className="relative bg-gradient-to-br from-muted/30 to-muted/10 rounded border overflow-hidden mx-auto"
       style={ big
         ? { width: "100%", height: "100%", aspectRatio: fsAspect, maxHeight: "100%", maxWidth: "100%" }
-        : { width: "100%", maxWidth: width, aspectRatio: aspect }
+        : { width: "100%", maxWidth: maxWidth ?? width, aspectRatio: aspect }
       }
     >
       {bgUrl && (
