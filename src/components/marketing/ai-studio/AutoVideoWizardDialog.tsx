@@ -34,12 +34,15 @@ interface AutoVideoWizardDialogProps {
   inline?: boolean;
 }
 
-// Modelos cinemáticos estilo Higgsfield — qualidade publicitária, suportam referência de imagem (produto + influencer)
+// Modelos cinemáticos estilo Higgsfield — qualidade publicitária.
 // O wizard só exibe os modelos cujo provedor está ATIVO em ai_api_keys.
-const AD_READY_VIDEO_MODELS: Array<{ value: string; label: string; provider: string; nativeAudio: boolean; tier: string; supportsImageRefs: boolean }> = [
-  { value: 'google/veo-3.1-fast', label: 'Veo 3.1 Fast — cinematográfico (áudio nativo, SEM referência de imagem)', provider: 'google', nativeAudio: true, tier: 'rápido', supportsImageRefs: false },
-  { value: 'google/veo-3', label: 'Veo 3 — máxima qualidade com diálogo (SEM referência de imagem)', provider: 'google', nativeAudio: true, tier: 'premium', supportsImageRefs: false },
-  { value: 'wavespeed/seedance-2.0', label: 'Seedance 2.0 — cinematic (aceita produto + influencer)', provider: 'wavespeed', nativeAudio: false, tier: 'alta', supportsImageRefs: true },
+const AD_READY_VIDEO_MODELS: Array<{ value: string; label: string; provider: string; nativeAudio: boolean; tier: string; supportsImageRefs: boolean; durations: number[] }> = [
+  { value: 'google/veo-3.1-fast', label: 'Veo 3.1 Fast — cinematográfico (áudio nativo, SEM referência de imagem)', provider: 'google', nativeAudio: true, tier: 'rápido', supportsImageRefs: false, durations: [8] },
+  { value: 'google/veo-3', label: 'Veo 3 — máxima qualidade com diálogo (SEM referência de imagem)', provider: 'google', nativeAudio: true, tier: 'premium', supportsImageRefs: false, durations: [8] },
+  { value: 'wavespeed/seedance-2.0', label: 'Seedance 2.0 — cinematic (aceita produto + influencer + IV)', provider: 'wavespeed', nativeAudio: false, tier: 'alta', supportsImageRefs: true, durations: [5, 10] },
+  { value: 'wavespeed/kling-2.6', label: 'Kling 2.6 Pro — WaveSpeed (aceita cena inicial com IV)', provider: 'wavespeed', nativeAudio: false, tier: 'alta', supportsImageRefs: true, durations: [5, 10] },
+  { value: 'wavespeed/wan-2.5', label: 'WAN 2.5 — WaveSpeed (aceita cena inicial com IV)', provider: 'wavespeed', nativeAudio: false, tier: 'alta', supportsImageRefs: true, durations: [5, 10] },
+  { value: 'wavespeed/ltx-video', label: 'LTX Video — WaveSpeed (rápido, aceita cena inicial)', provider: 'wavespeed', nativeAudio: false, tier: 'rápido', supportsImageRefs: true, durations: [4, 8, 10] },
 ];
 
 type Step = 1 | 2 | 3;
@@ -135,7 +138,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
   const [useVisualIdentity, setUseVisualIdentity] = useState(true);
   const [activeProviders, setActiveProviders] = useState<Set<string>>(new Set());
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16' | '1:1'>('9:16');
-  const [duration, setDuration] = useState<4 | 8>(8);
+  const [duration, setDuration] = useState<number>(10);
 
   // Step 3 — Script + Geração
   const [script, setScript] = useState('');
@@ -154,6 +157,21 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
   const availableTtsProviders = useMemo(() => {
     return (['elevenlabs', 'google', 'openai', 'wavespeed'] as const).filter((p) => activeProviders.has(p));
   }, [activeProviders]);
+
+  const selectedModelMeta = useMemo(
+    () => AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel),
+    [videoModel],
+  );
+  const allowedDurations = selectedModelMeta?.durations?.length ? selectedModelMeta.durations : [8];
+
+  useEffect(() => {
+    if (!allowedDurations.includes(duration)) {
+      const closest = allowedDurations.reduce((prev, curr) =>
+        Math.abs(curr - duration) < Math.abs(prev - duration) ? curr : prev,
+      );
+      setDuration(closest);
+    }
+  }, [allowedDurations, duration]);
 
   // Auto-seleciona o primeiro TTS disponível quando a lista carrega/muda
   useEffect(() => {
@@ -286,8 +304,13 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
   const handleGenerate = useCallback(async () => {
     if (!estabId) return toast.error('Estabelecimento não encontrado.');
     if (!selectedProduct?.foto_url) return toast.error('Selecione um produto com foto.');
+    const visualIdentity = useVisualIdentity ? await getActiveVisualIdentity(estabId) : null;
+    if (useVisualIdentity && !visualIdentity) {
+      toast.error('Identidade visual da marca não encontrada ou sem prompt/imagens ativos. Configure a Identidade Visual ou desative esta opção antes de gerar.');
+      return;
+    }
     const modelMeta = AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel);
-    const hasProtectedRefs = !!selectedProduct || (includeInfluencer && !!selectedInfluencer) || useVisualIdentity;
+    const hasProtectedRefs = !!selectedProduct || (includeInfluencer && !!selectedInfluencer) || !!visualIdentity;
     if (modelMeta && !modelMeta.supportsImageRefs && hasProtectedRefs) {
       toast.error(`O modelo ${modelMeta.label.split(' — ')[0]} não aceita produto, influencer ou identidade visual como referência. Escolha Seedance 2.0 (WaveSpeed) antes de gerar.`);
       return;
@@ -304,7 +327,6 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
         refs.push(selectedInfluencer.image_url);
         imageRoles.push('PERSON/INFLUENCER - DO NOT MODIFY');
       }
-      const visualIdentity = useVisualIdentity ? await getActiveVisualIdentity(estabId) : null;
       if (visualIdentity?.images?.length) {
         refs.push(...visualIdentity.images);
         imageRoles.push(...visualIdentity.images.map(() => 'BRAND IDENTITY REFERENCE'));
@@ -774,13 +796,17 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
               </div>
               <div>
                 <Label>Duração</Label>
-                <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v) as 4 | 8)}>
+                <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v))}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="4">4 segundos</SelectItem>
-                    <SelectItem value="8">8 segundos</SelectItem>
+                    {allowedDurations.map((seconds) => (
+                      <SelectItem key={seconds} value={String(seconds)}>{seconds} segundos</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Opções liberadas conforme o modelo selecionado.
+                </p>
               </div>
             </div>
 
@@ -793,6 +819,11 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
               </div>
               <Switch checked={useVisualIdentity} onCheckedChange={setUseVisualIdentity} />
             </div>
+            {useVisualIdentity && (
+              <div className="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-md p-2 leading-snug">
+                Se a identidade visual ativa não tiver prompt ou imagens selecionadas, vou avisar e não avançar para a geração.
+              </div>
+            )}
           </div>
         )}
 
@@ -931,13 +962,20 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
         </Button>
         {step < 3 ? (
           <Button
-            onClick={() => {
+            onClick={async () => {
               if (step === 2) {
                 const modelMeta = AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel);
                 const hasRefs = !!selectedProduct || (includeInfluencer && !!selectedInfluencer) || useVisualIdentity;
                 if (modelMeta && !modelMeta.supportsImageRefs && hasRefs) {
                   toast.error(`O modelo ${modelMeta.label.split(' — ')[0]} não aceita produto, influencer ou identidade visual como referência. Escolha Seedance 2.0 (WaveSpeed) para avançar.`);
                   return;
+                }
+                if (useVisualIdentity) {
+                  const visualIdentity = await getActiveVisualIdentity(estabId);
+                  if (!visualIdentity) {
+                    toast.error('Identidade visual da marca não encontrada ou sem prompt/imagens ativos. Configure a Identidade Visual ou desative esta opção para avançar.');
+                    return;
+                  }
                 }
               }
               if (step === 1) {

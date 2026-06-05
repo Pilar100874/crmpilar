@@ -123,6 +123,7 @@ serve(async (req) => {
       referenceLabels = [],
       estabelecimentoId = "",
       aspectRatio = "1:1",
+      contentTypeBadge = "",
     } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -217,14 +218,16 @@ serve(async (req) => {
         ? `COMPOSIÇÃO OBRIGATÓRIA: combine TODAS as referências acima em UMA única cena coesa. Preserve fielmente todos os elementos das referências.`
         : "";
 
+    const badgeText = String(contentTypeBadge || "").trim();
     const absoluteNoExtraTextRule = [
       "REGRA GLOBAL INVIOLÁVEL SOBRE TEXTO NA ARTE:",
-      "- Nunca escreva na imagem qualquer texto que venha da identidade visual, exemplos da marca, referências visuais, embalagem, preset, campanha, slogan, assinatura, URL, telefone, endereço, preço, percentual, hashtag, selo, etiqueta, botão ou marca d'água.",
-      "- Se o briefing permitir texto, escreva APENAS o conteúdo exato do título e/ou subtítulo informado pelo usuário no prompt principal.",
-      "- Se não houver título/subtítulo explícitos no prompt principal, a imagem deve ficar totalmente sem texto, exceto o logo usado como elemento visual.",
+      `- Nunca escreva na imagem qualquer texto que venha da identidade visual, exemplos da marca, referências visuais, embalagem, preset, campanha, slogan, assinatura, URL, telefone, endereço, preço, percentual, hashtag, etiqueta, botão ou marca d'água${badgeText ? `, exceto o selo obrigatório "${badgeText}"` : ", selo"}.`,
+      `- Se o briefing permitir texto, escreva APENAS o conteúdo exato do título e/ou subtítulo informado pelo usuário no prompt principal${badgeText ? ` e o selo obrigatório "${badgeText}"` : ""}.`,
+      `- Se não houver título/subtítulo explícitos no prompt principal, a imagem deve ficar totalmente sem texto${badgeText ? `, exceto o selo obrigatório "${badgeText}"` : ", exceto o logo usado como elemento visual"}.`,
+      badgeText ? `- SELO AUTORIZADO E OBRIGATÓRIO: renderize um badge/selo profissional com o texto exato "${badgeText}", integrado ao layout, legível e sem outras palavras.` : "",
       "- O logo pode aparecer como imagem de referência, mas não recrie nem adicione textos soltos ao redor dele.",
       "- Proibido texto decorativo, microtexto, letras aleatórias, palavras falsas ou textos genéricos para preencher layout.",
-    ].join("\n");
+    ].filter(Boolean).join("\n");
 
     const finalPrompt = [
       "TAREFA: gerar exatamente UMA imagem publicitária por chamada para WhatsApp.",
@@ -267,7 +270,7 @@ serve(async (req) => {
       const placement = (hasProduct && hasPerson)
         ? `\n\nPOSICIONAMENTO DESTA VARIAÇÃO (obrigatório): ${placementHints[variationIndex % placementHints.length]}.`
         : "";
-      const varyHint = `\n\nVARIAÇÃO ${variationIndex + 1} de ${variationsCount}: mantenha o mesmo briefing, identidade visual e referências; mude apenas ângulo, enquadramento e composição.${placement}\n\nLEMBRETE FINAL: ${hasProduct && hasPerson ? "o PRODUTO e o INFLUENCIADOR precisam aparecer JUNTOS nesta imagem — sem exceção." : "siga rigorosamente as referências."} Não adicione nenhum texto além do título/subtítulo explicitamente autorizado no briefing principal.`;
+      const varyHint = `\n\nVARIAÇÃO ${variationIndex + 1} de ${variationsCount}: mantenha o mesmo briefing, identidade visual e referências; mude apenas ângulo, enquadramento e composição.${placement}\n\nLEMBRETE FINAL: ${hasProduct && hasPerson ? "o PRODUTO e o INFLUENCIADOR precisam aparecer JUNTOS nesta imagem — sem exceção." : "siga rigorosamente as referências."} Não adicione nenhum texto além do título/subtítulo explicitamente autorizado no briefing principal${badgeText ? ` e do selo obrigatório "${badgeText}"` : ""}.`;
       const messages = [{
         role: "user",
         content: [

@@ -320,6 +320,12 @@ const PROVIDER_VIDEO_MODELS: Record<string, ModelDef[]> = {
   luma: [{ value: "luma/dream-machine", label: "🎬 Luma Dream Machine" }],
   pika: [{ value: "pika/2.0", label: "🎬 Pika 2.0" }],
   replicate: [{ value: "replicate/ltx-video-2", label: "🎬 LTX-Video 2 — Replicate" }],
+  wavespeed: [
+    { value: "wavespeed/seedance-2.0", label: "🎬 Seedance 2.0 — WaveSpeed" },
+    { value: "wavespeed/kling-2.6", label: "🎬 Kling 2.6 Pro — WaveSpeed" },
+    { value: "wavespeed/wan-2.5", label: "🎬 WAN 2.5 — WaveSpeed" },
+    { value: "wavespeed/ltx-video", label: "🎬 LTX Video — WaveSpeed" },
+  ],
   apiframe: [
     { value: "apiframe/runway-gen4", label: "🎬 Runway Gen-4 — Apiframe" },
     { value: "apiframe/kling-2.6", label: "🎬 Kling 2.6 — Apiframe" },
@@ -362,6 +368,10 @@ const VIDEO_MODEL_DURATIONS: Record<string, number[]> = {
   "polloai/luma": [5, 9],
   "pika/2.0": [3, 5, 8, 10],
   "replicate/ltx-video-2": [5, 8, 10],
+  "wavespeed/seedance-2.0": [5, 10],
+  "wavespeed/kling-2.6": [5, 10],
+  "wavespeed/wan-2.5": [5, 10],
+  "wavespeed/ltx-video": [4, 8, 10],
   "aimlapi/minimax": [6, 10],
 };
 const DEFAULT_VIDEO_DURATIONS = [5, 8, 10];
@@ -393,6 +403,10 @@ const VIDEO_MODEL_AUDIO_SUPPORT: Record<string, boolean> = {
   "polloai/luma": false,
   "pika/2.0": true,
   "replicate/ltx-video-2": false,
+  "wavespeed/seedance-2.0": false,
+  "wavespeed/kling-2.6": false,
+  "wavespeed/wan-2.5": false,
+  "wavespeed/ltx-video": false,
   "aimlapi/minimax": false,
 };
 const supportsNativeAudio = (model: string): boolean => {

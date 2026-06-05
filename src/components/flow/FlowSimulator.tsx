@@ -380,36 +380,42 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   };
 
   // ====== content_type (Tipo de Conteúdo: Divulgação / Promoção / Institucional...) ======
-  const CONTENT_TYPE_DIRECTIVES: Record<string, { label: string; rule: string }> = {
+  const CONTENT_TYPE_DIRECTIVES: Record<string, { label: string; rule: string; badgeText?: string }> = {
     divulgacao: {
       label: "Divulgação",
+      badgeText: "DIVULGAÇÃO",
       rule:
-        "OBJETIVO: peça de DIVULGAÇÃO/AWARENESS. Apresente o produto, serviço ou marca de forma atrativa, com estética convidativa e tom inspirador/lifestyle. PROIBIDO incluir preços, percentuais de desconto, selos de oferta, palavras como 'OFERTA', 'PROMOÇÃO', 'DESCONTO', '% OFF'. Composição mais leve, aspiracional, sem apelo de varejo.",
+        "OBJETIVO: peça de DIVULGAÇÃO/AWARENESS. Apresente o produto, serviço ou marca de forma atrativa, com estética convidativa e tom inspirador/lifestyle. Inclua um selo visual com o texto exato 'DIVULGAÇÃO'. PROIBIDO incluir preços, percentuais de desconto, selos de oferta, palavras como 'OFERTA', 'PROMOÇÃO', 'DESCONTO', '% OFF'. Composição mais leve, aspiracional, sem apelo de varejo.",
     },
     promocao: {
       label: "Promoção",
+      badgeText: "PROMOÇÃO",
       rule:
-        "OBJETIVO: peça PROMOCIONAL/COMERCIAL com foco em CONVERSÃO. Estética de varejo, energética, com hierarquia visual forte. Use cores vibrantes e contraste alto, mas NÃO crie selos/badges com texto, palavras como 'OFERTA'/'PROMOÇÃO', preços ou percentuais se esses conteúdos não estiverem exatamente no título/subtítulo fornecidos. Sensação de urgência apenas visual, sem texto extra.",
+        "OBJETIVO: peça PROMOCIONAL/COMERCIAL com foco em CONVERSÃO. Estética de varejo, energética, com hierarquia visual forte. Inclua um selo visual com o texto exato 'PROMOÇÃO'. Use cores vibrantes e contraste alto, sem preços ou percentuais se esses conteúdos não estiverem exatamente no título/subtítulo fornecidos.",
     },
     institucional: {
       label: "Institucional",
+      badgeText: "INSTITUCIONAL",
       rule:
-        "OBJETIVO: peça INSTITUCIONAL/BRANDING. Estética sóbria, elegante, minimalista, corporativa. Tipografia refinada, paleta contida. PROIBIDO ar de varejo, selos de desconto, urgência, preços, percentuais ou linguagem promocional. Foco em credibilidade, valores e posicionamento da marca.",
+        "OBJETIVO: peça INSTITUCIONAL/BRANDING. Estética sóbria, elegante, minimalista, corporativa. Inclua um selo discreto com o texto exato 'INSTITUCIONAL'. Tipografia refinada, paleta contida. PROIBIDO ar de varejo, selos de desconto, urgência, preços, percentuais ou linguagem promocional. Foco em credibilidade, valores e posicionamento da marca.",
     },
     evento: {
       label: "Evento",
+      badgeText: "EVENTO",
       rule:
-        "OBJETIVO: CONVITE/ANÚNCIO de evento. Estética de pôster/flyer com forte hierarquia visual. Só destaque nome do evento, data ou local se esses conteúdos estiverem exatamente no título/subtítulo fornecidos. Atmosfera coerente com o tema do evento, sem texto extra.",
+        "OBJETIVO: CONVITE/ANÚNCIO de evento. Estética de pôster/flyer com forte hierarquia visual. Inclua um selo visual com o texto exato 'EVENTO'. Só destaque nome do evento, data ou local se esses conteúdos estiverem exatamente no título/subtítulo fornecidos. Atmosfera coerente com o tema do evento, sem texto extra.",
     },
     lancamento: {
       label: "Lançamento",
+      badgeText: "LANÇAMENTO",
       rule:
-        "OBJETIVO: peça de LANÇAMENTO de produto/serviço. Estética premium e dramática, iluminação cinematográfica, produto em primeiro plano. NÃO use selo textual como 'NOVO' ou 'LANÇAMENTO' a menos que essa palavra esteja exatamente no título/subtítulo fornecidos. Sensação de novidade e expectativa apenas visual. Sem apelo promocional/desconto.",
+        "OBJETIVO: peça de LANÇAMENTO de produto/serviço. Estética premium e dramática, iluminação cinematográfica, produto em primeiro plano. Inclua um selo visual com o texto exato 'LANÇAMENTO'. Sem apelo promocional/desconto.",
     },
     educacional: {
       label: "Educacional / Informativo",
+      badgeText: "DICA",
       rule:
-        "OBJETIVO: peça EDUCACIONAL/INFORMATIVA (dica, tutorial, conteúdo de valor). Estética clean e didática, hierarquia clara de informação, similar a um post de carrossel informativo. SEM apelo comercial agressivo, SEM preços, SEM ofertas.",
+        "OBJETIVO: peça EDUCACIONAL/INFORMATIVA (dica, tutorial, conteúdo de valor). Estética clean e didática, hierarquia clara de informação, similar a um post de carrossel informativo. Inclua um selo visual com o texto exato 'DICA'. SEM apelo comercial agressivo, SEM preços, SEM ofertas.",
     },
     custom: {
       label: "Personalizado",
@@ -529,6 +535,9 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const meta = CONTENT_TYPE_DIRECTIVES[ct.type];
     const blocks: string[] = [];
     if (meta?.rule) blocks.push(meta.rule);
+    if (meta?.badgeText) {
+      blocks.push(`SELO OBRIGATÓRIO NA IMAGEM: crie um selo/badge profissional, integrado ao layout e legível, com o texto EXATO "${meta.badgeText}". Este selo é autorizado mesmo quando houver regra de não adicionar textos extras, pois faz parte do Tipo de Conteúdo selecionado.`);
+    }
     if (ct.guidance) blocks.push(`ORIENTAÇÃO ADICIONAL OBRIGATÓRIA: ${ct.guidance}`);
     if (!blocks.length) return "";
     return [
@@ -544,15 +553,17 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const userPrompt = interpolateVariables(prompt || config.basePrompt || "criativo", contextRef.current).trim();
     const basePrompt = interpolateVariables(config.basePrompt || "", contextRef.current).trim();
     const lockedTextDirective = buildLockedTextDirective(findUpstreamTextContent(node.id));
-    const contentTypeDirective = buildContentTypeDirective(findUpstreamContentType(node.id));
+    const contentType = findUpstreamContentType(node.id);
+    const contentTypeDirective = buildContentTypeDirective(contentType);
+    const contentTypeBadge = contentType ? CONTENT_TYPE_DIRECTIVES[contentType.type]?.badgeText : "";
     const aiTextDirective = buildAITextDirective(node.id);
     const upstreamPieca = findUpstreamPiecaRefs(node.id);
 
     // Regra GLOBAL: nada além do título/subtítulo definidos (ou nada de texto, se não houver).
     const hasAnyText = !!(lockedTextDirective || aiTextDirective);
     const noExtraTextDirective = hasAnyText
-      ? "REGRA ABSOLUTA DE TEXTO NA IMAGEM: renderize SOMENTE os textos especificados acima (título/subtítulo). PROIBIDO acrescentar QUALQUER outro texto, palavra, frase, slogan, call-to-action, hashtag, URL, telefone, endereço, preço, percentual, número, código, rótulo (como 'TÍTULO', 'SUBTÍTULO', 'TITLE', 'SUBTITLE'), legenda, marca d'água ou assinatura. NÃO copie nem invente textos vindos da identidade visual, referências, embalagens, exemplos, marca, campanha ou preset. Não use texto decorativo, microtexto, textos falsos, letras aleatórias, placas, botões, selos ou etiquetas. Apenas o conteúdo textual listado, nada mais."
-      : "REGRA ABSOLUTA DE TEXTO NA IMAGEM: NÃO escreva NENHUM texto na imagem. Sem palavras, frases, slogans, hashtags, URLs, telefones, endereços, preços, percentuais, números, códigos, rótulos, legendas, marcas d'água ou assinaturas. NÃO copie nem invente textos vindos da identidade visual, referências, embalagens, exemplos, marca, campanha ou preset. Não use texto decorativo, microtexto, textos falsos, letras aleatórias, placas, botões, selos ou etiquetas. Imagem 100% sem texto.";
+      ? `REGRA ABSOLUTA DE TEXTO NA IMAGEM: renderize SOMENTE os textos especificados acima (título/subtítulo)${contentTypeBadge ? ` e o selo obrigatório "${contentTypeBadge}"` : ""}. PROIBIDO acrescentar QUALQUER outro texto, palavra, frase, slogan, call-to-action, hashtag, URL, telefone, endereço, preço, percentual, número, código, rótulo (como 'TÍTULO', 'SUBTÍTULO', 'TITLE', 'SUBTITLE'), legenda, marca d'água ou assinatura. NÃO copie nem invente textos vindos da identidade visual, referências, embalagens, exemplos, marca, campanha ou preset. Não use texto decorativo, microtexto, textos falsos, letras aleatórias, placas, botões${contentTypeBadge ? " além do selo autorizado" : ", selos"} ou etiquetas. Apenas o conteúdo textual listado, nada mais.`
+      : `REGRA ABSOLUTA DE TEXTO NA IMAGEM: NÃO escreva NENHUM texto na imagem${contentTypeBadge ? `, exceto o selo obrigatório "${contentTypeBadge}"` : ""}. Sem palavras, frases, slogans, hashtags, URLs, telefones, endereços, preços, percentuais, números, códigos, rótulos, legendas, marcas d'água ou assinaturas. NÃO copie nem invente textos vindos da identidade visual, referências, embalagens, exemplos, marca, campanha ou preset. Não use texto decorativo, microtexto, textos falsos, letras aleatórias, placas, botões${contentTypeBadge ? " além do selo autorizado" : ", selos"} ou etiquetas.${contentTypeBadge ? "" : " Imagem 100% sem texto."}`;
 
     // Regra GLOBAL: logo da empresa sempre presente na peça.
     const logoMandatoryDirective = "LOGO DA EMPRESA (OBRIGATÓRIO): incorpore o LOGO da empresa fornecido como referência na peça final, de forma elegante, legível e bem posicionada (geralmente em um canto), preservando fielmente cores, formas e proporções originais do logo. NÃO recrie, NÃO redesenhe, NÃO traduza, NÃO altere o logo — use-o tal qual a referência.";
@@ -720,6 +731,10 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         "google/veo-3": "google/veo-3",
         "google/veo-2.0": "google/veo-2",
         "google/veo-2": "google/veo-2",
+        "wavespeed/seedance-2.0": "wavespeed/seedance-2.0",
+        "wavespeed/kling-2.6": "wavespeed/kling-2.6",
+        "wavespeed/wan-2.5": "wavespeed/wan-2.5",
+        "wavespeed/ltx-video": "wavespeed/ltx-video",
         "kling/3.0": "kling/3.0",
         "runway/gen-3": "runway/gen-3",
         "luma/dream-machine": "luma/dream-machine",
@@ -858,6 +873,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               prompt: `${userPrompt}${contentTypeDirective ? `\n\n${contentTypeDirective}` : ""}${lockedTextDirective ? `\n\n${lockedTextDirective}` : ""}${aiTextDirective ? `\n\n${aiTextDirective}` : ""}\n\n${noExtraTextDirective}\n\n${logoMandatoryDirective}${upstreamPieca.productDescription ? `\n\nPRODUTO (descrição do usuário): ${upstreamPieca.productDescription}` : ""}\n\nGere somente a opção ${optionIndex + 1} de ${variations}. Mantenha o mesmo briefing, identidade visual e formato ${imageAspectRatio}; varie apenas ângulo, enquadramento ou composição.${contentTypeDirective ? " Respeite ESTRITAMENTE o TIPO DE CONTEÚDO definido acima." : ""}${lockedTextDirective ? " O TEXTO renderizado na imagem deve ser EXATAMENTE o especificado — não varie, não traduza, não invente." : ""}${aiTextDirective ? " Para os textos marcados como GERAR PELA IA, crie textos curtos coerentes em PT-BR." : ""} O LOGO da empresa DEVE aparecer na peça final.`,
               basePrompt,
               variations: 1,
+              contentTypeBadge,
               styleSource,
               preset: styleSource === "preset" ? (config.preset || "") : "",
               referenceImageUrl: refImageUrl || "",
