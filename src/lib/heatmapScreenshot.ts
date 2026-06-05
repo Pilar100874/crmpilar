@@ -71,6 +71,7 @@ export async function captureAndUploadScreenshot(
     height: Math.min(document.body.scrollHeight, vh * 3),
     width: vw,
   });
+  if (canvasLooksBlank(canvas)) throw new Error("A tela ainda não terminou de carregar para captura");
 
   const blob: Blob = await new Promise((resolve, reject) =>
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob falhou"))), "image/jpeg", 0.78),
@@ -138,7 +139,7 @@ export async function captureRouteViaIframe(
   const waitMs = opts.waitMs ?? 6000; // tempo para a SPA carregar dados/render
   const maxTotalMs = 60000;
 
-  const iframe = document.createElement("iframe");
+    const iframe = document.createElement("iframe");
   iframe.style.position = "fixed";
   iframe.style.left = "0";
   iframe.style.top = "0";
@@ -150,8 +151,7 @@ export async function captureRouteViaIframe(
   iframe.style.zIndex = "-2147483647";
   iframe.name = "heatmap-capture-frame";
   iframe.setAttribute("aria-hidden", "true");
-  // não adicionamos query string para evitar quebrar rotas que não suportam
-  iframe.src = route;
+  iframe.src = frameSrcFor(route);
   document.body.appendChild(iframe);
 
   try {
@@ -187,6 +187,7 @@ export async function captureRouteViaIframe(
       imageTimeout: 8000,
       ignoreElements: (el) => ["IFRAME", "VIDEO"].includes(el.tagName),
     });
+    if (canvasLooksBlank(canvas)) throw new Error("A tela ainda não terminou de carregar para captura");
 
     const blob: Blob = await new Promise((resolve, reject) =>
       canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob falhou"))), "image/jpeg", 0.78),
