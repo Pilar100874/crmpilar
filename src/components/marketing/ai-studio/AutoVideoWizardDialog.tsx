@@ -146,6 +146,22 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
   const [saving, setSaving] = useState(false);
   const [elapsedSec, setElapsedSec] = useState(0);
   const [estimatedTotalSec, setEstimatedTotalSec] = useState(90);
+  const [ttsProvider, setTtsProvider] = useState<string>('');
+
+  // Provedores de TTS disponíveis (interseção com chaves ativas)
+  const availableTtsProviders = useMemo(() => {
+    return (['elevenlabs', 'google', 'openai'] as const).filter((p) => activeProviders.has(p));
+  }, [activeProviders]);
+
+  // Auto-seleciona o primeiro TTS disponível quando a lista carrega/muda
+  useEffect(() => {
+    if (availableTtsProviders.length > 0 && !availableTtsProviders.includes(ttsProvider as any)) {
+      setTtsProvider(availableTtsProviders[0]);
+    }
+    if (availableTtsProviders.length === 0 && ttsProvider) {
+      setTtsProvider('');
+    }
+  }, [availableTtsProviders, ttsProvider]);
 
   const estabId = useMemo(() => localStorage.getItem('estabelecimentoId') || '', []);
 
@@ -315,22 +331,16 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
       // 2) Se há narração e o modelo NÃO é Veo (que já gera áudio nativo), gera TTS + mux
       const modelHasNativeAudio = !!AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel)?.nativeAudio;
       if (script && !modelHasNativeAudio) {
-        // Escolhe provider TTS conforme as chaves ativas (sem hardcode em ElevenLabs)
-        const ttsProvider = activeProviders.has('elevenlabs')
-          ? 'elevenlabs'
-          : activeProviders.has('google')
-            ? 'google'
-            : activeProviders.has('openai')
-              ? 'openai'
-              : null;
-        if (!ttsProvider) {
-          toast.warning('Vídeo gerado sem narração: nenhuma API de TTS ativa (ElevenLabs, Google ou OpenAI). Configure em Ajustes → APIs.');
+        // Usa o provider TTS escolhido pelo usuário (só aparece se houver chave ativa)
+        const chosenTts = ttsProvider && availableTtsProviders.includes(ttsProvider as any) ? ttsProvider : null;
+        if (!chosenTts) {
+          toast.warning('Vídeo gerado sem narração: nenhuma API de TTS ativa (ElevenLabs, Google ou OpenAI). Ative uma em Configurações → IA / APIs.');
         } else {
           try {
-            setProgressMsg(`Gerando narração (TTS via ${ttsProvider})…`);
+            setProgressMsg(`Gerando narração (TTS via ${chosenTts})…`);
             const audioRes = await callEdge('generate_audio', {
               estabelecimentoId: estabId,
-              provider: ttsProvider,
+              provider: chosenTts,
               text: script,
               lang: 'pt',
             }, 120000);
@@ -360,7 +370,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
     } finally {
       setGenerating(false);
     }
-  }, [estabId, selectedProduct, includeInfluencer, selectedInfluencer, briefing, script, videoModel, aspectRatio, duration, useVisualIdentity, activeProviders]);
+  }, [estabId, selectedProduct, includeInfluencer, selectedInfluencer, briefing, script, videoModel, aspectRatio, duration, useVisualIdentity, activeProviders, ttsProvider, availableTtsProviders]);
 
   const handleSaveToGallery = useCallback(async () => {
     if (!resultVideoUrl || !estabId) return;
@@ -782,6 +792,35 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
                 Deixe em branco se não quiser narração. Em modelos Veo 3+ a fala é nativa; nos demais, geramos TTS e combinamos no vídeo.
               </div>
             </div>
+
+            {/* Seletor de modelo de voz (TTS) */}
+            {script && !AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel)?.nativeAudio && (
+              <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                <Label className="text-sm">Voz / modelo de narração (TTS)</Label>
+                {availableTtsProviders.length === 0 ? (
+                  <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-md p-2">
+                    ⚠️ Nenhuma API de voz ativa. O vídeo será gerado <strong>sem narração</strong>.
+                    Ative uma API de TTS (ElevenLabs, Google ou OpenAI) em <strong>Configurações → IA / APIs Pagas</strong> para narrar o texto acima.
+                  </div>
+                ) : (
+                  <>
+                    <Select value={ttsProvider} onValueChange={setTtsProvider}>
+                      <SelectTrigger className="mt-1"><SelectValue placeholder="Escolha o provedor de voz" /></SelectTrigger>
+                      <SelectContent>
+                        {availableTtsProviders.map((p) => (
+                          <SelectItem key={p} value={p}>
+                            {p === 'elevenlabs' ? 'ElevenLabs (voz premium PT-BR)' : p === 'google' ? 'Google Gemini TTS' : 'OpenAI TTS'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-[10px] text-muted-foreground">
+                      Apenas provedores com chave ativa aparecem aqui.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
 
             {!resultVideoUrl && (
               <Button
