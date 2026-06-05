@@ -796,13 +796,17 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
               </div>
               <div>
                 <Label>Duração</Label>
-                <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v) as 4 | 8)}>
+                <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v))}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="4">4 segundos</SelectItem>
-                    <SelectItem value="8">8 segundos</SelectItem>
+                    {allowedDurations.map((seconds) => (
+                      <SelectItem key={seconds} value={String(seconds)}>{seconds} segundos</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Opções liberadas conforme o modelo selecionado.
+                </p>
               </div>
             </div>
 
@@ -815,6 +819,11 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
               </div>
               <Switch checked={useVisualIdentity} onCheckedChange={setUseVisualIdentity} />
             </div>
+            {useVisualIdentity && (
+              <div className="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-md p-2 leading-snug">
+                Se a identidade visual ativa não tiver prompt ou imagens selecionadas, vou avisar e não avançar para a geração.
+              </div>
+            )}
           </div>
         )}
 
