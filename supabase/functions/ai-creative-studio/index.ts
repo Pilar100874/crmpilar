@@ -1072,9 +1072,14 @@ async function startVideoWavespeed(estabelecimentoId: string, params: any): Prom
         console.log(`[wavespeed-video] Using hero frame as starting image (VI=${_hasVI})`);
         params.imageUrls = [hero];
         params._heroFrameUsed = true;
+      } else if ((params.imageUrls || []).length > 1 || _roles.includes('PERSON/INFLUENCER - DO NOT MODIFY')) {
+        return { error: "Não foi possível compor a cena inicial com produto, influencer e/ou identidade visual. O modelo WaveSpeed recebe apenas uma imagem inicial; para não ignorar a influencer, a geração foi interrompida. Tente novamente ou use um modelo que aceite múltiplas referências." };
       }
     } catch (e) {
       console.warn(`[wavespeed-video] hero frame failed:`, (e as Error)?.message);
+      if ((params.imageUrls || []).length > 1 || _roles.includes('PERSON/INFLUENCER - DO NOT MODIFY')) {
+        return { error: "Falha ao preparar a referência com a influencer. O vídeo não foi gerado para evitar ignorar a pessoa selecionada." };
+      }
     }
   }
   const wsModelPath = WAVESPEED_VIDEO_MODEL_MAP[subModel];
