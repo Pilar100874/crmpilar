@@ -38,6 +38,7 @@ import { AUTOMACAO_VENDAS_BLOCKS } from "@/types/automacaoVendas";
 import { toast } from "@/hooks/use-toast";
 import type { AutomacaoVendasBlockType } from "@/types/automacaoVendas";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
+import { WorkflowSimulator } from "@/components/workflow-simulator/WorkflowSimulator";
 import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 
 const nodeTypes = {
@@ -81,6 +82,7 @@ function EditorRegrasContent() {
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showSimulator, setShowSimulator] = useState(false);
 
   const handleDuplicateNode = useCallback(
     (nodeId: string) => {
@@ -717,6 +719,10 @@ function EditorRegrasContent() {
       onAddBlock={() => setIsBlockLibraryExpanded(true)}
       isLocked={isLocked}
       onToggleLock={handleToggleLock}
+      onTest={() => { if (!showSimulator) setSelectedNode(null); setShowSimulator((v) => !v); }}
+      showTest={showSimulator}
+      isTestActive={showSimulator}
+      testLabel="Simular"
       hasUnsavedChanges={hasUnsavedChanges}
       defaultReturnUrl="/vendas-config?tab=automacao"
       aiGeneratorContent={
@@ -824,12 +830,24 @@ function EditorRegrasContent() {
       </div>
 
       {/* Properties Panel */}
-      {selectedNode && (
+      {selectedNode && !showSimulator && (
         <AutomacaoPropertiesPanel
           node={selectedNode}
           onUpdate={handleUpdateNode}
           onDelete={handleDeleteNode}
           onClose={() => setSelectedNode(null)}
+        />
+      )}
+
+      {/* Simulator Panel */}
+      {showSimulator && (
+        <WorkflowSimulator
+          open={showSimulator}
+          onClose={() => setShowSimulator(false)}
+          nodes={nodes}
+          edges={edges}
+          kind="automacao-vendas"
+          blockDefinitions={AUTOMACAO_VENDAS_BLOCKS}
         />
       )}
 

@@ -30,6 +30,7 @@ import { EcommercePropertiesPanel } from "@/components/ecommerce-rules/Ecommerce
 import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 import { ECOMMERCE_RULE_BLOCKS } from "@/types/ecommerceRules";
 import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
+import { WorkflowSimulator } from "@/components/workflow-simulator/WorkflowSimulator";
 import { toast } from "@/hooks/use-toast";
 import type { EcommerceRuleBlockType } from "@/types/ecommerceRules";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
@@ -52,6 +53,7 @@ function EcommerceRulesEditorInner() {
   const [flowName, setFlowName] = useState("Nova Regra E-commerce");
   const [isSaving, setIsSaving] = useState(false);
   const [isLibraryExpanded, setIsLibraryExpanded] = useState(true);
+  const [showSimulator, setShowSimulator] = useState(false);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [noteDialog, setNoteDialog] = useState<{ nodeId: string; note: string } | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -345,6 +347,10 @@ function EcommerceRulesEditorInner() {
       onZoomOut={() => reactFlowInstance?.zoomOut()}
       onFitView={() => reactFlowInstance?.fitView()}
       onAddBlock={() => setIsLibraryExpanded(!isLibraryExpanded)}
+      onTest={() => { if (!showSimulator) setSelectedNode(null); setShowSimulator((v) => !v); }}
+      showTest={showSimulator}
+      isTestActive={showSimulator}
+      testLabel="Simular"
       aiGeneratorContent={
         <WorkflowAIGenerator
           workflowType="Regras do E-commerce"
@@ -414,7 +420,7 @@ function EcommerceRulesEditorInner() {
         </div>
 
         {/* Properties Panel - Right */}
-        {selectedNode && (
+        {selectedNode && !showSimulator && (
           <div className="w-80 border-l border-border bg-card overflow-auto">
             <EcommercePropertiesPanel
               node={selectedNode}
@@ -423,6 +429,18 @@ function EcommerceRulesEditorInner() {
               onClose={() => setSelectedNode(null)}
             />
           </div>
+        )}
+
+        {/* Simulator Panel - Right */}
+        {showSimulator && (
+          <WorkflowSimulator
+            open={showSimulator}
+            onClose={() => setShowSimulator(false)}
+            nodes={nodes}
+            edges={edges}
+            kind="ecommerce"
+            blockDefinitions={ECOMMERCE_RULE_BLOCKS}
+          />
         )}
       </div>
 

@@ -38,6 +38,7 @@ import { AdsPropertiesPanel } from "@/components/ads-automation/AdsPropertiesPan
 import { BlockNoteDialog } from "@/components/omnichannel-builder/BlockNoteDialog";
 import { ADS_BLOCK_DEFINITIONS, AdsFlowNodeData } from "@/types/adsFlow";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
+import { WorkflowSimulator } from "@/components/workflow-simulator/WorkflowSimulator";
 import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 
 const nodeTypes = {
@@ -61,6 +62,7 @@ function AdsAutomationContent() {
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(true);
+  const [showSimulator, setShowSimulator] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -854,10 +856,11 @@ function AdsAutomationContent() {
               </Button>
               <Button 
                 size="sm" 
-                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white shadow-lg h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
+                onClick={() => { if (!showSimulator) setSelectedNode(null); setShowSimulator((v) => !v); }}
+                className={`bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white shadow-lg h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 ${showSimulator ? 'ring-2 ring-primary/40' : ''}`}
               >
                 <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Testar</span>
+                <span className="hidden sm:inline">{showSimulator ? 'Fechar' : 'Simular'}</span>
               </Button>
               <Button 
                 variant="destructive" 
@@ -961,11 +964,23 @@ function AdsAutomationContent() {
             </div>
 
             {/* Properties Panel */}
-            {selectedNode && (
+            {selectedNode && !showSimulator && (
               <AdsPropertiesPanel
                 selectedNode={selectedNode}
                 onUpdateNode={handleUpdateNode}
                 onClose={() => setSelectedNode(null)}
+              />
+            )}
+
+            {/* Simulator Panel */}
+            {showSimulator && (
+              <WorkflowSimulator
+                open={showSimulator}
+                onClose={() => setShowSimulator(false)}
+                nodes={nodes}
+                edges={edges}
+                kind="ads"
+                blockDefinitions={ADS_BLOCK_DEFINITIONS as any}
               />
             )}
           </div>
