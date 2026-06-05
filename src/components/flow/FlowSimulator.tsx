@@ -436,7 +436,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     };
   };
 
-  const findUpstreamContentType = (nodeId: string, visited = new Set<string>()): { type: string; guidance: string } | null => {
+  const findUpstreamContentType = (nodeId: string, visited = new Set<string>()): { type: string; guidance: string; useBadge: boolean } | null => {
     if (visited.has(nodeId)) return null;
     visited.add(nodeId);
     const incoming = edges.filter((e) => e.target === nodeId);
