@@ -460,6 +460,74 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
     }
   }, [estabId, selectedProduct, briefing, script, videoModel, aspectRatio, duration, useVisualIdentity, includeInfluencer, selectedInfluencer]);
 
+  const [uploadingProduct, setUploadingProduct] = useState(false);
+  const [uploadingInfluencer, setUploadingInfluencer] = useState(false);
+
+  const uploadImageTo = useCallback(async (bucket: string, file: File): Promise<string> => {
+    const ext = (file.name.split('.').pop() || 'png').toLowerCase();
+    const path = `${estabId}/wizard_${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from(bucket).upload(path, file, {
+      contentType: file.type || 'image/png',
+      upsert: true,
+    });
+    if (error) throw error;
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+    return data.publicUrl;
+  }, [estabId]);
+
+  const handleProductUpload = useCallback(async (file: File) => {
+    if (!estabId) return toast.error('Estabelecimento não encontrado.');
+    setUploadingProduct(true);
+    try {
+      const url = await uploadImageTo('produtos', file);
+      const uploaded: ProductRow = {
+        id: `upload_${Date.now()}`,
+        nome: file.name.replace(/\.[^.]+$/, '') || 'Produto enviado',
+        codigo: null,
+        foto_url: url,
+      };
+      setProducts((prev) => [uploaded, ...prev]);
+      setSelectedProduct(uploaded);
+      toast.success('Produto enviado.');
+    } catch (e: any) {
+      toast.error('Erro ao enviar imagem: ' + (e.message || ''));
+    } finally {
+      setUploadingProduct(false);
+    }
+  }, [estabId, uploadImageTo]);
+
+  const handleInfluencerUpload = useCallback(async (file: File) => {
+    if (!estabId) return toast.error('Estabelecimento não encontrado.');
+    setUploadingInfluencer(true);
+    try {
+      const url = await uploadImageTo('studio-gallery', file);
+      // Persist in gallery for reuse
+      const { data: inserted } = await supabase
+        .from('studio_gallery_images')
+        .insert({
+          estabelecimento_id: estabId,
+          image_url: url,
+          categoria: 'influencer',
+          nome: file.name.replace(/\.[^.]+$/, '') || 'Influencer enviado',
+        })
+        .select('id, image_url, nome')
+        .single();
+      const row: InfluencerRow = inserted as any || {
+        id: `upload_${Date.now()}`,
+        image_url: url,
+        nome: file.name,
+      };
+      setInfluencers((prev) => [row, ...prev]);
+      setSelectedInfluencer(row);
+      toast.success('Influencer enviado.');
+    } catch (e: any) {
+      toast.error('Erro ao enviar imagem: ' + (e.message || ''));
+    } finally {
+      setUploadingInfluencer(false);
+    }
+  }, [estabId, uploadImageTo]);
+
+
   // ---------- render ----------
   const canNext1 = briefing.trim().length >= 8;
   const canNext2 = !!selectedProduct && (!includeInfluencer || !!selectedInfluencer) && !!videoModel;
