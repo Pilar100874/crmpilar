@@ -96,6 +96,8 @@ const MarketingHub: React.FC = () => {
         return <StrategyEngine />;
       case 'ai-studio':
         return <AICreativeStudio />;
+      case 'auto-video-wizard':
+        return <AutoVideoWizardDialog open={true} onOpenChange={() => {}} inline />;
       case 'video-editor':
         return <VideoTimelineEditor />;
       case 'config-apis':
