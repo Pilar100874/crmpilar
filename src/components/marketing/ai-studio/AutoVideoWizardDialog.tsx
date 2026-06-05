@@ -146,6 +146,22 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
   const [saving, setSaving] = useState(false);
   const [elapsedSec, setElapsedSec] = useState(0);
   const [estimatedTotalSec, setEstimatedTotalSec] = useState(90);
+  const [ttsProvider, setTtsProvider] = useState<string>('');
+
+  // Provedores de TTS disponíveis (interseção com chaves ativas)
+  const availableTtsProviders = useMemo(() => {
+    return (['elevenlabs', 'google', 'openai'] as const).filter((p) => activeProviders.has(p));
+  }, [activeProviders]);
+
+  // Auto-seleciona o primeiro TTS disponível quando a lista carrega/muda
+  useEffect(() => {
+    if (availableTtsProviders.length > 0 && !availableTtsProviders.includes(ttsProvider as any)) {
+      setTtsProvider(availableTtsProviders[0]);
+    }
+    if (availableTtsProviders.length === 0 && ttsProvider) {
+      setTtsProvider('');
+    }
+  }, [availableTtsProviders, ttsProvider]);
 
   const estabId = useMemo(() => localStorage.getItem('estabelecimentoId') || '', []);
 
