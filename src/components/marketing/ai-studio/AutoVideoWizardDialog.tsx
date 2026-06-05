@@ -29,6 +29,7 @@ interface InfluencerRow {
 interface AutoVideoWizardDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  inline?: boolean;
 }
 
 // Modelos cinemáticos estilo Higgsfield — qualidade publicitária, suportam referência de imagem (produto + influencer)
