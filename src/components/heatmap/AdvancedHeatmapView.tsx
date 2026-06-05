@@ -678,11 +678,12 @@ function HeatmapPanel({ width, height, points, radius, maxOpacity, bgUrl, bgVw, 
 
   return (
     <>
-      <Panel w={width} h={height} />
+      <Panel />
       <Dialog open={fullscreen} onOpenChange={setFullscreen}>
-        <DialogContent className="max-w-[98vw] w-[98vw] h-[95vh] p-2 sm:p-3">
-          <div className="w-full h-full">
-            <Panel w={width} h={height} big />
+        <DialogContent className="max-w-[98vw] w-[98vw] h-[95vh] p-2 sm:p-3 flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center">
+            <Panel big />
+
           </div>
         </DialogContent>
       </Dialog>
