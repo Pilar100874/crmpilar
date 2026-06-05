@@ -654,6 +654,21 @@ function AdsAutomationContent() {
     input.click();
   }, [setNodes, setEdges, reactFlowInstance, handleSetBreakpoint, handleSetSkip, handleDuplicate, handleDeleteNode, handleClearDebug, handleAddNote, handleToggleCollapse]);
 
+  const styledEdges = useMemo(() => edges.map((edge) => ({
+    ...edge,
+    style: {
+      stroke: edge.selected ? '#ea580c' : '#f97316',
+      strokeWidth: edge.selected ? 2.5 : 1.33,
+    },
+    markerEnd: {
+      type: 'arrowclosed' as any,
+      width: 20,
+      height: 20,
+      color: edge.selected ? '#ea580c' : '#f97316',
+    },
+    type: 'smoothstep',
+  })), [edges]);
+
   return (
     <div className="min-h-screen bg-background">
       {!isEditing ? (
