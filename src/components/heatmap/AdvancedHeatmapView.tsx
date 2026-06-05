@@ -248,8 +248,10 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
     const vs = routeEvents.map((r) => r.vh).filter((v) => v && v > 0) as number[];
     return vs.length ? Math.round(vs.reduce((a, b) => a + b, 0) / vs.length) : 900;
   }, [routeEvents]);
+  const mapW = bgVw || avgVw;
+  const mapH = bgVh || avgVh;
   const scale = (pts: { x: number; y: number }[]) =>
-    pts.map((p) => ({ x: (p.x / avgVw) * CANVAS_W, y: Math.min((p.y / avgVh) * CANVAS_H, CANVAS_H) }));
+    pts.map((p) => ({ x: (p.x / avgVw) * mapW, y: Math.min((p.y / avgVh) * mapH, mapH) }));
 
   const pctDelta = (cur: number, prev: number) => {
     if (!prev) return null;
@@ -421,7 +423,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
               <CardDescription>{clickPoints.length} cliques mapeados (viewport médio {avgVw}×{avgVh})</CardDescription>
             </CardHeader>
             <CardContent>
-              <HeatmapPanel width={CANVAS_W} height={CANVAS_H} points={scale(clickPoints)} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
+              <HeatmapPanel width={mapW} height={mapH} maxWidth={CANVAS_W} points={scale(clickPoints)} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
             </CardContent>
           </Card>
           <Card>
@@ -456,7 +458,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
               <CardDescription>{movePoints.length} amostras (1 a cada 250ms)</CardDescription>
             </CardHeader>
             <CardContent>
-              <HeatmapPanel width={CANVAS_W} height={CANVAS_H} points={scale(movePoints)} radius={40} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
+              <HeatmapPanel width={mapW} height={mapH} maxWidth={CANVAS_W} points={scale(movePoints)} radius={40} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
             </CardContent>
           </Card>
         </TabsContent>
