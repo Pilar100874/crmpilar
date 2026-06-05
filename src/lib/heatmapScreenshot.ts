@@ -141,9 +141,8 @@ export async function captureRouteViaIframe(
       setTimeout(finish, waitMs + 4000);
     });
     const doc = iframe.contentDocument;
-    if (!doc) throw new Error("Iframe sem documento acessível");
-    const target = doc.documentElement || doc.body;
-    const body = doc.body;
+    if (!doc?.body) throw new Error("Iframe sem documento acessível");
+    const target = doc.body;
 
     const canvas = await html2canvas(target, {
       backgroundColor: "#ffffff",
@@ -153,7 +152,9 @@ export async function captureRouteViaIframe(
       windowWidth: width,
       windowHeight: height,
       width,
-      height: Math.min(body?.scrollHeight || target.scrollHeight || height, height * 3),
+      height: Math.min(target.scrollHeight || height, height * 3),
+      imageTimeout: 8000,
+      ignoreElements: (el) => ["IFRAME", "VIDEO"].includes(el.tagName),
     });
 
     const blob: Blob = await new Promise((resolve, reject) =>
