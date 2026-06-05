@@ -905,6 +905,19 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
         {step < 3 ? (
           <Button
             onClick={() => {
+              if (step === 2) {
+                const modelMeta = AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel);
+                const hasRefs = !!selectedProduct || (includeInfluencer && !!selectedInfluencer) || useVisualIdentity;
+                if (modelMeta && !modelMeta.supportsImageRefs && hasRefs) {
+                  const ok = window.confirm(
+                    `⚠️ O modelo "${modelMeta.label.split(' — ')[0]}" NÃO aceita imagens de referência.\n\n` +
+                    `Produto, influencer e identidade visual serão IGNORADOS — a cena será gerada apenas a partir do texto.\n\n` +
+                    `Recomendado: use o modelo Seedance 2.0 (WaveSpeed) para preservar a aparência do produto e do influencer.\n\n` +
+                    `Deseja continuar mesmo assim?`
+                  );
+                  if (!ok) return;
+                }
+              }
               if (step === 1) {
                 enhanceBriefingSilently();
               }
