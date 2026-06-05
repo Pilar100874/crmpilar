@@ -142,8 +142,28 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
   const [resultVideoUrl, setResultVideoUrl] = useState<string | null>(null);
   const [resultBlob, setResultBlob] = useState<Blob | null>(null);
   const [saving, setSaving] = useState(false);
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const [estimatedTotalSec, setEstimatedTotalSec] = useState(90);
 
   const estabId = useMemo(() => localStorage.getItem('estabelecimentoId') || '', []);
+
+  // Timer de progresso durante a geração
+  useEffect(() => {
+    if (!generating) return;
+    setElapsedSec(0);
+    const start = Date.now();
+    const t = setInterval(() => setElapsedSec(Math.floor((Date.now() - start) / 1000)), 500);
+    return () => clearInterval(t);
+  }, [generating]);
+
+  // Estima tempo total conforme modelo + duração + se precisa de TTS/mux
+  useEffect(() => {
+    const isVeo = videoModel.startsWith('google/veo');
+    const base = isVeo ? 60 : 110; // veo é mais rápido; seedance/wavespeed mais lento
+    const perSec = isVeo ? 6 : 9;
+    const ttsMux = script && !isVeo ? 25 : 0;
+    setEstimatedTotalSec(base + perSec * duration + ttsMux);
+  }, [videoModel, duration, script]);
 
   // ---------- carregar produtos / influencers / provedores ativos ----------
   useEffect(() => {
