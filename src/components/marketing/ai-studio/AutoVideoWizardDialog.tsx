@@ -442,12 +442,9 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
                   value={briefing}
                   onChange={(e) => setBriefing(e.target.value)}
                 />
-                <div className="flex justify-end mt-2">
-                  <Button size="sm" variant="ghost" onClick={enhanceBriefing} disabled={enhancingBrief}>
-                    {enhancingBrief ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Wand2 className="h-3.5 w-3.5 mr-1" />}
-                    Enriquecer com IA
-                  </Button>
-                </div>
+                <p className="text-[10px] text-muted-foreground mt-2">
+                  ✨ A IA vai refinar este briefing automaticamente ao avançar para o próximo passo.
+                </p>
               </div>
             </div>
           )}
