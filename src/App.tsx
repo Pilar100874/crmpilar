@@ -27,6 +27,7 @@ import SystemVisualConfig from "./pages/SystemVisualConfig";
 import GlobalVariables from "./pages/GlobalVariables";
 import Desenho from "./pages/Desenho";
 import MarketingHub from "./pages/MarketingHub";
+import AutoVideoWizardPage from "./pages/AutoVideoWizardPage";
 import MarketingCanvas from "./pages/MarketingCanvas";
 import MarketingAutomacoes from "./pages/MarketingAutomacoes";
 import MarketingCampanhas from "./pages/MarketingCampanhas";
