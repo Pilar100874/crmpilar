@@ -395,13 +395,15 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     },
     institucional: {
       label: "Institucional",
+      badgeText: "INSTITUCIONAL",
       rule:
-        "OBJETIVO: peça INSTITUCIONAL/BRANDING. Estética sóbria, elegante, minimalista, corporativa. Tipografia refinada, paleta contida. PROIBIDO ar de varejo, selos de desconto, urgência, preços, percentuais ou linguagem promocional. Foco em credibilidade, valores e posicionamento da marca.",
+        "OBJETIVO: peça INSTITUCIONAL/BRANDING. Estética sóbria, elegante, minimalista, corporativa. Inclua um selo discreto com o texto exato 'INSTITUCIONAL'. Tipografia refinada, paleta contida. PROIBIDO ar de varejo, selos de desconto, urgência, preços, percentuais ou linguagem promocional. Foco em credibilidade, valores e posicionamento da marca.",
     },
     evento: {
       label: "Evento",
+      badgeText: "EVENTO",
       rule:
-        "OBJETIVO: CONVITE/ANÚNCIO de evento. Estética de pôster/flyer com forte hierarquia visual. Só destaque nome do evento, data ou local se esses conteúdos estiverem exatamente no título/subtítulo fornecidos. Atmosfera coerente com o tema do evento, sem texto extra.",
+        "OBJETIVO: CONVITE/ANÚNCIO de evento. Estética de pôster/flyer com forte hierarquia visual. Inclua um selo visual com o texto exato 'EVENTO'. Só destaque nome do evento, data ou local se esses conteúdos estiverem exatamente no título/subtítulo fornecidos. Atmosfera coerente com o tema do evento, sem texto extra.",
     },
     lancamento: {
       label: "Lançamento",
@@ -411,8 +413,9 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     },
     educacional: {
       label: "Educacional / Informativo",
+      badgeText: "DICA",
       rule:
-        "OBJETIVO: peça EDUCACIONAL/INFORMATIVA (dica, tutorial, conteúdo de valor). Estética clean e didática, hierarquia clara de informação, similar a um post de carrossel informativo. SEM apelo comercial agressivo, SEM preços, SEM ofertas.",
+        "OBJETIVO: peça EDUCACIONAL/INFORMATIVA (dica, tutorial, conteúdo de valor). Estética clean e didática, hierarquia clara de informação, similar a um post de carrossel informativo. Inclua um selo visual com o texto exato 'DICA'. SEM apelo comercial agressivo, SEM preços, SEM ofertas.",
     },
     custom: {
       label: "Personalizado",
