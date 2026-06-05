@@ -37,7 +37,7 @@ async function loadFromBase(baseURL: string, onProgress?: (p: ConcatProgress) =>
   return ffmpeg;
 }
 
-async function getFFmpeg(onProgress?: (p: ConcatProgress) => void): Promise<FFmpeg> {
+export async function getFFmpeg(onProgress?: (p: ConcatProgress) => void): Promise<FFmpeg> {
   if (_ffmpegInstance) return _ffmpegInstance;
   if (_loadingPromise) return _loadingPromise;
 
