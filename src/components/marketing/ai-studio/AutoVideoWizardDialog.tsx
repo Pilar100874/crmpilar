@@ -707,32 +707,6 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
           </DialogDescription>
         </DialogHeader>
         {innerContent}
-        <DialogFooter className="flex-row sm:justify-between gap-2">
-          <Button
-            variant="ghost"
-            disabled={step === 1 || generating}
-            onClick={() => setStep((s) => (Math.max(1, s - 1) as Step))}
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
-          </Button>
-          {step < 3 ? (
-            <Button
-              onClick={() => {
-                if (step === 1) {
-                  enhanceBriefingSilently();
-                }
-                setStep((s) => (Math.min(3, s + 1) as Step));
-              }}
-              disabled={(step === 1 && !canNext1) || (step === 2 && !canNext2)}
-            >
-              Próximo <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
-          ) : (
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>
-              <X className="h-4 w-4 mr-1" /> Fechar
-            </Button>
-          )}
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
