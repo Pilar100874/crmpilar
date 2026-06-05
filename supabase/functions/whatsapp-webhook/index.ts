@@ -2221,6 +2221,7 @@ async function executeNode(
         const mode = cfg.mode === "ask" ? "ask" : "fixed";
         if (mode === "fixed") {
           context.vars.content_type = cfg.contentType || "divulgacao";
+          context.vars.content_type_use_badge = cfg.useBadge !== false;
           for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
           break;
         }
