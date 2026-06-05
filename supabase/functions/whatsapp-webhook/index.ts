@@ -2261,6 +2261,9 @@ async function executeNode(
 
       default: {
         console.log(`[FLOW] Unknown node type: ${data.type} - moving to next nodes`);
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
     }
   } catch (err) {
     console.error(`[FLOW] Error executing node ${node.id} (${data.type}):`, err);
