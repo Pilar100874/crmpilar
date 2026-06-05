@@ -731,6 +731,18 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
                 <p className="text-[10px] text-muted-foreground mt-1">
                   Somente modelos cinematográficos prontos para anúncio (estilo Higgsfield) com provedor ativo.
                 </p>
+                {(() => {
+                  const modelMeta = AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel);
+                  const hasRefs = !!selectedProduct || (includeInfluencer && !!selectedInfluencer) || useVisualIdentity;
+                  if (modelMeta && !modelMeta.supportsImageRefs && hasRefs) {
+                    return (
+                      <div className="mt-2 text-[11px] text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-md p-2 leading-snug">
+                        ⚠️ Este modelo <strong>não aceita imagens de referência</strong>. Produto, influencer e identidade visual serão <strong>ignorados</strong>. Para preservá-los, escolha <strong>Seedance 2.0 (WaveSpeed)</strong>.
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
               <div>
                 <Label>Proporção</Label>
