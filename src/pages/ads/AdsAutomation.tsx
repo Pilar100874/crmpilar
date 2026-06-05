@@ -856,10 +856,11 @@ function AdsAutomationContent() {
               </Button>
               <Button 
                 size="sm" 
-                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white shadow-lg h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
+                onClick={() => { if (!showSimulator) setSelectedNode(null); setShowSimulator((v) => !v); }}
+                className={`bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white shadow-lg h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 ${showSimulator ? 'ring-2 ring-primary/40' : ''}`}
               >
                 <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Testar</span>
+                <span className="hidden sm:inline">{showSimulator ? 'Fechar' : 'Simular'}</span>
               </Button>
               <Button 
                 variant="destructive" 
