@@ -165,7 +165,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
       if (!estabId) return;
       const { data } = await supabase
         .from('studio_gallery_images')
-        .select('id, url, nome')
+        .select('id, image_url, nome')
         .eq('estabelecimento_id', estabId)
         .eq('categoria', 'influencer')
         .order('created_at', { ascending: false })
