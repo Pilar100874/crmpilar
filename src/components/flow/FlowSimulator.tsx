@@ -380,14 +380,16 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   };
 
   // ====== content_type (Tipo de Conteúdo: Divulgação / Promoção / Institucional...) ======
-  const CONTENT_TYPE_DIRECTIVES: Record<string, { label: string; rule: string }> = {
+  const CONTENT_TYPE_DIRECTIVES: Record<string, { label: string; rule: string; badgeText?: string }> = {
     divulgacao: {
       label: "Divulgação",
+      badgeText: "DIVULGAÇÃO",
       rule:
         "OBJETIVO: peça de DIVULGAÇÃO/AWARENESS. Apresente o produto, serviço ou marca de forma atrativa, com estética convidativa e tom inspirador/lifestyle. Inclua um selo visual com o texto exato 'DIVULGAÇÃO'. PROIBIDO incluir preços, percentuais de desconto, selos de oferta, palavras como 'OFERTA', 'PROMOÇÃO', 'DESCONTO', '% OFF'. Composição mais leve, aspiracional, sem apelo de varejo.",
     },
     promocao: {
       label: "Promoção",
+      badgeText: "PROMOÇÃO",
       rule:
         "OBJETIVO: peça PROMOCIONAL/COMERCIAL com foco em CONVERSÃO. Estética de varejo, energética, com hierarquia visual forte. Inclua um selo visual com o texto exato 'PROMOÇÃO'. Use cores vibrantes e contraste alto, sem preços ou percentuais se esses conteúdos não estiverem exatamente no título/subtítulo fornecidos.",
     },
@@ -403,6 +405,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     },
     lancamento: {
       label: "Lançamento",
+      badgeText: "LANÇAMENTO",
       rule:
         "OBJETIVO: peça de LANÇAMENTO de produto/serviço. Estética premium e dramática, iluminação cinematográfica, produto em primeiro plano. Inclua um selo visual com o texto exato 'LANÇAMENTO'. Sem apelo promocional/desconto.",
     },
