@@ -283,7 +283,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
       let finalBlob: Blob | null = null;
 
       // 2) Se há narração e o modelo NÃO é Veo (que já gera áudio nativo), gera TTS + mux
-      const modelHasNativeAudio = videoModel.startsWith('google/veo-3');
+      const modelHasNativeAudio = !!AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel)?.nativeAudio;
       if (script && !modelHasNativeAudio) {
         try {
           setProgressMsg('Gerando narração (TTS)…');
