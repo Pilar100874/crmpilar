@@ -30,13 +30,12 @@ interface AutoVideoWizardDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// Modelos recomendados para o wizard automático (rápidos / com áudio nativo / acessíveis)
-const RECOMMENDED_VIDEO_MODELS = [
-  { value: 'google/veo-3.1-fast', label: 'Veo 3.1 Fast — recomendado (com áudio nativo)', tier: 'rápido' },
-  { value: 'google/veo-3', label: 'Veo 3 — alta qualidade com diálogos', tier: 'alta' },
-  { value: 'google/veo-2', label: 'Veo 2 — bom custo-benefício', tier: 'econômico' },
-  { value: 'wavespeed/seedance-2.0', label: 'Seedance 2.0 (WaveSpeed)', tier: 'alta' },
-  { value: 'free/gif-animated', label: 'GIF Animado (Gratuito, sem áudio)', tier: 'grátis' },
+// Modelos cinemáticos estilo Higgsfield — qualidade publicitária, suportam referência de imagem (produto + influencer)
+// O wizard só exibe os modelos cujo provedor está ATIVO em ai_api_keys.
+const AD_READY_VIDEO_MODELS: Array<{ value: string; label: string; provider: string; nativeAudio: boolean; tier: string }> = [
+  { value: 'google/veo-3.1-fast', label: 'Veo 3.1 Fast — cinematográfico (áudio nativo)', provider: 'google', nativeAudio: true, tier: 'rápido' },
+  { value: 'google/veo-3', label: 'Veo 3 — máxima qualidade com diálogo', provider: 'google', nativeAudio: true, tier: 'premium' },
+  { value: 'wavespeed/seedance-2.0', label: 'Seedance 2.0 — Higgsfield-style cinematic', provider: 'wavespeed', nativeAudio: false, tier: 'alta' },
 ];
 
 type Step = 1 | 2 | 3;
@@ -129,7 +128,8 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
   const [influencers, setInfluencers] = useState<InfluencerRow[]>([]);
   const [selectedInfluencer, setSelectedInfluencer] = useState<InfluencerRow | null>(null);
   const [influencerSearch, setInfluencerSearch] = useState('');
-  const [videoModel, setVideoModel] = useState('google/veo-3.1-fast');
+  const [videoModel, setVideoModel] = useState('wavespeed/seedance-2.0');
+  const [activeProviders, setActiveProviders] = useState<Set<string>>(new Set());
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16' | '1:1'>('9:16');
   const [duration, setDuration] = useState<4 | 8>(8);
 
@@ -144,19 +144,23 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
 
   const estabId = useMemo(() => localStorage.getItem('estabelecimentoId') || '', []);
 
-  // ---------- carregar produtos / influencers ----------
+  // ---------- carregar produtos / influencers / provedores ativos ----------
   useEffect(() => {
     if (!open) return;
     (async () => {
       if (!estabId) return;
-      const { data } = await supabase
-        .from('produtos')
-        .select('id, nome, codigo, foto_url')
-        .eq('estabelecimento_id', estabId)
-        .eq('ativo', true)
-        .order('nome')
-        .limit(300);
-      setProducts(data || []);
+      const [{ data: prods }, { data: keys }] = await Promise.all([
+        supabase.from('produtos').select('id, nome, codigo, foto_url').eq('estabelecimento_id', estabId).eq('ativo', true).order('nome').limit(300),
+        supabase.from('ai_api_keys').select('provider, is_active').eq('is_active', true),
+      ]);
+      setProducts(prods || []);
+      const active = new Set<string>((keys || []).map((k: any) => k.provider));
+      setActiveProviders(active);
+      // se o modelo atual não está disponível, escolhe o primeiro disponível
+      const available = AD_READY_VIDEO_MODELS.filter((m) => active.has(m.provider));
+      if (available.length && !available.find((m) => m.value === videoModel)) {
+        setVideoModel(available[0].value);
+      }
     })();
   }, [open, estabId]);
 
@@ -213,23 +217,33 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
     }
   }, [briefing]);
 
-  const generateScript = useCallback(async () => {
-    if (!briefing.trim()) return toast.info('Volte ao passo 1 e descreva o vídeo.');
+  const generateScript = useCallback(async (mode: 'generate' | 'enhance' = 'generate') => {
+    if (mode === 'enhance' && !script.trim()) {
+      return toast.info('Digite um texto base para enriquecer ou use "Gerar por IA".');
+    }
+    if (!briefing.trim() && mode === 'generate') return toast.info('Volte ao passo 1 e descreva o vídeo.');
     setGeneratingScript(true);
     try {
       const prodName = selectedProduct?.nome || 'o produto';
+      const systemPrompt = mode === 'enhance'
+        ? 'Você é um copywriter publicitário. Reescreva a locução abaixo deixando-a mais persuasiva, natural e cinematográfica, mantendo a essência. Português BR, sem emojis, sem aspas, sem marcações cênicas. Máximo 35 palavras. Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.'
+        : 'Você é um copywriter de anúncios curtos estilo Higgsfield. Escreva um TEXTO FALADO (locução/narração) em português BR, natural e direto, pronto para virar áudio TTS. Sem emojis, sem aspas, sem marcações cênicas. Máximo 35 palavras. Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.';
+      const prompt = mode === 'enhance'
+        ? `Locução atual: ${script}\nProduto: ${prodName}\nDuração-alvo: ${duration}s.\nReescreva mantendo o sentido, mas mais publicitária.`
+        : `Briefing do vídeo: ${briefing}\nProduto: ${prodName}\nDuração-alvo: ${duration}s.\nGere a narração que será falada por uma voz IA.`;
       const r = await callEdge('generate_text', {
         model: 'google/gemini-3-flash-preview',
-        systemPrompt: 'Você é um copywriter de anúncios curtos. Escreva um TEXTO FALADO (locução/narração) em português BR, natural e direto, pronto para virar áudio TTS. Sem emojis, sem aspas, sem marcações cênicas. Máximo 35 palavras. Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.',
-        prompt: `Briefing do vídeo: ${briefing}\nProduto: ${prodName}\nDuração-alvo: ${duration}s.\nGere a narração que será falada por uma voz IA.`,
+        systemPrompt,
+        prompt,
       }, 60000);
       if (r) setScript(String(r).trim().replace(/^["']|["']$/g, ''));
+      toast.success(mode === 'enhance' ? 'Texto enriquecido.' : 'Texto gerado.');
     } catch (e: any) {
-      toast.error('Falha ao gerar texto: ' + e.message);
+      toast.error('Falha ao processar texto: ' + e.message);
     } finally {
       setGeneratingScript(false);
     }
-  }, [briefing, selectedProduct, duration]);
+  }, [briefing, selectedProduct, duration, script]);
 
   const handleGenerate = useCallback(async () => {
     if (!estabId) return toast.error('Estabelecimento não encontrado.');
@@ -269,7 +283,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
       let finalBlob: Blob | null = null;
 
       // 2) Se há narração e o modelo NÃO é Veo (que já gera áudio nativo), gera TTS + mux
-      const modelHasNativeAudio = videoModel.startsWith('google/veo-3');
+      const modelHasNativeAudio = !!AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel)?.nativeAudio;
       if (script && !modelHasNativeAudio) {
         try {
           setProgressMsg('Gerando narração (TTS)…');
@@ -498,11 +512,19 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
                   <Select value={videoModel} onValueChange={setVideoModel}>
                     <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {RECOMMENDED_VIDEO_MODELS.map((m) => (
+                      {AD_READY_VIDEO_MODELS.filter((m) => activeProviders.has(m.provider)).map((m) => (
                         <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
                       ))}
+                      {AD_READY_VIDEO_MODELS.filter((m) => activeProviders.has(m.provider)).length === 0 && (
+                        <div className="px-3 py-2 text-xs text-muted-foreground">
+                          Nenhum provedor de vídeo ativo. Configure em Configurações → IA.
+                        </div>
+                      )}
                     </SelectContent>
                   </Select>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Somente modelos cinematográficos prontos para anúncio (estilo Higgsfield) com provedor ativo.
+                  </p>
                 </div>
                 <div>
                   <Label>Proporção</Label>
@@ -533,12 +555,18 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
           {step === 3 && (
             <div className="space-y-4 py-2">
               <div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <Label>Texto que será falado (locução)</Label>
-                  <Button size="sm" variant="ghost" onClick={generateScript} disabled={generatingScript}>
-                    {generatingScript ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Wand2 className="h-3.5 w-3.5 mr-1" />}
-                    Gerar com IA
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="outline" onClick={() => generateScript('enhance')} disabled={generatingScript || !script.trim()}>
+                      {generatingScript ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
+                      Enriquecer com IA
+                    </Button>
+                    <Button size="sm" variant="default" onClick={() => generateScript('generate')} disabled={generatingScript}>
+                      {generatingScript ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Wand2 className="h-3.5 w-3.5 mr-1" />}
+                      Gerar por IA
+                    </Button>
+                  </div>
                 </div>
                 <Textarea
                   rows={4}
