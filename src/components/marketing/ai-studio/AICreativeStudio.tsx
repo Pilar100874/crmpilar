@@ -40,7 +40,7 @@ import ExecutionLogPanel from './ExecutionLogPanel';
 import StudioGalleryManager from './StudioGalleryManager';
 import { nodeResultStore } from './useNodeResults';
 import BatchReviewDialog from './BatchReviewDialog';
-import AutoVideoWizardDialog from './AutoVideoWizardDialog';
+
 import SmartConnectMenu from './SmartConnectMenu';
 import { studioBackgroundJobs, estimateWorkflowSeconds, modelSuggestions, formatSeconds } from './backgroundJobsStore';
 import { WorkflowCard, WorkflowCardGrid } from '@/components/ui/workflow-card';
@@ -92,7 +92,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<StudioNode | null>(null);
   const [showPresets, setShowPresets] = useState(false);
-  const [showAutoVideoWizard, setShowAutoVideoWizard] = useState(false);
+  
   const [presetInitialSelections, setPresetInitialSelections] = useState<Record<string, string[]> | undefined>(undefined);
   const [reloadingPresetNodeId, setReloadingPresetNodeId] = useState<string | null>(null);
   const [showCanvas, setShowCanvas] = useState(false);
@@ -1952,15 +1952,6 @@ const AICreativeStudioInner: React.FC = () => {
             Presets
           </Button>
           <Button
-            size="sm"
-            onClick={() => setShowAutoVideoWizard(true)}
-            className="gap-1.5 text-xs h-8 px-3 shrink-0 bg-gradient-to-r from-primary via-fuchsia-500 to-orange-400 text-white hover:opacity-90"
-            title="Wizard de Vídeo Automático"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Wizard Vídeo</span>
-          </Button>
-          <Button
             size="icon"
             variant="ghost"
             onClick={() => setShowVisualIdentity(true)}
@@ -2084,7 +2075,6 @@ const AICreativeStudioInner: React.FC = () => {
             )}
           </AnimatePresence>
 
-          <AutoVideoWizardDialog open={showAutoVideoWizard} onOpenChange={setShowAutoVideoWizard} />
 
           {/* Context Menu */}
           <AnimatePresence>
