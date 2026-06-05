@@ -270,7 +270,7 @@ serve(async (req) => {
       const placement = (hasProduct && hasPerson)
         ? `\n\nPOSICIONAMENTO DESTA VARIAÇÃO (obrigatório): ${placementHints[variationIndex % placementHints.length]}.`
         : "";
-      const varyHint = `\n\nVARIAÇÃO ${variationIndex + 1} de ${variationsCount}: mantenha o mesmo briefing, identidade visual e referências; mude apenas ângulo, enquadramento e composição.${placement}\n\nLEMBRETE FINAL: ${hasProduct && hasPerson ? "o PRODUTO e o INFLUENCIADOR precisam aparecer JUNTOS nesta imagem — sem exceção." : "siga rigorosamente as referências."} Não adicione nenhum texto além do título/subtítulo explicitamente autorizado no briefing principal.`;
+      const varyHint = `\n\nVARIAÇÃO ${variationIndex + 1} de ${variationsCount}: mantenha o mesmo briefing, identidade visual e referências; mude apenas ângulo, enquadramento e composição.${placement}\n\nLEMBRETE FINAL: ${hasProduct && hasPerson ? "o PRODUTO e o INFLUENCIADOR precisam aparecer JUNTOS nesta imagem — sem exceção." : "siga rigorosamente as referências."} Não adicione nenhum texto além do título/subtítulo explicitamente autorizado no briefing principal${badgeText ? ` e do selo obrigatório "${badgeText}"` : ""}.`;
       const messages = [{
         role: "user",
         content: [
