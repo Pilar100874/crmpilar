@@ -17,8 +17,11 @@ import {
   Trash2,
   X,
   ArrowRight,
-  StickyNote
+  StickyNote,
+  HelpCircle,
 } from "lucide-react";
+import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
+import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
