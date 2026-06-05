@@ -21,7 +21,7 @@ interface ProductRow {
 
 interface InfluencerRow {
   id: string;
-  url: string;
+  image_url: string;
   nome?: string | null;
 }
 
