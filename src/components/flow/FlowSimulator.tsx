@@ -869,6 +869,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               prompt: `${userPrompt}${contentTypeDirective ? `\n\n${contentTypeDirective}` : ""}${lockedTextDirective ? `\n\n${lockedTextDirective}` : ""}${aiTextDirective ? `\n\n${aiTextDirective}` : ""}\n\n${noExtraTextDirective}\n\n${logoMandatoryDirective}${upstreamPieca.productDescription ? `\n\nPRODUTO (descrição do usuário): ${upstreamPieca.productDescription}` : ""}\n\nGere somente a opção ${optionIndex + 1} de ${variations}. Mantenha o mesmo briefing, identidade visual e formato ${imageAspectRatio}; varie apenas ângulo, enquadramento ou composição.${contentTypeDirective ? " Respeite ESTRITAMENTE o TIPO DE CONTEÚDO definido acima." : ""}${lockedTextDirective ? " O TEXTO renderizado na imagem deve ser EXATAMENTE o especificado — não varie, não traduza, não invente." : ""}${aiTextDirective ? " Para os textos marcados como GERAR PELA IA, crie textos curtos coerentes em PT-BR." : ""} O LOGO da empresa DEVE aparecer na peça final.`,
               basePrompt,
               variations: 1,
+              contentTypeBadge,
               styleSource,
               preset: styleSource === "preset" ? (config.preset || "") : "",
               referenceImageUrl: refImageUrl || "",
