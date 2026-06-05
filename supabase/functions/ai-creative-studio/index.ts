@@ -2660,7 +2660,8 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
         console.log(`[generate_audio] Provider=${provider}, text length=${text.length}`);
 
         if (provider === "elevenlabs") {
-          const apiKey = await fetchApiKey(estabId, "elevenlabs");
+          // Tenta primeiro a chave salva no banco; se não houver, usa o secret/conector global (ELEVENLABS_API_KEY)
+          const apiKey = (await fetchApiKey(estabId, "elevenlabs")) || Deno.env.get("ELEVENLABS_API_KEY") || "";
           if (!apiKey) throw new Error("ElevenLabs API key not configured. Go to Settings → Paid APIs.");
 
           // Fetch extra config from base_url field

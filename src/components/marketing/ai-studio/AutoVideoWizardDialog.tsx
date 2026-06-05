@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Sparkles, Video, ArrowLeft, ArrowRight, Save, Wand2, User, Package, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { Progress } from '@/components/ui/progress';
 import { muxAudioWithVideo } from './videoMux';
 
 interface ProductRow {
@@ -118,7 +119,6 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
 
   // Step 1 — Briefing
   const [briefing, setBriefing] = useState('');
-  const [enhancingBrief, setEnhancingBrief] = useState(false);
 
   // Step 2 — Produto + Influencer + Modelo
   const [products, setProducts] = useState<ProductRow[]>([]);
@@ -141,8 +141,28 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
   const [resultVideoUrl, setResultVideoUrl] = useState<string | null>(null);
   const [resultBlob, setResultBlob] = useState<Blob | null>(null);
   const [saving, setSaving] = useState(false);
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const [estimatedTotalSec, setEstimatedTotalSec] = useState(90);
 
   const estabId = useMemo(() => localStorage.getItem('estabelecimentoId') || '', []);
+
+  // Timer de progresso durante a geração
+  useEffect(() => {
+    if (!generating) return;
+    setElapsedSec(0);
+    const start = Date.now();
+    const t = setInterval(() => setElapsedSec(Math.floor((Date.now() - start) / 1000)), 500);
+    return () => clearInterval(t);
+  }, [generating]);
+
+  // Estima tempo total conforme modelo + duração + se precisa de TTS/mux
+  useEffect(() => {
+    const isVeo = videoModel.startsWith('google/veo');
+    const base = isVeo ? 60 : 110; // veo é mais rápido; seedance/wavespeed mais lento
+    const perSec = isVeo ? 6 : 9;
+    const ttsMux = script && !isVeo ? 25 : 0;
+    setEstimatedTotalSec(base + perSec * duration + ttsMux);
+  }, [videoModel, duration, script]);
 
   // ---------- carregar produtos / influencers / provedores ativos ----------
   useEffect(() => {
@@ -199,21 +219,18 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
   }, [open]);
 
   // ---------- ações ----------
-  const enhanceBriefing = useCallback(async () => {
-    if (!briefing.trim()) return toast.info('Escreva alguma ideia inicial.');
-    setEnhancingBrief(true);
+  // Enriquece o briefing silenciosamente em background (sem botão / sem feedback de loading)
+  const enhanceBriefingSilently = useCallback(async () => {
+    if (!briefing.trim() || briefing.trim().length < 8) return;
     try {
       const r = await callEdge('generate_text', {
         model: 'google/gemini-3-flash-preview',
         systemPrompt: 'Você é um diretor criativo de vídeos curtos publicitários. Reescreva o briefing do usuário em 2-3 frases claras, descrevendo cena, mood, câmera e luz. Português BR. Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.',
         prompt: briefing,
-      }, 60000);
+      }, 30000);
       if (r) setBriefing(String(r).trim());
-      toast.success('Briefing enriquecido.');
-    } catch (e: any) {
-      toast.error('Falha ao enriquecer: ' + e.message);
-    } finally {
-      setEnhancingBrief(false);
+    } catch {
+      // silencioso — segue com o briefing original
     }
   }, [briefing]);
 
@@ -424,12 +441,9 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
                   value={briefing}
                   onChange={(e) => setBriefing(e.target.value)}
                 />
-                <div className="flex justify-end mt-2">
-                  <Button size="sm" variant="ghost" onClick={enhanceBriefing} disabled={enhancingBrief}>
-                    {enhancingBrief ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Wand2 className="h-3.5 w-3.5 mr-1" />}
-                    Enriquecer com IA
-                  </Button>
-                </div>
+                <p className="text-[10px] text-muted-foreground mt-2">
+                  ✨ A IA vai refinar este briefing automaticamente ao avançar para o próximo passo.
+                </p>
               </div>
             </div>
           )}
@@ -607,9 +621,24 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
                 </Button>
               )}
 
-              {generating && progressMsg && (
-                <div className="text-xs text-muted-foreground text-center animate-pulse">{progressMsg}</div>
-              )}
+              {generating && (() => {
+                const pct = Math.min(98, Math.round((elapsedSec / Math.max(1, estimatedTotalSec)) * 100));
+                const remaining = Math.max(0, estimatedTotalSec - elapsedSec);
+                const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+                return (
+                  <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium text-foreground">{progressMsg || 'Renderizando…'}</span>
+                      <span className="font-mono text-muted-foreground">{pct}%</span>
+                    </div>
+                    <Progress value={pct} className="h-2" />
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                      <span>Decorrido: <span className="font-mono">{fmt(elapsedSec)}</span></span>
+                      <span>Estimado restante: <span className="font-mono">~{fmt(remaining)}</span></span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {resultVideoUrl && (
                 <div className="space-y-3">
@@ -641,7 +670,13 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
           </Button>
           {step < 3 ? (
             <Button
-              onClick={() => setStep((s) => (Math.min(3, s + 1) as Step))}
+              onClick={() => {
+                if (step === 1) {
+                  // dispara enriquecimento em background, sem bloquear UI
+                  enhanceBriefingSilently();
+                }
+                setStep((s) => (Math.min(3, s + 1) as Step));
+              }}
               disabled={(step === 1 && !canNext1) || (step === 2 && !canNext2)}
             >
               Próximo <ArrowRight className="h-4 w-4 ml-1" />
