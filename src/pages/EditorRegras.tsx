@@ -82,6 +82,7 @@ function EditorRegrasContent() {
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showSimulator, setShowSimulator] = useState(false);
 
   const handleDuplicateNode = useCallback(
     (nodeId: string) => {
