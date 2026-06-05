@@ -38,6 +38,7 @@ import { AdsPropertiesPanel } from "@/components/ads-automation/AdsPropertiesPan
 import { BlockNoteDialog } from "@/components/omnichannel-builder/BlockNoteDialog";
 import { ADS_BLOCK_DEFINITIONS, AdsFlowNodeData } from "@/types/adsFlow";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
+import { WorkflowSimulator } from "@/components/workflow-simulator/WorkflowSimulator";
 import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 
 const nodeTypes = {
