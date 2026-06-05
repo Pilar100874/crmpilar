@@ -331,22 +331,16 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
       // 2) Se há narração e o modelo NÃO é Veo (que já gera áudio nativo), gera TTS + mux
       const modelHasNativeAudio = !!AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel)?.nativeAudio;
       if (script && !modelHasNativeAudio) {
-        // Escolhe provider TTS conforme as chaves ativas (sem hardcode em ElevenLabs)
-        const ttsProvider = activeProviders.has('elevenlabs')
-          ? 'elevenlabs'
-          : activeProviders.has('google')
-            ? 'google'
-            : activeProviders.has('openai')
-              ? 'openai'
-              : null;
-        if (!ttsProvider) {
-          toast.warning('Vídeo gerado sem narração: nenhuma API de TTS ativa (ElevenLabs, Google ou OpenAI). Configure em Ajustes → APIs.');
+        // Usa o provider TTS escolhido pelo usuário (só aparece se houver chave ativa)
+        const chosenTts = ttsProvider && availableTtsProviders.includes(ttsProvider as any) ? ttsProvider : null;
+        if (!chosenTts) {
+          toast.warning('Vídeo gerado sem narração: nenhuma API de TTS ativa (ElevenLabs, Google ou OpenAI). Ative uma em Configurações → IA / APIs.');
         } else {
           try {
-            setProgressMsg(`Gerando narração (TTS via ${ttsProvider})…`);
+            setProgressMsg(`Gerando narração (TTS via ${chosenTts})…`);
             const audioRes = await callEdge('generate_audio', {
               estabelecimentoId: estabId,
-              provider: ttsProvider,
+              provider: chosenTts,
               text: script,
               lang: 'pt',
             }, 120000);
