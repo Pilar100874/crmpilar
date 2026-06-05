@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Sparkles, Video, ArrowLeft, ArrowRight, Save, Wand2, User, Package, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { Progress } from '@/components/ui/progress';
 import { muxAudioWithVideo } from './videoMux';
 
 interface ProductRow {
