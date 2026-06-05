@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { HeatmapCanvas } from "./HeatmapCanvas";
 import { MousePointerClick, ChevronsDown, AlertTriangle, Users, Smartphone, Monitor, Tablet, Filter, Image as ImageIcon, Loader2, ExternalLink, Maximize2, X } from "lucide-react";
-import { captureRouteViaIframe, fetchScreenshot } from "@/lib/heatmapScreenshot";
+import { captureAndUploadScreenshot, captureRouteViaIframe, fetchScreenshot } from "@/lib/heatmapScreenshot";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
@@ -58,6 +58,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
   const [bgVh, setBgVh] = useState<number | null>(null);
   const [capturing, setCapturing] = useState(false);
   const [routeTitles, setRouteTitles] = useState<Record<string, string>>({});
+  const [activeTab, setActiveTab] = useState("overview");
 
   // Carrega títulos das rotas (usage_events) para sistema
   useEffect(() => {
@@ -154,25 +155,45 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
   useEffect(() => {
     let mounted = true;
     if (isEmbeddedCapture) return () => { mounted = false; };
+    const needsBackground = ["clicks", "moves", "frustration"].includes(activeTab);
+    if (!needsBackground) return () => { mounted = false; };
+    if (!estabelecimentoId) return () => { mounted = false; };
     if (!selectedRoute) {
       setBgUrl(null);
       return;
     }
     (async () => {
+      const isCurrentOpenScreen = selectedRoute === window.location.pathname;
+      if (isCurrentOpenScreen) {
+        try {
+          setCapturing(true);
+          const res = await captureAndUploadScreenshot(scope, estabelecimentoId ?? null, selectedRoute);
+          if (!mounted) return;
+          setBgUrl(`${res.image_url}${res.image_url.includes("?") ? "&" : "?"}t=${Date.now()}`);
+          setBgVw(res.vw);
+          setBgVh(res.vh);
+          return;
+        } catch (e: any) {
+          console.warn("[heatmap] captura da tela aberta falhou:", e?.message || e);
+        } finally {
+          if (mounted) setCapturing(false);
+        }
+      }
+
       const s = await fetchScreenshot(scope, selectedRoute, estabelecimentoId ?? null);
       if (!mounted) return;
       if (s) {
         setBgUrl(`${s.image_url}${s.image_url.includes("?") ? "&" : "?"}t=${Date.now()}`);
         setBgVw(s.vw);
         setBgVh(s.vh);
-        if (!showBg) return;
+        return;
       } else {
         setBgUrl(null);
         setBgVw(null);
         setBgVh(null);
         if (!showBg) return;
       }
-      // Captura/atualiza automaticamente para corrigir fundos ausentes ou antigos.
+      // Captura automaticamente quando a aba visual precisa do fundo e ele ainda não existe.
       try {
         setCapturing(true);
         const res = await captureRouteViaIframe(scope, estabelecimentoId ?? null, selectedRoute);
@@ -188,7 +209,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
       }
     })();
     return () => { mounted = false; };
-  }, [selectedRoute, scope, estabelecimentoId, showBg, isEmbeddedCapture]);
+  }, [selectedRoute, scope, estabelecimentoId, showBg, isEmbeddedCapture, activeTab]);
 
 
 
@@ -348,7 +369,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="overview">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="clicks">Cliques</TabsTrigger>

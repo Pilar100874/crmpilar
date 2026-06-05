@@ -9,11 +9,42 @@ export interface CaptureResult {
 
 const BUCKET = "heatmap-screenshots";
 const SIGNED_TTL = 60 * 60 * 24 * 7; // 7 dias
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
 async function signedUrl(path: string): Promise<string> {
   const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, SIGNED_TTL);
   if (error) return "";
-  return data?.signedUrl || "";
+  const raw = (data as any)?.signedUrl || (data as any)?.signedURL || "";
+  if (!raw) return "";
+  return raw.startsWith("http") ? raw : `${SUPABASE_URL}/storage/v1${raw.startsWith("/") ? raw : `/${raw}`}`;
+}
+
+function frameSrcFor(route: string) {
+  const url = new URL(route, window.location.origin);
+  const currentParams = new URLSearchParams(window.location.search);
+  currentParams.forEach((value, key) => {
+    if (key.startsWith("__lovable") && !url.searchParams.has(key)) {
+      url.searchParams.set(key, value);
+    }
+  });
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
+function canvasLooksBlank(canvas: HTMLCanvasElement) {
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return false;
+  const stepX = Math.max(1, Math.floor(canvas.width / 24));
+  const stepY = Math.max(1, Math.floor(canvas.height / 16));
+  let sampled = 0;
+  let changed = 0;
+  for (let y = 0; y < canvas.height; y += stepY) {
+    for (let x = 0; x < canvas.width; x += stepX) {
+      const [r, g, b, a] = ctx.getImageData(x, y, 1, 1).data;
+      sampled += 1;
+      if (a > 0 && (Math.abs(r - 255) > 8 || Math.abs(g - 255) > 8 || Math.abs(b - 255) > 8)) changed += 1;
+    }
+  }
+  return sampled > 0 && changed / sampled < 0.01;
 }
 
 function pathFor(scope: "sistema" | "ecommerce", estab: string | null, route: string) {
@@ -40,6 +71,7 @@ export async function captureAndUploadScreenshot(
     height: Math.min(document.body.scrollHeight, vh * 3),
     width: vw,
   });
+  if (canvasLooksBlank(canvas)) throw new Error("A tela ainda não terminou de carregar para captura");
 
   const blob: Blob = await new Promise((resolve, reject) =>
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob falhou"))), "image/jpeg", 0.78),
@@ -107,7 +139,7 @@ export async function captureRouteViaIframe(
   const waitMs = opts.waitMs ?? 6000; // tempo para a SPA carregar dados/render
   const maxTotalMs = 60000;
 
-  const iframe = document.createElement("iframe");
+    const iframe = document.createElement("iframe");
   iframe.style.position = "fixed";
   iframe.style.left = "0";
   iframe.style.top = "0";
@@ -119,8 +151,7 @@ export async function captureRouteViaIframe(
   iframe.style.zIndex = "-2147483647";
   iframe.name = "heatmap-capture-frame";
   iframe.setAttribute("aria-hidden", "true");
-  // não adicionamos query string para evitar quebrar rotas que não suportam
-  iframe.src = route;
+  iframe.src = frameSrcFor(route);
   document.body.appendChild(iframe);
 
   try {
@@ -156,6 +187,7 @@ export async function captureRouteViaIframe(
       imageTimeout: 8000,
       ignoreElements: (el) => ["IFRAME", "VIDEO"].includes(el.tagName),
     });
+    if (canvasLooksBlank(canvas)) throw new Error("A tela ainda não terminou de carregar para captura");
 
     const blob: Blob = await new Promise((resolve, reject) =>
       canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob falhou"))), "image/jpeg", 0.78),
