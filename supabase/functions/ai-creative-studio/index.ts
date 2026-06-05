@@ -2790,15 +2790,20 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
         if (provider === "wavespeed") {
           const apiKey = await fetchApiKey(estabId, "wavespeed");
           if (!apiKey) throw new Error("WaveSpeed API key not configured. Go to Settings → Paid APIs.");
-          const wsModel = (params.wavespeedModel as string) || "wavespeed-ai/dia-tts";
-          const allowed = ["wavespeed-ai/spark-tts", "wavespeed-ai/kokoro-tts", "wavespeed-ai/dia-tts"];
-          const modelPath = allowed.includes(wsModel) ? wsModel : "wavespeed-ai/dia-tts";
+          const wsModel = (params.wavespeedModel as string) || "wavespeed-ai/qwen3-tts/text-to-speech";
+          const allowed = ["wavespeed-ai/qwen3-tts/text-to-speech"];
+          const modelPath = allowed.includes(wsModel) ? wsModel : "wavespeed-ai/qwen3-tts/text-to-speech";
 
           // Submit
           const submitResp = await fetch(`https://api.wavespeed.ai/api/v3/${modelPath}`, {
             method: "POST",
             headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ text, language: params.lang || "pt" }),
+            body: JSON.stringify({
+              text,
+              language: params.lang || "Portuguese",
+              voice: params.voice || "Vivian",
+              style_instruction: params.styleInstruction || "Natural Brazilian Portuguese advertising narration, warm, clear and persuasive.",
+            }),
           });
           if (!submitResp.ok) {
             const t = await submitResp.text().catch(() => "");
