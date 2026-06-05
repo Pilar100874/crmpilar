@@ -830,12 +830,24 @@ function EditorRegrasContent() {
       </div>
 
       {/* Properties Panel */}
-      {selectedNode && (
+      {selectedNode && !showSimulator && (
         <AutomacaoPropertiesPanel
           node={selectedNode}
           onUpdate={handleUpdateNode}
           onDelete={handleDeleteNode}
           onClose={() => setSelectedNode(null)}
+        />
+      )}
+
+      {/* Simulator Panel */}
+      {showSimulator && (
+        <WorkflowSimulator
+          open={showSimulator}
+          onClose={() => setShowSimulator(false)}
+          nodes={nodes}
+          edges={edges}
+          kind="automacao-vendas"
+          blockDefinitions={AUTOMACAO_VENDAS_BLOCKS}
         />
       )}
 
