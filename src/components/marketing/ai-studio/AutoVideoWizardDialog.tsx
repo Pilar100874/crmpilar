@@ -34,12 +34,15 @@ interface AutoVideoWizardDialogProps {
   inline?: boolean;
 }
 
-// Modelos cinemáticos estilo Higgsfield — qualidade publicitária, suportam referência de imagem (produto + influencer)
+// Modelos cinemáticos estilo Higgsfield — qualidade publicitária.
 // O wizard só exibe os modelos cujo provedor está ATIVO em ai_api_keys.
-const AD_READY_VIDEO_MODELS: Array<{ value: string; label: string; provider: string; nativeAudio: boolean; tier: string; supportsImageRefs: boolean }> = [
-  { value: 'google/veo-3.1-fast', label: 'Veo 3.1 Fast — cinematográfico (áudio nativo, SEM referência de imagem)', provider: 'google', nativeAudio: true, tier: 'rápido', supportsImageRefs: false },
-  { value: 'google/veo-3', label: 'Veo 3 — máxima qualidade com diálogo (SEM referência de imagem)', provider: 'google', nativeAudio: true, tier: 'premium', supportsImageRefs: false },
-  { value: 'wavespeed/seedance-2.0', label: 'Seedance 2.0 — cinematic (aceita produto + influencer)', provider: 'wavespeed', nativeAudio: false, tier: 'alta', supportsImageRefs: true },
+const AD_READY_VIDEO_MODELS: Array<{ value: string; label: string; provider: string; nativeAudio: boolean; tier: string; supportsImageRefs: boolean; durations: number[] }> = [
+  { value: 'google/veo-3.1-fast', label: 'Veo 3.1 Fast — cinematográfico (áudio nativo, SEM referência de imagem)', provider: 'google', nativeAudio: true, tier: 'rápido', supportsImageRefs: false, durations: [8] },
+  { value: 'google/veo-3', label: 'Veo 3 — máxima qualidade com diálogo (SEM referência de imagem)', provider: 'google', nativeAudio: true, tier: 'premium', supportsImageRefs: false, durations: [8] },
+  { value: 'wavespeed/seedance-2.0', label: 'Seedance 2.0 — cinematic (aceita produto + influencer + IV)', provider: 'wavespeed', nativeAudio: false, tier: 'alta', supportsImageRefs: true, durations: [5, 10] },
+  { value: 'wavespeed/kling-2.6', label: 'Kling 2.6 Pro — WaveSpeed (aceita cena inicial com IV)', provider: 'wavespeed', nativeAudio: false, tier: 'alta', supportsImageRefs: true, durations: [5, 10] },
+  { value: 'wavespeed/wan-2.5', label: 'WAN 2.5 — WaveSpeed (aceita cena inicial com IV)', provider: 'wavespeed', nativeAudio: false, tier: 'alta', supportsImageRefs: true, durations: [5, 10] },
+  { value: 'wavespeed/ltx-video', label: 'LTX Video — WaveSpeed (rápido, aceita cena inicial)', provider: 'wavespeed', nativeAudio: false, tier: 'rápido', supportsImageRefs: true, durations: [4, 8, 10] },
 ];
 
 type Step = 1 | 2 | 3;
