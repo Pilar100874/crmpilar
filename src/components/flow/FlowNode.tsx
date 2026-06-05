@@ -211,6 +211,13 @@ export const FlowNode = memo((props: any) => {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56 bg-white border-border shadow-lg">
               <DropdownMenuItem
+                onClick={() => { setHelpOpen(true); setDropdownOpen(false); }}
+                className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
+              >
+                <HelpCircle className="w-4 h-4 mr-2 text-primary" />
+                Ajuda e exemplos
+              </DropdownMenuItem>
+              <DropdownMenuItem
                 onClick={() => {
                   data.onSetBreakpoint?.(id);
                   setDropdownOpen(false);
