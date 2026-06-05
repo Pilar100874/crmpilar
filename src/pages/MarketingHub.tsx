@@ -48,6 +48,7 @@ import AISettingsPage from '@/components/marketing/ai-studio/AISettingsPage';
 import { StrategyEngine } from '@/components/marketing/strategy-engine';
 import PageBuilder from '@/components/marketing/page-builder/PageBuilder';
 import { ConectoresRedesSociaisCRUD } from '@/components/config/ConectoresRedesSociaisCRUD';
+import AutoVideoWizardDialog from '@/components/marketing/ai-studio/AutoVideoWizardDialog';
 
 interface TabItem {
   id: string;
