@@ -424,7 +424,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
               <CardDescription>{clickPoints.length} cliques mapeados (viewport médio {avgVw}×{avgVh})</CardDescription>
             </CardHeader>
             <CardContent>
-              <HeatmapPanel width={mapW} height={mapH} maxWidth={CANVAS_W} points={scale(clickPoints)} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
+              <HeatmapPanel width={mapW} height={mapH} maxWidth={CANVAS_W} points={scale(clickPoints)} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} capturing={capturing} />
             </CardContent>
           </Card>
           <Card>
@@ -459,7 +459,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
               <CardDescription>{movePoints.length} amostras (1 a cada 250ms)</CardDescription>
             </CardHeader>
             <CardContent>
-              <HeatmapPanel width={mapW} height={mapH} maxWidth={CANVAS_W} points={scale(movePoints)} radius={40} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
+              <HeatmapPanel width={mapW} height={mapH} maxWidth={CANVAS_W} points={scale(movePoints)} radius={40} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} capturing={capturing} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -497,13 +497,13 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
             <Card>
               <CardHeader><CardTitle className="text-red-500">Rage Clicks</CardTitle><CardDescription>Cliques repetidos rapidamente no mesmo elemento (sinal de frustração)</CardDescription></CardHeader>
               <CardContent>
-                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(ragePoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
+                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(ragePoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} capturing={capturing} />
               </CardContent>
             </Card>
             <Card>
               <CardHeader><CardTitle className="text-amber-500">Dead Clicks</CardTitle><CardDescription>Cliques sem nenhuma reação na interface</CardDescription></CardHeader>
               <CardContent>
-                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(deadPoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
+                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(deadPoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} capturing={capturing} />
               </CardContent>
             </Card>
           </div>
@@ -630,7 +630,7 @@ function RouteSelector({
   );
 }
 
-function HeatmapPanel({ width, height, maxWidth, points, radius, maxOpacity, bgUrl, bgVw, bgVh }: { width: number; height: number; maxWidth?: number; points: { x: number; y: number }[]; radius?: number; maxOpacity?: number; bgUrl?: string | null; bgVw?: number | null; bgVh?: number | null }) {
+function HeatmapPanel({ width, height, maxWidth, points, radius, maxOpacity, bgUrl, bgVw, bgVh, capturing }: { width: number; height: number; maxWidth?: number; points: { x: number; y: number }[]; radius?: number; maxOpacity?: number; bgUrl?: string | null; bgVw?: number | null; bgVh?: number | null; capturing?: boolean }) {
   const [fullscreen, setFullscreen] = useState(false);
   // Em tela cheia: usa o aspect ratio real da tela capturada (igual ao usuário vê)
   const fsAspect = bgVw && bgVh ? `${bgVw}/${bgVh}` : `${width}/${height}`;
@@ -653,7 +653,14 @@ function HeatmapPanel({ width, height, maxWidth, points, radius, maxOpacity, bgU
         </div>
       )}
       <HeatmapCanvas points={points} width={width} height={height} radius={radius} maxOpacity={maxOpacity} className="rounded absolute inset-0 w-full h-full" />
-      {points.length === 0 && (
+      {capturing && !bgUrl && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/80 backdrop-blur-sm z-10">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="text-sm font-medium text-foreground">Capturando tela de fundo...</div>
+          <div className="text-xs text-muted-foreground">Isso pode levar alguns segundos</div>
+        </div>
+      )}
+      {points.length === 0 && !capturing && (
         <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">Sem dados ainda. Aguardando interações...</div>
       )}
       <Button
