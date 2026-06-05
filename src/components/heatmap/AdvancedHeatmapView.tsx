@@ -40,7 +40,7 @@ interface EventRow {
 }
 
 export function AdvancedHeatmapView({ scope, title, description, estabelecimentoId }: { scope: Scope; title: string; description: string; estabelecimentoId?: string | null }) {
-  const isEmbeddedCapture = typeof window !== "undefined" && window.self !== window.top;
+  const isEmbeddedCapture = typeof window !== "undefined" && window.name === "heatmap-capture-frame";
   const [period, setPeriod] = useState<Period>("7");
   const [device, setDevice] = useState<DeviceFilter>("all");
   const [visitorFilter, setVisitorFilter] = useState<"all" | "new" | "returning">("all");
