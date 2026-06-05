@@ -964,11 +964,23 @@ function AdsAutomationContent() {
             </div>
 
             {/* Properties Panel */}
-            {selectedNode && (
+            {selectedNode && !showSimulator && (
               <AdsPropertiesPanel
                 selectedNode={selectedNode}
                 onUpdateNode={handleUpdateNode}
                 onClose={() => setSelectedNode(null)}
+              />
+            )}
+
+            {/* Simulator Panel */}
+            {showSimulator && (
+              <WorkflowSimulator
+                open={showSimulator}
+                onClose={() => setShowSimulator(false)}
+                nodes={nodes}
+                edges={edges}
+                kind="ads"
+                blockDefinitions={ADS_BLOCK_DEFINITIONS as any}
               />
             )}
           </div>
