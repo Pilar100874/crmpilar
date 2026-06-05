@@ -115,7 +115,7 @@ async function generateVideoAsync(
   throw new Error('Timeout aguardando o vídeo.');
 }
 
-export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoWizardDialogProps) {
+export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: AutoVideoWizardDialogProps) {
   const [step, setStep] = useState<Step>(1);
 
   // Step 1 — Briefing
