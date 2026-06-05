@@ -445,7 +445,13 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
                   <input
                     type="checkbox"
                     checked={includeInfluencer}
-                    onChange={(e) => setIncludeInfluencer(e.target.checked)}
+                    onChange={(e) => {
+                      setIncludeInfluencer(e.target.checked);
+                      if (!e.target.checked) {
+                        setSelectedInfluencer(null);
+                        setInfluencerSearch('');
+                      }
+                    }}
                     className="h-4 w-4"
                   />
                   <User className="h-3.5 w-3.5" />
