@@ -306,12 +306,10 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
               <ImageIcon className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">Fundo da tela</span>
               <Switch checked={showBg} onCheckedChange={setShowBg} />
+              {capturing && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
             </div>
-            <Button size="sm" variant="outline" onClick={handleCaptureCurrent} disabled={capturing}>
-              {capturing ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Camera className="h-3.5 w-3.5 mr-1" />}
-              Capturar tela atual
-            </Button>
           </div>
+
         </CardContent>
       </Card>
 
