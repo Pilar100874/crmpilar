@@ -186,6 +186,18 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BlockHelpDialog
+        open={helpOpen}
+        onOpenChange={setHelpOpen}
+        content={{
+          label,
+          description,
+          icon: blockDef.icon,
+          color: blockDef.color,
+          ...getBlockHelp("ecommerce", (data as any).type, label, description),
+        }}
+      />
     </>
   );
 });
