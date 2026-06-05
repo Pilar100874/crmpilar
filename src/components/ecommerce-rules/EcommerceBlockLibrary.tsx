@@ -87,6 +87,24 @@ const blockCategories = [
     iconColor: "text-red-600",
     blocks: ECOMMERCE_RULE_BLOCKS.filter(b => b.category === "acao_pagamento"),
   },
+  {
+    name: "Mapa de Calor (gatilhos por visitante)",
+    icon: "Flame",
+    gradient: "from-orange-500/10 to-red-500/10",
+    border: "border-orange-500/20",
+    borderHover: "hover:border-orange-500/40",
+    iconColor: "text-orange-600",
+    blocks: ECOMMERCE_RULE_BLOCKS.filter(b => b.category === "gatilho_comportamento"),
+  },
+  {
+    name: "Ações ao visitante (tempo real)",
+    icon: "Zap",
+    gradient: "from-emerald-500/10 to-lime-500/10",
+    border: "border-emerald-500/20",
+    borderHover: "hover:border-emerald-500/40",
+    iconColor: "text-emerald-600",
+    blocks: ECOMMERCE_RULE_BLOCKS.filter(b => b.category === "acao_recuperacao"),
+  },
 ];
 
 export const EcommerceBlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: EcommerceBlockLibraryProps) => {
