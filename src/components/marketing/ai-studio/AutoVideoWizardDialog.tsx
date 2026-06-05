@@ -572,6 +572,16 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
                 </Select>
               </div>
             </div>
+
+            <div className="flex items-start justify-between gap-3 rounded-lg border border-border bg-muted/30 p-3">
+              <div className="space-y-0.5">
+                <Label className="text-sm">Usar identidade visual da marca</Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Quando ativo, o vídeo aplica cores, tipografia e estilo da sua marca. Desative para um visual cinematográfico neutro.
+                </p>
+              </div>
+              <Switch checked={useVisualIdentity} onCheckedChange={setUseVisualIdentity} />
+            </div>
           </div>
         )}
 
