@@ -572,6 +572,106 @@ serve(async (req) => {
           }
         }
       }
+      // Processa resposta para blocos de escolha (keyword_options, content_type, ask_influencer, ask_product_image, text_content, list_buttons)
+      else if (
+        pendingNode?.data?.type === "keyword_options" ||
+        pendingNode?.data?.type === "content_type" ||
+        pendingNode?.data?.type === "ask_influencer" ||
+        pendingNode?.data?.type === "ask_product_image" ||
+        pendingNode?.data?.type === "text_content" ||
+        pendingNode?.data?.type === "list_buttons"
+      ) {
+        const cfg = pendingNode.data.config || {};
+        const userResponse = (context.vars.userMessage || "").trim();
+        const blockType = pendingNode.data.type;
+
+        let options: Array<{ label: string; value: string; handle: string }> = [];
+        let variable = cfg.variable || "resposta";
+
+        if (blockType === "keyword_options") {
+          options = (cfg.buttons || cfg.keywords || []).map((b: any, i: number) => ({
+            label: b.label || b.text || `Opção ${i + 1}`,
+            value: b.value || b.label || b.text || `opcao_${i + 1}`,
+            handle: `button_${i}`,
+          }));
+          variable = cfg.variable || "opcao_escolhida";
+        } else if (blockType === "content_type") {
+          const directives = [
+            "divulgacao", "promocao", "lancamento", "evento", "institucional",
+            "engajamento", "educacional", "vendas", "remarketing", "datas_especiais",
+          ];
+          options = directives.map((d, i) => ({ label: d, value: d, handle: `ct_${i}` }));
+          variable = "content_type_choice";
+        } else if (blockType === "ask_influencer" || blockType === "ask_product_image") {
+          const prefix = blockType === "ask_influencer" ? "infl" : "pim";
+          options = [
+            { label: "Sim", value: "sim", handle: `${prefix}_yes` },
+            { label: "Não", value: "nao", handle: `${prefix}_no` },
+          ];
+          variable = blockType === "ask_influencer" ? "tem_influencer" : "tem_produto_imagem";
+        } else if (blockType === "text_content") {
+          const opts: any[] = Array.isArray(cfg.options) ? cfg.options : [];
+          if (opts.length) {
+            options = opts.map((o: any, i: number) => ({
+              label: o.label || `Opção ${i + 1}`,
+              value: `tco_${i}`,
+              handle: `tco_${i}`,
+            }));
+          } else {
+            options = [
+              { label: "Sim", value: "sim", handle: "tc_yes" },
+              { label: "Não", value: "nao", handle: "tc_no" },
+            ];
+          }
+          variable = "text_content_choice";
+        } else if (blockType === "list_buttons") {
+          const sections: any[] = cfg.sections || [];
+          let idx = 0;
+          for (const sec of sections) {
+            for (const row of (sec.rows || sec.items || [])) {
+              options.push({
+                label: row.title || row.label || `Opção ${idx + 1}`,
+                value: row.id || row.value || row.title || `item_${idx}`,
+                handle: `row_${idx}`,
+              });
+              idx++;
+            }
+          }
+          variable = cfg.variable || "list_response";
+        }
+
+        let selectedIndex = -1;
+        const asNum = parseInt(userResponse);
+        if (!isNaN(asNum) && asNum >= 1 && asNum <= options.length) {
+          selectedIndex = asNum - 1;
+        } else {
+          const lower = userResponse.toLowerCase();
+          selectedIndex = options.findIndex(
+            (o) => o.label.toLowerCase() === lower || o.value.toLowerCase() === lower,
+          );
+        }
+
+        if (selectedIndex < 0) {
+          await respond(`Por favor, responda com um número entre 1 e ${options.length} ou o nome da opção.`);
+          shouldReturn = true;
+        } else {
+          const chosen = options[selectedIndex];
+          context.vars[variable] = chosen.value;
+          delete context.pendingNodeId;
+          let edge = flowData.flow_data.edges.find(
+            (e: any) => e.source === pendingNode.id && e.sourceHandle === chosen.handle,
+          );
+          if (!edge) {
+            edge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
+          }
+          if (edge) {
+            const nextNode = flowData.flow_data.nodes.find((n: any) => n.id === edge.target);
+            if (nextNode) {
+              await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+            }
+          }
+        }
+      }
       // Processa resposta para blocos ask_*
       else if (pendingNode?.data?.type?.startsWith("ask_")) {
         const cfg = pendingNode.data.config || {};
