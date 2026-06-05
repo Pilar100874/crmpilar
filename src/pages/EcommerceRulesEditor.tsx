@@ -347,6 +347,10 @@ function EcommerceRulesEditorInner() {
       onZoomOut={() => reactFlowInstance?.zoomOut()}
       onFitView={() => reactFlowInstance?.fitView()}
       onAddBlock={() => setIsLibraryExpanded(!isLibraryExpanded)}
+      onTest={() => { if (!showSimulator) setSelectedNode(null); setShowSimulator((v) => !v); }}
+      showTest={showSimulator}
+      isTestActive={showSimulator}
+      testLabel="Simular"
       aiGeneratorContent={
         <WorkflowAIGenerator
           workflowType="Regras do E-commerce"
