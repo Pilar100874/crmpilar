@@ -258,7 +258,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
           duration,
           referenceImages: refs,
           productImageUrl: selectedProduct.foto_url,
-          influencerImageUrl: includeInfluencer ? selectedInfluencer?.url : undefined,
+          influencerImageUrl: includeInfluencer ? selectedInfluencer?.image_url : undefined,
           withAudio: true,
         },
         (m) => setProgressMsg(m),
@@ -460,7 +460,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
                           selectedInfluencer?.id === i.id ? 'border-primary ring-2 ring-primary/30' : 'border-border'
                         }`}
                       >
-                        <img src={i.url} alt={i.nome || ''} className="aspect-square w-full object-cover" />
+                        <img src={i.image_url} alt={i.nome || ''} className="aspect-square w-full object-cover" />
                       </button>
                     ))}
                     {influencers.length === 0 && (
