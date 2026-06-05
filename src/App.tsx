@@ -229,6 +229,7 @@ const App = () => (
               <Route path="/global-variables" element={<GlobalVariables />} />
               <Route path="/desenho" element={<Desenho />} />
               <Route path="/marketing" element={<MarketingHub />} />
+              <Route path="/marketing/auto-video-wizard" element={<AutoVideoWizardPage />} />
               <Route path="/marketing/canvas" element={<MarketingCanvas />} />
               <Route path="/marketing/automacoes" element={<MarketingAutomacoes />} />
               <Route path="/marketing/campanhas" element={<MarketingCampanhas />} />
