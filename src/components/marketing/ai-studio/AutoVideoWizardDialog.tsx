@@ -843,7 +843,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
                             {p === 'elevenlabs' ? 'ElevenLabs (voz premium PT-BR)'
                               : p === 'google' ? 'Google Gemini TTS'
                               : p === 'openai' ? 'OpenAI TTS'
-                              : 'WaveSpeed TTS (Spark / Kokoro / Dia)'}
+                              : 'WaveSpeed TTS (Qwen3)'}
                           </SelectItem>
                         ))}
                       </SelectContent>
