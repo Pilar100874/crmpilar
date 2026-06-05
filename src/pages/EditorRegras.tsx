@@ -38,6 +38,7 @@ import { AUTOMACAO_VENDAS_BLOCKS } from "@/types/automacaoVendas";
 import { toast } from "@/hooks/use-toast";
 import type { AutomacaoVendasBlockType } from "@/types/automacaoVendas";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
+import { WorkflowSimulator } from "@/components/workflow-simulator/WorkflowSimulator";
 import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 
 const nodeTypes = {
