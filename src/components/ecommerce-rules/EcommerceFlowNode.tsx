@@ -28,6 +28,7 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
   const blockDef = ECOMMERCE_RULE_BLOCKS.find((b) => b.type === (data as any).type);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const isStartBlock = (data as any).type === 'inicio_regra';
   const isMultiOutput = (data as any).type === 'condicao_valor_pedido';
   const faixas: { valorMin: number; valorMax: number | null; label: string }[] = isMultiOutput ? ((data as any).config?.faixas || []) : [];
