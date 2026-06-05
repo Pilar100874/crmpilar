@@ -147,10 +147,11 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
   const [elapsedSec, setElapsedSec] = useState(0);
   const [estimatedTotalSec, setEstimatedTotalSec] = useState(90);
   const [ttsProvider, setTtsProvider] = useState<string>('');
+  const [wavespeedTtsModel, setWavespeedTtsModel] = useState<string>('wavespeed-ai/dia-tts');
 
   // Provedores de TTS disponíveis (interseção com chaves ativas)
   const availableTtsProviders = useMemo(() => {
-    return (['elevenlabs', 'google', 'openai'] as const).filter((p) => activeProviders.has(p));
+    return (['elevenlabs', 'google', 'openai', 'wavespeed'] as const).filter((p) => activeProviders.has(p));
   }, [activeProviders]);
 
   // Auto-seleciona o primeiro TTS disponível quando a lista carrega/muda
