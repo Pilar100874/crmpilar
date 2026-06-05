@@ -62,6 +62,7 @@ function AdsAutomationContent() {
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(true);
+  const [showSimulator, setShowSimulator] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
