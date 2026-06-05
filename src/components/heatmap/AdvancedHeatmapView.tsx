@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { HeatmapCanvas } from "./HeatmapCanvas";
-import { MousePointerClick, Move, ChevronsDown, AlertTriangle, Users, Smartphone, Monitor, Tablet, Filter, Camera, Image as ImageIcon, Loader2, ExternalLink } from "lucide-react";
-import { captureAndUploadScreenshot, fetchScreenshot } from "@/lib/heatmapScreenshot";
+import { MousePointerClick, Move, ChevronsDown, AlertTriangle, Users, Smartphone, Monitor, Tablet, Filter, Camera, Image as ImageIcon, Loader2, ExternalLink, Maximize2, X } from "lucide-react";
+import { captureAndUploadScreenshot, captureRouteViaIframe, fetchScreenshot } from "@/lib/heatmapScreenshot";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 function prettyName(route: string, titles: Record<string, string>): string {
