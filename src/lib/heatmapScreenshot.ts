@@ -98,7 +98,8 @@ export async function captureRouteViaIframe(
 ): Promise<CaptureResult> {
   const width = opts.width ?? 1440;
   const height = opts.height ?? 900;
-  const waitMs = opts.waitMs ?? 2500;
+  const waitMs = opts.waitMs ?? 6000; // tempo para a SPA carregar dados/render
+  const maxTotalMs = 60000;
 
   const iframe = document.createElement("iframe");
   iframe.style.position = "fixed";
@@ -109,21 +110,29 @@ export async function captureRouteViaIframe(
   iframe.style.border = "0";
   iframe.style.opacity = "0";
   iframe.setAttribute("aria-hidden", "true");
-  iframe.src = route + (route.includes("?") ? "&" : "?") + "_hmcap=1";
+  // não adicionamos query string para evitar quebrar rotas que não suportam
+  iframe.src = route;
   document.body.appendChild(iframe);
 
   try {
-    await new Promise<void>((resolve, reject) => {
-      const t = setTimeout(() => reject(new Error("Timeout ao carregar a tela no iframe")), 20000);
+    // Estratégia: aguardamos o evento load se ele vier rápido; caso contrário
+    // seguimos mesmo assim após waitMs (apps pesados podem nunca disparar load).
+    await new Promise<void>((resolve) => {
+      let done = false;
+      const finish = () => { if (!done) { done = true; resolve(); } };
+      const hardTimer = setTimeout(finish, maxTotalMs);
       iframe.addEventListener(
         "load",
         () => {
-          clearTimeout(t);
-          setTimeout(resolve, waitMs);
+          setTimeout(() => { clearTimeout(hardTimer); finish(); }, waitMs);
         },
         { once: true },
       );
+      // Fallback: se em waitMs+4s o load não veio, tentamos capturar mesmo assim
+      setTimeout(finish, waitMs + 4000);
     });
+
+
 
     const doc = iframe.contentDocument;
     if (!doc) throw new Error("Iframe sem documento acessível");
