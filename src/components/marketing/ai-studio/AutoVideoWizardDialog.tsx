@@ -220,21 +220,18 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
   }, [open]);
 
   // ---------- ações ----------
-  const enhanceBriefing = useCallback(async () => {
-    if (!briefing.trim()) return toast.info('Escreva alguma ideia inicial.');
-    setEnhancingBrief(true);
+  // Enriquece o briefing silenciosamente em background (sem botão / sem feedback de loading)
+  const enhanceBriefingSilently = useCallback(async () => {
+    if (!briefing.trim() || briefing.trim().length < 8) return;
     try {
       const r = await callEdge('generate_text', {
         model: 'google/gemini-3-flash-preview',
         systemPrompt: 'Você é um diretor criativo de vídeos curtos publicitários. Reescreva o briefing do usuário em 2-3 frases claras, descrevendo cena, mood, câmera e luz. Português BR. Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.',
         prompt: briefing,
-      }, 60000);
+      }, 30000);
       if (r) setBriefing(String(r).trim());
-      toast.success('Briefing enriquecido.');
-    } catch (e: any) {
-      toast.error('Falha ao enriquecer: ' + e.message);
-    } finally {
-      setEnhancingBrief(false);
+    } catch {
+      // silencioso — segue com o briefing original
     }
   }, [briefing]);
 
