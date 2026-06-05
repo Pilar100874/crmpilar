@@ -35,10 +35,10 @@ interface AutoVideoWizardDialogProps {
 
 // Modelos cinemáticos estilo Higgsfield — qualidade publicitária, suportam referência de imagem (produto + influencer)
 // O wizard só exibe os modelos cujo provedor está ATIVO em ai_api_keys.
-const AD_READY_VIDEO_MODELS: Array<{ value: string; label: string; provider: string; nativeAudio: boolean; tier: string }> = [
-  { value: 'google/veo-3.1-fast', label: 'Veo 3.1 Fast — cinematográfico (áudio nativo)', provider: 'google', nativeAudio: true, tier: 'rápido' },
-  { value: 'google/veo-3', label: 'Veo 3 — máxima qualidade com diálogo', provider: 'google', nativeAudio: true, tier: 'premium' },
-  { value: 'wavespeed/seedance-2.0', label: 'Seedance 2.0 — Higgsfield-style cinematic', provider: 'wavespeed', nativeAudio: false, tier: 'alta' },
+const AD_READY_VIDEO_MODELS: Array<{ value: string; label: string; provider: string; nativeAudio: boolean; tier: string; supportsImageRefs: boolean }> = [
+  { value: 'google/veo-3.1-fast', label: 'Veo 3.1 Fast — cinematográfico (áudio nativo, SEM referência de imagem)', provider: 'google', nativeAudio: true, tier: 'rápido', supportsImageRefs: false },
+  { value: 'google/veo-3', label: 'Veo 3 — máxima qualidade com diálogo (SEM referência de imagem)', provider: 'google', nativeAudio: true, tier: 'premium', supportsImageRefs: false },
+  { value: 'wavespeed/seedance-2.0', label: 'Seedance 2.0 — cinematic (aceita produto + influencer)', provider: 'wavespeed', nativeAudio: false, tier: 'alta', supportsImageRefs: true },
 ];
 
 type Step = 1 | 2 | 3;
