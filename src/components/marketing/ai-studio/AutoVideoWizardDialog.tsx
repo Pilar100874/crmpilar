@@ -621,9 +621,24 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
                 </Button>
               )}
 
-              {generating && progressMsg && (
-                <div className="text-xs text-muted-foreground text-center animate-pulse">{progressMsg}</div>
-              )}
+              {generating && (() => {
+                const pct = Math.min(98, Math.round((elapsedSec / Math.max(1, estimatedTotalSec)) * 100));
+                const remaining = Math.max(0, estimatedTotalSec - elapsedSec);
+                const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+                return (
+                  <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium text-foreground">{progressMsg || 'Renderizando…'}</span>
+                      <span className="font-mono text-muted-foreground">{pct}%</span>
+                    </div>
+                    <Progress value={pct} className="h-2" />
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                      <span>Decorrido: <span className="font-mono">{fmt(elapsedSec)}</span></span>
+                      <span>Estimado restante: <span className="font-mono">~{fmt(remaining)}</span></span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {resultVideoUrl && (
                 <div className="space-y-3">
