@@ -2,7 +2,7 @@ import { memo, useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { ADS_BLOCK_DEFINITIONS, AdsBlockType, AdsFlowNodeData } from "@/types/adsFlow";
 import { 
-  MoreVertical, Pause, SkipForward, Copy, Trash2, StickyNote, X, ArrowRight,
+  MoreVertical, Pause, SkipForward, Copy, Trash2, StickyNote, X, ArrowRight, HelpCircle,
   TrendingDown, DollarSign, MousePointerClick, Percent, Target, Eye, Clock,
   Repeat, Star, AlertTriangle, ArrowUpDown, Layers, Megaphone, BarChart3,
   Calendar, PiggyBank, Smartphone, MapPin, Play, TrendingUp, Bell, Webhook,
@@ -29,6 +29,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
+import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
 
 const iconMap: Record<string, LucideIcon> = {
   TrendingDown,
@@ -82,6 +84,7 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
   const blockDef = ADS_BLOCK_DEFINITIONS.find((b) => b.type === data.type);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const isCollapsed = data.isCollapsed ?? false;
 
   if (!blockDef) return null;
@@ -330,6 +333,11 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => setHelpOpen(true)}>
+                  <HelpCircle className="w-4 h-4 mr-2 text-primary" />
+                  Ajuda e exemplos
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => {
                     data.onToggleCollapse?.(id);
@@ -507,6 +515,18 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BlockHelpDialog
+        open={helpOpen}
+        onOpenChange={setHelpOpen}
+        content={{
+          label: String(data.label || blockDef?.label || data.type),
+          description: String(blockDef?.description || data.type),
+          icon: blockDef?.icon,
+          color: blockDef?.color,
+          ...getBlockHelp("ads", data.type, String(data.label || blockDef?.label || data.type), String(blockDef?.description || data.type)),
+        }}
+      />
     </>
   );
 });

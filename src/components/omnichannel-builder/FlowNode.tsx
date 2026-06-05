@@ -17,8 +17,11 @@ import {
   Trash2,
   X,
   ArrowRight,
-  StickyNote
+  StickyNote,
+  HelpCircle,
 } from "lucide-react";
+import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
+import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -93,6 +96,7 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
   const hasMultipleOutputs = multipleOutputNodes.includes(type);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const isStartBlock = type === 'inicio';
   
   const IconComponent = nodeIcons[type];
@@ -162,6 +166,13 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56 bg-white border-border shadow-lg">
+                    <DropdownMenuItem
+                      onClick={() => { setHelpOpen(true); setDropdownOpen(false); }}
+                      className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
+                    >
+                      <HelpCircle className="w-4 h-4 mr-2 text-primary" />
+                      Ajuda e exemplos
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
                         data.onSetBreakpoint?.(id);
@@ -372,6 +383,16 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BlockHelpDialog
+        open={helpOpen}
+        onOpenChange={setHelpOpen}
+        content={{
+          label: String(label || type),
+          description: String(type).replace(/_/g, ' '),
+          ...getBlockHelp("omnichannel", type, String(label || type), String(type).replace(/_/g, ' ')),
+        }}
+      />
     </>
   );
 });

@@ -20,12 +20,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreVertical, Copy, Trash2, StickyNote } from "lucide-react";
+import { MoreVertical, Copy, Trash2, StickyNote, HelpCircle } from "lucide-react";
+import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
+import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
 
 export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
   const blockDef = ECOMMERCE_RULE_BLOCKS.find((b) => b.type === (data as any).type);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const isStartBlock = (data as any).type === 'inicio_regra';
   const isMultiOutput = (data as any).type === 'condicao_valor_pedido';
   const faixas: { valorMin: number; valorMax: number | null; label: string }[] = isMultiOutput ? ((data as any).config?.faixas || []) : [];
@@ -58,12 +61,12 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
                 {IconComponent && <IconComponent className="w-4 h-4" style={{ color: blockDef.color }} />}
               </div>
               <div className="flex-1 min-w-0">
-                <span className="font-semibold text-sm text-foreground block truncate">{label}</span>
-                <span className="text-xs text-muted-foreground block truncate">{description}</span>
+                <span className="font-semibold text-sm text-foreground block leading-tight" title={label}>{label}</span>
+                <span className="text-xs text-muted-foreground block leading-snug mt-0.5 whitespace-normal break-words" title={description}>{description}</span>
               </div>
             </div>
 
-            {!isStartBlock && (
+            {!isStartBlock ? (
               <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
                 <DropdownMenuTrigger asChild>
                   <button className="p-1 hover:bg-accent rounded transition-colors flex-shrink-0">
@@ -71,6 +74,9 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="z-50">
+                  <DropdownMenuItem onClick={() => { setDropdownOpen(false); setHelpOpen(true); }}>
+                    <HelpCircle className="w-4 h-4 mr-2" /> Ajuda e exemplos
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => { setDropdownOpen(false); (data as any).onDuplicate?.(id); }}>
                     <Copy className="w-4 h-4 mr-2" /> Duplicar
                   </DropdownMenuItem>
@@ -83,6 +89,14 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+            ) : (
+              <button
+                className="p-1 hover:bg-accent rounded transition-colors flex-shrink-0"
+                title="Ajuda e exemplos"
+                onClick={(e) => { e.stopPropagation(); setHelpOpen(true); }}
+              >
+                <HelpCircle className="w-4 h-4 text-muted-foreground" />
+              </button>
             )}
           </div>
 
@@ -172,6 +186,18 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BlockHelpDialog
+        open={helpOpen}
+        onOpenChange={setHelpOpen}
+        content={{
+          label,
+          description,
+          icon: blockDef.icon,
+          color: blockDef.color,
+          ...getBlockHelp("ecommerce", (data as any).type, label, description),
+        }}
+      />
     </>
   );
 });

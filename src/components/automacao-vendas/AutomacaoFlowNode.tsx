@@ -21,12 +21,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreVertical, Copy, Trash2, StickyNote } from "lucide-react";
+import { MoreVertical, Copy, Trash2, StickyNote, HelpCircle } from "lucide-react";
+import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
+import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
 
 export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
   const blockDef = AUTOMACAO_VENDAS_BLOCKS.find((b) => b.type === (data as any).type);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const isStartBlock = (data as any).type === 'iniciar_validacao';
   
   if (!blockDef) return null;
@@ -80,6 +83,13 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56 bg-card dark:bg-card border-border shadow-lg">
+                <DropdownMenuItem
+                  onClick={() => { setHelpOpen(true); setDropdownOpen(false); }}
+                  className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
+                >
+                  <HelpCircle className="w-4 h-4 mr-2 text-primary" />
+                  Ajuda e exemplos
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
                     (data as any).onAddNote?.(id);
@@ -251,6 +261,18 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BlockHelpDialog
+        open={helpOpen}
+        onOpenChange={setHelpOpen}
+        content={{
+          label,
+          description,
+          icon: blockDef.icon,
+          color: blockDef.color,
+          ...getBlockHelp("automacao-vendas", (data as any).type, label, description),
+        }}
+      />
     </>
   );
 });

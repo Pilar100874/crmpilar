@@ -29,12 +29,16 @@ import {
   Copy,
   Trash2,
   StickyNote,
+  HelpCircle,
 } from "lucide-react";
+import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
+import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
 
 export const FlowNode = memo((props: any) => {
   const { data, selected, id } = props;
   const blockDef = BLOCK_DEFINITIONS.find((b) => b.type === data.type);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   
   const isStartBlock = data.type === 'inicio';
   
@@ -206,6 +210,13 @@ export const FlowNode = memo((props: any) => {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56 bg-white border-border shadow-lg">
+              <DropdownMenuItem
+                onClick={() => { setHelpOpen(true); setDropdownOpen(false); }}
+                className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
+              >
+                <HelpCircle className="w-4 h-4 mr-2 text-primary" />
+                Ajuda e exemplos
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
                   data.onSetBreakpoint?.(id);
@@ -507,6 +518,18 @@ export const FlowNode = memo((props: any) => {
         )}
       </ContextMenuContent>
     </ContextMenu>
+
+    <BlockHelpDialog
+      open={helpOpen}
+      onOpenChange={setHelpOpen}
+      content={{
+        label: String(data.label || blockDef.label || data.type),
+        description: String(blockDef.description || data.type),
+        icon: blockDef.icon,
+        color: (blockDef as any).color,
+        ...getBlockHelp("bot", data.type, String(data.label || blockDef.label || data.type), String(blockDef.description || data.type)),
+      }}
+    />
   </>
   );
 });
