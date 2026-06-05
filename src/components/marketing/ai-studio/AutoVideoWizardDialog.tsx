@@ -281,10 +281,14 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
         ? `\n\nA cena deve incluir uma locução em português BR dizendo exatamente: "${script}". Mantenha sincronia natural com a imagem.`
         : '';
 
+      // REGRA CRÍTICA: identidade visual da marca afeta APENAS cenário/ambiente/paleta de luz — NUNCA o produto.
       const viDirective = useVisualIdentity
-        ? '\n\nAplique a identidade visual da marca (cores, tipografia e estilo) de forma sutil, mantendo o produto fiel.'
-        : '\n\nIgnore qualquer identidade visual de marca. Use estilo cinematográfico neutro.';
-      const composedPrompt = `${briefing}\n\nProduto principal (#1): ${selectedProduct.nome}. Mantenha o produto fiel à imagem de referência fornecida.${includeInfluencer && selectedInfluencer ? ` Influencer (#2) presente na cena, conforme imagem de referência.` : ''}${viDirective}${speechDirective}`;
+        ? '\n\nDIRETRIZ DE MARCA: aplique as cores, tipografia e mood da identidade visual da marca SOMENTE no cenário, ambiente, iluminação e elementos gráficos da cena. NÃO altere, recolora, restilize ou redesenhe o produto sob nenhuma hipótese — o produto deve permanecer 100% idêntico à imagem de referência (mesma forma, cor, textura, logotipo e proporções).'
+        : '\n\nIgnore qualquer identidade visual de marca. Use estilo cinematográfico neutro. O produto deve permanecer fiel à imagem de referência.';
+      const influencerDirective = includeInfluencer && selectedInfluencer
+        ? `\n\nINFLUENCER OBRIGATÓRIO (#2): a pessoa da segunda imagem de referência DEVE aparecer claramente na cena, em primeiro plano ou interagindo com o produto. Mantenha rosto, cabelo, tom de pele, roupa e traços fiéis à referência. A ausência do influencer invalida o resultado.`
+        : '';
+      const composedPrompt = `${briefing}\n\nPRODUTO PRINCIPAL (#1): ${selectedProduct.nome}. Mantenha o produto 100% fiel à imagem de referência fornecida — mesma cor, forma, textura, logotipo e proporções. O produto NÃO pode ser modificado ou restilizado.${influencerDirective}${viDirective}${speechDirective}`;
 
       setProgressMsg('Gerando vídeo…');
       const videoUrl = await generateVideoAsync(
