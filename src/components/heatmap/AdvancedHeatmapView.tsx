@@ -58,6 +58,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
   const [bgVh, setBgVh] = useState<number | null>(null);
   const [capturing, setCapturing] = useState(false);
   const [routeTitles, setRouteTitles] = useState<Record<string, string>>({});
+  const [activeTab, setActiveTab] = useState("overview");
 
   // Carrega títulos das rotas (usage_events) para sistema
   useEffect(() => {
@@ -154,6 +155,9 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
   useEffect(() => {
     let mounted = true;
     if (isEmbeddedCapture) return () => { mounted = false; };
+    const needsBackground = ["clicks", "moves", "frustration"].includes(activeTab);
+    if (!needsBackground) return () => { mounted = false; };
+    if (!estabelecimentoId) return () => { mounted = false; };
     if (!selectedRoute) {
       setBgUrl(null);
       return;
@@ -165,14 +169,14 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
         setBgUrl(`${s.image_url}${s.image_url.includes("?") ? "&" : "?"}t=${Date.now()}`);
         setBgVw(s.vw);
         setBgVh(s.vh);
-        if (!showBg) return;
+        return;
       } else {
         setBgUrl(null);
         setBgVw(null);
         setBgVh(null);
         if (!showBg) return;
       }
-      // Captura/atualiza automaticamente para corrigir fundos ausentes ou antigos.
+      // Captura automaticamente quando a aba visual precisa do fundo e ele ainda não existe.
       try {
         setCapturing(true);
         const res = await captureRouteViaIframe(scope, estabelecimentoId ?? null, selectedRoute);
@@ -188,7 +192,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
       }
     })();
     return () => { mounted = false; };
-  }, [selectedRoute, scope, estabelecimentoId, showBg, isEmbeddedCapture]);
+  }, [selectedRoute, scope, estabelecimentoId, showBg, isEmbeddedCapture, activeTab]);
 
 
 
@@ -348,7 +352,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="overview">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="clicks">Cliques</TabsTrigger>
