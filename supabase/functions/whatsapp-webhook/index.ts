@@ -1746,10 +1746,521 @@ async function executeNode(
         );
         return;
       }
+      /* ============ LÓGICA ============ */
+      case "condition": {
+        const conditions: any[] = cfg.conditions || [];
+        let matchedIndex = -1;
+        for (let i = 0; i < conditions.length; i++) {
+          try {
+            const expr = itp(String(conditions[i].expression || ""));
+            // eslint-disable-next-line no-eval
+            if (eval(expr)) { matchedIndex = i; break; }
+          } catch (e) {
+            console.error(`[FLOW] condition eval error:`, e);
+          }
+        }
+        const outgoing = edges.filter((e: any) => e.source === node.id);
+        let target: any = null;
+        if (matchedIndex >= 0 && outgoing[matchedIndex]) {
+          target = nodes.find((n: any) => n.id === outgoing[matchedIndex].target);
+        } else if (outgoing[0]) {
+          target = nodes.find((n: any) => n.id === outgoing[0].target);
+        }
+        if (target) await executeNode(target, nodes, edges, context, onResponse);
+        break;
+      }
+      case "formulas": {
+        const outVar = cfg.outputVariable || "resultado";
+        try {
+          const expr = itp(String(cfg.formula || ""));
+          // eslint-disable-next-line no-eval
+          context.vars[outVar] = eval(expr);
+        } catch (e) {
+          console.error(`[FLOW] formulas error:`, e);
+        }
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
+      case "jump_to": {
+        const tgt = cfg.targetNodeId || "";
+        const target = nodes.find((n: any) => n.id === tgt);
+        if (target) await executeNode(target, nodes, edges, context, onResponse);
+        else for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
+      case "lead_scoring": {
+        const field = cfg.scoreField || "pontuacao_lead";
+        const pts = Number(cfg.points) || 0;
+        const act = cfg.action || "add";
+        const cur = Number(context.vars[field]) || 0;
+        context.vars[field] = act === "add" ? cur + pts : cur - pts;
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
+      case "goal": {
+        const name = cfg.goalName || "conversao";
+        const val = cfg.value || 0;
+        context.vars[`goal_${name}`] = val;
+        console.log(`[FLOW] 🎯 Goal: ${name} = ${val}`);
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
+      case "global_keywords":
+      case "keyword_jump": {
+        // No WhatsApp tratamos como pass-through (regras são avaliadas no roteador de entrada)
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
+
+      /* ============ WHATSAPP ESSENCIAL extras ============ */
+      case "keyword_options": {
+        const question = itp(cfg.question || "Escolha uma opção:");
+        const buttons: any[] = cfg.buttons || cfg.keywords || [];
+        let txt = question;
+        buttons.forEach((b: any, i: number) => {
+          const label = b.label || b.text || `Opção ${i + 1}`;
+          txt += `\n${i + 1}. ${label}`;
+        });
+        await onResponse(txt);
+        context.pendingNodeId = node.id;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
+        await supabase.from("chat_sessions").upsert(
+          { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+          { onConflict: "session_id" },
+        );
+        return;
+      }
+      case "message_template": {
+        const name = cfg.templateName || "";
+        const lang = cfg.language || "pt_BR";
+        const bodyTxt = itp(cfg.body || cfg.text || "");
+        if (bodyTxt) {
+          await onResponse(bodyTxt);
+        } else {
+          await onResponse(`📧 [Template: ${name} / ${lang}]`);
+        }
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
+      case "opt_in_out": {
+        const action = cfg.action || "opt-in";
+        const category = cfg.category || "marketing";
+        try {
+          const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          const phone = context.vars.from || "";
+          await supabase.from("customer_canal_preferences").upsert(
+            {
+              telefone: phone,
+              canal: "whatsapp",
+              categoria: category,
+              opt_in: action === "opt-in",
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "telefone,canal,categoria" },
+          );
+        } catch (e) {
+          console.error(`[FLOW] opt_in_out error:`, e);
+        }
+        context.vars[`opt_${category}`] = action === "opt-in";
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
+      case "opt_in_check": {
+        const category = cfg.category || "marketing";
+        let hasOptIn = false;
+        try {
+          const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          const phone = context.vars.from || "";
+          const { data } = await supabase
+            .from("customer_canal_preferences")
+            .select("opt_in")
+            .eq("telefone", phone)
+            .eq("canal", "whatsapp")
+            .eq("categoria", category)
+            .maybeSingle();
+          hasOptIn = !!data?.opt_in;
+        } catch (e) {
+          console.error(`[FLOW] opt_in_check error:`, e);
+        }
+        const outgoing = edges.filter((e: any) => e.source === node.id);
+        const target = nodes.find((n: any) => n.id === outgoing[hasOptIn ? 0 : 1]?.target);
+        if (target) await executeNode(target, nodes, edges, context, onResponse);
+        break;
+      }
+      case "audience": {
+        const segments: string[] = cfg.segments || [];
+        const action = cfg.action || "add";
+        context.vars.audience_action = action;
+        context.vars.audience_segments = segments;
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
+
+      /* ============ CÓDIGO / INTEGRAÇÕES ============ */
+      case "webhook": {
+        const url = itp(cfg.url || "");
+        const method = (cfg.method || "POST").toUpperCase();
+        const outVar = cfg.outputVariable || "webhook_response";
+        if (!url) {
+          for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+          break;
+        }
+        try {
+          const headers: Record<string, string> = { "Content-Type": "application/json" };
+          if (cfg.headers && typeof cfg.headers === "object") {
+            for (const [k, v] of Object.entries(cfg.headers)) headers[k] = itp(String(v));
+          }
+          const bodyStr = cfg.body ? itp(typeof cfg.body === "string" ? cfg.body : JSON.stringify(cfg.body)) : undefined;
+          const r = await fetch(url, {
+            method,
+            headers,
+            body: method === "GET" ? undefined : bodyStr,
+          });
+          const txt = await r.text();
+          try { context.vars[outVar] = JSON.parse(txt); } catch { context.vars[outVar] = txt; }
+          context.vars[`${outVar}_status`] = r.status;
+        } catch (e) {
+          console.error(`[FLOW] webhook error:`, e);
+          context.vars[`${outVar}_error`] = String(e);
+        }
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
+      case "dynamic_data": {
+        const outVar = cfg.outputVariable || "dados_dinamicos";
+        try {
+          const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          const { data, error } = await supabase.functions.invoke("execute-dynamic-query", {
+            body: {
+              source: cfg.source,
+              query: itp(cfg.query || ""),
+              params: cfg.params || {},
+            },
+          });
+          if (error) throw error;
+          context.vars[outVar] = data;
+        } catch (e) {
+          console.error(`[FLOW] dynamic_data error:`, e);
+          context.vars[`${outVar}_error`] = String(e);
+        }
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
+      case "trigger_automation": {
+        const automationId = cfg.automationId || "";
+        const outVar = cfg.outputVariable || "automacao_disparada";
+        try {
+          const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          const params: Record<string, any> = {};
+          if (cfg.parameters && typeof cfg.parameters === "object") {
+            for (const [k, v] of Object.entries(cfg.parameters)) params[k] = itp(String(v));
+          }
+          const { data, error } = await supabase.functions.invoke("marketing-automation-scheduler", {
+            body: { automationId, params, triggeredBy: "whatsapp_bot", phone: context.vars.from },
+          });
+          if (error) throw error;
+          context.vars[outVar] = data || { triggered: true };
+        } catch (e) {
+          console.error(`[FLOW] trigger_automation error:`, e);
+          context.vars[`${outVar}_error`] = String(e);
+        }
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
+
+      /* ============ DISPARO & LOOPS ============ */
+      case "send_whatsapp_to_number": {
+        const phone = itp(cfg.phoneNumber || "").replace(/\D/g, "");
+        const msg = itp(cfg.message || "");
+        const mediaUrl = itp(cfg.mediaUrl || "");
+        const outVar = cfg.outputVariable || "envio_whatsapp_status";
+        if (!phone) {
+          context.vars[outVar] = "erro_sem_numero";
+        } else {
+          try {
+            const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+            const { data: wahaCfg } = await supabase
+              .from("waha_config")
+              .select("waha_url, waha_api_key, session_name")
+              .eq("is_active", true)
+              .limit(1)
+              .maybeSingle();
+            const sessionName = wahaCfg?.session_name || context.vars.session || "default";
+            const wahaUrl = wahaCfg?.waha_url || env("WAHA_URL");
+            const wahaKey = wahaCfg?.waha_api_key || env("WAHA_API_KEY");
+            if (mediaUrl) {
+              await sendWahaMediaMessage(phone, mediaUrl, msg, "image", sessionName, wahaUrl, wahaKey);
+            } else if (msg) {
+              await sendWahaTextMessage(phone, msg, sessionName, wahaUrl, wahaKey);
+            }
+            context.vars[outVar] = "enviado";
+          } catch (e) {
+            console.error(`[FLOW] send_whatsapp_to_number error:`, e);
+            context.vars[outVar] = "erro";
+          }
+        }
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
+      case "api_loop": {
+        const outVar = cfg.outputVariable || "loop_resultado";
+        const url = itp(cfg.url || "");
+        const method = (cfg.method || "GET").toUpperCase();
+        const maxRows = Math.min(Number(cfg.maxRows) || 50, 200);
+        const delayMs = Math.max(0, (Number(cfg.delaySeconds) || 0) * 1000);
+        const itemVar = cfg.itemVariable || "item";
+        if (!url) { for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse); break; }
+        try {
+          const headers: Record<string, string> = { "Content-Type": "application/json" };
+          if (Array.isArray(cfg.headers)) {
+            for (const h of cfg.headers) if (h?.key) headers[h.key] = itp(String(h.value || ""));
+          }
+          const r = await fetch(url, { method, headers, body: method === "GET" ? undefined : itp(cfg.body || "") });
+          const json = await r.json();
+          let items: any[] = Array.isArray(json) ? json : (cfg.arrayPath ? cfg.arrayPath.split(".").reduce((o: any, k: string) => o?.[k], json) : []);
+          items = (items || []).slice(0, maxRows);
+          context.vars[outVar] = { total: items.length, status: "ok" };
+          const nextEdges = edges.filter((e: any) => e.source === node.id);
+          for (const it of items) {
+            context.vars[itemVar] = it;
+            for (const ne of nextEdges) {
+              const nx = nodes.find((n: any) => n.id === ne.target);
+              if (nx) await executeNode(nx, nodes, edges, context, onResponse);
+            }
+            if (delayMs) await new Promise((r) => setTimeout(r, delayMs));
+          }
+        } catch (e) {
+          console.error(`[FLOW] api_loop error:`, e);
+          context.vars[outVar] = { status: "erro", error: String(e) };
+          for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        }
+        break;
+      }
+
+      /* ============ ROTEAMENTO ============ */
+      case "transferir_omnichannel":
+      case "enviar_fila":
+      case "atribuir_atendente":
+      case "definir_prioridade": {
+        try {
+          const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          const phone = context.vars.from || "";
+          const updates: Record<string, any> = { bot_paused: true, updated_at: new Date().toISOString() };
+          if (data.type === "enviar_fila") {
+            updates.fila_id = cfg.filaId || null;
+            updates.fila_nome = cfg.filaNome || null;
+            updates.prioridade = cfg.prioridade ?? 0;
+          } else if (data.type === "atribuir_atendente") {
+            updates.atendente_id = cfg.atendenteId || null;
+            updates.atendente_nome = cfg.atendenteNome || null;
+          } else if (data.type === "definir_prioridade") {
+            updates.prioridade_nivel = cfg.prioridade || "normal";
+            updates.prioridade_motivo = cfg.motivo || null;
+          } else if (data.type === "transferir_omnichannel") {
+            updates.workflow_id = cfg.workflowId || null;
+            updates.workflow_nome = cfg.workflowNome || null;
+          }
+          await supabase
+            .from("conversations")
+            .update(updates)
+            .eq("phone_number", phone);
+          await onResponse("Você foi transferido para um atendente. Aguarde, por favor.");
+        } catch (e) {
+          console.error(`[FLOW] roteamento error:`, e);
+        }
+        // Pausa o fluxo: handoff para humano
+        return;
+      }
+
+      /* ============ CRM ============ */
+      case "crm_cadastro_empresa": {
+        try {
+          const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          const fieldMappings = cfg.fieldMappings || {};
+          const cnpjVar = cfg.cnpjVariable || "cnpj";
+          const cnpj = String(context.vars[cnpjVar] || "").replace(/\D/g, "");
+          const payload: Record<string, any> = { cnpj };
+          for (const [field, varName] of Object.entries(fieldMappings)) {
+            const v = context.vars[String(varName)];
+            if (v !== undefined && v !== "") payload[field] = v;
+          }
+          payload.estabelecimento_id = context.vars.estabelecimento_id;
+          const { data: existing } = await supabase
+            .from("empresas")
+            .select("id")
+            .eq("cnpj", cnpj)
+            .maybeSingle();
+          let empresaId = existing?.id;
+          if (empresaId && cfg.updateExisting !== false) {
+            await supabase.from("empresas").update(payload).eq("id", empresaId);
+          } else if (!empresaId) {
+            const { data: created } = await supabase.from("empresas").insert(payload).select("id").single();
+            empresaId = created?.id;
+          }
+          const outVar = cfg.outputVariable || "cliente_novo";
+          context.vars[outVar] = { id: empresaId, cnpj, criado: !existing };
+        } catch (e) {
+          console.error(`[FLOW] crm_cadastro_empresa error:`, e);
+        }
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
+      case "crm_agenda_rapida": {
+        try {
+          const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          const phone = (context.vars.from || "").replace(/\D/g, "");
+          const { data: customer } = await supabase
+            .from("customers")
+            .select("id, nome")
+            .ilike("telefone", `%${phone.slice(-9)}%`)
+            .maybeSingle();
+          const titulo = itp(cfg.tituloTarefa || "Retorno Bot");
+          const valor = itp(cfg.valorAgenda || "");
+          const dueDate = valor ? new Date(valor) : new Date(Date.now() + 24 * 60 * 60 * 1000);
+          const { data: created } = await supabase
+            .from("calendario_tarefas")
+            .insert({
+              title: titulo,
+              date: dueDate.toISOString(),
+              contact_id: customer?.id || null,
+              contact_name: customer?.nome || `WhatsApp ${phone}`,
+              estabelecimento_id: context.vars.estabelecimento_id,
+            })
+            .select("id")
+            .single();
+          const outVar = cfg.outputVariable || "tarefa_criada";
+          context.vars[outVar] = { id: created?.id, titulo };
+        } catch (e) {
+          console.error(`[FLOW] crm_agenda_rapida error:`, e);
+        }
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
+
+      /* ============ IA / MÍDIA ============ */
+      case "ai_agent": {
+        try {
+          const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          const userMsg = context.vars.userMessage || "";
+          const sys = itp(cfg.systemPrompt || "Você é um assistente útil.");
+          const { data, error } = await supabase.functions.invoke("chat-agent-execute", {
+            body: {
+              agentId: cfg.agentId,
+              systemPrompt: sys,
+              model: cfg.model || "google/gemini-2.5-flash",
+              messages: [{ role: "user", content: userMsg }],
+              context: context.vars,
+            },
+          });
+          if (error) throw error;
+          const reply = data?.reply || data?.content || data?.text;
+          if (reply) await onResponse(String(reply));
+          if (cfg.outputVariable) context.vars[cfg.outputVariable] = reply;
+        } catch (e) {
+          console.error(`[FLOW] ai_agent error:`, e);
+          await onResponse("⚠️ Erro ao consultar agente IA.");
+        }
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
+      case "generate_ai_media": {
+        try {
+          const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          const prompt = itp(cfg.basePrompt || cfg.textPrompt || "criativo");
+          await onResponse("🎨 Gerando mídia, aguarde...");
+          const { data, error } = await supabase.functions.invoke("bot-generate-ai-media", {
+            body: {
+              prompt,
+              variations: cfg.variations || 1,
+              estabelecimento_id: context.vars.estabelecimento_id,
+              refImageUrl: cfg.refImageUrl ? itp(cfg.refImageUrl) : undefined,
+            },
+          });
+          if (error) throw error;
+          const items: any[] = data?.items || data?.results || (data?.url ? [{ url: data.url }] : []);
+          for (const it of items.slice(0, 4)) {
+            if (it.url) await onResponse("", it.url, "image");
+          }
+          if (cfg.outputVariable) context.vars[cfg.outputVariable] = items[0] || null;
+        } catch (e) {
+          console.error(`[FLOW] generate_ai_media error:`, e);
+          await onResponse("⚠️ Não foi possível gerar a mídia.");
+        }
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
+      case "text_content": {
+        const blockMode = cfg.blockMode === "fixed" || cfg.blockMode === "options" ? cfg.blockMode : "advanced";
+        if (blockMode === "fixed") {
+          if (cfg.title) context.vars.tc_title = itp(cfg.title);
+          if (cfg.subtitle) context.vars.tc_subtitle = itp(cfg.subtitle);
+          if (cfg.body && cfg.bodyEnabled !== false) context.vars.tc_body = itp(cfg.body);
+          for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+          break;
+        }
+        // Modo options / advanced → pergunta e aguarda
+        const opts: any[] = Array.isArray(cfg.options) ? cfg.options : [];
+        let txt = itp(cfg.optionsPrompt || "Escolha um dos textos:");
+        if (opts.length) {
+          opts.forEach((o, i) => { txt += `\n${i + 1}. ${o.label || "Opção " + (i + 1)}`; });
+        } else {
+          txt = "Você quer usar título e subtítulo na imagem?\n1. Sim\n2. Não";
+        }
+        await onResponse(txt);
+        context.pendingNodeId = node.id;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
+        await supabase.from("chat_sessions").upsert(
+          { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+          { onConflict: "session_id" },
+        );
+        return;
+      }
+      case "content_type": {
+        const mode = cfg.mode === "ask" ? "ask" : "fixed";
+        if (mode === "fixed") {
+          context.vars.content_type = cfg.contentType || "divulgacao";
+          for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+          break;
+        }
+        const directives = [
+          "divulgacao", "promocao", "lancamento", "evento", "institucional",
+          "engajamento", "educacional", "vendas", "remarketing", "datas_especiais",
+        ];
+        let txt = itp(cfg.askPrompt || "Qual o objetivo da peça?");
+        directives.forEach((d, i) => { txt += `\n${i + 1}. ${d}`; });
+        await onResponse(txt);
+        context.pendingNodeId = node.id;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
+        await supabase.from("chat_sessions").upsert(
+          { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+          { onConflict: "session_id" },
+        );
+        return;
+      }
+      case "ask_influencer":
+      case "ask_product_image": {
+        const q = itp(
+          cfg.askQuestion ||
+            (data.type === "ask_influencer"
+              ? "A peça terá um influencer?"
+              : "A peça terá imagem do produto?"),
+        );
+        await onResponse(`${q}\n1. Sim\n2. Não`);
+        context.pendingNodeId = node.id;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
+        await supabase.from("chat_sessions").upsert(
+          { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+          { onConflict: "session_id" },
+        );
+        return;
+      }
+
       default: {
         console.log(`[FLOW] Unknown node type: ${data.type} - moving to next nodes`);
-        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
-      }
     }
   } catch (err) {
     console.error(`[FLOW] Error executing node ${node.id} (${data.type}):`, err);
