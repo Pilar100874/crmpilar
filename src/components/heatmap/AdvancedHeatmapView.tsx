@@ -459,7 +459,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
               <CardDescription>{movePoints.length} amostras (1 a cada 250ms)</CardDescription>
             </CardHeader>
             <CardContent>
-              <HeatmapPanel width={mapW} height={mapH} maxWidth={CANVAS_W} points={scale(movePoints)} radius={40} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
+              <HeatmapPanel width={mapW} height={mapH} maxWidth={CANVAS_W} points={scale(movePoints)} radius={40} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} capturing={capturing} />
             </CardContent>
           </Card>
         </TabsContent>
