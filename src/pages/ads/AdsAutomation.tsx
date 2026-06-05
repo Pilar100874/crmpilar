@@ -902,20 +902,7 @@ function AdsAutomationContent() {
             <div className="flex-1 relative" ref={reactFlowWrapper}>
               <ReactFlow
                 nodes={nodes}
-                edges={edges.map((edge) => ({
-                  ...edge,
-                  style: {
-                    stroke: edge.selected ? '#ea580c' : '#f97316',
-                    strokeWidth: edge.selected ? 2.5 : 1.33,
-                  },
-                  markerEnd: {
-                    type: 'arrowclosed' as any,
-                    width: 20,
-                    height: 20,
-                    color: edge.selected ? '#ea580c' : '#f97316',
-                  },
-                  type: 'smoothstep',
-                }))}
+                edges={styledEdges}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
