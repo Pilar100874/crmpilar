@@ -512,11 +512,19 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
                   <Select value={videoModel} onValueChange={setVideoModel}>
                     <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {RECOMMENDED_VIDEO_MODELS.map((m) => (
+                      {AD_READY_VIDEO_MODELS.filter((m) => activeProviders.has(m.provider)).map((m) => (
                         <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
                       ))}
+                      {AD_READY_VIDEO_MODELS.filter((m) => activeProviders.has(m.provider)).length === 0 && (
+                        <div className="px-3 py-2 text-xs text-muted-foreground">
+                          Nenhum provedor de vídeo ativo. Configure em Configurações → IA.
+                        </div>
+                      )}
                     </SelectContent>
                   </Select>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Somente modelos cinematográficos prontos para anúncio (estilo Higgsfield) com provedor ativo.
+                  </p>
                 </div>
                 <div>
                   <Label>Proporção</Label>
