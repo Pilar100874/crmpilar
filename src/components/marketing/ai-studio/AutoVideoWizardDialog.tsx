@@ -217,23 +217,33 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
     }
   }, [briefing]);
 
-  const generateScript = useCallback(async () => {
-    if (!briefing.trim()) return toast.info('Volte ao passo 1 e descreva o vídeo.');
+  const generateScript = useCallback(async (mode: 'generate' | 'enhance' = 'generate') => {
+    if (mode === 'enhance' && !script.trim()) {
+      return toast.info('Digite um texto base para enriquecer ou use "Gerar por IA".');
+    }
+    if (!briefing.trim() && mode === 'generate') return toast.info('Volte ao passo 1 e descreva o vídeo.');
     setGeneratingScript(true);
     try {
       const prodName = selectedProduct?.nome || 'o produto';
+      const systemPrompt = mode === 'enhance'
+        ? 'Você é um copywriter publicitário. Reescreva a locução abaixo deixando-a mais persuasiva, natural e cinematográfica, mantendo a essência. Português BR, sem emojis, sem aspas, sem marcações cênicas. Máximo 35 palavras. Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.'
+        : 'Você é um copywriter de anúncios curtos estilo Higgsfield. Escreva um TEXTO FALADO (locução/narração) em português BR, natural e direto, pronto para virar áudio TTS. Sem emojis, sem aspas, sem marcações cênicas. Máximo 35 palavras. Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.';
+      const prompt = mode === 'enhance'
+        ? `Locução atual: ${script}\nProduto: ${prodName}\nDuração-alvo: ${duration}s.\nReescreva mantendo o sentido, mas mais publicitária.`
+        : `Briefing do vídeo: ${briefing}\nProduto: ${prodName}\nDuração-alvo: ${duration}s.\nGere a narração que será falada por uma voz IA.`;
       const r = await callEdge('generate_text', {
         model: 'google/gemini-3-flash-preview',
-        systemPrompt: 'Você é um copywriter de anúncios curtos. Escreva um TEXTO FALADO (locução/narração) em português BR, natural e direto, pronto para virar áudio TTS. Sem emojis, sem aspas, sem marcações cênicas. Máximo 35 palavras. Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.',
-        prompt: `Briefing do vídeo: ${briefing}\nProduto: ${prodName}\nDuração-alvo: ${duration}s.\nGere a narração que será falada por uma voz IA.`,
+        systemPrompt,
+        prompt,
       }, 60000);
       if (r) setScript(String(r).trim().replace(/^["']|["']$/g, ''));
+      toast.success(mode === 'enhance' ? 'Texto enriquecido.' : 'Texto gerado.');
     } catch (e: any) {
-      toast.error('Falha ao gerar texto: ' + e.message);
+      toast.error('Falha ao processar texto: ' + e.message);
     } finally {
       setGeneratingScript(false);
     }
-  }, [briefing, selectedProduct, duration]);
+  }, [briefing, selectedProduct, duration, script]);
 
   const handleGenerate = useCallback(async () => {
     if (!estabId) return toast.error('Estabelecimento não encontrado.');
