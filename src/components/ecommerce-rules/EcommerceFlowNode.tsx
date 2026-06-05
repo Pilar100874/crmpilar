@@ -20,7 +20,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreVertical, Copy, Trash2, StickyNote } from "lucide-react";
+import { MoreVertical, Copy, Trash2, StickyNote, HelpCircle } from "lucide-react";
+import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
+import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
 
 export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
   const blockDef = ECOMMERCE_RULE_BLOCKS.find((b) => b.type === (data as any).type);
