@@ -344,6 +344,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
               provider: chosenTts,
               text: script,
               lang: 'pt',
+              ...(chosenTts === 'wavespeed' ? { wavespeedModel: wavespeedTtsModel } : {}),
             }, 120000);
             const audioUrl = audioRes?.audioUrl;
             if (audioUrl) {
