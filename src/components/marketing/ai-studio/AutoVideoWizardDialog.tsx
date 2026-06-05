@@ -30,13 +30,12 @@ interface AutoVideoWizardDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// Modelos recomendados para o wizard automático (rápidos / com áudio nativo / acessíveis)
-const RECOMMENDED_VIDEO_MODELS = [
-  { value: 'google/veo-3.1-fast', label: 'Veo 3.1 Fast — recomendado (com áudio nativo)', tier: 'rápido' },
-  { value: 'google/veo-3', label: 'Veo 3 — alta qualidade com diálogos', tier: 'alta' },
-  { value: 'google/veo-2', label: 'Veo 2 — bom custo-benefício', tier: 'econômico' },
-  { value: 'wavespeed/seedance-2.0', label: 'Seedance 2.0 (WaveSpeed)', tier: 'alta' },
-  { value: 'free/gif-animated', label: 'GIF Animado (Gratuito, sem áudio)', tier: 'grátis' },
+// Modelos cinemáticos estilo Higgsfield — qualidade publicitária, suportam referência de imagem (produto + influencer)
+// O wizard só exibe os modelos cujo provedor está ATIVO em ai_api_keys.
+const AD_READY_VIDEO_MODELS: Array<{ value: string; label: string; provider: string; nativeAudio: boolean; tier: string }> = [
+  { value: 'google/veo-3.1-fast', label: 'Veo 3.1 Fast — cinematográfico (áudio nativo)', provider: 'google', nativeAudio: true, tier: 'rápido' },
+  { value: 'google/veo-3', label: 'Veo 3 — máxima qualidade com diálogo', provider: 'google', nativeAudio: true, tier: 'premium' },
+  { value: 'wavespeed/seedance-2.0', label: 'Seedance 2.0 — Higgsfield-style cinematic', provider: 'wavespeed', nativeAudio: false, tier: 'alta' },
 ];
 
 type Step = 1 | 2 | 3;
