@@ -96,6 +96,7 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
   const hasMultipleOutputs = multipleOutputNodes.includes(type);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const isStartBlock = type === 'inicio';
   
   const IconComponent = nodeIcons[type];
