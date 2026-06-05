@@ -535,6 +535,9 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const meta = CONTENT_TYPE_DIRECTIVES[ct.type];
     const blocks: string[] = [];
     if (meta?.rule) blocks.push(meta.rule);
+    if (meta?.badgeText) {
+      blocks.push(`SELO OBRIGATÓRIO NA IMAGEM: crie um selo/badge profissional, integrado ao layout e legível, com o texto EXATO "${meta.badgeText}". Este selo é autorizado mesmo quando houver regra de não adicionar textos extras, pois faz parte do Tipo de Conteúdo selecionado.`);
+    }
     if (ct.guidance) blocks.push(`ORIENTAÇÃO ADICIONAL OBRIGATÓRIA: ${ct.guidance}`);
     if (!blocks.length) return "";
     return [
