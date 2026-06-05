@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { HeatmapCanvas } from "./HeatmapCanvas";
-import { MousePointerClick, Move, ChevronsDown, AlertTriangle, Users, Smartphone, Monitor, Tablet, Filter, Camera, Image as ImageIcon, Loader2, ExternalLink, Maximize2, X } from "lucide-react";
-import { captureAndUploadScreenshot, captureRouteViaIframe, fetchScreenshot } from "@/lib/heatmapScreenshot";
+import { MousePointerClick, ChevronsDown, AlertTriangle, Users, Smartphone, Monitor, Tablet, Filter, Image as ImageIcon, Loader2, ExternalLink, Maximize2, X } from "lucide-react";
+import { captureRouteViaIframe, fetchScreenshot } from "@/lib/heatmapScreenshot";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
@@ -597,15 +597,11 @@ function RouteSelector({
   value,
   onChange,
   titles = {},
-  onRecapture,
-  capturing,
 }: {
   routes: string[];
   value: string;
   onChange: (v: string) => void;
   titles?: Record<string, string>;
-  onRecapture?: () => void;
-  capturing?: boolean;
 }) {
   return (
     <div className="flex items-center gap-2 flex-wrap">
@@ -621,17 +617,9 @@ function RouteSelector({
         </SelectContent>
       </Select>
       {value && (
-        <>
-          {onRecapture && (
-            <Button size="sm" variant="outline" onClick={onRecapture} disabled={capturing} title="Recapturar fundo desta tela">
-              {capturing ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Camera className="h-3.5 w-3.5 mr-1" />}
-              Recapturar fundo
-            </Button>
-          )}
-          <a href={value} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline" title="Abrir tela em nova janela">
-            <ExternalLink className="h-3.5 w-3.5" /> Abrir
-          </a>
-        </>
+        <a href={value} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline" title="Abrir tela em nova janela">
+          <ExternalLink className="h-3.5 w-3.5" /> Abrir
+        </a>
       )}
     </div>
   );
