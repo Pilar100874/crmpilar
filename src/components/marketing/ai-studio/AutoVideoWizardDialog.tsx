@@ -962,13 +962,20 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
         </Button>
         {step < 3 ? (
           <Button
-            onClick={() => {
+            onClick={async () => {
               if (step === 2) {
                 const modelMeta = AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel);
                 const hasRefs = !!selectedProduct || (includeInfluencer && !!selectedInfluencer) || useVisualIdentity;
                 if (modelMeta && !modelMeta.supportsImageRefs && hasRefs) {
                   toast.error(`O modelo ${modelMeta.label.split(' — ')[0]} não aceita produto, influencer ou identidade visual como referência. Escolha Seedance 2.0 (WaveSpeed) para avançar.`);
                   return;
+                }
+                if (useVisualIdentity) {
+                  const visualIdentity = await getActiveVisualIdentity(estabId);
+                  if (!visualIdentity) {
+                    toast.error('Identidade visual da marca não encontrada ou sem prompt/imagens ativos. Configure a Identidade Visual ou desative esta opção para avançar.');
+                    return;
+                  }
                 }
               }
               if (step === 1) {
