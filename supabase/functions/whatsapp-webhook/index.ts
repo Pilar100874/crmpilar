@@ -1990,7 +1990,7 @@ async function executeNode(
             const wahaUrl = wahaCfg?.waha_url || env("WAHA_URL");
             const wahaKey = wahaCfg?.waha_api_key || env("WAHA_API_KEY");
             if (mediaUrl) {
-              await sendWahaMediaMessage(phone, mediaUrl, msg, "image", sessionName, wahaUrl, wahaKey);
+              await sendWahaMediaMessage(phone, msg, "image", mediaUrl, sessionName, wahaUrl, wahaKey);
             } else if (msg) {
               await sendWahaTextMessage(phone, msg, sessionName, wahaUrl, wahaKey);
             }
