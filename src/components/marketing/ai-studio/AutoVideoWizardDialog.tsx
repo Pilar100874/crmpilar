@@ -148,7 +148,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
   const [elapsedSec, setElapsedSec] = useState(0);
   const [estimatedTotalSec, setEstimatedTotalSec] = useState(90);
   const [ttsProvider, setTtsProvider] = useState<string>('');
-  const [wavespeedTtsModel, setWavespeedTtsModel] = useState<string>('wavespeed-ai/dia-tts');
+  const [wavespeedTtsModel, setWavespeedTtsModel] = useState<string>('wavespeed-ai/qwen3-tts/text-to-speech');
 
   // Provedores de TTS disponíveis (interseção com chaves ativas)
   const availableTtsProviders = useMemo(() => {
@@ -352,7 +352,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
         // Usa o provider TTS escolhido pelo usuário (só aparece se houver chave ativa)
         const chosenTts = ttsProvider && availableTtsProviders.includes(ttsProvider as any) ? ttsProvider : null;
         if (!chosenTts) {
-          toast.warning('Vídeo gerado sem narração: nenhuma API de TTS ativa (ElevenLabs, Google ou OpenAI). Ative uma em Configurações → IA / APIs.');
+          toast.warning('Vídeo gerado sem narração: nenhuma API de TTS ativa (ElevenLabs, Google, OpenAI ou WaveSpeed). Ative uma em Configurações → IA / APIs.');
         } else {
           try {
             setProgressMsg(`Gerando narração (TTS via ${chosenTts})…`);
@@ -852,9 +852,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
                       <Select value={wavespeedTtsModel} onValueChange={setWavespeedTtsModel}>
                         <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="wavespeed-ai/dia-tts">Dia TTS (natural, multilíngue)</SelectItem>
-                          <SelectItem value="wavespeed-ai/spark-tts">Spark TTS (rápido)</SelectItem>
-                          <SelectItem value="wavespeed-ai/kokoro-tts">Kokoro TTS (leve)</SelectItem>
+                          <SelectItem value="wavespeed-ai/qwen3-tts/text-to-speech">Qwen3 TTS (PT, vozes múltiplas)</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
