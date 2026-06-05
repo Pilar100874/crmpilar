@@ -372,7 +372,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
     } finally {
       setGenerating(false);
     }
-  }, [estabId, selectedProduct, includeInfluencer, selectedInfluencer, briefing, script, videoModel, aspectRatio, duration, useVisualIdentity, activeProviders, ttsProvider, availableTtsProviders]);
+  }, [estabId, selectedProduct, includeInfluencer, selectedInfluencer, briefing, script, videoModel, aspectRatio, duration, useVisualIdentity, activeProviders, ttsProvider, availableTtsProviders, wavespeedTtsModel]);
 
   const handleSaveToGallery = useCallback(async () => {
     if (!resultVideoUrl || !estabId) return;
