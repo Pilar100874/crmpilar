@@ -2,7 +2,7 @@ import { memo, useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { ADS_BLOCK_DEFINITIONS, AdsBlockType, AdsFlowNodeData } from "@/types/adsFlow";
 import { 
-  MoreVertical, Pause, SkipForward, Copy, Trash2, StickyNote, X, ArrowRight,
+  MoreVertical, Pause, SkipForward, Copy, Trash2, StickyNote, X, ArrowRight, HelpCircle,
   TrendingDown, DollarSign, MousePointerClick, Percent, Target, Eye, Clock,
   Repeat, Star, AlertTriangle, ArrowUpDown, Layers, Megaphone, BarChart3,
   Calendar, PiggyBank, Smartphone, MapPin, Play, TrendingUp, Bell, Webhook,
