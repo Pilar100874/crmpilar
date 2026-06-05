@@ -40,6 +40,7 @@ import ExecutionLogPanel from './ExecutionLogPanel';
 import StudioGalleryManager from './StudioGalleryManager';
 import { nodeResultStore } from './useNodeResults';
 import BatchReviewDialog from './BatchReviewDialog';
+import AutoVideoWizardDialog from './AutoVideoWizardDialog';
 import SmartConnectMenu from './SmartConnectMenu';
 import { studioBackgroundJobs, estimateWorkflowSeconds, modelSuggestions, formatSeconds } from './backgroundJobsStore';
 import { WorkflowCard, WorkflowCardGrid } from '@/components/ui/workflow-card';
