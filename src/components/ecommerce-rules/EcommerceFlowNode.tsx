@@ -58,8 +58,8 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
                 {IconComponent && <IconComponent className="w-4 h-4" style={{ color: blockDef.color }} />}
               </div>
               <div className="flex-1 min-w-0">
-                <span className="font-semibold text-sm text-foreground block truncate">{label}</span>
-                <span className="text-xs text-muted-foreground block truncate">{description}</span>
+                <span className="font-semibold text-sm text-foreground block leading-tight" title={label}>{label}</span>
+                <span className="text-xs text-muted-foreground block leading-snug mt-0.5 whitespace-normal break-words" title={description}>{description}</span>
               </div>
             </div>
 
