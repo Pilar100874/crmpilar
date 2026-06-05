@@ -35,10 +35,10 @@ interface AutoVideoWizardDialogProps {
 
 // Modelos cinemáticos estilo Higgsfield — qualidade publicitária, suportam referência de imagem (produto + influencer)
 // O wizard só exibe os modelos cujo provedor está ATIVO em ai_api_keys.
-const AD_READY_VIDEO_MODELS: Array<{ value: string; label: string; provider: string; nativeAudio: boolean; tier: string }> = [
-  { value: 'google/veo-3.1-fast', label: 'Veo 3.1 Fast — cinematográfico (áudio nativo)', provider: 'google', nativeAudio: true, tier: 'rápido' },
-  { value: 'google/veo-3', label: 'Veo 3 — máxima qualidade com diálogo', provider: 'google', nativeAudio: true, tier: 'premium' },
-  { value: 'wavespeed/seedance-2.0', label: 'Seedance 2.0 — Higgsfield-style cinematic', provider: 'wavespeed', nativeAudio: false, tier: 'alta' },
+const AD_READY_VIDEO_MODELS: Array<{ value: string; label: string; provider: string; nativeAudio: boolean; tier: string; supportsImageRefs: boolean }> = [
+  { value: 'google/veo-3.1-fast', label: 'Veo 3.1 Fast — cinematográfico (áudio nativo, SEM referência de imagem)', provider: 'google', nativeAudio: true, tier: 'rápido', supportsImageRefs: false },
+  { value: 'google/veo-3', label: 'Veo 3 — máxima qualidade com diálogo (SEM referência de imagem)', provider: 'google', nativeAudio: true, tier: 'premium', supportsImageRefs: false },
+  { value: 'wavespeed/seedance-2.0', label: 'Seedance 2.0 — cinematic (aceita produto + influencer)', provider: 'wavespeed', nativeAudio: false, tier: 'alta', supportsImageRefs: true },
 ];
 
 type Step = 1 | 2 | 3;
@@ -731,6 +731,18 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
                 <p className="text-[10px] text-muted-foreground mt-1">
                   Somente modelos cinematográficos prontos para anúncio (estilo Higgsfield) com provedor ativo.
                 </p>
+                {(() => {
+                  const modelMeta = AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel);
+                  const hasRefs = !!selectedProduct || (includeInfluencer && !!selectedInfluencer) || useVisualIdentity;
+                  if (modelMeta && !modelMeta.supportsImageRefs && hasRefs) {
+                    return (
+                      <div className="mt-2 text-[11px] text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-md p-2 leading-snug">
+                        ⚠️ Este modelo <strong>não aceita imagens de referência</strong>. Produto, influencer e identidade visual serão <strong>ignorados</strong>. Para preservá-los, escolha <strong>Seedance 2.0 (WaveSpeed)</strong>.
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
               <div>
                 <Label>Proporção</Label>
@@ -905,6 +917,19 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
         {step < 3 ? (
           <Button
             onClick={() => {
+              if (step === 2) {
+                const modelMeta = AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel);
+                const hasRefs = !!selectedProduct || (includeInfluencer && !!selectedInfluencer) || useVisualIdentity;
+                if (modelMeta && !modelMeta.supportsImageRefs && hasRefs) {
+                  const ok = window.confirm(
+                    `⚠️ O modelo "${modelMeta.label.split(' — ')[0]}" NÃO aceita imagens de referência.\n\n` +
+                    `Produto, influencer e identidade visual serão IGNORADOS — a cena será gerada apenas a partir do texto.\n\n` +
+                    `Recomendado: use o modelo Seedance 2.0 (WaveSpeed) para preservar a aparência do produto e do influencer.\n\n` +
+                    `Deseja continuar mesmo assim?`
+                  );
+                  if (!ok) return;
+                }
+              }
               if (step === 1) {
                 enhanceBriefingSilently();
               }
