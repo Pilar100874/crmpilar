@@ -53,7 +53,7 @@ export async function captureAndUploadScreenshot(
 
   const image_url = await signedUrl(path);
 
-  await supabase.from("heatmap_screenshots" as any).upsert(
+  const { error: dbErr } = await supabase.from("heatmap_screenshots" as any).upsert(
     {
       scope,
       route,
@@ -64,6 +64,7 @@ export async function captureAndUploadScreenshot(
     },
     { onConflict: "scope,route,estabelecimento_id" },
   );
+  if (dbErr) console.warn("[heatmap] falha ao salvar metadados do fundo:", dbErr.message);
 
   return { image_url, vw, vh };
 }
@@ -108,12 +109,14 @@ export async function captureRouteViaIframe(
 
   const iframe = document.createElement("iframe");
   iframe.style.position = "fixed";
-  iframe.style.left = "-10000px";
+  iframe.style.left = "0";
   iframe.style.top = "0";
   iframe.style.width = `${width}px`;
   iframe.style.height = `${height}px`;
   iframe.style.border = "0";
-  iframe.style.opacity = "0";
+  iframe.style.opacity = "0.01";
+  iframe.style.pointerEvents = "none";
+  iframe.style.zIndex = "-2147483647";
   iframe.name = "heatmap-capture-frame";
   iframe.setAttribute("aria-hidden", "true");
   // não adicionamos query string para evitar quebrar rotas que não suportam
@@ -137,12 +140,10 @@ export async function captureRouteViaIframe(
       // Fallback: se em waitMs+4s o load não veio, tentamos capturar mesmo assim
       setTimeout(finish, waitMs + 4000);
     });
-
-
-
     const doc = iframe.contentDocument;
     if (!doc) throw new Error("Iframe sem documento acessível");
-    const target = doc.body;
+    const target = doc.documentElement || doc.body;
+    const body = doc.body;
 
     const canvas = await html2canvas(target, {
       backgroundColor: "#ffffff",
@@ -152,7 +153,7 @@ export async function captureRouteViaIframe(
       windowWidth: width,
       windowHeight: height,
       width,
-      height: Math.min(target.scrollHeight || height, height * 3),
+      height: Math.min(body?.scrollHeight || target.scrollHeight || height, height * 3),
     });
 
     const blob: Blob = await new Promise((resolve, reject) =>
@@ -167,7 +168,7 @@ export async function captureRouteViaIframe(
 
     const image_url = await signedUrl(path);
 
-    await supabase.from("heatmap_screenshots" as any).upsert(
+    const { error: dbErr } = await supabase.from("heatmap_screenshots" as any).upsert(
       {
         scope,
         route,
@@ -178,6 +179,7 @@ export async function captureRouteViaIframe(
       },
       { onConflict: "scope,route,estabelecimento_id" },
     );
+    if (dbErr) console.warn("[heatmap] falha ao salvar metadados do fundo:", dbErr.message);
 
     return { image_url, vw: width, vh: height };
   } finally {
