@@ -420,7 +420,7 @@ function EcommerceRulesEditorInner() {
         </div>
 
         {/* Properties Panel - Right */}
-        {selectedNode && (
+        {selectedNode && !showSimulator && (
           <div className="w-80 border-l border-border bg-card overflow-auto">
             <EcommercePropertiesPanel
               node={selectedNode}
@@ -429,6 +429,18 @@ function EcommerceRulesEditorInner() {
               onClose={() => setSelectedNode(null)}
             />
           </div>
+        )}
+
+        {/* Simulator Panel - Right */}
+        {showSimulator && (
+          <WorkflowSimulator
+            open={showSimulator}
+            onClose={() => setShowSimulator(false)}
+            nodes={nodes}
+            edges={edges}
+            kind="ecommerce"
+            blockDefinitions={ECOMMERCE_RULE_BLOCKS}
+          />
         )}
       </div>
 
