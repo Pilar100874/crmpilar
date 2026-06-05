@@ -637,14 +637,17 @@ function RouteSelector({
   );
 }
 
-function HeatmapPanel({ width, height, points, radius, maxOpacity, bgUrl }: { width: number; height: number; points: { x: number; y: number }[]; radius?: number; maxOpacity?: number; bgUrl?: string | null }) {
+function HeatmapPanel({ width, height, points, radius, maxOpacity, bgUrl, bgVw, bgVh }: { width: number; height: number; points: { x: number; y: number }[]; radius?: number; maxOpacity?: number; bgUrl?: string | null; bgVw?: number | null; bgVh?: number | null }) {
   const [fullscreen, setFullscreen] = useState(false);
+  // Em tela cheia: usa o aspect ratio real da tela capturada (igual ao usuário vê)
+  const fsAspect = bgVw && bgVh ? `${bgVw}/${bgVh}` : `${width}/${height}`;
   const aspect = `${width}/${height}`;
-  const Panel = ({ w, h, big }: { w: number | string; h: number | string; big?: boolean }) => (
+
+  const Panel = ({ big }: { big?: boolean }) => (
     <div
-      className="relative bg-gradient-to-br from-muted/30 to-muted/10 rounded border overflow-hidden"
+      className="relative bg-gradient-to-br from-muted/30 to-muted/10 rounded border overflow-hidden mx-auto"
       style={ big
-        ? { width: "100%", height: "100%" }
+        ? { width: "100%", height: "100%", aspectRatio: fsAspect, maxHeight: "100%", maxWidth: "100%" }
         : { width: "100%", maxWidth: width, aspectRatio: aspect }
       }
     >
@@ -656,21 +659,22 @@ function HeatmapPanel({ width, height, points, radius, maxOpacity, bgUrl }: { wi
           {Array.from({ length: 96 }).map((_, i) => <div key={i} className="border border-foreground/20" />)}
         </div>
       )}
-      <HeatmapCanvas points={points} width={typeof w === "number" ? w : width} height={typeof h === "number" ? h : height} radius={radius} maxOpacity={maxOpacity} className="rounded" />
+      <HeatmapCanvas points={points} width={width} height={height} radius={radius} maxOpacity={maxOpacity} className="rounded absolute inset-0 w-full h-full" />
       {points.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">Sem dados ainda. Aguardando interações...</div>
       )}
       <Button
-        size="icon"
+        size="sm"
         variant="secondary"
-        className="absolute top-2 right-2 h-8 w-8 shadow"
+        className="absolute top-2 right-2 shadow-lg gap-1"
         onClick={() => setFullscreen((v) => !v)}
-        title={big ? "Sair de tela cheia" : "Ver em tela cheia"}
+        title={big ? "Sair de tela cheia" : "Ver em tela cheia (como o usuário vê)"}
       >
-        {big ? <X className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+        {big ? <><X className="h-4 w-4" /> Fechar</> : <><Maximize2 className="h-4 w-4" /> Tela cheia</>}
       </Button>
     </div>
   );
+
 
   return (
     <>
