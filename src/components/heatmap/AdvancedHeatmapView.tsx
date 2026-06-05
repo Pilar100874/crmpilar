@@ -165,13 +165,14 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
         setBgUrl(`${s.image_url}${s.image_url.includes("?") ? "&" : "?"}t=${Date.now()}`);
         setBgVw(s.vw);
         setBgVh(s.vh);
-        return;
+        if (!showBg) return;
+      } else {
+        setBgUrl(null);
+        setBgVw(null);
+        setBgVh(null);
+        if (!showBg) return;
       }
-      // Sem screenshot: auto-captura silenciosa via iframe
-      setBgUrl(null);
-      setBgVw(null);
-      setBgVh(null);
-      if (!showBg) return;
+      // Captura/atualiza automaticamente para corrigir fundos ausentes ou antigos.
       try {
         setCapturing(true);
         const res = await captureRouteViaIframe(scope, estabelecimentoId ?? null, selectedRoute);
@@ -248,8 +249,10 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
     const vs = routeEvents.map((r) => r.vh).filter((v) => v && v > 0) as number[];
     return vs.length ? Math.round(vs.reduce((a, b) => a + b, 0) / vs.length) : 900;
   }, [routeEvents]);
+  const mapW = bgVw || avgVw;
+  const mapH = bgVh || avgVh;
   const scale = (pts: { x: number; y: number }[]) =>
-    pts.map((p) => ({ x: (p.x / avgVw) * CANVAS_W, y: Math.min((p.y / avgVh) * CANVAS_H, CANVAS_H) }));
+    pts.map((p) => ({ x: (p.x / avgVw) * mapW, y: Math.min((p.y / avgVh) * mapH, mapH) }));
 
   const pctDelta = (cur: number, prev: number) => {
     if (!prev) return null;
@@ -421,7 +424,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
               <CardDescription>{clickPoints.length} cliques mapeados (viewport médio {avgVw}×{avgVh})</CardDescription>
             </CardHeader>
             <CardContent>
-              <HeatmapPanel width={CANVAS_W} height={CANVAS_H} points={scale(clickPoints)} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
+              <HeatmapPanel width={mapW} height={mapH} maxWidth={CANVAS_W} points={scale(clickPoints)} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
             </CardContent>
           </Card>
           <Card>
@@ -456,7 +459,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
               <CardDescription>{movePoints.length} amostras (1 a cada 250ms)</CardDescription>
             </CardHeader>
             <CardContent>
-              <HeatmapPanel width={CANVAS_W} height={CANVAS_H} points={scale(movePoints)} radius={40} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
+              <HeatmapPanel width={mapW} height={mapH} maxWidth={CANVAS_W} points={scale(movePoints)} radius={40} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -627,7 +630,7 @@ function RouteSelector({
   );
 }
 
-function HeatmapPanel({ width, height, points, radius, maxOpacity, bgUrl, bgVw, bgVh }: { width: number; height: number; points: { x: number; y: number }[]; radius?: number; maxOpacity?: number; bgUrl?: string | null; bgVw?: number | null; bgVh?: number | null }) {
+function HeatmapPanel({ width, height, maxWidth, points, radius, maxOpacity, bgUrl, bgVw, bgVh }: { width: number; height: number; maxWidth?: number; points: { x: number; y: number }[]; radius?: number; maxOpacity?: number; bgUrl?: string | null; bgVw?: number | null; bgVh?: number | null }) {
   const [fullscreen, setFullscreen] = useState(false);
   // Em tela cheia: usa o aspect ratio real da tela capturada (igual ao usuário vê)
   const fsAspect = bgVw && bgVh ? `${bgVw}/${bgVh}` : `${width}/${height}`;
@@ -638,7 +641,7 @@ function HeatmapPanel({ width, height, points, radius, maxOpacity, bgUrl, bgVw, 
       className="relative bg-gradient-to-br from-muted/30 to-muted/10 rounded border overflow-hidden mx-auto"
       style={ big
         ? { width: "100%", height: "100%", aspectRatio: fsAspect, maxHeight: "100%", maxWidth: "100%" }
-        : { width: "100%", maxWidth: width, aspectRatio: aspect }
+        : { width: "100%", maxWidth: maxWidth ?? width, aspectRatio: aspect }
       }
     >
       {bgUrl && (
