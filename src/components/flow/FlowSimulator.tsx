@@ -553,15 +553,17 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const userPrompt = interpolateVariables(prompt || config.basePrompt || "criativo", contextRef.current).trim();
     const basePrompt = interpolateVariables(config.basePrompt || "", contextRef.current).trim();
     const lockedTextDirective = buildLockedTextDirective(findUpstreamTextContent(node.id));
-    const contentTypeDirective = buildContentTypeDirective(findUpstreamContentType(node.id));
+    const contentType = findUpstreamContentType(node.id);
+    const contentTypeDirective = buildContentTypeDirective(contentType);
+    const contentTypeBadge = contentType ? CONTENT_TYPE_DIRECTIVES[contentType.type]?.badgeText : "";
     const aiTextDirective = buildAITextDirective(node.id);
     const upstreamPieca = findUpstreamPiecaRefs(node.id);
 
     // Regra GLOBAL: nada além do título/subtítulo definidos (ou nada de texto, se não houver).
     const hasAnyText = !!(lockedTextDirective || aiTextDirective);
     const noExtraTextDirective = hasAnyText
-      ? "REGRA ABSOLUTA DE TEXTO NA IMAGEM: renderize SOMENTE os textos especificados acima (título/subtítulo). PROIBIDO acrescentar QUALQUER outro texto, palavra, frase, slogan, call-to-action, hashtag, URL, telefone, endereço, preço, percentual, número, código, rótulo (como 'TÍTULO', 'SUBTÍTULO', 'TITLE', 'SUBTITLE'), legenda, marca d'água ou assinatura. NÃO copie nem invente textos vindos da identidade visual, referências, embalagens, exemplos, marca, campanha ou preset. Não use texto decorativo, microtexto, textos falsos, letras aleatórias, placas, botões, selos ou etiquetas. Apenas o conteúdo textual listado, nada mais."
-      : "REGRA ABSOLUTA DE TEXTO NA IMAGEM: NÃO escreva NENHUM texto na imagem. Sem palavras, frases, slogans, hashtags, URLs, telefones, endereços, preços, percentuais, números, códigos, rótulos, legendas, marcas d'água ou assinaturas. NÃO copie nem invente textos vindos da identidade visual, referências, embalagens, exemplos, marca, campanha ou preset. Não use texto decorativo, microtexto, textos falsos, letras aleatórias, placas, botões, selos ou etiquetas. Imagem 100% sem texto.";
+      ? `REGRA ABSOLUTA DE TEXTO NA IMAGEM: renderize SOMENTE os textos especificados acima (título/subtítulo)${contentTypeBadge ? ` e o selo obrigatório "${contentTypeBadge}"` : ""}. PROIBIDO acrescentar QUALQUER outro texto, palavra, frase, slogan, call-to-action, hashtag, URL, telefone, endereço, preço, percentual, número, código, rótulo (como 'TÍTULO', 'SUBTÍTULO', 'TITLE', 'SUBTITLE'), legenda, marca d'água ou assinatura. NÃO copie nem invente textos vindos da identidade visual, referências, embalagens, exemplos, marca, campanha ou preset. Não use texto decorativo, microtexto, textos falsos, letras aleatórias, placas, botões${contentTypeBadge ? " além do selo autorizado" : ", selos"} ou etiquetas. Apenas o conteúdo textual listado, nada mais.`
+      : `REGRA ABSOLUTA DE TEXTO NA IMAGEM: NÃO escreva NENHUM texto na imagem${contentTypeBadge ? `, exceto o selo obrigatório "${contentTypeBadge}"` : ""}. Sem palavras, frases, slogans, hashtags, URLs, telefones, endereços, preços, percentuais, números, códigos, rótulos, legendas, marcas d'água ou assinaturas. NÃO copie nem invente textos vindos da identidade visual, referências, embalagens, exemplos, marca, campanha ou preset. Não use texto decorativo, microtexto, textos falsos, letras aleatórias, placas, botões${contentTypeBadge ? " além do selo autorizado" : ", selos"} ou etiquetas.${contentTypeBadge ? "" : " Imagem 100% sem texto."}`;
 
     // Regra GLOBAL: logo da empresa sempre presente na peça.
     const logoMandatoryDirective = "LOGO DA EMPRESA (OBRIGATÓRIO): incorpore o LOGO da empresa fornecido como referência na peça final, de forma elegante, legível e bem posicionada (geralmente em um canto), preservando fielmente cores, formas e proporções originais do logo. NÃO recrie, NÃO redesenhe, NÃO traduza, NÃO altere o logo — use-o tal qual a referência.";
