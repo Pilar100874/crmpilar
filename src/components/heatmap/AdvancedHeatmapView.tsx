@@ -497,13 +497,13 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
             <Card>
               <CardHeader><CardTitle className="text-red-500">Rage Clicks</CardTitle><CardDescription>Cliques repetidos rapidamente no mesmo elemento (sinal de frustração)</CardDescription></CardHeader>
               <CardContent>
-                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(ragePoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
+                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(ragePoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} capturing={capturing} />
               </CardContent>
             </Card>
             <Card>
               <CardHeader><CardTitle className="text-amber-500">Dead Clicks</CardTitle><CardDescription>Cliques sem nenhuma reação na interface</CardDescription></CardHeader>
               <CardContent>
-                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(deadPoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
+                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(deadPoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} capturing={capturing} />
               </CardContent>
             </Card>
           </div>
