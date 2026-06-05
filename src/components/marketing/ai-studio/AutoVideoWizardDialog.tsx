@@ -128,7 +128,8 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
   const [influencers, setInfluencers] = useState<InfluencerRow[]>([]);
   const [selectedInfluencer, setSelectedInfluencer] = useState<InfluencerRow | null>(null);
   const [influencerSearch, setInfluencerSearch] = useState('');
-  const [videoModel, setVideoModel] = useState('google/veo-3.1-fast');
+  const [videoModel, setVideoModel] = useState('wavespeed/seedance-2.0');
+  const [activeProviders, setActiveProviders] = useState<Set<string>>(new Set());
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16' | '1:1'>('9:16');
   const [duration, setDuration] = useState<4 | 8>(8);
 
