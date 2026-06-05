@@ -630,7 +630,7 @@ function RouteSelector({
   );
 }
 
-function HeatmapPanel({ width, height, maxWidth, points, radius, maxOpacity, bgUrl, bgVw, bgVh }: { width: number; height: number; maxWidth?: number; points: { x: number; y: number }[]; radius?: number; maxOpacity?: number; bgUrl?: string | null; bgVw?: number | null; bgVh?: number | null }) {
+function HeatmapPanel({ width, height, maxWidth, points, radius, maxOpacity, bgUrl, bgVw, bgVh, capturing }: { width: number; height: number; maxWidth?: number; points: { x: number; y: number }[]; radius?: number; maxOpacity?: number; bgUrl?: string | null; bgVw?: number | null; bgVh?: number | null; capturing?: boolean }) {
   const [fullscreen, setFullscreen] = useState(false);
   // Em tela cheia: usa o aspect ratio real da tela capturada (igual ao usuário vê)
   const fsAspect = bgVw && bgVh ? `${bgVw}/${bgVh}` : `${width}/${height}`;
@@ -653,7 +653,14 @@ function HeatmapPanel({ width, height, maxWidth, points, radius, maxOpacity, bgU
         </div>
       )}
       <HeatmapCanvas points={points} width={width} height={height} radius={radius} maxOpacity={maxOpacity} className="rounded absolute inset-0 w-full h-full" />
-      {points.length === 0 && (
+      {capturing && !bgUrl && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/80 backdrop-blur-sm z-10">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="text-sm font-medium text-foreground">Capturando tela de fundo...</div>
+          <div className="text-xs text-muted-foreground">Isso pode levar alguns segundos</div>
+        </div>
+      )}
+      {points.length === 0 && !capturing && (
         <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">Sem dados ainda. Aguardando interações...</div>
       )}
       <Button
