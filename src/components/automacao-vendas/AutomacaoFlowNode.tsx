@@ -261,6 +261,18 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BlockHelpDialog
+        open={helpOpen}
+        onOpenChange={setHelpOpen}
+        content={{
+          label,
+          description,
+          icon: blockDef.icon,
+          color: blockDef.color,
+          ...getBlockHelp("automacao-vendas", (data as any).type, label, description),
+        }}
+      />
     </>
   );
 });
