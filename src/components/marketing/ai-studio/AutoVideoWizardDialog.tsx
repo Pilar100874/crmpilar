@@ -793,6 +793,35 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
               </div>
             </div>
 
+            {/* Seletor de modelo de voz (TTS) */}
+            {script && !AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel)?.nativeAudio && (
+              <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                <Label className="text-sm">Voz / modelo de narração (TTS)</Label>
+                {availableTtsProviders.length === 0 ? (
+                  <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-md p-2">
+                    ⚠️ Nenhuma API de voz ativa. O vídeo será gerado <strong>sem narração</strong>.
+                    Ative uma API de TTS (ElevenLabs, Google ou OpenAI) em <strong>Configurações → IA / APIs Pagas</strong> para narrar o texto acima.
+                  </div>
+                ) : (
+                  <>
+                    <Select value={ttsProvider} onValueChange={setTtsProvider}>
+                      <SelectTrigger className="mt-1"><SelectValue placeholder="Escolha o provedor de voz" /></SelectTrigger>
+                      <SelectContent>
+                        {availableTtsProviders.map((p) => (
+                          <SelectItem key={p} value={p}>
+                            {p === 'elevenlabs' ? 'ElevenLabs (voz premium PT-BR)' : p === 'google' ? 'Google Gemini TTS' : 'OpenAI TTS'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-[10px] text-muted-foreground">
+                      Apenas provedores com chave ativa aparecem aqui.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+
             {!resultVideoUrl && (
               <Button
                 onClick={handleGenerate}
