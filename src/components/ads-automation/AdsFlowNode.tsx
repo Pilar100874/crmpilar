@@ -333,6 +333,11 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => setHelpOpen(true)}>
+                  <HelpCircle className="w-4 h-4 mr-2 text-primary" />
+                  Ajuda e exemplos
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => {
                     data.onToggleCollapse?.(id);
