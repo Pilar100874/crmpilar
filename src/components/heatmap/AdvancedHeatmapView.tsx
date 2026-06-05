@@ -179,6 +179,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
         setBgVh(res.vh);
       } catch (e: any) {
         console.warn("[heatmap] auto-capture falhou:", e?.message || e);
+        toast.error("Não foi possível capturar o fundo desta tela: " + (e?.message || e));
       } finally {
         if (mounted) setCapturing(false);
       }
@@ -186,40 +187,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
     return () => { mounted = false; };
   }, [selectedRoute, scope, estabelecimentoId, showBg]);
 
-  const handleRecaptureSelected = async () => {
-    if (!selectedRoute) return;
-    setCapturing(true);
-    try {
-      const res = await captureRouteViaIframe(scope, estabelecimentoId ?? null, selectedRoute);
-      setBgUrl(`${res.image_url}${res.image_url.includes("?") ? "&" : "?"}t=${Date.now()}`);
-      setBgVw(res.vw);
-      setBgVh(res.vh);
-      toast.success("Tela capturada");
-    } catch (e: any) {
-      toast.error("Falha ao capturar: " + (e?.message || e));
-    } finally {
-      setCapturing(false);
-    }
-  };
 
-
-  const handleCaptureCurrent = async () => {
-    setCapturing(true);
-    try {
-      const res = await captureAndUploadScreenshot(scope, estabelecimentoId ?? null);
-      toast.success("Tela atual capturada! Selecione a rota para ver o fundo.");
-      // Se a rota atual coincide com a selecionada, atualiza
-      if (window.location.pathname === selectedRoute) {
-        setBgUrl(`${res.image_url}`);
-        setBgVw(res.vw);
-        setBgVh(res.vh);
-      }
-    } catch (e: any) {
-      toast.error("Falha ao capturar tela: " + (e?.message || e));
-    } finally {
-      setCapturing(false);
-    }
-  };
 
   const routeEvents = useMemo(() => filtered.filter((r) => r.route === selectedRoute), [filtered, selectedRoute]);
   const clickPoints = useMemo(() => routeEvents.filter((r) => r.event_type === "click" && r.x != null && r.y != null).map((r) => ({ x: r.x!, y: r.y! })), [routeEvents]);
