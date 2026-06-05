@@ -602,6 +602,7 @@ serve(async (req) => {
           ];
           options = directives.map((d, i) => ({ label: d, value: d, handle: `ct_${i}` }));
           variable = "content_type_choice";
+          context.vars.content_type_use_badge = cfg.useBadge !== false;
         } else if (blockType === "ask_influencer" || blockType === "ask_product_image") {
           const prefix = blockType === "ask_influencer" ? "infl" : "pim";
           options = [
