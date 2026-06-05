@@ -53,6 +53,7 @@ function EcommerceRulesEditorInner() {
   const [flowName, setFlowName] = useState("Nova Regra E-commerce");
   const [isSaving, setIsSaving] = useState(false);
   const [isLibraryExpanded, setIsLibraryExpanded] = useState(true);
+  const [showSimulator, setShowSimulator] = useState(false);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [noteDialog, setNoteDialog] = useState<{ nodeId: string; note: string } | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
