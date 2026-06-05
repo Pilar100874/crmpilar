@@ -412,7 +412,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
 
         {/* Clicks heatmap */}
         <TabsContent value="clicks" className="space-y-4 mt-4">
-          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} onRecapture={handleRecaptureSelected} capturing={capturing} />
+          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} />
           <Card>
             <CardHeader>
               <CardTitle>Mapa de cliques — {selectedRoute ? prettyName(selectedRoute, routeTitles) : "selecione uma tela"}</CardTitle>
@@ -447,7 +447,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
 
         {/* Moves */}
         <TabsContent value="moves" className="space-y-4 mt-4">
-          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} onRecapture={handleRecaptureSelected} capturing={capturing} />
+          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} />
           <Card>
             <CardHeader>
               <CardTitle>Movimento do mouse — {selectedRoute ? prettyName(selectedRoute, routeTitles) : "selecione uma tela"}</CardTitle>
@@ -487,7 +487,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
 
         {/* Frustration */}
         <TabsContent value="frustration" className="space-y-4 mt-4">
-          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} onRecapture={handleRecaptureSelected} capturing={capturing} />
+          <RouteSelector routes={routeStats.map((r) => r.route)} value={selectedRoute} onChange={setSelectedRoute} titles={routeTitles} />
           <div className="grid md:grid-cols-2 gap-4">
             <Card>
               <CardHeader><CardTitle className="text-red-500">Rage Clicks</CardTitle><CardDescription>Cliques repetidos rapidamente no mesmo elemento (sinal de frustração)</CardDescription></CardHeader>
