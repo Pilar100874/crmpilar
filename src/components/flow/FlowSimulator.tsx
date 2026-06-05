@@ -423,7 +423,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     },
   };
 
-  const resolveContentTypeValue = (ctNodeId: string, cfg: any): { type: string; guidance: string } => {
+  const resolveContentTypeValue = (ctNodeId: string, cfg: any): { type: string; guidance: string; useBadge: boolean } => {
     const runtime = simNodeStateRef.current[ctNodeId]?.resolvedContentType;
     const fromAsk = runtime?.contentType ? String(runtime.contentType).trim().toLowerCase() : "";
     const fixed = (cfg.contentType || "divulgacao").toString().trim().toLowerCase();
@@ -432,10 +432,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     return {
       type: normalized,
       guidance: interpolateVariables(cfg.customGuidance || "", contextRef.current).trim(),
+      useBadge: cfg.useBadge !== false,
     };
   };
 
-  const findUpstreamContentType = (nodeId: string, visited = new Set<string>()): { type: string; guidance: string } | null => {
+  const findUpstreamContentType = (nodeId: string, visited = new Set<string>()): { type: string; guidance: string; useBadge: boolean } | null => {
     if (visited.has(nodeId)) return null;
     visited.add(nodeId);
     const incoming = edges.filter((e) => e.target === nodeId);
@@ -530,12 +531,12 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   };
 
 
-  const buildContentTypeDirective = (ct: { type: string; guidance: string } | null): string => {
+  const buildContentTypeDirective = (ct: { type: string; guidance: string; useBadge: boolean } | null): string => {
     if (!ct) return "";
     const meta = CONTENT_TYPE_DIRECTIVES[ct.type];
     const blocks: string[] = [];
     if (meta?.rule) blocks.push(meta.rule);
-    if (meta?.badgeText) {
+    if (ct.useBadge && meta?.badgeText) {
       blocks.push(`SELO OBRIGATÓRIO NA IMAGEM: crie um selo/badge profissional, integrado ao layout e legível, com o texto EXATO "${meta.badgeText}". Este selo é autorizado mesmo quando houver regra de não adicionar textos extras, pois faz parte do Tipo de Conteúdo selecionado.`);
     }
     if (ct.guidance) blocks.push(`ORIENTAÇÃO ADICIONAL OBRIGATÓRIA: ${ct.guidance}`);
@@ -555,7 +556,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const lockedTextDirective = buildLockedTextDirective(findUpstreamTextContent(node.id));
     const contentType = findUpstreamContentType(node.id);
     const contentTypeDirective = buildContentTypeDirective(contentType);
-    const contentTypeBadge = contentType ? CONTENT_TYPE_DIRECTIVES[contentType.type]?.badgeText : "";
+    const contentTypeBadge = contentType && contentType.useBadge ? CONTENT_TYPE_DIRECTIVES[contentType.type]?.badgeText : "";
     const aiTextDirective = buildAITextDirective(node.id);
     const upstreamPieca = findUpstreamPiecaRefs(node.id);
 

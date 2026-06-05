@@ -75,6 +75,7 @@ export const ContentTypeConfig = ({ config, handleConfigChange }: ContentTypeCon
   const mode: "fixed" | "ask" = config.mode === "ask" ? "ask" : "fixed";
   const selected = config.contentType || "divulgacao";
   const selectedMeta = CONTENT_TYPE_OPTIONS.find((o) => o.value === selected);
+  const useBadge = config.useBadge !== false;
 
   return (
     <div className="space-y-4">
@@ -96,6 +97,16 @@ export const ContentTypeConfig = ({ config, handleConfigChange }: ContentTypeCon
         <span className="text-[11px] text-muted-foreground flex items-center gap-1">
           <MessageCircleQuestion className="h-3 w-3" />
           Pedir ao usuário
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2 pt-2">
+        <Switch
+          checked={useBadge}
+          onCheckedChange={(v) => handleConfigChange("useBadge", v)}
+        />
+        <span className="text-[11px] text-muted-foreground">
+          Incluir selo visual na imagem ({selectedMeta?.label || "Tipo de conteúdo"})
         </span>
       </div>
 
