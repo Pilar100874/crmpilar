@@ -30,6 +30,7 @@ import { EcommercePropertiesPanel } from "@/components/ecommerce-rules/Ecommerce
 import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 import { ECOMMERCE_RULE_BLOCKS } from "@/types/ecommerceRules";
 import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
+import { WorkflowSimulator } from "@/components/workflow-simulator/WorkflowSimulator";
 import { toast } from "@/hooks/use-toast";
 import type { EcommerceRuleBlockType } from "@/types/ecommerceRules";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
