@@ -424,7 +424,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
               <CardDescription>{clickPoints.length} cliques mapeados (viewport médio {avgVw}×{avgVh})</CardDescription>
             </CardHeader>
             <CardContent>
-              <HeatmapPanel width={mapW} height={mapH} maxWidth={CANVAS_W} points={scale(clickPoints)} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
+              <HeatmapPanel width={mapW} height={mapH} maxWidth={CANVAS_W} points={scale(clickPoints)} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} capturing={capturing} />
             </CardContent>
           </Card>
           <Card>
