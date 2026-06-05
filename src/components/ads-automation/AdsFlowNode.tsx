@@ -84,6 +84,7 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
   const blockDef = ADS_BLOCK_DEFINITIONS.find((b) => b.type === data.type);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const isCollapsed = data.isCollapsed ?? false;
 
   if (!blockDef) return null;
