@@ -119,7 +119,6 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
 
   // Step 1 — Briefing
   const [briefing, setBriefing] = useState('');
-  const [enhancingBrief, setEnhancingBrief] = useState(false);
 
   // Step 2 — Produto + Influencer + Modelo
   const [products, setProducts] = useState<ProductRow[]>([]);
