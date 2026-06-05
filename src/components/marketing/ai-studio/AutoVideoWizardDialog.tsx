@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { muxAudioWithVideo } from './videoMux';
+import { getActiveVisualIdentity } from './VisualIdentityPanel';
 
 interface ProductRow {
   id: string;
@@ -285,6 +286,12 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
   const handleGenerate = useCallback(async () => {
     if (!estabId) return toast.error('Estabelecimento não encontrado.');
     if (!selectedProduct?.foto_url) return toast.error('Selecione um produto com foto.');
+    const modelMeta = AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel);
+    const hasProtectedRefs = !!selectedProduct || (includeInfluencer && !!selectedInfluencer) || useVisualIdentity;
+    if (modelMeta && !modelMeta.supportsImageRefs && hasProtectedRefs) {
+      toast.error(`O modelo ${modelMeta.label.split(' — ')[0]} não aceita produto, influencer ou identidade visual como referência. Escolha Seedance 2.0 (WaveSpeed) antes de gerar.`);
+      return;
+    }
     setGenerating(true);
     setResultVideoUrl(null);
     setResultBlob(null);
@@ -292,7 +299,16 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
     try {
       // 1) Monta prompt enriquecido — Produto #1, Influencer #2 (memória do projeto)
       const refs: string[] = [selectedProduct.foto_url];
-      if (includeInfluencer && selectedInfluencer?.image_url) refs.push(selectedInfluencer.image_url);
+      const imageRoles: string[] = ['PRODUCT - DO NOT MODIFY'];
+      if (includeInfluencer && selectedInfluencer?.image_url) {
+        refs.push(selectedInfluencer.image_url);
+        imageRoles.push('PERSON/INFLUENCER - DO NOT MODIFY');
+      }
+      const visualIdentity = useVisualIdentity ? await getActiveVisualIdentity(estabId) : null;
+      if (visualIdentity?.images?.length) {
+        refs.push(...visualIdentity.images);
+        imageRoles.push(...visualIdentity.images.map(() => 'BRAND IDENTITY REFERENCE'));
+      }
 
       const speechDirective = script
         ? `\n\nA cena deve incluir uma locução em português BR dizendo exatamente: "${script}". Mantenha sincronia natural com a imagem.`
@@ -300,7 +316,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
 
       // REGRA CRÍTICA: identidade visual da marca afeta APENAS cenário/ambiente/paleta de luz — NUNCA o produto.
       const viDirective = useVisualIdentity
-        ? '\n\nDIRETRIZ DE MARCA: aplique as cores, tipografia e mood da identidade visual da marca SOMENTE no cenário, ambiente, iluminação e elementos gráficos da cena. NÃO altere, recolora, restilize ou redesenhe o produto sob nenhuma hipótese — o produto deve permanecer 100% idêntico à imagem de referência (mesma forma, cor, textura, logotipo e proporções).'
+        ? `\n\nDIRETRIZ DE MARCA: aplique as cores, tipografia e mood da identidade visual da marca SOMENTE no cenário, ambiente, iluminação e elementos gráficos da cena. NÃO altere, recolora, restilize ou redesenhe o produto sob nenhuma hipótese — o produto deve permanecer 100% idêntico à imagem de referência (mesma forma, cor, textura, logotipo e proporções).${visualIdentity?.prompt ? `\n\nPrompt da identidade visual ativa:\n${visualIdentity.prompt}` : ''}${visualIdentity?.images?.length ? '\n\nUse as imagens extras de referência apenas como identidade visual/estilo da marca; elas não substituem o produto nem o influencer.' : ''}`
         : '\n\nIgnore qualquer identidade visual de marca. Use estilo cinematográfico neutro. O produto deve permanecer fiel à imagem de referência.';
       const influencerDirective = includeInfluencer && selectedInfluencer
         ? `\n\nINFLUENCER OBRIGATÓRIO (#2): a pessoa da segunda imagem de referência DEVE aparecer claramente na cena, em primeiro plano ou interagindo com o produto. Mantenha rosto, cabelo, tom de pele, roupa e traços fiéis à referência. A ausência do influencer invalida o resultado.`
@@ -317,6 +333,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
           duration,
           // imageUrls é o nome esperado pelo edge function (1º item vira a imagem inicial do modelo image-to-video)
           imageUrls: refs,
+          imageRoles,
           referenceImages: refs,
           productImageUrl: selectedProduct.foto_url,
           influencerImageUrl: includeInfluencer ? selectedInfluencer?.image_url : undefined,
