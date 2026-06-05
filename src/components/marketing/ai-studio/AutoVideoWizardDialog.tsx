@@ -648,12 +648,31 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
               </label>
               {includeInfluencer && (
                 <div className="mt-2 space-y-2">
-                  <Input
-                    placeholder="Buscar influencer na galeria…"
-                    value={influencerSearch}
-                    onChange={(e) => setInfluencerSearch(e.target.value)}
-                    className="h-8 text-xs"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Buscar influencer na galeria…"
+                      value={influencerSearch}
+                      onChange={(e) => setInfluencerSearch(e.target.value)}
+                      className="h-8 text-xs flex-1"
+                    />
+                    <label className="shrink-0">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={uploadingInfluencer}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleInfluencerUpload(f);
+                          e.currentTarget.value = '';
+                        }}
+                      />
+                      <span className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full border-2 border-input bg-background hover:bg-accent hover:border-primary text-[11px] font-semibold cursor-pointer transition-colors">
+                        {uploadingInfluencer ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                        Enviar foto
+                      </span>
+                    </label>
+                  </div>
                   <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 max-h-40 overflow-y-auto p-1">
                     {influencers
                       .filter((i) =>
