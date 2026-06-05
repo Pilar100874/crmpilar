@@ -670,7 +670,13 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
           </Button>
           {step < 3 ? (
             <Button
-              onClick={() => setStep((s) => (Math.min(3, s + 1) as Step))}
+              onClick={() => {
+                if (step === 1) {
+                  // dispara enriquecimento em background, sem bloquear UI
+                  enhanceBriefingSilently();
+                }
+                setStep((s) => (Math.min(3, s + 1) as Step));
+              }}
               disabled={(step === 1 && !canNext1) || (step === 2 && !canNext2)}
             >
               Próximo <ArrowRight className="h-4 w-4 ml-1" />
