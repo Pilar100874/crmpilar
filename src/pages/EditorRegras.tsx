@@ -719,6 +719,10 @@ function EditorRegrasContent() {
       onAddBlock={() => setIsBlockLibraryExpanded(true)}
       isLocked={isLocked}
       onToggleLock={handleToggleLock}
+      onTest={() => { if (!showSimulator) setSelectedNode(null); setShowSimulator((v) => !v); }}
+      showTest={showSimulator}
+      isTestActive={showSimulator}
+      testLabel="Simular"
       hasUnsavedChanges={hasUnsavedChanges}
       defaultReturnUrl="/vendas-config?tab=automacao"
       aiGeneratorContent={
