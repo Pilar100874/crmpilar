@@ -147,10 +147,11 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
   const [elapsedSec, setElapsedSec] = useState(0);
   const [estimatedTotalSec, setEstimatedTotalSec] = useState(90);
   const [ttsProvider, setTtsProvider] = useState<string>('');
+  const [wavespeedTtsModel, setWavespeedTtsModel] = useState<string>('wavespeed-ai/dia-tts');
 
   // Provedores de TTS disponíveis (interseção com chaves ativas)
   const availableTtsProviders = useMemo(() => {
-    return (['elevenlabs', 'google', 'openai'] as const).filter((p) => activeProviders.has(p));
+    return (['elevenlabs', 'google', 'openai', 'wavespeed'] as const).filter((p) => activeProviders.has(p));
   }, [activeProviders]);
 
   // Auto-seleciona o primeiro TTS disponível quando a lista carrega/muda
@@ -343,6 +344,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
               provider: chosenTts,
               text: script,
               lang: 'pt',
+              ...(chosenTts === 'wavespeed' ? { wavespeedModel: wavespeedTtsModel } : {}),
             }, 120000);
             const audioUrl = audioRes?.audioUrl;
             if (audioUrl) {
@@ -370,7 +372,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
     } finally {
       setGenerating(false);
     }
-  }, [estabId, selectedProduct, includeInfluencer, selectedInfluencer, briefing, script, videoModel, aspectRatio, duration, useVisualIdentity, activeProviders, ttsProvider, availableTtsProviders]);
+  }, [estabId, selectedProduct, includeInfluencer, selectedInfluencer, briefing, script, videoModel, aspectRatio, duration, useVisualIdentity, activeProviders, ttsProvider, availableTtsProviders, wavespeedTtsModel]);
 
   const handleSaveToGallery = useCallback(async () => {
     if (!resultVideoUrl || !estabId) return;
@@ -809,11 +811,24 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
                       <SelectContent>
                         {availableTtsProviders.map((p) => (
                           <SelectItem key={p} value={p}>
-                            {p === 'elevenlabs' ? 'ElevenLabs (voz premium PT-BR)' : p === 'google' ? 'Google Gemini TTS' : 'OpenAI TTS'}
+                            {p === 'elevenlabs' ? 'ElevenLabs (voz premium PT-BR)'
+                              : p === 'google' ? 'Google Gemini TTS'
+                              : p === 'openai' ? 'OpenAI TTS'
+                              : 'WaveSpeed TTS (Spark / Kokoro / Dia)'}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    {ttsProvider === 'wavespeed' && (
+                      <Select value={wavespeedTtsModel} onValueChange={setWavespeedTtsModel}>
+                        <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="wavespeed-ai/dia-tts">Dia TTS (natural, multilíngue)</SelectItem>
+                          <SelectItem value="wavespeed-ai/spark-tts">Spark TTS (rápido)</SelectItem>
+                          <SelectItem value="wavespeed-ai/kokoro-tts">Kokoro TTS (leve)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
                     <p className="text-[10px] text-muted-foreground">
                       Apenas provedores com chave ativa aparecem aqui.
                     </p>

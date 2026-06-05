@@ -2782,6 +2782,68 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
           });
         }
 
+        if (provider === "wavespeed") {
+          const apiKey = await fetchApiKey(estabId, "wavespeed");
+          if (!apiKey) throw new Error("WaveSpeed API key not configured. Go to Settings → Paid APIs.");
+          const wsModel = (params.wavespeedModel as string) || "wavespeed-ai/dia-tts";
+          const allowed = ["wavespeed-ai/spark-tts", "wavespeed-ai/kokoro-tts", "wavespeed-ai/dia-tts"];
+          const modelPath = allowed.includes(wsModel) ? wsModel : "wavespeed-ai/dia-tts";
+
+          // Submit
+          const submitResp = await fetch(`https://api.wavespeed.ai/api/v3/${modelPath}`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ text, language: params.lang || "pt" }),
+          });
+          if (!submitResp.ok) {
+            const t = await submitResp.text().catch(() => "");
+            throw new Error(`WaveSpeed TTS ${submitResp.status}: ${t.substring(0, 200)}`);
+          }
+          const submitData = await submitResp.json();
+          const wsd = submitData.data || submitData;
+          let outputs: any[] = wsd.outputs || [];
+          let status = String(wsd.status || "").toLowerCase();
+          const taskId = wsd.id;
+
+          // Poll up to ~90s
+          const startAt = Date.now();
+          while (!["completed", "succeeded", "success", "finished"].includes(status) && Date.now() - startAt < 90000) {
+            await new Promise((r) => setTimeout(r, 2500));
+            const pr = await fetch(`https://api.wavespeed.ai/api/v3/predictions/${taskId}/result`, {
+              headers: { Authorization: `Bearer ${apiKey}` },
+            });
+            if (pr.status === 404) continue;
+            if (!pr.ok) {
+              const t = await pr.text().catch(() => "");
+              throw new Error(`WaveSpeed poll ${pr.status}: ${t.substring(0, 200)}`);
+            }
+            const pd = await pr.json();
+            const d = pd.data || pd;
+            status = String(d.status || "").toLowerCase();
+            outputs = d.outputs || [];
+            if (["failed", "error", "cancelled", "canceled"].includes(status)) {
+              throw new Error(d.error || "WaveSpeed TTS falhou");
+            }
+          }
+          const audioRemoteUrl = outputs[0];
+          if (!audioRemoteUrl) throw new Error("WaveSpeed TTS timeout: nenhum áudio retornado");
+
+          // Download and re-upload to our bucket
+          const audioResp = await fetch(audioRemoteUrl);
+          const audioBuffer = await audioResp.arrayBuffer();
+          const ct = audioResp.headers.get("content-type") || "audio/mpeg";
+          const ext = ct.includes("wav") ? "wav" : ct.includes("ogg") ? "ogg" : "mp3";
+          const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+          const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+          const sb = createClient(supabaseUrl, supabaseKey);
+          const fileName = `studio/${crypto.randomUUID()}.${ext}`;
+          await sb.storage.from("marketing-audio").upload(fileName, new Uint8Array(audioBuffer), { contentType: ct, upsert: true });
+          const { data: pubData } = sb.storage.from("marketing-audio").getPublicUrl(fileName);
+          return new Response(JSON.stringify({ result: { audioUrl: pubData.publicUrl, provider: "wavespeed", model: modelPath } }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
         throw new Error(`Unsupported audio provider: ${provider}`);
       }
 
