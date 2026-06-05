@@ -40,6 +40,7 @@ interface EventRow {
 }
 
 export function AdvancedHeatmapView({ scope, title, description, estabelecimentoId }: { scope: Scope; title: string; description: string; estabelecimentoId?: string | null }) {
+  const isEmbeddedCapture = typeof window !== "undefined" && window.self !== window.top;
   const [period, setPeriod] = useState<Period>("7");
   const [device, setDevice] = useState<DeviceFilter>("all");
   const [visitorFilter, setVisitorFilter] = useState<"all" | "new" | "returning">("all");
@@ -152,6 +153,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
   // Carrega screenshot da rota selecionada; se não existir, captura via iframe automaticamente
   useEffect(() => {
     let mounted = true;
+    if (isEmbeddedCapture) return () => { mounted = false; };
     if (!selectedRoute) {
       setBgUrl(null);
       return;
@@ -185,7 +187,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
       }
     })();
     return () => { mounted = false; };
-  }, [selectedRoute, scope, estabelecimentoId, showBg]);
+  }, [selectedRoute, scope, estabelecimentoId, showBg, isEmbeddedCapture]);
 
 
 
@@ -454,7 +456,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
               <CardDescription>{movePoints.length} amostras (1 a cada 250ms)</CardDescription>
             </CardHeader>
             <CardContent>
-              <HeatmapPanel width={CANVAS_W} height={CANVAS_H} points={scale(movePoints)} radius={40} bgUrl={showBg ? bgUrl : null} />
+              <HeatmapPanel width={CANVAS_W} height={CANVAS_H} points={scale(movePoints)} radius={40} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -492,13 +494,13 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
             <Card>
               <CardHeader><CardTitle className="text-red-500">Rage Clicks</CardTitle><CardDescription>Cliques repetidos rapidamente no mesmo elemento (sinal de frustração)</CardDescription></CardHeader>
               <CardContent>
-                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(ragePoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} bgUrl={showBg ? bgUrl : null} />
+                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(ragePoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
               </CardContent>
             </Card>
             <Card>
               <CardHeader><CardTitle className="text-amber-500">Dead Clicks</CardTitle><CardDescription>Cliques sem nenhuma reação na interface</CardDescription></CardHeader>
               <CardContent>
-                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(deadPoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} bgUrl={showBg ? bgUrl : null} />
+                <HeatmapPanel width={CANVAS_W / 2} height={CANVAS_H / 2} points={scale(deadPoints).map((p) => ({ x: p.x / 2, y: p.y / 2 }))} radius={20} maxOpacity={0.85} bgUrl={showBg ? bgUrl : null} bgVw={bgVw} bgVh={bgVh} />
               </CardContent>
             </Card>
           </div>
