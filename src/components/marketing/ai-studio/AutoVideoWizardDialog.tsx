@@ -458,23 +458,36 @@ export default function AutoVideoWizardDialog({ open, onOpenChange }: AutoVideoW
                   Incluir influencer na cena
                 </label>
                 {includeInfluencer && (
-                  <div className="mt-2 grid grid-cols-3 sm:grid-cols-6 gap-2 max-h-40 overflow-y-auto p-1">
-                    {influencers.map((i) => (
-                      <button
-                        key={i.id}
-                        onClick={() => setSelectedInfluencer(i)}
-                        className={`rounded-lg overflow-hidden border-2 ${
-                          selectedInfluencer?.id === i.id ? 'border-primary ring-2 ring-primary/30' : 'border-border'
-                        }`}
-                      >
-                        <img src={i.image_url} alt={i.nome || ''} className="aspect-square w-full object-cover" />
-                      </button>
-                    ))}
-                    {influencers.length === 0 && (
-                      <div className="col-span-full text-xs text-muted-foreground p-3 text-center">
-                        Nenhum influencer salvo. Adicione na galeria do Studio, categoria <strong>Influencer</strong>.
-                      </div>
-                    )}
+                  <div className="mt-2 space-y-2">
+                    <Input
+                      placeholder="Buscar influencer na galeria…"
+                      value={influencerSearch}
+                      onChange={(e) => setInfluencerSearch(e.target.value)}
+                      className="h-8 text-xs"
+                    />
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 max-h-40 overflow-y-auto p-1">
+                      {influencers
+                        .filter((i) =>
+                          !influencerSearch ||
+                          (i.nome || '').toLowerCase().includes(influencerSearch.toLowerCase())
+                        )
+                        .map((i) => (
+                        <button
+                          key={i.id}
+                          onClick={() => setSelectedInfluencer(i)}
+                          className={`rounded-lg overflow-hidden border-2 ${
+                            selectedInfluencer?.id === i.id ? 'border-primary ring-2 ring-primary/30' : 'border-border'
+                          }`}
+                        >
+                          <img src={i.image_url} alt={i.nome || ''} className="aspect-square w-full object-cover" />
+                        </button>
+                      ))}
+                      {influencers.length === 0 && (
+                        <div className="col-span-full text-xs text-muted-foreground p-3 text-center">
+                          Nenhum influencer salvo. Adicione na galeria do Studio, categoria <strong>Influencer</strong>.
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
