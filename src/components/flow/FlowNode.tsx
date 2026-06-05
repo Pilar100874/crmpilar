@@ -518,6 +518,18 @@ export const FlowNode = memo((props: any) => {
         )}
       </ContextMenuContent>
     </ContextMenu>
+
+    <BlockHelpDialog
+      open={helpOpen}
+      onOpenChange={setHelpOpen}
+      content={{
+        label: String(data.label || blockDef.label || data.type),
+        description: String(blockDef.description || data.type),
+        icon: blockDef.icon,
+        color: (blockDef as any).color,
+        ...getBlockHelp("bot", data.type, String(data.label || blockDef.label || data.type), String(blockDef.description || data.type)),
+      }}
+    />
   </>
   );
 });
