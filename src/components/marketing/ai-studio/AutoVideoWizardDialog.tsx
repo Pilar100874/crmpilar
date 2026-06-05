@@ -138,7 +138,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
   const [useVisualIdentity, setUseVisualIdentity] = useState(true);
   const [activeProviders, setActiveProviders] = useState<Set<string>>(new Set());
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16' | '1:1'>('9:16');
-  const [duration, setDuration] = useState<4 | 8>(8);
+  const [duration, setDuration] = useState<number>(10);
 
   // Step 3 — Script + Geração
   const [script, setScript] = useState('');
@@ -157,6 +157,21 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
   const availableTtsProviders = useMemo(() => {
     return (['elevenlabs', 'google', 'openai', 'wavespeed'] as const).filter((p) => activeProviders.has(p));
   }, [activeProviders]);
+
+  const selectedModelMeta = useMemo(
+    () => AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel),
+    [videoModel],
+  );
+  const allowedDurations = selectedModelMeta?.durations?.length ? selectedModelMeta.durations : [8];
+
+  useEffect(() => {
+    if (!allowedDurations.includes(duration)) {
+      const closest = allowedDurations.reduce((prev, curr) =>
+        Math.abs(curr - duration) < Math.abs(prev - duration) ? curr : prev,
+      );
+      setDuration(closest);
+    }
+  }, [allowedDurations, duration]);
 
   // Auto-seleciona o primeiro TTS disponível quando a lista carrega/muda
   useEffect(() => {
