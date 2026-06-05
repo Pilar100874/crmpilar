@@ -2075,7 +2075,6 @@ const AICreativeStudioInner: React.FC = () => {
             )}
           </AnimatePresence>
 
-          <AutoVideoWizardDialog open={showAutoVideoWizard} onOpenChange={setShowAutoVideoWizard} />
 
           {/* Context Menu */}
           <AnimatePresence>
