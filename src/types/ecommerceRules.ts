@@ -48,8 +48,25 @@ export type EcommerceRuleBlockType =
   // Gatilhos de comportamento (mapa de calor)
   | "gatilho_tempo_em_tela"
   | "gatilho_carrinho_abandonado"
+  // Gatilhos de comportamento por usuário (tempo real)
+  | "gatilho_visitou_pagina"
+  | "gatilho_tempo_na_pagina"
+  | "gatilho_intencao_saida"
+  | "gatilho_scroll_profundo"
+  | "gatilho_inatividade"
+  | "gatilho_rage_click"
+  | "gatilho_dead_click"
+  | "gatilho_clique_elemento"
+  | "gatilho_visualizou_produto_vezes"
+  | "gatilho_retorno_visitante"
   // Ações de recuperação
-  | "acao_enviar_lembrete_carrinho";
+  | "acao_enviar_lembrete_carrinho"
+  // Ações em tempo real para o visitante ativo
+  | "acao_popup_personalizado"
+  | "acao_oferecer_cupom_instantaneo"
+  | "acao_chat_proativo"
+  | "acao_notificacao_navegador"
+  | "acao_destacar_elemento";
 
 export interface EcommerceBlockDefinition {
   type: EcommerceRuleBlockType;
