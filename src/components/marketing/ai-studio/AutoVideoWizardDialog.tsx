@@ -281,7 +281,10 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
         ? `\n\nA cena deve incluir uma locução em português BR dizendo exatamente: "${script}". Mantenha sincronia natural com a imagem.`
         : '';
 
-      const composedPrompt = `${briefing}\n\nProduto principal (#1): ${selectedProduct.nome}. Mantenha o produto fiel à imagem de referência fornecida.${includeInfluencer && selectedInfluencer ? ` Influencer (#2) presente na cena, conforme imagem de referência.` : ''}${speechDirective}`;
+      const viDirective = useVisualIdentity
+        ? '\n\nAplique a identidade visual da marca (cores, tipografia e estilo) de forma sutil, mantendo o produto fiel.'
+        : '\n\nIgnore qualquer identidade visual de marca. Use estilo cinematográfico neutro.';
+      const composedPrompt = `${briefing}\n\nProduto principal (#1): ${selectedProduct.nome}. Mantenha o produto fiel à imagem de referência fornecida.${includeInfluencer && selectedInfluencer ? ` Influencer (#2) presente na cena, conforme imagem de referência.` : ''}${viDirective}${speechDirective}`;
 
       setProgressMsg('Gerando vídeo…');
       const videoUrl = await generateVideoAsync(
@@ -296,6 +299,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
           referenceImages: refs,
           productImageUrl: selectedProduct.foto_url,
           influencerImageUrl: includeInfluencer ? selectedInfluencer?.image_url : undefined,
+          useVisualIdentity,
           withAudio: true,
         },
         (m) => setProgressMsg(m),
