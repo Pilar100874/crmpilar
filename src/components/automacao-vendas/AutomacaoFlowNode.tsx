@@ -29,6 +29,7 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
   const blockDef = AUTOMACAO_VENDAS_BLOCKS.find((b) => b.type === (data as any).type);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const isStartBlock = (data as any).type === 'iniciar_validacao';
   
   if (!blockDef) return null;
