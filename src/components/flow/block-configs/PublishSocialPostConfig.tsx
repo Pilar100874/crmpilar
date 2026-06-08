@@ -1,10 +1,13 @@
+import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { Instagram, Facebook, Music2, Linkedin, Twitter, Youtube, AlertCircle, Settings } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Instagram, Facebook, Music2, Linkedin, Twitter, Youtube, AlertCircle, Settings, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ConfigProps {
   config: any;
