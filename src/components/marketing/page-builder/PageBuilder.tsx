@@ -3152,6 +3152,9 @@ const PageBuilderEditor: React.FC<{
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [rightPanel, setRightPanel] = useState<'editor' | 'agent' | 'config'>('editor');
   const [leftTab, setLeftTab] = useState<'sections' | 'assets'>('sections');
+  const isMobile = useIsMobile();
+  const [mobileLeftOpen, setMobileLeftOpen] = useState(false);
+  const [mobileRightOpen, setMobileRightOpen] = useState(false);
   const [showAddSection, setShowAddSection] = useState(false);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [showCodeDialog, setShowCodeDialog] = useState(false);
