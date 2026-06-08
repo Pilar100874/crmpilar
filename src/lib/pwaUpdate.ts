@@ -1,28 +1,42 @@
 // Utilitário para atualizar o app no modo PWA (tablet/celular) sem service worker.
-// Estratégia: pegar uma "assinatura" do index.html (ETag/Last-Modified ou hash)
-// e comparar periodicamente. Quando muda → notificar/atualizar.
+// Estratégia: comparar uma assinatura estável dos assets gerados no index.html.
 
 const VERSION_KEY = "__pwa_version_signature__";
+const PENDING_VERSION_KEY = "__pwa_pending_version_signature__";
+
+function buildSignatureFromHtml(html: string): string | null {
+  const assetMatches = Array.from(
+    html.matchAll(/\/(assets\/[^"'<>\s]+\.(?:js|css))/g),
+    (match) => match[1],
+  );
+
+  const uniqueAssets = Array.from(new Set(assetMatches)).sort();
+  if (uniqueAssets.length > 0) return `assets:${uniqueAssets.join("|")}`;
+
+  // Fallback determinístico: remove trechos que podem variar por request.
+  const normalizedHtml = html
+    .replace(/\?_=[0-9]+/g, "")
+    .replace(/_v=[0-9]+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  let hash = 0;
+  for (let i = 0; i < normalizedHtml.length; i++) {
+    hash = (hash << 5) - hash + normalizedHtml.charCodeAt(i);
+    hash |= 0;
+  }
+  return `h:${hash}`;
+}
 
 async function fetchSignature(): Promise<string | null> {
   try {
-    // cache:no-store garante request fresh ao servidor
     const res = await fetch(`/index.html?_=${Date.now()}`, {
       method: "GET",
       cache: "no-store",
     });
     if (!res.ok) return null;
-    const etag = res.headers.get("etag");
-    const lastMod = res.headers.get("last-modified");
-    if (etag || lastMod) return `${etag || ""}|${lastMod || ""}`;
-    // Fallback: hash simples do html (assets têm hash no nome, então muda quando há deploy)
     const text = await res.text();
-    let hash = 0;
-    for (let i = 0; i < text.length; i++) {
-      hash = (hash << 5) - hash + text.charCodeAt(i);
-      hash |= 0;
-    }
-    return `h:${hash}`;
+    return buildSignatureFromHtml(text);
   } catch {
     return null;
   }
@@ -38,20 +52,25 @@ export function isStandalonePWA(): boolean {
 }
 
 export async function captureInitialVersion(): Promise<void> {
-  if (sessionStorage.getItem(VERSION_KEY)) return;
+  if (localStorage.getItem(VERSION_KEY)) return;
   const sig = await fetchSignature();
-  if (sig) sessionStorage.setItem(VERSION_KEY, sig);
+  if (sig) localStorage.setItem(VERSION_KEY, sig);
 }
 
 export async function hasNewVersion(): Promise<boolean> {
-  const current = sessionStorage.getItem(VERSION_KEY);
+  const current = localStorage.getItem(VERSION_KEY);
   const latest = await fetchSignature();
   if (!current || !latest) return false;
-  return current !== latest;
+  const hasChanged = current !== latest;
+  if (hasChanged) localStorage.setItem(PENDING_VERSION_KEY, latest);
+  return hasChanged;
 }
 
 export async function forceUpdatePWA(): Promise<void> {
   try {
+    const latest = localStorage.getItem(PENDING_VERSION_KEY) || (await fetchSignature());
+    if (latest) localStorage.setItem(VERSION_KEY, latest);
+    localStorage.removeItem(PENDING_VERSION_KEY);
     // 1) Desregistra qualquer service worker (caso exista)
     if ("serviceWorker" in navigator) {
       const regs = await navigator.serviceWorker.getRegistrations();
