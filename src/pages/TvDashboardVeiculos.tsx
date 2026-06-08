@@ -5,7 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { 
   Car, Gauge, Clock, MapPin, 
   WifiOff, Activity, RefreshCw,
-  Fuel, Route, Timer, Zap, ArrowLeft
+  Fuel, Route, Timer, Zap, ArrowLeft, X, List
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +15,7 @@ import { VeiculoComStatus, VeiculoPosicao, VeiculoStatus } from '@/types/logisti
 import { ParadaMarcada } from '@/types/automacaoLogistica';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { useFullscreen } from '@/hooks/useFullscreen';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const statusConfig = {
   movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-600', icon: Activity },
