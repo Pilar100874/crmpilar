@@ -11,12 +11,12 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Library, Save, Trash2, FileText, Clock } from "lucide-react";
+import { Library, Save, Trash2, FileText, Clock, Loader2 } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { format } from "date-fns";
-
-const STORAGE_KEY = "bot_flow_templates_v1";
+import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 export interface FlowTemplate {
   id: string;
@@ -34,17 +34,26 @@ interface FlowTemplateManagerProps {
   onLoadTemplate: (nodes: Node[], edges: Edge[]) => void;
 }
 
-function loadTemplates(): FlowTemplate[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
+async function fetchTemplates(): Promise<FlowTemplate[]> {
+  const estabId = await getEstabelecimentoId();
+  if (!estabId) return [];
+  const { data, error } = await supabase
+    .from("flow_templates" as any)
+    .select("id, name, description, nodes, edges, created_at")
+    .eq("estabelecimento_id", estabId)
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("Erro ao carregar modelos:", error);
     return [];
   }
-}
-
-function persistTemplates(list: FlowTemplate[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  return (data || []).map((r: any) => ({
+    id: r.id,
+    name: r.name,
+    description: r.description ?? undefined,
+    nodes: (r.nodes as Node[]) || [],
+    edges: (r.edges as Edge[]) || [],
+    createdAt: r.created_at,
+  }));
 }
 
 export function FlowTemplateManager({
@@ -60,14 +69,27 @@ export function FlowTemplateManager({
   const [desc, setDesc] = useState("");
   const [onlySelected, setOnlySelected] = useState(false);
   const [toDelete, setToDelete] = useState<FlowTemplate | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const refresh = async () => {
+    setLoading(true);
+    try {
+      setTemplates(await fetchTemplates());
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (openList || openSave) setTemplates(loadTemplates());
+    if (openList || openSave) {
+      refresh();
+    }
   }, [openList, openSave]);
 
   const hasSelection = selectedNodes.length > 0;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) {
       toast.error("Informe um nome para o modelo");
       return;
@@ -84,21 +106,34 @@ export function FlowTemplateManager({
       return;
     }
 
-    const list = loadTemplates();
-    const tpl: FlowTemplate = {
-      id: `tpl_${Date.now()}`,
-      name: name.trim(),
-      description: desc.trim() || undefined,
-      nodes: JSON.parse(JSON.stringify(sourceNodes)),
-      edges: JSON.parse(JSON.stringify(sourceEdges)),
-      createdAt: new Date().toISOString(),
-    };
-    persistTemplates([tpl, ...list]);
-    toast.success(`Modelo "${tpl.name}" salvo!`);
-    setName("");
-    setDesc("");
-    setOnlySelected(false);
-    setOpenSave(false);
+    setSaving(true);
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) {
+        toast.error("Estabelecimento não encontrado");
+        return;
+      }
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase.from("flow_templates" as any).insert({
+        estabelecimento_id: estabId,
+        user_id: user?.id ?? null,
+        name: name.trim(),
+        description: desc.trim() || null,
+        nodes: JSON.parse(JSON.stringify(sourceNodes)),
+        edges: JSON.parse(JSON.stringify(sourceEdges)),
+      });
+      if (error) throw error;
+      toast.success(`Modelo "${name.trim()}" salvo!`);
+      setName("");
+      setDesc("");
+      setOnlySelected(false);
+      setOpenSave(false);
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Erro ao salvar modelo: " + (e.message || ""));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleLoad = (tpl: FlowTemplate) => {
@@ -130,12 +165,21 @@ export function FlowTemplateManager({
     setOpenList(false);
   };
 
-  const handleDelete = (tpl: FlowTemplate) => {
-    const list = loadTemplates().filter((t) => t.id !== tpl.id);
-    persistTemplates(list);
-    setTemplates(list);
-    toast.success("Modelo excluído");
-    setToDelete(null);
+  const handleDelete = async (tpl: FlowTemplate) => {
+    try {
+      const { error } = await supabase
+        .from("flow_templates" as any)
+        .delete()
+        .eq("id", tpl.id);
+      if (error) throw error;
+      setTemplates((prev) => prev.filter((t) => t.id !== tpl.id));
+      toast.success("Modelo excluído");
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Erro ao excluir modelo");
+    } finally {
+      setToDelete(null);
+    }
   };
 
   return (
@@ -208,7 +252,10 @@ export function FlowTemplateManager({
             <Button variant="outline" onClick={() => setOpenSave(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSave}>Salvar modelo</Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Salvar modelo
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -223,7 +270,11 @@ export function FlowTemplateManager({
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[50vh] overflow-y-auto space-y-2">
-            {templates.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-8">
+                <Loader2 className="h-6 w-6 mx-auto animate-spin text-muted-foreground" />
+              </div>
+            ) : templates.length === 0 ? (
               <div className="text-center py-8">
                 <FileText className="h-10 w-10 mx-auto text-muted-foreground/40 mb-2" />
                 <p className="text-sm text-muted-foreground">
