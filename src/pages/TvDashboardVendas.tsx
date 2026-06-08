@@ -527,9 +527,9 @@ export default function TvDashboardVendas() {
   }
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-foreground via-foreground/90 to-foreground overflow-hidden p-6">
+    <div className="fixed inset-0 bg-gradient-to-br from-foreground via-foreground/90 to-foreground overflow-y-auto md:overflow-hidden p-3 sm:p-4 md:p-6">
       {/* Header Minimal - apenas botão voltar */}
-      <div className="absolute top-4 right-6 z-10">
+      <div className="absolute top-2 right-2 sm:top-4 sm:right-6 z-10">
         <Button 
           variant="ghost" 
           size="icon"
@@ -541,9 +541,9 @@ export default function TvDashboardVendas() {
       </div>
 
       {/* Main Grid - Optimized for 4K */}
-      <div className="h-full flex flex-col gap-5">
+      <div className="md:h-full flex flex-col gap-3 sm:gap-4 md:gap-5 pt-10 md:pt-0">
         {/* KPI Row - 2 rows of cards for better readability */}
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
           {/* Vendas Hoje */}
           <div className="bg-gradient-to-br from-green-500/20 to-green-600/5 rounded-2xl border border-green-500/30 p-5">
             <div className="flex items-center justify-between">
