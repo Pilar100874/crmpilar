@@ -3378,8 +3378,10 @@ const PageBuilderEditor: React.FC<{
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-7 gap-1" onClick={() => setShowPreviewDialog(true)}><Eye className="h-3 w-3" /> Preview</Button>
-            <Button variant="outline" size="sm" className="h-7 gap-1" onClick={() => setShowCodeDialog(true)}><Code className="h-3 w-3" /> HTML</Button>
+            <Button variant="outline" size="sm" className="h-7 gap-1 md:hidden" onClick={() => setMobileLeftOpen(true)} title="Seções"><Layout className="h-3 w-3" /></Button>
+            <Button variant="outline" size="sm" className="h-7 gap-1 md:hidden" onClick={() => setMobileRightOpen(true)} title="Editor"><Settings className="h-3 w-3" /></Button>
+            <Button variant="outline" size="sm" className="h-7 gap-1 hidden sm:inline-flex" onClick={() => setShowPreviewDialog(true)}><Eye className="h-3 w-3" /> Preview</Button>
+            <Button variant="outline" size="sm" className="h-7 gap-1 hidden sm:inline-flex" onClick={() => setShowCodeDialog(true)}><Code className="h-3 w-3" /> HTML</Button>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsFullscreen(!isFullscreen)} title={isFullscreen ? 'Sair do Fullscreen' : 'Tela Cheia'}>{isFullscreen ? <Minimize className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}</Button>
           </div>
         </div>
