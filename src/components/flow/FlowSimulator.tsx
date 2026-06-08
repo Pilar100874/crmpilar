@@ -1062,10 +1062,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       setContext(newCtx);
       onContextChange?.(newCtx);
 
+      const linksText = links
+        .map((l) => `${l.label}\n${l.url}`)
+        .join("\n\n");
       setMessages((prev) => [...prev, {
         id: uid(),
         sender: "bot",
-        text: "✅ Publicado com sucesso! Toque em uma rede para ver o post:",
+        text: `✅ Publicado com sucesso!\n\n${linksText}`,
         timestamp: new Date(),
         nodeId: node.id,
         socialLinks: links,
