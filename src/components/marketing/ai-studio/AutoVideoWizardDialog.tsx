@@ -448,7 +448,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
       toast.success('Vídeo gerado com sucesso.');
       if (autoSaveToGallery) {
         setProgressMsg('Salvando na galeria…');
-        await saveVideoToGallery(finalUrl, finalBlob, { silent: false });
+        await saveVideoToGalleryRef.current?.(finalUrl, finalBlob, { silent: false });
       }
     } catch (e: any) {
       console.error(e);
@@ -457,7 +457,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
     } finally {
       setGenerating(false);
     }
-  }, [estabId, selectedProduct, includeInfluencer, selectedInfluencer, briefing, script, videoModel, aspectRatio, duration, useVisualIdentity, activeProviders, ttsProvider, availableTtsProviders, wavespeedTtsModel, autoSaveToGallery, saveVideoToGallery]);
+  }, [estabId, selectedProduct, includeInfluencer, selectedInfluencer, briefing, script, videoModel, aspectRatio, duration, useVisualIdentity, activeProviders, ttsProvider, availableTtsProviders, wavespeedTtsModel, autoSaveToGallery]);
 
   const saveVideoToGallery = useCallback(async (url: string, blob: Blob | null, opts?: { closeOnSuccess?: boolean; silent?: boolean }) => {
     if (!url || !estabId) return false;
