@@ -424,7 +424,7 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
             {/* Content */}
             <div className="flex flex-1 overflow-hidden">
               {/* Provider sidebar */}
-              <div className="w-[280px] border-r border-border flex flex-col bg-muted/30">
+              <div className={`${isMobile ? (mobileView === 'list' ? 'flex w-full' : 'hidden') : 'flex w-[280px]'} border-r border-border flex-col bg-muted/30`}>
                 <div className="p-3 pt-4">
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2 px-1">Configurações</p>
                 </div>
@@ -436,7 +436,7 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
                         <span>⚙️</span> Padrões
                       </p>
                       <button
-                        onClick={() => { setSelectedSection('defaults'); setSelectedProvider(''); }}
+                        onClick={() => { setSelectedSection('defaults'); setSelectedProvider(''); setMobileView('detail'); }}
                         className={`w-full text-left p-2.5 rounded-lg border transition-all mb-1 ${
                           selectedSection === 'defaults'
                             ? 'bg-accent border-primary/30 shadow-sm'
@@ -468,7 +468,7 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
                                 : 'bg-card border-border hover:bg-accent/50 hover:border-border'
                             }`}>
                               <button
-                                onClick={() => { setSelectedSection('providers'); setSelectedProvider(provider.id); }}
+                                onClick={() => { setSelectedSection('providers'); setSelectedProvider(provider.id); setMobileView('detail'); }}
                                 className="flex-1 text-left p-2.5"
                               >
                                 <div className="flex items-center justify-between">
@@ -498,7 +498,14 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
               </div>
 
               {/* Detail panel */}
-              <div className="flex-1 flex flex-col overflow-hidden bg-background">
+              <div className={`${isMobile ? (mobileView === 'detail' ? 'flex w-full' : 'hidden') : 'flex flex-1'} flex-col overflow-hidden bg-background`}>
+                {isMobile && (
+                  <div className="border-b border-border px-3 py-2 flex items-center gap-2 shrink-0">
+                    <Button size="sm" variant="ghost" onClick={() => setMobileView('list')} className="h-8 gap-1">
+                      <ArrowLeft className="h-4 w-4" /> Voltar
+                    </Button>
+                  </div>
+                )}
                 {loading ? (
                   <div className="flex-1 flex items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
