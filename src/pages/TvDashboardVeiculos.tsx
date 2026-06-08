@@ -326,15 +326,31 @@ export default function TvDashboardVeiculos() {
   return (
     <>
       {/* Vehicle List - Right Side */}
+      {/* Vehicle List - Right Side (desktop) / Bottom sheet (mobile) */}
       <div 
-        className="fixed top-3 right-3 bottom-3 w-64 bg-black/20 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden flex flex-col"
+        className={`fixed bg-black/40 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden flex flex-col transition-transform
+          md:top-3 md:right-3 md:bottom-3 md:w-64 md:translate-x-0
+          ${isMobile 
+            ? `left-2 right-2 bottom-2 max-h-[55vh] ${listaAberta ? 'translate-y-0' : 'translate-y-[calc(100%+1rem)]'}`
+            : ''}
+        `}
         style={{ zIndex: 999999 }}
       >
-        <div className="px-3 py-2 border-b border-white/10">
+        <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
           <h3 className="font-medium text-xs text-white/90 flex items-center gap-1.5">
             <Car className="h-3 w-3" />
             Veículos ({veiculos.length})
           </h3>
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setListaAberta(false)}
+              className="h-6 w-6 text-white/70 hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
         
         <div className="flex-1 overflow-y-auto">
@@ -376,6 +392,18 @@ export default function TvDashboardVeiculos() {
           )}
         </div>
       </div>
+
+      {/* Mobile FAB para abrir lista */}
+      {isMobile && !listaAberta && (
+        <Button
+          onClick={() => setListaAberta(true)}
+          className="fixed bottom-4 right-4 h-12 w-12 rounded-full shadow-xl bg-primary text-primary-foreground"
+          style={{ zIndex: 999998 }}
+          size="icon"
+        >
+          <List className="h-5 w-5" />
+        </Button>
+      )}
 
       {/* Main Container */}
       <div className="fixed inset-0 bg-background overflow-hidden">
