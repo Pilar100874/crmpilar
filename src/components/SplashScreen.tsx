@@ -6,6 +6,15 @@ const SPLASH_KEY = "pilar-splash-shown";
 export default function SplashScreen() {
   const [visible, setVisible] = useState(() => {
     if (typeof window === "undefined") return false;
+    // Skip our custom splash when running as an installed PWA (standalone/fullscreen),
+    // because the OS already shows the native PWA splash (icon on dark bg) and we
+    // don't want a double splash.
+    const isStandalone =
+      window.matchMedia?.("(display-mode: standalone)").matches ||
+      window.matchMedia?.("(display-mode: fullscreen)").matches ||
+      // iOS Safari
+      (window.navigator as any).standalone === true;
+    if (isStandalone) return false;
     return !sessionStorage.getItem(SPLASH_KEY);
   });
   const [fadeOut, setFadeOut] = useState(false);
