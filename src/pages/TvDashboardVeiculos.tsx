@@ -55,6 +55,8 @@ const veiculoCores = [
 
 export default function TvDashboardVeiculos() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const [listaAberta, setListaAberta] = useState(false);
   useFullscreen(true);
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
   const [paradasMarcadas, setParadasMarcadas] = useState<ParadaMarcada[]>([]);
