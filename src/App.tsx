@@ -159,7 +159,7 @@ import { UnsavedChangesProvider } from "./contexts/UnsavedChangesContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import StudioBackgroundIndicator from "./components/marketing/StudioBackgroundIndicator";
-import SplashScreen from "./components/SplashScreen";
+
 import WakeLockManager from "./components/WakeLockManager";
 
 const queryClient = new QueryClient();
@@ -175,7 +175,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <MacroProvider>
       <TooltipProvider>
-        <SplashScreen />
+        
         <Toaster />
         <Sonner />
         
