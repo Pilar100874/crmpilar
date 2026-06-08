@@ -323,7 +323,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
               {browsers.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
             </SelectContent>
           </Select>
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto flex-wrap">
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input type="checkbox" checked={comparePrev} onChange={(e) => setComparePrev(e.target.checked)} />
               Comparar período
