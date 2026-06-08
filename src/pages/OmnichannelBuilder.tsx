@@ -841,6 +841,15 @@ export default function OmnichannelBuilder() {
             nodesFocusable={!isLocked}
             edgesFocusable={!isLocked}
             {...boxSelectionProps({ disabled: isLocked })}
+            onBeforeDelete={async ({ nodes: nodesToDelete, edges: edgesToDelete }) => {
+              const filtered = nodesToDelete.filter(n => (n.data as any)?.type !== "inicio");
+              if (filtered.length === nodesToDelete.length) return true;
+              if (filtered.length === 0 && edgesToDelete.length === 0) {
+                toast.error("O bloco inicial não pode ser excluído!");
+                return false;
+              }
+              return { nodes: filtered, edges: edgesToDelete };
+            }}
             className="bg-background"
             defaultEdgeOptions={{
               animated: true,

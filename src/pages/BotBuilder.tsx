@@ -1735,6 +1735,15 @@ function BotBuilderContent() {
               panOnDrag={isLocked || showSimulator ? true : [1, 2]}
               selectionMode={SelectionMode.Partial}
               multiSelectionKeyCode={["Meta", "Control", "Shift"]}
+              onBeforeDelete={async ({ nodes: nodesToDelete, edges: edgesToDelete }) => {
+                const filtered = nodesToDelete.filter(n => (n.data as any)?.type !== "start");
+                if (filtered.length === nodesToDelete.length) return true;
+                if (filtered.length === 0 && edgesToDelete.length === 0) {
+                  setErrorDialog({ open: true, title: "Ação não Permitida", description: "O bloco Start não pode ser excluído!" });
+                  return false;
+                }
+                return { nodes: filtered, edges: edgesToDelete };
+              }}
               defaultEdgeOptions={{
                 animated: true,
                 style: { stroke: '#f97316', strokeWidth: 2 },
