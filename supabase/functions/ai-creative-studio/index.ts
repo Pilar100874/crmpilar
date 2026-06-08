@@ -2708,7 +2708,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
               body: JSON.stringify({
                 text,
                 model_id: model,
-                language_code: params.lang || "pt",
+                language_code: params.lang || "pt-BR",
                 voice_settings: {
                   stability: extraConfig.stability ?? 0.5,
                   similarity_boost: extraConfig.similarityBoost ?? 0.75,
