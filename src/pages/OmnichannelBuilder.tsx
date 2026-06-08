@@ -258,7 +258,8 @@ export default function OmnichannelBuilder() {
         webhook: "Webhook",
         aguardar: "Aguardar",
         analytics: "Analytics",
-        inicio: "Início"
+        inicio: "Início",
+        publicar_rede_social: "Publicar em Redes Sociais"
       };
       const bounds = reactFlowWrapper.current.getBoundingClientRect();
       const position = reactFlowInstance
