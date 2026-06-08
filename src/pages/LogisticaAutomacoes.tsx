@@ -23,6 +23,7 @@ import {
   Background,
   Controls,
   MiniMap,
+  Panel,
   addEdge,
   useNodesState,
   useEdgesState,
@@ -34,6 +35,8 @@ import {
   MarkerType,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { FlowTemplateManager } from "@/components/flow/FlowTemplateManager";
+import { boxSelectionProps } from "@/lib/flowSelection";
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -900,6 +903,7 @@ function EditorContent({
             deleteKeyCode={null}
             connectOnClick={false}
             autoPanOnConnect={false}
+            {...boxSelectionProps()}
             autoPanOnNodeDrag={true}
             defaultEdgeOptions={{
               animated: true,

@@ -10,6 +10,7 @@ import {
   Background,
   Controls,
   MiniMap,
+  Panel,
   addEdge,
   useNodesState,
   useEdgesState,
@@ -20,6 +21,8 @@ import {
   BackgroundVariant,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { FlowTemplateManager } from "@/components/flow/FlowTemplateManager";
+import { boxSelectionProps } from "@/lib/flowSelection";
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -784,7 +787,7 @@ function EditorRegrasContent() {
           onPaneClick={onPaneClick}
           nodeTypes={nodeTypes}
           defaultViewport={{ x: 0, y: 0, zoom: 0.33 }}
-          deleteKeyCode={isLocked ? null : "Delete"}
+          {...boxSelectionProps({ disabled: isLocked })}
           nodesDraggable={!isLocked}
           nodesConnectable={!isLocked}
           elementsSelectable={!isLocked}
@@ -817,6 +820,17 @@ function EditorRegrasContent() {
             nodeColor="#8B5CF6"
             maskColor="rgba(0, 0, 0, 0.1)"
           />
+          <Panel position="top-right" className="!m-2 flex gap-1.5 bg-card/95 backdrop-blur border border-border rounded-lg p-1 shadow-lg">
+            <FlowTemplateManager
+              nodes={nodes}
+              edges={edges}
+              selectedNodes={nodes.filter((n) => n.selected)}
+              onLoadTemplate={(newNodes, newEdges) => {
+                setNodes((nds) => [...nds, ...newNodes]);
+                setEdges((eds) => [...eds, ...newEdges]);
+              }}
+            />
+          </Panel>
         </ReactFlow>
         {connectMenu && (
           <SmartConnectMenu
