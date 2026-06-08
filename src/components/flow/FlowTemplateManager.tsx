@@ -69,14 +69,27 @@ export function FlowTemplateManager({
   const [desc, setDesc] = useState("");
   const [onlySelected, setOnlySelected] = useState(false);
   const [toDelete, setToDelete] = useState<FlowTemplate | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const refresh = async () => {
+    setLoading(true);
+    try {
+      setTemplates(await fetchTemplates());
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (openList || openSave) setTemplates(loadTemplates());
+    if (openList || openSave) {
+      refresh();
+    }
   }, [openList, openSave]);
 
   const hasSelection = selectedNodes.length > 0;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) {
       toast.error("Informe um nome para o modelo");
       return;
@@ -93,21 +106,34 @@ export function FlowTemplateManager({
       return;
     }
 
-    const list = loadTemplates();
-    const tpl: FlowTemplate = {
-      id: `tpl_${Date.now()}`,
-      name: name.trim(),
-      description: desc.trim() || undefined,
-      nodes: JSON.parse(JSON.stringify(sourceNodes)),
-      edges: JSON.parse(JSON.stringify(sourceEdges)),
-      createdAt: new Date().toISOString(),
-    };
-    persistTemplates([tpl, ...list]);
-    toast.success(`Modelo "${tpl.name}" salvo!`);
-    setName("");
-    setDesc("");
-    setOnlySelected(false);
-    setOpenSave(false);
+    setSaving(true);
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) {
+        toast.error("Estabelecimento não encontrado");
+        return;
+      }
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase.from("flow_templates" as any).insert({
+        estabelecimento_id: estabId,
+        user_id: user?.id ?? null,
+        name: name.trim(),
+        description: desc.trim() || null,
+        nodes: JSON.parse(JSON.stringify(sourceNodes)),
+        edges: JSON.parse(JSON.stringify(sourceEdges)),
+      });
+      if (error) throw error;
+      toast.success(`Modelo "${name.trim()}" salvo!`);
+      setName("");
+      setDesc("");
+      setOnlySelected(false);
+      setOpenSave(false);
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Erro ao salvar modelo: " + (e.message || ""));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleLoad = (tpl: FlowTemplate) => {
@@ -139,12 +165,21 @@ export function FlowTemplateManager({
     setOpenList(false);
   };
 
-  const handleDelete = (tpl: FlowTemplate) => {
-    const list = loadTemplates().filter((t) => t.id !== tpl.id);
-    persistTemplates(list);
-    setTemplates(list);
-    toast.success("Modelo excluído");
-    setToDelete(null);
+  const handleDelete = async (tpl: FlowTemplate) => {
+    try {
+      const { error } = await supabase
+        .from("flow_templates" as any)
+        .delete()
+        .eq("id", tpl.id);
+      if (error) throw error;
+      setTemplates((prev) => prev.filter((t) => t.id !== tpl.id));
+      toast.success("Modelo excluído");
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Erro ao excluir modelo");
+    } finally {
+      setToDelete(null);
+    }
   };
 
   return (
