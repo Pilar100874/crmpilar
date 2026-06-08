@@ -19,6 +19,7 @@ import {
   ArrowRight,
   StickyNote,
   HelpCircle,
+  Share2,
 } from "lucide-react";
 import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
 import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
