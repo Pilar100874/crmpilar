@@ -2481,7 +2481,65 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         break;
       }
 
+      case "trigger_workflow": {
+        const modLabels: Record<string, string> = {
+          bot: "Bot Builder",
+          omnichannel: "Omnichannel",
+          ecommerce_rules: "Regras E-commerce",
+          automacoes_vendas: "Automações de Vendas",
+          logistica: "Logística",
+          ads: "Ads",
+          ai_studio: "AI Studio",
+        };
+        const moduleKey = config.module || "bot";
+        const wfName = config.workflowName || config.workflowId || "(não selecionado)";
+        const mode = config.executionMode === "await" ? "síncrono" : "assíncrono";
 
+        if (!config.workflowId) {
+          addSystemMessage(`⚠️ Disparar Workflow: nenhum workflow selecionado em ${modLabels[moduleKey]}.`);
+        } else {
+          // Monta payload
+          let extraPayload: any = {};
+          if (config.payloadJson) {
+            try {
+              extraPayload = JSON.parse(interpolateVariables(config.payloadJson, context));
+            } catch (err) {
+              addSystemMessage(`⚠️ Payload JSON inválido em Disparar Workflow.`);
+            }
+          }
+          const payload = {
+            ...(config.passVariables !== false ? { variables: { ...context } } : {}),
+            ...extraPayload,
+          };
+
+          addSystemMessage(`🚀 Disparando workflow "${wfName}" em ${modLabels[moduleKey]} (${mode})...`);
+
+          // Evento global para integrações no app
+          try {
+            window.dispatchEvent(new CustomEvent("workflow:trigger", {
+              detail: { module: moduleKey, workflowId: config.workflowId, payload },
+            }));
+          } catch {}
+
+          // Salva resultado em variável
+          const outVar = config.outputVariable || "workflow_disparado";
+          context[outVar] = {
+            ok: true,
+            module: moduleKey,
+            workflowId: config.workflowId,
+            workflowName: wfName,
+            mode,
+            triggeredAt: new Date().toISOString(),
+          };
+          addSuccessMessage(`✅ Workflow disparado. Resultado salvo em {{${outVar}}}.`);
+        }
+
+        safeSetTimeout(() => {
+          const nextNode = getNextNode(node.id);
+          if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+        }, 600);
+        break;
+      }
 
 
       default:
