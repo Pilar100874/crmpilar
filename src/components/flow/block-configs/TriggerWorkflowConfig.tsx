@@ -28,7 +28,7 @@ export interface WorkflowModule {
 }
 
 export const WORKFLOW_MODULES: WorkflowModule[] = [
-  { key: "bot", label: "Bot Builder", table: "bot_flows", nameCol: "nome" },
+  { key: "bot", label: "Bot Builder", table: "bot_flows", nameCol: "name" },
   { key: "omnichannel", label: "Omnichannel", table: "omnichannel_flows", nameCol: "nome" },
   { key: "ecommerce_rules", label: "Regras E-commerce", table: "ecommerce_rules", nameCol: "nome" },
   { key: "automacoes_vendas", label: "Automações de Vendas", table: "automacoes_vendas", nameCol: "nome" },
