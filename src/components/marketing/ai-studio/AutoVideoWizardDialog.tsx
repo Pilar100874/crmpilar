@@ -499,6 +499,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
       setSaving(false);
     }
   }, [estabId, selectedProduct, briefing, duration, onOpenChange]);
+  saveVideoToGalleryRef.current = saveVideoToGallery;
 
   const handleSaveToGallery = useCallback(async () => {
     if (!resultVideoUrl) return;
