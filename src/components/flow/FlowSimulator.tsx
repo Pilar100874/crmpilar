@@ -992,16 +992,104 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       }
 
       items.forEach((it) => addBotMediaMessage(it.url, "image", `Opção ${it.index}`, node.id));
-      addBotMessage("Responda com o número da opção que você gostou:", node.id);
+      // Mostra cada opção como botão clicável + Cancelar / Gerar novas
+      const selectButtons = items.map((it) => ({
+        text: `✅ Usar opção ${it.index}`,
+        value: `pick_${it.index}`,
+        buttonId: `aim_pick_${it.index}`,
+      }));
+      selectButtons.push({ text: `🔄 Gerar ${variations} novas`, value: "regen", buttonId: "aim_regen" });
+      selectButtons.push({ text: "❌ Cancelar", value: "cancel", buttonId: "aim_cancel" });
+      setMessages((prev) => [...prev, {
+        id: uid(),
+        sender: "bot",
+        text: "Qual opção você quer usar? (Ou gere novas / cancele)",
+        timestamp: new Date(),
+        nodeId: node.id,
+        buttons: selectButtons,
+      }]);
       simNodeStateRef.current[node.id] = { items };
       setIsWaitingInput(true);
       setCurrentBlockType("ai_media_select");
       setPendingVariable(`__aims_${node.id}`);
       setCurrentNodeId(node.id);
+
     } catch (e: any) {
       addSystemMessage(`❌ Erro ao gerar imagens: ${e?.message || e}`);
     }
   };
+
+  // Helper extraído: executa a publicação social para um conjunto de plataformas
+  const runPublishSocial = (node: Node, selectedPlatforms: string[]) => {
+    const config = (node.data as any).config || {};
+    const caption = interpolateVariables(config.caption || "", contextRef.current);
+    const mediaUrl = interpolateVariables(config.mediaUrl || "", contextRef.current);
+
+    addSystemMessage(`📤 Publicando em: ${selectedPlatforms.join(", ")}${mediaUrl ? "\n🖼️ " + mediaUrl : ""}${caption ? "\n📝 " + caption : ""}`);
+
+    safeSetTimeout(() => {
+      const fakeId = `sim_${Date.now()}`;
+      const platformUrlBuilders: Record<string, (id: string) => string> = {
+        instagram: (id) => `https://instagram.com/p/${id}`,
+        facebook: (id) => `https://facebook.com/posts/${id}`,
+        tiktok: (id) => `https://tiktok.com/@usuario/video/${id}`,
+        linkedin: (id) => `https://linkedin.com/feed/update/${id}`,
+        twitter: (id) => `https://x.com/usuario/status/${id}`,
+        youtube: (id) => `https://youtube.com/watch?v=${id}`,
+      };
+      const platformLabels: Record<string, string> = {
+        instagram: "Instagram", facebook: "Facebook", tiktok: "TikTok",
+        linkedin: "LinkedIn", twitter: "X (Twitter)", youtube: "YouTube",
+      };
+      const links: SocialLink[] = selectedPlatforms.map((p) => ({
+        platform: p,
+        url: (platformUrlBuilders[p] || ((id) => `https://${p}.com/${id}`))(fakeId),
+        label: platformLabels[p] || p,
+      }));
+      const outputVar = normalizeVarName(config.outputVariable || "post_publicado");
+      const result = {
+        id: fakeId,
+        permalinks: links.reduce<Record<string, string>>((acc, l) => { acc[l.platform] = l.url; return acc; }, {}),
+        platforms: selectedPlatforms,
+      };
+      const newCtx = {
+        ...contextRef.current,
+        [outputVar]: result,
+        [`${outputVar}_id`]: fakeId,
+        [`${outputVar}_permalink`]: links[0]?.url || "",
+      };
+      contextRef.current = newCtx;
+      setContext(newCtx);
+      onContextChange?.(newCtx);
+
+      setMessages((prev) => [...prev, {
+        id: uid(),
+        sender: "bot",
+        text: "✅ Publicado com sucesso! Toque em uma rede para ver o post:",
+        timestamp: new Date(),
+        nodeId: node.id,
+        socialLinks: links,
+      }]);
+
+      safeSetTimeout(() => {
+        setMessages((prev) => [...prev, {
+          id: uid(),
+          sender: "bot",
+          text: "O que deseja fazer agora?",
+          timestamp: new Date(),
+          nodeId: node.id,
+          buttons: [
+            { text: "✅ Finalizar", value: "finalizar", buttonId: "pub_done" },
+            { text: "🔁 Gerar nova peça", value: "regenerar", buttonId: "pub_regen" },
+          ],
+        }]);
+        setIsWaitingInput(true);
+        setCurrentBlockType("publish_social_done");
+        setCurrentNodeId(node.id);
+      }, 500);
+    }, 1500);
+  };
+
 
   // Ask user for reference image URL (simulator step) before generation
   const askUserForRefImage = (node: Node, textPrompt: string) => {
@@ -2168,86 +2256,44 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         const selectedPlatforms: string[] = Array.isArray(config.platforms) && config.platforms.length > 0
           ? config.platforms
           : ["instagram"];
-        const caption = interpolateVariables(config.caption || "", context);
-        const mediaUrl = interpolateVariables(config.mediaUrl || "", context);
+        const publishMode = config.publishMode === "ask" ? "ask" : "all";
 
-        addSystemMessage(`📤 Publicando em: ${selectedPlatforms.join(", ")}${mediaUrl ? "\n🖼️ " + mediaUrl : ""}${caption ? "\n📝 " + caption : ""}`);
-
-        safeSetTimeout(() => {
-          const fakeId = `sim_${Date.now()}`;
-          // Gera um link por plataforma
-          const platformUrlBuilders: Record<string, (id: string) => string> = {
-            instagram: (id) => `https://instagram.com/p/${id}`,
-            facebook: (id) => `https://facebook.com/posts/${id}`,
-            tiktok: (id) => `https://tiktok.com/@usuario/video/${id}`,
-            linkedin: (id) => `https://linkedin.com/feed/update/${id}`,
-            twitter: (id) => `https://x.com/usuario/status/${id}`,
-            youtube: (id) => `https://youtube.com/watch?v=${id}`,
-          };
+        if (publishMode === "ask") {
           const platformLabels: Record<string, string> = {
-            instagram: "Instagram",
-            facebook: "Facebook",
-            tiktok: "TikTok",
-            linkedin: "LinkedIn",
-            twitter: "X (Twitter)",
-            youtube: "YouTube",
+            instagram: "Instagram", facebook: "Facebook", tiktok: "TikTok",
+            linkedin: "LinkedIn", twitter: "X (Twitter)", youtube: "YouTube",
           };
-
-          const links: SocialLink[] = selectedPlatforms.map((p) => ({
-            platform: p,
-            url: (platformUrlBuilders[p] || ((id) => `https://${p}.com/${id}`))(fakeId),
-            label: platformLabels[p] || p,
+          const buttons = selectedPlatforms.map((p) => ({
+            text: `📤 ${platformLabels[p] || p}`,
+            value: `plat_${p}`,
+            buttonId: `pub_ask_${p}`,
           }));
-
-          const outputVar = normalizeVarName(config.outputVariable || "post_publicado");
-          const result = {
-            id: fakeId,
-            permalinks: links.reduce<Record<string, string>>((acc, l) => {
-              acc[l.platform] = l.url;
-              return acc;
-            }, {}),
-            platforms: selectedPlatforms,
+          if (selectedPlatforms.length > 1) {
+            buttons.unshift({ text: "🚀 Publicar em todas", value: "all", buttonId: "pub_ask_all" });
+          }
+          buttons.push({ text: "❌ Cancelar", value: "cancel", buttonId: "pub_ask_cancel" });
+          simNodeStateRef.current[node.id] = {
+            ...(simNodeStateRef.current[node.id] || {}),
+            askPlatforms: selectedPlatforms,
           };
-          const newCtx = {
-            ...contextRef.current,
-            [outputVar]: result,
-            [`${outputVar}_id`]: fakeId,
-            [`${outputVar}_permalink`]: links[0]?.url || "",
-          };
-          contextRef.current = newCtx;
-          setContext(newCtx);
-          onContextChange?.(newCtx);
-
-          // Mensagem com cards clicáveis (logo + link) de cada rede
           setMessages((prev) => [...prev, {
             id: uid(),
             sender: "bot",
-            text: "✅ Publicado com sucesso! Toque em uma rede para ver o post:",
+            text: "Em qual(is) rede(s) você quer publicar?",
             timestamp: new Date(),
             nodeId: node.id,
-            socialLinks: links,
+            buttons,
           }]);
+          setIsWaitingInput(true);
+          setCurrentBlockType("publish_social_ask");
+          setCurrentNodeId(node.id);
+          break;
+        }
 
-          // Mensagem com opções Finalizar / Gerar novo
-          safeSetTimeout(() => {
-            setMessages((prev) => [...prev, {
-              id: uid(),
-              sender: "bot",
-              text: "O que deseja fazer agora?",
-              timestamp: new Date(),
-              nodeId: node.id,
-              buttons: [
-                { text: "✅ Finalizar", value: "finalizar", buttonId: "pub_done" },
-                { text: "🔁 Gerar nova peça", value: "regenerar", buttonId: "pub_regen" },
-              ],
-            }]);
-            setIsWaitingInput(true);
-            setCurrentBlockType("publish_social_done");
-            setCurrentNodeId(node.id);
-          }, 500);
-        }, 1500);
+        runPublishSocial(node, selectedPlatforms);
         break;
       }
+
 
 
       case "send_whatsapp_to_number": {
@@ -3521,8 +3567,67 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
 
 
+    // === ai_media_select: Pick / Regen / Cancel via botões ===
+    if (currentBlockType === "ai_media_select" && currentNodeId) {
+      addUserMessage(button.text);
+      const node = nodes.find((n) => n.id === currentNodeId);
+      const state = simNodeStateRef.current[currentNodeId] || {};
+      if (button.value === "cancel") {
+        addSystemMessage("❌ Geração cancelada pelo usuário.");
+        delete simNodeStateRef.current[currentNodeId];
+        setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
+        return;
+      }
+      if (button.value === "regen") {
+        delete simNodeStateRef.current[currentNodeId];
+        setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
+        addSystemMessage("🔄 Gerando novas opções...");
+        if (node) safeSetTimeout(() => { setCurrentNodeId(node.id); executeNode(node); }, 300);
+        return;
+      }
+      if (button.value.startsWith("pick_")) {
+        const idx = parseInt(button.value.split("_")[1]) - 1;
+        const sel = (state.items || [])[idx];
+        if (!sel || !node) { addSystemMessage("⚠️ Seleção inválida."); return; }
+        const cfg = (node.data as any).config || {};
+        const outVar = normalizeVarName(cfg.outputVariable || "midia_selecionada");
+        const newCtx = { ...contextRef.current, [outVar]: sel.url };
+        contextRef.current = newCtx; setContext(newCtx); onContextChange?.(newCtx);
+        addSuccessMessage(`✅ Mídia ${sel.index} selecionada`);
+        delete simNodeStateRef.current[currentNodeId];
+        setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
+        const nextNode = getNextNode(currentNodeId);
+        if (nextNode) safeSetTimeout(() => { setCurrentNodeId(nextNode.id); executeNode(nextNode); }, 400);
+        return;
+      }
+    }
 
-    // === ask_influencer: yes/no → usa influencer fixo ou galeria ===
+    // === publish_social_ask: escolha de redes no momento da execução ===
+    if (currentBlockType === "publish_social_ask" && currentNodeId) {
+      addUserMessage(button.text);
+      const node = nodes.find((n) => n.id === currentNodeId);
+      if (!node) return;
+      const state = simNodeStateRef.current[currentNodeId] || {};
+      const available: string[] = state.askPlatforms || [];
+      if (button.value === "cancel") {
+        addSystemMessage("❌ Publicação cancelada.");
+        setIsWaitingInput(false); setCurrentBlockType(null);
+        return;
+      }
+      let chosen: string[] = [];
+      if (button.value === "all") {
+        chosen = available;
+      } else if (button.value.startsWith("plat_")) {
+        chosen = [button.value.replace("plat_", "")];
+      }
+      if (chosen.length === 0) return;
+      setIsWaitingInput(false); setCurrentBlockType(null);
+      delete simNodeStateRef.current[currentNodeId];
+      runPublishSocial(node, chosen);
+      return;
+    }
+
+
     if (currentBlockType === "ask_influencer_choice" && currentNodeId) {
       addUserMessage(button.text);
       const node = nodes.find((n) => n.id === currentNodeId);
