@@ -158,6 +158,7 @@ import { MacroProvider } from "./contexts/MacroContext";
 import { UnsavedChangesProvider } from "./contexts/UnsavedChangesContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
+import PWAUpdateNotifier from "./components/PWAUpdateNotifier";
 import StudioBackgroundIndicator from "./components/marketing/StudioBackgroundIndicator";
 
 import WakeLockManager from "./components/WakeLockManager";
@@ -183,6 +184,7 @@ const App = () => (
           <UnsavedChangesProvider>
           <WatchRedirectWrapper />
           <PWAInstallPrompt />
+          <PWAUpdateNotifier />
           <StudioBackgroundIndicator />
           <WakeLockManager />
           <Routes>
