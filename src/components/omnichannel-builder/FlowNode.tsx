@@ -19,6 +19,7 @@ import {
   ArrowRight,
   StickyNote,
   HelpCircle,
+  Share2,
 } from "lucide-react";
 import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
 import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
@@ -80,6 +81,7 @@ const nodeIcons: Record<OmnichannelBlockType, any> = {
   webhook: Webhook,
   aguardar: Timer,
   analytics: BarChart3,
+  publicar_rede_social: Share2,
 };
 
 // Blocos que têm múltiplas saídas

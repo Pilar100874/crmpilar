@@ -1,4 +1,4 @@
-import { Users, User, Award, GitBranch, Clock, Webhook, Timer, PlayCircle, BarChart3, X, Search } from "lucide-react";
+import { Users, User, Award, GitBranch, Clock, Webhook, Timer, PlayCircle, BarChart3, X, Search, Share2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -78,6 +78,13 @@ const blocks: BlockItem[] = [
     icon: <BarChart3 className="h-5 w-5" />,
     description: "Visualiza métricas do fluxo",
     color: "text-emerald-500"
+  },
+  {
+    type: "publicar_rede_social",
+    label: "Publicar em Redes Sociais",
+    icon: <Share2 className="h-5 w-5" />,
+    description: "Publica conteúdo nas redes sociais configuradas",
+    color: "text-pink-500"
   },
 ];
 

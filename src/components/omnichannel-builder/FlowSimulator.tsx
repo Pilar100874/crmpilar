@@ -174,6 +174,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightPath }: FlowSimulatorPr
       case 'atendente':
         return { status: 'success', message: 'Atendente específico encontrado' };
 
+      case 'publicar_rede_social':
+        const plataformas = node.data.config?.platforms || [];
+        const modo = node.data.config?.publishMode === 'ask' ? 'perguntar' : 'todas';
+        return { status: 'success', message: `Publicação ${modo === 'perguntar' ? 'aguardando escolha da rede' : `enviada para ${plataformas.length > 0 ? plataformas.join(', ') : 'redes selecionadas'}`}` };
+
       default:
         return { status: 'success', message: `Processando: ${node.data.label}` };
     }
