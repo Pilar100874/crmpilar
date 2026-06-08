@@ -3413,8 +3413,8 @@ const PageBuilderEditor: React.FC<{
         </ScrollArea>
       </div>
 
-      {/* Right Panel */}
-      <div className="w-80 border-l bg-card flex flex-col shrink-0">
+      {/* Right Panel - hidden on mobile (use sheet) */}
+      <div className="hidden md:flex w-80 border-l bg-card flex-col shrink-0">
         <div className="border-b p-2 flex items-center gap-1">
           <Button variant={rightPanel === 'editor' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs flex-1" onClick={() => setRightPanel('editor')}><Settings className="h-3 w-3 mr-1" /> Editor</Button>
           <Button variant={rightPanel === 'config' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs flex-1" onClick={() => setRightPanel('config')}><Palette className="h-3 w-3 mr-1" /> Estilo</Button>
