@@ -1664,9 +1664,9 @@ const VideoTimelineEditor: React.FC = () => {
           </div>
         </div>
 
-        {/* Right panel resize handle */}
+        {/* Right panel resize handle - desktop only */}
         <div
-          className="w-1.5 shrink-0 cursor-col-resize hover:bg-primary/30 active:bg-primary/50 transition-colors relative group"
+          className="hidden md:block w-1.5 shrink-0 cursor-col-resize hover:bg-primary/30 active:bg-primary/50 transition-colors relative group"
           onMouseDown={(e) => {
             e.preventDefault();
             rightPanelDragRef.current = { startX: e.clientX, startWidth: rightPanelWidth };
@@ -1687,20 +1687,53 @@ const VideoTimelineEditor: React.FC = () => {
           <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-0.5 bg-border group-hover:bg-primary/50 transition-colors" />
         </div>
 
-        {/* Right panel */}
-        <div className="border-l bg-card shrink-0 flex flex-col overflow-hidden" style={{ width: rightPanelWidth }}>
-          <div className="flex items-center border-b px-1 py-1 gap-0.5 shrink-0">
-            <Button size="sm" variant={rightPanel === 'resources' ? 'default' : 'ghost'} onClick={() => setRightPanel('resources')} className="text-[10px] gap-1 flex-1 h-7 px-1"><FolderOpen className="h-3 w-3" />Recursos</Button>
-            <Button size="sm" variant={rightPanel === 'config' ? 'default' : 'ghost'} onClick={() => setRightPanel('config')} className="text-[10px] gap-1 flex-1 h-7 px-1"><Settings2 className="h-3 w-3" />Config</Button>
-            <Button size="sm" variant={rightPanel === 'properties' ? 'default' : 'ghost'} onClick={() => setRightPanel('properties')} className="text-[10px] gap-1 flex-1 h-7 px-1"><Settings2 className="h-3 w-3" />Props</Button>
+        {/* Right panel - desktop inline */}
+        {!isMobile && (
+          <div className="border-l bg-card shrink-0 flex flex-col overflow-hidden" style={{ width: rightPanelWidth }}>
+            <div className="flex items-center border-b px-1 py-1 gap-0.5 shrink-0">
+              <Button size="sm" variant={rightPanel === 'resources' ? 'default' : 'ghost'} onClick={() => setRightPanel('resources')} className="text-[10px] gap-1 flex-1 h-7 px-1"><FolderOpen className="h-3 w-3" />Recursos</Button>
+              <Button size="sm" variant={rightPanel === 'config' ? 'default' : 'ghost'} onClick={() => setRightPanel('config')} className="text-[10px] gap-1 flex-1 h-7 px-1"><Settings2 className="h-3 w-3" />Config</Button>
+              <Button size="sm" variant={rightPanel === 'properties' ? 'default' : 'ghost'} onClick={() => setRightPanel('properties')} className="text-[10px] gap-1 flex-1 h-7 px-1"><Settings2 className="h-3 w-3" />Props</Button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              {rightPanel === 'resources' && <ResourcePanel ref={resourcePanelRef} onAddClip={handleAddClip} onAddEffectClip={handleAddEffectClip} onDeleteClips={timeline.deleteClips} tracks={state.tracks} clips={state.clips} onOpenCanvas={handleOpenCanvasFromToolbar} onEditCanvas={handleEditCanvasFromResource} />}
+              {rightPanel === 'config' && <VideoConfigPanel config={videoConfig} onChange={setVideoConfig} />}
+              {rightPanel === 'properties' && <ClipPropertiesPanel clip={selectedClip || undefined} onUpdateClip={timeline.updateClip} />}
+            </div>
           </div>
-          <div className="flex-1 overflow-hidden">
-            {rightPanel === 'resources' && <ResourcePanel ref={resourcePanelRef} onAddClip={handleAddClip} onAddEffectClip={handleAddEffectClip} onDeleteClips={timeline.deleteClips} tracks={state.tracks} clips={state.clips} onOpenCanvas={handleOpenCanvasFromToolbar} onEditCanvas={handleEditCanvasFromResource} />}
-            {rightPanel === 'config' && <VideoConfigPanel config={videoConfig} onChange={setVideoConfig} />}
-            {rightPanel === 'properties' && <ClipPropertiesPanel clip={selectedClip || undefined} onUpdateClip={timeline.updateClip} />}
-          </div>
-        </div>
+        )}
       </div>
+
+      {/* Mobile: floating panel button + Sheet */}
+      {isMobile && (
+        <>
+          <Button
+            size="icon"
+            onClick={() => setMobilePanelOpen(true)}
+            className="md:hidden fixed bottom-20 right-4 z-40 h-12 w-12 rounded-full shadow-xl"
+            title="Painel de recursos"
+          >
+            <PanelRightOpen className="h-5 w-5" />
+          </Button>
+          <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
+            <SheetContent side="right" className="w-[90vw] sm:w-[400px] p-0 flex flex-col">
+              <SheetHeader className="px-3 py-2 border-b">
+                <SheetTitle className="text-sm">Painel</SheetTitle>
+              </SheetHeader>
+              <div className="flex items-center border-b px-1 py-1 gap-0.5 shrink-0">
+                <Button size="sm" variant={rightPanel === 'resources' ? 'default' : 'ghost'} onClick={() => setRightPanel('resources')} className="text-[10px] gap-1 flex-1 h-8 px-1"><FolderOpen className="h-3 w-3" />Recursos</Button>
+                <Button size="sm" variant={rightPanel === 'config' ? 'default' : 'ghost'} onClick={() => setRightPanel('config')} className="text-[10px] gap-1 flex-1 h-8 px-1"><Settings2 className="h-3 w-3" />Config</Button>
+                <Button size="sm" variant={rightPanel === 'properties' ? 'default' : 'ghost'} onClick={() => setRightPanel('properties')} className="text-[10px] gap-1 flex-1 h-8 px-1"><Settings2 className="h-3 w-3" />Props</Button>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                {rightPanel === 'resources' && <ResourcePanel ref={resourcePanelRef} onAddClip={handleAddClip} onAddEffectClip={handleAddEffectClip} onDeleteClips={timeline.deleteClips} tracks={state.tracks} clips={state.clips} onOpenCanvas={handleOpenCanvasFromToolbar} onEditCanvas={handleEditCanvasFromResource} />}
+                {rightPanel === 'config' && <VideoConfigPanel config={videoConfig} onChange={setVideoConfig} />}
+                {rightPanel === 'properties' && <ClipPropertiesPanel clip={selectedClip || undefined} onUpdateClip={timeline.updateClip} />}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </>
+      )}
 
       {/* Floating Effects Toolbar */}
       {effectsPanelOpen && selectedClip && (
