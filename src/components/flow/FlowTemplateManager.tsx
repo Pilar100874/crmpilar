@@ -11,12 +11,12 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Library, Save, Trash2, FileText, Clock } from "lucide-react";
+import { Library, Save, Trash2, FileText, Clock, Loader2 } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { format } from "date-fns";
-
-const STORAGE_KEY = "bot_flow_templates_v1";
+import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 export interface FlowTemplate {
   id: string;
@@ -34,17 +34,26 @@ interface FlowTemplateManagerProps {
   onLoadTemplate: (nodes: Node[], edges: Edge[]) => void;
 }
 
-function loadTemplates(): FlowTemplate[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
+async function fetchTemplates(): Promise<FlowTemplate[]> {
+  const estabId = await getEstabelecimentoId();
+  if (!estabId) return [];
+  const { data, error } = await supabase
+    .from("flow_templates" as any)
+    .select("id, name, description, nodes, edges, created_at")
+    .eq("estabelecimento_id", estabId)
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("Erro ao carregar modelos:", error);
     return [];
   }
-}
-
-function persistTemplates(list: FlowTemplate[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  return (data || []).map((r: any) => ({
+    id: r.id,
+    name: r.name,
+    description: r.description ?? undefined,
+    nodes: (r.nodes as Node[]) || [],
+    edges: (r.edges as Edge[]) || [],
+    createdAt: r.created_at,
+  }));
 }
 
 export function FlowTemplateManager({
