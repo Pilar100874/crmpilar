@@ -122,4 +122,9 @@ export { AskInfluencerConfig } from './AskInfluencerConfig';
 // Imagem do Produto (pergunta + 3 opções + confirmação)
 export { AskProductImageConfig } from './AskProductImageConfig';
 
+// Disparar outro workflow (cross-module)
+export { TriggerWorkflowConfig } from './TriggerWorkflowConfig';
+
+
+
 
