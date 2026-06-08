@@ -50,7 +50,8 @@ export type NodeType =
   | "text_content"
   | "content_type"
   | "ask_influencer"
-  | "ask_product_image";
+  | "ask_product_image"
+  | "trigger_workflow";
 
 
 export interface BlockDefinition {
@@ -613,6 +614,23 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       textPrompt: "Descreva o produto em texto:",
       outputImageVariable: "produto_imagem_url",
       outputDescVariable: "produto_descricao",
+    },
+  },
+  // Disparar outro workflow (qualquer módulo)
+  {
+    type: "trigger_workflow",
+    label: "Disparar Workflow",
+    description: "Dispara outro workflow (Bot, Omnichannel, Regras E-com, Vendas, Logística, Ads, AI Studio).",
+    icon: "Workflow",
+    color: "text-indigo-600",
+    defaultData: {
+      module: "bot",
+      workflowId: "",
+      workflowName: "",
+      executionMode: "async",
+      passVariables: true,
+      payloadJson: "",
+      outputVariable: "workflow_disparado",
     },
   },
 ];

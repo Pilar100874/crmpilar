@@ -22,6 +22,7 @@ import {
   MiniMap,
   Controls,
   Background,
+  Panel,
   useNodesState,
   useEdgesState,
   addEdge,
@@ -32,6 +33,8 @@ import {
   ReactFlowProvider,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { FlowTemplateManager } from "@/components/flow/FlowTemplateManager";
+import { boxSelectionProps } from "@/lib/flowSelection";
 import { AdsFlowNode } from "@/components/ads-automation/AdsFlowNode";
 import { AdsBlockLibrary } from "@/components/ads-automation/AdsBlockLibrary";
 import { AdsPropertiesPanel } from "@/components/ads-automation/AdsPropertiesPanel";
@@ -921,7 +924,7 @@ function AdsAutomationContent() {
                 onPaneClick={onPaneClick}
                 nodeTypes={nodeTypes}
                 className="bg-background"
-                deleteKeyCode={["Backspace", "Delete"]}
+                {...boxSelectionProps()}
                 connectOnClick={false}
                 autoPanOnConnect={false}
                 autoPanOnNodeDrag={true}
@@ -953,6 +956,17 @@ function AdsAutomationContent() {
                   className="bg-card border border-border rounded-lg shadow-lg"
                   maskColor="rgba(255, 255, 255, 0.8)"
                 />
+                <Panel position="top-right" className="!m-2 flex gap-1.5 bg-card/95 backdrop-blur border border-border rounded-lg p-1 shadow-lg">
+                  <FlowTemplateManager
+                    nodes={nodes}
+                    edges={edges}
+                    selectedNodes={nodes.filter((n) => n.selected)}
+                    onLoadTemplate={(newNodes, newEdges) => {
+                      setNodes((nds) => [...nds, ...newNodes]);
+                      setEdges((eds) => [...eds, ...newEdges]);
+                    }}
+                  />
+                </Panel>
               </ReactFlow>
               {connectMenu && (
                 <SmartConnectMenu

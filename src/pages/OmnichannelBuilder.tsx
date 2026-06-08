@@ -6,6 +6,7 @@ import {
   BackgroundVariant,
   MiniMap,
   Controls,
+  Panel,
   addEdge,
   useNodesState,
   useEdgesState,
@@ -13,6 +14,8 @@ import {
   type NodeTypes,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { FlowTemplateManager } from "@/components/flow/FlowTemplateManager";
+import { boxSelectionProps } from "@/lib/flowSelection";
 import { FlowNode } from "@/components/omnichannel-builder/FlowNode";
 import { BlockLibrary } from "@/components/omnichannel-builder/BlockLibrary";
 import { PropertiesPanel } from "@/components/omnichannel-builder/PropertiesPanel";
@@ -832,7 +835,7 @@ export default function OmnichannelBuilder() {
             nodesConnectable={!isLocked}
             nodesFocusable={!isLocked}
             edgesFocusable={!isLocked}
-            deleteKeyCode={isLocked ? null : "Delete"}
+            {...boxSelectionProps({ disabled: isLocked })}
             className="bg-background"
             defaultEdgeOptions={{
               animated: true,
@@ -857,6 +860,17 @@ export default function OmnichannelBuilder() {
               className="bg-card border border-border rounded-lg shadow-lg"
               maskColor="rgba(255, 255, 255, 0.8)"
             />
+            <Panel position="top-right" className="!m-2 flex gap-1.5 bg-card/95 backdrop-blur border border-border rounded-lg p-1 shadow-lg">
+              <FlowTemplateManager
+                nodes={nodes as any}
+                edges={edges as any}
+                selectedNodes={(nodes as any[]).filter((n) => n.selected)}
+                onLoadTemplate={(newNodes, newEdges) => {
+                  setNodes((nds) => [...nds, ...(newNodes as any)] as any);
+                  setEdges((eds) => [...eds, ...(newEdges as any)] as any);
+                }}
+              />
+            </Panel>
           </ReactFlow>
           {connectMenu && (
             <SmartConnectMenu
