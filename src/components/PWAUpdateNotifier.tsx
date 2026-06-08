@@ -13,6 +13,11 @@ export default function PWAUpdateNotifier() {
   const notifiedRef = useRef(false);
 
   useEffect(() => {
+    if (!ENABLED) return;
+    // Só notifica automaticamente quando rodando como PWA instalado.
+    // No navegador comum, o usuário pode atualizar via menu.
+    if (!isStandalonePWA()) return;
+
     let cancelled = false;
     let timer: number | undefined;
 
