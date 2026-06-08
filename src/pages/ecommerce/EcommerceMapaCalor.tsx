@@ -81,7 +81,7 @@ export default function EcommerceMapaCalor() {
               <CardTitle className="flex items-center gap-2"><ShoppingCart className="h-5 w-5" /> Carrinhos abandonados (mais de 30min sem atividade)</CardTitle>
               <CardDescription>{abandonedCarts.length} carrinhos · valor potencial de recuperação</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-x-auto">
               {abandonedCarts.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Nenhum carrinho abandonado no momento.</p>
               ) : (
