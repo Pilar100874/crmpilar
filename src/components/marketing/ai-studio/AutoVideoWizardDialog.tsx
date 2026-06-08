@@ -457,7 +457,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
     } finally {
       setGenerating(false);
     }
-  }, [estabId, selectedProduct, includeInfluencer, selectedInfluencer, briefing, script, videoModel, aspectRatio, duration, useVisualIdentity, activeProviders, ttsProvider, availableTtsProviders, wavespeedTtsModel]);
+  }, [estabId, selectedProduct, includeInfluencer, selectedInfluencer, briefing, script, videoModel, aspectRatio, duration, useVisualIdentity, activeProviders, ttsProvider, availableTtsProviders, wavespeedTtsModel, autoSaveToGallery, saveVideoToGallery]);
 
   const saveVideoToGallery = useCallback(async (url: string, blob: Blob | null, opts?: { closeOnSuccess?: boolean; silent?: boolean }) => {
     if (!url || !estabId) return false;
