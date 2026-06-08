@@ -527,9 +527,9 @@ export default function TvDashboardVendas() {
   }
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-foreground via-foreground/90 to-foreground overflow-hidden p-6">
+    <div className="fixed inset-0 bg-gradient-to-br from-foreground via-foreground/90 to-foreground overflow-y-auto md:overflow-hidden p-3 sm:p-4 md:p-6">
       {/* Header Minimal - apenas botão voltar */}
-      <div className="absolute top-4 right-6 z-10">
+      <div className="absolute top-2 right-2 sm:top-4 sm:right-6 z-10">
         <Button 
           variant="ghost" 
           size="icon"
@@ -541,15 +541,15 @@ export default function TvDashboardVendas() {
       </div>
 
       {/* Main Grid - Optimized for 4K */}
-      <div className="h-full flex flex-col gap-5">
+      <div className="md:h-full flex flex-col gap-3 sm:gap-4 md:gap-5 pt-10 md:pt-0">
         {/* KPI Row - 2 rows of cards for better readability */}
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
           {/* Vendas Hoje */}
           <div className="bg-gradient-to-br from-green-500/20 to-green-600/5 rounded-2xl border border-green-500/30 p-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-green-300/70 font-medium mb-1">Vendas Hoje</p>
-                <p className="text-5xl font-bold text-green-400">{totalVendasHoje}</p>
+                <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-green-400">{totalVendasHoje}</p>
               </div>
               <div className="p-4 rounded-2xl bg-green-500/20">
                 <ShoppingCart className="h-8 w-8 text-green-400" />
@@ -562,7 +562,7 @@ export default function TvDashboardVendas() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-blue-300/70 font-medium mb-1">Faturamento Hoje</p>
-                <p className="text-4xl font-bold text-blue-400">{formatCurrencyCompact(totalValorHoje)}</p>
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-400">{formatCurrencyCompact(totalValorHoje)}</p>
               </div>
               <div className="p-4 rounded-2xl bg-blue-500/20">
                 <DollarSign className="h-8 w-8 text-blue-400" />
@@ -575,7 +575,7 @@ export default function TvDashboardVendas() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-cyan-300/70 font-medium mb-1">Faturamento Mês</p>
-                <p className="text-4xl font-bold text-cyan-400">{formatCurrencyCompact(totalValorMes)}</p>
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-cyan-400">{formatCurrencyCompact(totalValorMes)}</p>
                 <p className="text-xs text-cyan-400/60 mt-1">{totalVendasMes} vendas</p>
               </div>
               <div className="p-4 rounded-2xl bg-cyan-500/20">
@@ -589,7 +589,7 @@ export default function TvDashboardVendas() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-purple-300/70 font-medium mb-1">Últimos 12 Meses</p>
-                <p className="text-4xl font-bold text-purple-400">{formatCurrencyCompact(totalValor12Meses)}</p>
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-purple-400">{formatCurrencyCompact(totalValor12Meses)}</p>
                 <p className="text-xs text-purple-400/60 mt-1">{totalVendas12Meses} vendas</p>
               </div>
               <div className="p-4 rounded-2xl bg-purple-500/20">
@@ -603,7 +603,7 @@ export default function TvDashboardVendas() {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-sm text-amber-300/70 font-medium mb-1">Meta Diária</p>
-                <p className="text-4xl font-bold text-amber-400">{progressoMeta.toFixed(0)}%</p>
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-400">{progressoMeta.toFixed(0)}%</p>
               </div>
               <div className="p-4 rounded-2xl bg-amber-500/20">
                 <Target className="h-8 w-8 text-amber-400" />
@@ -620,7 +620,7 @@ export default function TvDashboardVendas() {
         </div>
 
         {/* Secondary KPIs Row */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
           {/* Ticket Médio */}
           <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-border/50 px-5 py-3 flex items-center gap-4">
             <div className="p-2.5 rounded-xl bg-orange-500/20">
@@ -669,16 +669,16 @@ export default function TvDashboardVendas() {
         </div>
 
         {/* Team List - Full Width Vertical Layout */}
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-[400px] md:min-h-0">
           <Card className="h-full bg-black/30 backdrop-blur-sm border-border/50 flex flex-col">
-            <CardHeader className="py-2 px-6 border-b border-border/50">
-              <div className="flex items-center justify-between">
+            <CardHeader className="py-2 px-3 sm:px-6 border-b border-border/50">
+              <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 text-muted-foreground/60">
                   <Users className="h-5 w-5 text-blue-400" />
-                  <span className="text-base font-semibold">Ranking de Vendas</span>
+                  <span className="text-sm sm:text-base font-semibold">Ranking de Vendas</span>
                 </div>
-                {/* Column Headers */}
-                <div className="flex items-center gap-4 text-[10px] text-muted-foreground uppercase tracking-wider">
+                {/* Column Headers - hidden on mobile */}
+                <div className="hidden lg:flex items-center gap-4 text-[10px] text-muted-foreground uppercase tracking-wider">
                   <span className="w-12 text-center">Agenda</span>
                   <span className="w-12 text-center">Chats</span>
                   <span className="w-16 text-center">E-mails</span>
@@ -694,14 +694,14 @@ export default function TvDashboardVendas() {
                   {vendedores.map((vendedor, index) => (
                     <div 
                       key={vendedor.id}
-                      className={`px-3 py-1 rounded transition-all flex items-center justify-between ${
+                      className={`px-2 sm:px-3 py-1.5 rounded transition-all flex flex-wrap lg:flex-nowrap items-center justify-between gap-2 ${
                         vendedor.isOnline 
                           ? 'bg-foreground/80/50 border border-border/40' 
                           : 'bg-foreground/90/30 border border-transparent opacity-60'
                       }`}
                     >
                       {/* Left - Ranking & Name */}
-                      <div className="flex items-center gap-2 min-w-[160px]">
+                      <div className="flex items-center gap-2 min-w-[140px] lg:min-w-[160px]">
                         <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                           index === 0 ? 'bg-amber-500/30 text-amber-400' :
                           index === 1 ? 'bg-muted-foreground/40/30 text-muted-foreground/60' :
@@ -719,7 +719,7 @@ export default function TvDashboardVendas() {
                       </div>
 
                       {/* Right - Metrics */}
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
                         {/* Agenda */}
                         <div className="w-10 text-center">
                           <div className="flex items-center justify-center gap-0.5">
@@ -736,8 +736,8 @@ export default function TvDashboardVendas() {
                           </div>
                         </div>
 
-                        {/* Emails */}
-                        <div className="w-14 text-center">
+                        {/* Emails - hidden on small screens */}
+                        <div className="hidden sm:block w-14 text-center">
                           <div className="flex items-center justify-center gap-0.5 text-[9px]">
                             <span className="text-green-400">↑{vendedor.emailsEnviados}</span>
                             <span className="text-muted-foreground">/</span>
@@ -746,7 +746,7 @@ export default function TvDashboardVendas() {
                         </div>
 
                         {/* Orçamentos */}
-                        <div className="w-28 flex items-center justify-center gap-0.5">
+                        <div className="w-28 hidden md:flex items-center justify-center gap-0.5">
                           <span className="px-1 py-0.5 rounded text-[8px] bg-muted-foreground/50 text-muted-foreground">{vendedor.orcamentosTotal}</span>
                           <span className="px-1 py-0.5 rounded text-[8px] bg-amber-500/20 text-amber-400">{vendedor.orcamentosPendentes}P</span>
                           <span className="px-1 py-0.5 rounded text-[8px] bg-green-500/20 text-green-400">{vendedor.orcamentosAprovados}A</span>
@@ -754,13 +754,13 @@ export default function TvDashboardVendas() {
                         </div>
 
                         {/* Daily Sales */}
-                        <div className="w-20 text-right">
-                          <p className="text-sm font-bold text-green-400">{formatCurrencyCompact(vendedor.valorTotal)}</p>
+                        <div className="w-16 sm:w-20 text-right">
+                          <p className="text-[11px] sm:text-sm font-bold text-green-400">{formatCurrencyCompact(vendedor.valorTotal)}</p>
                         </div>
                         
                         {/* Monthly Sales */}
-                        <div className="w-20 text-right">
-                          <p className="text-sm font-bold text-blue-400">{formatCurrencyCompact(vendedor.valorMes)}</p>
+                        <div className="w-16 sm:w-20 text-right">
+                          <p className="text-[11px] sm:text-sm font-bold text-blue-400">{formatCurrencyCompact(vendedor.valorMes)}</p>
                         </div>
                       </div>
                     </div>
