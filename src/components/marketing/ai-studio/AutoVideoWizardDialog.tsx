@@ -506,65 +506,6 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
     await saveVideoToGallery(resultVideoUrl, resultBlob, { closeOnSuccess: true });
   }, [resultVideoUrl, resultBlob, saveVideoToGallery]);
 
-  const handleSaveAsWorkflow = useCallback(async () => {
-    if (!estabId) return toast.error('Estabelecimento não encontrado.');
-    if (!selectedProduct) return toast.error('Selecione um produto antes de salvar como workflow.');
-    setSaving(true);
-    try {
-      const ts = Date.now();
-      const textNodeId = `wiz_text_${ts}`;
-      const videoNodeId = `wiz_video_${ts}`;
-      const nodes = [
-        {
-          id: textNodeId,
-          type: 'custom',
-          position: { x: 100, y: 200 },
-          data: {
-            type: 'textInput',
-            label: 'Briefing',
-            config: { text: briefing, script },
-          },
-        },
-        {
-          id: videoNodeId,
-          type: 'custom',
-          position: { x: 500, y: 200 },
-          data: {
-            type: 'videoGen',
-            label: `Vídeo — ${selectedProduct.nome}`,
-            config: {
-              prompt: briefing,
-              script,
-              videoModel,
-              aspectRatio,
-              duration,
-              withAudio: true,
-              useVisualIdentity,
-              productId: selectedProduct.id,
-              productImageUrl: selectedProduct.foto_url,
-              influencerImageUrl: includeInfluencer ? selectedInfluencer?.image_url : null,
-            },
-          },
-        },
-      ];
-      const edges = [
-        { id: `wiz_edge_${ts}`, source: textNodeId, target: videoNodeId, type: 'smoothstep' },
-      ];
-      const { error } = await supabase.from('ai_studio_workflows').insert([{
-        estabelecimento_id: estabId,
-        nome: `Wizard — ${selectedProduct.nome} (${new Date().toLocaleDateString('pt-BR')})`,
-        descricao: briefing.substring(0, 200),
-        nodes_data: nodes as any,
-        edges_data: edges as any,
-      }]);
-      if (error) throw error;
-      toast.success('Workflow salvo no IA Creative Studio!');
-    } catch (e: any) {
-      toast.error('Erro ao salvar workflow: ' + (e.message || ''));
-    } finally {
-      setSaving(false);
-    }
-  }, [estabId, selectedProduct, briefing, script, videoModel, aspectRatio, duration, useVisualIdentity, includeInfluencer, selectedInfluencer]);
 
   const [uploadingProduct, setUploadingProduct] = useState(false);
   const [uploadingInfluencer, setUploadingInfluencer] = useState(false);
@@ -1005,10 +946,6 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" onClick={() => { setResultVideoUrl(null); setResultBlob(null); }} className="flex-1 min-w-[140px]">
                     Gerar outro
-                  </Button>
-                  <Button variant="secondary" onClick={handleSaveAsWorkflow} disabled={saving} className="flex-1 min-w-[140px]">
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Wand2 className="h-4 w-4 mr-2" />}
-                    Salvar como Workflow
                   </Button>
                   <Button onClick={handleSaveToGallery} disabled={saving} className="flex-1 min-w-[140px]">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
