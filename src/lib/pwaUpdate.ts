@@ -13,7 +13,6 @@ function buildSignatureFromHtml(html: string): string | null {
   const uniqueAssets = Array.from(new Set(assetMatches)).sort();
   if (uniqueAssets.length > 0) return `assets:${uniqueAssets.join("|")}`;
 
-  // Fallback determinístico: remove trechos que podem variar por request.
   const normalizedHtml = html
     .replace(/\?_=[0-9]+/g, "")
     .replace(/_v=[0-9]+/g, "")
@@ -45,7 +44,6 @@ async function fetchSignature(): Promise<string | null> {
 export function isStandalonePWA(): boolean {
   if (typeof window === "undefined") return false;
   const mql = window.matchMedia?.("(display-mode: standalone)").matches;
-  // iOS Safari
   // @ts-ignore
   const iosStandalone = window.navigator.standalone === true;
   return !!(mql || iosStandalone);
@@ -66,31 +64,62 @@ export async function hasNewVersion(): Promise<boolean> {
   return hasChanged;
 }
 
-export async function forceUpdatePWA(): Promise<void> {
+function hardReload() {
   try {
-    const latest = localStorage.getItem(PENDING_VERSION_KEY) || (await fetchSignature());
-    if (latest) localStorage.setItem(VERSION_KEY, latest);
-    localStorage.removeItem(PENDING_VERSION_KEY);
-    // 1) Desregistra qualquer service worker (caso exista)
+    const url = new URL(window.location.href);
+    url.searchParams.set("_v", String(Date.now()));
+    // location.replace pode ser bloqueado em alguns contextos; tenta múltiplas estratégias.
+    window.location.replace(url.toString());
+    // Fallback: alguns navegadores móveis ignoram replace dentro de promise async
+    setTimeout(() => {
+      try {
+        window.location.href = url.toString();
+      } catch {}
+      setTimeout(() => {
+        try {
+          // @ts-ignore - true força bypass de cache em alguns browsers antigos
+          window.location.reload(true);
+        } catch {
+          window.location.reload();
+        }
+      }, 300);
+    }, 200);
+  } catch {
+    try {
+      window.location.reload();
+    } catch {}
+  }
+}
+
+export async function forceUpdatePWA(): Promise<void> {
+  // Dispara o reload com timeout de segurança — se a limpeza demorar/falhar, recarrega assim mesmo.
+  const safety = window.setTimeout(() => hardReload(), 4000);
+  try {
+    try {
+      const latest = localStorage.getItem(PENDING_VERSION_KEY) || (await fetchSignature());
+      if (latest) localStorage.setItem(VERSION_KEY, latest);
+      localStorage.removeItem(PENDING_VERSION_KEY);
+    } catch {}
+
     if ("serviceWorker" in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map((r) => r.unregister().catch(() => {})));
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister().catch(() => {})));
+      } catch {}
     }
-    // 2) Limpa todos os caches da Cache Storage API
     if ("caches" in window) {
-      const keys = await caches.keys();
-      await Promise.all(keys.map((k) => caches.delete(k).catch(() => {})));
+      try {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k).catch(() => {})));
+      } catch {}
     }
-    // 3) Limpa storages voláteis (mantém localStorage com sessão/preferências)
     try {
       sessionStorage.clear();
     } catch {}
   } catch (err) {
     console.warn("[PWA] Falha durante limpeza:", err);
   } finally {
-    // 4) Reload forçado bypassando cache
-    const url = new URL(window.location.href);
-    url.searchParams.set("_v", String(Date.now()));
-    window.location.replace(url.toString());
+    window.clearTimeout(safety);
+    hardReload();
   }
 }
