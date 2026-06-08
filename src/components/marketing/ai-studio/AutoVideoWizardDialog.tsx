@@ -184,6 +184,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
   const [estimatedTotalSec, setEstimatedTotalSec] = useState(90);
   const [ttsProvider, setTtsProvider] = useState<string>('');
   const [wavespeedTtsModel, setWavespeedTtsModel] = useState<string>('wavespeed-ai/qwen3-tts/text-to-speech');
+  const [language, setLanguage] = useState<string>('pt-BR');
   const [autoSaveToGallery, setAutoSaveToGallery] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
     const v = localStorage.getItem('wizard_auto_save_gallery');
