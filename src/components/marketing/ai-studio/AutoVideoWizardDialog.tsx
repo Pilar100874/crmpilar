@@ -189,6 +189,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
     const v = localStorage.getItem('wizard_auto_save_gallery');
     return v === null ? true : v === '1';
   });
+  const saveVideoToGalleryRef = useRef<((url: string, blob: Blob | null, opts?: { closeOnSuccess?: boolean; silent?: boolean }) => Promise<boolean>) | null>(null);
 
   // Mantém a tela acesa enquanto qualquer geração estiver em andamento (evita
   // que o celular apague a tela e throttle a aba durante esperas longas).
