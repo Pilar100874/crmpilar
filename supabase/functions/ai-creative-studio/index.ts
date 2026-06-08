@@ -2800,7 +2800,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
             body: JSON.stringify({
               text,
-              language: params.lang || "Portuguese",
+              language: mapWavespeedLanguage(params.lang),
               voice: params.voice || "Vivian",
               style_instruction: params.styleInstruction || "Natural Brazilian Portuguese advertising narration, warm, clear and persuasive.",
             }),
