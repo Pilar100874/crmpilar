@@ -549,7 +549,7 @@ export default function TvDashboardVendas() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-green-300/70 font-medium mb-1">Vendas Hoje</p>
-                <p className="text-5xl font-bold text-green-400">{totalVendasHoje}</p>
+                <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-green-400">{totalVendasHoje}</p>
               </div>
               <div className="p-4 rounded-2xl bg-green-500/20">
                 <ShoppingCart className="h-8 w-8 text-green-400" />
@@ -562,7 +562,7 @@ export default function TvDashboardVendas() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-blue-300/70 font-medium mb-1">Faturamento Hoje</p>
-                <p className="text-4xl font-bold text-blue-400">{formatCurrencyCompact(totalValorHoje)}</p>
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-400">{formatCurrencyCompact(totalValorHoje)}</p>
               </div>
               <div className="p-4 rounded-2xl bg-blue-500/20">
                 <DollarSign className="h-8 w-8 text-blue-400" />
@@ -575,7 +575,7 @@ export default function TvDashboardVendas() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-cyan-300/70 font-medium mb-1">Faturamento Mês</p>
-                <p className="text-4xl font-bold text-cyan-400">{formatCurrencyCompact(totalValorMes)}</p>
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-cyan-400">{formatCurrencyCompact(totalValorMes)}</p>
                 <p className="text-xs text-cyan-400/60 mt-1">{totalVendasMes} vendas</p>
               </div>
               <div className="p-4 rounded-2xl bg-cyan-500/20">
@@ -589,7 +589,7 @@ export default function TvDashboardVendas() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-purple-300/70 font-medium mb-1">Últimos 12 Meses</p>
-                <p className="text-4xl font-bold text-purple-400">{formatCurrencyCompact(totalValor12Meses)}</p>
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-purple-400">{formatCurrencyCompact(totalValor12Meses)}</p>
                 <p className="text-xs text-purple-400/60 mt-1">{totalVendas12Meses} vendas</p>
               </div>
               <div className="p-4 rounded-2xl bg-purple-500/20">
@@ -603,7 +603,7 @@ export default function TvDashboardVendas() {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-sm text-amber-300/70 font-medium mb-1">Meta Diária</p>
-                <p className="text-4xl font-bold text-amber-400">{progressoMeta.toFixed(0)}%</p>
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-400">{progressoMeta.toFixed(0)}%</p>
               </div>
               <div className="p-4 rounded-2xl bg-amber-500/20">
                 <Target className="h-8 w-8 text-amber-400" />
