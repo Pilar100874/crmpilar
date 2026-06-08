@@ -1573,7 +1573,7 @@ const VideoTimelineEditor: React.FC = () => {
               <div className="inline-flex flex-col" style={{ minWidth: '100%' }}>
                 {/* Ruler row */}
                 <div className="flex sticky top-0 z-20">
-                  <div className="w-44 shrink-0 h-7 border-b border-r bg-muted/40 flex items-center justify-center sticky left-0 z-30">
+                  <div className="w-24 sm:w-44 shrink-0 h-7 border-b border-r bg-muted/40 flex items-center justify-center sticky left-0 z-30">
                     <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} renderMode="add-button" />
                   </div>
                   <div className="flex-1">
@@ -1582,7 +1582,7 @@ const VideoTimelineEditor: React.FC = () => {
                 </div>
                 {/* Tracks - headers stick left, content scrolls */}
                 <div className="flex">
-                  <div className="w-44 shrink-0 sticky left-0 z-10 bg-card/95">
+                  <div className="w-24 sm:w-44 shrink-0 sticky left-0 z-10 bg-card/95">
                     <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} renderMode="tracks" />
                   </div>
                   <TimelineTracks state={state} onSelectClip={(id, multi) => { timeline.selectClip(id, multi); const clip = state.clips.find(c => c.id === id); if (clip?.type !== 'effect') { setEffectsPanelOpen(true); } }} onUpdateClip={timeline.updateClip} onDeselectAll={() => { timeline.deselectAll(); setEffectsPanelOpen(false); }} onSeek={timeline.seekTo} onPause={timeline.pause} onDoubleClickClip={handleDoubleClickClip} onAddClip={handleAddClip} onAddEffectClip={handleAddEffectClip} />
