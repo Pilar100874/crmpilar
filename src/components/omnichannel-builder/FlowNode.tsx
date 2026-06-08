@@ -81,6 +81,7 @@ const nodeIcons: Record<OmnichannelBlockType, any> = {
   webhook: Webhook,
   aguardar: Timer,
   analytics: BarChart3,
+  publicar_rede_social: Share2,
 };
 
 // Blocos que têm múltiplas saídas
