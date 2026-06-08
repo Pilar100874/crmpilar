@@ -184,6 +184,11 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
   const [estimatedTotalSec, setEstimatedTotalSec] = useState(90);
   const [ttsProvider, setTtsProvider] = useState<string>('');
   const [wavespeedTtsModel, setWavespeedTtsModel] = useState<string>('wavespeed-ai/qwen3-tts/text-to-speech');
+  const [autoSaveToGallery, setAutoSaveToGallery] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const v = localStorage.getItem('wizard_auto_save_gallery');
+    return v === null ? true : v === '1';
+  });
 
   // Mantém a tela acesa enquanto qualquer geração estiver em andamento (evita
   // que o celular apague a tela e throttle a aba durante esperas longas).
