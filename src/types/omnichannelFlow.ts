@@ -7,7 +7,8 @@ export type OmnichannelBlockType =
   | 'webhook'
   | 'aguardar'
   | 'analytics'
-  | 'inicio';
+  | 'inicio'
+  | 'publicar_rede_social';
 
 export interface OmnichannelNode {
   id: string;
