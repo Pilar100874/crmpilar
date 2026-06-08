@@ -620,7 +620,7 @@ export default function TvDashboardVendas() {
         </div>
 
         {/* Secondary KPIs Row */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
           {/* Ticket Médio */}
           <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-border/50 px-5 py-3 flex items-center gap-4">
             <div className="p-2.5 rounded-xl bg-orange-500/20">
