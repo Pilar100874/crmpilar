@@ -535,13 +535,77 @@ function BotBuilderContent() {
           prevId = id;
         });
 
-        // Conectar bloco Início ao primeiro bloco do roteiro
+        // Bloco intermediário de confirmação
+        const confirmDef = BLOCK_DEFINITIONS.find((b) => b.type === "reply_buttons");
+        const goodbyeDefNo = BLOCK_DEFINITIONS.find((b) => b.type === "goodbye");
+        const confirmId = getId();
+        const goodbyeNoId = getId();
+
+        if (confirmDef) {
+          newNodes.push({
+            id: confirmId,
+            type: "custom",
+            position: { x: origin.x - 320, y: origin.y },
+            data: {
+              label: confirmDef.label,
+              type: confirmDef.type,
+              config: {
+                text: "Sistema automatizado de postagem. Deseja continuar?",
+                variable: "confirmar_postagem",
+                buttons: [
+                  { label: "Sim", value: "sim" },
+                  { label: "Não", value: "nao" },
+                ],
+              },
+            },
+          });
+        }
+
+        if (goodbyeDefNo) {
+          newNodes.push({
+            id: goodbyeNoId,
+            type: "custom",
+            position: { x: origin.x - 320, y: origin.y + 180 },
+            data: {
+              label: goodbyeDefNo.label,
+              type: goodbyeDefNo.type,
+              config: {
+                ...JSON.parse(JSON.stringify(goodbyeDefNo.defaultData || {})),
+                text: "Tudo bem! Se precisar de algo, é só chamar. 👋",
+              },
+            },
+          });
+        }
+
+        // Conectar bloco Início ao bloco de confirmação
+        newEdges.push({
+          id: `e_start_${confirmId}`,
+          source: "start_node",
+          target: confirmId,
+          type: "smoothstep",
+          animated: true,
+        });
+
+        // Conectar botão "Sim" ao primeiro bloco do roteiro
         const firstNodeId = createdIds[0];
         if (firstNodeId) {
           newEdges.push({
-            id: `e_start_${firstNodeId}`,
-            source: "start_node",
+            id: `e_${confirmId}_${firstNodeId}_sim`,
+            source: confirmId,
+            sourceHandle: "button_0",
             target: firstNodeId,
+            type: "smoothstep",
+            animated: true,
+          });
+        }
+
+        // Conectar botão "Não" ao bloco de despedida
+        if (goodbyeDefNo) {
+          newEdges.push({
+            id: `e_${confirmId}_${goodbyeNoId}_nao`,
+            source: confirmId,
+            sourceHandle: "button_1",
+            target: goodbyeNoId,
             type: "smoothstep",
             animated: true,
           });
