@@ -240,9 +240,9 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
 
   return (
     <>
-      <div className="h-16 border-b bg-card dark:bg-card flex items-center justify-between px-6 gap-6 shrink-0">
+      <div className="min-h-16 border-b bg-card dark:bg-card flex flex-wrap items-center justify-between px-3 sm:px-6 gap-2 sm:gap-6 py-2 shrink-0">
         {/* Left section - Title */}
-        <div className="flex flex-col">
+        <div className="hidden md:flex flex-col">
           <h1 className="text-lg font-bold text-foreground">EDITOR DE DESIGN</h1>
           <p className="text-xs text-muted-foreground">Crie e edite seus designs personalizados</p>
         </div>
