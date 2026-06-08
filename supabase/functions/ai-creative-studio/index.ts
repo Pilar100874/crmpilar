@@ -1,5 +1,22 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
 
+function mapWavespeedLanguage(lang: unknown): string {
+  const v = String(lang || "").trim().toLowerCase();
+  const map: Record<string, string> = {
+    "": "Portuguese",
+    "pt": "Portuguese", "pt-br": "Portuguese", "pt-pt": "Portuguese", "portuguese": "Portuguese", "português": "Portuguese",
+    "en": "English", "en-us": "English", "en-gb": "English", "english": "English",
+    "es": "Spanish", "es-es": "Spanish", "es-mx": "Spanish", "spanish": "Spanish",
+    "de": "German", "german": "German",
+    "it": "Italian", "italian": "Italian",
+    "fr": "French", "french": "French",
+    "ja": "Japanese", "japanese": "Japanese",
+    "zh": "Chinese", "zh-cn": "Chinese", "chinese": "Chinese",
+    "auto": "auto",
+  };
+  return map[v] || "Portuguese";
+}
+
 function base64Encode(data: ArrayBuffer | Uint8Array): string {
   const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
   const chunks: string[] = [];
