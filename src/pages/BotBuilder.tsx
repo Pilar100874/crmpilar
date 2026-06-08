@@ -28,6 +28,7 @@ import {
   Node,
   ReactFlowProvider,
   BackgroundVariant,
+  SelectionMode,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { FlowNode } from "@/components/flow/FlowNode";
@@ -46,6 +47,7 @@ import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
+import { FlowTemplateManager } from "@/components/flow/FlowTemplateManager";
 
 const nodeTypes = {
   custom: FlowNode,
@@ -1576,6 +1578,16 @@ function BotBuilderContent() {
               <Download className="h-4 w-4 mr-1.5" />
               <span className="hidden xl:inline">Exportar</span>
             </Button>
+            <FlowTemplateManager
+              nodes={nodes}
+              edges={edges}
+              selectedNodes={nodes.filter((n) => n.selected)}
+              onLoadTemplate={(newNodes, newEdges) => {
+                setNodes((nds) => [...nds, ...newNodes]);
+                setEdges((eds) => [...eds, ...newEdges]);
+                setHasUnsavedChanges(true);
+              }}
+            />
             <Button variant="outline" size="sm" onClick={() => handleSave(false)} disabled={isSaving} className="h-8 px-2">
               <Save className={`h-4 w-4 mr-1.5 ${isSaving ? "animate-pulse" : ""}`} />
               <span className="hidden sm:inline">{isSaving ? "..." : "Salvar"}</span>
@@ -1715,10 +1727,14 @@ function BotBuilderContent() {
               nodesFocusable={!isLocked}
               edgesFocusable={!isLocked}
               className="bg-background"
-              deleteKeyCode={isLocked ? null : "Delete"}
+              deleteKeyCode={isLocked ? null : ["Delete", "Backspace"]}
               connectOnClick={false}
               autoPanOnConnect={false}
               autoPanOnNodeDrag={true}
+              selectionOnDrag={!isLocked && !showSimulator}
+              panOnDrag={isLocked || showSimulator ? true : [1, 2]}
+              selectionMode={SelectionMode.Partial}
+              multiSelectionKeyCode={["Meta", "Control", "Shift"]}
               defaultEdgeOptions={{
                 animated: true,
                 style: { stroke: '#f97316', strokeWidth: 2 },
