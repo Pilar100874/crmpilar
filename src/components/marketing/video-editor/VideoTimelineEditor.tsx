@@ -52,7 +52,9 @@ interface VideoProject {
 const VideoTimelineEditor: React.FC = () => {
   const timeline = useTimelineState();
   const { state } = timeline;
+  const isMobile = useIsMobile();
   const [rightPanel, setRightPanel] = useState<'resources' | 'config' | 'properties'>('resources');
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [effectsPanelOpen, setEffectsPanelOpen] = useState(false);
   const [previewCollapsed, setPreviewCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
