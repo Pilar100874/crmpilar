@@ -1,4 +1,4 @@
-import { Users, User, Award, GitBranch, Clock, Webhook, Timer, PlayCircle, BarChart3, X, Search } from "lucide-react";
+import { Users, User, Award, GitBranch, Clock, Webhook, Timer, PlayCircle, BarChart3, X, Search, Share2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
