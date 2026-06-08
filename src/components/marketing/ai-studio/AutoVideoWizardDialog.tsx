@@ -108,8 +108,25 @@ async function generateVideoAsync(
 
   const maxPolls = 180; // ~15min
   let consecutiveErrors = 0;
+
+  // Aguarda `ms` mas acorda imediatamente se o app voltar ao primeiro plano
+  // (mobile costuma throttlear setTimeout em background — isso garante poll rápido).
+  const waitInterruptible = (ms: number) => new Promise<void>((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(t);
+      document.removeEventListener('visibilitychange', onVis);
+      resolve();
+    };
+    const onVis = () => { if (document.visibilityState === 'visible') finish(); };
+    const t = setTimeout(finish, ms);
+    document.addEventListener('visibilitychange', onVis);
+  });
+
   for (let i = 0; i < maxPolls; i++) {
-    await new Promise((r) => setTimeout(r, 5000));
+    await waitInterruptible(5000);
     try {
       const poll = await callEdge(fetchAction, {
         estabelecimentoId: params.estabelecimentoId,
@@ -121,13 +138,13 @@ async function generateVideoAsync(
       if (poll?.done && poll?.videoUrl) return poll.videoUrl;
       if (poll?.done) throw new Error('Geração concluiu sem retornar vídeo.');
     } catch (err: any) {
-      // Tolera falhas transitórias de rede (comum em mobile) — só aborta após 5 erros seguidos
+      // Tolera falhas transitórias de rede (comum em mobile) — só aborta após 8 erros seguidos
       const msg = String(err?.message || '');
       const isNetwork = err?.name === 'AbortError' || /Timeout|Failed to fetch|NetworkError|network/i.test(msg);
       if (!isNetwork) throw err;
       consecutiveErrors++;
-      onProgress?.(`Rede instável, tentando novamente… (${consecutiveErrors}/5)`);
-      if (consecutiveErrors >= 5) throw new Error('Conexão instável. Verifique sua internet e tente novamente.');
+      onProgress?.(`Rede instável, tentando novamente… (${consecutiveErrors}/8)`);
+      if (consecutiveErrors >= 8) throw new Error('Conexão instável. Verifique sua internet e tente novamente.');
     }
   }
   throw new Error('Timeout aguardando o vídeo.');
