@@ -43,16 +43,17 @@ export default function EcommerceMapaCalor() {
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+    <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Flame className="h-6 w-6 text-orange-500" /> Mapa de Calor — Loja Virtual
+        <div className="flex-1 min-w-0">
+          <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
+            <Flame className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500 shrink-0" />
+            <span className="truncate">Mapa de Calor — Loja Virtual</span>
           </h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-xs sm:text-sm hidden sm:block">
             Comportamento dos visitantes, carrinhos abandonados e análise de frustração.
           </p>
         </div>
@@ -60,9 +61,9 @@ export default function EcommerceMapaCalor() {
       </div>
 
       <Tabs defaultValue="advanced">
-        <TabsList>
-          <TabsTrigger value="advanced">🔥 Heatmap Avançado</TabsTrigger>
-          <TabsTrigger value="carts">Carrinhos Abandonados ({abandonedCarts.length})</TabsTrigger>
+        <TabsList className="flex-wrap h-auto w-full sm:w-auto">
+          <TabsTrigger value="advanced">🔥 Avançado</TabsTrigger>
+          <TabsTrigger value="carts" className="whitespace-normal text-xs sm:text-sm">Carrinhos Abandonados ({abandonedCarts.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="advanced" className="mt-4">
