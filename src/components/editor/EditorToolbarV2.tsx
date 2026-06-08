@@ -313,8 +313,8 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
             onClick={handleSaveAs}
             className="bg-card dark:bg-card border-border text-foreground hover:bg-muted h-9"
           >
-            <Copy className="h-4 w-4 mr-2" />
-            Salvar Como
+            <Copy className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Salvar Como</span>
           </Button>
 
           <Button
@@ -323,8 +323,8 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
             onClick={shareDesign}
             className="bg-card dark:bg-card border-border text-foreground hover:bg-muted h-9"
           >
-            <Share2 className="h-4 w-4 mr-2" />
-            Compartilhar
+            <Share2 className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Compartilhar</span>
           </Button>
 
           <Button
@@ -333,8 +333,8 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
             onClick={downloadDesign}
             className="bg-card dark:bg-card border-border text-foreground hover:bg-muted h-9"
           >
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
+            <Download className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Exportar</span>
           </Button>
 
           <Button
@@ -342,8 +342,8 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
             onClick={saveDesign}
             className="h-9"
           >
-            <Save className="h-4 w-4 mr-2" />
-            Salvar
+            <Save className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Salvar</span>
           </Button>
 
           {onClose && (
@@ -353,8 +353,8 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
               onClick={onClose}
               className="h-9"
             >
-              <X className="h-4 w-4 mr-2" />
-              Fechar
+              <X className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Fechar</span>
             </Button>
           )}
         </div>
