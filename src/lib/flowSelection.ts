@@ -18,6 +18,7 @@ export const boxSelectionProps = (opts: { disabled?: boolean } = {}) => {
     selectionOnDrag: !disabled,
     panOnDrag: disabled ? true : ([1, 2] as number[]),
     selectionMode: SelectionMode.Partial,
+    selectionKeyCode: disabled ? null : "Shift",
     multiSelectionKeyCode: ["Meta", "Control", "Shift"] as string[],
     deleteKeyCode: disabled ? null : (["Delete", "Backspace"] as string[]),
   };
