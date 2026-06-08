@@ -252,7 +252,10 @@ export function FlowTemplateManager({
             <Button variant="outline" onClick={() => setOpenSave(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSave}>Salvar modelo</Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Salvar modelo
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
