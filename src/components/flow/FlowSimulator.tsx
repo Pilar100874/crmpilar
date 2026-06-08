@@ -992,12 +992,28 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       }
 
       items.forEach((it) => addBotMediaMessage(it.url, "image", `Opção ${it.index}`, node.id));
-      addBotMessage("Responda com o número da opção que você gostou:", node.id);
+      // Mostra cada opção como botão clicável + Cancelar / Gerar novas
+      const selectButtons = items.map((it) => ({
+        text: `✅ Usar opção ${it.index}`,
+        value: `pick_${it.index}`,
+        buttonId: `aim_pick_${it.index}`,
+      }));
+      selectButtons.push({ text: `🔄 Gerar ${variations} novas`, value: "regen", buttonId: "aim_regen" });
+      selectButtons.push({ text: "❌ Cancelar", value: "cancel", buttonId: "aim_cancel" });
+      setMessages((prev) => [...prev, {
+        id: uid(),
+        sender: "bot",
+        text: "Qual opção você quer usar? (Ou gere novas / cancele)",
+        timestamp: new Date(),
+        nodeId: node.id,
+        buttons: selectButtons,
+      }]);
       simNodeStateRef.current[node.id] = { items };
       setIsWaitingInput(true);
       setCurrentBlockType("ai_media_select");
       setPendingVariable(`__aims_${node.id}`);
       setCurrentNodeId(node.id);
+
     } catch (e: any) {
       addSystemMessage(`❌ Erro ao gerar imagens: ${e?.message || e}`);
     }
