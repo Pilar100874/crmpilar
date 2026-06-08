@@ -32,6 +32,8 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface PageSection {
@@ -3150,6 +3152,9 @@ const PageBuilderEditor: React.FC<{
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [rightPanel, setRightPanel] = useState<'editor' | 'agent' | 'config'>('editor');
   const [leftTab, setLeftTab] = useState<'sections' | 'assets'>('sections');
+  const isMobile = useIsMobile();
+  const [mobileLeftOpen, setMobileLeftOpen] = useState(false);
+  const [mobileRightOpen, setMobileRightOpen] = useState(false);
   const [showAddSection, setShowAddSection] = useState(false);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [showCodeDialog, setShowCodeDialog] = useState(false);
@@ -3302,10 +3307,13 @@ const PageBuilderEditor: React.FC<{
   const previewWidth = viewMode === 'mobile' ? 375 : viewMode === 'tablet' ? 768 : '100%';
   const publicUrl = currentPageId && isPublished ? `${window.location.origin}/p/${pageSlug}` : null;
 
+  const closeMobileLeft = () => setMobileLeftOpen(false);
+  const closeMobileRight = () => setMobileRightOpen(false);
+
   return (
     <div className={`flex gap-0 overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50 bg-background' : 'h-[calc(100vh-200px)] -mx-3 sm:-mx-6 -mb-3 sm:-mb-6'}`}>
-      {/* Left Panel */}
-      <div className="w-64 border-r bg-muted/20 flex flex-col shrink-0">
+      {/* Left Panel - hidden on mobile (use sheet) */}
+      <div className="hidden md:flex w-64 border-r bg-muted/20 flex-col shrink-0">
         <div className="p-2 border-b">
           <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 w-full justify-start mb-1" onClick={handleBack}>
             <ChevronUp className="h-3 w-3 rotate-[-90deg]" /> Voltar aos Projetos
@@ -3373,8 +3381,10 @@ const PageBuilderEditor: React.FC<{
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-7 gap-1" onClick={() => setShowPreviewDialog(true)}><Eye className="h-3 w-3" /> Preview</Button>
-            <Button variant="outline" size="sm" className="h-7 gap-1" onClick={() => setShowCodeDialog(true)}><Code className="h-3 w-3" /> HTML</Button>
+            <Button variant="outline" size="sm" className="h-7 gap-1 md:hidden" onClick={() => setMobileLeftOpen(true)} title="Seções"><Layout className="h-3 w-3" /></Button>
+            <Button variant="outline" size="sm" className="h-7 gap-1 md:hidden" onClick={() => setMobileRightOpen(true)} title="Editor"><Settings className="h-3 w-3" /></Button>
+            <Button variant="outline" size="sm" className="h-7 gap-1 hidden sm:inline-flex" onClick={() => setShowPreviewDialog(true)}><Eye className="h-3 w-3" /> Preview</Button>
+            <Button variant="outline" size="sm" className="h-7 gap-1 hidden sm:inline-flex" onClick={() => setShowCodeDialog(true)}><Code className="h-3 w-3" /> HTML</Button>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsFullscreen(!isFullscreen)} title={isFullscreen ? 'Sair do Fullscreen' : 'Tela Cheia'}>{isFullscreen ? <Minimize className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}</Button>
           </div>
         </div>
@@ -3406,8 +3416,8 @@ const PageBuilderEditor: React.FC<{
         </ScrollArea>
       </div>
 
-      {/* Right Panel */}
-      <div className="w-80 border-l bg-card flex flex-col shrink-0">
+      {/* Right Panel - hidden on mobile (use sheet) */}
+      <div className="hidden md:flex w-80 border-l bg-card flex-col shrink-0">
         <div className="border-b p-2 flex items-center gap-1">
           <Button variant={rightPanel === 'editor' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs flex-1" onClick={() => setRightPanel('editor')}><Settings className="h-3 w-3 mr-1" /> Editor</Button>
           <Button variant={rightPanel === 'config' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs flex-1" onClick={() => setRightPanel('config')}><Palette className="h-3 w-3 mr-1" /> Estilo</Button>
@@ -3664,6 +3674,105 @@ const PageBuilderEditor: React.FC<{
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Mobile: Left Panel Sheet (Seções/Mídias) */}
+      <Sheet open={mobileLeftOpen} onOpenChange={setMobileLeftOpen}>
+        <SheetContent side="left" className="w-[88vw] sm:w-[320px] p-0 flex flex-col">
+          <div className="p-2 border-b">
+            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 w-full justify-start mb-1" onClick={handleBack}>
+              <ChevronUp className="h-3 w-3 rotate-[-90deg]" /> Voltar aos Projetos
+            </Button>
+            <Tabs value={leftTab} onValueChange={(v) => setLeftTab(v as any)}>
+              <TabsList className="w-full h-8">
+                <TabsTrigger value="sections" className="flex-1 text-xs h-7 gap-1"><Layout className="h-3 w-3" /> Seções</TabsTrigger>
+                <TabsTrigger value="assets" className="flex-1 text-xs h-7 gap-1"><ImagePlus className="h-3 w-3" /> Mídias</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+          {leftTab === 'sections' && (
+            <>
+              <div className="p-2 border-b space-y-1.5">
+                <div className="flex gap-1">
+                  <Button variant="outline" size="sm" className="h-7 flex-1 text-xs gap-1" onClick={() => setShowAddSection(true)}><Plus className="h-3 w-3" /> Seção</Button>
+                  {!isAutoGenerated && (
+                    <Button variant="outline" size="sm" className="h-7 flex-1 text-xs gap-1" onClick={() => setShowTemplateDialog(true)}><LayoutTemplate className="h-3 w-3" /> Template</Button>
+                  )}
+                </div>
+                <Button variant="outline" size="sm" className="h-7 w-full text-xs gap-1" onClick={() => setShowSaveDialog(true)}><Save className="h-3 w-3" /> Salvar</Button>
+              </div>
+              <ScrollArea className="flex-1 p-2">
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={(e: DragStartEvent) => setDragActiveId(e.active.id as string)} onDragEnd={handleDragEnd}>
+                  <SortableContext items={sections.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                    {sections.map(s => (
+                      <SortableSectionItem key={s.id} section={s} isSelected={s.id === selectedSectionId}
+                        onSelect={() => { setSelectedSectionId(s.id); setRightPanel('editor'); setMobileLeftOpen(false); setMobileRightOpen(true); }}
+                        onDelete={() => deleteSection(s.id)}
+                        onToggleVisible={() => updateSection({ ...s, visible: !s.visible })} />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              </ScrollArea>
+            </>
+          )}
+          {leftTab === 'assets' && (
+            <ScrollArea className="flex-1 p-2">
+              <AssetsPanel onDropAsset={handleAssetClick} />
+            </ScrollArea>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Mobile: Right Panel Sheet (Editor/Estilo/Agente) */}
+      <Sheet open={mobileRightOpen} onOpenChange={setMobileRightOpen}>
+        <SheetContent side="right" className="w-[92vw] sm:w-[360px] p-0 flex flex-col">
+          <div className="border-b p-2 flex items-center gap-1">
+            <Button variant={rightPanel === 'editor' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs flex-1" onClick={() => setRightPanel('editor')}><Settings className="h-3 w-3 mr-1" /> Editor</Button>
+            <Button variant={rightPanel === 'config' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs flex-1" onClick={() => setRightPanel('config')}><Palette className="h-3 w-3 mr-1" /> Estilo</Button>
+            <Button variant={rightPanel === 'agent' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs flex-1" onClick={() => setRightPanel('agent')}><Bot className="h-3 w-3 mr-1" /> Agente</Button>
+          </div>
+          <ScrollArea className="flex-1 p-3">
+            {rightPanel === 'editor' && (selectedSection ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium truncate">{selectedSection.title}</span>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => deleteSection(selectedSection.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                <SectionEditor section={selectedSection} onChange={updateSection} />
+              </div>
+            ) : <p className="text-sm text-muted-foreground text-center py-6">Selecione uma seção para editar</p>)}
+            {rightPanel === 'config' && (
+              <div className="space-y-4">
+                <div><Label className="text-xs">Título do Site</Label><Input value={config.title} onChange={e => setConfig(c => ({ ...c, title: e.target.value }))} /></div>
+                <div><Label className="text-xs">Descrição (SEO)</Label><Textarea value={config.description} onChange={e => setConfig(c => ({ ...c, description: e.target.value }))} rows={2} /></div>
+                <Separator />
+                <div className="grid grid-cols-2 gap-2">
+                  {([['primaryColor', 'Primária'], ['secondaryColor', 'Secundária'], ['accentColor', 'Destaque'], ['backgroundColor', 'Fundo'], ['textColor', 'Texto']] as const).map(([key, label]) => (
+                    <div key={key}><Label className="text-[10px]">{label}</Label><div className="flex gap-1"><input type="color" value={(config as any)[key]} onChange={e => setConfig(c => ({ ...c, [key]: e.target.value }))} className="w-8 h-8 rounded border cursor-pointer" /><Input value={(config as any)[key]} onChange={e => setConfig(c => ({ ...c, [key]: e.target.value }))} className="text-xs h-8" /></div></div>
+                  ))}
+                </div>
+                <Separator />
+                <div className="grid grid-cols-2 gap-2">
+                  <div><Label className="text-[10px]">Display (Títulos)</Label>
+                    <select value={config.fontDisplay} onChange={e => setConfig(c => ({ ...c, fontDisplay: e.target.value }))} className="w-full h-8 rounded-md border bg-background px-2 text-xs" style={{ fontFamily: config.fontDisplay }}>
+                      {['Inter', 'Poppins', 'Montserrat', 'Roboto', 'Open Sans', 'Lato', 'Raleway', 'Playfair Display', 'Merriweather'].map(f => <option key={f} value={f}>{f}</option>)}
+                    </select>
+                  </div>
+                  <div><Label className="text-[10px]">Body (Textos)</Label>
+                    <select value={config.fontBody} onChange={e => setConfig(c => ({ ...c, fontBody: e.target.value }))} className="w-full h-8 rounded-md border bg-background px-2 text-xs" style={{ fontFamily: config.fontBody }}>
+                      {['Inter', 'Poppins', 'Roboto', 'Open Sans', 'Lato', 'Nunito'].map(f => <option key={f} value={f}>{f}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div><Label className="text-[10px]">🏷️ Nome da Empresa</Label><Input value={config.empresaNome || ''} onChange={e => { const v = e.target.value; setConfig(c => ({ ...c, empresaNome: v })); saveGlobalConfig({ ...loadGlobalConfig(), empresaNome: v }); }} placeholder="Minha Empresa Ltda." className="text-xs" /></div>
+                <div><Label className="text-[10px]">💬 WhatsApp Global</Label><Input value={config.whatsappGlobal || ''} onChange={e => { const v = e.target.value; setConfig(c => ({ ...c, whatsappGlobal: v })); saveGlobalConfig({ ...loadGlobalConfig(), whatsappGlobal: v }); }} placeholder="5511999999999" className="text-xs" /></div>
+              </div>
+            )}
+            {rightPanel === 'agent' && <AgentTextBank />}
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };

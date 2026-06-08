@@ -240,9 +240,9 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
 
   return (
     <>
-      <div className="h-16 border-b bg-card dark:bg-card flex items-center justify-between px-6 gap-6 shrink-0">
+      <div className="min-h-16 border-b bg-card dark:bg-card flex flex-wrap items-center justify-between px-3 sm:px-6 gap-2 sm:gap-6 py-2 shrink-0">
         {/* Left section - Title */}
-        <div className="flex flex-col">
+        <div className="hidden md:flex flex-col">
           <h1 className="text-lg font-bold text-foreground">EDITOR DE DESIGN</h1>
           <p className="text-xs text-muted-foreground">Crie e edite seus designs personalizados</p>
         </div>
@@ -313,8 +313,8 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
             onClick={handleSaveAs}
             className="bg-card dark:bg-card border-border text-foreground hover:bg-muted h-9"
           >
-            <Copy className="h-4 w-4 mr-2" />
-            Salvar Como
+            <Copy className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Salvar Como</span>
           </Button>
 
           <Button
@@ -323,8 +323,8 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
             onClick={shareDesign}
             className="bg-card dark:bg-card border-border text-foreground hover:bg-muted h-9"
           >
-            <Share2 className="h-4 w-4 mr-2" />
-            Compartilhar
+            <Share2 className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Compartilhar</span>
           </Button>
 
           <Button
@@ -333,8 +333,8 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
             onClick={downloadDesign}
             className="bg-card dark:bg-card border-border text-foreground hover:bg-muted h-9"
           >
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
+            <Download className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Exportar</span>
           </Button>
 
           <Button
@@ -342,8 +342,8 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
             onClick={saveDesign}
             className="h-9"
           >
-            <Save className="h-4 w-4 mr-2" />
-            Salvar
+            <Save className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Salvar</span>
           </Button>
 
           {onClose && (
@@ -353,8 +353,8 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
               onClick={onClose}
               className="h-9"
             >
-              <X className="h-4 w-4 mr-2" />
-              Fechar
+              <X className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Fechar</span>
             </Button>
           )}
         </div>
