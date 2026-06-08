@@ -1416,12 +1416,12 @@ const VideoTimelineEditor: React.FC = () => {
     <div
       ref={containerRef}
       className={`flex flex-col border rounded-xl overflow-hidden bg-background ${
-        isFullscreen ? 'fixed inset-0 z-50 rounded-none' : 'h-[calc(100vh-200px)] min-h-[700px]'
+        isFullscreen ? 'fixed inset-0 z-50 rounded-none' : 'h-[calc(100vh-120px)] sm:h-[calc(100vh-200px)] min-h-[480px] sm:min-h-[700px]'
       }`}
       tabIndex={0}
     >
       {/* Top toolbar */}
-      <div className="flex items-center gap-1 px-3 py-1.5 border-b bg-card/80 backdrop-blur shrink-0">
+      <div className="flex flex-wrap items-center gap-1 px-2 sm:px-3 py-1.5 border-b bg-card/80 backdrop-blur shrink-0">
         {/* Back button */}
         <Button size="icon" variant="ghost" onClick={handleCloseEditor} title="Voltar aos projetos" className="h-8 w-8 mr-1">
           <ArrowLeft className="h-3.5 w-3.5" />
