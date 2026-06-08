@@ -3307,8 +3307,10 @@ const PageBuilderEditor: React.FC<{
   const previewWidth = viewMode === 'mobile' ? 375 : viewMode === 'tablet' ? 768 : '100%';
   const publicUrl = currentPageId && isPublished ? `${window.location.origin}/p/${pageSlug}` : null;
 
-  const leftPanelContent = (
-    <>
+  return (
+    <div className={`flex gap-0 overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50 bg-background' : 'h-[calc(100vh-200px)] -mx-3 sm:-mx-6 -mb-3 sm:-mb-6'}`}>
+      {/* Left Panel - hidden on mobile (use sheet) */}
+      <div className="hidden md:flex w-64 border-r bg-muted/20 flex-col shrink-0">
         <div className="p-2 border-b">
           <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 w-full justify-start mb-1" onClick={handleBack}>
             <ChevronUp className="h-3 w-3 rotate-[-90deg]" /> Voltar aos Projetos
