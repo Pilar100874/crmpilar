@@ -340,7 +340,7 @@ export function AdvancedHeatmapView({ scope, title, description, estabelecimento
       </Card>
 
       {/* KPIs */}
-      <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
         {[
           { label: "Sessões", value: totals.sessions, icon: Users, color: "text-blue-500", delta: prevTotals ? pctDelta(totals.sessions, prevTotals.sessions) : null },
           { label: "Cliques", value: totals.clicks, icon: MousePointerClick, color: "text-green-500", delta: prevTotals ? pctDelta(totals.clicks, prevTotals.clicks) : null },
