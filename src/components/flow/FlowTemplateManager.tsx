@@ -270,7 +270,11 @@ export function FlowTemplateManager({
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[50vh] overflow-y-auto space-y-2">
-            {templates.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-8">
+                <Loader2 className="h-6 w-6 mx-auto animate-spin text-muted-foreground" />
+              </div>
+            ) : templates.length === 0 ? (
               <div className="text-center py-8">
                 <FileText className="h-10 w-10 mx-auto text-muted-foreground/40 mb-2" />
                 <p className="text-sm text-muted-foreground">
