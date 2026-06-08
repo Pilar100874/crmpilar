@@ -3307,6 +3307,9 @@ const PageBuilderEditor: React.FC<{
   const previewWidth = viewMode === 'mobile' ? 375 : viewMode === 'tablet' ? 768 : '100%';
   const publicUrl = currentPageId && isPublished ? `${window.location.origin}/p/${pageSlug}` : null;
 
+  const closeMobileLeft = () => setMobileLeftOpen(false);
+  const closeMobileRight = () => setMobileRightOpen(false);
+
   return (
     <div className={`flex gap-0 overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50 bg-background' : 'h-[calc(100vh-200px)] -mx-3 sm:-mx-6 -mb-3 sm:-mb-6'}`}>
       {/* Left Panel - hidden on mobile (use sheet) */}
