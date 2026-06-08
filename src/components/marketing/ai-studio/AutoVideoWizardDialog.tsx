@@ -455,21 +455,21 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
     }
   }, [estabId, selectedProduct, includeInfluencer, selectedInfluencer, briefing, script, videoModel, aspectRatio, duration, useVisualIdentity, activeProviders, ttsProvider, availableTtsProviders, wavespeedTtsModel]);
 
-  const handleSaveToGallery = useCallback(async () => {
-    if (!resultVideoUrl || !estabId) return;
+  const saveVideoToGallery = useCallback(async (url: string, blob: Blob | null, opts?: { closeOnSuccess?: boolean; silent?: boolean }) => {
+    if (!url || !estabId) return false;
     setSaving(true);
     try {
-      let blob = resultBlob;
-      if (!blob) {
-        const resp = await fetch(resultVideoUrl);
-        blob = await resp.blob();
+      let b = blob;
+      if (!b) {
+        const resp = await fetch(url);
+        b = await resp.blob();
       }
-      const ext = blob.type.includes('mp4') ? 'mp4' : 'webm';
+      const ext = b.type.includes('mp4') ? 'mp4' : 'webm';
       const fileName = `wizard_${Date.now()}.${ext}`;
       const storagePath = `${estabId}/${fileName}`;
       const { error: upErr } = await supabase.storage
         .from('marketing-videos')
-        .upload(storagePath, blob, { contentType: blob.type || 'video/mp4', upsert: true });
+        .upload(storagePath, b, { contentType: b.type || 'video/mp4', upsert: true });
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from('marketing-videos').getPublicUrl(storagePath);
       await supabase.from('media_gallery').insert({
@@ -479,19 +479,26 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
         descricao: briefing.substring(0, 200),
         public_url: pub.publicUrl,
         storage_path: storagePath,
-        tamanho_bytes: blob.size,
-        mime_type: blob.type || 'video/mp4',
+        tamanho_bytes: b.size,
+        mime_type: b.type || 'video/mp4',
         duracao_segundos: duration,
         origem: 'ai_studio_wizard',
       });
-      toast.success('Salvo na galeria!');
-      onOpenChange(false);
+      if (!opts?.silent) toast.success('Salvo na galeria!');
+      if (opts?.closeOnSuccess) onOpenChange(false);
+      return true;
     } catch (e: any) {
-      toast.error('Erro ao salvar: ' + (e.message || ''));
+      toast.error('Erro ao salvar na galeria: ' + (e.message || ''));
+      return false;
     } finally {
       setSaving(false);
     }
-  }, [resultVideoUrl, resultBlob, estabId, selectedProduct, briefing, duration, onOpenChange]);
+  }, [estabId, selectedProduct, briefing, duration, onOpenChange]);
+
+  const handleSaveToGallery = useCallback(async () => {
+    if (!resultVideoUrl) return;
+    await saveVideoToGallery(resultVideoUrl, resultBlob, { closeOnSuccess: true });
+  }, [resultVideoUrl, resultBlob, saveVideoToGallery]);
 
   const handleSaveAsWorkflow = useCallback(async () => {
     if (!estabId) return toast.error('Estabelecimento não encontrado.');
