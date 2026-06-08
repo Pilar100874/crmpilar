@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -184,6 +184,12 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
   const [estimatedTotalSec, setEstimatedTotalSec] = useState(90);
   const [ttsProvider, setTtsProvider] = useState<string>('');
   const [wavespeedTtsModel, setWavespeedTtsModel] = useState<string>('wavespeed-ai/qwen3-tts/text-to-speech');
+  const [autoSaveToGallery, setAutoSaveToGallery] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const v = localStorage.getItem('wizard_auto_save_gallery');
+    return v === null ? true : v === '1';
+  });
+  const saveVideoToGalleryRef = useRef<((url: string, blob: Blob | null, opts?: { closeOnSuccess?: boolean; silent?: boolean }) => Promise<boolean>) | null>(null);
 
   // Mantém a tela acesa enquanto qualquer geração estiver em andamento (evita
   // que o celular apague a tela e throttle a aba durante esperas longas).
@@ -441,6 +447,10 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
       setResultBlob(finalBlob);
       setProgressMsg('Pronto!');
       toast.success('Vídeo gerado com sucesso.');
+      if (autoSaveToGallery) {
+        setProgressMsg('Salvando na galeria…');
+        await saveVideoToGalleryRef.current?.(finalUrl, finalBlob, { silent: false });
+      }
     } catch (e: any) {
       console.error(e);
       toast.error('Falha ao gerar vídeo: ' + (e.message || ''));
@@ -448,23 +458,23 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
     } finally {
       setGenerating(false);
     }
-  }, [estabId, selectedProduct, includeInfluencer, selectedInfluencer, briefing, script, videoModel, aspectRatio, duration, useVisualIdentity, activeProviders, ttsProvider, availableTtsProviders, wavespeedTtsModel]);
+  }, [estabId, selectedProduct, includeInfluencer, selectedInfluencer, briefing, script, videoModel, aspectRatio, duration, useVisualIdentity, activeProviders, ttsProvider, availableTtsProviders, wavespeedTtsModel, autoSaveToGallery]);
 
-  const handleSaveToGallery = useCallback(async () => {
-    if (!resultVideoUrl || !estabId) return;
+  const saveVideoToGallery = useCallback(async (url: string, blob: Blob | null, opts?: { closeOnSuccess?: boolean; silent?: boolean }) => {
+    if (!url || !estabId) return false;
     setSaving(true);
     try {
-      let blob = resultBlob;
-      if (!blob) {
-        const resp = await fetch(resultVideoUrl);
-        blob = await resp.blob();
+      let b = blob;
+      if (!b) {
+        const resp = await fetch(url);
+        b = await resp.blob();
       }
-      const ext = blob.type.includes('mp4') ? 'mp4' : 'webm';
+      const ext = b.type.includes('mp4') ? 'mp4' : 'webm';
       const fileName = `wizard_${Date.now()}.${ext}`;
       const storagePath = `${estabId}/${fileName}`;
       const { error: upErr } = await supabase.storage
         .from('marketing-videos')
-        .upload(storagePath, blob, { contentType: blob.type || 'video/mp4', upsert: true });
+        .upload(storagePath, b, { contentType: b.type || 'video/mp4', upsert: true });
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from('marketing-videos').getPublicUrl(storagePath);
       await supabase.from('media_gallery').insert({
@@ -474,19 +484,27 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
         descricao: briefing.substring(0, 200),
         public_url: pub.publicUrl,
         storage_path: storagePath,
-        tamanho_bytes: blob.size,
-        mime_type: blob.type || 'video/mp4',
+        tamanho_bytes: b.size,
+        mime_type: b.type || 'video/mp4',
         duracao_segundos: duration,
         origem: 'ai_studio_wizard',
       });
-      toast.success('Salvo na galeria!');
-      onOpenChange(false);
+      if (!opts?.silent) toast.success('Salvo na galeria!');
+      if (opts?.closeOnSuccess) onOpenChange(false);
+      return true;
     } catch (e: any) {
-      toast.error('Erro ao salvar: ' + (e.message || ''));
+      toast.error('Erro ao salvar na galeria: ' + (e.message || ''));
+      return false;
     } finally {
       setSaving(false);
     }
-  }, [resultVideoUrl, resultBlob, estabId, selectedProduct, briefing, duration, onOpenChange]);
+  }, [estabId, selectedProduct, briefing, duration, onOpenChange]);
+  saveVideoToGalleryRef.current = saveVideoToGallery;
+
+  const handleSaveToGallery = useCallback(async () => {
+    if (!resultVideoUrl) return;
+    await saveVideoToGallery(resultVideoUrl, resultBlob, { closeOnSuccess: true });
+  }, [resultVideoUrl, resultBlob, saveVideoToGallery]);
 
   const handleSaveAsWorkflow = useCallback(async () => {
     if (!estabId) return toast.error('Estabelecimento não encontrado.');
@@ -933,17 +951,31 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
             )}
 
             {!resultVideoUrl && (
-              <Button
-                onClick={handleGenerate}
-                disabled={generating}
-                className="w-full h-12 text-sm font-bold bg-gradient-to-r from-primary via-fuchsia-500 to-orange-400 text-white"
-              >
-                {generating ? (
-                  <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {progressMsg || 'Gerando…'}</>
-                ) : (
-                  <><Video className="h-4 w-4 mr-2" /> Gerar Vídeo</>
-                )}
-              </Button>
+              <>
+                <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none px-1">
+                  <input
+                    type="checkbox"
+                    checked={autoSaveToGallery}
+                    onChange={(e) => {
+                      setAutoSaveToGallery(e.target.checked);
+                      try { localStorage.setItem('wizard_auto_save_gallery', e.target.checked ? '1' : '0'); } catch {}
+                    }}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  <span>Salvar automaticamente na Galeria ao concluir</span>
+                </label>
+                <Button
+                  onClick={handleGenerate}
+                  disabled={generating}
+                  className="w-full h-12 text-sm font-bold bg-gradient-to-r from-primary via-fuchsia-500 to-orange-400 text-white"
+                >
+                  {generating ? (
+                    <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {progressMsg || 'Gerando…'}</>
+                  ) : (
+                    <><Video className="h-4 w-4 mr-2" /> Gerar Vídeo</>
+                  )}
+                </Button>
+              </>
             )}
 
             {generating && (() => {
