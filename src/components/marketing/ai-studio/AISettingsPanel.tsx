@@ -191,6 +191,8 @@ interface Props {
 const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) => {
   const [selectedProvider, setSelectedProvider] = useState<string>('elevenlabs');
   const [selectedSection, setSelectedSection] = useState<'providers' | 'defaults'>('providers');
+  const isMobile = useIsMobile();
+  const [mobileView, setMobileView] = useState<'list' | 'detail'>('list');
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
   const [statuses, setStatuses] = useState<Record<string, 'none' | 'pending' | 'valid' | 'invalid'>>({});
