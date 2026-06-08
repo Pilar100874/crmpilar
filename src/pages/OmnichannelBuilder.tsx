@@ -425,13 +425,18 @@ export default function OmnichannelBuilder() {
   }, [nodes, setNodes]);
 
   const handleDeleteNode = useCallback((nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (node && node.data.type === "inicio") {
+      toast.error("O bloco inicial não pode ser excluído!");
+      return;
+    }
     setNodes(nds => nds.filter(n => n.id !== nodeId));
     setEdges(eds => eds.filter(e => e.source !== nodeId && e.target !== nodeId));
     if (selectedNode?.id === nodeId) {
       setSelectedNode(null);
     }
     toast.success("Bloco removido");
-  }, [setNodes, setEdges, selectedNode]);
+  }, [nodes, setNodes, setEdges, selectedNode]);
 
   const handleAddNote = useCallback((nodeId: string) => {
     setCurrentNoteNodeId(nodeId);
@@ -836,6 +841,15 @@ export default function OmnichannelBuilder() {
             nodesFocusable={!isLocked}
             edgesFocusable={!isLocked}
             {...boxSelectionProps({ disabled: isLocked })}
+            onBeforeDelete={async ({ nodes: nodesToDelete, edges: edgesToDelete }) => {
+              const filtered = nodesToDelete.filter(n => (n.data as any)?.type !== "inicio");
+              if (filtered.length === nodesToDelete.length) return true;
+              if (filtered.length === 0 && edgesToDelete.length === 0) {
+                toast.error("O bloco inicial não pode ser excluído!");
+                return false;
+              }
+              return { nodes: filtered, edges: edgesToDelete };
+            }}
             className="bg-background"
             defaultEdgeOptions={{
               animated: true,

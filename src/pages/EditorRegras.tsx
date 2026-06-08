@@ -791,6 +791,15 @@ function EditorRegrasContent() {
           nodesDraggable={!isLocked}
           nodesConnectable={!isLocked}
           elementsSelectable={!isLocked}
+          onBeforeDelete={async ({ nodes: nodesToDelete, edges: edgesToDelete }) => {
+            const filtered = nodesToDelete.filter(n => (n.data as any)?.type !== "iniciar_validacao");
+            if (filtered.length === nodesToDelete.length) return true;
+            if (filtered.length === 0 && edgesToDelete.length === 0) {
+              toast({ title: "Ação não permitida", description: "O bloco inicial não pode ser excluído!", variant: "destructive" });
+              return false;
+            }
+            return { nodes: filtered, edges: edgesToDelete };
+          }}
           className="bg-background"
           defaultEdgeOptions={{
             animated: true,

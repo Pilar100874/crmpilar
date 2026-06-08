@@ -904,6 +904,15 @@ function EditorContent({
             autoPanOnConnect={false}
             {...boxSelectionProps()}
             autoPanOnNodeDrag={true}
+            onBeforeDelete={async ({ nodes: nodesToDelete, edges: edgesToDelete }) => {
+              const filtered = nodesToDelete.filter(n => (n.data as any)?.type !== "iniciar_automacao");
+              if (filtered.length === nodesToDelete.length) return true;
+              if (filtered.length === 0 && edgesToDelete.length === 0) {
+                toast({ title: "Ação não permitida", description: "O bloco inicial não pode ser excluído!", variant: "destructive" });
+                return false;
+              }
+              return { nodes: filtered, edges: edgesToDelete };
+            }}
             defaultEdgeOptions={{
               animated: true,
               style: { stroke: '#f97316', strokeWidth: 2 },

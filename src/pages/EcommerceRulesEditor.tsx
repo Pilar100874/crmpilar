@@ -294,10 +294,15 @@ function EcommerceRulesEditorInner() {
   };
 
   const handleDeleteNode = useCallback((nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (node && (node.data as any).type === "inicio_regra") {
+      toast({ title: "Ação não permitida", description: "O bloco inicial não pode ser excluído!", variant: "destructive" });
+      return;
+    }
     setNodes(nds => nds.filter(n => n.id !== nodeId));
     setEdges(eds => eds.filter(e => e.source !== nodeId && e.target !== nodeId));
     if (selectedNode?.id === nodeId) setSelectedNode(null);
-  }, [setNodes, setEdges, selectedNode]);
+  }, [nodes, setNodes, setEdges, selectedNode]);
 
   const handleDuplicateNode = useCallback((nodeId: string) => {
     const original = nodes.find(n => n.id === nodeId);
@@ -405,6 +410,15 @@ function EcommerceRulesEditorInner() {
             nodeTypes={nodeTypes}
             fitView
             {...boxSelectionProps()}
+            onBeforeDelete={async ({ nodes: nodesToDelete, edges: edgesToDelete }) => {
+              const filtered = nodesToDelete.filter(n => (n.data as any)?.type !== "inicio_regra");
+              if (filtered.length === nodesToDelete.length) return true;
+              if (filtered.length === 0 && edgesToDelete.length === 0) {
+                toast({ title: "Ação não permitida", description: "O bloco inicial não pode ser excluído!", variant: "destructive" });
+                return false;
+              }
+              return { nodes: filtered, edges: edgesToDelete };
+            }}
             className="bg-muted/30"
           >
             <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="!bg-muted/20" />

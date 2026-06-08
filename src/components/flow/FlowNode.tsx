@@ -40,7 +40,7 @@ export const FlowNode = memo((props: any) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   
-  const isStartBlock = data.type === 'inicio';
+  const isStartBlock = data.type === 'inicio' || data.type === 'start';
   
   if (!blockDef) return null;
 
