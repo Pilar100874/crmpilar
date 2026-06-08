@@ -14,6 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { muxAudioWithVideo } from './videoMux';
 import { getActiveVisualIdentity } from './VisualIdentityPanel';
+import { useWakeLock } from '@/hooks/useWakeLock';
 
 interface ProductRow {
   id: string;
