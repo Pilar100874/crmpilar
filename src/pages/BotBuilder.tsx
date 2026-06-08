@@ -535,10 +535,21 @@ function BotBuilderContent() {
           prevId = id;
         });
 
+        // Conectar bloco Início ao primeiro bloco do roteiro
+        const firstNodeId = createdIds[0];
+        if (firstNodeId) {
+          newEdges.push({
+            id: `e_start_${firstNodeId}`,
+            source: "start_node",
+            target: firstNodeId,
+            type: "smoothstep",
+            animated: true,
+          });
+        }
+
         // Bloco de loop: pergunta se quer criar mais posts ou finalizar
         const loopDef = BLOCK_DEFINITIONS.find((b) => b.type === "reply_buttons");
         const goodbyeDef = BLOCK_DEFINITIONS.find((b) => b.type === "goodbye");
-        const firstNodeId = createdIds[0];
 
         if (loopDef && goodbyeDef && prevId && firstNodeId) {
           const loopId = getId();
