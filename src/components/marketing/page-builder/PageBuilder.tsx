@@ -3730,12 +3730,47 @@ const PageBuilderEditor: React.FC<{
             <Button variant={rightPanel === 'config' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs flex-1" onClick={() => setRightPanel('config')}><Palette className="h-3 w-3 mr-1" /> Estilo</Button>
             <Button variant={rightPanel === 'agent' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs flex-1" onClick={() => setRightPanel('agent')}><Bot className="h-3 w-3 mr-1" /> Agente</Button>
           </div>
-          <div className="flex-1 overflow-hidden">
-            {/* Reuses same state as desktop right panel; render lightweight info */}
-            <div className="p-3 text-xs text-muted-foreground">
-              Use o painel completo no desktop. No celular, ajustes são aplicados aqui automaticamente quando você seleciona uma seção.
-            </div>
-          </div>
+          <ScrollArea className="flex-1 p-3">
+            {rightPanel === 'editor' && (selectedSection ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium truncate">{selectedSection.title}</span>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => deleteSection(selectedSection.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                <SectionEditor section={selectedSection} onChange={updateSection} />
+              </div>
+            ) : <p className="text-sm text-muted-foreground text-center py-6">Selecione uma seção para editar</p>)}
+            {rightPanel === 'config' && (
+              <div className="space-y-4">
+                <div><Label className="text-xs">Título do Site</Label><Input value={config.title} onChange={e => setConfig(c => ({ ...c, title: e.target.value }))} /></div>
+                <div><Label className="text-xs">Descrição (SEO)</Label><Textarea value={config.description} onChange={e => setConfig(c => ({ ...c, description: e.target.value }))} rows={2} /></div>
+                <Separator />
+                <div className="grid grid-cols-2 gap-2">
+                  {([['primaryColor', 'Primária'], ['secondaryColor', 'Secundária'], ['accentColor', 'Destaque'], ['backgroundColor', 'Fundo'], ['textColor', 'Texto']] as const).map(([key, label]) => (
+                    <div key={key}><Label className="text-[10px]">{label}</Label><div className="flex gap-1"><input type="color" value={(config as any)[key]} onChange={e => setConfig(c => ({ ...c, [key]: e.target.value }))} className="w-8 h-8 rounded border cursor-pointer" /><Input value={(config as any)[key]} onChange={e => setConfig(c => ({ ...c, [key]: e.target.value }))} className="text-xs h-8" /></div></div>
+                  ))}
+                </div>
+                <Separator />
+                <div className="grid grid-cols-2 gap-2">
+                  <div><Label className="text-[10px]">Display (Títulos)</Label>
+                    <select value={config.fontDisplay} onChange={e => setConfig(c => ({ ...c, fontDisplay: e.target.value }))} className="w-full h-8 rounded-md border bg-background px-2 text-xs" style={{ fontFamily: config.fontDisplay }}>
+                      {['Inter', 'Poppins', 'Montserrat', 'Roboto', 'Open Sans', 'Lato', 'Raleway', 'Playfair Display', 'Merriweather'].map(f => <option key={f} value={f}>{f}</option>)}
+                    </select>
+                  </div>
+                  <div><Label className="text-[10px]">Body (Textos)</Label>
+                    <select value={config.fontBody} onChange={e => setConfig(c => ({ ...c, fontBody: e.target.value }))} className="w-full h-8 rounded-md border bg-background px-2 text-xs" style={{ fontFamily: config.fontBody }}>
+                      {['Inter', 'Poppins', 'Roboto', 'Open Sans', 'Lato', 'Nunito'].map(f => <option key={f} value={f}>{f}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div><Label className="text-[10px]">🏷️ Nome da Empresa</Label><Input value={config.empresaNome || ''} onChange={e => { const v = e.target.value; setConfig(c => ({ ...c, empresaNome: v })); saveGlobalConfig({ ...loadGlobalConfig(), empresaNome: v }); }} placeholder="Minha Empresa Ltda." className="text-xs" /></div>
+                <div><Label className="text-[10px]">💬 WhatsApp Global</Label><Input value={config.whatsappGlobal || ''} onChange={e => { const v = e.target.value; setConfig(c => ({ ...c, whatsappGlobal: v })); saveGlobalConfig({ ...loadGlobalConfig(), whatsappGlobal: v }); }} placeholder="5511999999999" className="text-xs" /></div>
+              </div>
+            )}
+            {rightPanel === 'agent' && <AgentTextBank />}
+          </ScrollArea>
         </SheetContent>
       </Sheet>
     </div>
