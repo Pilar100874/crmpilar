@@ -425,13 +425,18 @@ export default function OmnichannelBuilder() {
   }, [nodes, setNodes]);
 
   const handleDeleteNode = useCallback((nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (node && node.data.type === "inicio") {
+      toast.error("O bloco inicial não pode ser excluído!");
+      return;
+    }
     setNodes(nds => nds.filter(n => n.id !== nodeId));
     setEdges(eds => eds.filter(e => e.source !== nodeId && e.target !== nodeId));
     if (selectedNode?.id === nodeId) {
       setSelectedNode(null);
     }
     toast.success("Bloco removido");
-  }, [setNodes, setEdges, selectedNode]);
+  }, [nodes, setNodes, setEdges, selectedNode]);
 
   const handleAddNote = useCallback((nodeId: string) => {
     setCurrentNoteNodeId(nodeId);
