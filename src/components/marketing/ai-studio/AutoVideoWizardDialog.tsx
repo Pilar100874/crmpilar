@@ -947,10 +947,6 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
                   <Button variant="outline" onClick={() => { setResultVideoUrl(null); setResultBlob(null); }} className="flex-1 min-w-[140px]">
                     Gerar outro
                   </Button>
-                  <Button variant="secondary" onClick={handleSaveAsWorkflow} disabled={saving} className="flex-1 min-w-[140px]">
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Wand2 className="h-4 w-4 mr-2" />}
-                    Salvar como Workflow
-                  </Button>
                   <Button onClick={handleSaveToGallery} disabled={saving} className="flex-1 min-w-[140px]">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                     Salvar na Galeria
