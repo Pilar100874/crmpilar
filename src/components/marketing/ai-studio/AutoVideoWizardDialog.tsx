@@ -951,17 +951,31 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
             )}
 
             {!resultVideoUrl && (
-              <Button
-                onClick={handleGenerate}
-                disabled={generating}
-                className="w-full h-12 text-sm font-bold bg-gradient-to-r from-primary via-fuchsia-500 to-orange-400 text-white"
-              >
-                {generating ? (
-                  <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {progressMsg || 'Gerando…'}</>
-                ) : (
-                  <><Video className="h-4 w-4 mr-2" /> Gerar Vídeo</>
-                )}
-              </Button>
+              <>
+                <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none px-1">
+                  <input
+                    type="checkbox"
+                    checked={autoSaveToGallery}
+                    onChange={(e) => {
+                      setAutoSaveToGallery(e.target.checked);
+                      try { localStorage.setItem('wizard_auto_save_gallery', e.target.checked ? '1' : '0'); } catch {}
+                    }}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  <span>Salvar automaticamente na Galeria ao concluir</span>
+                </label>
+                <Button
+                  onClick={handleGenerate}
+                  disabled={generating}
+                  className="w-full h-12 text-sm font-bold bg-gradient-to-r from-primary via-fuchsia-500 to-orange-400 text-white"
+                >
+                  {generating ? (
+                    <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {progressMsg || 'Gerando…'}</>
+                  ) : (
+                    <><Video className="h-4 w-4 mr-2" /> Gerar Vídeo</>
+                  )}
+                </Button>
+              </>
             )}
 
             {generating && (() => {
