@@ -446,6 +446,10 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
       setResultBlob(finalBlob);
       setProgressMsg('Pronto!');
       toast.success('Vídeo gerado com sucesso.');
+      if (autoSaveToGallery) {
+        setProgressMsg('Salvando na galeria…');
+        await saveVideoToGallery(finalUrl, finalBlob, { silent: false });
+      }
     } catch (e: any) {
       console.error(e);
       toast.error('Falha ao gerar vídeo: ' + (e.message || ''));
