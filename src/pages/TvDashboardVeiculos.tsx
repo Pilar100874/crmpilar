@@ -447,7 +447,7 @@ export default function TvDashboardVeiculos() {
         </div>
 
         {/* Bottom Left - Alerts */}
-        <div className="fixed bottom-3 left-3 space-y-2 max-w-[50%]" style={{ zIndex: 999999 }}>
+        <div className="fixed bottom-3 left-3 right-20 md:right-auto space-y-2 md:max-w-[50%]" style={{ zIndex: 999999 }}>
           {/* Alerta de Velocidade */}
           {veiculos.some(v => v.ultima_posicao && v.ultima_posicao.velocidade > 100) && (
             <div className="flex items-center gap-3 px-4 py-3 bg-red-500/20 backdrop-blur-md rounded-xl shadow-xl border border-red-500/30">
