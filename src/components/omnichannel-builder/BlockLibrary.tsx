@@ -79,6 +79,13 @@ const blocks: BlockItem[] = [
     description: "Visualiza métricas do fluxo",
     color: "text-emerald-500"
   },
+  {
+    type: "publicar_rede_social",
+    label: "Publicar em Redes Sociais",
+    icon: <Share2 className="h-5 w-5" />,
+    description: "Publica conteúdo nas redes sociais configuradas",
+    color: "text-pink-500"
+  },
 ];
 
 export const BlockLibrary = ({ 
