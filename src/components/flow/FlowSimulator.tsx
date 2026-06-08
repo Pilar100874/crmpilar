@@ -3537,8 +3537,67 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
 
 
+    // === ai_media_select: Pick / Regen / Cancel via botões ===
+    if (currentBlockType === "ai_media_select" && currentNodeId) {
+      addUserMessage(button.text);
+      const node = nodes.find((n) => n.id === currentNodeId);
+      const state = simNodeStateRef.current[currentNodeId] || {};
+      if (button.value === "cancel") {
+        addSystemMessage("❌ Geração cancelada pelo usuário.");
+        delete simNodeStateRef.current[currentNodeId];
+        setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
+        return;
+      }
+      if (button.value === "regen") {
+        delete simNodeStateRef.current[currentNodeId];
+        setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
+        addSystemMessage("🔄 Gerando novas opções...");
+        if (node) safeSetTimeout(() => { setCurrentNodeId(node.id); executeNode(node); }, 300);
+        return;
+      }
+      if (button.value.startsWith("pick_")) {
+        const idx = parseInt(button.value.split("_")[1]) - 1;
+        const sel = (state.items || [])[idx];
+        if (!sel || !node) { addSystemMessage("⚠️ Seleção inválida."); return; }
+        const cfg = (node.data as any).config || {};
+        const outVar = normalizeVarName(cfg.outputVariable || "midia_selecionada");
+        const newCtx = { ...contextRef.current, [outVar]: sel.url };
+        contextRef.current = newCtx; setContext(newCtx); onContextChange?.(newCtx);
+        addSuccessMessage(`✅ Mídia ${sel.index} selecionada`);
+        delete simNodeStateRef.current[currentNodeId];
+        setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
+        const nextNode = getNextNode(currentNodeId);
+        if (nextNode) safeSetTimeout(() => { setCurrentNodeId(nextNode.id); executeNode(nextNode); }, 400);
+        return;
+      }
+    }
 
-    // === ask_influencer: yes/no → usa influencer fixo ou galeria ===
+    // === publish_social_ask: escolha de redes no momento da execução ===
+    if (currentBlockType === "publish_social_ask" && currentNodeId) {
+      addUserMessage(button.text);
+      const node = nodes.find((n) => n.id === currentNodeId);
+      if (!node) return;
+      const state = simNodeStateRef.current[currentNodeId] || {};
+      const available: string[] = state.askPlatforms || [];
+      if (button.value === "cancel") {
+        addSystemMessage("❌ Publicação cancelada.");
+        setIsWaitingInput(false); setCurrentBlockType(null);
+        return;
+      }
+      let chosen: string[] = [];
+      if (button.value === "all") {
+        chosen = available;
+      } else if (button.value.startsWith("plat_")) {
+        chosen = [button.value.replace("plat_", "")];
+      }
+      if (chosen.length === 0) return;
+      setIsWaitingInput(false); setCurrentBlockType(null);
+      delete simNodeStateRef.current[currentNodeId];
+      runPublishSocial(node, chosen);
+      return;
+    }
+
+
     if (currentBlockType === "ask_influencer_choice" && currentNodeId) {
       addUserMessage(button.text);
       const node = nodes.find((n) => n.id === currentNodeId);
