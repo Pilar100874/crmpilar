@@ -29,7 +29,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import AIBridgeVideoDialog from './AIBridgeVideoDialog';
 import { BridgeGenerationManager, useBridgeGenerations } from './BridgeGenerationManager';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { FileVideo, BookOpen } from 'lucide-react';
+import { FileVideo, BookOpen, PanelRightOpen } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
