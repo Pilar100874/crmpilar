@@ -74,6 +74,41 @@ const PRIVACY_OPTIONS = [
 export const PublishSocialPostConfig = ({ config, handleConfigChange }: ConfigProps) => {
   const platforms: string[] = config.platforms || [];
   const platformConfig: Record<string, any> = config.platformConfig || {};
+  const publishMode: "all" | "ask" = config.publishMode === "ask" ? "ask" : "all";
+
+  const [enabledPlatforms, setEnabledPlatforms] = useState<string[] | null>(null);
+  const [loadingEnabled, setLoadingEnabled] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { setEnabledPlatforms([]); return; }
+        const { data: usuario } = await supabase
+          .from("usuarios")
+          .select("estabelecimento_id")
+          .eq("auth_user_id", user.id)
+          .single();
+        if (!usuario?.estabelecimento_id) { setEnabledPlatforms([]); return; }
+        const { data: rows } = await supabase
+          .from("social_media_credentials")
+          .select("platform, credentials, ativo")
+          .eq("estabelecimento_id", usuario.estabelecimento_id);
+        const ids = (rows || [])
+          .filter((r: any) => r.ativo !== false && r.credentials && Object.values(r.credentials).some((v: any) => v && String(v).trim() !== ""))
+          .map((r: any) => r.platform);
+        setEnabledPlatforms(ids);
+      } catch {
+        setEnabledPlatforms([]);
+      } finally {
+        setLoadingEnabled(false);
+      }
+    })();
+  }, []);
+
+  const visiblePlatforms = enabledPlatforms === null
+    ? PLATFORMS
+    : PLATFORMS.filter((p) => enabledPlatforms.includes(p.id));
 
   const togglePlatform = (id: string) => {
     const next = platforms.includes(id)
@@ -98,14 +133,46 @@ export const PublishSocialPostConfig = ({ config, handleConfigChange }: ConfigPr
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription className="text-xs">
-          Conecte suas contas em <strong>Conectores</strong> para publicar automaticamente. Sem conexão, o post fica em fila para revisão manual.
+          Apenas as redes com <strong>conector configurado e ativo</strong> são listadas. Configure em <strong>Config APIs → Redes Sociais</strong>.
         </AlertDescription>
       </Alert>
 
       <div className="space-y-2">
-        <Label>Plataformas</Label>
+        <Label>Modo de publicação</Label>
+        <RadioGroup
+          value={publishMode}
+          onValueChange={(v) => handleConfigChange("publishMode", v)}
+          className="grid grid-cols-1 gap-2"
+        >
+          <label className={`flex items-start gap-2 p-2 rounded-lg border-2 cursor-pointer transition-all ${publishMode === "all" ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"}`}>
+            <RadioGroupItem value="all" className="mt-0.5" />
+            <div className="flex-1">
+              <div className="text-xs font-medium">🚀 Publicar em todas as redes selecionadas</div>
+              <div className="text-[10px] text-muted-foreground">Envia automaticamente para todas as redes marcadas abaixo.</div>
+            </div>
+          </label>
+          <label className={`flex items-start gap-2 p-2 rounded-lg border-2 cursor-pointer transition-all ${publishMode === "ask" ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"}`}>
+            <RadioGroupItem value="ask" className="mt-0.5" />
+            <div className="flex-1">
+              <div className="text-xs font-medium">❓ Perguntar em qual rede publicar</div>
+              <div className="text-[10px] text-muted-foreground">No momento da execução, mostra botões para escolher a rede.</div>
+            </div>
+          </label>
+        </RadioGroup>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Plataformas {loadingEnabled && <Loader2 className="inline h-3 w-3 animate-spin ml-1" />}</Label>
+        {!loadingEnabled && visiblePlatforms.length === 0 && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-xs">
+              Nenhuma rede social com conector ativo. Acesse <strong>Config APIs → Redes Sociais</strong> para configurar.
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="grid grid-cols-2 gap-2">
-          {PLATFORMS.map((p) => {
+          {visiblePlatforms.map((p) => {
             const Icon = p.icon;
             const checked = platforms.includes(p.id);
             return (
@@ -125,6 +192,7 @@ export const PublishSocialPostConfig = ({ config, handleConfigChange }: ConfigPr
           })}
         </div>
       </div>
+
 
       {/* Conteúdo base compartilhado */}
       <div className="space-y-2">
