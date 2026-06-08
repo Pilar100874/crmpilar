@@ -502,11 +502,13 @@ function BotBuilderContent() {
         const newNodes: Node[] = [];
         const newEdges: Edge[] = [];
         let prevId: string | null = null;
+        const createdIds: string[] = [];
 
         sequence.forEach((step, idx) => {
           const def = BLOCK_DEFINITIONS.find((b) => b.type === step.type);
           if (!def) return;
           const id = getId();
+          createdIds.push(id);
           const node: Node = {
             id,
             type: "custom",
@@ -532,6 +534,77 @@ function BotBuilderContent() {
           }
           prevId = id;
         });
+
+        // Bloco de loop: pergunta se quer criar mais posts ou finalizar
+        const loopDef = BLOCK_DEFINITIONS.find((b) => b.type === "reply_buttons");
+        const goodbyeDef = BLOCK_DEFINITIONS.find((b) => b.type === "goodbye");
+        const firstNodeId = createdIds[0];
+
+        if (loopDef && goodbyeDef && prevId && firstNodeId) {
+          const loopId = getId();
+          const goodbyeId = getId();
+
+          newNodes.push({
+            id: loopId,
+            type: "custom",
+            position: { x: origin.x + sequence.length * 320, y: origin.y },
+            data: {
+              label: loopDef.label,
+              type: loopDef.type,
+              config: {
+                text: "Deseja criar mais posts ou finalizar?",
+                variable: "loop_resposta",
+                buttons: [
+                  { label: "🔁 Criar mais posts", value: "criar_mais" },
+                  { label: "✅ Finalizar", value: "finalizar" },
+                ],
+              },
+            },
+          });
+
+          newNodes.push({
+            id: goodbyeId,
+            type: "custom",
+            position: { x: origin.x + (sequence.length + 1) * 320, y: origin.y + 180 },
+            data: {
+              label: goodbyeDef.label,
+              type: goodbyeDef.type,
+              config: {
+                ...JSON.parse(JSON.stringify(goodbyeDef.defaultData || {})),
+                text: "Obrigado! Até a próxima 👋",
+              },
+            },
+          });
+
+          // publish -> loop
+          newEdges.push({
+            id: `e_${prevId}_${loopId}`,
+            source: prevId,
+            target: loopId,
+            type: "smoothstep",
+            animated: true,
+          });
+          // loop botão 0 (criar mais) -> primeiro nó (volta ao início)
+          newEdges.push({
+            id: `e_${loopId}_${firstNodeId}_loop`,
+            source: loopId,
+            sourceHandle: "button_0",
+            target: firstNodeId,
+            type: "smoothstep",
+            animated: true,
+            label: "Criar mais",
+          });
+          // loop botão 1 (finalizar) -> goodbye
+          newEdges.push({
+            id: `e_${loopId}_${goodbyeId}`,
+            source: loopId,
+            sourceHandle: "button_1",
+            target: goodbyeId,
+            type: "smoothstep",
+            animated: true,
+            label: "Finalizar",
+          });
+        }
 
         setNodes((nds) => [...nds, ...newNodes]);
         setEdges((eds) => [...eds, ...newEdges]);
