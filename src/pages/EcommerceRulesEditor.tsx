@@ -294,10 +294,15 @@ function EcommerceRulesEditorInner() {
   };
 
   const handleDeleteNode = useCallback((nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (node && (node.data as any).type === "inicio_regra") {
+      toast({ title: "Ação não permitida", description: "O bloco inicial não pode ser excluído!", variant: "destructive" });
+      return;
+    }
     setNodes(nds => nds.filter(n => n.id !== nodeId));
     setEdges(eds => eds.filter(e => e.source !== nodeId && e.target !== nodeId));
     if (selectedNode?.id === nodeId) setSelectedNode(null);
-  }, [setNodes, setEdges, selectedNode]);
+  }, [nodes, setNodes, setEdges, selectedNode]);
 
   const handleDuplicateNode = useCallback((nodeId: string) => {
     const original = nodes.find(n => n.id === nodeId);
