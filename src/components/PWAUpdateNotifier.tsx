@@ -1,6 +1,10 @@
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { captureInitialVersion, hasNewVersion, forceUpdatePWA } from "@/lib/pwaUpdate";
+import { captureInitialVersion, hasNewVersion, forceUpdatePWA, isStandalonePWA } from "@/lib/pwaUpdate";
+
+// Só roda em produção e em modo PWA standalone (evita falsos positivos no dev/preview do Lovable,
+// onde o index.html muda a cada request por causa do Vite/HMR).
+const ENABLED = import.meta.env.PROD && typeof window !== "undefined";
 
 // Intervalo de checagem: 2 minutos
 const CHECK_INTERVAL_MS = 2 * 60 * 1000;
