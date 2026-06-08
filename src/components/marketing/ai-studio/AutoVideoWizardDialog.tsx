@@ -98,7 +98,8 @@ async function generateVideoAsync(
   let fetchAction = isWavespeed ? 'fetch_wavespeed_video' : isGoogle ? 'fetch_google_video' : 'fetch_apiframe_video';
 
   onProgress?.('Enviando ao provedor…');
-  const started = await callEdge(startAction, params, 60000);
+  // Maior tolerância em redes móveis (3G/4G instável)
+  const started = await callEdge(startAction, params, 120000);
   if (started?.error) throw new Error(started.error);
   if (started?.videoUrl) return started.videoUrl;
   if (started?._googleProvider) fetchAction = 'fetch_google_video';
@@ -106,19 +107,32 @@ async function generateVideoAsync(
   if (!taskId) throw new Error('Provedor não devolveu o identificador da tarefa.');
 
   const maxPolls = 180; // ~15min
+  let consecutiveErrors = 0;
   for (let i = 0; i < maxPolls; i++) {
     await new Promise((r) => setTimeout(r, 5000));
-    const poll = await callEdge(fetchAction, {
-      estabelecimentoId: params.estabelecimentoId,
-      taskId,
-    }, 60000);
-    if (poll?.error) throw new Error(poll.error);
-    onProgress?.(poll?.message || `Renderizando… consulta ${i + 1}`);
-    if (poll?.done && poll?.videoUrl) return poll.videoUrl;
-    if (poll?.done) throw new Error('Geração concluiu sem retornar vídeo.');
+    try {
+      const poll = await callEdge(fetchAction, {
+        estabelecimentoId: params.estabelecimentoId,
+        taskId,
+      }, 90000);
+      consecutiveErrors = 0;
+      if (poll?.error) throw new Error(poll.error);
+      onProgress?.(poll?.message || `Renderizando… consulta ${i + 1}`);
+      if (poll?.done && poll?.videoUrl) return poll.videoUrl;
+      if (poll?.done) throw new Error('Geração concluiu sem retornar vídeo.');
+    } catch (err: any) {
+      // Tolera falhas transitórias de rede (comum em mobile) — só aborta após 5 erros seguidos
+      const msg = String(err?.message || '');
+      const isNetwork = err?.name === 'AbortError' || /Timeout|Failed to fetch|NetworkError|network/i.test(msg);
+      if (!isNetwork) throw err;
+      consecutiveErrors++;
+      onProgress?.(`Rede instável, tentando novamente… (${consecutiveErrors}/5)`);
+      if (consecutiveErrors >= 5) throw new Error('Conexão instável. Verifique sua internet e tente novamente.');
+    }
   }
   throw new Error('Timeout aguardando o vídeo.');
 }
+
 
 export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: AutoVideoWizardDialogProps) {
   const [step, setStep] = useState<Step>(1);
