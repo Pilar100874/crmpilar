@@ -888,6 +888,14 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
               </div>
             </>
           )}
+
+          {/* Configurações específicas para Publicar em Redes Sociais */}
+          {data.type === 'publicar_rede_social' && (
+            <PublishSocialPostConfig
+              config={data.config || {}}
+              handleConfigChange={(key, value) => updateConfig(key, value)}
+            />
+          )}
         </div>
       </ScrollArea>
     </Card>
