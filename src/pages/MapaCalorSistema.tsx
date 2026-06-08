@@ -123,16 +123,17 @@ export default function MapaCalorSistema() {
   }, [routeStats, rows]);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+    <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Flame className="h-6 w-6 text-orange-500" /> Mapa de Calor do Sistema
+        <div className="flex-1 min-w-0">
+          <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
+            <Flame className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500 shrink-0" />
+            <span className="truncate">Mapa de Calor do Sistema</span>
           </h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-xs sm:text-sm hidden sm:block">
             Telas mais usadas, tempo de uso por usuário e tempo ocioso.
           </p>
         </div>
@@ -140,8 +141,8 @@ export default function MapaCalorSistema() {
       </div>
 
       <Tabs defaultValue="advanced">
-        <TabsList>
-          <TabsTrigger value="advanced">🔥 Heatmap Avançado</TabsTrigger>
+        <TabsList className="flex-wrap h-auto w-full sm:w-auto">
+          <TabsTrigger value="advanced">🔥 Avançado</TabsTrigger>
           <TabsTrigger value="usage">Uso por Tela</TabsTrigger>
           <TabsTrigger value="users">Usuários</TabsTrigger>
         </TabsList>
