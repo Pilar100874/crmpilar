@@ -66,6 +66,16 @@ import { LayoutContext } from "@/contexts/LayoutContext";
 import { useAtalhos } from "@/hooks/useAtalhos";
 import { useAvisosSistema } from "@/hooks/useAvisosSistema";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useActivityTracking } from "@/hooks/useActivityTracking";
 import { useUsageTracker } from "@/hooks/useUsageTracker";
 import { useInteractionTracker } from "@/hooks/useInteractionTracker";
@@ -204,6 +214,7 @@ export default function Layout({ children }: LayoutProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuLocked, setMenuLocked] = useState(false);
   const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
+  const [showPwaUpdateDialog, setShowPwaUpdateDialog] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem("theme");
     if (saved) return saved === "dark";
@@ -1060,9 +1071,7 @@ export default function Layout({ children }: LayoutProps) {
                         <button
                           onClick={() => {
                             setOpenSubmenuId(null);
-                            if (confirm("Atualizar o sistema para a versão mais recente? O app será recarregado.")) {
-                              window.dispatchEvent(new CustomEvent("pwa-force-update"));
-                            }
+                            setShowPwaUpdateDialog(true);
                           }}
                           className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
                         >
@@ -1148,9 +1157,7 @@ export default function Layout({ children }: LayoutProps) {
                     <button
                       onClick={() => {
                         setOpenSubmenuId(null);
-                        if (confirm("Atualizar o sistema para a versão mais recente? O app será recarregado.")) {
-                          window.dispatchEvent(new CustomEvent("pwa-force-update"));
-                        }
+                        setShowPwaUpdateDialog(true);
                       }}
                       className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
                     >
@@ -1270,6 +1277,30 @@ export default function Layout({ children }: LayoutProps) {
         open={showChangePasswordDialog}
         onOpenChange={setShowChangePasswordDialog}
       />
+      <AlertDialog open={showPwaUpdateDialog} onOpenChange={setShowPwaUpdateDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <RefreshCw className="w-5 h-5 text-primary" />
+              Atualizar Sistema (PWA)
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja atualizar o sistema para a versão mais recente? O aplicativo será recarregado e todos os caches serão limpos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowPwaUpdateDialog(false);
+                window.dispatchEvent(new CustomEvent("pwa-force-update"));
+              }}
+            >
+              Atualizar agora
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </LayoutContext.Provider>
   );
 }
