@@ -184,6 +184,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
   const [estimatedTotalSec, setEstimatedTotalSec] = useState(90);
   const [ttsProvider, setTtsProvider] = useState<string>('');
   const [wavespeedTtsModel, setWavespeedTtsModel] = useState<string>('wavespeed-ai/qwen3-tts/text-to-speech');
+  const [language, setLanguage] = useState<string>('pt-BR');
   const [autoSaveToGallery, setAutoSaveToGallery] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
     const v = localStorage.getItem('wizard_auto_save_gallery');
@@ -425,7 +426,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
               estabelecimentoId: estabId,
               provider: chosenTts,
               text: script,
-              lang: 'pt-BR',
+              lang: language,
               ...(chosenTts === 'wavespeed' ? { wavespeedModel: wavespeedTtsModel } : {}),
             }, 120000);
             const audioUrl = audioRes?.audioUrl;
@@ -458,7 +459,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
     } finally {
       setGenerating(false);
     }
-  }, [estabId, selectedProduct, includeInfluencer, selectedInfluencer, briefing, script, videoModel, aspectRatio, duration, useVisualIdentity, activeProviders, ttsProvider, availableTtsProviders, wavespeedTtsModel, autoSaveToGallery]);
+  }, [estabId, selectedProduct, includeInfluencer, selectedInfluencer, briefing, script, videoModel, aspectRatio, duration, useVisualIdentity, activeProviders, ttsProvider, availableTtsProviders, wavespeedTtsModel, language, autoSaveToGallery]);
 
   const saveVideoToGallery = useCallback(async (url: string, blob: Blob | null, opts?: { closeOnSuccess?: boolean; silent?: boolean }) => {
     if (!url || !estabId) return false;
@@ -851,43 +852,61 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
               </div>
             </div>
 
-            {/* Seletor de modelo de voz (TTS) */}
+            {/* Seletor de idioma e modelo de voz (TTS) */}
             {script && !AD_READY_VIDEO_MODELS.find((m) => m.value === videoModel)?.nativeAudio && (
-              <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
-                <Label className="text-sm">Voz / modelo de narração (TTS)</Label>
-                {availableTtsProviders.length === 0 ? (
-                  <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-md p-2">
-                    ⚠️ Nenhuma API de voz ativa. O vídeo será gerado <strong>sem narração</strong>.
-                    Ative uma API de TTS (ElevenLabs, Google ou OpenAI) em <strong>Configurações → IA / APIs Pagas</strong> para narrar o texto acima.
-                  </div>
-                ) : (
-                  <>
-                    <Select value={ttsProvider} onValueChange={setTtsProvider}>
-                      <SelectTrigger className="mt-1"><SelectValue placeholder="Escolha o provedor de voz" /></SelectTrigger>
-                      <SelectContent>
-                        {availableTtsProviders.map((p) => (
-                          <SelectItem key={p} value={p}>
-                            {p === 'elevenlabs' ? 'ElevenLabs (voz premium PT-BR)'
-                              : p === 'google' ? 'Google Gemini TTS'
-                              : p === 'openai' ? 'OpenAI TTS'
-                              : 'WaveSpeed TTS (Qwen3)'}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {ttsProvider === 'wavespeed' && (
-                      <Select value={wavespeedTtsModel} onValueChange={setWavespeedTtsModel}>
-                        <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+              <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
+                <div>
+                  <Label className="text-sm">Idioma da narração</Label>
+                  <Select value={language} onValueChange={setLanguage}>
+                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pt-BR">Português (Brasil)</SelectItem>
+                      <SelectItem value="pt-PT">Português (Portugal)</SelectItem>
+                      <SelectItem value="en-US">Inglês (EUA)</SelectItem>
+                      <SelectItem value="en-GB">Inglês (Reino Unido)</SelectItem>
+                      <SelectItem value="es-ES">Espanhol</SelectItem>
+                      <SelectItem value="fr-FR">Francês</SelectItem>
+                      <SelectItem value="de-DE">Alemão</SelectItem>
+                      <SelectItem value="it-IT">Italiano</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm">Voz / modelo de narração (TTS)</Label>
+                  {availableTtsProviders.length === 0 ? (
+                    <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-md p-2 mt-1">
+                      ⚠️ Nenhuma API de voz ativa. O vídeo será gerado <strong>sem narração</strong>.
+                      Ative uma API de TTS (ElevenLabs, Google ou OpenAI) em <strong>Configurações → IA / APIs Pagas</strong> para narrar o texto acima.
+                    </div>
+                  ) : (
+                    <>
+                      <Select value={ttsProvider} onValueChange={setTtsProvider}>
+                        <SelectTrigger className="mt-1"><SelectValue placeholder="Escolha o provedor de voz" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="wavespeed-ai/qwen3-tts/text-to-speech">Qwen3 TTS (PT, vozes múltiplas)</SelectItem>
+                          {availableTtsProviders.map((p) => (
+                            <SelectItem key={p} value={p}>
+                              {p === 'elevenlabs' ? 'ElevenLabs (voz premium PT-BR)'
+                                : p === 'google' ? 'Google Gemini TTS'
+                                : p === 'openai' ? 'OpenAI TTS'
+                                : 'WaveSpeed TTS (Qwen3)'}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
-                    )}
-                    <p className="text-[10px] text-muted-foreground">
-                      Apenas provedores com chave ativa aparecem aqui.
-                    </p>
-                  </>
-                )}
+                      {ttsProvider === 'wavespeed' && (
+                        <Select value={wavespeedTtsModel} onValueChange={setWavespeedTtsModel}>
+                          <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="wavespeed-ai/qwen3-tts/text-to-speech">Qwen3 TTS (PT, vozes múltiplas)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        Apenas provedores com chave ativa aparecem aqui.
+                      </p>
+                    </>
+                  )}
+                </div>
               </div>
             )}
 
