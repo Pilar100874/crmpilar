@@ -1732,6 +1732,7 @@ function BotBuilderContent() {
               autoPanOnConnect={false}
               autoPanOnNodeDrag={true}
               selectionOnDrag={!isLocked && !showSimulator}
+              selectionKeyCode={!isLocked && !showSimulator ? "Shift" : null}
               panOnDrag={isLocked || showSimulator ? true : [1, 2]}
               selectionMode={SelectionMode.Partial}
               multiSelectionKeyCode={["Meta", "Control", "Shift"]}
