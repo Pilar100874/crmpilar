@@ -425,7 +425,7 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
               estabelecimentoId: estabId,
               provider: chosenTts,
               text: script,
-              lang: 'pt',
+              lang: 'pt-BR',
               ...(chosenTts === 'wavespeed' ? { wavespeedModel: wavespeedTtsModel } : {}),
             }, 120000);
             const audioUrl = audioRes?.audioUrl;
