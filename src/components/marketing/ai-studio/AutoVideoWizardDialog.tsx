@@ -185,6 +185,11 @@ export default function AutoVideoWizardDialog({ open, onOpenChange, inline }: Au
   const [ttsProvider, setTtsProvider] = useState<string>('');
   const [wavespeedTtsModel, setWavespeedTtsModel] = useState<string>('wavespeed-ai/qwen3-tts/text-to-speech');
 
+  // Mantém a tela acesa enquanto qualquer geração estiver em andamento (evita
+  // que o celular apague a tela e throttle a aba durante esperas longas).
+  useWakeLock(generating || generatingScript || saving);
+
+
   // Provedores de TTS disponíveis (interseção com chaves ativas)
   const availableTtsProviders = useMemo(() => {
     return (['elevenlabs', 'google', 'openai', 'wavespeed'] as const).filter((p) => activeProviders.has(p));
