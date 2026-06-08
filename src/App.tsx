@@ -160,6 +160,7 @@ import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import StudioBackgroundIndicator from "./components/marketing/StudioBackgroundIndicator";
 import SplashScreen from "./components/SplashScreen";
+import WakeLockManager from "./components/WakeLockManager";
 
 const queryClient = new QueryClient();
 
@@ -183,6 +184,7 @@ const App = () => (
           <WatchRedirectWrapper />
           <PWAInstallPrompt />
           <StudioBackgroundIndicator />
+          <WakeLockManager />
           <Routes>
             <Route path="/" element={<Splash />} />
             <Route path="/login" element={<Login />} />
