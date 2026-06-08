@@ -168,7 +168,7 @@ export default function MapaCalorSistema() {
       </Tabs>
 
 
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center gap-2">
             <Users className="h-4 w-4 text-blue-500" /> <CardTitle className="text-sm">Usuários ativos</CardTitle>
