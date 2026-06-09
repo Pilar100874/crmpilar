@@ -1,4 +1,4 @@
-import { Users, User, Award, GitBranch, Clock, Webhook, Timer, PlayCircle, BarChart3, X, Search, Share2 } from "lucide-react";
+import { Users, User, Award, GitBranch, Clock, Webhook, Timer, PlayCircle, BarChart3, X, Search, Share2, Reply } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -85,6 +85,13 @@ const blocks: BlockItem[] = [
     icon: <Share2 className="h-5 w-5" />,
     description: "Publica conteúdo nas redes sociais configuradas",
     color: "text-pink-500"
+  },
+  {
+    type: "return_response",
+    label: "Retornar Resposta",
+    icon: <Reply className="h-5 w-5" />,
+    description: "Devolve payload ao workflow chamador (modo síncrono) e encerra o fluxo",
+    color: "text-teal-500"
   },
 ];
 

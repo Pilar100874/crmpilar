@@ -8,7 +8,8 @@ export type LogisticaBlockType =
   | 'acao_marcar_mapa'
   | 'acao_whatsapp'
   | 'acao_notificacao'
-  | 'acao_email';
+  | 'acao_email'
+  | 'return_response';
 
 export interface CondicaoTempoParado {
   tempo_minutos: number;

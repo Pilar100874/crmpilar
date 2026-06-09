@@ -8,7 +8,8 @@ export type OmnichannelBlockType =
   | 'aguardar'
   | 'analytics'
   | 'inicio'
-  | 'publicar_rede_social';
+  | 'publicar_rede_social'
+  | 'return_response';
 
 export interface OmnichannelNode {
   id: string;

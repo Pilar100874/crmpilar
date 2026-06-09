@@ -24,7 +24,8 @@ export type AutomacaoVendasBlockType =
   | "acao_desconto_fixo"
   | "acao_adicionar_frete"
   | "acao_enviar_alerta"
-  | "aplicar_desconto";
+  | "aplicar_desconto"
+  | "return_response";
 
 // Operadores de comparação
 export type OperadorComparacao = ">" | ">=" | "=" | "<" | "<=" | "!=";
@@ -279,6 +280,22 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     category: "acao",
     defaultData: {
       tipoAplicacao: "automatico",
+    },
+  },
+  {
+    type: "return_response",
+    label: "Retornar Resposta",
+    description: "Devolve payload ao workflow chamador (modo síncrono) e encerra esta automação.",
+    icon: "Reply",
+    color: "#14b8a6",
+    category: "acao",
+    defaultData: {
+      status: "success",
+      statusCode: 200,
+      message: "Automação concluída",
+      payloadJson: "",
+      includeAllVariables: false,
+      stopFlow: true,
     },
   },
 ];
