@@ -281,14 +281,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    const prompt = collectTextPrompt(nodes, variables);
-    if (!prompt) {
-      return new Response(JSON.stringify({ error: "Workflow não tem texto/prompt configurado" }), {
+    const refs = collectImageRefs(nodes);
+    let prompt = collectTextPrompt(nodes, variables, gen);
+    if (!prompt && refs.imageUrls.length === 0) {
+      return new Response(JSON.stringify({ error: "Workflow não tem texto/prompt nem referências de imagem." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const refs = collectImageRefs(nodes);
+    if (!prompt) {
+      // Fallback mínimo para nós como productComposite com apenas refs visuais
+      prompt = "Gere a imagem combinando as referências fornecidas, preservando produto e pessoa.";
+    }
     const estabelecimentoId = String(wf.estabelecimento_id);
 
     let mediaUrl: string;
