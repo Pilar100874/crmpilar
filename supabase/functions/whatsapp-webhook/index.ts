@@ -906,6 +906,29 @@ async function sendWhatsAppMedia(phoneNumberId: string, to: string, mediaUrl: st
 
 /* ======= WAHA – tenta múltiplos endpoints ======= */
 
+async function getWahaSessionSnapshot(baseUrl: string, sessionName: string, apiKey: string) {
+  try {
+    const resp = await fetch(`${baseUrl}/api/sessions/${encodeURIComponent(sessionName)}`, {
+      method: "GET",
+      headers: { Accept: "application/json", "x-api-key": apiKey },
+      signal: AbortSignal.timeout(10000),
+    });
+    const text = await resp.text().catch(() => "");
+    if (!resp.ok) return { ok: false, statusCode: resp.status, status: "UNKNOWN", engineState: "UNKNOWN", hasMe: false };
+    const payload = text ? JSON.parse(text) : {};
+    return {
+      ok: true,
+      statusCode: resp.status,
+      status: String(payload?.status || "UNKNOWN"),
+      engineState: String(payload?.engine?.state || "UNKNOWN"),
+      hasMe: Boolean(payload?.me?.id || payload?.me?.user || payload?.me?.number),
+    };
+  } catch (error) {
+    console.warn("[WAHA] Could not read session snapshot before send:", error instanceof Error ? error.message : error);
+    return { ok: false, statusCode: 0, status: "UNKNOWN", engineState: "UNKNOWN", hasMe: false };
+  }
+}
+
 async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionName: string, wahaUrl: string, wahaApiKey: string) {
   const resolvedWahaUrl = wahaUrl || env("WAHA_URL");
   const authKeys = Array.from(new Set([env("WAHA_API_KEY"), wahaApiKey].map((key) => key.trim()).filter(Boolean)));
@@ -922,6 +945,8 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
   let unauthorizedCount = 0;
 
   for (const apiKey of authKeys) {
+    const snapshot = await getWahaSessionSnapshot(baseUrl, sessionName, apiKey);
+    console.log("[WAHA] Session snapshot before send:", { sessionName, ...snapshot });
     try {
       console.log(`[WAHA] Sending TEXT via official endpoint -> ${chatId}`, { sessionName });
       const resp = await fetch(`${baseUrl}/api/sendText`, {
@@ -932,7 +957,7 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
           "x-api-key": apiKey,
         },
         body: JSON.stringify(officialPayload),
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(60000),
       });
       const resultText = await resp.text();
       console.log("[WAHA] Official TEXT result:", resp.status, resultText);
@@ -946,7 +971,8 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
         return;
       }
     } catch (err) {
-      console.error("[WAHA] Official sendText failed:", err);
+      const afterSnapshot = await getWahaSessionSnapshot(baseUrl, sessionName, apiKey);
+      console.error("[WAHA] Official sendText failed:", err, { sessionName, afterSnapshot });
     }
   }
 
