@@ -632,53 +632,12 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
 
   const getQRCode = async (sessionId: string, sessionName: string) => {
     try {
-      const base = (config?.waha_url || '').replace(/\/+$/, '');
-      const headers = buildWahaHeaders(config?.waha_api_key);
-
-      const maxAttempts = 20;
-      let attempt = 0;
-      let qrUrl: string | null = null;
-
-      while (attempt < maxAttempts && !qrUrl) {
-        attempt++;
-        const attempts = [
-          { method: 'POST', url: `${base}/api/${sessionName}/auth/qr`, body: '{}' },
-          { method: 'POST', url: `${base}/api/sessions/${sessionName}/auth/qr`, body: '{}' },
-          { method: 'GET',  url: `${base}/api/${sessionName}/auth/qr` },
-          { method: 'GET',  url: `${base}/api/sessions/${sessionName}/auth/qr` },
-        ];
-        for (const a of attempts) {
-          try {
-            const response = await fetch(a.url, { method: a.method as any, headers, ...(a.body ? { body: a.body } : {}) });
-            if (response.status === 401) {
-              throw new Error('WAHA recusou a Chave de API. Copie o valor de WAHA_API_KEY, não a senha do dashboard.');
-            }
-            if (response.ok) {
-              const payload = await response.json();
-              const urlFound: string | null = payload.qr || (payload.data ? `data:${payload.mimetype || 'image/png'};base64,${payload.data}` : null);
-              if (urlFound) { qrUrl = urlFound; break; }
-            }
-          } catch {}
-        }
-
-        if (!qrUrl) {
-          const backoff = Math.min(2500, 500 * attempt);
-          await new Promise((r) => setTimeout(r, backoff));
-        }
-      }
-
-      if (!qrUrl) {
-        throw new Error(`QR code não disponível após ${attempt} tentativas.`);
-      }
-
-      await supabase
-        .from('whatsapp_sessions')
-        .update({
-          qr_code: qrUrl,
-          status: 'SCAN_QR_CODE',
-        })
-        .eq('id', sessionId);
-
+      await callWahaManager({
+        action: 'qr',
+        estabelecimentoId,
+        sessionId,
+        sessionName,
+      });
       await refreshSessions();
     } catch (error: any) {
       console.error('Error getting QR code:', error);
