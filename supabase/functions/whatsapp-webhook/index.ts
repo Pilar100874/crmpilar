@@ -227,25 +227,41 @@ serve(async (req) => {
     let flowData = null;
     
     if (transport === "waha") {
-      // Busca o estabelecimento_id da sessão
+      // Busca o estabelecimento_id e bot_flow_id atrelados à sessão
       const { data: sessionData } = await supabase
         .from("whatsapp_sessions")
-        .select("estabelecimento_id")
+        .select("estabelecimento_id, bot_flow_id")
         .eq("session_name", wahaSession)
         .maybeSingle();
-      
-      if (sessionData?.estabelecimento_id) {
-        // Busca o bot ativo desse estabelecimento configurado para WhatsApp WAHA
+
+      // 1) Se a sessão estiver vinculada a um bot específico, usa esse bot
+      //    (suporta canais whatsapp E marketing_automation atrelados ao número)
+      if (sessionData?.bot_flow_id) {
+        const { data } = await supabase
+          .from("bot_flows")
+          .select("*")
+          .eq("id", sessionData.bot_flow_id)
+          .eq("active", true)
+          .maybeSingle();
+        if (data) {
+          console.log("[WAHA] Bot via session.bot_flow_id:", { botName: data?.name, canais: data?.canais });
+          flowData = data;
+        }
+      }
+
+      // 2) Fallback: bot ativo do estabelecimento configurado para WAHA
+      //    (aceita canal whatsapp OU marketing_automation)
+      if (!flowData && sessionData?.estabelecimento_id) {
         const { data } = await supabase
           .from("bot_flows")
           .select("*")
           .eq("active", true)
           .eq("estabelecimento_id", sessionData.estabelecimento_id)
-          .contains("canais", ["whatsapp"])
+          .or("canais.cs.{whatsapp},canais.cs.{marketing_automation}")
           .eq("whatsapp_type", "waha")
           .maybeSingle();
-        
-        console.log("[WAHA] Bot search result:", { found: !!data, botName: data?.name, whatsappType: data?.whatsapp_type });
+
+        console.log("[WAHA] Bot fallback search:", { found: !!data, botName: data?.name });
         flowData = data;
       }
     } else {
@@ -254,10 +270,10 @@ serve(async (req) => {
         .from("bot_flows")
         .select("*")
         .eq("active", true)
-        .contains("canais", ["whatsapp"])
+        .or("canais.cs.{whatsapp},canais.cs.{marketing_automation}")
         .eq("whatsapp_type", "business")
         .maybeSingle();
-      
+
       console.log("[META] Bot search result:", { found: !!data, botName: data?.name, whatsappType: data?.whatsapp_type });
       flowData = data;
     }
