@@ -431,16 +431,27 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
             if (response.ok) {
               const data = await response.json();
               const wahaStatus = data.status || data.state;
+              const engineState = data?.engine?.state;
+              const meId = data?.me?.id;
               
               if (wahaStatus) {
                 let mappedStatus = 'STOPPED';
-                if (wahaStatus === 'WORKING' || wahaStatus === 'AUTHENTICATED') {
+                // Detecta conexão real: WAHA às vezes mantém status SCAN_QR_CODE
+                // mesmo após o QR ser lido. Se engine.state === CONNECTED ou
+                // existir data.me.id, a sessão está autenticada.
+                if (
+                  wahaStatus === 'WORKING' ||
+                  wahaStatus === 'AUTHENTICATED' ||
+                  engineState === 'CONNECTED' ||
+                  !!meId
+                ) {
                   mappedStatus = 'WORKING';
                 } else if (wahaStatus === 'SCAN_QR_CODE' || wahaStatus === 'STARTING') {
                   mappedStatus = 'SCAN_QR_CODE';
                 } else if (wahaStatus === 'FAILED') {
                   mappedStatus = 'FAILED';
                 }
+
 
                 if (session.status !== mappedStatus) {
                   await supabase
