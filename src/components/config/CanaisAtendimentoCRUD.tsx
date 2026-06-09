@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -325,6 +325,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
   const [config, setConfig] = useState<any>(null);
   const [sessions, setSessions] = useState<WhatsAppSession[]>([]);
   const [bots, setBots] = useState<any[]>([]);
+  const webhookSyncCacheRef = useRef<Record<string, boolean>>({});
   
   const [wahaUrl, setWahaUrl] = useState("");
   const [wahaApiKey, setWahaApiKey] = useState("");
@@ -398,10 +399,54 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
     }
   };
 
+  const getResolvedWebhookUrl = (customWebhookUrl?: string | null) => {
+    return (customWebhookUrl || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-webhook`).trim();
+  };
+
+  const syncSessionWebhook = async (
+    sessionName: string,
+    base: string,
+    headers: Record<string, string>,
+    customWebhookUrl?: string | null,
+  ) => {
+    const resolvedWebhookUrl = getResolvedWebhookUrl(customWebhookUrl);
+    const cacheKey = `${sessionName}:${resolvedWebhookUrl}`;
+    if (webhookSyncCacheRef.current[cacheKey]) return;
+
+    const body = JSON.stringify({
+      name: sessionName,
+      config: {
+        webhooks: [
+          {
+            url: resolvedWebhookUrl,
+            events: ['message', 'message.any'],
+          },
+        ],
+      },
+    });
+
+    const attempts = [
+      { url: `${base}/api/sessions/${sessionName}`, method: 'PUT' },
+      { url: `${base}/api/sessions/${sessionName}`, method: 'POST' },
+    ];
+
+    for (const attempt of attempts) {
+      try {
+        const response = await fetch(attempt.url, { method: attempt.method, headers, body });
+        if (response.ok || [200, 201, 202, 204].includes(response.status)) {
+          webhookSyncCacheRef.current[cacheKey] = true;
+          return;
+        }
+      } catch (error) {
+        console.warn(`Erro ao sincronizar webhook da sessão ${sessionName}:`, error);
+      }
+    }
+  };
+
   const syncSessionStatus = async (sessionsToSync: any[]) => {
     const { data: currentConfig } = await supabase
       .from("whatsapp_config")
-      .select("waha_url, waha_api_key")
+      .select("waha_url, waha_api_key, webhook_url")
       .eq("estabelecimento_id", estabelecimentoId)
       .maybeSingle();
 
@@ -413,6 +458,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
     };
     if (currentConfig.waha_api_key) {
       headers['x-api-key'] = currentConfig.waha_api_key;
+      headers['X-Api-Key'] = currentConfig.waha_api_key;
     }
 
     for (const session of sessionsToSync) {
@@ -430,20 +476,16 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
             const response = await fetch(url, { method: 'GET', headers });
             if (response.ok) {
               const data = await response.json();
-              const wahaStatus = data.status || data.state;
-              const engineState = data?.engine?.state;
+              const wahaStatus = String(data.status || data.state || '').toUpperCase();
+              const engineState = String(data?.engine?.state || '').toUpperCase();
               const meId = data?.me?.id;
               
               if (wahaStatus) {
                 let mappedStatus = 'STOPPED';
-                // Detecta conexão real: WAHA às vezes mantém status SCAN_QR_CODE
-                // mesmo após o QR ser lido. Se engine.state === CONNECTED ou
-                // existir data.me.id, a sessão está autenticada.
                 if (
                   wahaStatus === 'WORKING' ||
                   wahaStatus === 'AUTHENTICATED' ||
-                  engineState === 'CONNECTED' ||
-                  !!meId
+                  (engineState === 'CONNECTED' && wahaStatus !== 'SCAN_QR_CODE')
                 ) {
                   mappedStatus = 'WORKING';
                 } else if (wahaStatus === 'SCAN_QR_CODE' || wahaStatus === 'STARTING') {
@@ -452,6 +494,10 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
                   mappedStatus = 'FAILED';
                 }
 
+
+                if (mappedStatus === 'WORKING') {
+                  await syncSessionWebhook(session.session_name, base, headers, currentConfig.webhook_url);
+                }
 
                 const phoneFromMe = meId ? String(meId).split('@')[0] : null;
                 const needsUpdate =
@@ -539,6 +585,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
         if (error) throw error;
       }
       
+      webhookSyncCacheRef.current = {};
       toast({
         title: "✓ Configuração salva!",
         description: "Servidor WAHA configurado com sucesso.",
@@ -618,15 +665,16 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
       };
       if (config?.waha_api_key) {
         headers['x-api-key'] = config.waha_api_key;
+        headers['X-Api-Key'] = config.waha_api_key;
       }
 
-      const webhookUrl = config?.webhook_url || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-webhook`;
+      const webhookUrl = getResolvedWebhookUrl(config?.webhook_url);
 
       const createBody = JSON.stringify({
         name: sessionName,
         config: {
           webhooks: [
-            { url: webhookUrl, events: ['message'] }
+            { url: webhookUrl, events: ['message', 'message.any'] }
           ],
         },
       });
