@@ -201,8 +201,8 @@ serve(async (req) => {
         }
         
         if (wahaConfig) {
-          WAHA_URL = wahaConfig.waha_url || "";
-          WAHA_API_KEY = wahaConfig.waha_api_key || "";
+          WAHA_URL = wahaConfig.waha_url || env("WAHA_URL");
+          WAHA_API_KEY = env("WAHA_API_KEY") || wahaConfig.waha_api_key || "";
           console.log("[WAHA] ✓ Configuração carregada do banco:", { 
             sessionName: wahaSession, 
             hasUrl: !!WAHA_URL, 
@@ -908,7 +908,7 @@ async function sendWhatsAppMedia(phoneNumberId: string, to: string, mediaUrl: st
 
 async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionName: string, wahaUrl: string, wahaApiKey: string) {
   const resolvedWahaUrl = wahaUrl || env("WAHA_URL");
-  const authKeys = Array.from(new Set([wahaApiKey, env("WAHA_API_KEY")].map((key) => key.trim()).filter(Boolean)));
+  const authKeys = Array.from(new Set([env("WAHA_API_KEY"), wahaApiKey].map((key) => key.trim()).filter(Boolean)));
 
   if (!resolvedWahaUrl || authKeys.length === 0) {
     console.error("[WAHA] Missing WAHA_URL or WAHA_API_KEY");
@@ -929,7 +929,6 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          "X-Api-Key": apiKey,
           "x-api-key": apiKey,
         },
         body: JSON.stringify(officialPayload),
@@ -989,7 +988,6 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
       "Content-Type": "application/json",
       Accept: "application/json",
       "x-api-key": apiKey,
-      "X-Api-Key": apiKey,
       "X-Session-Name": sessionName,
     }));
 
