@@ -345,6 +345,19 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
     return () => clearInterval(interval);
   }, [estabelecimentoId]);
 
+  useEffect(() => {
+    if (selectedQrSession) {
+      const updatedSession = sessions.find((s) => s.id === selectedQrSession.id);
+      if (updatedSession && updatedSession.status === 'WORKING') {
+        setSelectedQrSession(null);
+        toast({
+          title: '✓ Sessão conectada!',
+          description: `A sessão "${updatedSession.session_name}" foi vinculada com sucesso.`,
+        });
+      }
+    }
+  }, [sessions, selectedQrSession]);
+
   const loadBots = async () => {
     try {
       const { data, error } = await supabase
