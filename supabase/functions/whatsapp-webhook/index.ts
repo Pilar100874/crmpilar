@@ -935,6 +935,10 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
     const resultText = await resp.text();
     console.log("[WAHA] Official TEXT result:", resp.status, resultText);
     if (resp.ok) return;
+    if (resp.status === 422 && resultText.includes("Session status is not as expected")) {
+      console.error("[WAHA] Session is not WORKING; reconnect or restart the WAHA session:", sessionName);
+      return;
+    }
   } catch (err) {
     console.error("[WAHA] Official sendText failed:", err);
   }
