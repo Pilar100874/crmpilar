@@ -351,7 +351,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
         .select('id, name')
         .eq('estabelecimento_id', estabelecimentoId)
         .eq('active', true)
-        .contains('canais', ['whatsapp'])
+        .or('canais.cs.{whatsapp},canais.cs.{marketing_automation}')
         .order('name');
 
       if (error) throw error;
