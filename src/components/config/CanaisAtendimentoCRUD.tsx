@@ -415,6 +415,13 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
     return headers;
   };
 
+  const callWahaManager = async (body: Record<string, any>) => {
+    const { data, error } = await supabase.functions.invoke('waha-manager', { body });
+    if (error) throw new Error(error.message || 'Erro ao comunicar com o gerenciador WAHA');
+    if ((data as any)?.error) throw new Error((data as any).error);
+    return data as any;
+  };
+
   const syncSessionWebhook = async (
     sessionName: string,
     base: string,
@@ -456,83 +463,14 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
   };
 
   const syncSessionStatus = async (sessionsToSync: any[]) => {
-    const { data: currentConfig } = await supabase
-      .from("whatsapp_config")
-      .select("waha_url, waha_api_key, webhook_url")
-      .eq("estabelecimento_id", estabelecimentoId)
-      .maybeSingle();
-
-    if (!currentConfig?.waha_url) return;
-
-    const base = currentConfig.waha_url.replace(/\/+$/, '');
-    const headers = buildWahaHeaders(currentConfig.waha_api_key);
-
     for (const session of sessionsToSync) {
       try {
-        const statusUrls = [
-          `${base}/api/sessions/${session.session_name}`,
-          `${base}/api/${session.session_name}`,
-          `${base}/api/sessions/${session.session_name}/status`,
-          `${base}/api/${session.session_name}/status`,
-        ];
-
-        let statusFound = false;
-        for (const url of statusUrls) {
-          try {
-            const response = await fetch(url, { method: 'GET', headers });
-            if (response.ok) {
-              const data = await response.json();
-              const wahaStatus = String(data.status || data.state || '').toUpperCase();
-              const engineState = String(data?.engine?.state || '').toUpperCase();
-              const meId = data?.me?.id;
-              
-              if (wahaStatus) {
-                let mappedStatus = 'STOPPED';
-                if (
-                  wahaStatus === 'WORKING' ||
-                  wahaStatus === 'AUTHENTICATED' ||
-                  (engineState === 'CONNECTED' && wahaStatus !== 'SCAN_QR_CODE')
-                ) {
-                  mappedStatus = 'WORKING';
-                } else if (wahaStatus === 'SCAN_QR_CODE' || wahaStatus === 'STARTING') {
-                  mappedStatus = 'SCAN_QR_CODE';
-                } else if (wahaStatus === 'FAILED') {
-                  mappedStatus = 'FAILED';
-                }
-
-
-                if (mappedStatus === 'WORKING') {
-                  await syncSessionWebhook(session.session_name, base, headers, currentConfig.webhook_url);
-                }
-
-                const phoneFromMe = meId ? String(meId).split('@')[0] : null;
-                const needsUpdate =
-                  session.status !== mappedStatus ||
-                  (mappedStatus === 'WORKING' && phoneFromMe && session.phone_number !== phoneFromMe);
-
-                if (needsUpdate) {
-                  const updatePayload: any = {
-                    status: mappedStatus,
-                    qr_code: mappedStatus === 'WORKING' ? null : session.qr_code,
-                  };
-                  if (mappedStatus === 'WORKING' && phoneFromMe) {
-                    updatePayload.phone_number = phoneFromMe;
-                  }
-                  await supabase
-                    .from('whatsapp_sessions')
-                    .update(updatePayload)
-                    .eq('id', session.id);
-                }
-
-                
-                statusFound = true;
-                break;
-              }
-            }
-          } catch (e) {
-            continue;
-          }
-        }
+        await callWahaManager({
+          action: 'status',
+          estabelecimentoId,
+          sessionId: session.id,
+          sessionName: session.session_name,
+        });
       } catch (error) {
         console.error(`Erro ao sincronizar status da sessão ${session.session_name}:`, error);
       }
