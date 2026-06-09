@@ -585,6 +585,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
         if (error) throw error;
       }
       
+      webhookSyncCacheRef.current = {};
       toast({
         title: "✓ Configuração salva!",
         description: "Servidor WAHA configurado com sucesso.",
@@ -664,15 +665,16 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
       };
       if (config?.waha_api_key) {
         headers['x-api-key'] = config.waha_api_key;
+        headers['X-Api-Key'] = config.waha_api_key;
       }
 
-      const webhookUrl = config?.webhook_url || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-webhook`;
+      const webhookUrl = getResolvedWebhookUrl(config?.webhook_url);
 
       const createBody = JSON.stringify({
         name: sessionName,
         config: {
           webhooks: [
-            { url: webhookUrl, events: ['message'] }
+            { url: webhookUrl, events: ['message', 'message.any'] }
           ],
         },
       });
