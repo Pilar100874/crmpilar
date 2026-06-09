@@ -1127,8 +1127,6 @@ async function sendWahaMediaMessage(
     const urlVariants = [
       base,
       `${base}?session=${encodeURIComponent(sessionName)}`,
-      `${base}?token=${encodeURIComponent(wahaApiKey)}`,
-      `${base}?session=${encodeURIComponent(sessionName)}&token=${encodeURIComponent(wahaApiKey)}`,
     ];
     
     for (const url of urlVariants) {
@@ -1222,8 +1220,6 @@ async function sendWahaMediaMessage(
       const urlVariants = [
         base,
         `${base}?session=${encodeURIComponent(sessionName)}`,
-        `${base}?token=${encodeURIComponent(wahaApiKey)}`,
-        `${base}?session=${encodeURIComponent(sessionName)}&token=${encodeURIComponent(wahaApiKey)}`,
       ];
 
       for (const url of urlVariants) {
