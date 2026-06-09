@@ -602,59 +602,24 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
 
   const startSession = async (sessionId: string, sessionName: string) => {
     try {
-      const base = (config?.waha_url || '').replace(/\/+$/, '');
-      const headers = buildWahaHeaders(config?.waha_api_key);
-      let lastError = 'Não foi possível iniciar a sessão no WAHA.';
-
-      const webhookUrl = getResolvedWebhookUrl(config?.webhook_url);
-
-      const createBody = JSON.stringify({
-        name: sessionName,
-        config: {
-          webhooks: [
-            { url: webhookUrl, events: ['message', 'message.any'] }
-          ],
-        },
+      const result = await callWahaManager({
+        action: 'start',
+        estabelecimentoId,
+        sessionId,
+        sessionName,
+        webhookUrl: getResolvedWebhookUrl(config?.webhook_url),
       });
-      const createAttempts = [
-        { url: `${base}/api/sessions`, method: 'POST', body: createBody },
-        { url: `${base}/api/sessions/${sessionName}`, method: 'POST', body: createBody },
-        { url: `${base}/api/${sessionName}`, method: 'POST', body: createBody },
-      ];
-      for (const a of createAttempts) {
-        try {
-          const r = await fetch(a.url, { method: a.method, headers, body: a.body });
-          const resultText = await r.text().catch(() => '');
-          if (r.status === 401) throw new Error('WAHA recusou a Chave de API. Copie o valor de WAHA_API_KEY, não a senha do dashboard.');
-          if (!r.ok && r.status !== 409 && resultText) lastError = resultText;
-          const ok = r.ok || [200,201,202,204,409].includes(r.status);
-          if (ok) break;
-        } catch (e: any) {
-          if (String(e?.message || '').includes('WAHA recusou')) throw e;
-        }
+      if (result?.qrCode) {
+        setSelectedQrSession({
+          id: sessionId,
+          session_name: sessionName,
+          phone_number: null,
+          status: 'SCAN_QR_CODE',
+          qr_code: result.qrCode,
+          bot_flow_id: null,
+        });
       }
-
-      const startAttempts = [
-        { url: `${base}/api/sessions/${sessionName}/start`, method: 'POST' },
-        { url: `${base}/api/${sessionName}/start`, method: 'POST' },
-        { url: `${base}/api/sessions/${sessionName}/start`, method: 'POST', body: JSON.stringify({ name: sessionName }) },
-        { url: `${base}/api/${sessionName}/start`, method: 'POST', body: JSON.stringify({ name: sessionName }) },
-      ];
-      let started = false;
-      for (const a of startAttempts) {
-        try {
-          const r = await fetch(a.url, { method: a.method as any, headers, ...(a.body ? { body: a.body } : {}) });
-          const resultText = await r.text().catch(() => '');
-          if (r.status === 401) throw new Error('WAHA recusou a Chave de API. Copie o valor de WAHA_API_KEY, não a senha do dashboard.');
-          if (!r.ok && resultText) lastError = resultText;
-          if (r.ok || r.status === 201) { started = true; break; }
-        } catch (e: any) {
-          if (String(e?.message || '').includes('WAHA recusou')) throw e;
-        }
-      }
-      if (!started) throw new Error(lastError);
-
-      await getQRCode(sessionId, sessionName);
+      await refreshSessions();
     } catch (error: any) {
       console.error('Error starting session:', error);
       toast({
