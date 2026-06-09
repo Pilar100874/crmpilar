@@ -1058,7 +1058,10 @@ async function sendWahaMediaMessage(
   wahaUrl: string,
   wahaApiKey: string,
 ) {
-  if (!wahaUrl || !wahaApiKey) {
+  const resolvedWahaUrl = wahaUrl || env("WAHA_URL");
+  const authKeys = Array.from(new Set([env("WAHA_API_KEY"), wahaApiKey].map((key) => key.trim()).filter(Boolean)));
+
+  if (!resolvedWahaUrl || authKeys.length === 0) {
     console.error("[WAHA] Missing WAHA_URL or WAHA_API_KEY");
     return;
   }
@@ -1079,7 +1082,7 @@ async function sendWahaMediaMessage(
     ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     : 'application/octet-stream';
 
-  const baseUrl = wahaUrl.replace(/\/$/, '');
+  const baseUrl = resolvedWahaUrl.replace(/\/$/, '');
   const endpoints = [
     `${baseUrl}/api/sendFile`,
     `${baseUrl}/api/sessions/${sessionName}/sendFile`,
@@ -1113,23 +1116,12 @@ async function sendWahaMediaMessage(
     { number: toNumberOnly, type: t, url: mediaUrl, caption, filename: inferredName },
   ];
 
-  const headerSets: Array<Record<string, string>> = [
-    {
+  const headerSets: Array<Record<string, string>> = authKeys.map((apiKey) => ({
       "Content-Type": "application/json",
       Accept: "application/json",
-      Authorization: `Bearer ${wahaApiKey}`,
-      "X-API-KEY": wahaApiKey,
-      "X-Api-Key": wahaApiKey,
-      "x-api-key": wahaApiKey,
+      "x-api-key": apiKey,
       "X-Session-Name": sessionName,
-    },
-    {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      "x-api-key": wahaApiKey,
-      "X-Session-Name": sessionName,
-    },
-  ];
+    }));
 
   for (const base of endpoints) {
     const urlVariants = [
