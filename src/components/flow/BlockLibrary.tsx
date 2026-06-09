@@ -134,7 +134,7 @@ const blockCategories = [
     iconColor: "text-emerald-600",
     iconHover: "group-hover:text-emerald-700",
     textHover: "group-hover:text-emerald-700",
-    blocks: ["send_whatsapp_to_number", "api_loop", "trigger_workflow"] as NodeType[],
+    blocks: ["send_whatsapp_to_number", "api_loop", "trigger_workflow", "return_response"] as NodeType[],
   },
   {
     name: "Catálogo",

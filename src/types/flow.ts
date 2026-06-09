@@ -51,7 +51,8 @@ export type NodeType =
   | "content_type"
   | "ask_influencer"
   | "ask_product_image"
-  | "trigger_workflow";
+  | "trigger_workflow"
+  | "return_response";
 
 
 export interface BlockDefinition {
@@ -631,6 +632,22 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       passVariables: true,
       payloadJson: "",
       outputVariable: "workflow_disparado",
+    },
+  },
+  // Retornar Resposta (modo síncrono)
+  {
+    type: "return_response",
+    label: "Retornar Resposta",
+    description: "Devolve um payload ao workflow chamador (quando disparado em modo síncrono) e encerra este fluxo.",
+    icon: "Reply",
+    color: "text-teal-600",
+    defaultData: {
+      status: "success",
+      statusCode: 200,
+      message: "Operação concluída",
+      payloadJson: "",
+      includeAllVariables: false,
+      stopFlow: true,
     },
   },
 ];

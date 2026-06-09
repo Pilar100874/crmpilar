@@ -2541,6 +2541,40 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         break;
       }
 
+      case "return_response": {
+        const statusMap: Record<string, number> = { success: 200, error: 500, custom: Number(config.statusCode) || 200 };
+        const status = config.status || "success";
+        const statusCode = statusMap[status] ?? 200;
+        let payload: any = {};
+        if (config.payloadJson) {
+          try {
+            payload = JSON.parse(interpolateVariables(config.payloadJson, context));
+          } catch {
+            addSystemMessage(`⚠️ Retornar Resposta: payload JSON inválido.`);
+          }
+        }
+        const response = {
+          status,
+          statusCode,
+          message: interpolateVariables(config.message || "", context),
+          payload,
+          ...(config.includeAllVariables === true ? { variables: { ...context } } : {}),
+          returnedAt: new Date().toISOString(),
+        };
+        try {
+          window.dispatchEvent(new CustomEvent("workflow:response", { detail: response }));
+        } catch {}
+        addSuccessMessage(`↩️ Retorno enviado (${status} • ${statusCode}).`);
+        if (config.stopFlow !== false) {
+          addSuccessMessage("Fluxo encerrado pelo bloco Retornar Resposta.");
+          break;
+        }
+        safeSetTimeout(() => {
+          const nextNode = getNextNode(node.id);
+          if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+        }, 400);
+        break;
+      }
 
       default:
         addSystemMessage(`▶️ Executando: ${blockDef.label}`);
