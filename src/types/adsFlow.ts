@@ -37,7 +37,8 @@ export type AdsBlockType =
   | 'action_slack'
   | 'action_create_report'
   | 'action_aviso_sistema'
-  | 'action_mensagem_interna';
+  | 'action_mensagem_interna'
+  | 'return_response';
 
 export interface AdsBlockDefinition {
   type: AdsBlockType;
@@ -406,6 +407,22 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
       mensagem: '',
       titulo_conversa: ''
     }
+  },
+  {
+    type: 'return_response',
+    label: 'Retornar Resposta',
+    description: 'Devolve payload ao workflow chamador (modo síncrono) e encerra esta automação.',
+    icon: 'Reply',
+    category: 'action',
+    color: '#14b8a6',
+    defaultData: {
+      status: 'success',
+      statusCode: 200,
+      message: 'Automação concluída',
+      payloadJson: '',
+      includeAllVariables: false,
+      stopFlow: true,
+    },
   },
 ];
 
