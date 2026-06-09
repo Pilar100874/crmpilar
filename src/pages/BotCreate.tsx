@@ -126,13 +126,6 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
         return;
       }
 
-      // Buscar configuração WAHA
-      const { data: config } = await supabase
-        .from('whatsapp_config')
-        .select('waha_url, waha_api_key')
-        .eq('estabelecimento_id', estabelecimentoId)
-        .maybeSingle();
-
       // Limpar vinculação anterior
       const previousSession = whatsappSessions.find(s => s.bot_flow_id === botId);
       if (previousSession) {
@@ -151,33 +144,22 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
           .update({ bot_flow_id: botId })
           .eq("id", sessionId);
         
-        // Configurar webhook no WAHA
-        if (config?.waha_url && config?.waha_api_key && session) {
+        // Configurar webhook/status no WAHA pelo backend seguro
+        if (session) {
           try {
-            const webhookUrl = `https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/whatsapp-webhook`;
-            
-            // Configurar webhook usando a API do WAHA
-            const webhookResponse = await fetch(`${config.waha_url}/api/sessions/${session.session_name}/`, {
-              method: 'POST',
-              headers: {
-                'X-Api-Key': config.waha_api_key,
-                'Content-Type': 'application/json'
+            const { data, error } = await supabase.functions.invoke('waha-manager', {
+              body: {
+                action: 'status',
+                estabelecimentoId,
+                sessionId,
+                sessionName: session.session_name,
               },
-              body: JSON.stringify({
-                config: {
-                  webhooks: [{ url: webhookUrl, events: ['message'] }]
-                }
-              })
             });
-
-            if (webhookResponse.ok) {
-              console.log("Webhook configurado com sucesso no WAHA");
-            } else {
-              console.warn("Não foi possível configurar o webhook no WAHA:", await webhookResponse.text());
+            if (error || (data as any)?.error) {
+              console.warn("Não foi possível sincronizar o WAHA:", error?.message || (data as any)?.error);
             }
           } catch (webhookError) {
-            console.error("Erro ao configurar webhook no WAHA:", webhookError);
-            // Não exibe erro ao usuário pois o bot pode funcionar sem webhook configurado via UI
+            console.error("Erro ao sincronizar WAHA:", webhookError);
           }
         }
         

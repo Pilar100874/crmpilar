@@ -201,8 +201,8 @@ serve(async (req) => {
         }
         
         if (wahaConfig) {
-          WAHA_URL = wahaConfig.waha_url || "";
-          WAHA_API_KEY = wahaConfig.waha_api_key || "";
+          WAHA_URL = wahaConfig.waha_url || env("WAHA_URL");
+          WAHA_API_KEY = env("WAHA_API_KEY") || wahaConfig.waha_api_key || "";
           console.log("[WAHA] ✓ Configuração carregada do banco:", { 
             sessionName: wahaSession, 
             hasUrl: !!WAHA_URL, 
@@ -908,7 +908,7 @@ async function sendWhatsAppMedia(phoneNumberId: string, to: string, mediaUrl: st
 
 async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionName: string, wahaUrl: string, wahaApiKey: string) {
   const resolvedWahaUrl = wahaUrl || env("WAHA_URL");
-  const authKeys = Array.from(new Set([wahaApiKey, env("WAHA_API_KEY")].map((key) => key.trim()).filter(Boolean)));
+  const authKeys = Array.from(new Set([env("WAHA_API_KEY"), wahaApiKey].map((key) => key.trim()).filter(Boolean)));
 
   if (!resolvedWahaUrl || authKeys.length === 0) {
     console.error("[WAHA] Missing WAHA_URL or WAHA_API_KEY");
@@ -929,7 +929,6 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          "X-Api-Key": apiKey,
           "x-api-key": apiKey,
         },
         body: JSON.stringify(officialPayload),
@@ -953,8 +952,8 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
 
   if (unauthorizedCount === authKeys.length) {
     console.error("[WAHA] Unauthorized sending message. Update the WAHA API key in the WhatsApp WAHA settings.", { sessionName });
-    return;
   }
+  return;
 
   const endpoints = [
     `${baseUrl}/api/sessions/${sessionName}/sendText`,
@@ -989,7 +988,6 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
       "Content-Type": "application/json",
       Accept: "application/json",
       "x-api-key": apiKey,
-      "X-Api-Key": apiKey,
       "X-Session-Name": sessionName,
     }));
 
@@ -1060,7 +1058,10 @@ async function sendWahaMediaMessage(
   wahaUrl: string,
   wahaApiKey: string,
 ) {
-  if (!wahaUrl || !wahaApiKey) {
+  const resolvedWahaUrl = wahaUrl || env("WAHA_URL");
+  const authKeys = Array.from(new Set([env("WAHA_API_KEY"), wahaApiKey].map((key) => key.trim()).filter(Boolean)));
+
+  if (!resolvedWahaUrl || authKeys.length === 0) {
     console.error("[WAHA] Missing WAHA_URL or WAHA_API_KEY");
     return;
   }
@@ -1081,7 +1082,7 @@ async function sendWahaMediaMessage(
     ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     : 'application/octet-stream';
 
-  const baseUrl = wahaUrl.replace(/\/$/, '');
+  const baseUrl = resolvedWahaUrl.replace(/\/$/, '');
   const endpoints = [
     `${baseUrl}/api/sendFile`,
     `${baseUrl}/api/sessions/${sessionName}/sendFile`,
@@ -1115,30 +1116,17 @@ async function sendWahaMediaMessage(
     { number: toNumberOnly, type: t, url: mediaUrl, caption, filename: inferredName },
   ];
 
-  const headerSets: Array<Record<string, string>> = [
-    {
+  const headerSets: Array<Record<string, string>> = authKeys.map((apiKey) => ({
       "Content-Type": "application/json",
       Accept: "application/json",
-      Authorization: `Bearer ${wahaApiKey}`,
-      "X-API-KEY": wahaApiKey,
-      "X-Api-Key": wahaApiKey,
-      "x-api-key": wahaApiKey,
+      "x-api-key": apiKey,
       "X-Session-Name": sessionName,
-    },
-    {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      "x-api-key": wahaApiKey,
-      "X-Session-Name": sessionName,
-    },
-  ];
+    }));
 
   for (const base of endpoints) {
     const urlVariants = [
       base,
       `${base}?session=${encodeURIComponent(sessionName)}`,
-      `${base}?token=${encodeURIComponent(wahaApiKey)}`,
-      `${base}?session=${encodeURIComponent(sessionName)}&token=${encodeURIComponent(wahaApiKey)}`,
     ];
     
     for (const url of urlVariants) {
@@ -1232,8 +1220,6 @@ async function sendWahaMediaMessage(
       const urlVariants = [
         base,
         `${base}?session=${encodeURIComponent(sessionName)}`,
-        `${base}?token=${encodeURIComponent(wahaApiKey)}`,
-        `${base}?session=${encodeURIComponent(sessionName)}&token=${encodeURIComponent(wahaApiKey)}`,
       ];
 
       for (const url of urlVariants) {
