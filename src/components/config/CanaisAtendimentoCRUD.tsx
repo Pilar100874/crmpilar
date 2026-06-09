@@ -730,13 +730,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
   const getQRCode = async (sessionId: string, sessionName: string) => {
     try {
       const base = (config?.waha_url || '').replace(/\/+$/, '');
-      const headers: Record<string, string> = {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      };
-      if (config?.waha_api_key) {
-        headers['x-api-key'] = config.waha_api_key;
-      }
+      const headers = buildWahaHeaders(config?.waha_api_key);
 
       const maxAttempts = 20;
       let attempt = 0;
@@ -753,6 +747,9 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
         for (const a of attempts) {
           try {
             const response = await fetch(a.url, { method: a.method as any, headers, ...(a.body ? { body: a.body } : {}) });
+            if (response.status === 401) {
+              throw new Error('WAHA recusou a Chave de API. Copie o valor de WAHA_API_KEY, não a senha do dashboard.');
+            }
             if (response.ok) {
               const payload = await response.json();
               const urlFound: string | null = payload.qr || (payload.data ? `data:${payload.mimetype || 'image/png'};base64,${payload.data}` : null);
