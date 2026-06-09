@@ -20,6 +20,7 @@ import {
   StickyNote,
   HelpCircle,
   Share2,
+  Reply,
 } from "lucide-react";
 import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
 import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
@@ -82,6 +83,7 @@ const nodeIcons: Record<OmnichannelBlockType, any> = {
   aguardar: Timer,
   analytics: BarChart3,
   publicar_rede_social: Share2,
+  return_response: Reply,
 };
 
 // Blocos que têm múltiplas saídas
