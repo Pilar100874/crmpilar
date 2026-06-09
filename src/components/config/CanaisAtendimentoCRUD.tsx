@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { MessageSquare, Facebook, Instagram, Send, Globe, Radio, Smartphone, Plus, Trash2, RefreshCw, Save, AlertCircle, ExternalLink, Eye, EyeOff, Power } from "lucide-react";
+import { MessageSquare, Facebook, Instagram, Send, Globe, Radio, Smartphone, Plus, Trash2, RefreshCw, Save, AlertCircle, ExternalLink, Eye, EyeOff, Power, CheckCircle2 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -921,12 +921,23 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
                   ) : null}
                   {session.bot_flow_id && (() => {
                     const linkedBot = bots.find(b => b.id === session.bot_flow_id);
+                    const isConnected = session.status === 'WORKING';
                     return linkedBot ? (
-                      <div className="flex items-center gap-2 p-2 bg-green-50 rounded-lg border border-green-200">
-                        <Power className="h-4 w-4 text-green-600" />
+                      <div className={`flex items-center gap-2 p-2 rounded-lg border ${
+                        isConnected ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'
+                      }`}>
+                        {isConnected ? (
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 text-amber-600" />
+                        )}
                         <div className="flex-1">
-                          <p className="text-xs font-medium text-green-900">Bot Vinculado</p>
-                          <p className="text-xs text-green-700">{linkedBot.name}</p>
+                          <p className={`text-xs font-medium ${isConnected ? 'text-green-900' : 'text-amber-900'}`}>
+                            {isConnected ? 'Bot Vinculado' : 'Bot vinculado, aguardando conexão'}
+                          </p>
+                          <p className={`text-xs ${isConnected ? 'text-green-700' : 'text-amber-700'}`}>
+                            {linkedBot.name}
+                          </p>
                         </div>
                       </div>
                     ) : null;

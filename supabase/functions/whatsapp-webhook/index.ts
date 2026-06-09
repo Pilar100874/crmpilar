@@ -30,6 +30,11 @@ const JID_SUFFIX = env("WAHA_JID_SUFFIX", "@c.us"); // "@c.us" (WEBJS) ou "@s.wh
 
 const toJid = (numOnly: string) => `${String(numOnly).replace(/\D/g, "")}${JID_SUFFIX}`;
 
+function isWahaMessageEvent(raw: any): boolean {
+  const event = String(raw?.event || raw?.type || "").toLowerCase();
+  return event === "message" || event === "message.any" || event.startsWith("message.");
+}
+
 function resolveWahaSession(raw: any): string {
   return String(
     raw?.data?.session ||
@@ -87,8 +92,8 @@ serve(async (req) => {
 
     // ====== Heurística WAHA ======
 
-    // A) { event:'message' | type:'message', data/message... }
-    if ((raw?.event === "message" || raw?.type === "message") && (raw?.data || raw?.message)) {
+    // A) { event:'message' | 'message.any' | type:'message', data/message... }
+    if (isWahaMessageEvent(raw) && (raw?.data || raw?.message)) {
       transport = "waha";
       const fromMe = raw.payload?.fromMe || raw.data?.fromMe || raw.message?.fromMe || false;
       
@@ -127,8 +132,8 @@ serve(async (req) => {
       console.log("[WAHA] Message received (baileys):", { sessionName: wahaSession, fromNumber: from, text: body });
     }
 
-    // C) WEBJS: { event:'message', payload:{ from, body }, session: ... }
-    if (transport !== "waha" && (raw?.event === "message" || raw?.type === "message") && raw?.payload) {
+    // C) WEBJS: { event:'message' | 'message.any', payload:{ from, body }, session: ... }
+    if (transport !== "waha" && isWahaMessageEvent(raw) && raw?.payload) {
       transport = "waha";
       const p = raw.payload || {};
       
