@@ -36,6 +36,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { FlowTemplateManager } from "@/components/flow/FlowTemplateManager";
+import { FlowExportImportGeneric } from "@/components/flow/FlowExportImportGeneric";
 import { boxSelectionProps } from "@/lib/flowSelection";
 import { 
   AlertDialog, 
