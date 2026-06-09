@@ -637,7 +637,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                                 locale: ptBR 
                               })}
                             </div>
-                            {canal === 'whatsapp' && (
+                            {(canal === 'whatsapp' || canal === 'marketing_automation') && (
                               <div className="space-y-1.5" onClick={(e) => e.stopPropagation()}>
                                 <Label className="text-xs flex items-center gap-1">
                                   <Smartphone className="h-3 w-3" />
