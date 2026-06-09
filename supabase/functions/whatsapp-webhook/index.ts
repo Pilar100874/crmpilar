@@ -915,8 +915,35 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
   const baseUrl = wahaUrl.replace(/\/$/, '');
   const chatId = toJid(toNumberOnly);
 
+  const apiKeyHeaders: Record<string, string> = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    "x-api-key": wahaApiKey,
+    "X-Api-Key": wahaApiKey,
+  };
+
+  const officialPayload = { session: sessionName, chatId, text };
+
+  try {
+    console.log(`[WAHA] Sending TEXT via official endpoint -> ${chatId}`, { sessionName });
+    const resp = await fetch(`${baseUrl}/api/sendText`, {
+      method: "POST",
+      headers: apiKeyHeaders,
+      body: JSON.stringify(officialPayload),
+      signal: AbortSignal.timeout(8000),
+    });
+    const resultText = await resp.text();
+    console.log("[WAHA] Official TEXT result:", resp.status, resultText);
+    if (resp.ok) return;
+    if (resp.status === 422 && resultText.includes("Session status is not as expected")) {
+      console.error("[WAHA] Session is not WORKING; reconnect or restart the WAHA session:", sessionName);
+      return;
+    }
+  } catch (err) {
+    console.error("[WAHA] Official sendText failed:", err);
+  }
+
   const endpoints = [
-    `${baseUrl}/api/sendText`, // WAHA Plus (global)
     `${baseUrl}/api/sessions/${sessionName}/sendText`,
     `${baseUrl}/api/sessions/${sessionName}/messages/send`,
     `${baseUrl}/api/sessions/${sessionName}/messages`,
@@ -953,25 +980,8 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
       {
         "Content-Type": "application/json",
         Accept: "application/json",
-        Authorization: `Bearer ${wahaApiKey}`,
-        "X-API-KEY": wahaApiKey,
+        "x-api-key": wahaApiKey,
         "X-Api-Key": wahaApiKey,
-        "x-api-key": wahaApiKey,
-        apikey: wahaApiKey,
-        "X-Session-Name": sessionName,
-      },
-      {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: `Apikey ${wahaApiKey}`,
-        "x-api-key": wahaApiKey,
-        apikey: wahaApiKey,
-        "X-Session-Name": sessionName,
-      },
-      {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "x-api-key": wahaApiKey,
         "X-Session-Name": sessionName,
       },
     ];
@@ -985,6 +995,7 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
               method: "POST",
               headers,
               body: JSON.stringify(body),
+              signal: AbortSignal.timeout(8000),
             });
             const resultText = await resp.text();
             console.log("[WAHA] TEXT result:", resp.status, resultText);
