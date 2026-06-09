@@ -88,18 +88,22 @@ export const FlowExportImport = ({ flowData, flowName, onImport }: FlowExportImp
           variant="outline"
           size="sm"
           onClick={handleExport}
+          className="h-8 px-2"
+          title="Exportar fluxo"
         >
-          <Download className="h-4 w-4 mr-2" />
-          Exportar
+          <Download className="h-4 w-4 xl:mr-2" />
+          <span className="hidden xl:inline">Exportar</span>
         </Button>
 
         <Button
           variant="outline"
           size="sm"
           onClick={() => setShowImport(true)}
+          className="h-8 px-2"
+          title="Importar fluxo"
         >
-          <Upload className="h-4 w-4 mr-2" />
-          Importar
+          <Upload className="h-4 w-4 xl:mr-2" />
+          <span className="hidden xl:inline">Importar</span>
         </Button>
       </div>
 

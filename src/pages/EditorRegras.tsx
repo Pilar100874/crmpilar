@@ -22,6 +22,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { FlowTemplateManager } from "@/components/flow/FlowTemplateManager";
+import { FlowExportImportGeneric } from "@/components/flow/FlowExportImportGeneric";
 import { boxSelectionProps } from "@/lib/flowSelection";
 import { 
   AlertDialog, 
@@ -830,6 +831,14 @@ function EditorRegrasContent() {
             maskColor="rgba(0, 0, 0, 0.1)"
           />
           <Panel position="top-right" className="!m-2 flex gap-1.5 bg-card/95 backdrop-blur border border-border rounded-lg p-1 shadow-lg">
+            <FlowExportImportGeneric
+              nodes={nodes}
+              edges={edges}
+              onImport={(n, e) => {
+                setNodes(n as any);
+                setEdges(e as any);
+              }}
+            />
             <FlowTemplateManager
               nodes={nodes}
               edges={edges}

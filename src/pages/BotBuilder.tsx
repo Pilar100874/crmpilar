@@ -1570,12 +1570,12 @@ function BotBuilderContent() {
           
           {/* Right section - Action buttons */}
           <div className="flex items-center gap-1.5 flex-wrap justify-end">
-            <Button variant="outline" size="sm" onClick={handleImport} className="h-8 px-2 hidden lg:flex">
-              <Upload className="h-4 w-4 mr-1.5" />
+            <Button variant="outline" size="sm" onClick={handleImport} className="h-8 px-2">
+              <Upload className="h-4 w-4 xl:mr-1.5" />
               <span className="hidden xl:inline">Importar</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExport} className="h-8 px-2 hidden lg:flex">
-              <Download className="h-4 w-4 mr-1.5" />
+            <Button variant="outline" size="sm" onClick={handleExport} className="h-8 px-2">
+              <Download className="h-4 w-4 xl:mr-1.5" />
               <span className="hidden xl:inline">Exportar</span>
             </Button>
             <FlowTemplateManager
