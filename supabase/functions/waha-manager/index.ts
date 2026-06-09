@@ -43,11 +43,11 @@ function mapStatus(payload: any) {
   const engineState = String(payload?.engine?.state || "").toUpperCase();
   const meId = payload?.me?.id || payload?.me?.user || payload?.me?.number;
 
-  if (wahaStatus === "WORKING" || wahaStatus === "AUTHENTICATED" || (engineState === "CONNECTED" && wahaStatus !== "SCAN_QR_CODE")) {
+  if (wahaStatus === "FAILED") return { status: "FAILED", phoneNumber: null };
+  if (wahaStatus === "WORKING" || wahaStatus === "AUTHENTICATED" || engineState === "CONNECTED" || meId) {
     return { status: "WORKING", phoneNumber: meId ? String(meId).split("@")[0].replace(/\D/g, "") : null };
   }
   if (wahaStatus === "SCAN_QR_CODE" || wahaStatus === "STARTING") return { status: "SCAN_QR_CODE", phoneNumber: null };
-  if (wahaStatus === "FAILED") return { status: "FAILED", phoneNumber: null };
   return { status: "STOPPED", phoneNumber: null };
 }
 
