@@ -125,6 +125,9 @@ export { AskProductImageConfig } from './AskProductImageConfig';
 // Disparar outro workflow (cross-module)
 export { TriggerWorkflowConfig } from './TriggerWorkflowConfig';
 
+// Retornar Resposta (modo síncrono)
+export { ReturnResponseConfig } from './ReturnResponseConfig';
+
 
 
 

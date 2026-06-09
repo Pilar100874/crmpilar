@@ -228,7 +228,8 @@ export default function OmnichannelBuilder() {
         aguardar: "Aguardar",
         analytics: "Analytics",
         inicio: "Início",
-        publicar_rede_social: "Publicar em Redes Sociais"
+        publicar_rede_social: "Publicar em Redes Sociais",
+        return_response: "Retornar Resposta"
       };
 
       const newNode: OmnichannelNode = {
@@ -262,7 +263,8 @@ export default function OmnichannelBuilder() {
         aguardar: "Aguardar",
         analytics: "Analytics",
         inicio: "Início",
-        publicar_rede_social: "Publicar em Redes Sociais"
+        publicar_rede_social: "Publicar em Redes Sociais",
+        return_response: "Retornar Resposta"
       };
       const bounds = reactFlowWrapper.current.getBoundingClientRect();
       const position = reactFlowInstance

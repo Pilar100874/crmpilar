@@ -412,6 +412,8 @@ export const PropertiesPanel = ({
         return <BlockConfigs.AskProductImageConfig {...configProps} />;
       case "trigger_workflow":
         return <BlockConfigs.TriggerWorkflowConfig data={selectedNode.data} onChange={(cfg) => Object.entries(cfg).forEach(([k, v]) => handleConfigChange(k, v))} />;
+      case "return_response":
+        return <BlockConfigs.ReturnResponseConfig data={selectedNode.data} onChange={(cfg) => Object.entries(cfg).forEach(([k, v]) => handleConfigChange(k, v))} />;
 
 
 

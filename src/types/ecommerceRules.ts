@@ -66,7 +66,8 @@ export type EcommerceRuleBlockType =
   | "acao_oferecer_cupom_instantaneo"
   | "acao_chat_proativo"
   | "acao_notificacao_navegador"
-  | "acao_destacar_elemento";
+  | "acao_destacar_elemento"
+  | "return_response";
 
 export interface EcommerceBlockDefinition {
   type: EcommerceRuleBlockType;
@@ -74,7 +75,7 @@ export interface EcommerceBlockDefinition {
   description: string;
   icon: string;
   color: string;
-  category: "sistema" | "condicao_carrinho" | "condicao_cliente" | "condicao_temporal" | "condicao_cupom" | "logica" | "acao_desconto" | "acao_frete" | "acao_propaganda" | "acao_pagamento" | "gatilho_comportamento" | "acao_recuperacao";
+  category: "sistema" | "condicao_carrinho" | "condicao_cliente" | "condicao_temporal" | "condicao_cupom" | "logica" | "acao_desconto" | "acao_frete" | "acao_propaganda" | "acao_pagamento" | "gatilho_comportamento" | "acao_recuperacao" | "retorno";
   defaultData?: Record<string, any>;
 }
 
@@ -571,6 +572,22 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
     color: "#10b981",
     category: "acao_recuperacao",
     defaultData: { seletor: "#botao-comprar", duracaoSegundos: 5 },
+  },
+  {
+    type: "return_response",
+    label: "Retornar Resposta",
+    description: "Devolve payload ao workflow chamador (modo síncrono) e encerra esta regra.",
+    icon: "Reply",
+    color: "#14b8a6",
+    category: "retorno",
+    defaultData: {
+      status: "success",
+      statusCode: 200,
+      message: "Regra aplicada",
+      payloadJson: "",
+      includeAllVariables: false,
+      stopFlow: true,
+    },
   },
 ];
 

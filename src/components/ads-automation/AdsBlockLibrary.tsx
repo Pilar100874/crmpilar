@@ -43,7 +43,7 @@ const blockCategories = [
     border: "border-green-500/20",
     borderHover: "hover:border-green-500/40",
     iconColor: "text-green-600",
-    blocks: ['action_pause', 'action_resume', 'action_activate', 'action_archive', 'action_budget_decrease', 'action_budget_increase', 'action_bid_adjust', 'action_bid_device', 'action_duplicate', 'action_schedule_change', 'action_notify', 'action_email', 'action_webhook', 'action_slack', 'action_create_report'] as AdsBlockType[],
+    blocks: ['action_pause', 'action_resume', 'action_activate', 'action_archive', 'action_budget_decrease', 'action_budget_increase', 'action_bid_adjust', 'action_bid_device', 'action_duplicate', 'action_schedule_change', 'action_notify', 'action_email', 'action_webhook', 'action_slack', 'action_create_report', 'return_response'] as AdsBlockType[],
   },
 ];
 
