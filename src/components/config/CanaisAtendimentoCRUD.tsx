@@ -665,14 +665,8 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
   const startSession = async (sessionId: string, sessionName: string) => {
     try {
       const base = (config?.waha_url || '').replace(/\/+$/, '');
-      const headers: Record<string, string> = {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      };
-      if (config?.waha_api_key) {
-        headers['x-api-key'] = config.waha_api_key;
-        headers['X-Api-Key'] = config.waha_api_key;
-      }
+      const headers = buildWahaHeaders(config?.waha_api_key);
+      let lastError = 'Não foi possível iniciar a sessão no WAHA.';
 
       const webhookUrl = getResolvedWebhookUrl(config?.webhook_url);
 
@@ -692,9 +686,14 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
       for (const a of createAttempts) {
         try {
           const r = await fetch(a.url, { method: a.method, headers, body: a.body });
+          const resultText = await r.text().catch(() => '');
+          if (r.status === 401) throw new Error('WAHA recusou a Chave de API. Copie o valor de WAHA_API_KEY, não a senha do dashboard.');
+          if (!r.ok && r.status !== 409 && resultText) lastError = resultText;
           const ok = r.ok || [200,201,202,204,409].includes(r.status);
           if (ok) break;
-        } catch (e) {}
+        } catch (e: any) {
+          if (String(e?.message || '').includes('WAHA recusou')) throw e;
+        }
       }
 
       const startAttempts = [
@@ -707,17 +706,22 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
       for (const a of startAttempts) {
         try {
           const r = await fetch(a.url, { method: a.method as any, headers, ...(a.body ? { body: a.body } : {}) });
+          const resultText = await r.text().catch(() => '');
+          if (r.status === 401) throw new Error('WAHA recusou a Chave de API. Copie o valor de WAHA_API_KEY, não a senha do dashboard.');
+          if (!r.ok && resultText) lastError = resultText;
           if (r.ok || r.status === 201) { started = true; break; }
-        } catch (e) {}
+        } catch (e: any) {
+          if (String(e?.message || '').includes('WAHA recusou')) throw e;
+        }
       }
-      if (!started) throw new Error('Failed to start session');
+      if (!started) throw new Error(lastError);
 
       await getQRCode(sessionId, sessionName);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error starting session:', error);
       toast({
         title: 'Erro',
-        description: 'Erro ao iniciar sessão no WAHA',
+        description: error?.message || 'Erro ao iniciar sessão no WAHA',
         variant: 'destructive',
       });
     }
