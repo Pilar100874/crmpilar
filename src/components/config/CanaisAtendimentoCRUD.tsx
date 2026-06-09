@@ -453,15 +453,25 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
                 }
 
 
-                if (session.status !== mappedStatus) {
+                const phoneFromMe = meId ? String(meId).split('@')[0] : null;
+                const needsUpdate =
+                  session.status !== mappedStatus ||
+                  (mappedStatus === 'WORKING' && phoneFromMe && session.phone_number !== phoneFromMe);
+
+                if (needsUpdate) {
+                  const updatePayload: any = {
+                    status: mappedStatus,
+                    qr_code: mappedStatus === 'WORKING' ? null : session.qr_code,
+                  };
+                  if (mappedStatus === 'WORKING' && phoneFromMe) {
+                    updatePayload.phone_number = phoneFromMe;
+                  }
                   await supabase
                     .from('whatsapp_sessions')
-                    .update({ 
-                      status: mappedStatus,
-                      qr_code: mappedStatus === 'WORKING' ? null : session.qr_code
-                    })
+                    .update(updatePayload)
                     .eq('id', session.id);
                 }
+
                 
                 statusFound = true;
                 break;
