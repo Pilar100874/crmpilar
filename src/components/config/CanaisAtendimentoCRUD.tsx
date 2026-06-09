@@ -476,20 +476,16 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
             const response = await fetch(url, { method: 'GET', headers });
             if (response.ok) {
               const data = await response.json();
-              const wahaStatus = data.status || data.state;
-              const engineState = data?.engine?.state;
+              const wahaStatus = String(data.status || data.state || '').toUpperCase();
+              const engineState = String(data?.engine?.state || '').toUpperCase();
               const meId = data?.me?.id;
               
               if (wahaStatus) {
                 let mappedStatus = 'STOPPED';
-                // Detecta conexão real: WAHA às vezes mantém status SCAN_QR_CODE
-                // mesmo após o QR ser lido. Se engine.state === CONNECTED ou
-                // existir data.me.id, a sessão está autenticada.
                 if (
                   wahaStatus === 'WORKING' ||
                   wahaStatus === 'AUTHENTICATED' ||
-                  engineState === 'CONNECTED' ||
-                  !!meId
+                  (engineState === 'CONNECTED' && wahaStatus !== 'SCAN_QR_CODE')
                 ) {
                   mappedStatus = 'WORKING';
                 } else if (wahaStatus === 'SCAN_QR_CODE' || wahaStatus === 'STARTING') {
@@ -498,6 +494,10 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
                   mappedStatus = 'FAILED';
                 }
 
+
+                if (mappedStatus === 'WORKING') {
+                  await syncSessionWebhook(session.session_name, base, headers, currentConfig.webhook_url);
+                }
 
                 const phoneFromMe = meId ? String(meId).split('@')[0] : null;
                 const needsUpdate =
