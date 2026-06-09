@@ -403,6 +403,25 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
     return (customWebhookUrl || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-webhook`).trim();
   };
 
+  const buildWahaHeaders = (apiKey?: string | null) => {
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    };
+    const cleanApiKey = String(apiKey || '').trim();
+    if (cleanApiKey) {
+      headers['x-api-key'] = cleanApiKey;
+    }
+    return headers;
+  };
+
+  const callWahaManager = async (body: Record<string, any>) => {
+    const { data, error } = await supabase.functions.invoke('waha-manager', { body });
+    if (error) throw new Error(error.message || 'Erro ao comunicar com o gerenciador WAHA');
+    if ((data as any)?.error) throw new Error((data as any).error);
+    return data as any;
+  };
+
   const syncSessionWebhook = async (
     sessionName: string,
     base: string,
@@ -444,89 +463,14 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
   };
 
   const syncSessionStatus = async (sessionsToSync: any[]) => {
-    const { data: currentConfig } = await supabase
-      .from("whatsapp_config")
-      .select("waha_url, waha_api_key, webhook_url")
-      .eq("estabelecimento_id", estabelecimentoId)
-      .maybeSingle();
-
-    if (!currentConfig?.waha_url) return;
-
-    const base = currentConfig.waha_url.replace(/\/+$/, '');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (currentConfig.waha_api_key) {
-      headers['x-api-key'] = currentConfig.waha_api_key;
-      headers['X-Api-Key'] = currentConfig.waha_api_key;
-    }
-
     for (const session of sessionsToSync) {
       try {
-        const statusUrls = [
-          `${base}/api/sessions/${session.session_name}`,
-          `${base}/api/${session.session_name}`,
-          `${base}/api/sessions/${session.session_name}/status`,
-          `${base}/api/${session.session_name}/status`,
-        ];
-
-        let statusFound = false;
-        for (const url of statusUrls) {
-          try {
-            const response = await fetch(url, { method: 'GET', headers });
-            if (response.ok) {
-              const data = await response.json();
-              const wahaStatus = String(data.status || data.state || '').toUpperCase();
-              const engineState = String(data?.engine?.state || '').toUpperCase();
-              const meId = data?.me?.id;
-              
-              if (wahaStatus) {
-                let mappedStatus = 'STOPPED';
-                if (
-                  wahaStatus === 'WORKING' ||
-                  wahaStatus === 'AUTHENTICATED' ||
-                  (engineState === 'CONNECTED' && wahaStatus !== 'SCAN_QR_CODE')
-                ) {
-                  mappedStatus = 'WORKING';
-                } else if (wahaStatus === 'SCAN_QR_CODE' || wahaStatus === 'STARTING') {
-                  mappedStatus = 'SCAN_QR_CODE';
-                } else if (wahaStatus === 'FAILED') {
-                  mappedStatus = 'FAILED';
-                }
-
-
-                if (mappedStatus === 'WORKING') {
-                  await syncSessionWebhook(session.session_name, base, headers, currentConfig.webhook_url);
-                }
-
-                const phoneFromMe = meId ? String(meId).split('@')[0] : null;
-                const needsUpdate =
-                  session.status !== mappedStatus ||
-                  (mappedStatus === 'WORKING' && phoneFromMe && session.phone_number !== phoneFromMe);
-
-                if (needsUpdate) {
-                  const updatePayload: any = {
-                    status: mappedStatus,
-                    qr_code: mappedStatus === 'WORKING' ? null : session.qr_code,
-                  };
-                  if (mappedStatus === 'WORKING' && phoneFromMe) {
-                    updatePayload.phone_number = phoneFromMe;
-                  }
-                  await supabase
-                    .from('whatsapp_sessions')
-                    .update(updatePayload)
-                    .eq('id', session.id);
-                }
-
-                
-                statusFound = true;
-                break;
-              }
-            }
-          } catch (e) {
-            continue;
-          }
-        }
+        await callWahaManager({
+          action: 'status',
+          estabelecimentoId,
+          sessionId: session.id,
+          sessionName: session.session_name,
+        });
       } catch (error) {
         console.error(`Erro ao sincronizar status da sessão ${session.session_name}:`, error);
       }
@@ -658,60 +602,29 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
 
   const startSession = async (sessionId: string, sessionName: string) => {
     try {
-      const base = (config?.waha_url || '').replace(/\/+$/, '');
-      const headers: Record<string, string> = {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      };
-      if (config?.waha_api_key) {
-        headers['x-api-key'] = config.waha_api_key;
-        headers['X-Api-Key'] = config.waha_api_key;
-      }
-
-      const webhookUrl = getResolvedWebhookUrl(config?.webhook_url);
-
-      const createBody = JSON.stringify({
-        name: sessionName,
-        config: {
-          webhooks: [
-            { url: webhookUrl, events: ['message', 'message.any'] }
-          ],
-        },
+      const result = await callWahaManager({
+        action: 'start',
+        estabelecimentoId,
+        sessionId,
+        sessionName,
+        webhookUrl: getResolvedWebhookUrl(config?.webhook_url),
       });
-      const createAttempts = [
-        { url: `${base}/api/sessions`, method: 'POST', body: createBody },
-        { url: `${base}/api/sessions/${sessionName}`, method: 'POST', body: createBody },
-        { url: `${base}/api/${sessionName}`, method: 'POST', body: createBody },
-      ];
-      for (const a of createAttempts) {
-        try {
-          const r = await fetch(a.url, { method: a.method, headers, body: a.body });
-          const ok = r.ok || [200,201,202,204,409].includes(r.status);
-          if (ok) break;
-        } catch (e) {}
+      if (result?.qrCode) {
+        setSelectedQrSession({
+          id: sessionId,
+          session_name: sessionName,
+          phone_number: null,
+          status: 'SCAN_QR_CODE',
+          qr_code: result.qrCode,
+          bot_flow_id: null,
+        });
       }
-
-      const startAttempts = [
-        { url: `${base}/api/sessions/${sessionName}/start`, method: 'POST' },
-        { url: `${base}/api/${sessionName}/start`, method: 'POST' },
-        { url: `${base}/api/sessions/${sessionName}/start`, method: 'POST', body: JSON.stringify({ name: sessionName }) },
-        { url: `${base}/api/${sessionName}/start`, method: 'POST', body: JSON.stringify({ name: sessionName }) },
-      ];
-      let started = false;
-      for (const a of startAttempts) {
-        try {
-          const r = await fetch(a.url, { method: a.method as any, headers, ...(a.body ? { body: a.body } : {}) });
-          if (r.ok || r.status === 201) { started = true; break; }
-        } catch (e) {}
-      }
-      if (!started) throw new Error('Failed to start session');
-
-      await getQRCode(sessionId, sessionName);
-    } catch (error) {
+      await refreshSessions();
+    } catch (error: any) {
       console.error('Error starting session:', error);
       toast({
         title: 'Erro',
-        description: 'Erro ao iniciar sessão no WAHA',
+        description: error?.message || 'Erro ao iniciar sessão no WAHA',
         variant: 'destructive',
       });
     }
@@ -719,56 +632,12 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
 
   const getQRCode = async (sessionId: string, sessionName: string) => {
     try {
-      const base = (config?.waha_url || '').replace(/\/+$/, '');
-      const headers: Record<string, string> = {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      };
-      if (config?.waha_api_key) {
-        headers['x-api-key'] = config.waha_api_key;
-      }
-
-      const maxAttempts = 20;
-      let attempt = 0;
-      let qrUrl: string | null = null;
-
-      while (attempt < maxAttempts && !qrUrl) {
-        attempt++;
-        const attempts = [
-          { method: 'POST', url: `${base}/api/${sessionName}/auth/qr`, body: '{}' },
-          { method: 'POST', url: `${base}/api/sessions/${sessionName}/auth/qr`, body: '{}' },
-          { method: 'GET',  url: `${base}/api/${sessionName}/auth/qr` },
-          { method: 'GET',  url: `${base}/api/sessions/${sessionName}/auth/qr` },
-        ];
-        for (const a of attempts) {
-          try {
-            const response = await fetch(a.url, { method: a.method as any, headers, ...(a.body ? { body: a.body } : {}) });
-            if (response.ok) {
-              const payload = await response.json();
-              const urlFound: string | null = payload.qr || (payload.data ? `data:${payload.mimetype || 'image/png'};base64,${payload.data}` : null);
-              if (urlFound) { qrUrl = urlFound; break; }
-            }
-          } catch {}
-        }
-
-        if (!qrUrl) {
-          const backoff = Math.min(2500, 500 * attempt);
-          await new Promise((r) => setTimeout(r, backoff));
-        }
-      }
-
-      if (!qrUrl) {
-        throw new Error(`QR code não disponível após ${attempt} tentativas.`);
-      }
-
-      await supabase
-        .from('whatsapp_sessions')
-        .update({
-          qr_code: qrUrl,
-          status: 'SCAN_QR_CODE',
-        })
-        .eq('id', sessionId);
-
+      await callWahaManager({
+        action: 'qr',
+        estabelecimentoId,
+        sessionId,
+        sessionName,
+      });
       await refreshSessions();
     } catch (error: any) {
       console.error('Error getting QR code:', error);
@@ -788,12 +657,8 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
       if (!session) return;
 
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
+        ...buildWahaHeaders(config?.waha_api_key),
       };
-      if (config?.waha_api_key) {
-        headers['x-api-key'] = config.waha_api_key;
-      }
 
       const base = config?.waha_url?.replace(/\/+$/, '') || '';
 
