@@ -1096,226 +1096,84 @@ async function sendWahaMediaMessage(
     ? mediaType.toLowerCase()
     : "document";
 
-  // Inferir nome do arquivo e mimetype a partir da URL
   const _lastPath = (() => { try { return new URL(mediaUrl).pathname.split('/').pop() || 'arquivo'; } catch { return mediaUrl.split('?')[0].split('/').pop() || 'arquivo'; } })();
   const inferredName = decodeURIComponent(_lastPath);
   const lowerName = inferredName.toLowerCase();
   const isPdf = lowerName.endsWith('.pdf');
   const isXlsx = lowerName.endsWith('.xlsx');
+  const isImage = /\.(png|jpe?g|webp|gif)$/i.test(lowerName);
+  const isVideo = /\.(mp4|mov|webm)$/i.test(lowerName);
+  const isAudio = /\.(ogg|oga|mp3|wav|m4a)$/i.test(lowerName);
   const mime = isPdf
     ? 'application/pdf'
     : isXlsx
     ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    : lowerName.endsWith('.png')
+    ? 'image/png'
+    : lowerName.endsWith('.webp')
+    ? 'image/webp'
+    : lowerName.endsWith('.gif')
+    ? 'image/gif'
+    : lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')
+    ? 'image/jpeg'
+    : lowerName.endsWith('.mp4')
+    ? 'video/mp4'
+    : lowerName.endsWith('.webm')
+    ? 'video/webm'
+    : lowerName.endsWith('.mp3')
+    ? 'audio/mpeg'
+    : lowerName.endsWith('.ogg') || lowerName.endsWith('.oga')
+    ? 'audio/ogg'
     : 'application/octet-stream';
 
   const baseUrl = resolvedWahaUrl.replace(/\/$/, '');
-  const endpoints = [
-    `${baseUrl}/api/sendFile`,
-    `${baseUrl}/api/sessions/${sessionName}/sendFile`,
-    `${baseUrl}/api/sessions/${sessionName}/messages`,
-    `${baseUrl}/api/sessions/${sessionName}/sendMessage`,
-    `${baseUrl}/api/sessions/${sessionName}/messages/send`,
-    `${baseUrl}/api/sessions/${sessionName}/messages/${t}`,
-  ];
+  const endpoint = `${baseUrl}/api/sendFile`;
+  const payload = {
+    session: sessionName,
+    chatId,
+    file: {
+      mimetype: mime,
+      url: mediaUrl,
+      filename: inferredName,
+    },
+    ...(caption ? { caption } : {}),
+    ...(t === "audio" ? { convert: false } : {}),
+  };
 
-  const variantBase: any[] = [
-    // Formato 1: url direto (com nome)
-    { session: sessionName, chatId, type: t, url: mediaUrl, caption, fileName: inferredName, filename: inferredName, name: inferredName },
-    { session: sessionName, to: toNumberOnly, type: t, url: mediaUrl, caption, fileName: inferredName },
-    { session: sessionName, to: chatId, type: t, url: mediaUrl, caption, fileName: inferredName },
-    
-    // Formato 2: nested object (WAHA Plus padrão)
-    { session: sessionName, to: chatId, [t]: { url: mediaUrl, filename: inferredName }, caption },
-    { session: sessionName, chatId, [t]: { url: mediaUrl, filename: inferredName }, caption },
-    
-    // Formato 3: campo file com mimetype e nome
-    { session: sessionName, chatId, file: { url: mediaUrl, mimetype: mime, filename: inferredName }, caption },
-    { session: sessionName, to: chatId, file: { url: mediaUrl, mimetype: mime, filename: inferredName }, caption },
-    
-    // Formato 4: sem session na raiz
-    { chatId, type: t, url: mediaUrl, caption, fileName: inferredName },
-    { to: chatId, type: t, url: mediaUrl, caption, fileName: inferredName },
-    { chatId, [t]: { url: mediaUrl, filename: inferredName }, caption },
-    
-    // Formato 5: variações adicionais
-    { to: toNumberOnly, type: t, url: mediaUrl, caption, filename: inferredName },
-    { number: toNumberOnly, type: t, url: mediaUrl, caption, filename: inferredName },
-  ];
+  for (const apiKey of authKeys) {
+    const snapshot = await getWahaSessionSnapshot(baseUrl, sessionName, apiKey);
+    console.log("[WAHA] Session snapshot before media send:", { sessionName, ...snapshot });
 
-  const headerSets: Array<Record<string, string>> = authKeys.map((apiKey) => ({
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      "x-api-key": apiKey,
-      "X-Session-Name": sessionName,
-    }));
+    try {
+      const resp = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "x-api-key": apiKey,
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(60000),
+      });
+      const resultText = await resp.text().catch(() => "");
+      console.log("[WAHA] Official sendFile result:", resp.status, resultText);
 
-  for (const base of endpoints) {
-    const urlVariants = [
-      base,
-      `${base}?session=${encodeURIComponent(sessionName)}`,
-    ];
-    
-    for (const url of urlVariants) {
-      for (const body of variantBase) {
-        for (const headers of headerSets) {
-          try {
-            console.log(`[WAHA] 📤 Tentando enviar mídia (${t})`);
-            console.log(`[WAHA]    URL: ${url}`);
-            console.log(`[WAHA]    Body keys: ${Object.keys(body).join(',')}`);
-            console.log(`[WAHA]    Body completo:`, JSON.stringify(body, null, 2));
-            console.log(`[WAHA]    Headers: ${Object.keys(headers).filter(k => k !== 'Authorization' && !k.toLowerCase().includes('key')).join(',')}`);
-            
-            const resp = await fetch(url, {
-              method: "POST",
-              headers,
-              body: JSON.stringify(body),
-            });
-            const result = await resp.json().catch(() => ({}));
-            console.log("[WAHA] 📥 Resposta MEDIA:", resp.status, JSON.stringify(result));
-            
-            if (resp.ok) {
-              console.log("[WAHA] ✅ Mídia enviada com sucesso!");
-              return;
-            }
-            if (resp.status === 404) {
-              console.log("[WAHA] ⚠️ Endpoint 404, tentando próximo...");
-              break;
-            }
-            if (resp.status === 401) {
-              console.log("[WAHA] ⚠️ Não autorizado (401), tentando próxima variante...");
-              continue;
-            }
-          } catch (err) {
-            console.error("[WAHA] ❌ Erro ao enviar mídia via", url, err);
-          }
-        }
+      if (resp.ok) return;
+      if (resp.status === 401) continue;
+
+      if (resp.status === 422 && resultText.includes("Session status is not as expected")) {
+        console.error("[WAHA] Sessão não está WORKING para envio de mídia:", sessionName);
+        break;
       }
+    } catch (error) {
+      const afterSnapshot = await getWahaSessionSnapshot(baseUrl, sessionName, apiKey);
+      console.error("[WAHA] Official sendFile failed:", error, { sessionName, afterSnapshot });
     }
   }
 
-  // ===== Fallback: upload multipart/form-data com arquivo real =====
-  try {
-    console.log("[WAHA] 🔁 Tentando fallback multipart (upload de arquivo)");
-
-    // Baixa o arquivo público para bytes com timeout aumentado
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minutos de timeout
-    
-    console.log("[WAHA] 📥 Baixando arquivo de:", mediaUrl);
-    const fileResp = await fetch(mediaUrl, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    
-    if (!fileResp.ok) {
-      console.error("[WAHA] ❌ Falha ao baixar mídia para upload:", fileResp.status, fileResp.statusText);
-      throw new Error(`download_failed_${fileResp.status}`);
-    }
-    
-    const buf = new Uint8Array(await fileResp.arrayBuffer());
-    const sizeMB = buf.length / (1024 * 1024);
-    console.log(`[WAHA] ✅ Arquivo baixado: ${sizeMB.toFixed(2)} MB`);
-    
-    if (sizeMB > 25) {
-      console.warn(`[WAHA] ⚠️ Arquivo grande (${sizeMB.toFixed(2)} MB). Pode falhar no envio via WhatsApp em alguns dispositivos.`);
-    }
-
-    // Deduz nome e content-type
-    const urlObj = new URL(mediaUrl);
-    const baseName = urlObj.pathname.split('/').pop() || 'arquivo';
-    const lower = baseName.toLowerCase();
-    const isPdf = lower.endsWith('.pdf');
-    const isXlsx = lower.endsWith('.xlsx');
-    const contentType = isPdf
-      ? 'application/pdf'
-      : isXlsx
-      ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      : 'application/octet-stream';
-
-    const fileFieldNames = ['file', 'document', 'media', 'attachment'];
-    const recipientParamSets = [
-      { chatId },
-      { to: chatId },
-      { to: toNumberOnly },
-      { jid: chatId },
-      { number: toNumberOnly },
-    ];
-    
-    let uploadAttempts = 0;
-    const maxUploadAttempts = 3; // Tentar até 3 vezes
-
-    for (const base of endpoints) {
-      const urlVariants = [
-        base,
-        `${base}?session=${encodeURIComponent(sessionName)}`,
-      ];
-
-      for (const url of urlVariants) {
-        for (const headers of headerSets) {
-          for (const recipient of recipientParamSets) {
-            for (const fileField of fileFieldNames) {
-              uploadAttempts++;
-              if (uploadAttempts > maxUploadAttempts * endpoints.length) {
-                console.error(`[WAHA] ❌ Número máximo de tentativas de upload atingido`);
-                break;
-              }
-              
-              try {
-                const fd = new FormData();
-                // sessão também no corpo, alguns WAHA exigem
-                fd.append('session', sessionName);
-                fd.append('type', t);
-                if (caption) fd.append('caption', caption);
-                Object.entries(recipient).forEach(([k, v]) => fd.append(k, String(v)));
-                fd.append(fileField, new Blob([buf], { type: contentType }), baseName);
-
-                // Não definir Content-Type manualmente (boundary automático)
-                const hdrs = { ...headers } as Record<string, string>;
-                delete hdrs['Content-Type'];
-
-                console.log(`[WAHA] 📤 Multipart tentativa ${uploadAttempts} -> ${url} (fileField=${fileField}, recipient=${Object.keys(recipient).join(',')}, size=${sizeMB.toFixed(2)}MB)`);
-                
-                // Timeout aumentado para arquivos grandes
-                const uploadController = new AbortController();
-                const uploadTimeoutId = setTimeout(() => uploadController.abort(), 180000); // 3 minutos
-                
-                const resp = await fetch(url, {
-                  method: 'POST',
-                  headers: hdrs,
-                  body: fd as any,
-                  signal: uploadController.signal,
-                });
-                clearTimeout(uploadTimeoutId);
-                
-                const txt = await resp.text();
-                console.log('[WAHA] 📥 Resposta MULTIPART:', resp.status, txt);
-                if (resp.ok) {
-                  console.log('[WAHA] ✅ Upload multipart enviado com sucesso!');
-                  return;
-                }
-                if (resp.status === 404) break; // tentar próximo endpoint
-                if (resp.status === 401) continue; // tentar próxima combinação
-                
-                // Retry delay para erros temporários
-                if (resp.status >= 500) {
-                  console.log('[WAHA] ⏳ Erro temporário, aguardando 2s antes de retry...');
-                  await new Promise(r => setTimeout(r, 2000));
-                }
-              } catch (e: any) {
-                if (e.name === 'AbortError') {
-                  console.error('[WAHA] ❌ Timeout no upload multipart (arquivo muito grande ou conexão lenta)');
-                } else {
-                  console.error('[WAHA] ❌ Erro no upload multipart:', e);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  } catch (e) {
-    console.error('[WAHA] ❌ Fallback multipart falhou:', e);
-  }
-
-  console.error("[WAHA] ❌ Todas as tentativas de envio de mídia falharam para sessão:", sessionName);
+  console.error("[WAHA] ❌ Falha ao enviar mídia. Enviando link como fallback:", { sessionName, chatId, mediaUrl });
+  const fallbackLabel = isPdf || isXlsx ? "arquivo" : isImage ? "imagem" : isVideo ? "vídeo" : isAudio ? "áudio" : "mídia";
+  await sendWahaTextMessage(toNumberOnly, `${caption ? `${caption}\n` : ""}Link do ${fallbackLabel}: ${mediaUrl}`, sessionName, resolvedWahaUrl, authKeys[0]);
 }
 
 /* ======= Validadores ======= */
