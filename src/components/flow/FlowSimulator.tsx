@@ -2521,6 +2521,51 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             }));
           } catch {}
 
+          // 🎯 AI Studio — gera imagem/vídeo de verdade e envia ao usuário
+          if (moduleKey === "ai_studio") {
+            const outputVar = config.outputVariable || "workflow_disparado";
+            (async () => {
+              try {
+                const variablesForWf = { ...(payload.variables || {}), ...payload };
+                const { data: previewData, error: pErr } = await supabase.functions.invoke(
+                  "bot-run-ai-studio-workflow",
+                  { body: { workflowId: config.workflowId, variables: variablesForWf, preview: true } },
+                );
+                if (pErr) throw pErr;
+                const mediaType: "image" | "video" = previewData?.mediaType || "image";
+                const estSecs: number = Number(previewData?.estimatedSeconds) || (mediaType === "video" ? 120 : 25);
+                const tipoLabel = mediaType === "video" ? "vídeo" : "imagem";
+                const tempoLabel = estSecs >= 60
+                  ? `cerca de ${Math.ceil(estSecs / 60)} minuto(s)`
+                  : `cerca de ${estSecs} segundos`;
+                addBotMessage(`⏳ Estou gerando sua ${tipoLabel} agora. Isso pode levar ${tempoLabel}. Já te envio assim que ficar pronta!`, node.id);
+
+                const { data: genData, error: gErr } = await supabase.functions.invoke(
+                  "bot-run-ai-studio-workflow",
+                  { body: { workflowId: config.workflowId, variables: variablesForWf } },
+                );
+                if (gErr) throw gErr;
+                if (!genData?.mediaUrl) throw new Error(genData?.error || "Sem mídia retornada");
+
+                addBotMediaMessage(genData.mediaUrl, mediaType, "", node.id);
+                setContext((prev) => ({
+                  ...prev,
+                  [outputVar]: { ok: true, mediaUrl: genData.mediaUrl, mediaType, model: genData?.model },
+                  midia_gerada: genData.mediaUrl,
+                  midia_gerada_tipo: mediaType,
+                }));
+                addSuccessMessage(`✅ Mídia gerada e enviada. Resultado em {{${outputVar}}}.`);
+              } catch (err: any) {
+                addSystemMessage(`❌ Falha ao gerar mídia do AI Studio: ${err?.message || err}`);
+                setContext((prev) => ({ ...prev, [outputVar]: { ok: false, error: String(err?.message || err) } }));
+              } finally {
+                const nextNode = getNextNode(node.id);
+                if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+              }
+            })();
+            break;
+          }
+
           // Salva resultado em variável
           const outVar = config.outputVariable || "workflow_disparado";
           context[outVar] = {
