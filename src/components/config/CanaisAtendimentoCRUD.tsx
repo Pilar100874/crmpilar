@@ -795,12 +795,8 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
       if (!session) return;
 
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
+        ...buildWahaHeaders(config?.waha_api_key),
       };
-      if (config?.waha_api_key) {
-        headers['x-api-key'] = config.waha_api_key;
-      }
 
       const base = config?.waha_url?.replace(/\/+$/, '') || '';
 
