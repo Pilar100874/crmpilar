@@ -1870,6 +1870,103 @@ async function executeNode(
         break;
       }
 
+      /* ============ DISPARAR WORKFLOW (multimódulo) ============ */
+      case "trigger_workflow": {
+        const moduleKey = cfg.module || "bot";
+        const workflowId = cfg.workflowId || "";
+        const outVar = cfg.outputVariable || "workflow_disparado";
+        const wfName = cfg.workflowName || workflowId || "(sem nome)";
+
+        // Monta payload de variáveis para enviar ao workflow
+        let extraPayload: Record<string, any> = {};
+        if (cfg.payloadJson) {
+          try { extraPayload = JSON.parse(itp(String(cfg.payloadJson))); } catch {}
+        }
+        const passedVars = cfg.passVariables !== false ? { ...context.vars } : {};
+        const variablesForWf = { ...passedVars, ...extraPayload };
+
+        if (!workflowId) {
+          context.vars[outVar] = { ok: false, error: "workflow_nao_selecionado" };
+          for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+          break;
+        }
+
+        // 🎯 Caso especial: AI Studio — gera imagem/vídeo e envia ao usuário
+        if (moduleKey === "ai_studio") {
+          try {
+            // 1) Preview — descobre tipo e tempo estimado
+            const previewResp = await fetch(`${SUPABASE_URL}/functions/v1/bot-run-ai-studio-workflow`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+              },
+              body: JSON.stringify({ workflowId, variables: variablesForWf, preview: true }),
+            });
+            const previewData = await previewResp.json().catch(() => ({}));
+            if (!previewResp.ok) {
+              await onResponse(`⚠️ Não foi possível preparar a geração: ${previewData?.error || "erro desconhecido"}`);
+              context.vars[outVar] = { ok: false, error: previewData?.error || "preview_failed" };
+              for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+              break;
+            }
+            const mediaType: "image" | "video" = previewData?.mediaType || "image";
+            const estSecs: number = Number(previewData?.estimatedSeconds) || (mediaType === "video" ? 120 : 25);
+            const tipoLabel = mediaType === "video" ? "vídeo" : "imagem";
+            const tempoLabel = estSecs >= 60
+              ? `cerca de ${Math.ceil(estSecs / 60)} minuto(s)`
+              : `cerca de ${estSecs} segundos`;
+            await onResponse(`⏳ Estou gerando sua ${tipoLabel} agora. Isso pode levar ${tempoLabel}. Já te envio assim que ficar pronta!`);
+
+            // 2) Geração real (pode demorar — fetch sem timeout)
+            const genResp = await fetch(`${SUPABASE_URL}/functions/v1/bot-run-ai-studio-workflow`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+              },
+              body: JSON.stringify({ workflowId, variables: variablesForWf }),
+            });
+            const genData = await genResp.json().catch(() => ({}));
+            if (!genResp.ok || !genData?.mediaUrl) {
+              await onResponse(`❌ Não consegui gerar a ${tipoLabel}: ${genData?.error || "erro desconhecido"}.`);
+              context.vars[outVar] = { ok: false, error: genData?.error || "generation_failed" };
+            } else {
+              await onResponse("", genData.mediaUrl, mediaType);
+              context.vars[outVar] = {
+                ok: true,
+                module: moduleKey,
+                workflowId,
+                workflowName: genData?.workflowName || wfName,
+                mediaUrl: genData.mediaUrl,
+                mediaType,
+                model: genData?.model,
+              };
+              // Salva também em variável padronizada para facilitar uso depois
+              context.vars["midia_gerada"] = genData.mediaUrl;
+              context.vars["midia_gerada_tipo"] = mediaType;
+            }
+          } catch (e: any) {
+            console.error("[FLOW] trigger_workflow(ai_studio) erro:", e);
+            await onResponse(`❌ Falha ao gerar mídia: ${e?.message || e}`);
+            context.vars[outVar] = { ok: false, error: String(e?.message || e) };
+          }
+          for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+          break;
+        }
+
+        // Outros módulos — apenas registra o disparo (compatível com simulador)
+        context.vars[outVar] = {
+          ok: true,
+          module: moduleKey,
+          workflowId,
+          workflowName: wfName,
+          triggeredAt: new Date().toISOString(),
+        };
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
+
       /* ============ DISPARO & LOOPS ============ */
       case "send_whatsapp_to_number": {
         const phone = itp(cfg.phoneNumber || "").replace(/\D/g, "");
