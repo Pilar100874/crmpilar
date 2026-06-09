@@ -33,23 +33,63 @@ function estimateSecondsFor(model: string, isVideo: boolean, duration?: number):
   return Math.max(90, dur * 25);
 }
 
+const COMPOSITE_MODE_DESC: Record<string, string> = {
+  clothing: "Vista esta roupa na pessoa da foto.",
+  holding: "Insira o produto original na mão da pessoa preservando rótulo, logo, formato e cores.",
+  wearing: "Coloque este acessório na pessoa da foto.",
+  scene: "Insira o produto original na cena com a pessoa, preservando a embalagem exatamente como na referência.",
+};
+
 function pickGenNode(nodes: any[]): { node: any; isVideo: boolean } | null {
+  // Vídeo tem prioridade
   for (const n of nodes) {
     const t = n?.data?.type;
     if (t === "videoGen") return { node: n, isVideo: true };
-    if (t === "imageGen") return { node: n, isVideo: false };
+  }
+  for (const n of nodes) {
+    const t = n?.data?.type;
+    if (t === "imageGen" || t === "productComposite" || t === "imageEdit") {
+      return { node: n, isVideo: false };
+    }
   }
   return null;
 }
 
-function collectTextPrompt(nodes: any[], variables: Record<string, any>): string {
+function categoriaFromGalleryType(type: string, cfg: any): string {
+  if (cfg?.categoria) return String(cfg.categoria);
+  if (type === "gallerySalvas") return "salvas";
+  return type.replace("gallery", "").toLowerCase();
+}
+
+function collectTextPrompt(nodes: any[], variables: Record<string, any>, gen: { node: any; isVideo: boolean }): string {
   const parts: string[] = [];
+  const cfg = gen.node?.data?.config || {};
+
+  // Modo do productComposite vira diretiva inicial
+  if (gen.node?.data?.type === "productComposite") {
+    parts.push(COMPOSITE_MODE_DESC[cfg.compositeMode] || COMPOSITE_MODE_DESC.clothing);
+  }
+
+  // Prompt do próprio nó de geração (campo `prompt`)
+  const genPrompt = String(cfg.prompt || "").trim();
+  if (genPrompt) parts.push(genPrompt);
+
   for (const n of nodes) {
-    if (n?.data?.type === "textInput") {
-      const t = String(n?.data?.config?.text || "").trim();
-      if (t) parts.push(t);
+    const t = n?.data?.type;
+    const c = n?.data?.config || {};
+    if (t === "textInput") {
+      const tx = String(c.text || "").trim();
+      if (tx) parts.push(tx);
+    } else if (t === "textContent") {
+      const merged = [c.title, c.subtitle, c.body].filter(Boolean).join("\n").trim();
+      if (merged) {
+        parts.push(
+          `[TEXTO LITERAL — não alterar] título="${c.title || ""}", subtítulo="${c.subtitle || ""}", corpo="${c.body || ""}"`,
+        );
+      }
     }
   }
+
   // Variáveis do bot como contexto
   const vars = Object.entries(variables || {})
     .filter(([k, v]) => v !== undefined && v !== null && String(v).trim() !== "" && !k.startsWith("_"))
@@ -64,16 +104,24 @@ function collectImageRefs(nodes: any[]) {
   const imageUrls: string[] = [];
   const imageRoles: string[] = [];
   for (const n of nodes) {
-    const t = n?.data?.type;
+    const t = String(n?.data?.type || "");
     const cfg = n?.data?.config || {};
     if (t === "productImageSelect" && cfg.selectedImageUrl) {
       imageUrls.push(cfg.selectedImageUrl);
       imageRoles.push("produto");
-    } else if (t === "galleryInfluencer" && cfg.selectedImageUrl) {
+    } else if (t === "multiProductSelect" && Array.isArray(cfg.products)) {
+      for (const p of cfg.products) {
+        const url = p?.foto_url || p?.imageUrl;
+        if (url) {
+          imageUrls.push(url);
+          imageRoles.push("produto");
+        }
+      }
+    } else if (t.startsWith("gallery") && cfg.selectedImageUrl) {
       imageUrls.push(cfg.selectedImageUrl);
-      imageRoles.push("influencer");
-    } else if (t === "imageInput" && cfg.imageUrl) {
-      imageUrls.push(cfg.imageUrl);
+      imageRoles.push(categoriaFromGalleryType(t, cfg));
+    } else if ((t === "imageInput" || t === "mediaGallery") && (cfg.imageUrl || cfg.selectedUrl)) {
+      imageUrls.push(cfg.imageUrl || cfg.selectedUrl);
       imageRoles.push("referencia");
     }
   }
@@ -233,14 +281,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    const prompt = collectTextPrompt(nodes, variables);
-    if (!prompt) {
-      return new Response(JSON.stringify({ error: "Workflow não tem texto/prompt configurado" }), {
+    const refs = collectImageRefs(nodes);
+    let prompt = collectTextPrompt(nodes, variables, gen);
+    if (!prompt && refs.imageUrls.length === 0) {
+      return new Response(JSON.stringify({ error: "Workflow não tem texto/prompt nem referências de imagem." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const refs = collectImageRefs(nodes);
+    if (!prompt) {
+      // Fallback mínimo para nós como productComposite com apenas refs visuais
+      prompt = "Gere a imagem combinando as referências fornecidas, preservando produto e pessoa.";
+    }
     const estabelecimentoId = String(wf.estabelecimento_id);
 
     let mediaUrl: string;
