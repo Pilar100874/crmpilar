@@ -952,8 +952,8 @@ async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionNa
 
   if (unauthorizedCount === authKeys.length) {
     console.error("[WAHA] Unauthorized sending message. Update the WAHA API key in the WhatsApp WAHA settings.", { sessionName });
-    return;
   }
+  return;
 
   const endpoints = [
     `${baseUrl}/api/sessions/${sessionName}/sendText`,
