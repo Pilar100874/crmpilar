@@ -403,6 +403,18 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
     return (customWebhookUrl || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-webhook`).trim();
   };
 
+  const buildWahaHeaders = (apiKey?: string | null) => {
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    };
+    const cleanApiKey = String(apiKey || '').trim();
+    if (cleanApiKey) {
+      headers['x-api-key'] = cleanApiKey;
+    }
+    return headers;
+  };
+
   const syncSessionWebhook = async (
     sessionName: string,
     base: string,
@@ -453,13 +465,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
     if (!currentConfig?.waha_url) return;
 
     const base = currentConfig.waha_url.replace(/\/+$/, '');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (currentConfig.waha_api_key) {
-      headers['x-api-key'] = currentConfig.waha_api_key;
-      headers['X-Api-Key'] = currentConfig.waha_api_key;
-    }
+    const headers = buildWahaHeaders(currentConfig.waha_api_key);
 
     for (const session of sessionsToSync) {
       try {
