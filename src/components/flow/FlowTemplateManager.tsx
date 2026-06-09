@@ -188,20 +188,20 @@ export function FlowTemplateManager({
         variant="outline"
         size="sm"
         onClick={() => setOpenSave(true)}
-        className="h-8 px-2 hidden lg:flex"
+        className="h-8 px-2"
         title="Salvar fluxo atual como modelo"
       >
-        <Save className="h-4 w-4 mr-1.5" />
+        <Save className="h-4 w-4 xl:mr-1.5" />
         <span className="hidden xl:inline">Salvar Modelo</span>
       </Button>
       <Button
         variant="outline"
         size="sm"
         onClick={() => setOpenList(true)}
-        className="h-8 px-2 hidden lg:flex"
+        className="h-8 px-2"
         title="Inserir modelo salvo"
       >
-        <Library className="h-4 w-4 mr-1.5" />
+        <Library className="h-4 w-4 xl:mr-1.5" />
         <span className="hidden xl:inline">Modelos</span>
       </Button>
 
