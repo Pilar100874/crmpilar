@@ -3704,6 +3704,19 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const handleButtonClick = (button: { text: string; value: string; buttonId?: string; keywords?: string[] }, nodeId?: string) => {
     console.log("🔘 Button clicked:", { button, nodeId, pendingVariable, currentBlockType });
 
+    // === Saída universal: encerra o atendimento ===
+    if (button.value === "__exit__") {
+      addUserMessage(button.text || "Sair");
+      addSystemMessage("👋 Atendimento encerrado. Até logo!");
+      setIsWaitingInput(false);
+      setCurrentBlockType(null);
+      setPendingVariable(null);
+      setCurrentNodeId(null);
+      return;
+    }
+
+
+
     // === publish_social_done: Finalizar ou Gerar novo ===
     if (currentBlockType === "publish_social_done" && currentNodeId) {
       addUserMessage(button.text);
