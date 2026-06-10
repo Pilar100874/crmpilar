@@ -1048,10 +1048,11 @@ async function sendWahaListMessage(
     description,
     buttonText,
     footerText,
-    sections: sanitizedSections,
+    values: sanitizedSections,
+    delay: 1200,
   };
   try {
-    console.log(`[EVOLUTION] Enviando LIST -> ${number}`, { instance, sections: body.sections.length });
+    console.log(`[EVOLUTION] Enviando LIST -> ${number}`, { instance, sections: body.values.length });
     const resp = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json", apikey: apiKey },
@@ -1061,30 +1062,20 @@ async function sendWahaListMessage(
     const resultText = await resp.text().catch(() => "");
     console.log("[EVOLUTION] sendList result:", resp.status, resultText.slice(0, 500));
     if (!resp.ok) {
-      // Fallback 1: tentar enviar como Poll (enquete) — interativo e estável no Baileys
+      // Fallback: tentar enviar como Poll (enquete) — mantém clique/toque, sem texto numerado
       const allRows: any[] = [];
-      for (const sec of body.sections) for (const r of (sec.rows || [])) allRows.push(r);
-      if (allRows.length >= 2 && allRows.length <= 12) {
+      for (const sec of body.values) for (const r of (sec.rows || [])) allRows.push(r);
+      const pollRows = allRows.filter((r) => r.rowId !== "__exit__").slice(0, 10);
+      if (pollRows.length >= 2) {
         console.log("[EVOLUTION] sendList falhou — tentando Poll como fallback");
         const pollOk = await sendWahaPollMessage(
           toNumberOnly,
-          { name: description.slice(0, 255), values: allRows.map(r => String(r.title).slice(0, 100)), selectableCount: 1 },
+          { name: description.slice(0, 255), values: pollRows.map(r => String(r.title).slice(0, 100)), selectableCount: 1 },
           sessionName, wahaUrl, wahaApiKey,
         );
         if (pollOk) return;
       }
-      // Fallback 2: texto numerado
-      let fallback = `${title}\n${description}\n`;
-      let idx = 1;
-      for (const sec of body.sections) {
-        if (sec.title) fallback += `\n*${sec.title}*\n`;
-        for (const row of (sec.rows || [])) {
-          fallback += `${idx}. ${row.title}${row.description && row.description !== " " ? " - " + row.description : ""}\n`;
-          idx++;
-        }
-      }
-      fallback += `\n_Responda com o número da opção._`;
-      await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey);
+      console.error("[EVOLUTION] Não foi possível enviar opções clicáveis; fallback textual desativado para não pedir digitação.");
     }
   } catch (err) {
     console.error("[EVOLUTION] Erro no sendList:", err);
