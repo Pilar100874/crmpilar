@@ -298,7 +298,24 @@ serve(async (req) => {
     const respond = async (text?: string, mediaUrl?: string, mediaType?: string, interactive?: any) => {
       if (transport === "waha") {
         if (interactive?.type === "list") {
-          await sendWahaListMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
+          const sent = await sendWahaListMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
+          if (!sent) {
+            const rows = (interactive.sections || [])
+              .flatMap((section: any) => section.rows || [])
+              .filter((row: any) => String(row.rowId || row.id || "") !== "__exit__");
+            if (rows.length > 0 && rows.length <= 3) {
+              await sendWahaButtonsMessage(from, {
+                type: "buttons",
+                title: interactive.title || "",
+                description: interactive.description || text || "Escolha uma opção",
+                footerText: interactive.footerText || "",
+                buttons: rows.map((row: any, index: number) => ({
+                  text: row.title || `Opção ${index + 1}`,
+                  id: row.rowId || row.id || `item_${index}`,
+                })),
+              }, wahaSession, WAHA_URL, WAHA_API_KEY, false);
+            }
+          }
           return;
         }
         if (interactive?.type === "buttons") {
@@ -705,7 +722,8 @@ serve(async (req) => {
         } else if (blockType === "list_buttons") {
           const sections: any[] = cfg.sections || [];
           let idx = 0;
-          for (const sec of sections) {
+          const listSections = sections.length ? sections : [{ rows: cfg.items || [] }];
+          for (const sec of listSections) {
             for (const row of (sec.rows || sec.items || [])) {
               const rawValue = row.id ?? row.value ?? row.title ?? row.label ?? `item_${idx}`;
               options.push({
@@ -731,15 +749,21 @@ serve(async (req) => {
         }
 
         if (selectedIndex < 0) {
-          await respond(`Por favor, responda com um número entre 1 e ${options.length} ou o nome da opção.`);
+          if (blockType === "list_buttons") {
+            await executeNode(pendingNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+          } else {
+            await respond(`Por favor, responda com um número entre 1 e ${options.length} ou o nome da opção.`);
+          }
           shouldReturn = true;
         } else {
           const chosen = options[selectedIndex];
           context.vars[variable] = chosen.value;
           delete context.pendingNodeId;
-          let edge = flowData.flow_data.edges.find(
-            (e: any) => e.source === pendingNode.id && e.sourceHandle === chosen.handle,
-          );
+          let edge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id && e.sourceHandle === chosen.handle);
+          if (!edge && blockType === "list_buttons") {
+            const normalized = normalizeListHandle(pendingNode.data.config || {}, selectedIndex);
+            edge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id && e.sourceHandle === normalized);
+          }
           if (!edge) {
             edge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
           }
@@ -1019,11 +1043,11 @@ async function sendWahaListMessage(
   sessionName: string,
   wahaUrl: string,
   wahaApiKey: string,
-) {
+): Promise<boolean> {
   const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
   if (!base || !apiKey) {
     console.error("[EVOLUTION] URL ou apikey ausentes para sendList.");
-    return;
+    return false;
   }
   const instance = sessionName || "default";
   const number = String(toNumberOnly).replace(/\D/g, "");
@@ -1065,9 +1089,12 @@ async function sendWahaListMessage(
     console.log("[EVOLUTION] sendList result:", resp.status, resultText.slice(0, 500));
     if (!resp.ok) {
       console.error("[EVOLUTION] Não foi possível enviar List Message; fallback por enquete/texto desativado.");
+      return false;
     }
+    return true;
   } catch (err) {
     console.error("[EVOLUTION] Erro no sendList:", err);
+    return false;
   }
 }
 
@@ -1112,6 +1139,7 @@ async function sendWahaButtonsMessage(
   sessionName: string,
   wahaUrl: string,
   wahaApiKey: string,
+  allowTextFallback = true,
 ) {
   const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
   if (!base || !apiKey) return;
@@ -1139,7 +1167,7 @@ async function sendWahaButtonsMessage(
     });
     const resultText = await resp.text().catch(() => "");
     console.log("[EVOLUTION] sendButtons result:", resp.status, resultText.slice(0, 500));
-    if (!resp.ok) {
+    if (!resp.ok && allowTextFallback) {
       let fallback = `${body.description}\n`;
       body.buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.displayText}`; });
       await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey);
@@ -1328,6 +1356,19 @@ async function executeFlow(
   }
   console.log(`[FLOW] Starting from node: ${startNode.id} (${startNode.data.type})`);
   await executeNode(startNode, flowData.nodes, flowData.edges, context, onResponse);
+}
+
+function normalizeListHandle(config: any, flatIndex: number): string {
+  let cursor = 0;
+  const sections = Array.isArray(config?.sections) ? config.sections : [];
+  for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
+    const items = sections[sectionIndex]?.items || sections[sectionIndex]?.rows || [];
+    for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+      if (cursor === flatIndex) return `section_${sectionIndex}_item_${itemIndex}`;
+      cursor++;
+    }
+  }
+  return `row_${flatIndex}`;
 }
 
 async function executeNode(
