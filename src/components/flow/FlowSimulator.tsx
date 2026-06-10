@@ -2467,20 +2467,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
       case "ask_influencer": {
         const q = interpolateVariables(config.askQuestion || "A peça terá um influencer?", contextRef.current);
-        const inflListId = `list_${node.id}_${Date.now()}`;
-        setActiveListId(inflListId);
         setMessages((prev) => [...prev, {
-          id: inflListId, sender: "bot", text: q, timestamp: new Date(), nodeId: node.id,
-          isListButton: true,
-          listButtonText: "Ver opções",
-          listSections: [{
-            title: "Opções",
-            items: [
-              { label: "Sim", value: "sim" },
-              { label: "Não", value: "nao" },
-              { label: "Sair", value: "__exit__", description: "Encerrar atendimento" },
-            ],
-          }],
+          id: uid(), sender: "bot", text: q, timestamp: new Date(), nodeId: node.id,
+          buttons: [
+            { text: "Sim", value: "sim", buttonId: "infl_yes" },
+            { text: "Não", value: "nao", buttonId: "infl_no" },
+            { text: "Sair", value: "__exit__", buttonId: "infl_exit" },
+          ],
         }]);
         setIsWaitingInput(true);
         setCurrentBlockType("ask_influencer_choice");
@@ -2490,20 +2483,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
       case "ask_product_image": {
         const q = interpolateVariables(config.askQuestion || "A peça terá imagem do produto?", contextRef.current);
-        const pimListId = `list_${node.id}_${Date.now()}`;
-        setActiveListId(pimListId);
         setMessages((prev) => [...prev, {
-          id: pimListId, sender: "bot", text: q, timestamp: new Date(), nodeId: node.id,
-          isListButton: true,
-          listButtonText: "Ver opções",
-          listSections: [{
-            title: "Opções",
-            items: [
-              { label: "Sim", value: "sim" },
-              { label: "Não", value: "nao" },
-              { label: "Sair", value: "__exit__", description: "Encerrar atendimento" },
-            ],
-          }],
+          id: uid(), sender: "bot", text: q, timestamp: new Date(), nodeId: node.id,
+          buttons: [
+            { text: "Sim", value: "sim", buttonId: "pim_yes" },
+            { text: "Não", value: "nao", buttonId: "pim_no" },
+            { text: "Sair", value: "__exit__", buttonId: "pim_exit" },
+          ],
         }]);
         setIsWaitingInput(true);
         setCurrentBlockType("ask_product_image_choice");
