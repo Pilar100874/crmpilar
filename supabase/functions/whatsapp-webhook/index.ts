@@ -1027,13 +1027,22 @@ async function sendWahaListMessage(
   const instance = sessionName || "default";
   const number = String(toNumberOnly).replace(/\D/g, "");
   const endpoint = `${base}/message/sendList/${encodeURIComponent(instance)}`;
+  // Evolution API exige description não-vazia em cada row
+  const sanitizedSections = (interactive.sections || []).map((sec: any) => ({
+    title: sec.title || "Opções",
+    rows: (sec.rows || []).map((r: any) => ({
+      title: r.title || "Opção",
+      description: (r.description && String(r.description).trim()) ? r.description : (r.title || "Selecionar"),
+      rowId: r.rowId || r.title || "row",
+    })),
+  }));
   const body = {
     number,
     title: interactive.title || "Escolha uma opção",
-    description: interactive.description || "",
+    description: (interactive.description && String(interactive.description).trim()) ? interactive.description : "Selecione abaixo",
     buttonText: interactive.buttonText || "Ver opções",
     footerText: interactive.footerText || "",
-    sections: interactive.sections || [],
+    sections: sanitizedSections,
   };
   try {
     console.log(`[EVOLUTION] Enviando LIST -> ${number}`, { instance, sections: body.sections.length });
