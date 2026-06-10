@@ -1049,11 +1049,12 @@ async function sendWahaListMessage(
     description,
     buttonText,
     footerText,
+    sections: sanitizedSections,
     values: sanitizedSections,
     delay: 1200,
   };
   try {
-    console.log(`[EVOLUTION] Enviando LIST -> ${number}`, { instance, values: body.values.length });
+    console.log(`[EVOLUTION] Enviando LIST -> ${number}`, { instance, sections: body.sections.length });
     const resp = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json", apikey: apiKey },
