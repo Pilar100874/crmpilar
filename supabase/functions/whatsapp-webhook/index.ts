@@ -1401,29 +1401,47 @@ async function executeNode(
       break;
     }
     case "reply_buttons": {
-      const buttons = (cfg.buttons || []).map((b: any, i: number) => ({
+      const rawButtons = (cfg.buttons || []).map((b: any, i: number) => ({
         text: itp(b.text || `Opção ${i + 1}`),
         id: b.value || b.id || `btn_${i}`,
       }));
-      // Adiciona opção universal de Sair
-      const rows = [
-        ...buttons.map((b: any, i: number) => ({
-          title: b.text,
-          description: "",
-          rowId: b.id || `row_${i}`,
-        })),
-        { title: "Sair", description: "Encerrar atendimento", rowId: "__exit__" },
-      ];
-      const interactive = {
-        type: "list",
-        title: itp(cfg.headerText || cfg.title || ""),
-        description: itp(cfg.text || cfg.bodyText || "Escolha uma opção:"),
-        buttonText: itp(cfg.buttonText || "Ver opções"),
-        footerText: itp(cfg.footerText || ""),
-        sections: [{ title: itp(cfg.sectionTitle || "Opções"), rows }],
-      };
-      let fallbackTxt = interactive.description + "";
-      rows.forEach((r: any, i: number) => { fallbackTxt += `\n${i + 1}. ${r.title}`; });
+      // WhatsApp suporta no máximo 3 reply buttons. Adiciona "Sair" se houver espaço.
+      const canFitExit = rawButtons.length <= 2;
+      const buttons = canFitExit
+        ? [...rawButtons, { text: "Sair", id: "__exit__" }]
+        : rawButtons.slice(0, 3);
+      const useButtons = buttons.length <= 3;
+      const headerText = itp(cfg.headerText || cfg.title || "");
+      const bodyText = itp(cfg.text || cfg.bodyText || "Escolha uma opção:");
+      const footerText = itp(cfg.footerText || "");
+      let interactive: any;
+      if (useButtons) {
+        interactive = {
+          type: "buttons",
+          title: headerText,
+          description: bodyText,
+          footerText,
+          buttons,
+        };
+      } else {
+        // Fallback: muitos botões → list
+        const rows = [
+          ...rawButtons.map((b: any, i: number) => ({
+            title: b.text, description: "", rowId: b.id || `row_${i}`,
+          })),
+          { title: "Sair", description: "Encerrar atendimento", rowId: "__exit__" },
+        ];
+        interactive = {
+          type: "list",
+          title: headerText,
+          description: bodyText,
+          buttonText: itp(cfg.buttonText || "Ver opções"),
+          footerText,
+          sections: [{ title: itp(cfg.sectionTitle || "Opções"), rows }],
+        };
+      }
+      let fallbackTxt = bodyText + "";
+      buttons.forEach((b: any, i: number) => { fallbackTxt += `\n${i + 1}. ${b.text || b.title}`; });
       await onResponse(fallbackTxt, undefined, undefined, interactive);
       context.pendingNodeId = node.id;
 
