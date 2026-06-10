@@ -556,6 +556,42 @@ serve(async (req) => {
         shouldSaveContext = true;
         shouldReturn = true;
       }
+      // ====== Opção universal "Sair" — finaliza o fluxo ======
+      else if (
+        (() => {
+          const raw = String(body || "").trim().toLowerCase();
+          if (!raw) return false;
+          if (raw === "__exit__" || raw === "sair" || raw === "exit" || raw === "encerrar" || raw === "fim") return true;
+          const cfg = pendingNode?.data?.config || {};
+          const t = pendingNode?.data?.type;
+          const asNum = parseInt(raw);
+          if (!isNaN(asNum)) {
+            let total = 0;
+            if (t === "reply_buttons") total = (cfg.buttons?.length || 0) + 1;
+            else if (t === "list_buttons") {
+              const secs = cfg.sections || [];
+              if (secs.length) for (const s of secs) total += (s.rows || s.items || []).length;
+              else total = (cfg.items || []).length;
+              total += 1;
+            } else if (t === "text_content") {
+              const opts = Array.isArray(cfg.options) ? cfg.options : [];
+              total = (opts.length || 2) + 1;
+            } else if (t === "content_type") total = 10 + 1;
+            else if (t === "ask_influencer" || t === "ask_product_image") total = 2 + 1;
+            if (total > 0 && asNum === total) return true;
+          }
+          return false;
+        })()
+      ) {
+        console.log("[FLOW] Usuário escolheu Sair — finalizando fluxo");
+        await respond("Atendimento encerrado. Quando quiser retomar, é só enviar uma nova mensagem. 👋");
+        context = { vars: { from, phoneNumber: from, session: wahaSession } };
+        const supabaseCli = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const sessionKey = `whatsapp_${wahaSession || "default"}_${from || ""}`;
+        await supabaseCli.from("chat_sessions").delete().eq("session_id", sessionKey);
+        shouldSaveContext = false;
+        shouldReturn = true;
+      }
       // Processa resposta para reply_buttons
       else if (pendingNode?.data?.type === "reply_buttons") {
         const cfg = pendingNode.data.config || {};
