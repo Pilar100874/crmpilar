@@ -206,10 +206,10 @@ export const FlowNode = memo((props: any) => {
                 if (!kind) return null;
                 return (
                   <span
-                    title={kind.title}
-                    className={`shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded border ${kind.className}`}
+                    title={`${kind.label} — ${kind.title}`}
+                    className={`shrink-0 inline-flex items-center justify-center w-5 h-5 text-[11px] leading-none rounded-full border ${kind.className}`}
                   >
-                    {kind.label}
+                    {kind.symbol}
                   </span>
                 );
               })()}
