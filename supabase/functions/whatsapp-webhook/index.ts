@@ -707,9 +707,10 @@ serve(async (req) => {
           let idx = 0;
           for (const sec of sections) {
             for (const row of (sec.rows || sec.items || [])) {
+              const rawValue = row.id ?? row.value ?? row.title ?? row.label ?? `item_${idx}`;
               options.push({
                 label: row.title || row.label || `Opção ${idx + 1}`,
-                value: row.id || row.value || row.title || `item_${idx}`,
+                value: String(rawValue),
                 handle: `row_${idx}`,
               });
               idx++;
@@ -725,7 +726,7 @@ serve(async (req) => {
         } else {
           const lower = userResponse.toLowerCase();
           selectedIndex = options.findIndex(
-            (o) => o.label.toLowerCase() === lower || o.value.toLowerCase() === lower,
+            (o) => String(o.label || "").toLowerCase() === lower || String(o.value || "").toLowerCase() === lower,
           );
         }
 
@@ -1033,7 +1034,7 @@ async function sendWahaListMessage(
     rows: (sec.rows || []).map((r: any, ri: number) => ({
       title: (r.title && String(r.title).trim()) ? String(r.title).trim().slice(0, 24) : `Opção ${ri + 1}`,
       description: (r.description && String(r.description).trim()) ? String(r.description).trim().slice(0, 72) : " ",
-      rowId: r.rowId || `row_${si}_${ri}`,
+      rowId: String(r.rowId ?? `row_${si}_${ri}`),
     })),
   })).filter((s: any) => s.rows.length > 0);
 
