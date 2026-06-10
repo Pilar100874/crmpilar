@@ -1353,6 +1353,19 @@ async function executeFlow(
   await executeNode(startNode, flowData.nodes, flowData.edges, context, onResponse);
 }
 
+function normalizeListHandle(config: any, flatIndex: number): string {
+  let cursor = 0;
+  const sections = Array.isArray(config?.sections) ? config.sections : [];
+  for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
+    const items = sections[sectionIndex]?.items || sections[sectionIndex]?.rows || [];
+    for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+      if (cursor === flatIndex) return `section_${sectionIndex}_item_${itemIndex}`;
+      cursor++;
+    }
+  }
+  return `row_${flatIndex}`;
+}
+
 async function executeNode(
   node: any,
   nodes: any[],
