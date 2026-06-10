@@ -609,7 +609,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                                       : 'bg-primary/10 text-primary border-primary/20'
                                   }`}
                                 >
-                                  {bot.whatsapp_type === 'business' ? 'Business' : 'WAHA'}
+                                  {bot.whatsapp_type === 'business' ? 'Business' : 'Evolution'}
                                 </Badge>
                               )}
                             </div>
