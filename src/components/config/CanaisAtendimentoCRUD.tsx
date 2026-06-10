@@ -331,6 +331,8 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
   const [wahaApiKey, setWahaApiKey] = useState("");
   const [webhookUrl, setWebhookUrl] = useState("");
   const [managerUrl, setManagerUrl] = useState("");
+  const [managerUser, setManagerUser] = useState("");
+  const [managerPassword, setManagerPassword] = useState("");
   const [newSessionName, setNewSessionName] = useState("");
   const [showConfigDialog, setShowConfigDialog] = useState(false);
   const [showNewSessionDialog, setShowNewSessionDialog] = useState(false);
@@ -392,6 +394,8 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
           setWahaApiKey(cfg.waha_api_key || "");
           setWebhookUrl(cfg.webhook_url || "");
           setManagerUrl(cfg.manager_url || "");
+          setManagerUser(cfg.manager_user || "");
+          setManagerPassword(cfg.manager_password || "");
         }
       }
 
@@ -528,6 +532,8 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
             waha_api_key: wahaApiKey || null,
             webhook_url: webhookUrl || null,
             manager_url: managerUrl || null,
+            manager_user: managerUser || null,
+            manager_password: managerPassword || null,
           } as any)
           .eq("id", existingConfig.id);
 
@@ -541,6 +547,8 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
             waha_api_key: wahaApiKey || null,
             webhook_url: webhookUrl || null,
             manager_url: managerUrl || null,
+            manager_user: managerUser || null,
+            manager_password: managerPassword || null,
           } as any);
 
         if (error) throw error;
@@ -820,6 +828,29 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
                 <p className="text-xs text-muted-foreground">
                   Endereço do painel administrativo (Manager) do Evolution API.
                 </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="manager-user">Usuário do Manager</Label>
+                  <Input
+                    id="manager-user"
+                    placeholder="admin"
+                    autoComplete="off"
+                    value={managerUser}
+                    onChange={(e) => setManagerUser(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="manager-password">Senha do Manager</Label>
+                  <Input
+                    id="manager-password"
+                    type="password"
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                    value={managerPassword}
+                    onChange={(e) => setManagerPassword(e.target.value)}
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
