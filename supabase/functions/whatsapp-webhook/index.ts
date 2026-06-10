@@ -1357,9 +1357,27 @@ async function executeNode(
       break;
     }
     case "reply_buttons": {
-      let txt = "Escolha uma opção:";
-      if (cfg.buttons?.length) cfg.buttons.forEach((b: any, i: number) => (txt += `\n${i + 1}. ${b.text}`));
-      await onResponse(txt);
+      const buttons = (cfg.buttons || []).map((b: any, i: number) => ({
+        text: itp(b.text || `Opção ${i + 1}`),
+        id: b.value || b.id || `btn_${i}`,
+      }));
+      // Envia como List Message nativo (mais robusto que botões e suporta >3 opções)
+      const rows = buttons.map((b: any, i: number) => ({
+        title: b.text,
+        description: "",
+        rowId: b.id || `row_${i}`,
+      }));
+      const interactive = {
+        type: "list",
+        title: itp(cfg.headerText || cfg.title || ""),
+        description: itp(cfg.text || cfg.bodyText || "Escolha uma opção:"),
+        buttonText: itp(cfg.buttonText || "Ver opções"),
+        footerText: itp(cfg.footerText || ""),
+        sections: [{ title: itp(cfg.sectionTitle || "Opções"), rows }],
+      };
+      let fallbackTxt = interactive.description + "";
+      buttons.forEach((b: any, i: number) => { fallbackTxt += `\n${i + 1}. ${b.text}`; });
+      await onResponse(fallbackTxt, undefined, undefined, interactive);
       context.pendingNodeId = node.id;
 
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -1371,16 +1389,53 @@ async function executeNode(
       return;
     }
       case "list_buttons": {
-        let txt = itp(cfg.text || cfg.headerText || "");
-        if (cfg.items?.length) {
-          txt += "\n\nEscolha uma opção:";
-          cfg.items.forEach((item: any, i: number) => {
-            txt += `\n${i + 1}. ${item.title}${item.description ? " - " + item.description : ""}`;
-          });
+        const headerTxt = itp(cfg.text || cfg.headerText || "");
+        // Suporta dois formatos: { items: [...] } simples ou { sections: [{ title, rows }] }
+        let sections: any[] = [];
+        if (Array.isArray(cfg.sections) && cfg.sections.length) {
+          sections = cfg.sections.map((sec: any) => ({
+            title: itp(sec.title || ""),
+            rows: (sec.rows || sec.items || []).map((r: any, i: number) => ({
+              title: itp(r.title || r.label || `Opção ${i + 1}`),
+              description: itp(r.description || ""),
+              rowId: r.id || r.value || r.title || `item_${i}`,
+            })),
+          }));
+        } else {
+          const rows = (cfg.items || []).map((item: any, i: number) => ({
+            title: itp(item.title || `Opção ${i + 1}`),
+            description: itp(item.description || ""),
+            rowId: item.id || item.value || item.title || `item_${i}`,
+          }));
+          sections = [{ title: itp(cfg.sectionTitle || "Opções"), rows }];
         }
-        if (txt) await onResponse(txt);
-        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
-        break;
+        const interactive = {
+          type: "list",
+          title: itp(cfg.title || ""),
+          description: headerTxt || "Escolha uma opção",
+          buttonText: itp(cfg.buttonText || "Ver opções"),
+          footerText: itp(cfg.footerText || ""),
+          sections,
+        };
+        // Texto fallback
+        let fallback = (headerTxt || "Escolha uma opção:") + "";
+        let n = 1;
+        for (const sec of sections) {
+          if (sec.title) fallback += `\n\n*${sec.title}*`;
+          for (const r of sec.rows) {
+            fallback += `\n${n}. ${r.title}${r.description ? " - " + r.description : ""}`;
+            n++;
+          }
+        }
+        await onResponse(fallback, undefined, undefined, interactive);
+        context.pendingNodeId = node.id;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
+        await supabase.from("chat_sessions").upsert(
+          { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+          { onConflict: "session_id" },
+        );
+        return;
       }
       case "crm_gerar_relatorio": {
         console.log(`[FLOW] crm_gerar_relatorio - config:`, JSON.stringify(cfg));
