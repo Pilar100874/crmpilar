@@ -330,6 +330,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
   const [wahaUrl, setWahaUrl] = useState("");
   const [wahaApiKey, setWahaApiKey] = useState("");
   const [webhookUrl, setWebhookUrl] = useState("");
+  const [managerUrl, setManagerUrl] = useState("");
   const [newSessionName, setNewSessionName] = useState("");
   const [showConfigDialog, setShowConfigDialog] = useState(false);
   const [showNewSessionDialog, setShowNewSessionDialog] = useState(false);
@@ -390,6 +391,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
           setWahaUrl(cfg.waha_url);
           setWahaApiKey(cfg.waha_api_key || "");
           setWebhookUrl(cfg.webhook_url || "");
+          setManagerUrl(cfg.manager_url || "");
         }
       }
 
@@ -525,6 +527,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
             waha_url: wahaUrl,
             waha_api_key: wahaApiKey || null,
             webhook_url: webhookUrl || null,
+            manager_url: managerUrl || null,
           } as any)
           .eq("id", existingConfig.id);
 
@@ -537,6 +540,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
             waha_url: wahaUrl,
             waha_api_key: wahaApiKey || null,
             webhook_url: webhookUrl || null,
+            manager_url: managerUrl || null,
           } as any);
 
         if (error) throw error;
@@ -791,6 +795,31 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
                   value={wahaApiKey}
                   onChange={(e) => setWahaApiKey(e.target.value)}
                 />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="manager-url">URL do Manager do Evolution</Label>
+                  {managerUrl && (
+                    <a
+                      href={managerUrl.startsWith("http") ? managerUrl : `https://${managerUrl}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      Abrir Manager
+                    </a>
+                  )}
+                </div>
+                <Input
+                  id="manager-url"
+                  placeholder="https://manager.evolution.exemplo.com"
+                  value={managerUrl}
+                  onChange={(e) => setManagerUrl(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Endereço do painel administrativo (Manager) do Evolution API.
+                </p>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
