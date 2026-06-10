@@ -2410,18 +2410,22 @@ async function executeNode(
               : "A peça terá imagem do produto?"),
         );
         const prefix = data.type === "ask_influencer" ? "infl" : "pim";
+        const rows = [
+          { title: "Sim", description: "", rowId: `${prefix}_1` },
+          { title: "Não", description: "", rowId: `${prefix}_2` },
+          { title: "Sair", description: "Encerrar atendimento", rowId: "__exit__" },
+        ];
         const interactive = {
-          type: "buttons",
+          type: "list",
           title: "",
           description: q,
+          buttonText: "Ver opções",
           footerText: "",
-          buttons: [
-            { text: "Sim", id: `${prefix}_1` },
-            { text: "Não", id: `${prefix}_2` },
-            { text: "Sair", id: "__exit__" },
-          ],
+          sections: [{ title: "Opções", rows }],
         };
-        await onResponse(`${q}\n1. Sim\n2. Não\n3. Sair`, undefined, undefined, interactive);
+        let fallback = q;
+        rows.forEach((r: any, i: number) => { fallback += `\n${i + 1}. ${r.title}`; });
+        await onResponse(fallback, undefined, undefined, interactive);
         context.pendingNodeId = node.id;
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
         const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
@@ -2431,6 +2435,7 @@ async function executeNode(
         );
         return;
       }
+
 
       default: {
         console.log(`[FLOW] Unknown node type: ${data.type} - moving to next nodes`);
