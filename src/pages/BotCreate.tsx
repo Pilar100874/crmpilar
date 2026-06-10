@@ -609,7 +609,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                                       : 'bg-primary/10 text-primary border-primary/20'
                                   }`}
                                 >
-                                  {bot.whatsapp_type === 'business' ? 'Business' : 'WAHA'}
+                                  {bot.whatsapp_type === 'business' ? 'Business' : 'Evolution'}
                                 </Badge>
                               )}
                             </div>
@@ -733,12 +733,12 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="waha">WhatsApp WAHA</SelectItem>
+                    <SelectItem value="waha">WhatsApp Evolution</SelectItem>
                     <SelectItem value="business">WhatsApp Business (Meta)</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground">
-                  WAHA: servidor próprio | Business: API oficial Meta
+                  Evolution: servidor próprio | Business: API oficial Meta
                 </p>
               </div>
             )}
@@ -844,12 +844,12 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="waha">WhatsApp WAHA</SelectItem>
+                    <SelectItem value="waha">WhatsApp Evolution</SelectItem>
                     <SelectItem value="business">WhatsApp Business (Meta)</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground">
-                  WAHA: servidor próprio | Business: API oficial Meta
+                  Evolution: servidor próprio | Business: API oficial Meta
                 </p>
               </div>
             )}
