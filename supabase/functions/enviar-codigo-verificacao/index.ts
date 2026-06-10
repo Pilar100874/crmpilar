@@ -61,53 +61,42 @@ serve(async (req) => {
     // Montar mensagem
     const mensagem = `🔐 *Código de Verificação*\n\nSeu código para alteração de senha é: *${codigo}*\n\nEste código é válido por 10 minutos.\n\n⚠️ Não compartilhe este código com ninguém.`;
 
-    // Enviar mensagem via WAHA
-    const wahaUrl = whatsappConfig.waha_url || "http://localhost:3000";
-    const wahaSession = whatsappConfig.session_name || "default";
-    const wahaApiKey = whatsappConfig.waha_api_key;
+    // Enviar mensagem via Evolution API
+    const evoUrl = (whatsappConfig.waha_url || "http://localhost:8080").replace(/\/+$/, "");
+    const instance = whatsappConfig.session_name || "default";
+    const apiKey = whatsappConfig.waha_api_key;
 
-    const chatId = `${phoneNumber}@c.us`;
+    const evoPayload = { number: phoneNumber, text: mensagem };
 
-    const wahaPayload = {
-      session: wahaSession,
-      chatId: chatId,
-      text: mensagem,
-    };
-
-    console.log("Enviando para WAHA:", {
-      url: `${wahaUrl}/api/sendText`,
-      session: wahaSession,
-      chatId: chatId,
+    console.log("Enviando para Evolution:", {
+      url: `${evoUrl}/message/sendText/${instance}`,
+      instance,
+      number: phoneNumber,
     });
 
-    const wahaHeaders: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
+    const evoHeaders: Record<string, string> = { "Content-Type": "application/json" };
+    if (apiKey) evoHeaders["apikey"] = apiKey;
 
-    if (wahaApiKey) {
-      wahaHeaders["X-Api-Key"] = wahaApiKey;
-    }
-
-    const wahaResponse = await fetch(`${wahaUrl}/api/sendText`, {
+    const wahaResponse = await fetch(`${evoUrl}/message/sendText/${encodeURIComponent(instance)}`, {
       method: "POST",
-      headers: wahaHeaders,
-      body: JSON.stringify(wahaPayload),
+      headers: evoHeaders,
+      body: JSON.stringify(evoPayload),
     });
 
     if (!wahaResponse.ok) {
       const errorText = await wahaResponse.text();
-      console.error("Erro WAHA:", errorText);
+      console.error("Erro Evolution:", errorText);
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: "Erro ao enviar mensagem via WhatsApp",
-          details: errorText 
+          details: errorText,
         }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const wahaResult = await wahaResponse.json();
-    console.log("Resposta WAHA:", wahaResult);
+    const wahaResult = await wahaResponse.json().catch(() => ({}));
+    console.log("Resposta Evolution:", wahaResult);
 
     return new Response(
       JSON.stringify({ 

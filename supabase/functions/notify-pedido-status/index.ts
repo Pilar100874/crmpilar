@@ -61,18 +61,25 @@ Deno.serve(async (req) => {
     let notificationSent = false;
 
     if (canal === "whatsapp" && pedido.telefone_cliente) {
-      const wahaUrl = Deno.env.get("WAHA_URL");
-      const wahaApiKey = Deno.env.get("WAHA_API_KEY");
+      // Busca config Evolution da tabela whatsapp_config do estabelecimento
+      const { data: evoCfg } = await supabase
+        .from("whatsapp_config")
+        .select("waha_url, waha_api_key, session_name")
+        .eq("estabelecimento_id", pedido.estabelecimento_id)
+        .maybeSingle();
 
-      if (!wahaUrl || !wahaApiKey) {
-        console.error("WAHA not configured");
+      const evoUrl = (evoCfg?.waha_url || Deno.env.get("EVOLUTION_URL") || Deno.env.get("WAHA_URL") || "").replace(/\/+$/, "");
+      const apiKey = evoCfg?.waha_api_key || Deno.env.get("EVOLUTION_API_KEY") || Deno.env.get("WAHA_API_KEY");
+      const instance = evoCfg?.session_name || "default";
+
+      if (!evoUrl || !apiKey) {
+        console.error("Evolution não configurado");
         return new Response(JSON.stringify({ error: "WhatsApp não configurado" }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      // Build message from template or default
       let message = statusConfig?.mensagem_whatsapp || `Olá {nome}! Atualização do pedido #{numero}: *${statusConfig?.label || status}*`;
       message = message
         .replace(/{nome}/g, pedido.nome_cliente)
@@ -81,31 +88,20 @@ Deno.serve(async (req) => {
         .replace(/{empresa}/g, nomeEmpresa)
         .replace(/{link}/g, trackingUrl);
 
-      // Add tracking link if not in template
       if (!message.includes(trackingUrl)) {
         message += `\n\n📦 Acompanhe aqui: ${trackingUrl}`;
       }
 
-      // Send via WAHA
       const phone = pedido.telefone_cliente.replace(/\D/g, "");
-      const chatId = `${phone}@c.us`;
 
-      const wahaResponse = await fetch(`${wahaUrl}/api/sendText`, {
+      const wahaResponse = await fetch(`${evoUrl}/message/sendText/${encodeURIComponent(instance)}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Api-Key": wahaApiKey,
-        },
-        body: JSON.stringify({
-          chatId,
-          text: message,
-          session: "default",
-        }),
+        headers: { "Content-Type": "application/json", "apikey": apiKey },
+        body: JSON.stringify({ number: phone, text: message }),
       });
 
       if (wahaResponse.ok) {
         notificationSent = true;
-        // Update historico with notification flag
         await supabase
           .from("pedido_tracking_historico")
           .update({ notificado_whatsapp: true })
@@ -114,7 +110,7 @@ Deno.serve(async (req) => {
           .order("created_at", { ascending: false })
           .limit(1);
       } else {
-        console.error("WAHA send failed:", await wahaResponse.text());
+        console.error("Evolution send failed:", await wahaResponse.text());
       }
     }
 

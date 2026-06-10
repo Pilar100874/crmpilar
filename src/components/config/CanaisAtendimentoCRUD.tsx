@@ -757,7 +757,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">
-          Gerencie sessões WAHA para múltiplos números de WhatsApp
+          Gerencie instâncias do Evolution API para múltiplos números de WhatsApp
         </p>
         <Dialog open={showConfigDialog} onOpenChange={setShowConfigDialog}>
           <DialogTrigger asChild>
@@ -767,27 +767,27 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Configuração do Servidor WAHA</DialogTitle>
+              <DialogTitle>Configuração do Servidor Evolution API</DialogTitle>
               <DialogDescription>
-                Configure a URL e chave de API do seu servidor WAHA
+                Configure a URL e a apikey do seu servidor Evolution API
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="waha-url">URL do Servidor WAHA</Label>
+                <Label htmlFor="waha-url">URL do Servidor Evolution</Label>
                 <Input
                   id="waha-url"
-                  placeholder="https://waha.exemplo.com"
+                  placeholder="https://evolution.exemplo.com"
                   value={wahaUrl}
                   onChange={(e) => setWahaUrl(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="waha-key">Chave de API (opcional)</Label>
+                <Label htmlFor="waha-key">apikey (obrigatória)</Label>
                 <Input
                   id="waha-key"
                   type="password"
-                  placeholder="Sua chave de API"
+                  placeholder="Sua apikey global do Evolution"
                   value={wahaApiKey}
                   onChange={(e) => setWahaApiKey(e.target.value)}
                 />
@@ -2035,7 +2035,7 @@ export const CanaisAtendimentoCRUD = ({ estabelecimentoId: propEstabId }: Canais
               <AccordionTrigger className="text-lg font-semibold">
                 <div className="flex items-center gap-2">
                   <Radio className="w-5 h-5 text-blue-600" />
-                  WhatsApp WAHA
+                  WhatsApp (Evolution API)
                 </div>
               </AccordionTrigger>
               <AccordionContent>

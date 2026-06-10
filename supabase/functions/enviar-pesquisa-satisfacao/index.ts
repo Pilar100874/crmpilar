@@ -181,23 +181,24 @@ Deno.serve(async (req) => {
           throw new Error('Nenhuma sessão WhatsApp ativa encontrada');
         }
 
-        // Enviar mensagem via WAHA
-        const wahaResponse = await fetch(`${wahaConfig.waha_url}/api/sendText`, {
+        // Enviar mensagem via Evolution API
+        const evoUrl = String(wahaConfig.waha_url).replace(/\/+$/, "");
+        const instance = session.session_name;
+        const wahaResponse = await fetch(`${evoUrl}/message/sendText/${encodeURIComponent(instance)}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-Api-Key': wahaConfig.waha_api_key
+            'apikey': wahaConfig.waha_api_key,
           },
           body: JSON.stringify({
-            session: session.session_name,
-            chatId: `${customer.telefone}@c.us`,
-            text: mensagem
-          })
+            number: String(customer.telefone).replace(/\D/g, ''),
+            text: mensagem,
+          }),
         });
 
         if (!wahaResponse.ok) {
           const errorText = await wahaResponse.text();
-          throw new Error(`Erro ao enviar mensagem WAHA: ${errorText}`);
+          throw new Error(`Erro ao enviar mensagem Evolution: ${errorText}`);
         }
 
         console.log('✓ Pesquisa enviada via WhatsApp para:', customer.telefone);
