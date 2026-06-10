@@ -733,12 +733,12 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="waha">WhatsApp WAHA</SelectItem>
+                    <SelectItem value="waha">WhatsApp Evolution</SelectItem>
                     <SelectItem value="business">WhatsApp Business (Meta)</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground">
-                  WAHA: servidor próprio | Business: API oficial Meta
+                  Evolution: servidor próprio | Business: API oficial Meta
                 </p>
               </div>
             )}
