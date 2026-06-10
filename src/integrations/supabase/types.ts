@@ -14574,6 +14574,10 @@ export type Database = {
         Row: {
           business_account_id: string | null
           business_token: string | null
+          cloud_access_token: string | null
+          cloud_business_account_id: string | null
+          cloud_phone_number_id: string | null
+          cloud_webhook_verify_token: string | null
           created_at: string | null
           estabelecimento_id: string | null
           id: string
@@ -14581,6 +14585,7 @@ export type Database = {
           manager_url: string | null
           manager_user: string | null
           phone_number_id: string | null
+          provider: string
           session_name: string | null
           updated_at: string | null
           waha_api_key: string | null
@@ -14590,6 +14595,10 @@ export type Database = {
         Insert: {
           business_account_id?: string | null
           business_token?: string | null
+          cloud_access_token?: string | null
+          cloud_business_account_id?: string | null
+          cloud_phone_number_id?: string | null
+          cloud_webhook_verify_token?: string | null
           created_at?: string | null
           estabelecimento_id?: string | null
           id?: string
@@ -14597,6 +14606,7 @@ export type Database = {
           manager_url?: string | null
           manager_user?: string | null
           phone_number_id?: string | null
+          provider?: string
           session_name?: string | null
           updated_at?: string | null
           waha_api_key?: string | null
@@ -14606,6 +14616,10 @@ export type Database = {
         Update: {
           business_account_id?: string | null
           business_token?: string | null
+          cloud_access_token?: string | null
+          cloud_business_account_id?: string | null
+          cloud_phone_number_id?: string | null
+          cloud_webhook_verify_token?: string | null
           created_at?: string | null
           estabelecimento_id?: string | null
           id?: string
@@ -14613,6 +14627,7 @@ export type Database = {
           manager_url?: string | null
           manager_user?: string | null
           phone_number_id?: string | null
+          provider?: string
           session_name?: string | null
           updated_at?: string | null
           waha_api_key?: string | null
