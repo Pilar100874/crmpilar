@@ -4540,82 +4540,143 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
                         
                         {msg.isListButton && msg.listSections && (
-                          <div className="mt-3">
+                          <div className={channel === 'whatsapp' ? '-mx-4 -mb-2 mt-2' : 'mt-3'}>
                             {expandedListId === msg.id ? (
-                              <div className="border border-border rounded-lg overflow-hidden bg-background">
-                                <div className="p-3 bg-muted border-b border-border flex items-center justify-between">
-                                  <span className="text-sm font-medium">Selecione uma opção</span>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setExpandedListId(null)}
-                                    className="h-6 px-2"
-                                  >
-                                    ✕
-                                  </Button>
+                              channel === 'whatsapp' ? (
+                                <div className="border-t border-[#E9EDEF] bg-white">
+                                  <div className="px-4 py-3 flex items-center justify-between border-b border-[#E9EDEF]">
+                                    <span className="text-[15px] font-medium text-[#111B21]">{msg.listButtonText || 'Selecione uma opção'}</span>
+                                    <button
+                                      onClick={() => setExpandedListId(null)}
+                                      className="text-[#54656F] hover:text-[#111B21]"
+                                      aria-label="Fechar"
+                                    >
+                                      <XIcon className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                  <ScrollArea className="max-h-[320px]">
+                                    {msg.listSections.map((section, secIdx) => (
+                                      <div key={secIdx}>
+                                        {section.title && (
+                                          <div className="px-4 pt-3 pb-1 text-[13px] font-semibold text-[#00A884]">
+                                            {section.title}
+                                          </div>
+                                        )}
+                                        {section.items.map((item, itemIdx) => (
+                                          <button
+                                            key={itemIdx}
+                                            onClick={() => {
+                                              setExpandedListId(null);
+                                              handleButtonClick({
+                                                text: item.label,
+                                                value: item.value || item.label,
+                                                buttonId: `section_${secIdx}_item_${itemIdx}`
+                                              }, msg.nodeId);
+                                            }}
+                                            disabled={!isWaitingInput || msg.id !== activeListId}
+                                            className="w-full px-4 py-3 text-left hover:bg-[#F5F6F6] border-b border-[#E9EDEF] last:border-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                                          >
+                                            <div className="text-[15px] text-[#111B21]">{item.label}</div>
+                                            {item.description && (
+                                              <div className="text-[13px] mt-0.5 text-[#667781]">{item.description}</div>
+                                            )}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    ))}
+                                  </ScrollArea>
                                 </div>
-                                <ScrollArea className="max-h-[300px]">
-                                  {msg.listSections.map((section, secIdx) => (
-                                    <div key={secIdx}>
-                                      {section.title && (
-                                        <div className={`px-4 py-2 bg-muted/50 text-xs font-semibold ${channel === 'telegram' ? 'text-gray-300 bg-[#1A2633]' : 'text-muted-foreground'}`}>
-                                          {section.title}
-                                        </div>
-                                      )}
-                                      {section.items.map((item, itemIdx) => (
-                                        <button
-                                          key={itemIdx}
-                                          onClick={() => {
-                                            setExpandedListId(null);
-                                            handleButtonClick({ 
-                                              text: item.label, 
-                                              value: item.value || item.label,
-                                              buttonId: `section_${secIdx}_item_${itemIdx}`
-                                            }, msg.nodeId);
-                                          }}
-                                          disabled={!isWaitingInput || msg.id !== activeListId}
-                                          className={`w-full px-4 py-3 text-left hover:bg-accent/50 border-b border-border last:border-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${channel === 'telegram' ? 'text-white hover:bg-[#2B5278]/50' : ''}`}
-                                        >
-                                          <div className={`text-sm font-medium ${channel === 'telegram' ? 'text-white' : ''}`}>{item.label}</div>
-                                          {item.description && (
-                                            <div className={`text-xs mt-0.5 ${channel === 'telegram' ? 'text-gray-300' : 'text-muted-foreground'}`}>{item.description}</div>
-                                          )}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  ))}
-                                </ScrollArea>
-                              </div>
+                              ) : (
+                                <div className="border border-border rounded-lg overflow-hidden bg-background">
+                                  <div className="p-3 bg-muted border-b border-border flex items-center justify-between">
+                                    <span className="text-sm font-medium">Selecione uma opção</span>
+                                    <Button variant="ghost" size="sm" onClick={() => setExpandedListId(null)} className="h-6 px-2">✕</Button>
+                                  </div>
+                                  <ScrollArea className="max-h-[300px]">
+                                    {msg.listSections.map((section, secIdx) => (
+                                      <div key={secIdx}>
+                                        {section.title && (
+                                          <div className={`px-4 py-2 bg-muted/50 text-xs font-semibold ${channel === 'telegram' ? 'text-gray-300 bg-[#1A2633]' : 'text-muted-foreground'}`}>
+                                            {section.title}
+                                          </div>
+                                        )}
+                                        {section.items.map((item, itemIdx) => (
+                                          <button
+                                            key={itemIdx}
+                                            onClick={() => {
+                                              setExpandedListId(null);
+                                              handleButtonClick({ text: item.label, value: item.value || item.label, buttonId: `section_${secIdx}_item_${itemIdx}` }, msg.nodeId);
+                                            }}
+                                            disabled={!isWaitingInput || msg.id !== activeListId}
+                                            className={`w-full px-4 py-3 text-left hover:bg-accent/50 border-b border-border last:border-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${channel === 'telegram' ? 'text-white hover:bg-[#2B5278]/50' : ''}`}
+                                          >
+                                            <div className={`text-sm font-medium ${channel === 'telegram' ? 'text-white' : ''}`}>{item.label}</div>
+                                            {item.description && (
+                                              <div className={`text-xs mt-0.5 ${channel === 'telegram' ? 'text-gray-300' : 'text-muted-foreground'}`}>{item.description}</div>
+                                            )}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    ))}
+                                  </ScrollArea>
+                                </div>
+                              )
                             ) : (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setExpandedListId(msg.id)}
-                                disabled={!isWaitingInput || msg.id !== activeListId}
-                                className={`w-full justify-between ${channel === 'telegram' ? 'bg-[#3390EC] hover:bg-[#2B7FD9] text-white border-transparent' : ''}`}
-                              >
-                                <span>{msg.listButtonText || "Ver opções"}</span>
-                                <span className="ml-2">▼</span>
-                              </Button>
+                              channel === 'whatsapp' ? (
+                                <button
+                                  onClick={() => setExpandedListId(msg.id)}
+                                  disabled={!isWaitingInput || msg.id !== activeListId}
+                                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border-t border-[#E9EDEF] text-[#00A884] font-medium text-[14px] hover:bg-[#F5F6F6] disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <ListIcon className="w-4 h-4" />
+                                  <span>{msg.listButtonText || 'Ver opções'}</span>
+                                </button>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setExpandedListId(msg.id)}
+                                  disabled={!isWaitingInput || msg.id !== activeListId}
+                                  className={`w-full justify-between ${channel === 'telegram' ? 'bg-[#3390EC] hover:bg-[#2B7FD9] text-white border-transparent' : ''}`}
+                                >
+                                  <span>{msg.listButtonText || 'Ver opções'}</span>
+                                  <span className="ml-2">▼</span>
+                                </Button>
+                              )
                             )}
                           </div>
                         )}
                         
                         {msg.buttons && msg.buttons.length > 0 && !msg.isListButton && (
-                          <div className="mt-3 space-y-2">
-                            {msg.buttons.map((button, idx) => (
-                              <Button
-                                key={idx}
-                                variant="outline"
-                                size="sm"
-                                className={`w-full justify-start ${channel === 'telegram' ? 'bg-[#3390EC] hover:bg-[#2B7FD9] text-white border-transparent' : ''}`}
-                                onClick={() => handleButtonClick(button, msg.nodeId)}
-                                disabled={!isWaitingInput}
-                              >
-                                {button.text}
-                              </Button>
-                            ))}
-                          </div>
+                          channel === 'whatsapp' ? (
+                            <div className="-mx-4 -mb-2 mt-2 flex flex-col">
+                              {msg.buttons.map((button, idx) => (
+                                <button
+                                  key={idx}
+                                  onClick={() => handleButtonClick(button, msg.nodeId)}
+                                  disabled={!isWaitingInput}
+                                  className="w-full px-4 py-2.5 border-t border-[#E9EDEF] text-[#00A884] font-medium text-[14px] hover:bg-[#F5F6F6] disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                                >
+                                  {button.text}
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="mt-3 space-y-2">
+                              {msg.buttons.map((button, idx) => (
+                                <Button
+                                  key={idx}
+                                  variant="outline"
+                                  size="sm"
+                                  className={`w-full justify-start ${channel === 'telegram' ? 'bg-[#3390EC] hover:bg-[#2B7FD9] text-white border-transparent' : ''}`}
+                                  onClick={() => handleButtonClick(button, msg.nodeId)}
+                                  disabled={!isWaitingInput}
+                                >
+                                  {button.text}
+                                </Button>
+                              ))}
+                            </div>
+                          )
                         )}
                         
                         <span className="text-xs opacity-70 mt-1 block">
