@@ -1132,6 +1132,7 @@ async function sendWahaButtonsMessage(
   sessionName: string,
   wahaUrl: string,
   wahaApiKey: string,
+  allowTextFallback = true,
 ) {
   const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
   if (!base || !apiKey) return;
@@ -1159,7 +1160,7 @@ async function sendWahaButtonsMessage(
     });
     const resultText = await resp.text().catch(() => "");
     console.log("[EVOLUTION] sendButtons result:", resp.status, resultText.slice(0, 500));
-    if (!resp.ok) {
+    if (!resp.ok && allowTextFallback) {
       let fallback = `${body.description}\n`;
       body.buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.displayText}`; });
       await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey);
