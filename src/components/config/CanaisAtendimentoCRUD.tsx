@@ -2035,7 +2035,7 @@ export const CanaisAtendimentoCRUD = ({ estabelecimentoId: propEstabId }: Canais
               <AccordionTrigger className="text-lg font-semibold">
                 <div className="flex items-center gap-2">
                   <Radio className="w-5 h-5 text-blue-600" />
-                  WhatsApp WAHA
+                  WhatsApp (Evolution API)
                 </div>
               </AccordionTrigger>
               <AccordionContent>
