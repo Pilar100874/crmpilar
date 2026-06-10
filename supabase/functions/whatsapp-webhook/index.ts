@@ -2283,15 +2283,30 @@ async function executeNode(
           for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
           break;
         }
-        // Modo options / advanced → pergunta e aguarda
+        // Modo options / advanced → pergunta com List Message interativo
         const opts: any[] = Array.isArray(cfg.options) ? cfg.options : [];
-        let txt = itp(cfg.optionsPrompt || "Escolha um dos textos:");
-        if (opts.length) {
-          opts.forEach((o, i) => { txt += `\n${i + 1}. ${o.label || "Opção " + (i + 1)}`; });
-        } else {
-          txt = "Você quer usar título e subtítulo na imagem?\n1. Sim\n2. Não";
-        }
-        await onResponse(txt);
+        const prompt = itp(cfg.optionsPrompt || (opts.length ? "Escolha um dos textos:" : "Você quer usar título e subtítulo na imagem?"));
+        const rows = opts.length
+          ? opts.map((o: any, i: number) => ({
+              title: (itp(o.label || `Opção ${i + 1}`) + "").slice(0, 24),
+              description: "",
+              rowId: `tc_${i + 1}`,
+            }))
+          : [
+              { title: "Sim", description: "", rowId: "tc_1" },
+              { title: "Não", description: "", rowId: "tc_2" },
+            ];
+        const interactive = {
+          type: "list",
+          title: "",
+          description: prompt,
+          buttonText: "Ver opções",
+          footerText: "",
+          sections: [{ title: "Opções", rows }],
+        };
+        let fallback = prompt;
+        rows.forEach((r: any, i: number) => { fallback += `\n${i + 1}. ${r.title}`; });
+        await onResponse(fallback, undefined, undefined, interactive);
         context.pendingNodeId = node.id;
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
         const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
@@ -2313,9 +2328,23 @@ async function executeNode(
           "divulgacao", "promocao", "lancamento", "evento", "institucional",
           "engajamento", "educacional", "vendas", "remarketing", "datas_especiais",
         ];
-        let txt = itp(cfg.askPrompt || "Qual o objetivo da peça?");
-        directives.forEach((d, i) => { txt += `\n${i + 1}. ${d}`; });
-        await onResponse(txt);
+        const prompt = itp(cfg.askPrompt || "Qual o objetivo da peça?");
+        const rows = directives.map((d, i) => ({
+          title: d.slice(0, 24),
+          description: "",
+          rowId: `ct_${i + 1}`,
+        }));
+        const interactive = {
+          type: "list",
+          title: "",
+          description: prompt,
+          buttonText: "Ver opções",
+          footerText: "",
+          sections: [{ title: "Objetivos", rows }],
+        };
+        let fallback = prompt;
+        directives.forEach((d, i) => { fallback += `\n${i + 1}. ${d}`; });
+        await onResponse(fallback, undefined, undefined, interactive);
         context.pendingNodeId = node.id;
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
         const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
@@ -2333,7 +2362,18 @@ async function executeNode(
               ? "A peça terá um influencer?"
               : "A peça terá imagem do produto?"),
         );
-        await onResponse(`${q}\n1. Sim\n2. Não`);
+        const prefix = data.type === "ask_influencer" ? "infl" : "pim";
+        const interactive = {
+          type: "buttons",
+          title: "",
+          description: q,
+          footerText: "",
+          buttons: [
+            { text: "Sim", id: `${prefix}_1` },
+            { text: "Não", id: `${prefix}_2` },
+          ],
+        };
+        await onResponse(`${q}\n1. Sim\n2. Não`, undefined, undefined, interactive);
         context.pendingNodeId = node.id;
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
         const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
