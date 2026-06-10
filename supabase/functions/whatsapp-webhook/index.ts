@@ -2373,11 +2373,14 @@ async function executeNode(
           "engajamento", "educacional", "vendas", "remarketing", "datas_especiais",
         ];
         const prompt = itp(cfg.askPrompt || "Qual o objetivo da peça?");
-        const rows = directives.map((d, i) => ({
-          title: d.slice(0, 24),
-          description: "",
-          rowId: `ct_${i + 1}`,
-        }));
+        const rows = [
+          ...directives.map((d, i) => ({
+            title: d.slice(0, 24),
+            description: "",
+            rowId: `ct_${i + 1}`,
+          })),
+          { title: "Sair", description: "Encerrar atendimento", rowId: "__exit__" },
+        ];
         const interactive = {
           type: "list",
           title: "",
@@ -2387,7 +2390,7 @@ async function executeNode(
           sections: [{ title: "Objetivos", rows }],
         };
         let fallback = prompt;
-        directives.forEach((d, i) => { fallback += `\n${i + 1}. ${d}`; });
+        rows.forEach((r: any, i: number) => { fallback += `\n${i + 1}. ${r.title}`; });
         await onResponse(fallback, undefined, undefined, interactive);
         context.pendingNodeId = node.id;
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
