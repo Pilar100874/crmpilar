@@ -295,8 +295,16 @@ serve(async (req) => {
       flowData = data;
     }
 
-    const respond = async (text?: string, mediaUrl?: string, mediaType?: string) => {
+    const respond = async (text?: string, mediaUrl?: string, mediaType?: string, interactive?: any) => {
       if (transport === "waha") {
+        if (interactive?.type === "list") {
+          await sendWahaListMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
+          return;
+        }
+        if (interactive?.type === "buttons") {
+          await sendWahaButtonsMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
+          return;
+        }
         if (mediaUrl && mediaType) {
           await sendWahaMediaMessage(from, text, mediaType, mediaUrl, wahaSession, WAHA_URL, WAHA_API_KEY);
         } else if (text) {
