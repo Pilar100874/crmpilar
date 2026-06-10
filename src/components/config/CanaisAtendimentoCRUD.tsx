@@ -797,6 +797,31 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
                 />
               </div>
               <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="manager-url">URL do Manager do Evolution</Label>
+                  {managerUrl && (
+                    <a
+                      href={managerUrl.startsWith("http") ? managerUrl : `https://${managerUrl}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      Abrir Manager
+                    </a>
+                  )}
+                </div>
+                <Input
+                  id="manager-url"
+                  placeholder="https://manager.evolution.exemplo.com"
+                  value={managerUrl}
+                  onChange={(e) => setManagerUrl(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Endereço do painel administrativo (Manager) do Evolution API.
+                </p>
+              </div>
+              <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Label htmlFor="webhook-url">URL do Webhook</Label>
                   <div className="flex items-center gap-1">
