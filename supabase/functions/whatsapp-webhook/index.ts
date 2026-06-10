@@ -298,30 +298,30 @@ serve(async (req) => {
     const respond = async (text?: string, mediaUrl?: string, mediaType?: string, interactive?: any) => {
       if (transport === "waha") {
         if (interactive?.type === "list") {
-          const sent = await sendWahaListMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
-          if (!sent) {
-            const allRows = (interactive.sections || [])
-              .flatMap((section: any) => section.rows || []);
-            const rows = allRows
-              .filter((row: any) => String(row.rowId || row.id || "") !== "__exit__");
-            if (rows.length > 0 && rows.length <= 3) {
-              await sendWahaButtonsMessage(from, {
-                type: "buttons",
-                title: interactive.title || "",
-                description: interactive.description || text || "Escolha uma opção",
-                footerText: interactive.footerText || "",
-                buttons: rows.map((row: any, index: number) => ({
-                  text: row.title || `Opção ${index + 1}`,
-                  id: String(row.rowId || row.id || `item_${index}`),
-                })),
-              }, wahaSession, WAHA_URL, WAHA_API_KEY, true);
-            } else if (allRows.length > 0) {
-              let fallback = `${interactive.description || text || "Escolha uma opção"}`;
-              allRows.forEach((row: any, index: number) => {
-                fallback += `\n${index + 1}. ${row.title || `Opção ${index + 1}`}${row.description ? " - " + row.description : ""}`;
-              });
-              await sendWahaTextMessage(from, fallback, wahaSession, WAHA_URL, WAHA_API_KEY);
-            }
+          // Evolution/Baileys frequentemente não renderiza listas interativas em WhatsApp pessoal.
+          // Enviamos sempre como texto numerado (garantido) — e se houver ≤3 opções, tentamos botões antes.
+          const allRows = (interactive.sections || [])
+            .flatMap((section: any) => section.rows || []);
+          const rows = allRows
+            .filter((row: any) => String(row.rowId || row.id || "") !== "__exit__");
+
+          if (rows.length > 0 && rows.length <= 3) {
+            await sendWahaButtonsMessage(from, {
+              type: "buttons",
+              title: interactive.title || "",
+              description: interactive.description || text || "Escolha uma opção",
+              footerText: interactive.footerText || "",
+              buttons: rows.map((row: any, index: number) => ({
+                text: row.title || `Opção ${index + 1}`,
+                id: String(row.rowId || row.id || `item_${index}`),
+              })),
+            }, wahaSession, WAHA_URL, WAHA_API_KEY, true);
+          } else {
+            let fallback = `${interactive.description || text || "Escolha uma opção"}`;
+            allRows.forEach((row: any, index: number) => {
+              fallback += `\n${index + 1}. ${row.title || `Opção ${index + 1}`}${row.description ? " - " + row.description : ""}`;
+            });
+            await sendWahaTextMessage(from, fallback, wahaSession, WAHA_URL, WAHA_API_KEY);
           }
           return;
         }
