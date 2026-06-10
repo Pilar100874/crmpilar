@@ -754,9 +754,11 @@ serve(async (req) => {
           const chosen = options[selectedIndex];
           context.vars[variable] = chosen.value;
           delete context.pendingNodeId;
-          let edge = flowData.flow_data.edges.find(
-            (e: any) => e.source === pendingNode.id && e.sourceHandle === chosen.handle,
-          );
+          let edge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id && e.sourceHandle === chosen.handle);
+          if (!edge && blockType === "list_buttons") {
+            const normalized = normalizeListHandle(pendingNode.data.config || {}, selectedIndex);
+            edge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id && e.sourceHandle === normalized);
+          }
           if (!edge) {
             edge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
           }
