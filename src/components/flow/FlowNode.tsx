@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
 import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
+import { getInteractionKind } from "./blockInteractionKind";
 
 export const FlowNode = memo((props: any) => {
   const { data, selected, id } = props;
@@ -200,6 +201,18 @@ export const FlowNode = memo((props: any) => {
                 </div>
               )}
               <span className="font-semibold text-sm text-foreground truncate">{blockDef.label}</span>
+              {(() => {
+                const kind = getInteractionKind(data.type, data.config);
+                if (!kind) return null;
+                return (
+                  <span
+                    title={kind.title}
+                    className={`shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded border ${kind.className}`}
+                  >
+                    {kind.label}
+                  </span>
+                );
+              })()}
             </div>
             <p className="text-xs text-muted-foreground line-clamp-2">{data.label || blockDef.description}</p>
           </div>
