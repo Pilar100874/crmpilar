@@ -4401,7 +4401,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                   </div>
                 ) : (
                   <div
-                    className={`max-w-[80%] rounded-2xl overflow-hidden shadow-sm ${
+                    className={`max-w-[80%] overflow-hidden shadow-sm ${
+                      channel === 'whatsapp'
+                        ? msg.sender === 'user'
+                          ? 'rounded-lg rounded-tr-none shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]'
+                          : 'rounded-lg rounded-tl-none shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]'
+                        : 'rounded-2xl'
+                    } ${
                       msg.sender === "user"
                         ? `${channelStyle.userBubble} ${channel === 'facebook' || channel === 'telegram' || channel === 'instagram' ? 'text-white' : 'text-foreground'}`
                         : `${channelStyle.botBubble} ${channel === 'telegram' ? 'text-white' : 'text-foreground'}`
