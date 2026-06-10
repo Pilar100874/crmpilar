@@ -532,6 +532,8 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
             waha_api_key: wahaApiKey || null,
             webhook_url: webhookUrl || null,
             manager_url: managerUrl || null,
+            manager_user: managerUser || null,
+            manager_password: managerPassword || null,
           } as any)
           .eq("id", existingConfig.id);
 
