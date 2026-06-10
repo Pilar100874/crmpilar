@@ -298,7 +298,24 @@ serve(async (req) => {
     const respond = async (text?: string, mediaUrl?: string, mediaType?: string, interactive?: any) => {
       if (transport === "waha") {
         if (interactive?.type === "list") {
-          await sendWahaListMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
+          const sent = await sendWahaListMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
+          if (!sent) {
+            const rows = (interactive.sections || [])
+              .flatMap((section: any) => section.rows || [])
+              .filter((row: any) => String(row.rowId || row.id || "") !== "__exit__");
+            if (rows.length > 0 && rows.length <= 3) {
+              await sendWahaButtonsMessage(from, {
+                type: "buttons",
+                title: interactive.title || "",
+                description: interactive.description || text || "Escolha uma opção",
+                footerText: interactive.footerText || "",
+                buttons: rows.map((row: any, index: number) => ({
+                  text: row.title || `Opção ${index + 1}`,
+                  id: row.rowId || row.id || `item_${index}`,
+                })),
+              }, wahaSession, WAHA_URL, WAHA_API_KEY, false);
+            }
+          }
           return;
         }
         if (interactive?.type === "buttons") {
