@@ -115,47 +115,8 @@ serve(async (req) => {
     let transport: "waha" | "meta" | "twilio" = "meta";
     let wahaSession = "default";
 
-    // ====== Heurística WAHA ======
 
-    // A) { event:'message' | 'message.any' | type:'message', data/message... }
-    if (isWahaMessageEvent(raw) && (raw?.data || raw?.message)) {
-      transport = "waha";
-      const fromMe = raw.payload?.fromMe || raw.data?.fromMe || raw.message?.fromMe || false;
-      
-      // Ignora mensagens enviadas pelo próprio bot
-      if (fromMe) {
-        console.log("[WAHA] Ignoring message from bot itself");
-        return new Response(JSON.stringify({ success: true, ignored: "fromMe" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      
-      from = String(raw.data?.from || raw.message?.from || raw.from || "").replace(/\D/g, "");
-      body =
-        raw.data?.text ||
-        raw.message?.text ||
-        raw.data?.message?.conversation ||
-        raw.message?.conversation ||
-        raw.data?.message?.extendedTextMessage?.text ||
-        "";
-      wahaSession = resolveWahaSession(raw);
-      console.log("[WAHA] Message received:", { sessionName: wahaSession, fromNumber: from, text: body });
-    }
 
-    // B) Baileys: { messages:[{ key:{remoteJid}, message:{...} }], ... }
-    if (transport !== "waha" && Array.isArray(raw?.messages) && raw.messages[0]?.key) {
-      transport = "waha";
-      const msg0 = raw.messages[0];
-      const remote = msg0.key?.remoteJid || "";
-      from = String(remote).split("@")[0].replace(/\D/g, "");
-      body =
-        msg0.message?.conversation ||
-        msg0.message?.extendedTextMessage?.text ||
-        msg0.message?.imageMessage?.caption ||
-        "";
-      wahaSession = resolveWahaSession(raw);
-      console.log("[WAHA] Message received (baileys):", { sessionName: wahaSession, fromNumber: from, text: body });
-    }
 
     // ====== Heurística Evolution API (substitui WAHA) ======
 
