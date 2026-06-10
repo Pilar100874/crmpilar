@@ -68,8 +68,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const getChannelStyles = () => {
     const styles = {
       whatsapp: {
-        bg: "bg-[#ECE5DD]",
-        userBubble: "bg-[#DCF8C6]",
+        bg: "bg-[#E5DDD5] bg-[url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22120%22%20height%3D%22120%22%20viewBox%3D%220%200%20120%20120%22%3E%3Cg%20fill%3D%22%23d9d2c8%22%20fill-opacity%3D%220.45%22%3E%3Ccircle%20cx%3D%2210%22%20cy%3D%2210%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%2240%22%20cy%3D%2230%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%2270%22%20cy%3D%2260%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%22100%22%20cy%3D%2290%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2280%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2220%22%20r%3D%221%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E')]",
+        userBubble: "bg-[#D9FDD3]",
         botBubble: "bg-white",
         headerBg: "bg-[#075E54]",
         headerText: "text-white",
