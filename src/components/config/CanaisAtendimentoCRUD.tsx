@@ -391,6 +391,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
           setWahaUrl(cfg.waha_url);
           setWahaApiKey(cfg.waha_api_key || "");
           setWebhookUrl(cfg.webhook_url || "");
+          setManagerUrl(cfg.manager_url || "");
         }
       }
 
