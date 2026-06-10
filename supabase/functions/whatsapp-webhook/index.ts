@@ -1869,14 +1869,13 @@ async function executeNode(
           try {
             const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
             const { data: wahaCfg } = await supabase
-              .from("waha_config")
+              .from("whatsapp_config")
               .select("waha_url, waha_api_key, session_name")
-              .eq("is_active", true)
               .limit(1)
               .maybeSingle();
             const sessionName = wahaCfg?.session_name || context.vars.session || "default";
-            const wahaUrl = wahaCfg?.waha_url || env("WAHA_URL");
-            const wahaKey = wahaCfg?.waha_api_key || env("WAHA_API_KEY");
+            const wahaUrl = wahaCfg?.waha_url || env("EVOLUTION_URL") || env("WAHA_URL");
+            const wahaKey = wahaCfg?.waha_api_key || env("EVOLUTION_API_KEY") || env("WAHA_API_KEY");
             if (mediaUrl) {
               await sendWahaMediaMessage(phone, msg, "image", mediaUrl, sessionName, wahaUrl, wahaKey);
             } else if (msg) {
