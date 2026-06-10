@@ -1396,12 +1396,15 @@ async function executeNode(
         text: itp(b.text || `Opção ${i + 1}`),
         id: b.value || b.id || `btn_${i}`,
       }));
-      // Envia como List Message nativo (mais robusto que botões e suporta >3 opções)
-      const rows = buttons.map((b: any, i: number) => ({
-        title: b.text,
-        description: "",
-        rowId: b.id || `row_${i}`,
-      }));
+      // Adiciona opção universal de Sair
+      const rows = [
+        ...buttons.map((b: any, i: number) => ({
+          title: b.text,
+          description: "",
+          rowId: b.id || `row_${i}`,
+        })),
+        { title: "Sair", description: "Encerrar atendimento", rowId: "__exit__" },
+      ];
       const interactive = {
         type: "list",
         title: itp(cfg.headerText || cfg.title || ""),
@@ -1411,7 +1414,7 @@ async function executeNode(
         sections: [{ title: itp(cfg.sectionTitle || "Opções"), rows }],
       };
       let fallbackTxt = interactive.description + "";
-      buttons.forEach((b: any, i: number) => { fallbackTxt += `\n${i + 1}. ${b.text}`; });
+      rows.forEach((r: any, i: number) => { fallbackTxt += `\n${i + 1}. ${r.title}`; });
       await onResponse(fallbackTxt, undefined, undefined, interactive);
       context.pendingNodeId = node.id;
 
