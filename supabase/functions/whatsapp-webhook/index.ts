@@ -2418,9 +2418,10 @@ async function executeNode(
           buttons: [
             { text: "Sim", id: `${prefix}_1` },
             { text: "Não", id: `${prefix}_2` },
+            { text: "Sair", id: "__exit__" },
           ],
         };
-        await onResponse(`${q}\n1. Sim\n2. Não`, undefined, undefined, interactive);
+        await onResponse(`${q}\n1. Sim\n2. Não\n3. Sair`, undefined, undefined, interactive);
         context.pendingNodeId = node.id;
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
         const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
