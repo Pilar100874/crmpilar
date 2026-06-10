@@ -722,7 +722,8 @@ serve(async (req) => {
         } else if (blockType === "list_buttons") {
           const sections: any[] = cfg.sections || [];
           let idx = 0;
-          for (const sec of sections) {
+          const listSections = sections.length ? sections : [{ rows: cfg.items || [] }];
+          for (const sec of listSections) {
             for (const row of (sec.rows || sec.items || [])) {
               const rawValue = row.id ?? row.value ?? row.title ?? row.label ?? `item_${idx}`;
               options.push({
@@ -748,7 +749,11 @@ serve(async (req) => {
         }
 
         if (selectedIndex < 0) {
-          await respond(`Por favor, responda com um número entre 1 e ${options.length} ou o nome da opção.`);
+          if (blockType === "list_buttons") {
+            await executeNode(pendingNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+          } else {
+            await respond(`Por favor, responda com um número entre 1 e ${options.length} ou o nome da opção.`);
+          }
           shouldReturn = true;
         } else {
           const chosen = options[selectedIndex];
