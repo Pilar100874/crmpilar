@@ -253,7 +253,7 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                         title="Arraste ou clique 2x para adicionar"
                         className="p-2 ml-5 cursor-grab active:cursor-grabbing bg-muted/50 hover:bg-muted hover:border-primary/40 transition-all duration-150 hover:shadow-md group rounded-2xl select-none"
                       >
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-start gap-2">
                           {IconComponent && (
                             <div className="p-1 rounded-md bg-gradient-to-br from-primary/15 to-primary/10 border border-primary/25 group-hover:border-primary/50 transition-all flex-shrink-0">
                               <IconComponent className="w-3 h-3 text-primary group-hover:text-primary" />
@@ -263,19 +263,19 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                             <h4 className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors truncate">
                               {blockDef.label}
                             </h4>
+                            {(() => {
+                              const kind = getInteractionKind(blockDef.type);
+                              if (!kind) return null;
+                              return (
+                                <span
+                                  title={kind.title}
+                                  className={`inline-block mt-1 text-[9px] font-semibold px-1.5 py-0.5 rounded border ${kind.className}`}
+                                >
+                                  {kind.label}
+                                </span>
+                              );
+                            })()}
                           </div>
-                          {(() => {
-                            const kind = getInteractionKind(blockDef.type);
-                            if (!kind) return null;
-                            return (
-                              <span
-                                title={kind.title}
-                                className={`shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded border ${kind.className}`}
-                              >
-                                {kind.label}
-                              </span>
-                            );
-                          })()}
                         </div>
                       </Card>
                     );
