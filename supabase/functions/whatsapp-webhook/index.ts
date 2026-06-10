@@ -1027,21 +1027,27 @@ async function sendWahaListMessage(
   const instance = sessionName || "default";
   const number = String(toNumberOnly).replace(/\D/g, "");
   const endpoint = `${base}/message/sendList/${encodeURIComponent(instance)}`;
-  // Evolution API exige description não-vazia em cada row
-  const sanitizedSections = (interactive.sections || []).map((sec: any) => ({
-    title: sec.title || "Opções",
-    rows: (sec.rows || []).map((r: any) => ({
-      title: r.title || "Opção",
-      description: (r.description && String(r.description).trim()) ? r.description : (r.title || "Selecionar"),
-      rowId: r.rowId || r.title || "row",
+  // Evolution API exige description não-vazia em cada row e rejeita títulos vazios
+  const sanitizedSections = (interactive.sections || []).map((sec: any, si: number) => ({
+    title: (sec.title && String(sec.title).trim()) ? String(sec.title).trim().slice(0, 24) : `Opções ${si + 1}`,
+    rows: (sec.rows || []).map((r: any, ri: number) => ({
+      title: (r.title && String(r.title).trim()) ? String(r.title).trim().slice(0, 24) : `Opção ${ri + 1}`,
+      description: (r.description && String(r.description).trim()) ? String(r.description).trim().slice(0, 72) : " ",
+      rowId: r.rowId || `row_${si}_${ri}`,
     })),
-  }));
-  const body = {
+  })).filter((s: any) => s.rows.length > 0);
+
+  const title = (interactive.title && String(interactive.title).trim()) ? String(interactive.title).trim().slice(0, 60) : "Escolha uma opção";
+  const description = (interactive.description && String(interactive.description).trim()) ? String(interactive.description).trim() : "Selecione abaixo";
+  const buttonText = (interactive.buttonText && String(interactive.buttonText).trim()) ? String(interactive.buttonText).trim().slice(0, 20) : "Ver opções";
+  const footerText = (interactive.footerText && String(interactive.footerText).trim()) ? String(interactive.footerText).trim() : "Toque para escolher";
+
+  const body: any = {
     number,
-    title: interactive.title || "Escolha uma opção",
-    description: (interactive.description && String(interactive.description).trim()) ? interactive.description : "Selecione abaixo",
-    buttonText: interactive.buttonText || "Ver opções",
-    footerText: interactive.footerText || "",
+    title,
+    description,
+    buttonText,
+    footerText,
     sections: sanitizedSections,
   };
   try {
@@ -1055,19 +1061,68 @@ async function sendWahaListMessage(
     const resultText = await resp.text().catch(() => "");
     console.log("[EVOLUTION] sendList result:", resp.status, resultText.slice(0, 500));
     if (!resp.ok) {
-      let fallback = `${body.title}\n${body.description}\n`;
+      // Fallback 1: tentar enviar como Poll (enquete) — interativo e estável no Baileys
+      const allRows: any[] = [];
+      for (const sec of body.sections) for (const r of (sec.rows || [])) allRows.push(r);
+      if (allRows.length >= 2 && allRows.length <= 12) {
+        console.log("[EVOLUTION] sendList falhou — tentando Poll como fallback");
+        const pollOk = await sendWahaPollMessage(
+          toNumberOnly,
+          { name: description.slice(0, 255), values: allRows.map(r => String(r.title).slice(0, 100)), selectableCount: 1 },
+          sessionName, wahaUrl, wahaApiKey,
+        );
+        if (pollOk) return;
+      }
+      // Fallback 2: texto numerado
+      let fallback = `${title}\n${description}\n`;
       let idx = 1;
       for (const sec of body.sections) {
         if (sec.title) fallback += `\n*${sec.title}*\n`;
         for (const row of (sec.rows || [])) {
-          fallback += `${idx}. ${row.title}${row.description ? " - " + row.description : ""}\n`;
+          fallback += `${idx}. ${row.title}${row.description && row.description !== " " ? " - " + row.description : ""}\n`;
           idx++;
         }
       }
+      fallback += `\n_Responda com o número da opção._`;
       await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey);
     }
   } catch (err) {
     console.error("[EVOLUTION] Erro no sendList:", err);
+  }
+}
+
+async function sendWahaPollMessage(
+  toNumberOnly: string,
+  poll: { name: string; values: string[]; selectableCount?: number },
+  sessionName: string,
+  wahaUrl: string,
+  wahaApiKey: string,
+): Promise<boolean> {
+  const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
+  if (!base || !apiKey) return false;
+  const instance = sessionName || "default";
+  const number = String(toNumberOnly).replace(/\D/g, "");
+  const endpoint = `${base}/message/sendPoll/${encodeURIComponent(instance)}`;
+  const body = {
+    number,
+    name: poll.name,
+    selectableCount: poll.selectableCount ?? 1,
+    values: poll.values,
+  };
+  try {
+    console.log(`[EVOLUTION] Enviando POLL -> ${number}`, { instance, options: poll.values.length });
+    const resp = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json", apikey: apiKey },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(60000),
+    });
+    const resultText = await resp.text().catch(() => "");
+    console.log("[EVOLUTION] sendPoll result:", resp.status, resultText.slice(0, 500));
+    return resp.ok;
+  } catch (err) {
+    console.error("[EVOLUTION] Erro no sendPoll:", err);
+    return false;
   }
 }
 
