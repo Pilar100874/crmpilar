@@ -1447,6 +1447,11 @@ async function executeNode(
           }));
           sections = [{ title: itp(cfg.sectionTitle || "Opções"), rows }];
         }
+        // Adiciona seção universal de Sair
+        sections.push({
+          title: "",
+          rows: [{ title: "Sair", description: "Encerrar atendimento", rowId: "__exit__" }],
+        });
         const interactive = {
           type: "list",
           title: itp(cfg.title || ""),
