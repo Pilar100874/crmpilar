@@ -707,9 +707,10 @@ serve(async (req) => {
           let idx = 0;
           for (const sec of sections) {
             for (const row of (sec.rows || sec.items || [])) {
+              const rawValue = row.id ?? row.value ?? row.title ?? row.label ?? `item_${idx}`;
               options.push({
                 label: row.title || row.label || `Opção ${idx + 1}`,
-                value: row.id || row.value || row.title || `item_${idx}`,
+                value: String(rawValue),
                 handle: `row_${idx}`,
               });
               idx++;
@@ -725,7 +726,7 @@ serve(async (req) => {
         } else {
           const lower = userResponse.toLowerCase();
           selectedIndex = options.findIndex(
-            (o) => o.label.toLowerCase() === lower || o.value.toLowerCase() === lower,
+            (o) => String(o.label || "").toLowerCase() === lower || String(o.value || "").toLowerCase() === lower,
           );
         }
 
