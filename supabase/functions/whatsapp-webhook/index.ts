@@ -295,8 +295,16 @@ serve(async (req) => {
       flowData = data;
     }
 
-    const respond = async (text?: string, mediaUrl?: string, mediaType?: string) => {
+    const respond = async (text?: string, mediaUrl?: string, mediaType?: string, interactive?: any) => {
       if (transport === "waha") {
+        if (interactive?.type === "list") {
+          await sendWahaListMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
+          return;
+        }
+        if (interactive?.type === "buttons") {
+          await sendWahaButtonsMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
+          return;
+        }
         if (mediaUrl && mediaType) {
           await sendWahaMediaMessage(from, text, mediaType, mediaUrl, wahaSession, WAHA_URL, WAHA_API_KEY);
         } else if (text) {
@@ -435,16 +443,17 @@ serve(async (req) => {
       }
     }
 
-    const onResponse = async (message: string, mediaUrl?: string, mediaType?: string) => {
+    const onResponse = async (message: string, mediaUrl?: string, mediaType?: string, interactive?: any) => {
       // Salva mensagem do bot na conversation
-      if (conversationId && message) {
+      if (conversationId && (message || interactive)) {
+        const textForLog = message || (interactive?.title ? `[interactive] ${interactive.title}` : "[interactive]");
         console.log("[ATENDIMENTO] Salvando mensagem do bot");
         const { error: botMsgError } = await supabase
           .from("messages")
           .insert({
             conversation_id: conversationId,
             sender: "agent",
-            text: message
+            text: textForLog
           });
         
         if (botMsgError) {
@@ -453,12 +462,11 @@ serve(async (req) => {
           console.log("[ATENDIMENTO] ✓ Mensagem do bot salva");
         }
       }
-      // Se tem mídia, envia tudo junto em uma única chamada
-      if (mediaUrl && mediaType) {
+      if (interactive) {
+        await respond(message, undefined, undefined, interactive);
+      } else if (mediaUrl && mediaType) {
         await respond(message, mediaUrl, mediaType);
-      } 
-      // Se só tem mensagem, envia apenas texto
-      else if (message) {
+      } else if (message) {
         await respond(message);
       }
     };
@@ -962,7 +970,101 @@ async function sendWahaTextMessage(
     if (resp.ok) return;
     if (resp.status === 401) {
       console.error("[EVOLUTION] 401 não autorizado — verifique a apikey configurada.");
+}
+
+async function sendWahaListMessage(
+  toNumberOnly: string,
+  interactive: any,
+  sessionName: string,
+  wahaUrl: string,
+  wahaApiKey: string,
+) {
+  const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
+  if (!base || !apiKey) {
+    console.error("[EVOLUTION] URL ou apikey ausentes para sendList.");
+    return;
+  }
+  const instance = sessionName || "default";
+  const number = String(toNumberOnly).replace(/\D/g, "");
+  const endpoint = `${base}/message/sendList/${encodeURIComponent(instance)}`;
+  const body = {
+    number,
+    title: interactive.title || "Escolha uma opção",
+    description: interactive.description || "",
+    buttonText: interactive.buttonText || "Ver opções",
+    footerText: interactive.footerText || "",
+    sections: interactive.sections || [],
+  };
+  try {
+    console.log(`[EVOLUTION] Enviando LIST -> ${number}`, { instance, sections: body.sections.length });
+    const resp = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json", apikey: apiKey },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(60000),
+    });
+    const resultText = await resp.text().catch(() => "");
+    console.log("[EVOLUTION] sendList result:", resp.status, resultText.slice(0, 500));
+    if (!resp.ok) {
+      // Fallback texto numerado
+      let fallback = `${body.title}\n${body.description}\n`;
+      let idx = 1;
+      for (const sec of body.sections) {
+        if (sec.title) fallback += `\n*${sec.title}*\n`;
+        for (const row of (sec.rows || [])) {
+          fallback += `${idx}. ${row.title}${row.description ? " - " + row.description : ""}\n`;
+          idx++;
+        }
+      }
+      await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey);
     }
+  } catch (err) {
+    console.error("[EVOLUTION] Erro no sendList:", err);
+  }
+}
+
+async function sendWahaButtonsMessage(
+  toNumberOnly: string,
+  interactive: any,
+  sessionName: string,
+  wahaUrl: string,
+  wahaApiKey: string,
+) {
+  const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
+  if (!base || !apiKey) return;
+  const instance = sessionName || "default";
+  const number = String(toNumberOnly).replace(/\D/g, "");
+  const endpoint = `${base}/message/sendButtons/${encodeURIComponent(instance)}`;
+  const body = {
+    number,
+    title: interactive.title || "",
+    description: interactive.description || "Escolha uma opção",
+    footer: interactive.footerText || "",
+    buttons: (interactive.buttons || []).map((b: any, i: number) => ({
+      type: "reply",
+      displayText: b.text || b.displayText || `Opção ${i + 1}`,
+      id: b.id || b.value || `btn_${i}`,
+    })),
+  };
+  try {
+    console.log(`[EVOLUTION] Enviando BUTTONS -> ${number}`, { instance, count: body.buttons.length });
+    const resp = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json", apikey: apiKey },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(60000),
+    });
+    const resultText = await resp.text().catch(() => "");
+    console.log("[EVOLUTION] sendButtons result:", resp.status, resultText.slice(0, 500));
+    if (!resp.ok) {
+      let fallback = `${body.description}\n`;
+      body.buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.displayText}`; });
+      await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey);
+    }
+  } catch (err) {
+    console.error("[EVOLUTION] Erro no sendButtons:", err);
+  }
+}
   } catch (err) {
     console.error("[EVOLUTION] Erro no sendText:", err);
   }
@@ -1138,7 +1240,7 @@ async function executeFlow(
   flowData: any,
   context: any,
   startNode: any,
-  onResponse: (message: string, mediaUrl?: string, mediaType?: string) => Promise<void>,
+  onResponse: (message: string, mediaUrl?: string, mediaType?: string, interactive?: any) => Promise<void>,
 ) {
   const { nodes } = flowData;
   if (!startNode) {
@@ -1154,7 +1256,7 @@ async function executeNode(
   nodes: any[],
   edges: any[],
   context: any,
-  onResponse: (message: string, mediaUrl?: string, mediaType?: string) => Promise<void>,
+  onResponse: (message: string, mediaUrl?: string, mediaType?: string, interactive?: any) => Promise<void>,
 ) {
   const data = node.data;
   const cfg = data.config || {};
@@ -1255,9 +1357,27 @@ async function executeNode(
       break;
     }
     case "reply_buttons": {
-      let txt = "Escolha uma opção:";
-      if (cfg.buttons?.length) cfg.buttons.forEach((b: any, i: number) => (txt += `\n${i + 1}. ${b.text}`));
-      await onResponse(txt);
+      const buttons = (cfg.buttons || []).map((b: any, i: number) => ({
+        text: itp(b.text || `Opção ${i + 1}`),
+        id: b.value || b.id || `btn_${i}`,
+      }));
+      // Envia como List Message nativo (mais robusto que botões e suporta >3 opções)
+      const rows = buttons.map((b: any, i: number) => ({
+        title: b.text,
+        description: "",
+        rowId: b.id || `row_${i}`,
+      }));
+      const interactive = {
+        type: "list",
+        title: itp(cfg.headerText || cfg.title || ""),
+        description: itp(cfg.text || cfg.bodyText || "Escolha uma opção:"),
+        buttonText: itp(cfg.buttonText || "Ver opções"),
+        footerText: itp(cfg.footerText || ""),
+        sections: [{ title: itp(cfg.sectionTitle || "Opções"), rows }],
+      };
+      let fallbackTxt = interactive.description + "";
+      buttons.forEach((b: any, i: number) => { fallbackTxt += `\n${i + 1}. ${b.text}`; });
+      await onResponse(fallbackTxt, undefined, undefined, interactive);
       context.pendingNodeId = node.id;
 
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -1269,16 +1389,53 @@ async function executeNode(
       return;
     }
       case "list_buttons": {
-        let txt = itp(cfg.text || cfg.headerText || "");
-        if (cfg.items?.length) {
-          txt += "\n\nEscolha uma opção:";
-          cfg.items.forEach((item: any, i: number) => {
-            txt += `\n${i + 1}. ${item.title}${item.description ? " - " + item.description : ""}`;
-          });
+        const headerTxt = itp(cfg.text || cfg.headerText || "");
+        // Suporta dois formatos: { items: [...] } simples ou { sections: [{ title, rows }] }
+        let sections: any[] = [];
+        if (Array.isArray(cfg.sections) && cfg.sections.length) {
+          sections = cfg.sections.map((sec: any) => ({
+            title: itp(sec.title || ""),
+            rows: (sec.rows || sec.items || []).map((r: any, i: number) => ({
+              title: itp(r.title || r.label || `Opção ${i + 1}`),
+              description: itp(r.description || ""),
+              rowId: r.id || r.value || r.title || `item_${i}`,
+            })),
+          }));
+        } else {
+          const rows = (cfg.items || []).map((item: any, i: number) => ({
+            title: itp(item.title || `Opção ${i + 1}`),
+            description: itp(item.description || ""),
+            rowId: item.id || item.value || item.title || `item_${i}`,
+          }));
+          sections = [{ title: itp(cfg.sectionTitle || "Opções"), rows }];
         }
-        if (txt) await onResponse(txt);
-        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
-        break;
+        const interactive = {
+          type: "list",
+          title: itp(cfg.title || ""),
+          description: headerTxt || "Escolha uma opção",
+          buttonText: itp(cfg.buttonText || "Ver opções"),
+          footerText: itp(cfg.footerText || ""),
+          sections,
+        };
+        // Texto fallback
+        let fallback = (headerTxt || "Escolha uma opção:") + "";
+        let n = 1;
+        for (const sec of sections) {
+          if (sec.title) fallback += `\n\n*${sec.title}*`;
+          for (const r of sec.rows) {
+            fallback += `\n${n}. ${r.title}${r.description ? " - " + r.description : ""}`;
+            n++;
+          }
+        }
+        await onResponse(fallback, undefined, undefined, interactive);
+        context.pendingNodeId = node.id;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
+        await supabase.from("chat_sessions").upsert(
+          { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+          { onConflict: "session_id" },
+        );
+        return;
       }
       case "crm_gerar_relatorio": {
         console.log(`[FLOW] crm_gerar_relatorio - config:`, JSON.stringify(cfg));
