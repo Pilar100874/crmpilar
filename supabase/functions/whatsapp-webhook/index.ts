@@ -1034,7 +1034,7 @@ async function sendWahaListMessage(
     rows: (sec.rows || []).map((r: any, ri: number) => ({
       title: (r.title && String(r.title).trim()) ? String(r.title).trim().slice(0, 24) : `Opção ${ri + 1}`,
       description: (r.description && String(r.description).trim()) ? String(r.description).trim().slice(0, 72) : " ",
-      rowId: r.rowId || `row_${si}_${ri}`,
+      rowId: String(r.rowId ?? `row_${si}_${ri}`),
     })),
   })).filter((s: any) => s.rows.length > 0);
 
