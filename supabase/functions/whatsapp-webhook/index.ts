@@ -2054,22 +2054,62 @@ async function executeNode(
       case "generate_ai_media": {
         try {
           const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-          const prompt = itp(cfg.basePrompt || cfg.textPrompt || "criativo");
+          const userPrompt = itp(cfg.textPrompt || cfg.prompt || "");
+          const basePrompt = itp(cfg.basePrompt || "");
           await onResponse("🎨 Gerando mídia, aguarde...");
+
+          // Coleta referências (produto, influencer, extras) das variáveis do contexto
+          const refUrls: string[] = [];
+          const refLabels: string[] = [];
+          const pushRef = (u: any, label: string) => {
+            if (typeof u === "string" && u && !refUrls.includes(u)) {
+              refUrls.push(u);
+              refLabels.push(label);
+            } else if (Array.isArray(u)) {
+              u.forEach((x) => pushRef(x, label));
+            }
+          };
+          pushRef(context.vars.product_image_url || context.vars.product_image, "product");
+          pushRef(context.vars.influencer_image_url || context.vars.influencer_image, "influencer");
+          if (cfg.refImageUrl) pushRef(itp(cfg.refImageUrl), "ref");
+
+          const titulo = context.vars.tc_title || "";
+          const subtitulo = context.vars.tc_subtitle || "";
+          const corpo = context.vars.tc_body || "";
+          const textHints = [
+            titulo ? `Título: "${titulo}"` : "",
+            subtitulo ? `Subtítulo: "${subtitulo}"` : "",
+            corpo ? `Texto auxiliar: "${corpo}"` : "",
+          ].filter(Boolean).join("\n");
+          const promptFinal = [userPrompt, textHints].filter(Boolean).join("\n\n");
+
           const { data, error } = await supabase.functions.invoke("bot-generate-ai-media", {
             body: {
-              prompt,
+              prompt: promptFinal,
+              basePrompt,
               variations: cfg.variations || 1,
-              estabelecimento_id: context.vars.estabelecimento_id,
-              refImageUrl: cfg.refImageUrl ? itp(cfg.refImageUrl) : undefined,
+              estabelecimentoId: context.vars.estabelecimento_id,
+              referenceImageUrls: refUrls,
+              referenceLabels: refLabels,
+              aspectRatio: cfg.aspectRatio || "1:1",
+              contentTypeBadge: context.vars.content_type_use_badge ? (context.vars.content_type || "") : "",
             },
           });
           if (error) throw error;
-          const items: any[] = data?.items || data?.results || (data?.url ? [{ url: data.url }] : []);
-          for (const it of items.slice(0, 4)) {
-            if (it.url) await onResponse("", it.url, "image");
+          const urls: string[] = Array.isArray(data?.images)
+            ? data.images
+            : (data?.items || data?.results || []).map((it: any) => it?.url).filter(Boolean);
+          if (!urls.length) {
+            console.error(`[FLOW] generate_ai_media: nenhuma imagem retornada`, data?.errors);
+            await onResponse("⚠️ Não foi possível gerar a mídia.");
+          } else {
+            for (const url of urls.slice(0, 4)) {
+              await onResponse("", url, "image");
+            }
+            if (cfg.outputVariable) context.vars[cfg.outputVariable] = urls[0];
+            context.vars.last_generated_media_url = urls[0];
+            context.vars.last_generated_media_urls = urls;
           }
-          if (cfg.outputVariable) context.vars[cfg.outputVariable] = items[0] || null;
         } catch (e) {
           console.error(`[FLOW] generate_ai_media error:`, e);
           await onResponse("⚠️ Não foi possível gerar a mídia.");
