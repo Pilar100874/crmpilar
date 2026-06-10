@@ -2407,21 +2407,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           break;
         }
 
-        // Novo fluxo: pergunta Sim/Não/Sair como dropdown
-        const tcYesNoId = `list_${node.id}_${Date.now()}`;
-        setActiveListId(tcYesNoId);
+        // Novo fluxo: pergunta Sim/Não/Sair como botões de resposta
         setMessages((prev) => [...prev, {
-          id: tcYesNoId, sender: "bot", text: "Você quer usar título e subtítulo na imagem?", timestamp: new Date(), nodeId: node.id,
-          isListButton: true,
-          listButtonText: "Ver opções",
-          listSections: [{
-            title: "Opções",
-            items: [
-              { label: "Sim", value: "sim" },
-              { label: "Não", value: "nao" },
-              { label: "Sair", value: "__exit__", description: "Encerrar atendimento" },
-            ],
-          }],
+          id: uid(), sender: "bot", text: "Você quer usar título e subtítulo na imagem?", timestamp: new Date(), nodeId: node.id,
+          buttons: [
+            { text: "Sim", value: "sim", buttonId: "tc_yes" },
+            { text: "Não", value: "nao", buttonId: "tc_no" },
+            { text: "Sair", value: "__exit__", buttonId: "tc_exit" },
+          ],
         }]);
         setIsWaitingInput(true);
         setCurrentBlockType("text_content_yesno");
