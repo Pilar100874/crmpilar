@@ -1036,11 +1036,11 @@ async function sendWahaListMessage(
   sessionName: string,
   wahaUrl: string,
   wahaApiKey: string,
-) {
+): Promise<boolean> {
   const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
   if (!base || !apiKey) {
     console.error("[EVOLUTION] URL ou apikey ausentes para sendList.");
-    return;
+    return false;
   }
   const instance = sessionName || "default";
   const number = String(toNumberOnly).replace(/\D/g, "");
@@ -1082,9 +1082,12 @@ async function sendWahaListMessage(
     console.log("[EVOLUTION] sendList result:", resp.status, resultText.slice(0, 500));
     if (!resp.ok) {
       console.error("[EVOLUTION] Não foi possível enviar List Message; fallback por enquete/texto desativado.");
+      return false;
     }
+    return true;
   } catch (err) {
     console.error("[EVOLUTION] Erro no sendList:", err);
+    return false;
   }
 }
 
