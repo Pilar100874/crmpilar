@@ -157,27 +157,53 @@ serve(async (req) => {
       console.log("[WAHA] Message received (baileys):", { sessionName: wahaSession, fromNumber: from, text: body });
     }
 
-    // C) WEBJS: { event:'message' | 'message.any', payload:{ from, body }, session: ... }
-    if (transport !== "waha" && isWahaMessageEvent(raw) && raw?.payload) {
+    // ====== Heurística Evolution API (substitui WAHA) ======
+
+    // A) Evolution v2: { event:'messages.upsert', instance, data:{ key:{remoteJid, fromMe}, message:{...} } }
+    if (isWahaMessageEvent(raw) && (raw?.data?.key || raw?.data?.message || raw?.data)) {
       transport = "waha";
-      const p = raw.payload || {};
-      
-      // Ignora mensagens enviadas pelo próprio bot
-      if (p.fromMe) {
-        console.log("[WAHA] Ignoring message from bot itself (webjs)");
+      const d = raw.data || {};
+      const fromMe = d?.key?.fromMe === true;
+
+      if (fromMe) {
+        console.log("[EVOLUTION] Ignorando mensagem do próprio bot");
         return new Response(JSON.stringify({ success: true, ignored: "fromMe" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      
-      const fromJid = String(p.from || p._data?.id?.remote || "");
-      from = fromJid.split("@")[0].replace(/\D/g, "");
-      body = String(p.body || p.text || p.message?.conversation || p._data?.body || "");
+
+      const remoteJid = String(d?.key?.remoteJid || d?.remoteJid || "");
+      // Ignora mensagens de grupos por padrão
+      if (remoteJid.endsWith("@g.us")) {
+        console.log("[EVOLUTION] Ignorando mensagem de grupo:", remoteJid);
+        return new Response(JSON.stringify({ success: true, ignored: "group" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      from = remoteJid.split("@")[0].split(":")[0].replace(/\D/g, "");
+      body = extractEvolutionText(d?.message) || d?.text || "";
       wahaSession = resolveWahaSession(raw);
-      console.log("[WAHA] Message received (webjs):", { sessionName: wahaSession, fromNumber: from, text: body });
+      console.log("[EVOLUTION] Mensagem recebida:", { instance: wahaSession, from, text: body });
     }
 
-    // ====== Meta oficial (se não caiu em WAHA) ======
+    // B) Baileys cru: { messages:[{ key:{remoteJid}, message:{...} }] } — compatibilidade
+    if (transport !== "waha" && Array.isArray(raw?.messages) && raw.messages[0]?.key) {
+      transport = "waha";
+      const msg0 = raw.messages[0];
+      if (msg0.key?.fromMe) {
+        return new Response(JSON.stringify({ success: true, ignored: "fromMe" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const remote = msg0.key?.remoteJid || "";
+      from = String(remote).split("@")[0].split(":")[0].replace(/\D/g, "");
+      body = extractEvolutionText(msg0.message);
+      wahaSession = resolveWahaSession(raw);
+      console.log("[EVOLUTION] Mensagem recebida (baileys raw):", { instance: wahaSession, from, text: body });
+    }
+
+    // ====== Meta oficial (se não caiu em Evolution) ======
     if (transport !== "waha") {
       const payload: WhatsAppWebhookPayload = raw;
       if (!payload.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {
