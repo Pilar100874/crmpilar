@@ -7,6 +7,7 @@ import { ChevronDown, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getInteractionKind } from "./blockInteractionKind";
 
 interface BlockLibraryProps {
   onDragStart: (event: React.DragEvent, nodeType: string) => void;
@@ -263,6 +264,18 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                               {blockDef.label}
                             </h4>
                           </div>
+                          {(() => {
+                            const kind = getInteractionKind(blockDef.type);
+                            if (!kind) return null;
+                            return (
+                              <span
+                                title={kind.title}
+                                className={`shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded border ${kind.className}`}
+                              >
+                                {kind.label}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </Card>
                     );
