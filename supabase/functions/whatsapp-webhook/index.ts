@@ -2329,7 +2329,7 @@ async function executeNode(
         // Modo options / advanced → pergunta com List Message interativo
         const opts: any[] = Array.isArray(cfg.options) ? cfg.options : [];
         const prompt = itp(cfg.optionsPrompt || (opts.length ? "Escolha um dos textos:" : "Você quer usar título e subtítulo na imagem?"));
-        const rows = opts.length
+        const baseRows = opts.length
           ? opts.map((o: any, i: number) => ({
               title: (itp(o.label || `Opção ${i + 1}`) + "").slice(0, 24),
               description: "",
@@ -2339,6 +2339,7 @@ async function executeNode(
               { title: "Sim", description: "", rowId: "tc_1" },
               { title: "Não", description: "", rowId: "tc_2" },
             ];
+        const rows = [...baseRows, { title: "Sair", description: "Encerrar atendimento", rowId: "__exit__" }];
         const interactive = {
           type: "list",
           title: "",
