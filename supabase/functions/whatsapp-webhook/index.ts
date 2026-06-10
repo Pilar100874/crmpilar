@@ -443,16 +443,17 @@ serve(async (req) => {
       }
     }
 
-    const onResponse = async (message: string, mediaUrl?: string, mediaType?: string) => {
+    const onResponse = async (message: string, mediaUrl?: string, mediaType?: string, interactive?: any) => {
       // Salva mensagem do bot na conversation
-      if (conversationId && message) {
+      if (conversationId && (message || interactive)) {
+        const textForLog = message || (interactive?.title ? `[interactive] ${interactive.title}` : "[interactive]");
         console.log("[ATENDIMENTO] Salvando mensagem do bot");
         const { error: botMsgError } = await supabase
           .from("messages")
           .insert({
             conversation_id: conversationId,
             sender: "agent",
-            text: message
+            text: textForLog
           });
         
         if (botMsgError) {
@@ -461,12 +462,11 @@ serve(async (req) => {
           console.log("[ATENDIMENTO] ✓ Mensagem do bot salva");
         }
       }
-      // Se tem mídia, envia tudo junto em uma única chamada
-      if (mediaUrl && mediaType) {
+      if (interactive) {
+        await respond(message, undefined, undefined, interactive);
+      } else if (mediaUrl && mediaType) {
         await respond(message, mediaUrl, mediaType);
-      } 
-      // Se só tem mensagem, envia apenas texto
-      else if (message) {
+      } else if (message) {
         await respond(message);
       }
     };
