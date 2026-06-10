@@ -300,7 +300,9 @@ serve(async (req) => {
         if (interactive?.type === "list") {
           const sent = await sendWahaListMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
           if (!sent) {
-            const rows = (interactive.sections || [])
+            const allRows = (interactive.sections || [])
+              .flatMap((section: any) => section.rows || []);
+            const rows = allRows
               .flatMap((section: any) => section.rows || [])
               .filter((row: any) => String(row.rowId || row.id || "") !== "__exit__");
             if (rows.length > 0 && rows.length <= 3) {
@@ -311,9 +313,15 @@ serve(async (req) => {
                 footerText: interactive.footerText || "",
                 buttons: rows.map((row: any, index: number) => ({
                   text: row.title || `Opção ${index + 1}`,
-                  id: row.rowId || row.id || `item_${index}`,
+                  id: String(row.rowId || row.id || `item_${index}`),
                 })),
-              }, wahaSession, WAHA_URL, WAHA_API_KEY, false);
+              }, wahaSession, WAHA_URL, WAHA_API_KEY, true);
+            } else if (allRows.length > 0) {
+              let fallback = `${interactive.description || text || "Escolha uma opção"}`;
+              allRows.forEach((row: any, index: number) => {
+                fallback += `\n${index + 1}. ${row.title || `Opção ${index + 1}`}${row.description ? " - " + row.description : ""}`;
+              });
+              await sendWahaTextMessage(from, fallback, wahaSession, WAHA_URL, WAHA_API_KEY);
             }
           }
           return;
