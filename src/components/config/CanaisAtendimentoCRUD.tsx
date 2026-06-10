@@ -527,6 +527,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
             waha_url: wahaUrl,
             waha_api_key: wahaApiKey || null,
             webhook_url: webhookUrl || null,
+            manager_url: managerUrl || null,
           } as any)
           .eq("id", existingConfig.id);
 
@@ -539,6 +540,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
             waha_url: wahaUrl,
             waha_api_key: wahaApiKey || null,
             webhook_url: webhookUrl || null,
+            manager_url: managerUrl || null,
           } as any);
 
         if (error) throw error;
