@@ -26,28 +26,53 @@ const env = (k: string, d = "") => (Deno.env.get(k) ?? d).trim();
 const SUPABASE_URL = env("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = env("SUPABASE_SERVICE_ROLE_KEY");
 const VERIFY_TOKEN = env("WHATSAPP_VERIFY_TOKEN", "conversa_botique_verify");
-const JID_SUFFIX = env("WAHA_JID_SUFFIX", "@c.us"); // "@c.us" (WEBJS) ou "@s.whatsapp.net" (Baileys)
+// JID suffix mantido por compatibilidade (não usado pelo Evolution, que aceita só dígitos)
+const JID_SUFFIX = env("WAHA_JID_SUFFIX", "@s.whatsapp.net");
 
 const toJid = (numOnly: string) => `${String(numOnly).replace(/\D/g, "")}${JID_SUFFIX}`;
 
+// Detecta evento do Evolution API (messages.upsert) ou formatos antigos compatíveis.
 function isWahaMessageEvent(raw: any): boolean {
   const event = String(raw?.event || raw?.type || "").toLowerCase();
-  return event === "message" || event === "message.any" || event.startsWith("message.");
+  if (!event) return false;
+  // Evolution: "messages.upsert" | "messages.update"
+  if (event.startsWith("messages.")) return true;
+  // Compatibilidade legada (WAHA)
+  if (event === "message" || event === "message.any" || event.startsWith("message.")) return true;
+  return false;
 }
 
+// Resolve o nome da instância/sessão (Evolution usa "instance")
 function resolveWahaSession(raw: any): string {
   return String(
-    raw?.data?.session ||
-      raw?.data?.sessionId ||
-      raw?.payload?.session ||
+    raw?.instance ||
+      raw?.instanceName ||
+      raw?.data?.instance ||
+      raw?.data?.instanceName ||
+      raw?.payload?.instance ||
       raw?.session ||
       raw?.sessionId ||
-      raw?.instance?.name ||
-      raw?.instanceId ||
-      raw?.data?.instance ||
-      raw?.payload?.instance ||
+      raw?.data?.session ||
+      raw?.data?.sessionId ||
+      raw?.payload?.session ||
       "default",
   ).trim();
+}
+
+// Extrai texto da mensagem Evolution (data.message)
+function extractEvolutionText(msg: any): string {
+  if (!msg) return "";
+  return (
+    msg.conversation ||
+    msg.extendedTextMessage?.text ||
+    msg.imageMessage?.caption ||
+    msg.videoMessage?.caption ||
+    msg.documentMessage?.caption ||
+    msg.buttonsResponseMessage?.selectedButtonId ||
+    msg.listResponseMessage?.singleSelectReply?.selectedRowId ||
+    msg.templateButtonReplyMessage?.selectedId ||
+    ""
+  );
 }
 
 serve(async (req) => {
