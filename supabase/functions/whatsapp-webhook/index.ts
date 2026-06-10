@@ -970,7 +970,101 @@ async function sendWahaTextMessage(
     if (resp.ok) return;
     if (resp.status === 401) {
       console.error("[EVOLUTION] 401 não autorizado — verifique a apikey configurada.");
+}
+
+async function sendWahaListMessage(
+  toNumberOnly: string,
+  interactive: any,
+  sessionName: string,
+  wahaUrl: string,
+  wahaApiKey: string,
+) {
+  const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
+  if (!base || !apiKey) {
+    console.error("[EVOLUTION] URL ou apikey ausentes para sendList.");
+    return;
+  }
+  const instance = sessionName || "default";
+  const number = String(toNumberOnly).replace(/\D/g, "");
+  const endpoint = `${base}/message/sendList/${encodeURIComponent(instance)}`;
+  const body = {
+    number,
+    title: interactive.title || "Escolha uma opção",
+    description: interactive.description || "",
+    buttonText: interactive.buttonText || "Ver opções",
+    footerText: interactive.footerText || "",
+    sections: interactive.sections || [],
+  };
+  try {
+    console.log(`[EVOLUTION] Enviando LIST -> ${number}`, { instance, sections: body.sections.length });
+    const resp = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json", apikey: apiKey },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(60000),
+    });
+    const resultText = await resp.text().catch(() => "");
+    console.log("[EVOLUTION] sendList result:", resp.status, resultText.slice(0, 500));
+    if (!resp.ok) {
+      // Fallback texto numerado
+      let fallback = `${body.title}\n${body.description}\n`;
+      let idx = 1;
+      for (const sec of body.sections) {
+        if (sec.title) fallback += `\n*${sec.title}*\n`;
+        for (const row of (sec.rows || [])) {
+          fallback += `${idx}. ${row.title}${row.description ? " - " + row.description : ""}\n`;
+          idx++;
+        }
+      }
+      await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey);
     }
+  } catch (err) {
+    console.error("[EVOLUTION] Erro no sendList:", err);
+  }
+}
+
+async function sendWahaButtonsMessage(
+  toNumberOnly: string,
+  interactive: any,
+  sessionName: string,
+  wahaUrl: string,
+  wahaApiKey: string,
+) {
+  const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
+  if (!base || !apiKey) return;
+  const instance = sessionName || "default";
+  const number = String(toNumberOnly).replace(/\D/g, "");
+  const endpoint = `${base}/message/sendButtons/${encodeURIComponent(instance)}`;
+  const body = {
+    number,
+    title: interactive.title || "",
+    description: interactive.description || "Escolha uma opção",
+    footer: interactive.footerText || "",
+    buttons: (interactive.buttons || []).map((b: any, i: number) => ({
+      type: "reply",
+      displayText: b.text || b.displayText || `Opção ${i + 1}`,
+      id: b.id || b.value || `btn_${i}`,
+    })),
+  };
+  try {
+    console.log(`[EVOLUTION] Enviando BUTTONS -> ${number}`, { instance, count: body.buttons.length });
+    const resp = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json", apikey: apiKey },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(60000),
+    });
+    const resultText = await resp.text().catch(() => "");
+    console.log("[EVOLUTION] sendButtons result:", resp.status, resultText.slice(0, 500));
+    if (!resp.ok) {
+      let fallback = `${body.description}\n`;
+      body.buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.displayText}`; });
+      await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey);
+    }
+  } catch (err) {
+    console.error("[EVOLUTION] Erro no sendButtons:", err);
+  }
+}
   } catch (err) {
     console.error("[EVOLUTION] Erro no sendText:", err);
   }
