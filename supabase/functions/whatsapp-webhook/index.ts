@@ -303,7 +303,6 @@ serve(async (req) => {
             const allRows = (interactive.sections || [])
               .flatMap((section: any) => section.rows || []);
             const rows = allRows
-              .flatMap((section: any) => section.rows || [])
               .filter((row: any) => String(row.rowId || row.id || "") !== "__exit__");
             if (rows.length > 0 && rows.length <= 3) {
               await sendWahaButtonsMessage(from, {
@@ -731,13 +730,17 @@ serve(async (req) => {
           const sections: any[] = cfg.sections || [];
           let idx = 0;
           const listSections = sections.length ? sections : [{ rows: cfg.items || [] }];
-          for (const sec of listSections) {
-            for (const row of (sec.rows || sec.items || [])) {
-              const rawValue = row.id ?? row.value ?? row.title ?? row.label ?? `item_${idx}`;
+          for (let sectionIndex = 0; sectionIndex < listSections.length; sectionIndex++) {
+            const sec = listSections[sectionIndex];
+            const rows = sec.rows || sec.items || [];
+            for (let itemIndex = 0; itemIndex < rows.length; itemIndex++) {
+              const row = rows[itemIndex];
+              const handle = row.rowId || `section_${sectionIndex}_item_${itemIndex}`;
+              const rawValue = row.value || row.id || row.rowId || row.title || row.label || handle;
               options.push({
                 label: row.title || row.label || `Opção ${idx + 1}`,
                 value: String(rawValue),
-                handle: `row_${idx}`,
+                handle,
               });
               idx++;
             }
@@ -1547,14 +1550,14 @@ async function executeNode(
             rows: (sec.rows || sec.items || []).map((r: any, i: number) => ({
               title: itp(r.title || r.label || `Opção ${i + 1}`),
               description: itp(r.description || ""),
-              rowId: r.id || r.value || r.title || `item_${i}`,
+              rowId: `section_${si}_item_${i}`,
             })),
           }));
         } else {
           const rows = (cfg.items || []).map((item: any, i: number) => ({
             title: itp(item.title || `Opção ${i + 1}`),
             description: itp(item.description || ""),
-            rowId: item.id || item.value || item.title || `item_${i}`,
+            rowId: `section_0_item_${i}`,
           }));
           sections = [{ title: itp(cfg.sectionTitle || "Opções"), rows }];
         }
