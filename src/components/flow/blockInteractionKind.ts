@@ -1,60 +1,70 @@
 // Mapeia tipo de bloco -> tipo de interação WhatsApp (rótulo visual)
 export type InteractionKind = {
   label: string;
-  className: string; // classes tailwind para o badge
+  symbol: string; // símbolo/emoji compacto
+  className: string;
   title: string;
 };
 
 const BUTTONS: InteractionKind = {
   label: "Botões",
+  symbol: "⏺",
   className: "bg-purple-100 text-purple-700 border-purple-300",
   title: "Botões de resposta (reply buttons) — até 3 opções",
 };
 
 const LIST: InteractionKind = {
   label: "Lista",
+  symbol: "☰",
   className: "bg-blue-100 text-blue-700 border-blue-300",
   title: "Lista suspensa (list message)",
 };
 
 const TEXT: InteractionKind = {
   label: "Texto",
+  symbol: "💬",
   className: "bg-emerald-100 text-emerald-700 border-emerald-300",
   title: "Mensagem de texto",
 };
 
 const INPUT: InteractionKind = {
   label: "Entrada",
+  symbol: "⌨",
   className: "bg-amber-100 text-amber-700 border-amber-300",
   title: "Aguarda resposta livre do usuário",
 };
 
 const MEDIA: InteractionKind = {
   label: "Mídia",
+  symbol: "🖼",
   className: "bg-pink-100 text-pink-700 border-pink-300",
   title: "Envia mídia (imagem/vídeo/áudio/arquivo)",
 };
 
 const TEMPLATE: InteractionKind = {
   label: "Template",
+  symbol: "📋",
   className: "bg-teal-100 text-teal-700 border-teal-300",
   title: "Template HSM aprovado do WhatsApp",
 };
 
 const LOGIC: InteractionKind = {
   label: "Lógica",
+  symbol: "⚙",
   className: "bg-orange-100 text-orange-700 border-orange-300",
   title: "Bloco de lógica (não envia mensagem)",
 };
 
 const SYSTEM: InteractionKind = {
   label: "Sistema",
+  symbol: "🔧",
   className: "bg-slate-100 text-slate-700 border-slate-300",
   title: "Ação interna do sistema",
 };
 
 const AI: InteractionKind = {
   label: "IA",
+  symbol: "✨",
   className: "bg-violet-100 text-violet-700 border-violet-300",
   title: "Processamento de IA",
 };
