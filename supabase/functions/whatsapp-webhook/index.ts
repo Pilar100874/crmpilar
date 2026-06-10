@@ -1545,7 +1545,7 @@ async function executeNode(
         // Suporta dois formatos: { items: [...] } simples ou { sections: [{ title, rows }] }
         let sections: any[] = [];
         if (Array.isArray(cfg.sections) && cfg.sections.length) {
-          sections = cfg.sections.map((sec: any) => ({
+          sections = cfg.sections.map((sec: any, si: number) => ({
             title: itp(sec.title || ""),
             rows: (sec.rows || sec.items || []).map((r: any, i: number) => ({
               title: itp(r.title || r.label || `Opção ${i + 1}`),
