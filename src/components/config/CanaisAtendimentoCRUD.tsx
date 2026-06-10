@@ -331,6 +331,8 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
   const [wahaApiKey, setWahaApiKey] = useState("");
   const [webhookUrl, setWebhookUrl] = useState("");
   const [managerUrl, setManagerUrl] = useState("");
+  const [managerUser, setManagerUser] = useState("");
+  const [managerPassword, setManagerPassword] = useState("");
   const [newSessionName, setNewSessionName] = useState("");
   const [showConfigDialog, setShowConfigDialog] = useState(false);
   const [showNewSessionDialog, setShowNewSessionDialog] = useState(false);
