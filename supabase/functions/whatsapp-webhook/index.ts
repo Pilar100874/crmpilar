@@ -556,6 +556,42 @@ serve(async (req) => {
         shouldSaveContext = true;
         shouldReturn = true;
       }
+      // ====== Opção universal "Sair" — finaliza o fluxo ======
+      else if (
+        (() => {
+          const raw = String(body || "").trim().toLowerCase();
+          if (!raw) return false;
+          if (raw === "__exit__" || raw === "sair" || raw === "exit" || raw === "encerrar" || raw === "fim") return true;
+          const cfg = pendingNode?.data?.config || {};
+          const t = pendingNode?.data?.type;
+          const asNum = parseInt(raw);
+          if (!isNaN(asNum)) {
+            let total = 0;
+            if (t === "reply_buttons") total = (cfg.buttons?.length || 0) + 1;
+            else if (t === "list_buttons") {
+              const secs = cfg.sections || [];
+              if (secs.length) for (const s of secs) total += (s.rows || s.items || []).length;
+              else total = (cfg.items || []).length;
+              total += 1;
+            } else if (t === "text_content") {
+              const opts = Array.isArray(cfg.options) ? cfg.options : [];
+              total = (opts.length || 2) + 1;
+            } else if (t === "content_type") total = 10 + 1;
+            else if (t === "ask_influencer" || t === "ask_product_image") total = 2 + 1;
+            if (total > 0 && asNum === total) return true;
+          }
+          return false;
+        })()
+      ) {
+        console.log("[FLOW] Usuário escolheu Sair — finalizando fluxo");
+        await respond("Atendimento encerrado. Quando quiser retomar, é só enviar uma nova mensagem. 👋");
+        context = { vars: { from, phoneNumber: from, session: wahaSession } };
+        const supabaseCli = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const sessionKey = `whatsapp_${wahaSession || "default"}_${from || ""}`;
+        await supabaseCli.from("chat_sessions").delete().eq("session_id", sessionKey);
+        shouldSaveContext = false;
+        shouldReturn = true;
+      }
       // Processa resposta para reply_buttons
       else if (pendingNode?.data?.type === "reply_buttons") {
         const cfg = pendingNode.data.config || {};
@@ -1360,12 +1396,15 @@ async function executeNode(
         text: itp(b.text || `Opção ${i + 1}`),
         id: b.value || b.id || `btn_${i}`,
       }));
-      // Envia como List Message nativo (mais robusto que botões e suporta >3 opções)
-      const rows = buttons.map((b: any, i: number) => ({
-        title: b.text,
-        description: "",
-        rowId: b.id || `row_${i}`,
-      }));
+      // Adiciona opção universal de Sair
+      const rows = [
+        ...buttons.map((b: any, i: number) => ({
+          title: b.text,
+          description: "",
+          rowId: b.id || `row_${i}`,
+        })),
+        { title: "Sair", description: "Encerrar atendimento", rowId: "__exit__" },
+      ];
       const interactive = {
         type: "list",
         title: itp(cfg.headerText || cfg.title || ""),
@@ -1375,7 +1414,7 @@ async function executeNode(
         sections: [{ title: itp(cfg.sectionTitle || "Opções"), rows }],
       };
       let fallbackTxt = interactive.description + "";
-      buttons.forEach((b: any, i: number) => { fallbackTxt += `\n${i + 1}. ${b.text}`; });
+      rows.forEach((r: any, i: number) => { fallbackTxt += `\n${i + 1}. ${r.title}`; });
       await onResponse(fallbackTxt, undefined, undefined, interactive);
       context.pendingNodeId = node.id;
 
@@ -1408,6 +1447,11 @@ async function executeNode(
           }));
           sections = [{ title: itp(cfg.sectionTitle || "Opções"), rows }];
         }
+        // Adiciona seção universal de Sair
+        sections.push({
+          title: "",
+          rows: [{ title: "Sair", description: "Encerrar atendimento", rowId: "__exit__" }],
+        });
         const interactive = {
           type: "list",
           title: itp(cfg.title || ""),
@@ -2285,7 +2329,7 @@ async function executeNode(
         // Modo options / advanced → pergunta com List Message interativo
         const opts: any[] = Array.isArray(cfg.options) ? cfg.options : [];
         const prompt = itp(cfg.optionsPrompt || (opts.length ? "Escolha um dos textos:" : "Você quer usar título e subtítulo na imagem?"));
-        const rows = opts.length
+        const baseRows = opts.length
           ? opts.map((o: any, i: number) => ({
               title: (itp(o.label || `Opção ${i + 1}`) + "").slice(0, 24),
               description: "",
@@ -2295,6 +2339,7 @@ async function executeNode(
               { title: "Sim", description: "", rowId: "tc_1" },
               { title: "Não", description: "", rowId: "tc_2" },
             ];
+        const rows = [...baseRows, { title: "Sair", description: "Encerrar atendimento", rowId: "__exit__" }];
         const interactive = {
           type: "list",
           title: "",
@@ -2328,11 +2373,14 @@ async function executeNode(
           "engajamento", "educacional", "vendas", "remarketing", "datas_especiais",
         ];
         const prompt = itp(cfg.askPrompt || "Qual o objetivo da peça?");
-        const rows = directives.map((d, i) => ({
-          title: d.slice(0, 24),
-          description: "",
-          rowId: `ct_${i + 1}`,
-        }));
+        const rows = [
+          ...directives.map((d, i) => ({
+            title: d.slice(0, 24),
+            description: "",
+            rowId: `ct_${i + 1}`,
+          })),
+          { title: "Sair", description: "Encerrar atendimento", rowId: "__exit__" },
+        ];
         const interactive = {
           type: "list",
           title: "",
@@ -2342,7 +2390,7 @@ async function executeNode(
           sections: [{ title: "Objetivos", rows }],
         };
         let fallback = prompt;
-        directives.forEach((d, i) => { fallback += `\n${i + 1}. ${d}`; });
+        rows.forEach((r: any, i: number) => { fallback += `\n${i + 1}. ${r.title}`; });
         await onResponse(fallback, undefined, undefined, interactive);
         context.pendingNodeId = node.id;
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -2370,9 +2418,10 @@ async function executeNode(
           buttons: [
             { text: "Sim", id: `${prefix}_1` },
             { text: "Não", id: `${prefix}_2` },
+            { text: "Sair", id: "__exit__" },
           ],
         };
-        await onResponse(`${q}\n1. Sim\n2. Não`, undefined, undefined, interactive);
+        await onResponse(`${q}\n1. Sim\n2. Não\n3. Sair`, undefined, undefined, interactive);
         context.pendingNodeId = node.id;
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
         const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
