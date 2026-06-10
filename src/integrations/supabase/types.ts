@@ -14577,7 +14577,9 @@ export type Database = {
           created_at: string | null
           estabelecimento_id: string | null
           id: string
+          manager_password: string | null
           manager_url: string | null
+          manager_user: string | null
           phone_number_id: string | null
           session_name: string | null
           updated_at: string | null
@@ -14591,7 +14593,9 @@ export type Database = {
           created_at?: string | null
           estabelecimento_id?: string | null
           id?: string
+          manager_password?: string | null
           manager_url?: string | null
+          manager_user?: string | null
           phone_number_id?: string | null
           session_name?: string | null
           updated_at?: string | null
@@ -14605,7 +14609,9 @@ export type Database = {
           created_at?: string | null
           estabelecimento_id?: string | null
           id?: string
+          manager_password?: string | null
           manager_url?: string | null
+          manager_user?: string | null
           phone_number_id?: string | null
           session_name?: string | null
           updated_at?: string | null
