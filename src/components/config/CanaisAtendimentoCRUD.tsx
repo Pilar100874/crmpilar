@@ -506,7 +506,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
     if (!wahaUrl) {
       toast({
         title: "Erro",
-        description: "URL do servidor WAHA é obrigatória",
+        description: "URL do Servidor Evolution é obrigatória",
         variant: "destructive",
       });
       return;
