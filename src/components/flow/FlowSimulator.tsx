@@ -2357,21 +2357,28 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             ...(simNodeStateRef.current[node.id] || {}),
             textContentOptions: opts,
           };
+          const tcoListId = `list_${node.id}_${Date.now()}`;
+          setActiveListId(tcoListId);
           setMessages((prev) => [...prev, {
-            id: uid(), sender: "bot",
+            id: tcoListId, sender: "bot",
             text: config.optionsPrompt || "Escolha um dos textos abaixo:",
             timestamp: new Date(), nodeId: node.id,
-            buttons: opts.map((o, i) => ({
-              text: o.label || `Opção ${i + 1}`,
-              value: `tco_${i}`,
-              buttonId: `tco_${i}`,
-            })),
+            isListButton: true,
+            listButtonText: "Ver opções",
+            listSections: [{
+              title: "Opções",
+              items: [
+                ...opts.map((o, i) => ({ label: o.label || `Opção ${i + 1}`, value: `tco_${i}` })),
+                { label: "Sair", value: "__exit__", description: "Encerrar atendimento" },
+              ],
+            }],
           }]);
           setIsWaitingInput(true);
           setCurrentBlockType("text_content_options_pick");
           setCurrentNodeId(node.id);
           break;
         }
+
 
         // === MODO AVANÇADO (legado) ===
         // Se o designer pré-configurou textos fixos (sem nenhum modo "ask"/"ai"),
@@ -2400,19 +2407,28 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           break;
         }
 
-        // Novo fluxo: pergunta Sim/Não antes de qualquer coisa
+        // Novo fluxo: pergunta Sim/Não/Sair como dropdown
+        const tcYesNoId = `list_${node.id}_${Date.now()}`;
+        setActiveListId(tcYesNoId);
         setMessages((prev) => [...prev, {
-          id: uid(), sender: "bot", text: "Você quer usar título e subtítulo na imagem?", timestamp: new Date(), nodeId: node.id,
-          buttons: [
-            { text: "✅ Sim", value: "sim", buttonId: "tc_yes" },
-            { text: "❌ Não", value: "nao", buttonId: "tc_no" },
-          ],
+          id: tcYesNoId, sender: "bot", text: "Você quer usar título e subtítulo na imagem?", timestamp: new Date(), nodeId: node.id,
+          isListButton: true,
+          listButtonText: "Ver opções",
+          listSections: [{
+            title: "Opções",
+            items: [
+              { label: "Sim", value: "sim" },
+              { label: "Não", value: "nao" },
+              { label: "Sair", value: "__exit__", description: "Encerrar atendimento" },
+            ],
+          }],
         }]);
         setIsWaitingInput(true);
         setCurrentBlockType("text_content_yesno");
         setCurrentNodeId(node.id);
         break;
       }
+
 
       case "content_type": {
         const mode = config.mode === "ask" ? "ask" : "fixed";
@@ -2428,20 +2444,24 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             config.askPrompt || "Qual o objetivo da peça? Toque em uma das opções abaixo:",
             contextRef.current,
           );
-          const ctButtons = Object.entries(CONTENT_TYPE_DIRECTIVES)
+          const ctItems = Object.entries(CONTENT_TYPE_DIRECTIVES)
             .filter(([k]) => k !== "custom")
-            .map(([key, meta], idx) => ({
-              text: meta.label,
+            .map(([key, meta]) => ({
+              label: meta.label,
               value: key,
-              buttonId: `ct_${idx}`,
             }));
+          ctItems.push({ label: "Sair", value: "__exit__" } as any);
+          const ctListId = `list_${node.id}_${Date.now()}`;
+          setActiveListId(ctListId);
           setMessages((prev) => [...prev, {
-            id: uid(),
+            id: ctListId,
             sender: "bot",
             text: prompt,
             timestamp: new Date(),
             nodeId: node.id,
-            buttons: ctButtons,
+            isListButton: true,
+            listButtonText: "Ver opções",
+            listSections: [{ title: "Objetivos", items: ctItems }],
           }]);
           setIsWaitingInput(true);
           setCurrentBlockType("content_type_ask");
@@ -2451,14 +2471,23 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         break;
       }
 
+
       case "ask_influencer": {
         const q = interpolateVariables(config.askQuestion || "A peça terá um influencer?", contextRef.current);
+        const inflListId = `list_${node.id}_${Date.now()}`;
+        setActiveListId(inflListId);
         setMessages((prev) => [...prev, {
-          id: uid(), sender: "bot", text: q, timestamp: new Date(), nodeId: node.id,
-          buttons: [
-            { text: "Sim", value: "sim", buttonId: "infl_yes" },
-            { text: "Não", value: "nao", buttonId: "infl_no" },
-          ],
+          id: inflListId, sender: "bot", text: q, timestamp: new Date(), nodeId: node.id,
+          isListButton: true,
+          listButtonText: "Ver opções",
+          listSections: [{
+            title: "Opções",
+            items: [
+              { label: "Sim", value: "sim" },
+              { label: "Não", value: "nao" },
+              { label: "Sair", value: "__exit__", description: "Encerrar atendimento" },
+            ],
+          }],
         }]);
         setIsWaitingInput(true);
         setCurrentBlockType("ask_influencer_choice");
@@ -2468,18 +2497,27 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
       case "ask_product_image": {
         const q = interpolateVariables(config.askQuestion || "A peça terá imagem do produto?", contextRef.current);
+        const pimListId = `list_${node.id}_${Date.now()}`;
+        setActiveListId(pimListId);
         setMessages((prev) => [...prev, {
-          id: uid(), sender: "bot", text: q, timestamp: new Date(), nodeId: node.id,
-          buttons: [
-            { text: "Sim", value: "sim", buttonId: "pim_yes" },
-            { text: "Não", value: "nao", buttonId: "pim_no" },
-          ],
+          id: pimListId, sender: "bot", text: q, timestamp: new Date(), nodeId: node.id,
+          isListButton: true,
+          listButtonText: "Ver opções",
+          listSections: [{
+            title: "Opções",
+            items: [
+              { label: "Sim", value: "sim" },
+              { label: "Não", value: "nao" },
+              { label: "Sair", value: "__exit__", description: "Encerrar atendimento" },
+            ],
+          }],
         }]);
         setIsWaitingInput(true);
         setCurrentBlockType("ask_product_image_choice");
         setCurrentNodeId(node.id);
         break;
       }
+
 
       case "trigger_workflow": {
         const modLabels: Record<string, string> = {
