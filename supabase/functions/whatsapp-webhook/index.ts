@@ -1240,7 +1240,7 @@ async function executeFlow(
   flowData: any,
   context: any,
   startNode: any,
-  onResponse: (message: string, mediaUrl?: string, mediaType?: string) => Promise<void>,
+  onResponse: (message: string, mediaUrl?: string, mediaType?: string, interactive?: any) => Promise<void>,
 ) {
   const { nodes } = flowData;
   if (!startNode) {
@@ -1256,7 +1256,7 @@ async function executeNode(
   nodes: any[],
   edges: any[],
   context: any,
-  onResponse: (message: string, mediaUrl?: string, mediaType?: string) => Promise<void>,
+  onResponse: (message: string, mediaUrl?: string, mediaType?: string, interactive?: any) => Promise<void>,
 ) {
   const data = node.data;
   const cfg = data.config || {};
