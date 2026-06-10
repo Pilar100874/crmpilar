@@ -970,6 +970,10 @@ async function sendWahaTextMessage(
     if (resp.ok) return;
     if (resp.status === 401) {
       console.error("[EVOLUTION] 401 não autorizado — verifique a apikey configurada.");
+    }
+  } catch (err) {
+    console.error("[EVOLUTION] Erro no sendText:", err);
+  }
 }
 
 async function sendWahaListMessage(
@@ -1006,7 +1010,6 @@ async function sendWahaListMessage(
     const resultText = await resp.text().catch(() => "");
     console.log("[EVOLUTION] sendList result:", resp.status, resultText.slice(0, 500));
     if (!resp.ok) {
-      // Fallback texto numerado
       let fallback = `${body.title}\n${body.description}\n`;
       let idx = 1;
       for (const sec of body.sections) {
@@ -1063,10 +1066,6 @@ async function sendWahaButtonsMessage(
     }
   } catch (err) {
     console.error("[EVOLUTION] Erro no sendButtons:", err);
-  }
-}
-  } catch (err) {
-    console.error("[EVOLUTION] Erro no sendText:", err);
   }
 }
 
