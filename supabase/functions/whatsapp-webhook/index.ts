@@ -921,175 +921,51 @@ async function sendWhatsAppMedia(phoneNumberId: string, to: string, mediaUrl: st
   if (!r.ok) console.error("Meta media error:", res);
 }
 
-/* ======= WAHA – tenta múltiplos endpoints ======= */
+/* ======= Evolution API – envio de texto e mídia ======= */
 
-async function getWahaSessionSnapshot(baseUrl: string, sessionName: string, apiKey: string) {
-  try {
-    const resp = await fetch(`${baseUrl}/api/sessions/${encodeURIComponent(sessionName)}`, {
-      method: "GET",
-      headers: { Accept: "application/json", "x-api-key": apiKey },
-      signal: AbortSignal.timeout(10000),
-    });
-    const text = await resp.text().catch(() => "");
-    if (!resp.ok) return { ok: false, statusCode: resp.status, status: "UNKNOWN", engineState: "UNKNOWN", hasMe: false };
-    const payload = text ? JSON.parse(text) : {};
-    return {
-      ok: true,
-      statusCode: resp.status,
-      status: String(payload?.status || "UNKNOWN"),
-      engineState: String(payload?.engine?.state || "UNKNOWN"),
-      hasMe: Boolean(payload?.me?.id || payload?.me?.user || payload?.me?.number),
-    };
-  } catch (error) {
-    console.warn("[WAHA] Could not read session snapshot before send:", error instanceof Error ? error.message : error);
-    return { ok: false, statusCode: 0, status: "UNKNOWN", engineState: "UNKNOWN", hasMe: false };
-  }
+function resolveEvolution(wahaUrl: string, wahaApiKey: string) {
+  const base = (wahaUrl || env("EVOLUTION_URL") || env("WAHA_URL") || "").replace(/\/+$/, "");
+  const apiKey = (wahaApiKey || env("EVOLUTION_API_KEY") || env("WAHA_API_KEY") || "").trim();
+  return { base, apiKey };
 }
 
-async function sendWahaTextMessage(toNumberOnly: string, text: string, sessionName: string, wahaUrl: string, wahaApiKey: string) {
-  const resolvedWahaUrl = wahaUrl || env("WAHA_URL");
-  const authKeys = Array.from(new Set([env("WAHA_API_KEY"), wahaApiKey].map((key) => key.trim()).filter(Boolean)));
-
-  if (!resolvedWahaUrl || authKeys.length === 0) {
-    console.error("[WAHA] Missing WAHA_URL or WAHA_API_KEY");
+async function sendWahaTextMessage(
+  toNumberOnly: string,
+  text: string,
+  sessionName: string,
+  wahaUrl: string,
+  wahaApiKey: string,
+) {
+  const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
+  if (!base || !apiKey) {
+    console.error("[EVOLUTION] URL ou apikey ausentes. Configure em Canais de Atendimento.");
     return;
   }
-  
-  const baseUrl = resolvedWahaUrl.replace(/\/$/, '');
-  const chatId = toJid(toNumberOnly);
+  const instance = sessionName || "default";
+  const number = String(toNumberOnly).replace(/\D/g, "");
+  const endpoint = `${base}/message/sendText/${encodeURIComponent(instance)}`;
 
-  const officialPayload = { session: sessionName, chatId, text };
-  let unauthorizedCount = 0;
-
-  for (const apiKey of authKeys) {
-    const snapshot = await getWahaSessionSnapshot(baseUrl, sessionName, apiKey);
-    console.log("[WAHA] Session snapshot before send:", { sessionName, ...snapshot });
-    try {
-      console.log(`[WAHA] Sending TEXT via official endpoint -> ${chatId}`, { sessionName });
-      const resp = await fetch(`${baseUrl}/api/sendText`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "x-api-key": apiKey,
-        },
-        body: JSON.stringify(officialPayload),
-        signal: AbortSignal.timeout(60000),
-      });
-      const resultText = await resp.text();
-      console.log("[WAHA] Official TEXT result:", resp.status, resultText);
-      if (resp.ok) return;
-      if (resp.status === 401) {
-        unauthorizedCount++;
-        continue;
-      }
-      if (resp.status === 422 && resultText.includes("Session status is not as expected")) {
-        console.error("[WAHA] Session is not WORKING; reconnect or restart the WAHA session:", sessionName);
-        return;
-      }
-    } catch (err) {
-      const afterSnapshot = await getWahaSessionSnapshot(baseUrl, sessionName, apiKey);
-      console.error("[WAHA] Official sendText failed:", err, { sessionName, afterSnapshot });
+  try {
+    console.log(`[EVOLUTION] Enviando TEXT -> ${number}`, { instance });
+    const resp = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        apikey: apiKey,
+      },
+      body: JSON.stringify({ number, text }),
+      signal: AbortSignal.timeout(60000),
+    });
+    const resultText = await resp.text().catch(() => "");
+    console.log("[EVOLUTION] sendText result:", resp.status, resultText.slice(0, 500));
+    if (resp.ok) return;
+    if (resp.status === 401) {
+      console.error("[EVOLUTION] 401 não autorizado — verifique a apikey configurada.");
     }
+  } catch (err) {
+    console.error("[EVOLUTION] Erro no sendText:", err);
   }
-
-  if (unauthorizedCount === authKeys.length) {
-    console.error("[WAHA] Unauthorized sending message. Update the WAHA API key in the WhatsApp WAHA settings.", { sessionName });
-  }
-  return;
-
-  const endpoints = [
-    `${baseUrl}/api/sessions/${sessionName}/sendText`,
-    `${baseUrl}/api/sessions/${sessionName}/messages/send`,
-    `${baseUrl}/api/sessions/${sessionName}/messages`,
-    `${baseUrl}/api/sessions/${sessionName}/sendMessage`,
-    `${baseUrl}/api/sessions/${sessionName}/chats/send-text`,
-    `${baseUrl}/api/sessions/${sessionName}/chats/${encodeURIComponent(chatId)}/send-text`,
-    `${baseUrl}/api/chats/${encodeURIComponent(chatId)}/send-text`,
-    `${baseUrl}/api/messages/send-text`,
-  ];
-
-  const variants: any[] = [
-    { session: sessionName, chatId, text }, // sendText style
-    { chatId, text },
-    { to: chatId, text },
-    { jid: chatId, text },
-    { number: toNumberOnly, text },
-    { phone: toNumberOnly, text },
-    { chatId, type: "text", text: { body: text } }, // some builds expect nested text
-    { to: chatId, type: "text", text: { body: text } },
-    { jid: chatId, message: text },
-  ];
-
-  for (const base of endpoints) {
-    const urlVariants = [
-      base,
-      `${base}?session=${encodeURIComponent(sessionName)}`,
-    ];
-
-    const headerSets: Array<Record<string, string>> = authKeys.map((apiKey) => ({
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      "x-api-key": apiKey,
-      "X-Session-Name": sessionName,
-    }));
-
-    for (const url of urlVariants) {
-      for (const body of variants) {
-        for (const headers of headerSets) {
-          try {
-            console.log(`[WAHA] Trying TEXT -> ${chatId} via ${url} with body keys: ${Object.keys(body).join(',')}`);
-            const resp = await fetch(url, {
-              method: "POST",
-              headers,
-              body: JSON.stringify(body),
-              signal: AbortSignal.timeout(8000),
-            });
-            const resultText = await resp.text();
-            console.log("[WAHA] TEXT result:", resp.status, resultText);
-            if (resp.ok) return;
-            if (resp.status === 404) break;
-            if (resp.status === 401) continue; // try next variant/headers
-          } catch (err) {
-            console.error("[WAHA] error sending text via", url, err);
-          }
-        }
-      }
-
-      // GET fallback sem expor a chave na URL
-      if (base.includes('/sendText')) {
-        const getParamSets = [
-          `session=${encodeURIComponent(sessionName)}&to=${encodeURIComponent(toNumberOnly)}&message=${encodeURIComponent(text)}`,
-          `session=${encodeURIComponent(sessionName)}&to=${encodeURIComponent(chatId)}&text=${encodeURIComponent(text)}`,
-          `session=${encodeURIComponent(sessionName)}&jid=${encodeURIComponent(chatId)}&message=${encodeURIComponent(text)}`,
-          `session=${encodeURIComponent(sessionName)}&number=${encodeURIComponent(toNumberOnly)}&text=${encodeURIComponent(text)}`,
-        ];
-        for (const params of getParamSets) {
-          for (const apiKey of authKeys) {
-            const urlWithParams = `${base}?${params}`;
-            try {
-              console.log(`[WAHA] Trying GET TEXT -> ${chatId} via ${urlWithParams}`);
-              const resp = await fetch(urlWithParams, {
-                method: "GET",
-                headers: {
-                  Accept: "application/json",
-                  "x-api-key": apiKey,
-                  "X-Api-Key": apiKey,
-                  "X-Session-Name": sessionName,
-                },
-              });
-              const resultText = await resp.text();
-              console.log("[WAHA] GET TEXT result:", resp.status, resultText);
-              if (resp.ok) return;
-            } catch (err) {
-              console.error("[WAHA] error sending GET text via", urlWithParams, err);
-            }
-          }
-        }
-      }
-    }
-  }
-  console.error("[WAHA] Failed to send message for session:", sessionName);
 }
 
 async function sendWahaMediaMessage(
@@ -1101,97 +977,94 @@ async function sendWahaMediaMessage(
   wahaUrl: string,
   wahaApiKey: string,
 ) {
-  const resolvedWahaUrl = wahaUrl || env("WAHA_URL");
-  const authKeys = Array.from(new Set([env("WAHA_API_KEY"), wahaApiKey].map((key) => key.trim()).filter(Boolean)));
-
-  if (!resolvedWahaUrl || authKeys.length === 0) {
-    console.error("[WAHA] Missing WAHA_URL or WAHA_API_KEY");
+  const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
+  if (!base || !apiKey) {
+    console.error("[EVOLUTION] URL ou apikey ausentes para envio de mídia.");
     return;
   }
-  const chatId = toJid(toNumberOnly);
-  const t = ["image", "video", "audio", "document"].includes((mediaType || "").toLowerCase())
-    ? mediaType.toLowerCase()
-    : "document";
+  const instance = sessionName || "default";
+  const number = String(toNumberOnly).replace(/\D/g, "");
 
-  const _lastPath = (() => { try { return new URL(mediaUrl).pathname.split('/').pop() || 'arquivo'; } catch { return mediaUrl.split('?')[0].split('/').pop() || 'arquivo'; } })();
-  const inferredName = decodeURIComponent(_lastPath);
+  const lower = (mediaType || "").toLowerCase();
+  // Evolution aceita: image | video | document | audio
+  let evoType: "image" | "video" | "document" | "audio" =
+    lower === "image" || lower === "video" || lower === "audio" || lower === "document"
+      ? (lower as any)
+      : "document";
+
+  const lastPath = (() => {
+    try { return new URL(mediaUrl).pathname.split("/").pop() || "arquivo"; }
+    catch { return mediaUrl.split("?")[0].split("/").pop() || "arquivo"; }
+  })();
+  const inferredName = decodeURIComponent(lastPath);
   const lowerName = inferredName.toLowerCase();
-  const isPdf = lowerName.endsWith('.pdf');
-  const isXlsx = lowerName.endsWith('.xlsx');
-  const isImage = /\.(png|jpe?g|webp|gif)$/i.test(lowerName);
-  const isVideo = /\.(mp4|mov|webm)$/i.test(lowerName);
-  const isAudio = /\.(ogg|oga|mp3|wav|m4a)$/i.test(lowerName);
-  const mime = isPdf
-    ? 'application/pdf'
-    : isXlsx
-    ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    : lowerName.endsWith('.png')
-    ? 'image/png'
-    : lowerName.endsWith('.webp')
-    ? 'image/webp'
-    : lowerName.endsWith('.gif')
-    ? 'image/gif'
-    : lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')
-    ? 'image/jpeg'
-    : lowerName.endsWith('.mp4')
-    ? 'video/mp4'
-    : lowerName.endsWith('.webm')
-    ? 'video/webm'
-    : lowerName.endsWith('.mp3')
-    ? 'audio/mpeg'
-    : lowerName.endsWith('.ogg') || lowerName.endsWith('.oga')
-    ? 'audio/ogg'
-    : 'application/octet-stream';
+  const mime =
+    lowerName.endsWith(".pdf") ? "application/pdf" :
+    lowerName.endsWith(".xlsx") ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" :
+    lowerName.endsWith(".png") ? "image/png" :
+    lowerName.endsWith(".webp") ? "image/webp" :
+    lowerName.endsWith(".gif") ? "image/gif" :
+    (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) ? "image/jpeg" :
+    lowerName.endsWith(".mp4") ? "video/mp4" :
+    lowerName.endsWith(".webm") ? "video/webm" :
+    lowerName.endsWith(".mp3") ? "audio/mpeg" :
+    (lowerName.endsWith(".ogg") || lowerName.endsWith(".oga")) ? "audio/ogg" :
+    "application/octet-stream";
 
-  const baseUrl = resolvedWahaUrl.replace(/\/$/, '');
-  const endpoint = `${baseUrl}/api/sendFile`;
-  const payload = {
-    session: sessionName,
-    chatId,
-    file: {
-      mimetype: mime,
-      url: mediaUrl,
-      filename: inferredName,
-    },
-    ...(caption ? { caption } : {}),
-    ...(t === "audio" ? { convert: false } : {}),
-  };
+  try {
+    let endpoint: string;
+    let body: Record<string, unknown>;
 
-  for (const apiKey of authKeys) {
-    const snapshot = await getWahaSessionSnapshot(baseUrl, sessionName, apiKey);
-    console.log("[WAHA] Session snapshot before media send:", { sessionName, ...snapshot });
-
-    try {
-      const resp = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "x-api-key": apiKey,
-        },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(60000),
-      });
-      const resultText = await resp.text().catch(() => "");
-      console.log("[WAHA] Official sendFile result:", resp.status, resultText);
-
-      if (resp.ok) return;
-      if (resp.status === 401) continue;
-
-      if (resp.status === 422 && resultText.includes("Session status is not as expected")) {
-        console.error("[WAHA] Sessão não está WORKING para envio de mídia:", sessionName);
-        break;
-      }
-    } catch (error) {
-      const afterSnapshot = await getWahaSessionSnapshot(baseUrl, sessionName, apiKey);
-      console.error("[WAHA] Official sendFile failed:", error, { sessionName, afterSnapshot });
+    if (evoType === "audio") {
+      // Evolution tem endpoint dedicado para áudio do whatsapp (ptt)
+      endpoint = `${base}/message/sendWhatsAppAudio/${encodeURIComponent(instance)}`;
+      body = { number, audio: mediaUrl };
+    } else {
+      endpoint = `${base}/message/sendMedia/${encodeURIComponent(instance)}`;
+      body = {
+        number,
+        mediatype: evoType,
+        mimetype: mime,
+        media: mediaUrl,
+        fileName: inferredName,
+        ...(caption ? { caption } : {}),
+      };
     }
+
+    console.log(`[EVOLUTION] Enviando MEDIA (${evoType}) -> ${number}`, { instance, endpoint });
+    const resp = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        apikey: apiKey,
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(90000),
+    });
+    const resultText = await resp.text().catch(() => "");
+    console.log("[EVOLUTION] sendMedia result:", resp.status, resultText.slice(0, 500));
+    if (resp.ok) return;
+  } catch (err) {
+    console.error("[EVOLUTION] Erro no sendMedia:", err);
   }
 
-  console.error("[WAHA] ❌ Falha ao enviar mídia. Enviando link como fallback:", { sessionName, chatId, mediaUrl });
-  const fallbackLabel = isPdf || isXlsx ? "arquivo" : isImage ? "imagem" : isVideo ? "vídeo" : isAudio ? "áudio" : "mídia";
-  await sendWahaTextMessage(toNumberOnly, `${caption ? `${caption}\n` : ""}Link do ${fallbackLabel}: ${mediaUrl}`, sessionName, resolvedWahaUrl, authKeys[0]);
+  // Fallback: envia link como texto
+  const fallbackLabel =
+    evoType === "image" ? "imagem" :
+    evoType === "video" ? "vídeo" :
+    evoType === "audio" ? "áudio" : "arquivo";
+  console.error("[EVOLUTION] ❌ Falha ao enviar mídia. Enviando link como fallback.");
+  await sendWahaTextMessage(
+    toNumberOnly,
+    `${caption ? `${caption}\n` : ""}Link do ${fallbackLabel}: ${mediaUrl}`,
+    sessionName,
+    wahaUrl,
+    wahaApiKey,
+  );
 }
+
+
 
 /* ======= Validadores ======= */
 
