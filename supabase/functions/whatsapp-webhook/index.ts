@@ -300,8 +300,9 @@ serve(async (req) => {
         if (interactive?.type === "list") {
           const sent = await sendWahaListMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
           if (!sent) {
-            const rows = (interactive.sections || [])
-              .flatMap((section: any) => section.rows || [])
+            const allRows = (interactive.sections || [])
+              .flatMap((section: any) => section.rows || []);
+            const rows = allRows
               .filter((row: any) => String(row.rowId || row.id || "") !== "__exit__");
             if (rows.length > 0 && rows.length <= 3) {
               await sendWahaButtonsMessage(from, {
@@ -311,9 +312,15 @@ serve(async (req) => {
                 footerText: interactive.footerText || "",
                 buttons: rows.map((row: any, index: number) => ({
                   text: row.title || `Opção ${index + 1}`,
-                  id: row.rowId || row.id || `item_${index}`,
+                  id: String(row.rowId || row.id || `item_${index}`),
                 })),
-              }, wahaSession, WAHA_URL, WAHA_API_KEY, false);
+              }, wahaSession, WAHA_URL, WAHA_API_KEY, true);
+            } else if (allRows.length > 0) {
+              let fallback = `${interactive.description || text || "Escolha uma opção"}`;
+              allRows.forEach((row: any, index: number) => {
+                fallback += `\n${index + 1}. ${row.title || `Opção ${index + 1}`}${row.description ? " - " + row.description : ""}`;
+              });
+              await sendWahaTextMessage(from, fallback, wahaSession, WAHA_URL, WAHA_API_KEY);
             }
           }
           return;
@@ -723,13 +730,17 @@ serve(async (req) => {
           const sections: any[] = cfg.sections || [];
           let idx = 0;
           const listSections = sections.length ? sections : [{ rows: cfg.items || [] }];
-          for (const sec of listSections) {
-            for (const row of (sec.rows || sec.items || [])) {
-              const rawValue = row.id ?? row.value ?? row.title ?? row.label ?? `item_${idx}`;
+          for (let sectionIndex = 0; sectionIndex < listSections.length; sectionIndex++) {
+            const sec = listSections[sectionIndex];
+            const rows = sec.rows || sec.items || [];
+            for (let itemIndex = 0; itemIndex < rows.length; itemIndex++) {
+              const row = rows[itemIndex];
+              const handle = row.rowId || `section_${sectionIndex}_item_${itemIndex}`;
+              const rawValue = row.value || row.id || row.rowId || row.title || row.label || handle;
               options.push({
                 label: row.title || row.label || `Opção ${idx + 1}`,
                 value: String(rawValue),
-                handle: `row_${idx}`,
+                handle,
               });
               idx++;
             }
@@ -1534,19 +1545,19 @@ async function executeNode(
         // Suporta dois formatos: { items: [...] } simples ou { sections: [{ title, rows }] }
         let sections: any[] = [];
         if (Array.isArray(cfg.sections) && cfg.sections.length) {
-          sections = cfg.sections.map((sec: any) => ({
+          sections = cfg.sections.map((sec: any, si: number) => ({
             title: itp(sec.title || ""),
             rows: (sec.rows || sec.items || []).map((r: any, i: number) => ({
               title: itp(r.title || r.label || `Opção ${i + 1}`),
               description: itp(r.description || ""),
-              rowId: r.id || r.value || r.title || `item_${i}`,
+              rowId: `section_${si}_item_${i}`,
             })),
           }));
         } else {
           const rows = (cfg.items || []).map((item: any, i: number) => ({
             title: itp(item.title || `Opção ${i + 1}`),
             description: itp(item.description || ""),
-            rowId: item.id || item.value || item.title || `item_${i}`,
+            rowId: `section_0_item_${i}`,
           }));
           sections = [{ title: itp(cfg.sectionTitle || "Opções"), rows }];
         }
