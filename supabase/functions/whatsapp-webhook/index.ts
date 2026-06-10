@@ -298,15 +298,19 @@ serve(async (req) => {
     const respond = async (text?: string, mediaUrl?: string, mediaType?: string, interactive?: any) => {
       if (transport === "waha") {
         if (interactive?.type === "list") {
-          // Evolution/Baileys aceita botões/listas com 201/PENDING, mas o WhatsApp pessoal
-          // pode descartar silenciosamente. Para não travar o fluxo, enviamos texto numerado.
-          const allRows = (interactive.sections || [])
-            .flatMap((section: any) => section.rows || []);
-          let fallback = `${interactive.description || text || "Escolha uma opção"}`;
-          allRows.forEach((row: any, index: number) => {
-            fallback += `\n${index + 1}. ${row.title || `Opção ${index + 1}`}${row.description ? " - " + row.description : ""}`;
-          });
-          await sendWahaTextMessage(from, fallback, wahaSession, WAHA_URL, WAHA_API_KEY);
+          // Tenta enviar como List Message nativo do WhatsApp (Evolution sendList).
+          // Se falhar (instância sem suporte, erro de API, etc.), cai para texto numerado.
+          const ok = await sendWahaListMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
+          if (!ok) {
+            console.log("[FLOW] sendList falhou, usando fallback texto numerado");
+            const allRows = (interactive.sections || [])
+              .flatMap((section: any) => section.rows || []);
+            let fallback = `${interactive.description || text || "Escolha uma opção"}`;
+            allRows.forEach((row: any, index: number) => {
+              fallback += `\n${index + 1}. ${row.title || `Opção ${index + 1}`}${row.description ? " - " + row.description : ""}`;
+            });
+            await sendWahaTextMessage(from, fallback, wahaSession, WAHA_URL, WAHA_API_KEY);
+          }
           return;
         }
         if (interactive?.type === "buttons") {
