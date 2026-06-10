@@ -2353,30 +2353,45 @@ async function executeNode(
           for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
           break;
         }
-        // Modo options / advanced → pergunta com List Message interativo
+        // Modo options → lista suspensa (pode ter várias opções)
+        // Modo advanced (sim/não) → botões de resposta
         const opts: any[] = Array.isArray(cfg.options) ? cfg.options : [];
         const prompt = itp(cfg.optionsPrompt || (opts.length ? "Escolha um dos textos:" : "Você quer usar título e subtítulo na imagem?"));
-        const baseRows = opts.length
-          ? opts.map((o: any, i: number) => ({
+        let interactive: any;
+        let fallback = prompt;
+        if (opts.length) {
+          const rows = [
+            ...opts.map((o: any, i: number) => ({
               title: (itp(o.label || `Opção ${i + 1}`) + "").slice(0, 24),
               description: "",
               rowId: `tc_${i + 1}`,
-            }))
-          : [
-              { title: "Sim", description: "", rowId: "tc_1" },
-              { title: "Não", description: "", rowId: "tc_2" },
-            ];
-        const rows = [...baseRows, { title: "Sair", description: "Encerrar atendimento", rowId: "__exit__" }];
-        const interactive = {
-          type: "list",
-          title: "",
-          description: prompt,
-          buttonText: "Ver opções",
-          footerText: "",
-          sections: [{ title: "Opções", rows }],
-        };
-        let fallback = prompt;
-        rows.forEach((r: any, i: number) => { fallback += `\n${i + 1}. ${r.title}`; });
+            })),
+            { title: "Sair", description: "Encerrar atendimento", rowId: "__exit__" },
+          ];
+          interactive = {
+            type: "list",
+            title: "",
+            description: prompt,
+            buttonText: "Ver opções",
+            footerText: "",
+            sections: [{ title: "Opções", rows }],
+          };
+          rows.forEach((r: any, i: number) => { fallback += `\n${i + 1}. ${r.title}`; });
+        } else {
+          const buttons = [
+            { text: "Sim", id: "tc_1" },
+            { text: "Não", id: "tc_2" },
+            { text: "Sair", id: "__exit__" },
+          ];
+          interactive = {
+            type: "buttons",
+            title: "",
+            description: prompt,
+            footerText: "",
+            buttons,
+          };
+          buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.text}`; });
+        }
         await onResponse(fallback, undefined, undefined, interactive);
         context.pendingNodeId = node.id;
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
