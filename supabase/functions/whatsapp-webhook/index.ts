@@ -2452,21 +2452,20 @@ async function executeNode(
               : "A peça terá imagem do produto?"),
         );
         const prefix = data.type === "ask_influencer" ? "infl" : "pim";
-        const rows = [
-          { title: "Sim", description: "", rowId: `${prefix}_1` },
-          { title: "Não", description: "", rowId: `${prefix}_2` },
-          { title: "Sair", description: "Encerrar atendimento", rowId: "__exit__" },
+        const buttons = [
+          { text: "Sim", id: `${prefix}_1` },
+          { text: "Não", id: `${prefix}_2` },
+          { text: "Sair", id: "__exit__" },
         ];
         const interactive = {
-          type: "list",
+          type: "buttons",
           title: "",
           description: q,
-          buttonText: "Ver opções",
           footerText: "",
-          sections: [{ title: "Opções", rows }],
+          buttons,
         };
         let fallback = q;
-        rows.forEach((r: any, i: number) => { fallback += `\n${i + 1}. ${r.title}`; });
+        buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.text}`; });
         await onResponse(fallback, undefined, undefined, interactive);
         context.pendingNodeId = node.id;
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
