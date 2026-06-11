@@ -1745,6 +1745,26 @@ function normalizeListHandle(config: any, flatIndex: number): string {
   return `row_${flatIndex}`;
 }
 
+function getContentTypeOptions(): Array<{ value: string; label: string }> {
+  return [
+    { value: "divulgacao", label: "Divulgação" },
+    { value: "promocao", label: "Promoção" },
+    { value: "institucional", label: "Institucional" },
+    { value: "evento", label: "Evento" },
+    { value: "lancamento", label: "Lançamento" },
+    { value: "educacional", label: "Educacional" },
+  ];
+}
+
+function normalizeContentTypeResponse(value: string): string {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9_]/g, "");
+}
+
 async function executeNode(
   node: any,
   nodes: any[],
