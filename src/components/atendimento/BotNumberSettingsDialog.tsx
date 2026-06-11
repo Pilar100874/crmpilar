@@ -31,12 +31,13 @@ const NONE = "__none__";
 
 export function BotNumberSettingsDialog({
   botId,
-  estabelecimentoId,
+  estabelecimentoId: estabIdProp,
   whatsappNumeroId,
   forwardToNumeroId,
   onSaved,
 }: BotNumberSettingsDialogProps) {
   const [open, setOpen] = useState(false);
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(estabIdProp ?? null);
   const [numeros, setNumeros] = useState<NumeroOption[]>([]);
   const [numeroId, setNumeroId] = useState<string | null>(whatsappNumeroId);
   const [forwardId, setForwardId] = useState<string | null>(forwardToNumeroId ?? null);
