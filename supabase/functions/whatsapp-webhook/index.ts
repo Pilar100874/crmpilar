@@ -1058,6 +1058,144 @@ async function sendWhatsAppMedia(phoneNumberId: string, to: string, mediaUrl: st
   if (!r.ok) console.error("Meta media error:", res);
 }
 
+/* ======= Meta Cloud API – envio explícito por número (multi-conta) ======= */
+
+async function sendCloudText(phoneNumberId: string, accessToken: string, to: string, text: string) {
+  if (!phoneNumberId || !accessToken) {
+    console.error("[CLOUD] phoneNumberId/accessToken ausentes");
+    return false;
+  }
+  const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body: text } }),
+  });
+  const res = await r.json().catch(() => ({}));
+  if (!r.ok) console.error("[CLOUD] sendText error:", res);
+  return r.ok;
+}
+
+async function sendCloudMedia(
+  phoneNumberId: string,
+  accessToken: string,
+  to: string,
+  mediaUrl: string,
+  mediaType: string,
+  caption?: string,
+) {
+  if (!phoneNumberId || !accessToken) return false;
+  const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+  const typeMap: Record<string, string> = { image: "image", video: "video", audio: "audio", file: "document", document: "document" };
+  const t = typeMap[(mediaType || "").toLowerCase()] || "document";
+  const body: any = { messaging_product: "whatsapp", to, type: t, [t]: { link: mediaUrl } };
+  if (caption && (t === "image" || t === "video" || t === "document")) body[t].caption = caption;
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify(body),
+  });
+  const res = await r.json().catch(() => ({}));
+  if (!r.ok) console.error("[CLOUD] sendMedia error:", res);
+  return r.ok;
+}
+
+async function sendCloudListMessage(
+  phoneNumberId: string,
+  accessToken: string,
+  to: string,
+  interactive: any,
+  bodyText?: string,
+): Promise<boolean> {
+  if (!phoneNumberId || !accessToken) return false;
+  try {
+    const sections = (interactive.sections || []).map((s: any) => ({
+      title: (s.title || "Opções").slice(0, 24),
+      rows: (s.rows || []).slice(0, 10).map((r: any) => ({
+        id: String(r.id || r.rowId || r.title || "").slice(0, 200),
+        title: String(r.title || "Opção").slice(0, 24),
+        description: r.description ? String(r.description).slice(0, 72) : undefined,
+      })),
+    }));
+    const payload = {
+      messaging_product: "whatsapp",
+      to,
+      type: "interactive",
+      interactive: {
+        type: "list",
+        header: interactive.title ? { type: "text", text: String(interactive.title).slice(0, 60) } : undefined,
+        body: { text: String(interactive.description || bodyText || "Escolha uma opção").slice(0, 1024) },
+        footer: interactive.footer ? { text: String(interactive.footer).slice(0, 60) } : undefined,
+        action: {
+          button: String(interactive.buttonText || "Ver opções").slice(0, 20),
+          sections,
+        },
+      },
+    };
+    const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify(payload),
+    });
+    const res = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      console.error("[CLOUD] sendList error:", res);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error("[CLOUD] sendList exception:", e);
+    return false;
+  }
+}
+
+async function sendCloudButtonsMessage(
+  phoneNumberId: string,
+  accessToken: string,
+  to: string,
+  interactive: any,
+  bodyText?: string,
+): Promise<boolean> {
+  if (!phoneNumberId || !accessToken) return false;
+  try {
+    const buttons = (interactive.buttons || []).slice(0, 3).map((b: any) => ({
+      type: "reply",
+      reply: {
+        id: String(b.id || b.title || "").slice(0, 256),
+        title: String(b.title || "OK").slice(0, 20),
+      },
+    }));
+    if (!buttons.length) return false;
+    const payload = {
+      messaging_product: "whatsapp",
+      to,
+      type: "interactive",
+      interactive: {
+        type: "button",
+        body: { text: String(interactive.description || bodyText || "Escolha uma opção").slice(0, 1024) },
+        action: { buttons },
+      },
+    };
+    const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify(payload),
+    });
+    const res = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      console.error("[CLOUD] sendButtons error:", res);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error("[CLOUD] sendButtons exception:", e);
+    return false;
+  }
+}
+
+
 /* ======= Evolution API – envio de texto e mídia ======= */
 
 function resolveEvolution(wahaUrl: string, wahaApiKey: string) {
