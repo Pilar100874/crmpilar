@@ -440,6 +440,16 @@ serve(async (req) => {
     }
 
     const respond = async (text?: string, mediaUrl?: string, mediaType?: string, interactive?: any) => {
+      // Otimiza imagens hospedadas no Supabase Storage para o dispositivo do destinatário
+      let optimizedMediaUrl = mediaUrl;
+      if (mediaUrl && (mediaType || "").toLowerCase() === "image") {
+        const device = detectDeviceFromMessageId(inboundMsgId);
+        optimizedMediaUrl = optimizeMediaUrlForWhatsApp(mediaUrl, mediaType, device);
+        if (optimizedMediaUrl !== mediaUrl) {
+          console.log(`[MEDIA] Otimizada para ${device}: ${optimizedMediaUrl}`);
+        }
+      }
+      mediaUrl = optimizedMediaUrl;
       if (activeProvider === "evolution") {
         if (interactive?.type === "list") {
           const ok = await sendWahaListMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
