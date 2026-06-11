@@ -2883,16 +2883,13 @@ async function executeNode(
           for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
           break;
         }
-        const directives = [
-          "divulgacao", "promocao", "lancamento", "evento", "institucional",
-          "engajamento", "educacional", "vendas", "remarketing", "datas_especiais",
-        ];
+        const directives = getContentTypeOptions();
         const prompt = itp(cfg.askPrompt || "Qual o objetivo da peça?");
         const rows = [
-          ...directives.map((d, i) => ({
-            title: d.slice(0, 24),
+          ...directives.map((d) => ({
+            title: d.label.slice(0, 24),
             description: "",
-            rowId: `ct_${i + 1}`,
+            rowId: `content_${d.value}`,
           })),
           { title: "Sair", description: "Encerrar atendimento", rowId: "__exit__" },
         ];
