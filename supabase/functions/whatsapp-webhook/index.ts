@@ -3343,6 +3343,8 @@ async function executeNode(
           } else {
             for (const url of urls.slice(0, 4)) {
               await onResponse("", url, "image");
+              // pequeno respiro entre mídias para não saturar o Evolution/WhatsApp
+              await new Promise((r) => setTimeout(r, 600));
             }
             if (cfg.outputVariable) context.vars[cfg.outputVariable] = urls[0];
             context.vars.last_generated_media_url = urls[0];
@@ -3352,7 +3354,19 @@ async function executeNode(
           console.error(`[FLOW] generate_ai_media error:`, e);
           await onResponse("⚠️ Não foi possível gerar a mídia.");
         }
-        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        // pausa antes do próximo bloco (ex.: botões de resposta) para evitar
+        // que o WhatsApp/Evolution descarte a próxima mensagem logo após mídias.
+        await new Promise((r) => setTimeout(r, 800));
+        const nextNodes = nexts(node.id);
+        console.log(`[FLOW] generate_ai_media → ${nextNodes.length} próximo(s) bloco(s):`,
+          nextNodes.map((n: any) => `${n.id}(${n?.data?.type})`).join(", "));
+        for (const nx of nextNodes) {
+          try {
+            await executeNode(nx, nodes, edges, context, onResponse);
+          } catch (err) {
+            console.error(`[FLOW] generate_ai_media → erro ao executar próximo bloco ${nx?.id}:`, err);
+          }
+        }
         break;
       }
       case "text_content": {
