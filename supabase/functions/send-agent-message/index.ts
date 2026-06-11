@@ -12,7 +12,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { conversationId, text, fileUrl, fileName, contentType } = await req.json();
+    const { conversationId, text, fileUrl, fileName, contentType, whatsappNumeroId } = await req.json();
 
     if (!conversationId || (!text && !fileUrl)) {
       return new Response(
