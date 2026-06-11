@@ -723,7 +723,13 @@ serve(async (req) => {
               const opts = Array.isArray(cfg.options) ? cfg.options : [];
               total = (opts.length || 2) + 1;
             } else if (t === "content_type") total = getContentTypeOptions().length + 1;
-            else if (t === "ask_influencer" || t === "ask_product_image") total = 2 + 1;
+            else if (t === "ask_influencer") total = 2 + 1;
+            else if (t === "ask_product_image") {
+              const sub = context.vars.__pim_sub || "choice";
+              if (sub === "choice") total = 2 + 1;           // Sim/Não/Sair
+              else if (sub === "method") total = 3 + 1;      // Código/Foto/Texto/Sair
+              else total = 0;                                 // input: sem opção Sair
+            }
             if (total > 0 && asNum === total) return true;
           }
           return false;
