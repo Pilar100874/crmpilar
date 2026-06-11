@@ -751,8 +751,18 @@ serve(async (req) => {
               else total = (cfg.items || []).length;
               total += 1;
             } else if (t === "text_content") {
-              const opts = Array.isArray(cfg.options) ? cfg.options : [];
-              total = (opts.length || 2) + 1;
+              const sub = context.vars.__tc_sub;
+              if (sub === "choice") total = 2 + 1; // Sim/Não/Sair
+              else if (sub === "method") total = 2 + 1; // Digitar/IA/Sair
+              else if (sub === "sample_select") {
+                const samples = Array.isArray(context.vars.__tc_samples) ? context.vars.__tc_samples : [];
+                total = samples.length + 2; // opções + regenerar + Sair (Sair = samples.length+2)
+              } else if (sub) {
+                total = 0; // input livre (typing/theme): sem opção Sair numérica
+              } else {
+                const opts = Array.isArray(cfg.options) ? cfg.options : [];
+                total = (opts.length || 2) + 1;
+              }
             } else if (t === "content_type") total = getContentTypeOptions().length + 1;
             else if (t === "ask_influencer") {
               const sub = context.vars.__infl_sub || "choice";
