@@ -2053,13 +2053,22 @@ async function sendWahaButtonsMessage(
     });
     const resultText = await resp.text().catch(() => "");
     console.log("[EVOLUTION] sendButtons result:", resp.status, resultText.slice(0, 500));
-    if (!resp.ok && allowTextFallback) {
+    // Considera sucesso apenas quando a resposta contém uma "key" (id da mensagem entregue).
+    // Muitas instâncias Evolution/Baileys retornam 200 sem entregar botões interativos.
+    const looksDelivered = resp.ok && /"key"\s*:/.test(resultText);
+    if (!looksDelivered && allowTextFallback) {
+      console.warn("[EVOLUTION] sendButtons sem entrega confirmada — enviando fallback de texto numerado.");
       let fallback = `${body.description}\n`;
       body.buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.displayText}`; });
       await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey);
     }
   } catch (err) {
     console.error("[EVOLUTION] Erro no sendButtons:", err);
+    if (allowTextFallback) {
+      let fallback = `${body.description}\n`;
+      body.buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.displayText}`; });
+      try { await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey); } catch {}
+    }
   }
 }
 
