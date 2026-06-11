@@ -76,6 +76,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
   useEffect(() => {
     loadBots();
     loadWhatsAppSessions();
+    loadWhatsAppNumeros();
     // Garante que nenhum overlay/dialog/popover fica preso ao montar (especialmente embedded)
     if (embedded) {
       setNewBotDialogOpen(false);
