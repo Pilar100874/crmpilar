@@ -310,6 +310,7 @@ export default function Atendimento() {
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
   const [orcamentosEmAndamentoCount, setOrcamentosEmAndamentoCount] = useState(0);
   const [usuarioId, setUsuarioId] = useState<string>("");
+  const [selectedWhatsappNumeroId, setSelectedWhatsappNumeroId] = useState<string | null>(null);
   
   // Atendente data
   const [atendente, setAtendente] = useState<Atendente | null>(null);
