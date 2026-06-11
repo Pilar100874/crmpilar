@@ -71,6 +71,7 @@ function BotBuilderContent() {
   const botDescriptionFromUrl = searchParams.get("description");
   const canaisFromUrl = searchParams.get("canais");
   const whatsappTypeFromUrl = searchParams.get("whatsapp_type");
+  const whatsappNumeroIdFromUrl = searchParams.get("whatsapp_numero_id");
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const savingRef = useRef(false);
   
