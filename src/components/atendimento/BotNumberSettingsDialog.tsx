@@ -14,7 +14,7 @@ import { toast } from "sonner";
 
 interface BotNumberSettingsDialogProps {
   botId: string | null;
-  estabelecimentoId: string | null;
+  estabelecimentoId?: string | null;
   whatsappNumeroId: string | null;
   forwardToNumeroId?: string | null;
   onSaved: (whatsappNumeroId: string | null, forwardToNumeroId: string | null) => void;
