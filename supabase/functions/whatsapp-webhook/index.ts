@@ -997,6 +997,12 @@ serve(async (req) => {
           const chosen = options[selectedIndex];
           context.vars[variable] = chosen.value;
           if (blockType === "content_type") context.vars.content_type_choice = chosen.value;
+          console.log("[FLOW] Choice selected:", {
+            blockType,
+            selectedIndex,
+            chosenValue: chosen.value,
+            chosenHandle: chosen.handle,
+          });
           delete context.pendingNodeId;
           let edge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id && e.sourceHandle === chosen.handle);
           if (!edge && blockType === "list_buttons") {
@@ -2936,7 +2942,10 @@ async function executeNode(
         };
         let fallback = q;
         buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.text}`; });
-        await onResponse(fallback, undefined, undefined, interactive);
+        // No Evolution, botões podem retornar 201 mas não aparecer no celular.
+        // Envia texto numerado para manter o mesmo comportamento confiável do tipo de conteúdo.
+        const usePlainText = context?.vars?.session;
+        await onResponse(fallback, undefined, undefined, usePlainText ? undefined : interactive);
         context.pendingNodeId = node.id;
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
         const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
