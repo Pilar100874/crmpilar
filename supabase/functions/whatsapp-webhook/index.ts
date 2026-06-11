@@ -3288,7 +3288,12 @@ async function executeNode(
           const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
           const userPrompt = itp(cfg.textPrompt || cfg.prompt || "");
           const basePrompt = itp(cfg.basePrompt || "");
-          await onResponse("🎨 Gerando mídia com a previsão do tempo, aguarde...");
+          const variations = cfg.variations || 1;
+          const estimatedSeconds = Math.max(10, variations * 20);
+          const estimatedText = estimatedSeconds < 60
+            ? `${estimatedSeconds} segundos`
+            : `${Math.ceil(estimatedSeconds / 60)} minuto(s)`;
+          await onResponse(`🎨 Gerando mídia, tempo estimado ${estimatedText}...`);
 
           // Coleta referências (produto, influencer, extras) das variáveis do contexto
           const refUrls: string[] = [];
