@@ -523,12 +523,29 @@ serve(async (req) => {
     let context: any = sessionData?.context || { vars: {} };
     if (!context.pendingNodeId) context = { vars: {} };
 
+    // Dedup: ignora reentregas do mesmo messageId (Evolution/Meta às vezes reenviam)
+    if (inboundMsgId && context.vars?.__last_inbound_msg_id === inboundMsgId) {
+      console.log("[DEDUP] Ignorando mensagem duplicada:", inboundMsgId);
+      return new Response(JSON.stringify({ success: true, ignored: "duplicate" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (inboundMsgId) context.vars.__last_inbound_msg_id = inboundMsgId;
+
     context.vars.userMessage = body;
     context.vars.from = from;
     context.vars.phoneNumber = from;
     context.vars.session = wahaSession;
     if (incomingImage) context.vars.__incoming_image = incomingImage; else delete context.vars.__incoming_image;
     if (estabelecimentoId) context.vars.estabelecimento_id = estabelecimentoId;
+
+    // Persiste o messageId imediatamente para bloquear reentregas concorrentes
+    if (inboundMsgId) {
+      await supabase.from("chat_sessions").upsert(
+        { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+        { onConflict: "session_id" },
+      );
+    }
 
     // ====== Buscar ou criar customer e conversation ======
     let conversationId: string | null = null;
