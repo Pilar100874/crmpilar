@@ -3280,7 +3280,9 @@ async function executeNode(
               referenceImageUrls: refUrls,
               referenceLabels: refLabels,
               aspectRatio: cfg.aspectRatio || "1:1",
-              contentTypeBadge: context.vars.content_type_use_badge ? (context.vars.content_type || "") : "",
+              contentTypeBadge: context.vars.content_type_use_badge
+                ? (getContentTypeOptions().find((o) => o.value === context.vars.content_type)?.label || context.vars.content_type || "")
+                : "",
             },
           });
           if (error) throw error;
