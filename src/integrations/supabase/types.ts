@@ -1639,6 +1639,7 @@ export type Database = {
           id: string
           name: string
           updated_at: string | null
+          whatsapp_numero_id: string | null
           whatsapp_type: string | null
         }
         Insert: {
@@ -1651,6 +1652,7 @@ export type Database = {
           id?: string
           name: string
           updated_at?: string | null
+          whatsapp_numero_id?: string | null
           whatsapp_type?: string | null
         }
         Update: {
@@ -1663,6 +1665,7 @@ export type Database = {
           id?: string
           name?: string
           updated_at?: string | null
+          whatsapp_numero_id?: string | null
           whatsapp_type?: string | null
         }
         Relationships: [
@@ -1671,6 +1674,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_flows_whatsapp_numero_id_fkey"
+            columns: ["whatsapp_numero_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_numeros"
             referencedColumns: ["id"]
           },
         ]
@@ -14639,6 +14649,71 @@ export type Database = {
             foreignKeyName: "whatsapp_config_estabelecimento_id_fkey"
             columns: ["estabelecimento_id"]
             isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_numeros: {
+        Row: {
+          ativo: boolean
+          cloud_access_token: string | null
+          cloud_business_account_id: string | null
+          cloud_phone_number_id: string | null
+          cloud_webhook_verify_token: string | null
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          is_default: boolean
+          nome: string
+          provider: string
+          session_name: string | null
+          telefone: string | null
+          updated_at: string
+          waha_api_key: string | null
+          waha_url: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          cloud_access_token?: string | null
+          cloud_business_account_id?: string | null
+          cloud_phone_number_id?: string | null
+          cloud_webhook_verify_token?: string | null
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          is_default?: boolean
+          nome: string
+          provider?: string
+          session_name?: string | null
+          telefone?: string | null
+          updated_at?: string
+          waha_api_key?: string | null
+          waha_url?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          cloud_access_token?: string | null
+          cloud_business_account_id?: string | null
+          cloud_phone_number_id?: string | null
+          cloud_webhook_verify_token?: string | null
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          is_default?: boolean
+          nome?: string
+          provider?: string
+          session_name?: string | null
+          telefone?: string | null
+          updated_at?: string
+          waha_api_key?: string | null
+          waha_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_numeros_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
             referencedRelation: "estabelecimentos"
             referencedColumns: ["id"]
           },
