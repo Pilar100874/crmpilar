@@ -59,6 +59,11 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
   const [whatsappSessions, setWhatsappSessions] = useState<any[]>([]);
   const [selectedSessions, setSelectedSessions] = useState<Record<string, string>>({});
 
+  // Números de WhatsApp cadastrados
+  const [whatsappNumeros, setWhatsappNumeros] = useState<any[]>([]);
+  const [selectedNumeroId, setSelectedNumeroId] = useState<string>("");
+  const [duplicateNumeroId, setDuplicateNumeroId] = useState<string>("");
+
 
   // Fail-safe para fechar overlays caso algo fique preso
   const closeOverlays = () => {
