@@ -1008,11 +1008,11 @@ serve(async (req) => {
           } else {
             context.vars.tem_produto_imagem = "sim";
             const codeP = cfg.codePrompt || "Digite o código (ou nome) do produto:";
-            const photoP = cfg.photoPrompt || "Envie a URL da foto do produto:";
+            const photoP = cfg.photoPrompt || "📷 Envie agora a foto do produto como anexo no WhatsApp:";
             const textP = cfg.textPrompt || "Descreva o produto em texto:";
             let menu = "Como você quer fornecer a imagem do produto?";
             menu += `\n1. 🔢 Digitar código do produto`;
-            menu += `\n2. 📷 Enviar foto (URL)`;
+            menu += `\n2. 📷 Enviar foto (anexo)`;
             menu += `\n3. ✍️ Descrever em texto`;
             menu += `\n4. Sair`;
             await respond(menu);
