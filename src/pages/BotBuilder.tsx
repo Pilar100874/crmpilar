@@ -71,6 +71,7 @@ function BotBuilderContent() {
   const botDescriptionFromUrl = searchParams.get("description");
   const canaisFromUrl = searchParams.get("canais");
   const whatsappTypeFromUrl = searchParams.get("whatsapp_type");
+  const whatsappNumeroIdFromUrl = searchParams.get("whatsapp_numero_id");
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const savingRef = useRef(false);
   
@@ -105,6 +106,7 @@ function BotBuilderContent() {
   const [currentBotDescription, setCurrentBotDescription] = useState("");
   const [currentBotCanais, setCurrentBotCanais] = useState<string[]>(["whatsapp"]);
   const [currentBotWhatsAppType, setCurrentBotWhatsAppType] = useState<string>("waha");
+  const [currentBotWhatsAppNumeroId, setCurrentBotWhatsAppNumeroId] = useState<string | null>(null);
   const [savedBots, setSavedBots] = useState<any[]>([]);
   const [isLocked, setIsLocked] = useState(false);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
@@ -187,7 +189,10 @@ function BotBuilderContent() {
     if (whatsappTypeFromUrl && !currentBotId) {
       setCurrentBotWhatsAppType(whatsappTypeFromUrl);
     }
-  }, [botNameFromUrl, botDescriptionFromUrl, canaisFromUrl, whatsappTypeFromUrl, currentBotId]);
+    if (whatsappNumeroIdFromUrl && !currentBotId) {
+      setCurrentBotWhatsAppNumeroId(whatsappNumeroIdFromUrl);
+    }
+  }, [botNameFromUrl, botDescriptionFromUrl, canaisFromUrl, whatsappTypeFromUrl, whatsappNumeroIdFromUrl, currentBotId]);
 
   // Auto-save movido abaixo (após handleSave) para evitar closures desatualizadas.
 
@@ -964,6 +969,7 @@ function BotBuilderContent() {
       // Adicionar whatsapp_type apenas se o bot for para WhatsApp
       if (currentBotCanais.includes('whatsapp')) {
         botInsertData.whatsapp_type = currentBotWhatsAppType;
+        botInsertData.whatsapp_numero_id = currentBotWhatsAppNumeroId;
       }
       
       const botData = botInsertData;
@@ -1171,6 +1177,7 @@ function BotBuilderContent() {
       setCurrentBotDescription(data.description || "");
       setCurrentBotCanais(data.canais || ["whatsapp"]);
       setCurrentBotWhatsAppType(data.whatsapp_type || "waha");
+      setCurrentBotWhatsAppNumeroId((data as any).whatsapp_numero_id || null);
       setSelectedNode(null);
       
       // Fixar estabelecimento do bot como o estabelecimento corrente da sessão

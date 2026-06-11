@@ -59,6 +59,11 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
   const [whatsappSessions, setWhatsappSessions] = useState<any[]>([]);
   const [selectedSessions, setSelectedSessions] = useState<Record<string, string>>({});
 
+  // Números de WhatsApp cadastrados
+  const [whatsappNumeros, setWhatsappNumeros] = useState<any[]>([]);
+  const [selectedNumeroId, setSelectedNumeroId] = useState<string>("");
+  const [duplicateNumeroId, setDuplicateNumeroId] = useState<string>("");
+
 
   // Fail-safe para fechar overlays caso algo fique preso
   const closeOverlays = () => {
@@ -71,6 +76,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
   useEffect(() => {
     loadBots();
     loadWhatsAppSessions();
+    loadWhatsAppNumeros();
     // Garante que nenhum overlay/dialog/popover fica preso ao montar (especialmente embedded)
     if (embedded) {
       setNewBotDialogOpen(false);
@@ -115,6 +121,27 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
       }
     } catch (error) {
       console.error("Error loading WhatsApp sessions:", error);
+    }
+  };
+
+  const loadWhatsAppNumeros = async () => {
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) return;
+      const { data, error } = await supabase
+        .from("whatsapp_numeros")
+        .select("id, nome, telefone, provider, ativo, is_default")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .eq("ativo", true)
+        .order("is_default", { ascending: false })
+        .order("nome", { ascending: true });
+      if (error) {
+        console.error("Error loading whatsapp_numeros:", error);
+      } else {
+        setWhatsappNumeros(data || []);
+      }
+    } catch (e) {
+      console.error("Error loading whatsapp_numeros:", e);
     }
   };
 
@@ -342,12 +369,14 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
 
       // Navegar para o builder com o nome do bot como parâmetro
       const whatsappTypeParam = selectedCanal === 'whatsapp' ? `&whatsapp_type=${selectedWhatsAppType}` : '';
-      openBuilder(`/bot-builder?name=${encodeURIComponent(newBotName.trim())}&description=${encodeURIComponent(newBotDescription.trim())}&canais=${encodeURIComponent(JSON.stringify([selectedCanal]))}${whatsappTypeParam}`);
+      const numeroParam = selectedCanal === 'whatsapp' && selectedNumeroId ? `&whatsapp_numero_id=${encodeURIComponent(selectedNumeroId)}` : '';
+      openBuilder(`/bot-builder?name=${encodeURIComponent(newBotName.trim())}&description=${encodeURIComponent(newBotDescription.trim())}&canais=${encodeURIComponent(JSON.stringify([selectedCanal]))}${whatsappTypeParam}${numeroParam}`);
       setNewBotDialogOpen(false);
       setNewBotName("");
       setNewBotDescription("");
       setSelectedCanal("whatsapp");
       setSelectedWhatsAppType("waha");
+      setSelectedNumeroId("");
     } catch (error) {
       console.error("Error creating bot:", error);
       toast.error("Erro ao criar bot");
@@ -728,7 +757,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
             {selectedCanal === 'whatsapp' && (
               <div className="grid gap-2">
                 <Label htmlFor="bot-whatsapp-type">Tipo de WhatsApp *</Label>
-                <Select value={selectedWhatsAppType} onValueChange={setSelectedWhatsAppType}>
+                <Select value={selectedWhatsAppType} onValueChange={(v) => { setSelectedWhatsAppType(v); setSelectedNumeroId(""); }}>
                   <SelectTrigger id="bot-whatsapp-type">
                     <SelectValue />
                   </SelectTrigger>
@@ -742,6 +771,34 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                 </p>
               </div>
             )}
+
+            {selectedCanal === 'whatsapp' && (() => {
+              const expectedProvider = selectedWhatsAppType === 'business' ? 'cloud_api' : 'evolution';
+              const filtered = whatsappNumeros.filter((n) => n.provider === expectedProvider);
+              return (
+                <div className="grid gap-2">
+                  <Label htmlFor="bot-whatsapp-numero">Número do WhatsApp</Label>
+                  <Select value={selectedNumeroId || "__default__"} onValueChange={(v) => setSelectedNumeroId(v === "__default__" ? "" : v)}>
+                    <SelectTrigger id="bot-whatsapp-numero">
+                      <SelectValue placeholder="Usar número padrão" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__default__">Usar número padrão</SelectItem>
+                      {filtered.map((n) => (
+                        <SelectItem key={n.id} value={n.id}>
+                          {n.nome}{n.telefone ? ` · ${n.telefone}` : ""}{n.is_default ? " (padrão)" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    {filtered.length === 0
+                      ? "Nenhum número cadastrado para esse tipo. Cadastre em Configurações de Atendimento → Canais."
+                      : "Mensagens deste bot serão enviadas pelo número selecionado."}
+                  </p>
+                </div>
+              );
+            })()}
           </div>
           <DialogFooter>
             <Button
