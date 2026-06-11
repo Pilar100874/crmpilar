@@ -114,6 +114,8 @@ serve(async (req) => {
     let phoneNumberId = "";        // Meta Graph API phone number id
     let transport: "waha" | "meta" | "twilio" = "meta";
     let wahaSession = "default";
+    let incomingImage: any = null; // metadados de imagem recebida (anexo)
+    let metaAccessToken = "";      // token Meta para baixar mídia
 
 
 
@@ -145,7 +147,17 @@ serve(async (req) => {
       from = remoteJid.split("@")[0].split(":")[0].replace(/\D/g, "");
       body = extractEvolutionText(d?.message) || d?.text || "";
       wahaSession = resolveWahaSession(raw);
-      console.log("[EVOLUTION] Mensagem recebida:", { instance: wahaSession, from, text: body });
+      if (d?.message?.imageMessage) {
+        incomingImage = {
+          source: "evolution",
+          messageId: d?.key?.id,
+          remoteJid,
+          fromMe: false,
+          mimetype: d?.message?.imageMessage?.mimetype || "image/jpeg",
+          rawKey: d?.key,
+        };
+      }
+      console.log("[EVOLUTION] Mensagem recebida:", { instance: wahaSession, from, text: body, hasImage: !!incomingImage });
     }
 
     // B) Baileys cru: { messages:[{ key:{remoteJid}, message:{...} }] } — compatibilidade
@@ -161,7 +173,17 @@ serve(async (req) => {
       from = String(remote).split("@")[0].split(":")[0].replace(/\D/g, "");
       body = extractEvolutionText(msg0.message);
       wahaSession = resolveWahaSession(raw);
-      console.log("[EVOLUTION] Mensagem recebida (baileys raw):", { instance: wahaSession, from, text: body });
+      if (msg0.message?.imageMessage) {
+        incomingImage = {
+          source: "evolution",
+          messageId: msg0?.key?.id,
+          remoteJid: remote,
+          fromMe: false,
+          mimetype: msg0.message?.imageMessage?.mimetype || "image/jpeg",
+          rawKey: msg0?.key,
+        };
+      }
+      console.log("[EVOLUTION] Mensagem recebida (baileys raw):", { instance: wahaSession, from, text: body, hasImage: !!incomingImage });
     }
 
     // ====== Meta oficial (se não caiu em Evolution) ======
@@ -176,9 +198,17 @@ serve(async (req) => {
       }
       const messageData = payload.entry[0].changes[0].value.messages[0];
       from = messageData.from;
-      body = messageData.text?.body || "";
+      body = messageData.text?.body || (messageData as any)?.image?.caption || "";
       phoneNumberId = payload.entry[0].changes[0].value.metadata.phone_number_id;
       transport = "meta";
+      if ((messageData as any)?.image?.id) {
+        incomingImage = {
+          source: "meta",
+          mediaId: (messageData as any).image.id,
+          mimetype: (messageData as any).image.mime_type || "image/jpeg",
+          phoneNumberId,
+        };
+      }
     }
 
     console.log("Processed message:", { from, body, phoneNumberId, transport });
@@ -493,6 +523,7 @@ serve(async (req) => {
     context.vars.from = from;
     context.vars.phoneNumber = from;
     context.vars.session = wahaSession;
+    if (incomingImage) context.vars.__incoming_image = incomingImage; else delete context.vars.__incoming_image;
     if (estabelecimentoId) context.vars.estabelecimento_id = estabelecimentoId;
 
     // ====== Buscar ou criar customer e conversation ======
@@ -977,11 +1008,11 @@ serve(async (req) => {
           } else {
             context.vars.tem_produto_imagem = "sim";
             const codeP = cfg.codePrompt || "Digite o código (ou nome) do produto:";
-            const photoP = cfg.photoPrompt || "Envie a URL da foto do produto:";
+            const photoP = cfg.photoPrompt || "📷 Envie agora a foto do produto como anexo no WhatsApp:";
             const textP = cfg.textPrompt || "Descreva o produto em texto:";
             let menu = "Como você quer fornecer a imagem do produto?";
             menu += `\n1. 🔢 Digitar código do produto`;
-            menu += `\n2. 📷 Enviar foto (URL)`;
+            menu += `\n2. 📷 Enviar foto (anexo)`;
             menu += `\n3. ✍️ Descrever em texto`;
             menu += `\n4. Sair`;
             await respond(menu);
@@ -1035,13 +1066,27 @@ serve(async (req) => {
             }
             await advancePim();
           } else if (method === "photo") {
-            const url = userResponse;
-            if (/^https?:\/\//i.test(url)) {
-              context.vars[imgVar] = url;
-              await respond("✅ Foto do produto registrada.", url, "image");
-              await advancePim();
+            const incoming = context.vars.__incoming_image;
+            if (incoming) {
+              await respond("⏳ Recebendo a foto, aguarde...");
+              const publicUrl = await downloadIncomingImageAsPublicUrl(incoming, {
+                wahaUrl: WAHA_URL,
+                wahaApiKey: WAHA_API_KEY,
+                sessionName: wahaSession,
+                metaToken: cloudAccessToken,
+                from,
+              });
+              delete context.vars.__incoming_image;
+              if (publicUrl) {
+                context.vars[imgVar] = publicUrl;
+                await respond("✅ Foto do produto registrada.", publicUrl, "image");
+                await advancePim();
+              } else {
+                await respond("⚠️ Não consegui baixar a foto. Por favor, envie a imagem novamente como anexo.");
+                shouldReturn = true;
+              }
             } else {
-              await respond("Por favor, envie uma URL válida (começando com http:// ou https://).");
+              await respond("📷 Por favor, anexe a foto do produto (envie a imagem como anexo no WhatsApp).");
               shouldReturn = true;
             }
           } else {
@@ -1568,7 +1613,93 @@ async function sendCloudButtonsMessage(
 }
 
 
+/* ======= Download de imagens recebidas e upload para bot-media ======= */
+
+async function downloadIncomingImageAsPublicUrl(
+  incoming: any,
+  ctx: { wahaUrl: string; wahaApiKey: string; sessionName: string; metaToken?: string; from: string },
+): Promise<string | null> {
+  try {
+    let base64 = "";
+    let mimetype = incoming?.mimetype || "image/jpeg";
+
+    if (incoming?.source === "evolution") {
+      const { base, apiKey } = resolveEvolution(ctx.wahaUrl, ctx.wahaApiKey);
+      if (!base || !apiKey) {
+        console.error("[INCOMING-IMG] Evolution sem URL/apikey");
+        return null;
+      }
+      const url = `${base}/chat/getBase64FromMediaMessage/${encodeURIComponent(ctx.sessionName)}`;
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: apiKey },
+        body: JSON.stringify({
+          message: { key: incoming.rawKey || { id: incoming.messageId, remoteJid: incoming.remoteJid, fromMe: false } },
+          convertToMp4: false,
+        }),
+      });
+      const j = await r.json().catch(() => ({} as any));
+      if (!r.ok) {
+        console.error("[INCOMING-IMG] Evolution getBase64 falhou:", j);
+        return null;
+      }
+      base64 = j?.base64 || j?.data || "";
+      mimetype = j?.mimetype || mimetype;
+    } else if (incoming?.source === "meta") {
+      const token = ctx.metaToken;
+      if (!token) {
+        console.error("[INCOMING-IMG] Meta sem access token");
+        return null;
+      }
+      const metaR = await fetch(`https://graph.facebook.com/v18.0/${incoming.mediaId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const metaJ = await metaR.json().catch(() => ({} as any));
+      if (!metaR.ok || !metaJ?.url) {
+        console.error("[INCOMING-IMG] Meta meta lookup falhou:", metaJ);
+        return null;
+      }
+      const fileR = await fetch(metaJ.url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!fileR.ok) {
+        console.error("[INCOMING-IMG] Meta download falhou:", fileR.status);
+        return null;
+      }
+      const buf = new Uint8Array(await fileR.arrayBuffer());
+      base64 = btoa(String.fromCharCode(...buf));
+      mimetype = metaJ.mime_type || mimetype;
+    } else {
+      return null;
+    }
+
+    if (!base64) return null;
+
+    // base64 -> bytes
+    const bin = atob(base64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+
+    const ext = mimetype.includes("png") ? "png" : mimetype.includes("webp") ? "webp" : "jpg";
+    const path = `whatsapp-incoming/${ctx.from || "anon"}/${Date.now()}.${ext}`;
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { error: upErr } = await sb.storage.from("bot-media").upload(path, bytes, {
+      contentType: mimetype,
+      upsert: true,
+    });
+    if (upErr) {
+      console.error("[INCOMING-IMG] upload falhou:", upErr);
+      return null;
+    }
+    const { data: pub } = sb.storage.from("bot-media").getPublicUrl(path);
+    return pub?.publicUrl || null;
+  } catch (e) {
+    console.error("[INCOMING-IMG] exception:", e);
+    return null;
+  }
+}
+
+
 /* ======= Evolution API – envio de texto e mídia ======= */
+
 
 function resolveEvolution(wahaUrl: string, wahaApiKey: string) {
   const base = (wahaUrl || env("EVOLUTION_URL") || env("WAHA_URL") || "").replace(/\/+$/, "");
