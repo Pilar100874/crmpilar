@@ -971,6 +971,7 @@ function BotBuilderContent() {
       if (currentBotCanais.includes('whatsapp')) {
         botInsertData.whatsapp_type = currentBotWhatsAppType;
         botInsertData.whatsapp_numero_id = currentBotWhatsAppNumeroId;
+        botInsertData.forward_to_numero_id = currentBotForwardToNumeroId;
       }
       
       const botData = botInsertData;
