@@ -51,12 +51,18 @@ export function BotNumberSettingsDialog({
   }, [forwardToNumeroId]);
 
   useEffect(() => {
-    if (!open || !estabelecimentoId) return;
+    if (!open) return;
     (async () => {
+      let estabId = estabelecimentoId;
+      if (!estabId) {
+        estabId = await getEstabelecimentoId();
+        setEstabelecimentoId(estabId);
+      }
+      if (!estabId) return;
       const { data, error } = await supabase
         .from("whatsapp_numeros")
         .select("id, nome, provider, numero")
-        .eq("estabelecimento_id", estabelecimentoId)
+        .eq("estabelecimento_id", estabId)
         .eq("ativo", true)
         .order("nome");
       if (error) {
