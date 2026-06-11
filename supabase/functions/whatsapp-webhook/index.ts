@@ -3183,19 +3183,19 @@ async function executeNode(
           };
           rows.forEach((r: any, i: number) => { fallback += `\n${i + 1}. ${r.title}`; });
         } else {
-          const buttons = [
-            { text: "Sim", id: "tc_1" },
-            { text: "Não", id: "tc_2" },
-            { text: "Sair", id: "__exit__" },
-          ];
-          interactive = {
-            type: "buttons",
-            title: "",
-            description: prompt,
-            footerText: "",
-            buttons,
-          };
-          buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.text}`; });
+          // Modo advanced: Sim/Não → se Sim, pergunta método (Digitar / IA) → coleta
+          const q = itp(cfg.askPrompt || "Deseja incluir conteúdo de texto (título/subtítulo/corpo) na peça?");
+          fallback = `${q}\n1. Sim\n2. Não\n3. Sair`;
+          await onResponse(fallback);
+          context.vars.__tc_sub = "choice";
+          context.pendingNodeId = node.id;
+          const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
+          await supabase.from("chat_sessions").upsert(
+            { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+            { onConflict: "session_id" },
+          );
+          return;
         }
         await onResponse(fallback, undefined, undefined, interactive);
         context.pendingNodeId = node.id;
