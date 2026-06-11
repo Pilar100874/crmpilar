@@ -722,7 +722,7 @@ serve(async (req) => {
             } else if (t === "text_content") {
               const opts = Array.isArray(cfg.options) ? cfg.options : [];
               total = (opts.length || 2) + 1;
-            } else if (t === "content_type") total = 10 + 1;
+            } else if (t === "content_type") total = getContentTypeOptions().length + 1;
             else if (t === "ask_influencer" || t === "ask_product_image") total = 2 + 1;
             if (total > 0 && asNum === total) return true;
           }
@@ -911,12 +911,9 @@ serve(async (req) => {
           }));
           variable = cfg.variable || "opcao_escolhida";
         } else if (blockType === "content_type") {
-          const directives = [
-            "divulgacao", "promocao", "lancamento", "evento", "institucional",
-            "engajamento", "educacional", "vendas", "remarketing", "datas_especiais",
-          ];
-          options = directives.map((d, i) => ({ label: d, value: d, handle: `ct_${i}` }));
-          variable = "content_type_choice";
+          const directives = getContentTypeOptions();
+          options = directives.map((o) => ({ label: o.label, value: o.value, handle: `content_${o.value}` }));
+          variable = "content_type";
           context.vars.content_type_use_badge = cfg.useBadge !== false;
         } else if (blockType === "ask_influencer" || blockType === "ask_product_image") {
           const prefix = blockType === "ask_influencer" ? "infl" : "pim";
@@ -975,7 +972,7 @@ serve(async (req) => {
           if (selectedIndex < 0) {
             selectedIndex = options.findIndex((o) => String(o.handle || "").toLowerCase() === lower);
           }
-          // Para content_type a row vem como ct_1..ct_10 (1-indexed) mas o handle interno é ct_0..ct_9
+          // Compatibilidade: listas antigas de content_type usavam ct_1..ct_N como rowId
           if (selectedIndex < 0 && blockType === "content_type") {
             const m = lower.match(/^ct_(\d+)$/);
             if (m) {
@@ -996,6 +993,7 @@ serve(async (req) => {
         } else {
           const chosen = options[selectedIndex];
           context.vars[variable] = chosen.value;
+          if (blockType === "content_type") context.vars.content_type_choice = chosen.value;
           delete context.pendingNodeId;
           let edge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id && e.sourceHandle === chosen.handle);
           if (!edge && blockType === "list_buttons") {
