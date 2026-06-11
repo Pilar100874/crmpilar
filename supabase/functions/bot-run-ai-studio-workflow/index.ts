@@ -300,7 +300,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const refs = collectImageRefs(nodes);
+    const refs = collectImageRefs(nodes, variables);
     let prompt = collectTextPrompt(nodes, variables, gen);
     if (!prompt && refs.imageUrls.length === 0) {
       return new Response(JSON.stringify({ error: "Workflow não tem texto/prompt nem referências de imagem." }), {
