@@ -9,158 +9,147 @@ const corsHeaders = {
 const env = (k: string, d = "") => (Deno.env.get(k) ?? d).trim();
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const { conversationId, text, fileUrl, fileName, contentType } = await req.json();
 
-    if (!conversationId || !text) {
+    if (!conversationId || (!text && !fileUrl)) {
       return new Response(
-        JSON.stringify({ error: "conversationId and text are required" }),
+        JSON.stringify({ error: "conversationId and text/fileUrl are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const supabase = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
 
-    // Get conversation details
     const { data: conversation, error: convError } = await supabase
       .from("conversations")
       .select(`
-        *,
-        customer:customers!conversations_customer_id_fkey (
-          telefone
-        )
+        id, bot_id, estabelecimento_id,
+        customer:customers!conversations_customer_id_fkey ( telefone )
       `)
       .eq("id", conversationId)
       .single();
 
     if (convError || !conversation) {
-      console.error("Conversation not found:", convError);
       return new Response(
         JSON.stringify({ error: "Conversation not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get WAHA config
-    const { data: wahaConfig } = await supabase
-      .from("whatsapp_config")
-      .select("*")
-      .limit(1)
-      .maybeSingle();
-
-    if (!wahaConfig?.waha_url || !wahaConfig?.waha_api_key) {
-      console.error("WAHA not configured");
-      return new Response(
-        JSON.stringify({ error: "WhatsApp not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const customerPhone = conversation.customer?.telefone;
+    const customerPhone = (conversation as any).customer?.telefone;
     if (!customerPhone) {
       return new Response(
         JSON.stringify({ error: "Customer phone not found" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    const toNumberOnly = String(customerPhone).replace(/\D/g, "");
 
-    // Send via WAHA usando a mesma estratégia robusta do bot
-    const toNumberOnly = customerPhone.replace(/\D/g, "");
-    const wahaUrl = wahaConfig.waha_url.replace(/\/$/, "");
-    const sessionName = wahaConfig.session_name || "default";
-    const wahaApiKey = wahaConfig.waha_api_key;
-
-    console.log("[AGENT] Sending to WAHA", {
-      toNumberOnly,
-      hasFile: !!fileUrl,
-      contentType,
-      fileName,
-      sessionName,
-    });
-
-    if (fileUrl) {
-      // Enviar como DOCUMENTO (PDF / EXCEL), igual ao fluxo do bot
-      await sendAgentWahaMediaMessage(
-        toNumberOnly,
-        text || undefined,
-        contentType || "document",
-        fileUrl,
-        sessionName,
-        wahaUrl,
-        wahaApiKey,
-      );
-    } else if (text) {
-      // Somente texto
-      await sendAgentWahaTextMessage(toNumberOnly, text, sessionName, wahaUrl, wahaApiKey);
+    // ===== Resolve número vinculado (via bot -> whatsapp_numeros, ou default) =====
+    let numero: any = null;
+    if (conversation.bot_id) {
+      const { data: bot } = await supabase
+        .from("bot_flows")
+        .select("whatsapp_numero_id")
+        .eq("id", conversation.bot_id)
+        .maybeSingle();
+      if (bot?.whatsapp_numero_id) {
+        const { data: n } = await supabase
+          .from("whatsapp_numeros")
+          .select("*")
+          .eq("id", bot.whatsapp_numero_id)
+          .eq("ativo", true)
+          .maybeSingle();
+        numero = n;
+      }
+    }
+    if (!numero && conversation.estabelecimento_id) {
+      const { data: n } = await supabase
+        .from("whatsapp_numeros")
+        .select("*")
+        .eq("estabelecimento_id", conversation.estabelecimento_id)
+        .eq("ativo", true)
+        .eq("is_default", true)
+        .maybeSingle();
+      numero = n;
     }
 
-    return new Response(
-      JSON.stringify({ success: true }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    // Fallback antigo (compatibilidade): whatsapp_config singleton
+    if (!numero) {
+      const { data: wahaConfig } = await supabase
+        .from("whatsapp_config")
+        .select("*")
+        .limit(1)
+        .maybeSingle();
+      if (wahaConfig?.waha_url && wahaConfig?.waha_api_key) {
+        numero = {
+          provider: "evolution",
+          waha_url: wahaConfig.waha_url,
+          waha_api_key: wahaConfig.waha_api_key,
+          session_name: wahaConfig.session_name || "default",
+        };
+      }
+    }
+
+    if (!numero) {
+      return new Response(
+        JSON.stringify({ error: "Nenhum número WhatsApp configurado" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("[AGENT] Enviando via", numero.provider, { nome: numero.nome });
+
+    if (numero.provider === "cloud_api") {
+      if (fileUrl) {
+        await sendCloudMedia(numero.cloud_phone_number_id, numero.cloud_access_token, toNumberOnly, fileUrl, contentType || "document", text);
+      } else {
+        await sendCloudText(numero.cloud_phone_number_id, numero.cloud_access_token, toNumberOnly, text);
+      }
+    } else {
+      const base = (numero.waha_url || "").replace(/\/+$/, "");
+      const session = numero.session_name || "default";
+      const apiKey = numero.waha_api_key;
+      if (fileUrl) {
+        await sendEvolutionMedia(toNumberOnly, text || undefined, contentType || "document", fileUrl, session, base, apiKey);
+      } else {
+        await sendEvolutionText(toNumberOnly, text, session, base, apiKey);
+      }
+    }
+
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("[AGENT] Error:", error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    const msg = error instanceof Error ? error.message : String(error);
+    return new Response(JSON.stringify({ error: msg }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
 
-// ===== Helpers para envio via Evolution API =====
-
-async function sendAgentWahaTextMessage(
-  toNumberOnly: string,
-  text: string,
-  sessionName: string,
-  wahaUrl: string,
-  wahaApiKey: string,
-) {
-  const base = (wahaUrl || "").replace(/\/+$/, "");
-  if (!base || !wahaApiKey) {
-    console.error("[AGENT][EVOLUTION] Faltam URL ou apikey");
-    return;
-  }
-  const instance = sessionName || "default";
+/* ===== Evolution senders ===== */
+async function sendEvolutionText(toNumberOnly: string, text: string, sessionName: string, base: string, apiKey: string) {
+  if (!base || !apiKey) return console.error("[AGENT][EVO] Faltam URL/apikey");
   const number = String(toNumberOnly).replace(/\D/g, "");
-  try {
-    const res = await fetch(`${base}/message/sendText/${encodeURIComponent(instance)}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json", apikey: wahaApiKey },
-      body: JSON.stringify({ number, text }),
-    });
-    const json = await res.text().catch(() => "");
-    console.log("[AGENT][EVOLUTION] sendText:", res.status, json.slice(0, 300));
-  } catch (e) {
-    console.error("[AGENT][EVOLUTION] sendText error:", e);
-  }
+  const res = await fetch(`${base}/message/sendText/${encodeURIComponent(sessionName)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: apiKey },
+    body: JSON.stringify({ number, text }),
+  });
+  console.log("[AGENT][EVO] sendText:", res.status);
 }
 
-async function sendAgentWahaMediaMessage(
-  toNumberOnly: string,
-  caption: string | undefined,
-  mediaType: string,
-  mediaUrl: string,
-  sessionName: string,
-  wahaUrl: string,
-  wahaApiKey: string,
-) {
-  const base = (wahaUrl || "").replace(/\/+$/, "");
-  if (!base || !wahaApiKey) {
-    console.error("[AGENT][EVOLUTION] Faltam URL ou apikey");
-    return;
-  }
-  const instance = sessionName || "default";
+async function sendEvolutionMedia(toNumberOnly: string, caption: string | undefined, mediaType: string, mediaUrl: string, sessionName: string, base: string, apiKey: string) {
+  if (!base || !apiKey) return console.error("[AGENT][EVO] Faltam URL/apikey");
   const number = String(toNumberOnly).replace(/\D/g, "");
   const lower = (mediaType || "").toLowerCase();
-  const evoType = lower === "image" || lower === "video" || lower === "audio" || lower === "document"
-    ? lower : "document";
-
+  const evoType = ["image", "video", "audio", "document"].includes(lower) ? lower : "document";
   const lastPath = (() => {
     try { return new URL(mediaUrl).pathname.split("/").pop() || "arquivo"; }
     catch { return mediaUrl.split("?")[0].split("/").pop() || "arquivo"; }
@@ -171,25 +160,45 @@ async function sendAgentWahaMediaMessage(
     : ln.endsWith(".xlsx") ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     : "application/octet-stream";
 
-  try {
-    let endpoint: string;
-    let body: Record<string, unknown>;
-    if (evoType === "audio") {
-      endpoint = `${base}/message/sendWhatsAppAudio/${encodeURIComponent(instance)}`;
-      body = { number, audio: mediaUrl };
-    } else {
-      endpoint = `${base}/message/sendMedia/${encodeURIComponent(instance)}`;
-      body = { number, mediatype: evoType, mimetype: mime, media: mediaUrl, fileName: inferredName, ...(caption ? { caption } : {}) };
-    }
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json", apikey: wahaApiKey },
-      body: JSON.stringify(body),
-    });
-    const json = await res.text().catch(() => "");
-    console.log("[AGENT][EVOLUTION] sendMedia:", res.status, json.slice(0, 300));
-  } catch (e) {
-    console.error("[AGENT][EVOLUTION] sendMedia error:", e);
+  let endpoint: string; let body: Record<string, unknown>;
+  if (evoType === "audio") {
+    endpoint = `${base}/message/sendWhatsAppAudio/${encodeURIComponent(sessionName)}`;
+    body = { number, audio: mediaUrl };
+  } else {
+    endpoint = `${base}/message/sendMedia/${encodeURIComponent(sessionName)}`;
+    body = { number, mediatype: evoType, mimetype: mime, media: mediaUrl, fileName: inferredName, ...(caption ? { caption } : {}) };
   }
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: apiKey },
+    body: JSON.stringify(body),
+  });
+  console.log("[AGENT][EVO] sendMedia:", res.status);
 }
 
+/* ===== Cloud API senders ===== */
+async function sendCloudText(phoneNumberId: string, accessToken: string, to: string, text: string) {
+  if (!phoneNumberId || !accessToken) return console.error("[AGENT][CLOUD] Faltam credenciais");
+  const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body: text } }),
+  });
+  if (!r.ok) console.error("[AGENT][CLOUD] sendText error:", await r.text().catch(() => ""));
+}
+
+async function sendCloudMedia(phoneNumberId: string, accessToken: string, to: string, mediaUrl: string, mediaType: string, caption?: string) {
+  if (!phoneNumberId || !accessToken) return console.error("[AGENT][CLOUD] Faltam credenciais");
+  const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+  const typeMap: Record<string, string> = { image: "image", video: "video", audio: "audio", file: "document", document: "document" };
+  const t = typeMap[(mediaType || "").toLowerCase()] || "document";
+  const body: any = { messaging_product: "whatsapp", to, type: t, [t]: { link: mediaUrl } };
+  if (caption && (t === "image" || t === "video" || t === "document")) body[t].caption = caption;
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) console.error("[AGENT][CLOUD] sendMedia error:", await r.text().catch(() => ""));
+}
