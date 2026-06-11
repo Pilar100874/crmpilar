@@ -2095,12 +2095,14 @@ async function sendWahaMediaMessage(
       body = { number, audio: mediaUrl };
     } else {
       endpoint = `${base}/message/sendMedia/${encodeURIComponent(instance)}`;
+      // IMPORTANTE: para image/video NÃO enviar fileName, senão Evolution envia como documento (não abre inline no WhatsApp)
+      const isInlineMedia = evoType === "image" || evoType === "video";
       body = {
         number,
         mediatype: evoType,
         mimetype: mime,
         media: mediaUrl,
-        fileName: inferredName,
+        ...(isInlineMedia ? {} : { fileName: inferredName }),
         ...(caption ? { caption } : {}),
       };
     }
