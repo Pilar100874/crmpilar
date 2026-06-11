@@ -147,7 +147,17 @@ serve(async (req) => {
       from = remoteJid.split("@")[0].split(":")[0].replace(/\D/g, "");
       body = extractEvolutionText(d?.message) || d?.text || "";
       wahaSession = resolveWahaSession(raw);
-      console.log("[EVOLUTION] Mensagem recebida:", { instance: wahaSession, from, text: body });
+      if (d?.message?.imageMessage) {
+        incomingImage = {
+          source: "evolution",
+          messageId: d?.key?.id,
+          remoteJid,
+          fromMe: false,
+          mimetype: d?.message?.imageMessage?.mimetype || "image/jpeg",
+          rawKey: d?.key,
+        };
+      }
+      console.log("[EVOLUTION] Mensagem recebida:", { instance: wahaSession, from, text: body, hasImage: !!incomingImage });
     }
 
     // B) Baileys cru: { messages:[{ key:{remoteJid}, message:{...} }] } — compatibilidade
