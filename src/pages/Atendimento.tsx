@@ -50,6 +50,7 @@ import type { Atendente } from "@/types/atendimento";
 import { useFerramentasAtendimento, type TabType } from "@/hooks/useFerramentasAtendimento";
 import { ToolsDropdown } from "@/components/atendimento/ToolsDropdown";
 import { AgentChatPanel } from "@/components/atendimento/AgentChatPanel";
+import { WhatsAppNumeroSelector } from "@/components/atendimento/WhatsAppNumeroSelector";
 import { useChatAgents, type ChatAgent } from "@/hooks/useChatAgents";
 import { FluxoAtendimentoDialog } from "@/components/atendimento/agenda/FluxoAtendimentoDialog";
 import { ConfigDatasProximoContatoDialog } from "@/components/atendimento/agenda/ConfigDatasProximoContatoDialog";
