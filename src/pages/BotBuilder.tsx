@@ -1599,6 +1599,17 @@ function BotBuilderContent() {
                 setHasUnsavedChanges(true);
               }}
             />
+            {currentBotCanais.includes('whatsapp') && (
+              <BotNumberSettingsDialog
+                botId={currentBotId || botIdFromUrl}
+                whatsappNumeroId={currentBotWhatsAppNumeroId}
+                forwardToNumeroId={currentBotForwardToNumeroId}
+                onSaved={(numId, fwdId) => {
+                  setCurrentBotWhatsAppNumeroId(numId);
+                  setCurrentBotForwardToNumeroId(fwdId);
+                }}
+              />
+            )}
             <Button variant="outline" size="sm" onClick={() => handleSave(false)} disabled={isSaving} className="h-8 px-2">
               <Save className={`h-4 w-4 mr-1.5 ${isSaving ? "animate-pulse" : ""}`} />
               <span className="hidden sm:inline">{isSaving ? "..." : "Salvar"}</span>
