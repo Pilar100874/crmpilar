@@ -295,11 +295,57 @@ serve(async (req) => {
       flowData = data;
     }
 
+    // ====== Resolve número vinculado ao bot (multi-provider) ======
+    // Prioridade: bot_flows.whatsapp_numero_id -> whatsapp_numeros
+    // Fallback Meta: busca número por cloud_phone_number_id == phoneNumberId
+    let activeProvider: "evolution" | "cloud_api" = transport === "waha" ? "evolution" : "cloud_api";
+    let cloudPhoneNumberId = phoneNumberId;
+    let cloudAccessToken = "";
+
+    try {
+      let numeroRow: any = null;
+      if (flowData?.whatsapp_numero_id) {
+        const { data } = await supabase
+          .from("whatsapp_numeros")
+          .select("*")
+          .eq("id", flowData.whatsapp_numero_id)
+          .eq("ativo", true)
+          .maybeSingle();
+        numeroRow = data;
+      }
+      // Fallback Meta: identifica por phone_number_id recebido
+      if (!numeroRow && transport === "meta" && phoneNumberId) {
+        const { data } = await supabase
+          .from("whatsapp_numeros")
+          .select("*")
+          .eq("provider", "cloud_api")
+          .eq("cloud_phone_number_id", phoneNumberId)
+          .eq("ativo", true)
+          .maybeSingle();
+        numeroRow = data;
+      }
+
+      if (numeroRow) {
+        activeProvider = numeroRow.provider === "cloud_api" ? "cloud_api" : "evolution";
+        if (activeProvider === "evolution") {
+          if (numeroRow.waha_url) WAHA_URL = numeroRow.waha_url;
+          if (numeroRow.waha_api_key) WAHA_API_KEY = numeroRow.waha_api_key;
+          if (numeroRow.session_name) wahaSession = numeroRow.session_name;
+        } else {
+          cloudPhoneNumberId = numeroRow.cloud_phone_number_id || phoneNumberId;
+          cloudAccessToken = numeroRow.cloud_access_token || "";
+        }
+        console.log("[NUMERO] ✓ Vinculado ao bot:", { provider: activeProvider, nome: numeroRow.nome });
+      } else {
+        console.log("[NUMERO] Nenhum número vinculado, usando configuração padrão");
+      }
+    } catch (e) {
+      console.error("[NUMERO] Erro ao resolver número:", e);
+    }
+
     const respond = async (text?: string, mediaUrl?: string, mediaType?: string, interactive?: any) => {
-      if (transport === "waha") {
+      if (activeProvider === "evolution") {
         if (interactive?.type === "list") {
-          // Tenta enviar como List Message nativo do WhatsApp (Evolution sendList).
-          // Se falhar (instância sem suporte, erro de API, etc.), cai para texto numerado.
           const ok = await sendWahaListMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
           if (!ok) {
             console.log("[FLOW] sendList falhou, usando fallback texto numerado");
@@ -323,8 +369,31 @@ serve(async (req) => {
           await sendWahaTextMessage(from, text, wahaSession, WAHA_URL, WAHA_API_KEY);
         }
       } else {
-        if (mediaUrl && mediaType) await sendWhatsAppMedia(phoneNumberId, from, mediaUrl, mediaType, text);
-        else if (text) await sendWhatsAppMessage(phoneNumberId, from, text);
+        // Cloud API (Meta oficial)
+        const pnId = cloudPhoneNumberId;
+        const token = cloudAccessToken;
+        if (interactive?.type === "list") {
+          const ok = await sendCloudListMessage(pnId, token, from, interactive, text);
+          if (!ok) {
+            const allRows = (interactive.sections || []).flatMap((s: any) => s.rows || []);
+            let fallback = `${interactive.description || text || "Escolha uma opção"}`;
+            allRows.forEach((row: any, i: number) => {
+              fallback += `\n${i + 1}. ${row.title || `Opção ${i + 1}`}${row.description ? " - " + row.description : ""}`;
+            });
+            await sendCloudText(pnId, token, from, fallback);
+          }
+          return;
+        }
+        if (interactive?.type === "buttons") {
+          const ok = await sendCloudButtonsMessage(pnId, token, from, interactive, text);
+          if (!ok && text) await sendCloudText(pnId, token, from, text);
+          return;
+        }
+        if (mediaUrl && mediaType) {
+          await sendCloudMedia(pnId, token, from, mediaUrl, mediaType, text);
+        } else if (text) {
+          await sendCloudText(pnId, token, from, text);
+        }
       }
     };
 
