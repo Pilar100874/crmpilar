@@ -106,6 +106,7 @@ function BotBuilderContent() {
   const [currentBotDescription, setCurrentBotDescription] = useState("");
   const [currentBotCanais, setCurrentBotCanais] = useState<string[]>(["whatsapp"]);
   const [currentBotWhatsAppType, setCurrentBotWhatsAppType] = useState<string>("waha");
+  const [currentBotWhatsAppNumeroId, setCurrentBotWhatsAppNumeroId] = useState<string | null>(null);
   const [savedBots, setSavedBots] = useState<any[]>([]);
   const [isLocked, setIsLocked] = useState(false);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
