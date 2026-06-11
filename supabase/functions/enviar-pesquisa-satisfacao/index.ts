@@ -158,50 +158,63 @@ Deno.serve(async (req) => {
           throw new Error('Cliente sem telefone cadastrado');
         }
 
-        // Buscar configuração WAHA do estabelecimento
-        const { data: wahaConfig } = await supabase
-          .from('whatsapp_config')
-          .select('waha_url, waha_api_key')
+        // Resolve número padrão do estabelecimento (multi-provider)
+        let numero: any = null;
+        const { data: defNum } = await supabase
+          .from('whatsapp_numeros')
+          .select('*')
           .eq('estabelecimento_id', conversation.estabelecimento_id)
-          .single();
+          .eq('ativo', true)
+          .eq('is_default', true)
+          .maybeSingle();
+        numero = defNum;
 
-        if (!wahaConfig?.waha_url || !wahaConfig?.waha_api_key) {
-          throw new Error('Configuração WAHA não encontrada');
+        if (!numero) {
+          const { data: wahaConfig } = await supabase
+            .from('whatsapp_config')
+            .select('waha_url, waha_api_key, session_name')
+            .eq('estabelecimento_id', conversation.estabelecimento_id)
+            .maybeSingle();
+          if (wahaConfig?.waha_url && wahaConfig?.waha_api_key) {
+            const { data: session } = await supabase
+              .from('whatsapp_sessions')
+              .select('session_name')
+              .eq('estabelecimento_id', conversation.estabelecimento_id)
+              .eq('status', 'active')
+              .maybeSingle();
+            numero = {
+              provider: 'evolution',
+              waha_url: wahaConfig.waha_url,
+              waha_api_key: wahaConfig.waha_api_key,
+              session_name: session?.session_name || wahaConfig.session_name || 'default',
+            };
+          }
         }
 
-        // Buscar sessão ativa para o estabelecimento
-        const { data: session } = await supabase
-          .from('whatsapp_sessions')
-          .select('session_name')
-          .eq('estabelecimento_id', conversation.estabelecimento_id)
-          .eq('status', 'active')
-          .single();
+        if (!numero) throw new Error('Nenhum número WhatsApp configurado');
 
-        if (!session?.session_name) {
-          throw new Error('Nenhuma sessão WhatsApp ativa encontrada');
+        const phone = String(customer.telefone).replace(/\D/g, '');
+
+        if (numero.provider === 'cloud_api') {
+          const r = await fetch(`https://graph.facebook.com/v18.0/${numero.cloud_phone_number_id}/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${numero.cloud_access_token}` },
+            body: JSON.stringify({ messaging_product: 'whatsapp', to: phone, type: 'text', text: { body: mensagem } }),
+          });
+          if (!r.ok) throw new Error(`Erro Cloud API: ${await r.text().catch(() => '')}`);
+        } else {
+          const evoUrl = String(numero.waha_url).replace(/\/+$/, '');
+          const instance = numero.session_name || 'default';
+          const r = await fetch(`${evoUrl}/message/sendText/${encodeURIComponent(instance)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'apikey': numero.waha_api_key },
+            body: JSON.stringify({ number: phone, text: mensagem }),
+          });
+          if (!r.ok) throw new Error(`Erro Evolution: ${await r.text().catch(() => '')}`);
         }
 
-        // Enviar mensagem via Evolution API
-        const evoUrl = String(wahaConfig.waha_url).replace(/\/+$/, "");
-        const instance = session.session_name;
-        const wahaResponse = await fetch(`${evoUrl}/message/sendText/${encodeURIComponent(instance)}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': wahaConfig.waha_api_key,
-          },
-          body: JSON.stringify({
-            number: String(customer.telefone).replace(/\D/g, ''),
-            text: mensagem,
-          }),
-        });
+        console.log('✓ Pesquisa enviada via WhatsApp para:', customer.telefone, 'provider:', numero.provider);
 
-        if (!wahaResponse.ok) {
-          const errorText = await wahaResponse.text();
-          throw new Error(`Erro ao enviar mensagem Evolution: ${errorText}`);
-        }
-
-        console.log('✓ Pesquisa enviada via WhatsApp para:', customer.telefone);
       } catch (error) {
         console.error('Erro ao enviar pesquisa via WhatsApp:', error);
         throw error;
