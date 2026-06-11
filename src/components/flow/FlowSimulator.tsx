@@ -3810,9 +3810,10 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       const node = nodes.find((n) => n.id === currentNodeId);
       const cfg = (node?.data as any)?.config || {};
       if (button.value === "sim") {
+        const mode = cfg.influencerMode === "selection" ? "selection" : "fixed";
         const fixedId = cfg.fixedInfluencerId || "";
         const fixedUrl = cfg.fixedInfluencerUrl || "";
-        if (fixedId && fixedUrl) {
+        if (mode === "fixed" && fixedId && fixedUrl) {
           // Influencer fixo configurado no bloco — usa direto sem perguntar
           simNodeStateRef.current[currentNodeId] = {
             ...(simNodeStateRef.current[currentNodeId] || {}),
@@ -3828,27 +3829,32 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
           return;
         }
-        // Sem influencer fixo — fallback para galeria
+        // Modo seleção (ou fixo sem fixo definido) — mostra galeria filtrada
+        const allowedIds: string[] = Array.isArray(cfg.allowedInfluencerIds) ? cfg.allowedInfluencerIds : [];
         (async () => {
           const estId = await getEstabelecimentoId();
-          let q = supabase.from("studio_gallery_images").select("id,nome,image_url,pasta").eq("categoria", "influencer").order("created_at", { ascending: false }).limit(24);
+          let q = supabase.from("studio_gallery_images").select("id,nome,image_url,pasta").eq("categoria", "influencer").order("created_at", { ascending: false }).limit(100);
           if (estId) q = q.eq("estabelecimento_id", estId);
           const { data, error } = await q;
-          if (error || !data || data.length === 0) {
-            addSystemMessage("⚠️ Nenhum influencer cadastrado na galeria. Cadastre influencers primeiro.");
+          let list: any[] = data || [];
+          if (mode === "selection" && allowedIds.length > 0) {
+            list = list.filter((it: any) => allowedIds.includes(it.id));
+          }
+          if (error || list.length === 0) {
+            addSystemMessage("⚠️ Nenhum influencer disponível. Verifique a configuração do bloco ou cadastre influencers na galeria.");
             setIsWaitingInput(false); setCurrentBlockType(null);
             const next = getNextNode(currentNodeId);
             if (next) safeSetTimeout(() => { setCurrentNodeId(next.id); executeNode(next); }, 300);
             return;
           }
-          simNodeStateRef.current[currentNodeId!] = { ...(simNodeStateRef.current[currentNodeId!] || {}), influencerGallery: data };
-          addBotMessage(`Encontrei ${data.length} influencer(s). Veja as opções abaixo:`, currentNodeId!);
-          data.forEach((it: any, idx: number) => {
+          simNodeStateRef.current[currentNodeId!] = { ...(simNodeStateRef.current[currentNodeId!] || {}), influencerGallery: list };
+          addBotMessage(`Encontrei ${list.length} influencer(s). Veja as opções abaixo:`, currentNodeId!);
+          list.forEach((it: any, idx: number) => {
             addBotMediaMessage(it.image_url, "image", it.nome || `Influencer ${idx + 1}`, currentNodeId!);
           });
           setMessages((prev) => [...prev, {
             id: uid(), sender: "bot", text: "Selecione um influencer:", timestamp: new Date(), nodeId: currentNodeId!,
-            buttons: data.map((it: any, idx: number) => ({
+            buttons: list.slice(0, 24).map((it: any, idx: number) => ({
               text: `👤 ${it.nome || `Influencer ${idx + 1}`}`,
               value: String(idx),
               buttonId: `infl_gal_${idx}`,
