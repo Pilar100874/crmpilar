@@ -295,11 +295,57 @@ serve(async (req) => {
       flowData = data;
     }
 
+    // ====== Resolve número vinculado ao bot (multi-provider) ======
+    // Prioridade: bot_flows.whatsapp_numero_id -> whatsapp_numeros
+    // Fallback Meta: busca número por cloud_phone_number_id == phoneNumberId
+    let activeProvider: "evolution" | "cloud_api" = transport === "waha" ? "evolution" : "cloud_api";
+    let cloudPhoneNumberId = phoneNumberId;
+    let cloudAccessToken = "";
+
+    try {
+      let numeroRow: any = null;
+      if (flowData?.whatsapp_numero_id) {
+        const { data } = await supabase
+          .from("whatsapp_numeros")
+          .select("*")
+          .eq("id", flowData.whatsapp_numero_id)
+          .eq("ativo", true)
+          .maybeSingle();
+        numeroRow = data;
+      }
+      // Fallback Meta: identifica por phone_number_id recebido
+      if (!numeroRow && transport === "meta" && phoneNumberId) {
+        const { data } = await supabase
+          .from("whatsapp_numeros")
+          .select("*")
+          .eq("provider", "cloud_api")
+          .eq("cloud_phone_number_id", phoneNumberId)
+          .eq("ativo", true)
+          .maybeSingle();
+        numeroRow = data;
+      }
+
+      if (numeroRow) {
+        activeProvider = numeroRow.provider === "cloud_api" ? "cloud_api" : "evolution";
+        if (activeProvider === "evolution") {
+          if (numeroRow.waha_url) WAHA_URL = numeroRow.waha_url;
+          if (numeroRow.waha_api_key) WAHA_API_KEY = numeroRow.waha_api_key;
+          if (numeroRow.session_name) wahaSession = numeroRow.session_name;
+        } else {
+          cloudPhoneNumberId = numeroRow.cloud_phone_number_id || phoneNumberId;
+          cloudAccessToken = numeroRow.cloud_access_token || "";
+        }
+        console.log("[NUMERO] ✓ Vinculado ao bot:", { provider: activeProvider, nome: numeroRow.nome });
+      } else {
+        console.log("[NUMERO] Nenhum número vinculado, usando configuração padrão");
+      }
+    } catch (e) {
+      console.error("[NUMERO] Erro ao resolver número:", e);
+    }
+
     const respond = async (text?: string, mediaUrl?: string, mediaType?: string, interactive?: any) => {
-      if (transport === "waha") {
+      if (activeProvider === "evolution") {
         if (interactive?.type === "list") {
-          // Tenta enviar como List Message nativo do WhatsApp (Evolution sendList).
-          // Se falhar (instância sem suporte, erro de API, etc.), cai para texto numerado.
           const ok = await sendWahaListMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
           if (!ok) {
             console.log("[FLOW] sendList falhou, usando fallback texto numerado");
@@ -323,8 +369,31 @@ serve(async (req) => {
           await sendWahaTextMessage(from, text, wahaSession, WAHA_URL, WAHA_API_KEY);
         }
       } else {
-        if (mediaUrl && mediaType) await sendWhatsAppMedia(phoneNumberId, from, mediaUrl, mediaType, text);
-        else if (text) await sendWhatsAppMessage(phoneNumberId, from, text);
+        // Cloud API (Meta oficial)
+        const pnId = cloudPhoneNumberId;
+        const token = cloudAccessToken;
+        if (interactive?.type === "list") {
+          const ok = await sendCloudListMessage(pnId, token, from, interactive, text);
+          if (!ok) {
+            const allRows = (interactive.sections || []).flatMap((s: any) => s.rows || []);
+            let fallback = `${interactive.description || text || "Escolha uma opção"}`;
+            allRows.forEach((row: any, i: number) => {
+              fallback += `\n${i + 1}. ${row.title || `Opção ${i + 1}`}${row.description ? " - " + row.description : ""}`;
+            });
+            await sendCloudText(pnId, token, from, fallback);
+          }
+          return;
+        }
+        if (interactive?.type === "buttons") {
+          const ok = await sendCloudButtonsMessage(pnId, token, from, interactive, text);
+          if (!ok && text) await sendCloudText(pnId, token, from, text);
+          return;
+        }
+        if (mediaUrl && mediaType) {
+          await sendCloudMedia(pnId, token, from, mediaUrl, mediaType, text);
+        } else if (text) {
+          await sendCloudText(pnId, token, from, text);
+        }
       }
     };
 
@@ -988,6 +1057,144 @@ async function sendWhatsAppMedia(phoneNumberId: string, to: string, mediaUrl: st
   const res = await r.json().catch(() => ({}));
   if (!r.ok) console.error("Meta media error:", res);
 }
+
+/* ======= Meta Cloud API – envio explícito por número (multi-conta) ======= */
+
+async function sendCloudText(phoneNumberId: string, accessToken: string, to: string, text: string) {
+  if (!phoneNumberId || !accessToken) {
+    console.error("[CLOUD] phoneNumberId/accessToken ausentes");
+    return false;
+  }
+  const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body: text } }),
+  });
+  const res = await r.json().catch(() => ({}));
+  if (!r.ok) console.error("[CLOUD] sendText error:", res);
+  return r.ok;
+}
+
+async function sendCloudMedia(
+  phoneNumberId: string,
+  accessToken: string,
+  to: string,
+  mediaUrl: string,
+  mediaType: string,
+  caption?: string,
+) {
+  if (!phoneNumberId || !accessToken) return false;
+  const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+  const typeMap: Record<string, string> = { image: "image", video: "video", audio: "audio", file: "document", document: "document" };
+  const t = typeMap[(mediaType || "").toLowerCase()] || "document";
+  const body: any = { messaging_product: "whatsapp", to, type: t, [t]: { link: mediaUrl } };
+  if (caption && (t === "image" || t === "video" || t === "document")) body[t].caption = caption;
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify(body),
+  });
+  const res = await r.json().catch(() => ({}));
+  if (!r.ok) console.error("[CLOUD] sendMedia error:", res);
+  return r.ok;
+}
+
+async function sendCloudListMessage(
+  phoneNumberId: string,
+  accessToken: string,
+  to: string,
+  interactive: any,
+  bodyText?: string,
+): Promise<boolean> {
+  if (!phoneNumberId || !accessToken) return false;
+  try {
+    const sections = (interactive.sections || []).map((s: any) => ({
+      title: (s.title || "Opções").slice(0, 24),
+      rows: (s.rows || []).slice(0, 10).map((r: any) => ({
+        id: String(r.id || r.rowId || r.title || "").slice(0, 200),
+        title: String(r.title || "Opção").slice(0, 24),
+        description: r.description ? String(r.description).slice(0, 72) : undefined,
+      })),
+    }));
+    const payload = {
+      messaging_product: "whatsapp",
+      to,
+      type: "interactive",
+      interactive: {
+        type: "list",
+        header: interactive.title ? { type: "text", text: String(interactive.title).slice(0, 60) } : undefined,
+        body: { text: String(interactive.description || bodyText || "Escolha uma opção").slice(0, 1024) },
+        footer: interactive.footer ? { text: String(interactive.footer).slice(0, 60) } : undefined,
+        action: {
+          button: String(interactive.buttonText || "Ver opções").slice(0, 20),
+          sections,
+        },
+      },
+    };
+    const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify(payload),
+    });
+    const res = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      console.error("[CLOUD] sendList error:", res);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error("[CLOUD] sendList exception:", e);
+    return false;
+  }
+}
+
+async function sendCloudButtonsMessage(
+  phoneNumberId: string,
+  accessToken: string,
+  to: string,
+  interactive: any,
+  bodyText?: string,
+): Promise<boolean> {
+  if (!phoneNumberId || !accessToken) return false;
+  try {
+    const buttons = (interactive.buttons || []).slice(0, 3).map((b: any) => ({
+      type: "reply",
+      reply: {
+        id: String(b.id || b.title || "").slice(0, 256),
+        title: String(b.title || "OK").slice(0, 20),
+      },
+    }));
+    if (!buttons.length) return false;
+    const payload = {
+      messaging_product: "whatsapp",
+      to,
+      type: "interactive",
+      interactive: {
+        type: "button",
+        body: { text: String(interactive.description || bodyText || "Escolha uma opção").slice(0, 1024) },
+        action: { buttons },
+      },
+    };
+    const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify(payload),
+    });
+    const res = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      console.error("[CLOUD] sendButtons error:", res);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error("[CLOUD] sendButtons exception:", e);
+    return false;
+  }
+}
+
 
 /* ======= Evolution API – envio de texto e mídia ======= */
 
