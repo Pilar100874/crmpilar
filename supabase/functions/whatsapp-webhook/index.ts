@@ -795,15 +795,104 @@ serve(async (req) => {
           }
         }
       }
-      // Processa resposta para blocos de escolha (keyword_options, content_type, ask_influencer, ask_product_image, text_content, list_buttons)
+      // ===== Bloco ask_influencer (fixo ou seleção pela galeria) =====
+      else if (pendingNode?.data?.type === "ask_influencer") {
+        const cfg = pendingNode.data.config || {};
+        const userResponse = (context.vars.userMessage || "").trim();
+        const subState = context.vars.__infl_sub || "choice";
+        const outVar = cfg.outputVariable || "influencer_image_url";
+
+        const advance = async () => {
+          delete context.pendingNodeId;
+          delete context.vars.__infl_sub;
+          delete context.vars.__infl_gallery;
+          const edge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
+          if (edge) {
+            const nextNode = flowData.flow_data.nodes.find((n: any) => n.id === edge.target);
+            if (nextNode) await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+          }
+        };
+
+        if (subState === "choice") {
+          // Aceita "1"/"sim", "2"/"não" (Sair já tratado antes)
+          const r = userResponse.toLowerCase();
+          const isYes = r === "1" || r === "sim" || r === "s" || r === "yes";
+          const isNo = r === "2" || r === "nao" || r === "não" || r === "n" || r === "no";
+          if (!isYes && !isNo) {
+            await respond("Por favor, responda com 1 (Sim), 2 (Não) ou 3 (Sair).");
+            shouldReturn = true;
+          } else if (isNo) {
+            context.vars.tem_influencer = "nao";
+            await advance();
+          } else {
+            context.vars.tem_influencer = "sim";
+            const mode = cfg.influencerMode === "selection" ? "selection" : "fixed";
+            const fixedId = cfg.fixedInfluencerId || "";
+            const fixedUrl = cfg.fixedInfluencerUrl || "";
+
+            if (mode === "fixed" && fixedId && fixedUrl) {
+              context.vars[outVar] = fixedUrl;
+              await respond("✅ Influencer fixo registrado automaticamente.", fixedUrl, "image");
+              await advance();
+            } else {
+              // Modo seleção — carrega galeria filtrada por allowedInfluencerIds
+              const allowedIds: string[] = Array.isArray(cfg.allowedInfluencerIds) ? cfg.allowedInfluencerIds : [];
+              const sbCli = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+              let q = sbCli
+                .from("studio_gallery_images")
+                .select("id,nome,image_url,pasta")
+                .eq("categoria", "influencer")
+                .order("created_at", { ascending: false })
+                .limit(100);
+              const estId = context.vars.estabelecimento_id;
+              if (estId) q = q.eq("estabelecimento_id", estId);
+              const { data: galData } = await q;
+              let list: any[] = galData || [];
+              if (mode === "selection" && allowedIds.length > 0) {
+                list = list.filter((it: any) => allowedIds.includes(it.id));
+              }
+              if (list.length === 0) {
+                await respond("⚠️ Nenhum influencer disponível. Seguindo sem influencer.");
+                await advance();
+              } else {
+                await respond(`Encontrei ${list.length} influencer(s). Veja as opções abaixo:`);
+                for (let i = 0; i < list.length; i++) {
+                  const it = list[i];
+                  await respond(`${i + 1}. ${it.nome || `Influencer ${i + 1}`}`, it.image_url, "image");
+                }
+                let menu = "Selecione um influencer respondendo com o número:";
+                list.forEach((it: any, i: number) => { menu += `\n${i + 1}. ${it.nome || `Influencer ${i + 1}`}`; });
+                await respond(menu);
+                context.vars.__infl_sub = "gallery_select";
+                context.vars.__infl_gallery = list.map((it: any) => ({ id: it.id, nome: it.nome, image_url: it.image_url }));
+                // mantém pendingNodeId
+                shouldReturn = true;
+              }
+            }
+          }
+        } else if (subState === "gallery_select") {
+          const list: any[] = Array.isArray(context.vars.__infl_gallery) ? context.vars.__infl_gallery : [];
+          const idx = parseInt(userResponse) - 1;
+          if (isNaN(idx) || idx < 0 || idx >= list.length) {
+            await respond(`Por favor, responda com um número entre 1 e ${list.length}.`);
+            shouldReturn = true;
+          } else {
+            const item = list[idx];
+            context.vars[outVar] = item.image_url;
+            await respond(`✅ Influencer "${item.nome || "selecionado"}" registrado.`, item.image_url, "image");
+            await advance();
+          }
+        }
+      }
+      // Processa resposta para blocos de escolha (keyword_options, content_type, ask_product_image, text_content, list_buttons)
       else if (
         pendingNode?.data?.type === "keyword_options" ||
         pendingNode?.data?.type === "content_type" ||
-        pendingNode?.data?.type === "ask_influencer" ||
         pendingNode?.data?.type === "ask_product_image" ||
         pendingNode?.data?.type === "text_content" ||
         pendingNode?.data?.type === "list_buttons"
       ) {
+
         const cfg = pendingNode.data.config || {};
         const userResponse = (context.vars.userMessage || "").trim();
         const blockType = pendingNode.data.type;
