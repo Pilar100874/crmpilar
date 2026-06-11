@@ -523,6 +523,7 @@ serve(async (req) => {
     context.vars.from = from;
     context.vars.phoneNumber = from;
     context.vars.session = wahaSession;
+    if (incomingImage) context.vars.__incoming_image = incomingImage; else delete context.vars.__incoming_image;
     if (estabelecimentoId) context.vars.estabelecimento_id = estabelecimentoId;
 
     // ====== Buscar ou criar customer e conversation ======
