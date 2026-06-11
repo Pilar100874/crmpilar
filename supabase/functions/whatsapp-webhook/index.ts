@@ -722,7 +722,7 @@ serve(async (req) => {
             } else if (t === "text_content") {
               const opts = Array.isArray(cfg.options) ? cfg.options : [];
               total = (opts.length || 2) + 1;
-            } else if (t === "content_type") total = 10 + 1;
+            } else if (t === "content_type") total = getContentTypeOptions().length + 1;
             else if (t === "ask_influencer" || t === "ask_product_image") total = 2 + 1;
             if (total > 0 && asNum === total) return true;
           }
@@ -911,12 +911,9 @@ serve(async (req) => {
           }));
           variable = cfg.variable || "opcao_escolhida";
         } else if (blockType === "content_type") {
-          const directives = [
-            "divulgacao", "promocao", "lancamento", "evento", "institucional",
-            "engajamento", "educacional", "vendas", "remarketing", "datas_especiais",
-          ];
-          options = directives.map((d, i) => ({ label: d, value: d, handle: `ct_${i}` }));
-          variable = "content_type_choice";
+          const directives = getContentTypeOptions();
+          options = directives.map((o) => ({ label: o.label, value: o.value, handle: `content_${o.value}` }));
+          variable = "content_type";
           context.vars.content_type_use_badge = cfg.useBadge !== false;
         } else if (blockType === "ask_influencer" || blockType === "ask_product_image") {
           const prefix = blockType === "ask_influencer" ? "infl" : "pim";
@@ -968,14 +965,17 @@ serve(async (req) => {
           selectedIndex = asNum - 1;
         } else {
           const lower = userResponse.toLowerCase();
-          selectedIndex = options.findIndex(
-            (o) => String(o.label || "").toLowerCase() === lower || String(o.value || "").toLowerCase() === lower,
-          );
+          const normalizedResponse = blockType === "content_type" ? normalizeContentTypeResponse(userResponse) : lower;
+          selectedIndex = options.findIndex((o) => {
+            const label = blockType === "content_type" ? normalizeContentTypeResponse(o.label) : String(o.label || "").toLowerCase();
+            const value = blockType === "content_type" ? normalizeContentTypeResponse(o.value) : String(o.value || "").toLowerCase();
+            return label === normalizedResponse || value === normalizedResponse;
+          });
           // Reconhece rowId/buttonId enviado por listas/botões interativos do WhatsApp (ex: "ct_1", "section_0_item_0", custom rowIds)
           if (selectedIndex < 0) {
             selectedIndex = options.findIndex((o) => String(o.handle || "").toLowerCase() === lower);
           }
-          // Para content_type a row vem como ct_1..ct_10 (1-indexed) mas o handle interno é ct_0..ct_9
+          // Compatibilidade: listas antigas de content_type usavam ct_1..ct_N como rowId
           if (selectedIndex < 0 && blockType === "content_type") {
             const m = lower.match(/^ct_(\d+)$/);
             if (m) {
@@ -996,6 +996,7 @@ serve(async (req) => {
         } else {
           const chosen = options[selectedIndex];
           context.vars[variable] = chosen.value;
+          if (blockType === "content_type") context.vars.content_type_choice = chosen.value;
           delete context.pendingNodeId;
           let edge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id && e.sourceHandle === chosen.handle);
           if (!edge && blockType === "list_buttons") {
@@ -1745,6 +1746,26 @@ function normalizeListHandle(config: any, flatIndex: number): string {
     }
   }
   return `row_${flatIndex}`;
+}
+
+function getContentTypeOptions(): Array<{ value: string; label: string }> {
+  return [
+    { value: "divulgacao", label: "Divulgação" },
+    { value: "promocao", label: "Promoção" },
+    { value: "institucional", label: "Institucional" },
+    { value: "evento", label: "Evento" },
+    { value: "lancamento", label: "Lançamento" },
+    { value: "educacional", label: "Educacional" },
+  ];
+}
+
+function normalizeContentTypeResponse(value: string): string {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9_]/g, "");
 }
 
 async function executeNode(
@@ -2862,16 +2883,13 @@ async function executeNode(
           for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
           break;
         }
-        const directives = [
-          "divulgacao", "promocao", "lancamento", "evento", "institucional",
-          "engajamento", "educacional", "vendas", "remarketing", "datas_especiais",
-        ];
+        const directives = getContentTypeOptions();
         const prompt = itp(cfg.askPrompt || "Qual o objetivo da peça?");
         const rows = [
-          ...directives.map((d, i) => ({
-            title: d.slice(0, 24),
+          ...directives.map((d) => ({
+            title: d.label.slice(0, 24),
             description: "",
-            rowId: `ct_${i + 1}`,
+            rowId: `content_${d.value}`,
           })),
           { title: "Sair", description: "Encerrar atendimento", rowId: "__exit__" },
         ];
