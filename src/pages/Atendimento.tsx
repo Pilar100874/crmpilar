@@ -439,6 +439,12 @@ export default function Atendimento() {
           .single();
         if (userData) {
           setCurrentUsuarioTableId(userData.id);
+          const { data: full } = await supabase
+            .from('usuarios')
+            .select('whatsapp_numero_id')
+            .eq('id', userData.id)
+            .maybeSingle();
+          if (full?.whatsapp_numero_id) setSelectedWhatsappNumeroId(full.whatsapp_numero_id);
         }
       }
     };
