@@ -6177,6 +6177,13 @@ ${recentMessages}
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 md:gap-2">
+                  <WhatsAppNumeroSelector
+                    estabelecimentoId={estabelecimentoId || null}
+                    usuarioId={currentUsuarioTableId || null}
+                    value={selectedWhatsappNumeroId}
+                    onChange={setSelectedWhatsappNumeroId}
+                    className="hidden md:block"
+                  />
                   {selectedConv.bot_active === false && (
                     <Button
                       size="sm"
