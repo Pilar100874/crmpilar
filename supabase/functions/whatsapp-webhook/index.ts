@@ -887,11 +887,118 @@ serve(async (req) => {
           }
         }
       }
-      // Processa resposta para blocos de escolha (keyword_options, content_type, ask_product_image, text_content, list_buttons)
+      // ===== Bloco ask_product_image (sim/não + método + input) =====
+      else if (pendingNode?.data?.type === "ask_product_image") {
+        const cfg = pendingNode.data.config || {};
+        const userResponse = (context.vars.userMessage || "").trim();
+        const subState = context.vars.__pim_sub || "choice";
+        const imgVar = cfg.outputImageVariable || "produto_imagem_url";
+        const descVar = cfg.outputDescVariable || "produto_descricao";
+
+        const advancePim = async () => {
+          delete context.pendingNodeId;
+          delete context.vars.__pim_sub;
+          delete context.vars.__pim_method;
+          const edge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
+          if (edge) {
+            const nextNode = flowData.flow_data.nodes.find((n: any) => n.id === edge.target);
+            if (nextNode) await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+          }
+        };
+
+        console.log("[PIM] processing", { subState, userResponse });
+
+        if (subState === "choice") {
+          const r = userResponse.toLowerCase();
+          const isYes = r === "1" || r === "sim" || r === "s" || r === "yes" || r === "pim_1" || r === "pim_yes";
+          const isNo = r === "2" || r === "nao" || r === "não" || r === "n" || r === "no" || r === "pim_2" || r === "pim_no";
+          if (!isYes && !isNo) {
+            await respond("Por favor, responda com 1 (Sim), 2 (Não) ou 3 (Sair).");
+            shouldReturn = true;
+          } else if (isNo) {
+            context.vars.tem_produto_imagem = "nao";
+            await advancePim();
+          } else {
+            context.vars.tem_produto_imagem = "sim";
+            const codeP = cfg.codePrompt || "Digite o código (ou nome) do produto:";
+            const photoP = cfg.photoPrompt || "Envie a URL da foto do produto:";
+            const textP = cfg.textPrompt || "Descreva o produto em texto:";
+            let menu = "Como você quer fornecer a imagem do produto?";
+            menu += `\n1. 🔢 Digitar código do produto`;
+            menu += `\n2. 📷 Enviar foto (URL)`;
+            menu += `\n3. ✍️ Descrever em texto`;
+            menu += `\n4. Sair`;
+            await respond(menu);
+            context.vars.__pim_sub = "method";
+            context.vars.__pim_prompts = { code: codeP, photo: photoP, text: textP };
+            shouldReturn = true;
+          }
+        } else if (subState === "method") {
+          const r = userResponse.toLowerCase();
+          let method: string | null = null;
+          if (r === "1" || r.includes("codigo") || r.includes("código") || r === "code") method = "code";
+          else if (r === "2" || r.includes("foto") || r.includes("photo") || r.includes("url")) method = "photo";
+          else if (r === "3" || r.includes("texto") || r.includes("descre") || r === "text") method = "text";
+          if (!method) {
+            await respond("Por favor, responda com 1, 2 ou 3.");
+            shouldReturn = true;
+          } else {
+            const prompts = context.vars.__pim_prompts || {};
+            context.vars.__pim_method = method;
+            context.vars.__pim_sub = "input";
+            await respond(prompts[method] || "Envie a informação:");
+            shouldReturn = true;
+          }
+        } else if (subState === "input") {
+          const method = context.vars.__pim_method || "text";
+          if (method === "code") {
+            const sbCli = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+            const term = userResponse;
+            const estId = context.vars.estabelecimento_id;
+            let query = sbCli.from("produtos").select("id,nome,codigo,foto_url").limit(1);
+            if (estId) query = query.eq("estabelecimento_id", estId);
+            const { data: byCode } = await query.eq("codigo", term);
+            let prod: any = byCode && byCode[0];
+            if (!prod) {
+              let q2 = sbCli.from("produtos").select("id,nome,codigo,foto_url").ilike("nome", `%${term}%`).limit(1);
+              if (estId) q2 = q2.eq("estabelecimento_id", estId);
+              const { data: byName } = await q2;
+              prod = byName && byName[0];
+            }
+            if (prod) {
+              if (prod.foto_url) {
+                context.vars[imgVar] = prod.foto_url;
+                await respond(`✅ Produto "${prod.nome}" encontrado.`, prod.foto_url, "image");
+              } else {
+                context.vars[descVar] = prod.nome;
+                await respond(`✅ Produto "${prod.nome}" registrado (sem foto).`);
+              }
+            } else {
+              context.vars[descVar] = term;
+              await respond(`⚠️ Produto não encontrado. Usando "${term}" como descrição.`);
+            }
+            await advancePim();
+          } else if (method === "photo") {
+            const url = userResponse;
+            if (/^https?:\/\//i.test(url)) {
+              context.vars[imgVar] = url;
+              await respond("✅ Foto do produto registrada.", url, "image");
+              await advancePim();
+            } else {
+              await respond("Por favor, envie uma URL válida (começando com http:// ou https://).");
+              shouldReturn = true;
+            }
+          } else {
+            context.vars[descVar] = userResponse;
+            await respond("✅ Descrição do produto registrada.");
+            await advancePim();
+          }
+        }
+      }
+      // Processa resposta para blocos de escolha (keyword_options, content_type, text_content, list_buttons)
       else if (
         pendingNode?.data?.type === "keyword_options" ||
         pendingNode?.data?.type === "content_type" ||
-        pendingNode?.data?.type === "ask_product_image" ||
         pendingNode?.data?.type === "text_content" ||
         pendingNode?.data?.type === "list_buttons"
       ) {
