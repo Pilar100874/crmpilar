@@ -48,6 +48,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 import { FlowTemplateManager } from "@/components/flow/FlowTemplateManager";
+import { BotNumberSettingsDialog } from "@/components/atendimento/BotNumberSettingsDialog";
 
 const nodeTypes = {
   custom: FlowNode,
