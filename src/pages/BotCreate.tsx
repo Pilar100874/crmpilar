@@ -369,12 +369,14 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
 
       // Navegar para o builder com o nome do bot como parâmetro
       const whatsappTypeParam = selectedCanal === 'whatsapp' ? `&whatsapp_type=${selectedWhatsAppType}` : '';
-      openBuilder(`/bot-builder?name=${encodeURIComponent(newBotName.trim())}&description=${encodeURIComponent(newBotDescription.trim())}&canais=${encodeURIComponent(JSON.stringify([selectedCanal]))}${whatsappTypeParam}`);
+      const numeroParam = selectedCanal === 'whatsapp' && selectedNumeroId ? `&whatsapp_numero_id=${encodeURIComponent(selectedNumeroId)}` : '';
+      openBuilder(`/bot-builder?name=${encodeURIComponent(newBotName.trim())}&description=${encodeURIComponent(newBotDescription.trim())}&canais=${encodeURIComponent(JSON.stringify([selectedCanal]))}${whatsappTypeParam}${numeroParam}`);
       setNewBotDialogOpen(false);
       setNewBotName("");
       setNewBotDescription("");
       setSelectedCanal("whatsapp");
       setSelectedWhatsAppType("waha");
+      setSelectedNumeroId("");
     } catch (error) {
       console.error("Error creating bot:", error);
       toast.error("Erro ao criar bot");
