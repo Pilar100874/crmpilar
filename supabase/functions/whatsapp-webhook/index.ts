@@ -397,6 +397,71 @@ serve(async (req) => {
       }
     };
 
+    // ====== Redirecionamento por bot (Canal A -> Canal B) ======
+    // Se o bot tiver forward_to_numero_id, encaminha a mensagem recebida
+    // criando/atualizando um contato no estabelecimento do número de destino
+    // e enviando a mensagem original pelo provider do número B.
+    if (flowData?.forward_to_numero_id && body) {
+      try {
+        const { data: targetNumero } = await supabase
+          .from("whatsapp_numeros")
+          .select("*")
+          .eq("id", flowData.forward_to_numero_id)
+          .eq("ativo", true)
+          .maybeSingle();
+
+        if (targetNumero) {
+          console.log("[FORWARD] Encaminhando para número B:", targetNumero.nome);
+
+          // Cria/atualiza contato no estabelecimento do número B
+          const targetEstabId = targetNumero.estabelecimento_id;
+          if (targetEstabId) {
+            const { data: existing } = await supabase
+              .from("customers")
+              .select("id")
+              .eq("telefone", from)
+              .eq("estabelecimento_id", targetEstabId)
+              .maybeSingle();
+            if (!existing) {
+              await supabase.from("customers").insert({
+                nome: `Encaminhado ${from}`,
+                telefone: from,
+                email: `${from}@forward.temp`,
+                estabelecimento_id: targetEstabId,
+              });
+              console.log("[FORWARD] Novo contato criado no canal B");
+            }
+          }
+
+          // Envia a mensagem original pelo Canal B para o mesmo cliente
+          const forwardText = `↪️ Encaminhado de ${flowData.name || "bot"}:\n${body}`;
+          if (targetNumero.provider === "cloud_api") {
+            await sendCloudText(
+              targetNumero.cloud_phone_number_id,
+              targetNumero.cloud_access_token,
+              from,
+              forwardText,
+            );
+          } else {
+            await sendWahaTextMessage(
+              from,
+              forwardText,
+              targetNumero.session_name || wahaSession,
+              targetNumero.waha_url || WAHA_URL,
+              targetNumero.waha_api_key || WAHA_API_KEY,
+            );
+          }
+
+          return new Response(JSON.stringify({ success: true, forwarded: true }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } catch (e) {
+        console.error("[FORWARD] Erro ao encaminhar:", e);
+      }
+    }
+
+
     if (!flowData) {
       await respond("Olá! Nenhum fluxo ativo encontrado. Configure um bot no painel.");
       return new Response(JSON.stringify({ success: true }), {

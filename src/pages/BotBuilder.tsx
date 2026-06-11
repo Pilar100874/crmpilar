@@ -48,6 +48,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 import { FlowTemplateManager } from "@/components/flow/FlowTemplateManager";
+import { BotNumberSettingsDialog } from "@/components/atendimento/BotNumberSettingsDialog";
 
 const nodeTypes = {
   custom: FlowNode,
@@ -107,6 +108,7 @@ function BotBuilderContent() {
   const [currentBotCanais, setCurrentBotCanais] = useState<string[]>(["whatsapp"]);
   const [currentBotWhatsAppType, setCurrentBotWhatsAppType] = useState<string>("waha");
   const [currentBotWhatsAppNumeroId, setCurrentBotWhatsAppNumeroId] = useState<string | null>(null);
+  const [currentBotForwardToNumeroId, setCurrentBotForwardToNumeroId] = useState<string | null>(null);
   const [savedBots, setSavedBots] = useState<any[]>([]);
   const [isLocked, setIsLocked] = useState(false);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
@@ -970,6 +972,7 @@ function BotBuilderContent() {
       if (currentBotCanais.includes('whatsapp')) {
         botInsertData.whatsapp_type = currentBotWhatsAppType;
         botInsertData.whatsapp_numero_id = currentBotWhatsAppNumeroId;
+        botInsertData.forward_to_numero_id = currentBotForwardToNumeroId;
       }
       
       const botData = botInsertData;
@@ -1178,6 +1181,7 @@ function BotBuilderContent() {
       setCurrentBotCanais(data.canais || ["whatsapp"]);
       setCurrentBotWhatsAppType(data.whatsapp_type || "waha");
       setCurrentBotWhatsAppNumeroId((data as any).whatsapp_numero_id || null);
+      setCurrentBotForwardToNumeroId((data as any).forward_to_numero_id || null);
       setSelectedNode(null);
       
       // Fixar estabelecimento do bot como o estabelecimento corrente da sessão
@@ -1595,6 +1599,17 @@ function BotBuilderContent() {
                 setHasUnsavedChanges(true);
               }}
             />
+            {currentBotCanais.includes('whatsapp') && (
+              <BotNumberSettingsDialog
+                botId={currentBotId || botIdFromUrl}
+                whatsappNumeroId={currentBotWhatsAppNumeroId}
+                forwardToNumeroId={currentBotForwardToNumeroId}
+                onSaved={(numId, fwdId) => {
+                  setCurrentBotWhatsAppNumeroId(numId);
+                  setCurrentBotForwardToNumeroId(fwdId);
+                }}
+              />
+            )}
             <Button variant="outline" size="sm" onClick={() => handleSave(false)} disabled={isSaving} className="h-8 px-2">
               <Save className={`h-4 w-4 mr-1.5 ${isSaving ? "animate-pulse" : ""}`} />
               <span className="hidden sm:inline">{isSaving ? "..." : "Salvar"}</span>
