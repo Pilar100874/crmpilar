@@ -173,7 +173,17 @@ serve(async (req) => {
       from = String(remote).split("@")[0].split(":")[0].replace(/\D/g, "");
       body = extractEvolutionText(msg0.message);
       wahaSession = resolveWahaSession(raw);
-      console.log("[EVOLUTION] Mensagem recebida (baileys raw):", { instance: wahaSession, from, text: body });
+      if (msg0.message?.imageMessage) {
+        incomingImage = {
+          source: "evolution",
+          messageId: msg0?.key?.id,
+          remoteJid: remote,
+          fromMe: false,
+          mimetype: msg0.message?.imageMessage?.mimetype || "image/jpeg",
+          rawKey: msg0?.key,
+        };
+      }
+      console.log("[EVOLUTION] Mensagem recebida (baileys raw):", { instance: wahaSession, from, text: body, hasImage: !!incomingImage });
     }
 
     // ====== Meta oficial (se não caiu em Evolution) ======
@@ -188,9 +198,17 @@ serve(async (req) => {
       }
       const messageData = payload.entry[0].changes[0].value.messages[0];
       from = messageData.from;
-      body = messageData.text?.body || "";
+      body = messageData.text?.body || (messageData as any)?.image?.caption || "";
       phoneNumberId = payload.entry[0].changes[0].value.metadata.phone_number_id;
       transport = "meta";
+      if ((messageData as any)?.image?.id) {
+        incomingImage = {
+          source: "meta",
+          mediaId: (messageData as any).image.id,
+          mimetype: (messageData as any).image.mime_type || "image/jpeg",
+          phoneNumberId,
+        };
+      }
     }
 
     console.log("Processed message:", { from, body, phoneNumberId, transport });
