@@ -969,6 +969,7 @@ function BotBuilderContent() {
       // Adicionar whatsapp_type apenas se o bot for para WhatsApp
       if (currentBotCanais.includes('whatsapp')) {
         botInsertData.whatsapp_type = currentBotWhatsAppType;
+        botInsertData.whatsapp_numero_id = currentBotWhatsAppNumeroId;
       }
       
       const botData = botInsertData;
