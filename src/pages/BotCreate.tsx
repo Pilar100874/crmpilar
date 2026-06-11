@@ -755,7 +755,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
             {selectedCanal === 'whatsapp' && (
               <div className="grid gap-2">
                 <Label htmlFor="bot-whatsapp-type">Tipo de WhatsApp *</Label>
-                <Select value={selectedWhatsAppType} onValueChange={setSelectedWhatsAppType}>
+                <Select value={selectedWhatsAppType} onValueChange={(v) => { setSelectedWhatsAppType(v); setSelectedNumeroId(""); }}>
                   <SelectTrigger id="bot-whatsapp-type">
                     <SelectValue />
                   </SelectTrigger>
@@ -769,6 +769,34 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                 </p>
               </div>
             )}
+
+            {selectedCanal === 'whatsapp' && (() => {
+              const expectedProvider = selectedWhatsAppType === 'business' ? 'cloud_api' : 'evolution';
+              const filtered = whatsappNumeros.filter((n) => n.provider === expectedProvider);
+              return (
+                <div className="grid gap-2">
+                  <Label htmlFor="bot-whatsapp-numero">Número do WhatsApp</Label>
+                  <Select value={selectedNumeroId || "__default__"} onValueChange={(v) => setSelectedNumeroId(v === "__default__" ? "" : v)}>
+                    <SelectTrigger id="bot-whatsapp-numero">
+                      <SelectValue placeholder="Usar número padrão" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__default__">Usar número padrão</SelectItem>
+                      {filtered.map((n) => (
+                        <SelectItem key={n.id} value={n.id}>
+                          {n.nome}{n.telefone ? ` · ${n.telefone}` : ""}{n.is_default ? " (padrão)" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    {filtered.length === 0
+                      ? "Nenhum número cadastrado para esse tipo. Cadastre em Configurações de Atendimento → Canais."
+                      : "Mensagens deste bot serão enviadas pelo número selecionado."}
+                  </p>
+                </div>
+              );
+            })()}
           </div>
           <DialogFooter>
             <Button
