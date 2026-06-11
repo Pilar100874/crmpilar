@@ -3083,6 +3083,7 @@ ${recentMessages}
           fileUrl: finalFileUrl,
           fileName: fileName,
           contentType: contentType,
+          whatsappNumeroId: selectedWhatsappNumeroId,
         },
       });
 
