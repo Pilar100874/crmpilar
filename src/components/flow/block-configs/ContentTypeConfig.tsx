@@ -110,6 +110,20 @@ export const ContentTypeConfig = ({ config, handleConfigChange }: ContentTypeCon
         </span>
       </div>
 
+      {mode === "ask" && (
+        <div className="flex items-center gap-2 pt-2 border-t border-border">
+          <Switch
+            checked={!!config.splitOutputs}
+            onCheckedChange={(v) => handleConfigChange("splitOutputs", v)}
+          />
+          <span className="text-[11px] text-muted-foreground">
+            Saída individual por tipo de conteúdo (uma conexão para cada opção). Desligado = saída única.
+          </span>
+        </div>
+      )}
+
+
+
       {mode === "fixed" ? (
         <div className="space-y-3">
           <Label className="flex items-center gap-2">
