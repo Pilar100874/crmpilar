@@ -100,7 +100,7 @@ function collectTextPrompt(nodes: any[], variables: Record<string, any>, gen: { 
   return parts.join("\n\n").trim();
 }
 
-function collectImageRefs(nodes: any[]) {
+function collectImageRefs(nodes: any[], variables: Record<string, any> = {}) {
   const imageUrls: string[] = [];
   const imageRoles: string[] = [];
   for (const n of nodes) {
@@ -123,6 +123,25 @@ function collectImageRefs(nodes: any[]) {
     } else if ((t === "imageInput" || t === "mediaGallery") && (cfg.imageUrl || cfg.selectedUrl)) {
       imageUrls.push(cfg.imageUrl || cfg.selectedUrl);
       imageRoles.push("referencia");
+    }
+  }
+
+  // Bot variables — bloco ask_product_image salva a URL escolhida em variável
+  const isHttpUrl = (v: any) => typeof v === "string" && /^https?:\/\//i.test(v);
+  const productVarKeys = ["produto_imagem_url", "produto_foto_url", "product_image_url", "imagem_produto"];
+  for (const k of productVarKeys) {
+    const v = variables?.[k];
+    if (isHttpUrl(v) && !imageUrls.includes(v)) {
+      imageUrls.push(v);
+      imageRoles.push("produto");
+    }
+  }
+  const influencerVarKeys = ["influencer_imagem_url", "influencer_foto_url", "influencer_url"];
+  for (const k of influencerVarKeys) {
+    const v = variables?.[k];
+    if (isHttpUrl(v) && !imageUrls.includes(v)) {
+      imageUrls.push(v);
+      imageRoles.push("influencer");
     }
   }
   return { imageUrls, imageRoles };
