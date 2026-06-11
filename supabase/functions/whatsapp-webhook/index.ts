@@ -971,7 +971,20 @@ serve(async (req) => {
           selectedIndex = options.findIndex(
             (o) => String(o.label || "").toLowerCase() === lower || String(o.value || "").toLowerCase() === lower,
           );
+          // Reconhece rowId/buttonId enviado por listas/botões interativos do WhatsApp (ex: "ct_1", "section_0_item_0", custom rowIds)
+          if (selectedIndex < 0) {
+            selectedIndex = options.findIndex((o) => String(o.handle || "").toLowerCase() === lower);
+          }
+          // Para content_type a row vem como ct_1..ct_10 (1-indexed) mas o handle interno é ct_0..ct_9
+          if (selectedIndex < 0 && blockType === "content_type") {
+            const m = lower.match(/^ct_(\d+)$/);
+            if (m) {
+              const n = parseInt(m[1]);
+              if (n >= 1 && n <= options.length) selectedIndex = n - 1;
+            }
+          }
         }
+
 
         if (selectedIndex < 0) {
           if (blockType === "list_buttons") {
