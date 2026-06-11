@@ -2082,10 +2082,13 @@ async function sendWahaMediaMessage(
 
   const lower = (mediaType || "").toLowerCase();
   // Evolution aceita: image | video | document | audio
+  // "gif" trata como image; "file" e tipos desconhecidos serão promovidos via mime abaixo
   let evoType: "image" | "video" | "document" | "audio" =
-    lower === "image" || lower === "video" || lower === "audio" || lower === "document"
-      ? (lower as any)
-      : "document";
+    lower === "image" || lower === "gif" ? "image"
+    : lower === "video" ? "video"
+    : lower === "audio" ? "audio"
+    : lower === "document" ? "document"
+    : "document";
 
   const lastPath = (() => {
     try { return new URL(mediaUrl).pathname.split("/").pop() || "arquivo"; }
@@ -2105,6 +2108,15 @@ async function sendWahaMediaMessage(
     lowerName.endsWith(".mp3") ? "audio/mpeg" :
     (lowerName.endsWith(".ogg") || lowerName.endsWith(".oga")) ? "audio/ogg" :
     "application/octet-stream";
+
+  // Promove document → image/video/audio automaticamente quando o mime indicar mídia renderizável.
+  // Isso garante que, mesmo se o bloco vier configurado como "file" ou tipo desconhecido,
+  // imagens/vídeos/áudios apareçam abertos no WhatsApp em vez de como documento.
+  if (evoType === "document") {
+    if (mime.startsWith("image/")) evoType = "image";
+    else if (mime.startsWith("video/")) evoType = "video";
+    else if (mime.startsWith("audio/")) evoType = "audio";
+  }
 
   try {
     let endpoint: string;
