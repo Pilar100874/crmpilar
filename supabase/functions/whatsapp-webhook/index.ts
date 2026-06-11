@@ -175,6 +175,7 @@ serve(async (req) => {
       from = String(remote).split("@")[0].split(":")[0].replace(/\D/g, "");
       body = extractEvolutionText(msg0.message);
       wahaSession = resolveWahaSession(raw);
+      inboundMsgId = String(msg0?.key?.id || "");
       if (msg0.message?.imageMessage) {
         incomingImage = {
           source: "evolution",
