@@ -723,7 +723,14 @@ serve(async (req) => {
               const opts = Array.isArray(cfg.options) ? cfg.options : [];
               total = (opts.length || 2) + 1;
             } else if (t === "content_type") total = getContentTypeOptions().length + 1;
-            else if (t === "ask_influencer") total = 2 + 1;
+            else if (t === "ask_influencer") {
+              const sub = context.vars.__infl_sub || "choice";
+              if (sub === "choice") total = 2 + 1; // Sim/Não/Sair
+              else if (sub === "gallery_select") {
+                const list = Array.isArray(context.vars.__infl_gallery) ? context.vars.__infl_gallery : [];
+                total = list.length + 1; // Influencers + Sair
+              }
+            }
             else if (t === "ask_product_image") {
               const sub = context.vars.__pim_sub || "choice";
               if (sub === "choice") total = 2 + 1;           // Sim/Não/Sair
@@ -871,6 +878,7 @@ serve(async (req) => {
                 }
                 let menu = "Selecione um influencer respondendo com o número:";
                 list.forEach((it: any, i: number) => { menu += `\n${i + 1}. ${it.nome || `Influencer ${i + 1}`}`; });
+                menu += `\n${list.length + 1}. Sair`;
                 await respond(menu);
                 context.vars.__infl_sub = "gallery_select";
                 context.vars.__infl_gallery = list.map((it: any) => ({ id: it.id, nome: it.nome, image_url: it.image_url }));
@@ -883,7 +891,7 @@ serve(async (req) => {
           const list: any[] = Array.isArray(context.vars.__infl_gallery) ? context.vars.__infl_gallery : [];
           const idx = parseInt(userResponse) - 1;
           if (isNaN(idx) || idx < 0 || idx >= list.length) {
-            await respond(`Por favor, responda com um número entre 1 e ${list.length}.`);
+            await respond(`Por favor, responda com um número entre 1 e ${list.length} ou ${list.length + 1} para sair.`);
             shouldReturn = true;
           } else {
             const item = list[idx];
