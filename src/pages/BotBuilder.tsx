@@ -1177,6 +1177,7 @@ function BotBuilderContent() {
       setCurrentBotDescription(data.description || "");
       setCurrentBotCanais(data.canais || ["whatsapp"]);
       setCurrentBotWhatsAppType(data.whatsapp_type || "waha");
+      setCurrentBotWhatsAppNumeroId((data as any).whatsapp_numero_id || null);
       setSelectedNode(null);
       
       // Fixar estabelecimento do bot como o estabelecimento corrente da sessão
