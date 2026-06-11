@@ -1598,7 +1598,93 @@ async function sendCloudButtonsMessage(
 }
 
 
+/* ======= Download de imagens recebidas e upload para bot-media ======= */
+
+async function downloadIncomingImageAsPublicUrl(
+  incoming: any,
+  ctx: { wahaUrl: string; wahaApiKey: string; sessionName: string; metaToken?: string; from: string },
+): Promise<string | null> {
+  try {
+    let base64 = "";
+    let mimetype = incoming?.mimetype || "image/jpeg";
+
+    if (incoming?.source === "evolution") {
+      const { base, apiKey } = resolveEvolution(ctx.wahaUrl, ctx.wahaApiKey);
+      if (!base || !apiKey) {
+        console.error("[INCOMING-IMG] Evolution sem URL/apikey");
+        return null;
+      }
+      const url = `${base}/chat/getBase64FromMediaMessage/${encodeURIComponent(ctx.sessionName)}`;
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: apiKey },
+        body: JSON.stringify({
+          message: { key: incoming.rawKey || { id: incoming.messageId, remoteJid: incoming.remoteJid, fromMe: false } },
+          convertToMp4: false,
+        }),
+      });
+      const j = await r.json().catch(() => ({} as any));
+      if (!r.ok) {
+        console.error("[INCOMING-IMG] Evolution getBase64 falhou:", j);
+        return null;
+      }
+      base64 = j?.base64 || j?.data || "";
+      mimetype = j?.mimetype || mimetype;
+    } else if (incoming?.source === "meta") {
+      const token = ctx.metaToken;
+      if (!token) {
+        console.error("[INCOMING-IMG] Meta sem access token");
+        return null;
+      }
+      const metaR = await fetch(`https://graph.facebook.com/v18.0/${incoming.mediaId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const metaJ = await metaR.json().catch(() => ({} as any));
+      if (!metaR.ok || !metaJ?.url) {
+        console.error("[INCOMING-IMG] Meta meta lookup falhou:", metaJ);
+        return null;
+      }
+      const fileR = await fetch(metaJ.url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!fileR.ok) {
+        console.error("[INCOMING-IMG] Meta download falhou:", fileR.status);
+        return null;
+      }
+      const buf = new Uint8Array(await fileR.arrayBuffer());
+      base64 = btoa(String.fromCharCode(...buf));
+      mimetype = metaJ.mime_type || mimetype;
+    } else {
+      return null;
+    }
+
+    if (!base64) return null;
+
+    // base64 -> bytes
+    const bin = atob(base64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+
+    const ext = mimetype.includes("png") ? "png" : mimetype.includes("webp") ? "webp" : "jpg";
+    const path = `whatsapp-incoming/${ctx.from || "anon"}/${Date.now()}.${ext}`;
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { error: upErr } = await sb.storage.from("bot-media").upload(path, bytes, {
+      contentType: mimetype,
+      upsert: true,
+    });
+    if (upErr) {
+      console.error("[INCOMING-IMG] upload falhou:", upErr);
+      return null;
+    }
+    const { data: pub } = sb.storage.from("bot-media").getPublicUrl(path);
+    return pub?.publicUrl || null;
+  } catch (e) {
+    console.error("[INCOMING-IMG] exception:", e);
+    return null;
+  }
+}
+
+
 /* ======= Evolution API – envio de texto e mídia ======= */
+
 
 function resolveEvolution(wahaUrl: string, wahaApiKey: string) {
   const base = (wahaUrl || env("EVOLUTION_URL") || env("WAHA_URL") || "").replace(/\/+$/, "");
