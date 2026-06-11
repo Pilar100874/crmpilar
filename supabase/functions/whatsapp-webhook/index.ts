@@ -116,6 +116,7 @@ serve(async (req) => {
     let wahaSession = "default";
     let incomingImage: any = null; // metadados de imagem recebida (anexo)
     let metaAccessToken = "";      // token Meta para baixar mídia
+    let inboundMsgId = "";         // id da mensagem recebida (para dedup)
 
 
 
