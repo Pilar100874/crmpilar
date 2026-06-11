@@ -31,6 +31,68 @@ const JID_SUFFIX = env("WAHA_JID_SUFFIX", "@s.whatsapp.net");
 
 const toJid = (numOnly: string) => `${String(numOnly).replace(/\D/g, "")}${JID_SUFFIX}`;
 
+/**
+ * Otimiza URL de mídia para WhatsApp, redimensionando imagens hospedadas no
+ * Supabase Storage para um tamanho universalmente bem renderizado em qualquer
+ * celular (iOS, Android e Desktop). Pode receber um "device hint" opcional
+ * detectado a partir do messageId recebido para ajustar dimensões por SO.
+ *
+ * - iOS: 1170x1462 (ratio próximo a 4:5, ideal para Retina)
+ * - Android: 1080x1350 (4:5, padrão WhatsApp)
+ * - Desconhecido/Desktop: 1080x1080 (quadrado seguro)
+ *
+ * Vídeos e arquivos não-Supabase passam sem alteração.
+ */
+function optimizeMediaUrlForWhatsApp(
+  url: string,
+  mediaType?: string,
+  deviceHint?: "ios" | "android" | "unknown",
+): string {
+  try {
+    if (!url) return url;
+    const t = (mediaType || "").toLowerCase();
+    if (t && t !== "image") return url; // só otimiza imagens
+    const u = new URL(url);
+    // Só sabemos transformar URLs públicas do Supabase Storage
+    if (!u.pathname.includes("/storage/v1/object/public/")) return url;
+    // Evita re-otimizar
+    if (u.pathname.includes("/render/image/")) return url;
+
+    const dims = deviceHint === "ios"
+      ? { w: 1170, h: 1462 }
+      : deviceHint === "android"
+      ? { w: 1080, h: 1350 }
+      : { w: 1080, h: 1080 };
+
+    u.pathname = u.pathname.replace(
+      "/storage/v1/object/public/",
+      "/storage/v1/render/image/public/",
+    );
+    u.searchParams.set("width", String(dims.w));
+    u.searchParams.set("height", String(dims.h));
+    u.searchParams.set("resize", "contain");
+    u.searchParams.set("quality", "85");
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
+/**
+ * Heurística leve para inferir o SO do destinatário a partir do messageId
+ * recebido pelo WhatsApp. Não é 100% confiável, mas WhatsApp normalmente usa:
+ *  - "3A..."   -> iOS
+ *  - "BAE5..." -> Android
+ *  - "3EB0..." -> WhatsApp Web/Desktop
+ */
+function detectDeviceFromMessageId(messageId?: string): "ios" | "android" | "unknown" {
+  const id = String(messageId || "").toUpperCase();
+  if (!id) return "unknown";
+  if (id.startsWith("3A")) return "ios";
+  if (id.startsWith("BAE5")) return "android";
+  return "unknown";
+}
+
 // Detecta evento do Evolution API (messages.upsert) ou formatos antigos compatíveis.
 function isWahaMessageEvent(raw: any): boolean {
   const event = String(raw?.event || raw?.type || "").toLowerCase();
