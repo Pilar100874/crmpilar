@@ -189,7 +189,10 @@ function BotBuilderContent() {
     if (whatsappTypeFromUrl && !currentBotId) {
       setCurrentBotWhatsAppType(whatsappTypeFromUrl);
     }
-  }, [botNameFromUrl, botDescriptionFromUrl, canaisFromUrl, whatsappTypeFromUrl, currentBotId]);
+    if (whatsappNumeroIdFromUrl && !currentBotId) {
+      setCurrentBotWhatsAppNumeroId(whatsappNumeroIdFromUrl);
+    }
+  }, [botNameFromUrl, botDescriptionFromUrl, canaisFromUrl, whatsappTypeFromUrl, whatsappNumeroIdFromUrl, currentBotId]);
 
   // Auto-save movido abaixo (após handleSave) para evitar closures desatualizadas.
 
