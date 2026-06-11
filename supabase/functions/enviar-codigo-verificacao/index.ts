@@ -26,86 +26,83 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Buscar configuração do WhatsApp para o estabelecimento
-    // Como não temos estabelecimento_id neste contexto, pegamos a primeira config disponível
-    const { data: whatsappConfig, error: configError } = await supabase
-      .from("whatsapp_config")
+    // Tenta usar o número padrão de whatsapp_numeros; fallback para whatsapp_config
+    let numero: any = null;
+    const { data: defaultNumero } = await supabase
+      .from("whatsapp_numeros")
       .select("*")
+      .eq("ativo", true)
+      .eq("is_default", true)
       .limit(1)
       .maybeSingle();
+    numero = defaultNumero;
 
-    if (configError) {
-      console.error("Erro ao buscar configuração:", configError);
+    if (!numero) {
+      const { data: whatsappConfig } = await supabase
+        .from("whatsapp_config")
+        .select("*")
+        .limit(1)
+        .maybeSingle();
+      if (whatsappConfig?.waha_url) {
+        numero = {
+          provider: "evolution",
+          waha_url: whatsappConfig.waha_url,
+          waha_api_key: whatsappConfig.waha_api_key,
+          session_name: whatsappConfig.session_name || "default",
+        };
+      }
+    }
+
+    if (!numero) {
       return new Response(
-        JSON.stringify({ error: "Erro ao buscar configuração do WhatsApp", details: configError.message }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
+        JSON.stringify({ error: "Nenhum número WhatsApp configurado" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    if (!whatsappConfig) {
-      return new Response(
-        JSON.stringify({ error: "Configuração do WhatsApp não encontrada. Configure em Configurações > Recuperar Senha" }),
-        { 
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
-      );
-    }
-
-    // Formatar telefone (remover caracteres não numéricos)
     const phoneNumber = telefone.replace(/\D/g, "");
-    
-    // Montar mensagem
     const mensagem = `🔐 *Código de Verificação*\n\nSeu código para alteração de senha é: *${codigo}*\n\nEste código é válido por 10 minutos.\n\n⚠️ Não compartilhe este código com ninguém.`;
 
-    // Enviar mensagem via Evolution API
-    const evoUrl = (whatsappConfig.waha_url || "http://localhost:8080").replace(/\/+$/, "");
-    const instance = whatsappConfig.session_name || "default";
-    const apiKey = whatsappConfig.waha_api_key;
+    let ok = false; let messageId: string | undefined;
 
-    const evoPayload = { number: phoneNumber, text: mensagem };
+    if (numero.provider === "cloud_api") {
+      const r = await fetch(`https://graph.facebook.com/v18.0/${numero.cloud_phone_number_id}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${numero.cloud_access_token}` },
+        body: JSON.stringify({ messaging_product: "whatsapp", to: phoneNumber, type: "text", text: { body: mensagem } }),
+      });
+      const j = await r.json().catch(() => ({}));
+      ok = r.ok;
+      messageId = j?.messages?.[0]?.id;
+      if (!ok) console.error("[CLOUD] Erro:", j);
+    } else {
+      const evoUrl = (numero.waha_url || "").replace(/\/+$/, "");
+      const instance = numero.session_name || "default";
+      const apiKey = numero.waha_api_key;
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (apiKey) headers["apikey"] = apiKey;
+      const r = await fetch(`${evoUrl}/message/sendText/${encodeURIComponent(instance)}`, {
+        method: "POST", headers,
+        body: JSON.stringify({ number: phoneNumber, text: mensagem }),
+      });
+      ok = r.ok;
+      const j = await r.json().catch(() => ({}));
+      messageId = j?.id;
+      if (!ok) console.error("[EVO] Erro:", j);
+    }
 
-    console.log("Enviando para Evolution:", {
-      url: `${evoUrl}/message/sendText/${instance}`,
-      instance,
-      number: phoneNumber,
-    });
-
-    const evoHeaders: Record<string, string> = { "Content-Type": "application/json" };
-    if (apiKey) evoHeaders["apikey"] = apiKey;
-
-    const wahaResponse = await fetch(`${evoUrl}/message/sendText/${encodeURIComponent(instance)}`, {
-      method: "POST",
-      headers: evoHeaders,
-      body: JSON.stringify(evoPayload),
-    });
-
-    if (!wahaResponse.ok) {
-      const errorText = await wahaResponse.text();
-      console.error("Erro Evolution:", errorText);
+    if (!ok) {
       return new Response(
-        JSON.stringify({
-          error: "Erro ao enviar mensagem via WhatsApp",
-          details: errorText,
-        }),
+        JSON.stringify({ error: "Erro ao enviar mensagem via WhatsApp" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const wahaResult = await wahaResponse.json().catch(() => ({}));
-    console.log("Resposta Evolution:", wahaResult);
-
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: "Código enviado com sucesso",
-        messageId: wahaResult.id 
-      }),
+      JSON.stringify({ success: true, message: "Código enviado com sucesso", messageId }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
 
   } catch (error) {
     console.error("Erro ao enviar código:", error);

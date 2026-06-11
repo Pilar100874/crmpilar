@@ -61,19 +61,35 @@ Deno.serve(async (req) => {
     let notificationSent = false;
 
     if (canal === "whatsapp" && pedido.telefone_cliente) {
-      // Busca config Evolution da tabela whatsapp_config do estabelecimento
-      const { data: evoCfg } = await supabase
-        .from("whatsapp_config")
-        .select("waha_url, waha_api_key, session_name")
+      // Busca número padrão do estabelecimento (multi-provider)
+      let numero: any = null;
+      const { data: defNum } = await supabase
+        .from("whatsapp_numeros")
+        .select("*")
         .eq("estabelecimento_id", pedido.estabelecimento_id)
+        .eq("ativo", true)
+        .eq("is_default", true)
         .maybeSingle();
+      numero = defNum;
 
-      const evoUrl = (evoCfg?.waha_url || Deno.env.get("EVOLUTION_URL") || Deno.env.get("WAHA_URL") || "").replace(/\/+$/, "");
-      const apiKey = evoCfg?.waha_api_key || Deno.env.get("EVOLUTION_API_KEY") || Deno.env.get("WAHA_API_KEY");
-      const instance = evoCfg?.session_name || "default";
+      if (!numero) {
+        const { data: evoCfg } = await supabase
+          .from("whatsapp_config")
+          .select("waha_url, waha_api_key, session_name")
+          .eq("estabelecimento_id", pedido.estabelecimento_id)
+          .maybeSingle();
+        if (evoCfg?.waha_url) {
+          numero = {
+            provider: "evolution",
+            waha_url: evoCfg.waha_url,
+            waha_api_key: evoCfg.waha_api_key || Deno.env.get("EVOLUTION_API_KEY") || Deno.env.get("WAHA_API_KEY"),
+            session_name: evoCfg.session_name || "default",
+          };
+        }
+      }
 
-      if (!evoUrl || !apiKey) {
-        console.error("Evolution não configurado");
+      if (!numero) {
+        console.error("WhatsApp não configurado para estabelecimento", pedido.estabelecimento_id);
         return new Response(JSON.stringify({ error: "WhatsApp não configurado" }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -93,14 +109,30 @@ Deno.serve(async (req) => {
       }
 
       const phone = pedido.telefone_cliente.replace(/\D/g, "");
+      let sent = false;
 
-      const wahaResponse = await fetch(`${evoUrl}/message/sendText/${encodeURIComponent(instance)}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "apikey": apiKey },
-        body: JSON.stringify({ number: phone, text: message }),
-      });
+      if (numero.provider === "cloud_api") {
+        const r = await fetch(`https://graph.facebook.com/v18.0/${numero.cloud_phone_number_id}/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${numero.cloud_access_token}` },
+          body: JSON.stringify({ messaging_product: "whatsapp", to: phone, type: "text", text: { body: message } }),
+        });
+        sent = r.ok;
+        if (!r.ok) console.error("[CLOUD] Erro:", await r.text().catch(() => ""));
+      } else {
+        const evoUrl = (numero.waha_url || "").replace(/\/+$/, "");
+        const apiKey = numero.waha_api_key;
+        const instance = numero.session_name || "default";
+        const r = await fetch(`${evoUrl}/message/sendText/${encodeURIComponent(instance)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "apikey": apiKey },
+          body: JSON.stringify({ number: phone, text: message }),
+        });
+        sent = r.ok;
+        if (!r.ok) console.error("[EVO] Erro:", await r.text().catch(() => ""));
+      }
 
-      if (wahaResponse.ok) {
+      if (sent) {
         notificationSent = true;
         await supabase
           .from("pedido_tracking_historico")
@@ -109,10 +141,9 @@ Deno.serve(async (req) => {
           .eq("status", status)
           .order("created_at", { ascending: false })
           .limit(1);
-      } else {
-        console.error("Evolution send failed:", await wahaResponse.text());
       }
     }
+
 
     if (canal === "email" && pedido.email_cliente) {
       // Send via external email server
