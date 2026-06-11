@@ -965,9 +965,12 @@ serve(async (req) => {
           selectedIndex = asNum - 1;
         } else {
           const lower = userResponse.toLowerCase();
-          selectedIndex = options.findIndex(
-            (o) => String(o.label || "").toLowerCase() === lower || String(o.value || "").toLowerCase() === lower,
-          );
+          const normalizedResponse = blockType === "content_type" ? normalizeContentTypeResponse(userResponse) : lower;
+          selectedIndex = options.findIndex((o) => {
+            const label = blockType === "content_type" ? normalizeContentTypeResponse(o.label) : String(o.label || "").toLowerCase();
+            const value = blockType === "content_type" ? normalizeContentTypeResponse(o.value) : String(o.value || "").toLowerCase();
+            return label === normalizedResponse || value === normalizedResponse;
+          });
           // Reconhece rowId/buttonId enviado por listas/botões interativos do WhatsApp (ex: "ct_1", "section_0_item_0", custom rowIds)
           if (selectedIndex < 0) {
             selectedIndex = options.findIndex((o) => String(o.handle || "").toLowerCase() === lower);
