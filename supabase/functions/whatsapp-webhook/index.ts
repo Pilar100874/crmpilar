@@ -204,6 +204,7 @@ serve(async (req) => {
       body = messageData.text?.body || (messageData as any)?.image?.caption || "";
       phoneNumberId = payload.entry[0].changes[0].value.metadata.phone_number_id;
       transport = "meta";
+      inboundMsgId = String((messageData as any)?.id || "");
       if ((messageData as any)?.image?.id) {
         incomingImage = {
           source: "meta",
