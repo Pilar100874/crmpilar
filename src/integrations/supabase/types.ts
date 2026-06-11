@@ -1636,6 +1636,7 @@ export type Database = {
           description: string | null
           estabelecimento_id: string | null
           flow_data: Json
+          forward_to_numero_id: string | null
           id: string
           name: string
           updated_at: string | null
@@ -1649,6 +1650,7 @@ export type Database = {
           description?: string | null
           estabelecimento_id?: string | null
           flow_data: Json
+          forward_to_numero_id?: string | null
           id?: string
           name: string
           updated_at?: string | null
@@ -1662,6 +1664,7 @@ export type Database = {
           description?: string | null
           estabelecimento_id?: string | null
           flow_data?: Json
+          forward_to_numero_id?: string | null
           id?: string
           name?: string
           updated_at?: string | null
@@ -1674,6 +1677,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_flows_forward_to_numero_id_fkey"
+            columns: ["forward_to_numero_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_numeros"
             referencedColumns: ["id"]
           },
           {
@@ -3348,6 +3358,7 @@ export type Database = {
           tempo_encerramento: string | null
           tempo_espera_inicio: string | null
           updated_at: string | null
+          whatsapp_numero_id: string | null
         }
         Insert: {
           assignee_id?: string | null
@@ -3382,6 +3393,7 @@ export type Database = {
           tempo_encerramento?: string | null
           tempo_espera_inicio?: string | null
           updated_at?: string | null
+          whatsapp_numero_id?: string | null
         }
         Update: {
           assignee_id?: string | null
@@ -3416,6 +3428,7 @@ export type Database = {
           tempo_encerramento?: string | null
           tempo_espera_inicio?: string | null
           updated_at?: string | null
+          whatsapp_numero_id?: string | null
         }
         Relationships: [
           {
@@ -3451,6 +3464,13 @@ export type Database = {
             columns: ["sla_config_id"]
             isOneToOne: false
             referencedRelation: "sla_config"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_whatsapp_numero_id_fkey"
+            columns: ["whatsapp_numero_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_numeros"
             referencedColumns: ["id"]
           },
         ]
@@ -13900,6 +13920,7 @@ export type Database = {
           updated_at: string | null
           usar_autenticacao: boolean | null
           usuario_sip: string | null
+          whatsapp_numero_id: string | null
         }
         Insert: {
           auth_user_id?: string | null
@@ -13928,6 +13949,7 @@ export type Database = {
           updated_at?: string | null
           usar_autenticacao?: boolean | null
           usuario_sip?: string | null
+          whatsapp_numero_id?: string | null
         }
         Update: {
           auth_user_id?: string | null
@@ -13956,6 +13978,7 @@ export type Database = {
           updated_at?: string | null
           usar_autenticacao?: boolean | null
           usuario_sip?: string | null
+          whatsapp_numero_id?: string | null
         }
         Relationships: [
           {
@@ -13984,6 +14007,13 @@ export type Database = {
             columns: ["unidade_id"]
             isOneToOne: false
             referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuarios_whatsapp_numero_id_fkey"
+            columns: ["whatsapp_numero_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_numeros"
             referencedColumns: ["id"]
           },
         ]
