@@ -1066,13 +1066,27 @@ serve(async (req) => {
             }
             await advancePim();
           } else if (method === "photo") {
-            const url = userResponse;
-            if (/^https?:\/\//i.test(url)) {
-              context.vars[imgVar] = url;
-              await respond("✅ Foto do produto registrada.", url, "image");
-              await advancePim();
+            const incoming = context.vars.__incoming_image;
+            if (incoming) {
+              await respond("⏳ Recebendo a foto, aguarde...");
+              const publicUrl = await downloadIncomingImageAsPublicUrl(incoming, {
+                wahaUrl: WAHA_URL,
+                wahaApiKey: WAHA_API_KEY,
+                sessionName: wahaSession,
+                metaToken: cloudAccessToken,
+                from,
+              });
+              delete context.vars.__incoming_image;
+              if (publicUrl) {
+                context.vars[imgVar] = publicUrl;
+                await respond("✅ Foto do produto registrada.", publicUrl, "image");
+                await advancePim();
+              } else {
+                await respond("⚠️ Não consegui baixar a foto. Por favor, envie a imagem novamente como anexo.");
+                shouldReturn = true;
+              }
             } else {
-              await respond("Por favor, envie uma URL válida (começando com http:// ou https://).");
+              await respond("📷 Por favor, anexe a foto do produto (envie a imagem como anexo no WhatsApp).");
               shouldReturn = true;
             }
           } else {
