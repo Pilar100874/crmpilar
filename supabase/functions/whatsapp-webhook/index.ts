@@ -114,6 +114,8 @@ serve(async (req) => {
     let phoneNumberId = "";        // Meta Graph API phone number id
     let transport: "waha" | "meta" | "twilio" = "meta";
     let wahaSession = "default";
+    let incomingImage: any = null; // metadados de imagem recebida (anexo)
+    let metaAccessToken = "";      // token Meta para baixar mídia
 
 
 
