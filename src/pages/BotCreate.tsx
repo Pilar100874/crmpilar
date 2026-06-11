@@ -124,6 +124,27 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
     }
   };
 
+  const loadWhatsAppNumeros = async () => {
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) return;
+      const { data, error } = await supabase
+        .from("whatsapp_numeros")
+        .select("id, nome, telefone, provider, ativo, is_default")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .eq("ativo", true)
+        .order("is_default", { ascending: false })
+        .order("nome", { ascending: true });
+      if (error) {
+        console.error("Error loading whatsapp_numeros:", error);
+      } else {
+        setWhatsappNumeros(data || []);
+      }
+    } catch (e) {
+      console.error("Error loading whatsapp_numeros:", e);
+    }
+  };
+
   const handleSessionChange = async (botId: string, sessionId: string) => {
     try {
       const estabelecimentoId = await getEstabelecimentoId();
