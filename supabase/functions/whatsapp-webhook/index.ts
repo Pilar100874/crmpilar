@@ -751,8 +751,18 @@ serve(async (req) => {
               else total = (cfg.items || []).length;
               total += 1;
             } else if (t === "text_content") {
-              const opts = Array.isArray(cfg.options) ? cfg.options : [];
-              total = (opts.length || 2) + 1;
+              const sub = context.vars.__tc_sub;
+              if (sub === "choice") total = 2 + 1; // Sim/Não/Sair
+              else if (sub === "method") total = 2 + 1; // Digitar/IA/Sair
+              else if (sub === "sample_select") {
+                const samples = Array.isArray(context.vars.__tc_samples) ? context.vars.__tc_samples : [];
+                total = samples.length + 2; // opções + regenerar + Sair (Sair = samples.length+2)
+              } else if (sub) {
+                total = 0; // input livre (typing/theme): sem opção Sair numérica
+              } else {
+                const opts = Array.isArray(cfg.options) ? cfg.options : [];
+                total = (opts.length || 2) + 1;
+              }
             } else if (t === "content_type") total = getContentTypeOptions().length + 1;
             else if (t === "ask_influencer") {
               const sub = context.vars.__infl_sub || "choice";
@@ -1125,6 +1135,152 @@ serve(async (req) => {
             if (context.vars.__pim_description) context.vars[descVar] = context.vars.__pim_description;
             await respond(`✅ Opção ${idx + 1} selecionada.`, selected, "image");
             await advancePim();
+          }
+        }
+      }
+      // ===== Bloco text_content avançado (sim/não + método digitar/IA + coleta/amostras) =====
+      else if (pendingNode?.data?.type === "text_content" && context.vars.__tc_sub) {
+        const cfg = pendingNode.data.config || {};
+        const userResponse = (context.vars.userMessage || "").trim();
+        const subState = context.vars.__tc_sub;
+
+        const advanceTc = async () => {
+          delete context.pendingNodeId;
+          delete context.vars.__tc_sub;
+          delete context.vars.__tc_method;
+          delete context.vars.__tc_samples;
+          delete context.vars.__tc_theme;
+          delete context.vars.__tc_typing_step;
+          const edge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
+          if (edge) {
+            const nextNode = flowData.flow_data.nodes.find((n: any) => n.id === edge.target);
+            if (nextNode) await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+          }
+        };
+
+        const generateTextSamples = async (theme: string) => {
+          const count = Math.max(1, Math.min(6, Number(cfg.sampleCount) || 3));
+          context.vars.__tc_theme = theme;
+          await respond(`✍️ Gerando ${count} opç${count > 1 ? "ões" : "ão"} de texto, aguarde...`);
+          try {
+            const sbCli = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+            const { data, error } = await sbCli.functions.invoke("bot-generate-text-samples", {
+              body: { theme, count },
+            });
+            if (error) throw error;
+            const options: any[] = Array.isArray(data?.options) ? data.options : [];
+            if (!options.length) throw new Error(data?.error || "Nenhuma opção retornada");
+            context.vars.__tc_samples = options;
+            context.vars.__tc_sub = "sample_select";
+            let menu = "Escolha uma das opções de texto respondendo com o número:";
+            options.forEach((o: any, i: number) => {
+              menu += `\n\n${i + 1}. *${o.title || "(sem título)"}*`;
+              if (o.subtitle) menu += `\n   _${o.subtitle}_`;
+              if (o.body) menu += `\n   ${o.body}`;
+            });
+            menu += `\n\n${options.length + 1}. 🔄 Gerar novamente`;
+            menu += `\n${options.length + 2}. Sair`;
+            await respond(menu);
+            shouldReturn = true;
+          } catch (e: any) {
+            console.error("[TC] erro ao gerar amostras:", e);
+            await respond("⚠️ Não consegui gerar as opções agora. Envie um novo tema ou digite Sair.");
+            context.vars.__tc_sub = "theme";
+            shouldReturn = true;
+          }
+        };
+
+        if (subState === "choice") {
+          const r = userResponse.toLowerCase();
+          const isYes = r === "1" || r === "sim" || r === "s";
+          const isNo = r === "2" || r === "nao" || r === "não" || r === "n";
+          if (!isYes && !isNo) {
+            await respond("Por favor, responda com 1 (Sim), 2 (Não) ou 3 (Sair).");
+            shouldReturn = true;
+          } else if (isNo) {
+            context.vars.text_content_choice = "nao";
+            await advanceTc();
+          } else {
+            context.vars.text_content_choice = "sim";
+            let menu = "Como você quer fornecer o texto?";
+            menu += `\n1. ✍️ Digitar eu mesmo`;
+            menu += `\n2. 🤖 Gerar com IA`;
+            menu += `\n3. Sair`;
+            await respond(menu);
+            context.vars.__tc_sub = "method";
+            shouldReturn = true;
+          }
+        } else if (subState === "method") {
+          const r = userResponse.toLowerCase();
+          let method: string | null = null;
+          if (r === "1" || r.includes("digit")) method = "type";
+          else if (r === "2" || r.includes("ia") || r.includes("ai")) method = "ai";
+          if (!method) {
+            await respond("Por favor, responda com 1, 2 ou 3.");
+            shouldReturn = true;
+          } else if (method === "type") {
+            context.vars.__tc_method = "type";
+            context.vars.__tc_sub = "typing";
+            context.vars.__tc_typing_step = "title";
+            await respond("Digite o *título* (chamada principal):");
+            shouldReturn = true;
+          } else {
+            context.vars.__tc_method = "ai";
+            context.vars.__tc_sub = "theme";
+            await respond("Sobre qual *tema* você quer que eu gere as opções de texto?");
+            shouldReturn = true;
+          }
+        } else if (subState === "typing") {
+          const step = context.vars.__tc_typing_step || "title";
+          if (step === "title") {
+            context.vars.tc_title = userResponse;
+            context.vars.__tc_typing_step = "subtitle";
+            await respond("Agora o *subtítulo* (ou digite '-' para pular):");
+            shouldReturn = true;
+          } else if (step === "subtitle") {
+            context.vars.tc_subtitle = userResponse === "-" ? "" : userResponse;
+            context.vars.__tc_typing_step = "body";
+            await respond("Por fim, o *corpo/CTA* (ou digite '-' para pular):");
+            shouldReturn = true;
+          } else {
+            context.vars.tc_body = userResponse === "-" ? "" : userResponse;
+            await respond("✅ Texto registrado.");
+            await advanceTc();
+          }
+        } else if (subState === "theme") {
+          if (!userResponse) {
+            await respond("Por favor, descreva o tema:");
+            shouldReturn = true;
+          } else {
+            await generateTextSamples(userResponse);
+          }
+        } else if (subState === "sample_select") {
+          const samples: any[] = Array.isArray(context.vars.__tc_samples) ? context.vars.__tc_samples : [];
+          const idx = parseInt(userResponse) - 1;
+          const regenIndex = samples.length;
+          const exitIndex = samples.length + 1;
+          if (idx === regenIndex) {
+            const theme = context.vars.__tc_theme || "";
+            if (!theme) { context.vars.__tc_sub = "theme"; await respond("Descreva o tema novamente:"); shouldReturn = true; }
+            else await generateTextSamples(theme);
+          } else if (idx === exitIndex) {
+            await respond("Atendimento encerrado. Quando quiser retomar, é só enviar uma nova mensagem. 👋");
+            context = { vars: { from, phoneNumber: from, session: wahaSession } };
+            const sbCli = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+            const sessionKey = `whatsapp_${wahaSession || "default"}_${from || ""}`;
+            await sbCli.from("chat_sessions").delete().eq("session_id", sessionKey);
+            shouldSaveContext = false;
+            shouldReturn = true;
+          } else if (isNaN(idx) || idx < 0 || idx >= samples.length) {
+            await respond(`Por favor, responda com um número entre 1 e ${samples.length + 2}.`);
+            shouldReturn = true;
+          } else {
+            const chosen = samples[idx];
+            context.vars.tc_title = chosen.title || "";
+            context.vars.tc_subtitle = chosen.subtitle || "";
+            context.vars.tc_body = chosen.body || "";
+            await respond(`✅ Opção ${idx + 1} selecionada.`);
+            await advanceTc();
           }
         }
       }
@@ -3183,19 +3339,19 @@ async function executeNode(
           };
           rows.forEach((r: any, i: number) => { fallback += `\n${i + 1}. ${r.title}`; });
         } else {
-          const buttons = [
-            { text: "Sim", id: "tc_1" },
-            { text: "Não", id: "tc_2" },
-            { text: "Sair", id: "__exit__" },
-          ];
-          interactive = {
-            type: "buttons",
-            title: "",
-            description: prompt,
-            footerText: "",
-            buttons,
-          };
-          buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.text}`; });
+          // Modo advanced: Sim/Não → se Sim, pergunta método (Digitar / IA) → coleta
+          const q = itp(cfg.askPrompt || "Deseja incluir conteúdo de texto (título/subtítulo/corpo) na peça?");
+          fallback = `${q}\n1. Sim\n2. Não\n3. Sair`;
+          await onResponse(fallback);
+          context.vars.__tc_sub = "choice";
+          context.pendingNodeId = node.id;
+          const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
+          await supabase.from("chat_sessions").upsert(
+            { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+            { onConflict: "session_id" },
+          );
+          return;
         }
         await onResponse(fallback, undefined, undefined, interactive);
         context.pendingNodeId = node.id;
