@@ -12,7 +12,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { conversationId, text, fileUrl, fileName, contentType } = await req.json();
+    const { conversationId, text, fileUrl, fileName, contentType, whatsappNumeroId } = await req.json();
 
     if (!conversationId || (!text && !fileUrl)) {
       return new Response(
@@ -48,9 +48,14 @@ serve(async (req) => {
     }
     const toNumberOnly = String(customerPhone).replace(/\D/g, "");
 
-    // ===== Resolve número vinculado (via bot -> whatsapp_numeros, ou default) =====
+    // ===== Resolve número (prioridade: override do atendente > bot > padrão) =====
     let numero: any = null;
-    if (conversation.bot_id) {
+    if (whatsappNumeroId) {
+      const { data: n } = await supabase
+        .from("whatsapp_numeros").select("*").eq("id", whatsappNumeroId).eq("ativo", true).maybeSingle();
+      numero = n;
+    }
+    if (!numero && conversation.bot_id) {
       const { data: bot } = await supabase
         .from("bot_flows")
         .select("whatsapp_numero_id")

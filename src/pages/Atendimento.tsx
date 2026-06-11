@@ -50,6 +50,7 @@ import type { Atendente } from "@/types/atendimento";
 import { useFerramentasAtendimento, type TabType } from "@/hooks/useFerramentasAtendimento";
 import { ToolsDropdown } from "@/components/atendimento/ToolsDropdown";
 import { AgentChatPanel } from "@/components/atendimento/AgentChatPanel";
+import { WhatsAppNumeroSelector } from "@/components/atendimento/WhatsAppNumeroSelector";
 import { useChatAgents, type ChatAgent } from "@/hooks/useChatAgents";
 import { FluxoAtendimentoDialog } from "@/components/atendimento/agenda/FluxoAtendimentoDialog";
 import { ConfigDatasProximoContatoDialog } from "@/components/atendimento/agenda/ConfigDatasProximoContatoDialog";
@@ -309,6 +310,7 @@ export default function Atendimento() {
   const [unreadEmailsCount, setUnreadEmailsCount] = useState(0);
   const [orcamentosEmAndamentoCount, setOrcamentosEmAndamentoCount] = useState(0);
   const [usuarioId, setUsuarioId] = useState<string>("");
+  const [selectedWhatsappNumeroId, setSelectedWhatsappNumeroId] = useState<string | null>(null);
   
   // Atendente data
   const [atendente, setAtendente] = useState<Atendente | null>(null);
@@ -437,6 +439,12 @@ export default function Atendimento() {
           .single();
         if (userData) {
           setCurrentUsuarioTableId(userData.id);
+          const { data: full } = await supabase
+            .from('usuarios')
+            .select('whatsapp_numero_id')
+            .eq('id', userData.id)
+            .maybeSingle();
+          if (full?.whatsapp_numero_id) setSelectedWhatsappNumeroId(full.whatsapp_numero_id);
         }
       }
     };
@@ -3075,6 +3083,7 @@ ${recentMessages}
           fileUrl: finalFileUrl,
           fileName: fileName,
           contentType: contentType,
+          whatsappNumeroId: selectedWhatsappNumeroId,
         },
       });
 
@@ -6169,6 +6178,13 @@ ${recentMessages}
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 md:gap-2">
+                  <WhatsAppNumeroSelector
+                    estabelecimentoId={estabelecimentoId || null}
+                    usuarioId={currentUsuarioTableId || null}
+                    value={selectedWhatsappNumeroId}
+                    onChange={setSelectedWhatsappNumeroId}
+                    className="hidden md:block"
+                  />
                   {selectedConv.bot_active === false && (
                     <Button
                       size="sm"
