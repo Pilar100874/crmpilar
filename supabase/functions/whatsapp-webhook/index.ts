@@ -905,10 +905,52 @@ serve(async (req) => {
           delete context.pendingNodeId;
           delete context.vars.__pim_sub;
           delete context.vars.__pim_method;
+          delete context.vars.__pim_prompts;
+          delete context.vars.__pim_samples;
+          delete context.vars.__pim_description;
+          delete context.vars.__pim_sample_count;
           const edge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
           if (edge) {
             const nextNode = flowData.flow_data.nodes.find((n: any) => n.id === edge.target);
             if (nextNode) await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+          }
+        };
+
+        const generateAndAskProductSamples = async (description: string) => {
+          const count = Math.max(1, Math.min(6, Number(cfg.sampleCount) || 3));
+          context.vars.__pim_description = description;
+          context.vars.__pim_sample_count = count;
+          await respond(`🎨 Gerando ${count} opção${count > 1 ? "ões" : ""} de imagem do produto, aguarde...`);
+
+          try {
+            const sbCli = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+            const { data, error } = await sbCli.functions.invoke("bot-generate-product-samples", {
+              body: {
+                description,
+                count,
+                estabelecimentoId: context.vars.estabelecimento_id || "",
+              },
+            });
+            if (error) throw error;
+            const images: string[] = Array.isArray(data?.images) ? data.images.filter(Boolean) : [];
+            if (!images.length) throw new Error(data?.error || "Nenhuma imagem retornada");
+
+            context.vars.__pim_samples = images;
+            context.vars.__pim_sub = "sample_select";
+            for (let i = 0; i < images.length; i++) {
+              await respond(`Opção ${i + 1}`, images[i], "image");
+            }
+            let menu = "Escolha a imagem do produto respondendo com o número:";
+            images.forEach((_, i) => { menu += `\n${i + 1}. ✅ Usar opção ${i + 1}`; });
+            menu += `\n${images.length + 1}. 🔄 Gerar mais ${count}`;
+            menu += `\n${images.length + 2}. Sair`;
+            await respond(menu);
+            shouldReturn = true;
+          } catch (e: any) {
+            console.error("[PIM] erro ao gerar amostras:", e);
+            await respond("⚠️ Não consegui gerar as opções de imagem agora. Envie uma nova descrição ou digite Sair.");
+            context.vars.__pim_sub = "input";
+            shouldReturn = true;
           }
         };
 
@@ -996,7 +1038,39 @@ serve(async (req) => {
             }
           } else {
             context.vars[descVar] = userResponse;
-            await respond("✅ Descrição do produto registrada.");
+            await generateAndAskProductSamples(userResponse);
+          }
+        } else if (subState === "sample_select") {
+          const samples: string[] = Array.isArray(context.vars.__pim_samples) ? context.vars.__pim_samples : [];
+          const idx = parseInt(userResponse) - 1;
+          const regenIndex = samples.length;
+          const exitIndex = samples.length + 1;
+
+          if (userResponse.toLowerCase() === "regen" || idx === regenIndex) {
+            const desc = context.vars.__pim_description || context.vars[descVar] || "";
+            if (!desc) {
+              await respond("⚠️ Sem descrição para gerar novas opções. Descreva o produto novamente.");
+              context.vars.__pim_sub = "input";
+              shouldReturn = true;
+            } else {
+              await generateAndAskProductSamples(desc);
+            }
+          } else if (userResponse.toLowerCase() === "cancelar" || idx === exitIndex) {
+            await respond("Atendimento encerrado. Quando quiser retomar, é só enviar uma nova mensagem. 👋");
+            context = { vars: { from, phoneNumber: from, session: wahaSession } };
+            const sbCli = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+            const sessionKey = `whatsapp_${wahaSession || "default"}_${from || ""}`;
+            await sbCli.from("chat_sessions").delete().eq("session_id", sessionKey);
+            shouldSaveContext = false;
+            shouldReturn = true;
+          } else if (isNaN(idx) || idx < 0 || idx >= samples.length) {
+            await respond(`Por favor, responda com um número entre 1 e ${samples.length + 2}.`);
+            shouldReturn = true;
+          } else {
+            const selected = samples[idx];
+            context.vars[imgVar] = selected;
+            if (context.vars.__pim_description) context.vars[descVar] = context.vars.__pim_description;
+            await respond(`✅ Opção ${idx + 1} selecionada.`, selected, "image");
             await advancePim();
           }
         }
