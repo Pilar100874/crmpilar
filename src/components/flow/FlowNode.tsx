@@ -150,6 +150,25 @@ export const FlowNode = memo((props: any) => {
       };
     }
 
+    // Content type (modo "ask") com saídas individuais por tipo
+    if (data.type === "content_type" && config.mode === "ask" && config.splitOutputs) {
+      const opts: Array<{ value: string; label: string }> = [
+        { value: "divulgacao", label: "Divulgação" },
+        { value: "promocao", label: "Promoção" },
+        { value: "institucional", label: "Institucional" },
+        { value: "evento", label: "Evento" },
+        { value: "lancamento", label: "Lançamento" },
+        { value: "educacional", label: "Educacional" },
+      ];
+      return {
+        buttons: opts.map((o) => ({
+          id: `content_${o.value}`,
+          label: o.label,
+          color: "bg-pink-500",
+        })),
+      };
+    }
+
     return null;
   };
 

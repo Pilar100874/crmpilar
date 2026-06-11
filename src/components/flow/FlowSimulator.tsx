@@ -3085,7 +3085,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       const ctNodeId = currentNodeId;
       setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
       setInput("");
-      const nextNode = getNextNode(ctNodeId);
+      const ctNodeData: any = nodes.find(n => n.id === ctNodeId)?.data || {};
+      const ctCfg = ctNodeData.config || {};
+      let nextNode: any = null;
+      if (ctCfg.splitOutputs) {
+        const edge = edges.find(e => e.source === ctNodeId && e.sourceHandle === `content_${matched}`);
+        if (edge) nextNode = nodes.find(n => n.id === edge.target);
+      }
+      if (!nextNode) nextNode = getNextNode(ctNodeId);
       if (nextNode) safeSetTimeout(() => { setCurrentNodeId(nextNode.id); executeNode(nextNode); }, 400);
       return;
     }
@@ -4135,7 +4142,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       addSystemMessage(`🎯 Tipo de Conteúdo definido: ${meta?.label || matched}.`);
       const ctNodeId = currentNodeId;
       setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
-      const nextNode = getNextNode(ctNodeId);
+      const ctNodeData: any = nodes.find(n => n.id === ctNodeId)?.data || {};
+      const ctCfg = ctNodeData.config || {};
+      let nextNode: any = null;
+      if (ctCfg.splitOutputs) {
+        const edge = edges.find(e => e.source === ctNodeId && e.sourceHandle === `content_${matched}`);
+        if (edge) nextNode = nodes.find(n => n.id === edge.target);
+      }
+      if (!nextNode) nextNode = getNextNode(ctNodeId);
       if (nextNode) safeSetTimeout(() => { setCurrentNodeId(nextNode.id); executeNode(nextNode); }, 400);
       return;
     }
