@@ -3280,8 +3280,21 @@ async function executeNode(
               u.forEach((x) => pushRef(x, label));
             }
           };
-          pushRef(context.vars.product_image_url || context.vars.product_image, "product");
-          pushRef(context.vars.influencer_image_url || context.vars.influencer_image, "influencer");
+          pushRef(
+            context.vars.product_image_url ||
+              context.vars.product_image ||
+              context.vars.produto_imagem_url ||
+              context.vars.produto_foto_url ||
+              context.vars.imagem_produto,
+            "product",
+          );
+          pushRef(
+            context.vars.influencer_image_url ||
+              context.vars.influencer_image ||
+              context.vars.influencer_imagem_url ||
+              context.vars.influencer_foto_url,
+            "influencer",
+          );
           if (cfg.refImageUrl) pushRef(itp(cfg.refImageUrl), "ref");
 
           const titulo = context.vars.tc_title || "";
