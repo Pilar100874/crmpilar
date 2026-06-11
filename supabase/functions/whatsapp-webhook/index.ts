@@ -813,14 +813,17 @@ serve(async (req) => {
           }
         };
 
+        console.log("[INFL] processing", { subState, userResponse, mode: cfg.influencerMode, hasAllowed: Array.isArray(cfg.allowedInfluencerIds) ? cfg.allowedInfluencerIds.length : 0 });
+
         if (subState === "choice") {
-          // Aceita "1"/"sim", "2"/"não" (Sair já tratado antes)
+          // Aceita texto/numero/id do botão (infl_1=Sim, infl_2=Não). Sair já tratado antes.
           const r = userResponse.toLowerCase();
-          const isYes = r === "1" || r === "sim" || r === "s" || r === "yes";
-          const isNo = r === "2" || r === "nao" || r === "não" || r === "n" || r === "no";
+          const isYes = r === "1" || r === "sim" || r === "s" || r === "yes" || r === "infl_1";
+          const isNo = r === "2" || r === "nao" || r === "não" || r === "n" || r === "no" || r === "infl_2";
           if (!isYes && !isNo) {
             await respond("Por favor, responda com 1 (Sim), 2 (Não) ou 3 (Sair).");
             shouldReturn = true;
+
           } else if (isNo) {
             context.vars.tem_influencer = "nao";
             await advance();
