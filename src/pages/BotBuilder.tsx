@@ -1734,10 +1734,15 @@ function BotBuilderContent() {
               onEdgesDelete={onEdgesDelete}
               onInit={(instance) => {
                 setReactFlowInstance(instance);
-                // Define zoom inicial de 1.0 (tamanho normal)
+                // Centraliza os blocos ao abrir o bot
                 setTimeout(() => {
-                  instance.setViewport({ x: 0, y: 0, zoom: 1.0 });
-                }, 0);
+                  instance.fitView({
+                    padding: 0.2,
+                    duration: 400,
+                    maxZoom: 1.0,
+                    minZoom: 0.5,
+                  });
+                }, 100);
               }}
               onDrop={onDrop}
               onDragOver={onDragOver}
