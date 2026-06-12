@@ -124,15 +124,20 @@ function resolveWahaSession(raw: any): string {
 // Extrai texto da mensagem Evolution (data.message)
 function extractEvolutionText(msg: any): string {
   if (!msg) return "";
+  // IMPORTANTE: respostas clicáveis (lista/botão) vêm com o ID estável em
+  // selectedRowId / selectedButtonId / selectedId E ao mesmo tempo com o
+  // título visível em msg.conversation. Precisamos priorizar o ID para que
+  // handlers como "pim_pick_1", "infl_pick_2", "pim_m_text" funcionem.
   return (
+    msg.listResponseMessage?.singleSelectReply?.selectedRowId ||
+    msg.buttonsResponseMessage?.selectedButtonId ||
+    msg.templateButtonReplyMessage?.selectedId ||
+    msg.interactiveResponseMessage?.body?.text ||
     msg.conversation ||
     msg.extendedTextMessage?.text ||
     msg.imageMessage?.caption ||
     msg.videoMessage?.caption ||
     msg.documentMessage?.caption ||
-    msg.buttonsResponseMessage?.selectedButtonId ||
-    msg.listResponseMessage?.singleSelectReply?.selectedRowId ||
-    msg.templateButtonReplyMessage?.selectedId ||
     ""
   );
 }
@@ -2229,13 +2234,15 @@ async function sendWahaButtonsMessage(
     return base;
   });
 
+  const titleStr = toWhatsappMarkdown(String(interactive.title || "").trim());
+  const footerStr = toWhatsappMarkdown(String(interactive.footerText || interactive.footer || "").trim());
   const body: any = {
     number,
-    title: toWhatsappMarkdown(interactive.title || ""),
     description: toWhatsappMarkdown(interactive.description || "Escolha uma opção"),
-    footer: toWhatsappMarkdown(interactive.footerText || interactive.footer || ""),
     buttons,
   };
+  if (titleStr) body.title = titleStr;
+  if (footerStr) body.footer = footerStr;
   if (interactive.thumbnailUrl) body.thumbnailUrl = interactive.thumbnailUrl;
   if (interactive.mediaType) body.mediaType = interactive.mediaType;
 
@@ -2286,26 +2293,32 @@ async function sendWahaCarouselMessage(
   const number = String(toNumberOnly).replace(/\D/g, "");
   const endpoint = `${base}/message/sendCarousel/${encodeURIComponent(instance)}`;
 
-  const cards = (interactive.cards || []).slice(0, 10).map((c: any, i: number) => ({
-    header: c.header || c.imageUrl || "",
-    body: toWhatsappMarkdown(c.body || c.title || ""),
-    footer: toWhatsappMarkdown(c.footer || ""),
-    buttons: (c.buttons || [{ type: "reply", displayText: c.buttonText || "Selecionar", id: c.buttonId || `card_${i}` }]).map((b: any, bi: number) => ({
-      type: b.type || "reply",
-      displayText: toWhatsappMarkdown(b.displayText || b.text || "Selecionar"),
-      ...(b.type === "url" ? { url: b.url || "" } : {}),
-      ...(b.type === "copy" ? { copyCode: b.copyCode || b.code || "" } : {}),
-      ...(b.type === "call" ? { phoneNumber: b.phoneNumber || b.phone || "" } : {}),
-      ...((!b.type || b.type === "reply") ? { id: b.id || `card_${i}_btn_${bi}` } : {}),
-    })),
-  }));
+  const cards = (interactive.cards || []).slice(0, 10).map((c: any, i: number) => {
+    const cardBody = toWhatsappMarkdown(String(c.body || c.title || "").trim());
+    const cardFooter = toWhatsappMarkdown(String(c.footer || "").trim());
+    const card: any = {
+      header: c.header || c.imageUrl || "",
+      buttons: (c.buttons || [{ type: "reply", displayText: c.buttonText || "Selecionar", id: c.buttonId || `card_${i}` }]).map((b: any, bi: number) => ({
+        type: b.type || "reply",
+        displayText: toWhatsappMarkdown(b.displayText || b.text || "Selecionar"),
+        ...(b.type === "url" ? { url: b.url || "" } : {}),
+        ...(b.type === "copy" ? { copyCode: b.copyCode || b.code || "" } : {}),
+        ...(b.type === "call" ? { phoneNumber: b.phoneNumber || b.phone || "" } : {}),
+        ...((!b.type || b.type === "reply") ? { id: b.id || `card_${i}_btn_${bi}` } : {}),
+      })),
+    };
+    if (cardBody) card.body = cardBody;
+    if (cardFooter) card.footer = cardFooter;
+    return card;
+  });
 
+  const titleStr = toWhatsappMarkdown(String(interactive.title || "").trim());
   const body: any = {
     number,
-    title: toWhatsappMarkdown(interactive.title || ""),
     cards,
     delay: 1200,
   };
+  if (titleStr) body.title = titleStr;
 
   try {
     console.log(`[EVOLUTION] Enviando CAROUSEL -> ${number}`, { instance, cardsCount: cards.length });
