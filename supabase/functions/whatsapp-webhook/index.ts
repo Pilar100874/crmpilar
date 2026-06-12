@@ -1051,15 +1051,25 @@ serve(async (req) => {
           }
         } else if (subState === "gallery_select") {
           const list: any[] = Array.isArray(context.vars.__infl_gallery) ? context.vars.__infl_gallery : [];
-          const idx = parseInt(userResponse) - 1;
-          if (isNaN(idx) || idx < 0 || idx >= list.length) {
-            await respond(`Por favor, responda com um número entre 1 e ${list.length} ou ${list.length + 1} para sair.`);
-            shouldReturn = true;
-          } else {
-            const item = list[idx];
-            context.vars[outVar] = item.image_url;
-            await respond(`✅ Influencer "${item.nome || "selecionado"}" registrado.`, item.image_url, "image");
+          // Aceita rowId clicável (infl_pick_N / infl_pick_exit) ou número digitado
+          const r = userResponse.toLowerCase();
+          if (r === "infl_pick_exit" || r === `${list.length + 1}` || r === "sair") {
+            context.vars.tem_influencer = "nao";
             await advance();
+          } else {
+            let idx = -1;
+            const m = r.match(/^infl_pick_(\d+)$/);
+            if (m) idx = parseInt(m[1]);
+            else idx = parseInt(userResponse) - 1;
+            if (isNaN(idx) || idx < 0 || idx >= list.length) {
+              await respond(`Por favor, toque em uma das opções da lista ou responda com um número entre 1 e ${list.length} (ou ${list.length + 1} para sair).`);
+              shouldReturn = true;
+            } else {
+              const item = list[idx];
+              context.vars[outVar] = item.image_url;
+              await respond(`✅ Influencer "${item.nome || "selecionado"}" registrado.`, item.image_url, "image");
+              await advance();
+            }
           }
         }
       }
