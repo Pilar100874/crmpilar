@@ -1196,6 +1196,16 @@ function BotBuilderContent() {
         lastSavedSignatureRef.current = getFlowSignature();
         setHasUnsavedChanges(false);
       }, 0);
+
+      // Centralizar os blocos ao abrir o bot
+      setTimeout(() => {
+        reactFlowInstance?.fitView({
+          padding: 0.2,
+          duration: 400,
+          maxZoom: 1.0,
+          minZoom: 0.5,
+        });
+      }, 200);
     }
   }, [setNodes, setEdges]);
 
