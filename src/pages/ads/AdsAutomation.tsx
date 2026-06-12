@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { WorkflowCard, WorkflowCardGrid } from "@/components/ui/workflow-card";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { 
   Plus, Play, Trash2, Edit, Zap, Loader2, Save, 
   ZoomIn, ZoomOut, Maximize2, X, Blocks, Minimize2, Copy
@@ -82,6 +83,8 @@ function AdsAutomationContent() {
   const [renameDescription, setRenameDescription] = useState("");
   const [isRenaming, setIsRenaming] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [automationToDelete, setAutomationToDelete] = useState<any>(null);
 
   useEffect(() => {
     getEstabelecimentoId().then(setEstabelecimentoId);
@@ -759,7 +762,7 @@ function AdsAutomationContent() {
                     }}
                     onDuplicate={() => { setOpenMenuId(null); duplicateAutomationMutation.mutate(automation); }}
                     onToggleActive={() => { setOpenMenuId(null); updateAutomationMutation.mutate({ id: automation.id, ativo: !automation.ativo }); }}
-                    onDelete={() => { setOpenMenuId(null); if (confirm("Tem certeza?")) deleteAutomationMutation.mutate(automation.id); }}
+                    onDelete={() => { setOpenMenuId(null); setAutomationToDelete(automation); setDeleteDialogOpen(true); }}
                     onOpenEditor={() => loadAutomation(automation)}
                   />
                 ))}
@@ -1045,6 +1048,23 @@ function AdsAutomationContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={() => {
+          if (!automationToDelete) return;
+          deleteAutomationMutation.mutate(automationToDelete.id, {
+            onSettled: () => {
+              setDeleteDialogOpen(false);
+              setAutomationToDelete(null);
+              setTimeout(() => { document.body.style.pointerEvents = ""; }, 100);
+            },
+          });
+        }}
+        itemName={automationToDelete?.nome}
+        isLoading={deleteAutomationMutation.isPending}
+      />
     </div>
   );
 }
