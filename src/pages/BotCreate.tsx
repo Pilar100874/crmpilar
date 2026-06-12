@@ -269,6 +269,10 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
       setIsDeleting(false);
       setDeleteDialogOpen(false);
       setBotToDelete(null);
+      // Workaround Radix AlertDialog pointer-events bug
+      setTimeout(() => {
+        document.body.style.pointerEvents = "";
+      }, 100);
     }
   };
 
