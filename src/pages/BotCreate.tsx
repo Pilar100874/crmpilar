@@ -446,6 +446,10 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
       setDuplicateWhatsAppType("waha");
       setSelectedBot(null);
       closeOverlays();
+      // Garantir que pointer-events do body seja restaurado (workaround Radix Dialog + Select)
+      setTimeout(() => {
+        document.body.style.pointerEvents = "";
+      }, 100);
       await loadBots();
     } catch (error) {
       console.error("Error duplicating bot:", error);
