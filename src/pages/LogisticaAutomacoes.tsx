@@ -1228,7 +1228,7 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
               }}
               onDelete={() => {
                 setOpenMenuId(null);
-                handleDelete(automacao.id);
+                handleDelete(automacao);
               }}
               onOpenEditor={() => onEdit(automacao.id)}
             />
