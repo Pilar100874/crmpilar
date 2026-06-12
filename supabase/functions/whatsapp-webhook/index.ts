@@ -2104,19 +2104,38 @@ async function sendWahaButtonsMessage(
   const instance = sessionName || "default";
   const number = String(toNumberOnly).replace(/\D/g, "");
   const endpoint = `${base}/message/sendButtons/${encodeURIComponent(instance)}`;
-  const body = {
+
+  // Suporta múltiplos tipos por botão: reply, url, copy, call, pix.
+  // Mantém compatibilidade com formato antigo (text/value/id).
+  const buttons = (interactive.buttons || []).map((b: any, i: number) => {
+    const btnType = b.type || "reply";
+    const displayText = b.displayText || b.text || b.label || `Opção ${i + 1}`;
+    const base: any = { type: btnType, displayText };
+    if (btnType === "reply") base.id = b.id || b.value || `btn_${i}`;
+    if (btnType === "url") base.url = b.url || "";
+    if (btnType === "copy") base.copyCode = b.copyCode || b.code || "";
+    if (btnType === "call") base.phoneNumber = b.phoneNumber || b.phone || "";
+    if (btnType === "pix") {
+      base.currency = b.currency || "BRL";
+      base.name = b.name || "";
+      base.keyType = b.keyType || "email";
+      base.key = b.key || b.pixKey || "";
+    }
+    return base;
+  });
+
+  const body: any = {
     number,
     title: interactive.title || "",
     description: interactive.description || "Escolha uma opção",
-    footer: interactive.footerText || "",
-    buttons: (interactive.buttons || []).map((b: any, i: number) => ({
-      type: "reply",
-      displayText: b.text || b.displayText || `Opção ${i + 1}`,
-      id: b.id || b.value || `btn_${i}`,
-    })),
+    footer: interactive.footerText || interactive.footer || "",
+    buttons,
   };
+  if (interactive.thumbnailUrl) body.thumbnailUrl = interactive.thumbnailUrl;
+  if (interactive.mediaType) body.mediaType = interactive.mediaType;
+
   try {
-    console.log(`[EVOLUTION] Enviando BUTTONS -> ${number}`, { instance, count: body.buttons.length });
+    console.log(`[EVOLUTION] Enviando BUTTONS -> ${number}`, { instance, count: body.buttons.length, types: buttons.map((b: any) => b.type) });
     const resp = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json", apikey: apiKey },
@@ -2125,24 +2144,88 @@ async function sendWahaButtonsMessage(
     });
     const resultText = await resp.text().catch(() => "");
     console.log("[EVOLUTION] sendButtons result:", resp.status, resultText.slice(0, 500));
-    // Considera sucesso apenas quando a resposta contém uma "key" (id da mensagem entregue).
-    // Muitas instâncias Evolution/Baileys retornam 200 sem entregar botões interativos.
     const looksDelivered = resp.ok && /"key"\s*:/.test(resultText);
     if (!looksDelivered && allowTextFallback) {
-      console.warn("[EVOLUTION] sendButtons sem entrega confirmada — enviando fallback de texto numerado.");
+      console.warn("[EVOLUTION] sendButtons sem entrega confirmada — enviando fallback texto.");
       let fallback = `${body.description}\n`;
-      body.buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.displayText}`; });
+      buttons.forEach((b: any, i: number) => {
+        let extra = "";
+        if (b.type === "url") extra = ` → ${b.url}`;
+        else if (b.type === "copy") extra = ` (código: ${b.copyCode})`;
+        else if (b.type === "call") extra = ` (${b.phoneNumber})`;
+        else if (b.type === "pix") extra = ` (Pix ${b.keyType}: ${b.key})`;
+        fallback += `\n${i + 1}. ${b.displayText}${extra}`;
+      });
       await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey);
     }
   } catch (err) {
     console.error("[EVOLUTION] Erro no sendButtons:", err);
     if (allowTextFallback) {
       let fallback = `${body.description}\n`;
-      body.buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.displayText}`; });
+      buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.displayText}`; });
       try { await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey); } catch {}
     }
   }
 }
+
+async function sendWahaCarouselMessage(
+  toNumberOnly: string,
+  interactive: any,
+  sessionName: string,
+  wahaUrl: string,
+  wahaApiKey: string,
+) {
+  const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
+  if (!base || !apiKey) return;
+  const instance = sessionName || "default";
+  const number = String(toNumberOnly).replace(/\D/g, "");
+  const endpoint = `${base}/message/sendCarousel/${encodeURIComponent(instance)}`;
+
+  const cards = (interactive.cards || []).slice(0, 10).map((c: any, i: number) => ({
+    header: c.header || c.imageUrl || "",
+    body: c.body || c.title || "",
+    footer: c.footer || "",
+    buttons: (c.buttons || [{ type: "reply", displayText: c.buttonText || "Selecionar", id: c.buttonId || `card_${i}` }]).map((b: any, bi: number) => ({
+      type: b.type || "reply",
+      displayText: b.displayText || b.text || "Selecionar",
+      ...(b.type === "url" ? { url: b.url || "" } : {}),
+      ...(b.type === "copy" ? { copyCode: b.copyCode || "" } : {}),
+      ...(b.type === "call" ? { phoneNumber: b.phoneNumber || "" } : {}),
+      ...((!b.type || b.type === "reply") ? { id: b.id || `card_${i}_btn_${bi}` } : {}),
+    })),
+  }));
+
+  const body = {
+    number,
+    title: interactive.title || "",
+    description: interactive.description || "",
+    footer: interactive.footer || interactive.footerText || "",
+    cards,
+  };
+
+  try {
+    console.log(`[EVOLUTION] Enviando CAROUSEL -> ${number}`, { instance, cardsCount: cards.length });
+    const resp = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json", apikey: apiKey },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(60000),
+    });
+    const resultText = await resp.text().catch(() => "");
+    console.log("[EVOLUTION] sendCarousel result:", resp.status, resultText.slice(0, 500));
+    const looksDelivered = resp.ok && /"key"\s*:/.test(resultText);
+    if (!looksDelivered) {
+      let fallback = (interactive.title || "Confira") + "\n";
+      cards.forEach((c: any, i: number) => {
+        fallback += `\n${i + 1}. ${c.body}${c.footer ? " — " + c.footer : ""}`;
+      });
+      await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey);
+    }
+  } catch (err) {
+    console.error("[EVOLUTION] Erro no sendCarousel:", err);
+  }
+}
+
 
 async function sendWahaMediaMessage(
   toNumberOnly: string,
