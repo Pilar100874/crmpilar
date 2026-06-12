@@ -1,73 +1,75 @@
-## Diagnóstico
+## Resumo
 
-O **simulador** (`src/components/flow/FlowSimulator.tsx`) executa ~40 tipos de bloco. Já o **WhatsApp real** roda em `supabase/functions/whatsapp-webhook/index.ts`, que só implementa um subconjunto pequeno. Por isso vários blocos "funcionam no teste, mas não no WhatsApp".
+Adicionar 7 blocos novos no Bot Builder (exclusivos da Evolution API), atualizar o webhook para enviar os payloads corretos, e bloquear vinculação de bots que usem esses blocos a números configurados como Cloud API oficial.
 
-### Blocos já suportados no WhatsApp
-`start`, `send_message`, `media`, `goodbye`, `ask_*` (11 tipos), `set_field`, `reply_buttons`, `list_buttons`, `crm_gerar_relatorio`, `publish_social_post`, `product_search_select`.
+## Blocos novos (1 por tipo)
 
-### Blocos do grupo Automação de Marketing (e correlatos) que **NÃO** rodam no WhatsApp hoje
-Grupo "IA": `ai_agent`, `generate_ai_media`, `text_content`, `content_type`, `ask_influencer`, `ask_product_image`
-Grupo "WhatsApp Essencial": `keyword_options`, `message_template`, `opt_in_out`, `opt_in_check`, `audience`
-Grupo "Lógica": `condition`, `keyword_jump`, `global_keywords`, `formulas`, `jump_to`, `lead_scoring`, `goal`
-Grupo "Código": `webhook`, `trigger_automation`, `dynamic_data`
-Grupo "Integração CRM": `crm_cadastro_empresa`, `crm_agenda_rapida`
-Grupo "Roteamento": `transferir_omnichannel`, `enviar_fila`, `atribuir_atendente`, `definir_prioridade`
-Grupo "Disparo & Loops": `send_whatsapp_to_number`, `api_loop`
+Todos com fallback automático para texto quando entrega falhar (já é o padrão do `sendWahaButtonsMessage`).
 
-## Escopo da entrega
+| Bloco | Type interno | Payload Evolution |
+|---|---|---|
+| Botão URL | `button_url` | `buttons:[{type:"url", displayText, url}]` |
+| Botão Copy (cupom) | `button_copy` | `buttons:[{type:"copy", displayText, copyCode}]` |
+| Botão Call (ligação) | `button_call` | `buttons:[{type:"call", displayText, phoneNumber}]` |
+| Botão Pix | `button_pix` | `buttons:[{type:"pix", currency, name, keyType, key}]` |
+| Botões Mistos | `buttons_mixed` | Lista de até 3 botões, cada um com seletor de tipo (reply/url/copy/call) |
+| Botões com Mídia | `buttons_media` | Estende reply buttons com `thumbnailUrl` + `mediaType: image\|video` |
+| Carrossel | `carousel` | `cards:[{header, body, footer, buttons:[...]}]` — modo Manual ou Dinâmico (lista de produtos) |
 
-Portar para o webhook do WhatsApp **todos** os blocos acima, mantendo a mesma semântica do simulador (interpolação de variáveis, ramificações, pendência de resposta etc.). Quem ficar dependente de UI exclusiva (ex.: pré-visualização visual) cai num envio textual equivalente no WhatsApp.
+**Observação:** o bloco `reply_buttons` atual fica como está (já envia `type:"reply"`). Os novos blocos são adicionais.
 
-## Plano de implementação
+## UI — Biblioteca de blocos
 
-### Etapa 1 — Lógica pura (sem chamadas externas)
-Implementar no `switch` do webhook:
-- `condition` (já há `evalCondition` no simulador — replicar)
-- `keyword_jump`, `global_keywords`, `jump_to`
-- `formulas`, `lead_scoring`, `goal`
-- `set_field` (já existe) + extensão de tipos
-- `audience`, `opt_in_check`, `opt_in_out` (gravam flag de consentimento em `chat_sessions`/`contatos`)
+Nova seção "WhatsApp Avançado (Evolution)" em `BlockLibrary.tsx` com badge "Evolution-only" nos 7 blocos. Ícones e cores próprias para diferenciar.
 
-### Etapa 2 — Blocos de mensagem WhatsApp
-- `keyword_options` → envia lista numerada e marca `pendingNodeId` (como `reply_buttons`)
-- `message_template` → resolve template e envia via `send_message`
+Em `blockInteractionKind.ts`: mapear cada novo type para uma categoria visual (BUTTONS / LIST + nova categoria "PAGAMENTO" para Pix).
 
-### Etapa 3 — Integrações backend
-- `webhook` → `fetch` com body interpolado, grava resposta em variável
-- `dynamic_data` → consulta tabela com filtros interpolados (reaproveita `execute-dynamic-query`)
-- `trigger_automation` → chama `marketing-automation-scheduler`/`trigger-automation`
-- `crm_cadastro_empresa`, `crm_agenda_rapida` → reusam mesmas tabelas
+## Validação de canal (bloqueio Cloud API)
 
-### Etapa 4 — Roteamento humano
-- `transferir_omnichannel`, `enviar_fila`, `atribuir_atendente`, `definir_prioridade` → atualizam `conversations` (fila/atendente/prioridade) e param o fluxo
+Quando o usuário tentar vincular um bot a um número via tela de vinculação:
 
-### Etapa 5 — IA e mídia
-- `ai_agent` → invoca `chat-agent-execute`, devolve texto
-- `generate_ai_media`, `text_content`, `content_type`, `ask_influencer`, `ask_product_image` → invocam as edge functions `bot-generate-ai-media`, `bot-suggest-text-content`, `bot-generate-product-samples` e enviam mídia/texto ao número
+1. Carrega o flow do bot e detecta se usa qualquer bloco em `EVOLUTION_ONLY_BLOCKS = ['button_url','button_copy','button_call','button_pix','buttons_mixed','buttons_media','carousel']`
+2. Verifica `whatsapp_numeros.provider` (ou campo equivalente) do número selecionado
+3. Se `provider === 'cloud'` (oficial) **e** o flow contém algum bloco Evolution-only → mostra `AlertDialog` listando os blocos incompatíveis e desabilita o botão "Vincular" até o usuário trocar o número ou remover os blocos.
 
-### Etapa 6 — Disparo e loop
-- `send_whatsapp_to_number` → envia mensagem para outro número via mesmo conector
-- `api_loop` → fetch + iteração com limite de segurança
+A mesma checagem roda no webhook ao receber mensagem: se canal for Cloud e bloco for Evolution-only, registra erro no log e envia mensagem de fallback informando que aquele recurso requer Evolution API.
 
-### Etapa 7 — Bloco desconhecido
-Trocar o `default` para **logar** + enviar mensagem amigável "(bloco não suportado)" ao desenvolvedor (somente em modo debug), em vez de só pular silenciosamente.
+## Carrossel — modo Dinâmico
 
-## Detalhes técnicos
+Config tem switch "Origem dos cards":
+- **Manual**: lista editável de cards (header URL, body, footer, label do botão, payload do botão)
+- **Dinâmico — Produtos**: select de "Tabela de preço" / "Grupo" / "Categoria" + limite (máx 10 cards do WhatsApp). No render do webhook, busca produtos via `produtos` table aplicando filtros e monta os cards usando imagem do produto, nome+preço no body, "Selecionar" como botão. Variável de saída salva o `id` do card selecionado.
 
-- Centralizar todos os handlers em um helper `executors.ts` dentro de `supabase/functions/whatsapp-webhook/` para evitar inflar mais o `index.ts` (já com 1660 linhas).
-- Reaproveitar `itp()` (interpolação) e `nexts()` (próximos nós) já existentes.
-- Para blocos que pausam (perguntas/listas), seguir o padrão atual: `context.pendingNodeId = node.id` + upsert em `chat_sessions` + `return`.
-- Tudo passa por `await onResponse(...)` — não muda a camada de transporte (WAHA/Cloud API) já existente.
+## Mudanças no webhook (`supabase/functions/whatsapp-webhook/index.ts`)
 
-## Verificação
+1. Estender `sendWahaButtonsMessage` para aceitar botões com `type` variado (reply/url/copy/call/pix) e propagar campos extras (`url`, `copyCode`, `phoneNumber`, `currency`, `name`, `keyType`, `key`).
+2. Nova função `sendWahaCarouselMessage` chamando `POST /message/sendCarousel/{instance}` da Evolution.
+3. Suporte a `thumbnailUrl` + `mediaType` em `sendButtons` (Evolution já aceita).
+4. Novos `case` no switch de tipos de bloco (`button_url`, `button_copy`, etc.) montando o `interactive` correto.
+5. Resolver carrossel dinâmico server-side antes de enviar (consulta `produtos`).
+6. Guard: se canal não-Evolution e bloco Evolution-only → log de erro + mensagem texto explicativa.
 
-1. `supabase--deploy_edge_functions` no `whatsapp-webhook`.
-2. Para cada bloco portado, rodar `supabase--curl_edge_functions` simulando payload do webhook e conferir `edge_function_logs`.
-3. Validar no console do bot real (um fluxo cobrindo IA + condição + roteamento).
+## Arquivos a editar / criar
 
-## Riscos / Observações
+**Criar:**
+- `src/components/flow/block-configs/ButtonUrlConfig.tsx`
+- `src/components/flow/block-configs/ButtonCopyConfig.tsx`
+- `src/components/flow/block-configs/ButtonCallConfig.tsx`
+- `src/components/flow/block-configs/ButtonPixConfig.tsx`
+- `src/components/flow/block-configs/ButtonsMixedConfig.tsx`
+- `src/components/flow/block-configs/ButtonsMediaConfig.tsx`
+- `src/components/flow/block-configs/CarouselConfig.tsx`
+- `src/lib/evolutionOnlyBlocks.ts` (constante + helper `detectEvolutionOnlyBlocks(flow)`)
 
-- É uma mudança grande (≈ +800 linhas no webhook ou em helper novo). Vou entregar em **um único PR** para o usuário ter paridade completa de uma vez, mas posso fatiar por etapa se preferir.
-- Alguns blocos (IA, geração de mídia) podem demorar > 10 s e exceder o timeout síncrono do webhook do WhatsApp; para esses o ideal é processamento assíncrono (background) — confirmo antes de mergulhar.
+**Editar:**
+- `src/components/flow/BlockLibrary.tsx` — registrar os 7 blocos
+- `src/components/flow/block-configs/index.tsx` — exportar e mapear nos PropertiesPanel
+- `src/components/flow/blockInteractionKind.ts` — mapear tipos
+- `src/components/flow/FlowNode.tsx` — renderizar visual dos novos blocos
+- Tela de vinculação bot ↔ número (provavelmente `BotManager.tsx` ou similar) — adicionar checagem + AlertDialog
+- `supabase/functions/whatsapp-webhook/index.ts` — switch dos novos tipos + funções de envio + guard de canal
 
-Posso seguir com a Etapa 1 → 7 nessa ordem em um único deploy? Ou prefere que eu entregue por etapa para revisar?
+## Fora de escopo
+
+- Listas interativas, botões reply puros e botões com mídia para reply simples — esses já existem (`list_buttons`, `reply_buttons`) e não serão duplicados.
+- Cloud API: não vamos implementar tradução desses tipos para Cloud (oficial não suporta os mesmos botões). Apenas o bloqueio na vinculação.
