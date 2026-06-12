@@ -2519,10 +2519,8 @@ async function executeNode(
       }
       let fallbackTxt = bodyText + "";
       buttons.forEach((b: any, i: number) => { fallbackTxt += `\n${i + 1}. ${b.text || b.title}`; });
-      // No Evolution/WhatsApp real, reply buttons podem ficar PENDING após envio de mídia.
-      // Envia texto numerado para garantir que o bloco subsequente apareça e continue respondível por número.
-      const usePlainText = context?.vars?.session;
-      await onResponse(fallbackTxt, undefined, undefined, usePlainText ? undefined : interactive);
+      // Envia como reply buttons (quick reply) — sendWahaButtonsMessage já faz fallback de texto se a entrega falhar.
+      await onResponse(fallbackTxt, undefined, undefined, interactive);
       context.pendingNodeId = node.id;
 
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
