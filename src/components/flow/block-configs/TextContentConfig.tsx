@@ -303,17 +303,27 @@ export const TextContentConfig = ({ config, handleConfigChange }: TextContentCon
             <Hash className="h-3.5 w-3.5 text-violet-600" />
             Quantidade de sugestões geradas por IA
           </Label>
-          <Input
-            type="number"
-            min={2}
-            max={5}
-            value={config.suggestionCount ?? 3}
-            onChange={(e) => {
-              const v = parseInt(e.target.value);
-              handleConfigChange("suggestionCount", Number.isNaN(v) ? 3 : Math.max(2, Math.min(5, v)));
-            }}
-            placeholder="3"
-          />
+          <div className="grid grid-cols-4 gap-1">
+            {[2, 3, 4, 5].map((n) => {
+              const current = config.suggestionCount ?? 3;
+              const active = current === n;
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => handleConfigChange("suggestionCount", n)}
+                  className={cn(
+                    "h-9 rounded-md border-2 text-sm font-semibold transition-all",
+                    active
+                      ? "border-violet-500 bg-violet-500/10 text-violet-700 ring-2 ring-violet-500/30"
+                      : "border-border bg-background hover:border-violet-500/50 text-foreground",
+                  )}
+                >
+                  {n}
+                </button>
+              );
+            })}
+          </div>
           <p className="text-[10px] text-muted-foreground">Mínimo 2, máximo 5. Padrão: 3.</p>
         </div>
       )}

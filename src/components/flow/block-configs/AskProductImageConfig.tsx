@@ -2,6 +2,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Package, Info, Image } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Props {
   config: any;
@@ -85,17 +86,27 @@ export const AskProductImageConfig = ({ config, handleConfigChange }: Props) => 
           <Image className="h-3.5 w-3.5 text-amber-600" />
           Quantidade de amostras a gerar
         </Label>
-        <Input
-          type="number"
-          min={1}
-          max={6}
-          value={config.sampleCount ?? 3}
-          onChange={(e) => {
-            const v = parseInt(e.target.value);
-            handleConfigChange("sampleCount", Number.isNaN(v) ? 3 : Math.max(1, Math.min(6, v)));
-          }}
-          placeholder="3"
-        />
+        <div className="grid grid-cols-6 gap-1">
+          {[1, 2, 3, 4, 5, 6].map((n) => {
+            const current = config.sampleCount ?? 3;
+            const active = current === n;
+            return (
+              <button
+                key={n}
+                type="button"
+                onClick={() => handleConfigChange("sampleCount", n)}
+                className={cn(
+                  "h-9 rounded-md border-2 text-sm font-semibold transition-all",
+                  active
+                    ? "border-amber-500 bg-amber-500/10 text-amber-700 ring-2 ring-amber-500/30"
+                    : "border-border bg-background hover:border-amber-500/50 text-foreground",
+                )}
+              >
+                {n}
+              </button>
+            );
+          })}
+        </div>
         <p className="text-[10px] text-muted-foreground">Mínimo 1, máximo 6. Padrão: 3.</p>
       </div>
     </div>
