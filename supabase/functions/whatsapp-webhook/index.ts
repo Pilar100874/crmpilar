@@ -1174,7 +1174,7 @@ serve(async (req) => {
             // 3 botões clicáveis (limite do WhatsApp). "Sair" via texto/typing.
             const interactive = {
               type: "buttons",
-              title: "",
+              title: cfg.headerTitle || "Imagem do produto",
               description: "Como você quer fornecer a imagem do produto?",
               footerText: "Digite 'sair' para cancelar",
               buttons: [
