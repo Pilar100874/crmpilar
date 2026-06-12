@@ -2229,13 +2229,15 @@ async function sendWahaButtonsMessage(
     return base;
   });
 
+  const titleStr = toWhatsappMarkdown(String(interactive.title || "").trim());
+  const footerStr = toWhatsappMarkdown(String(interactive.footerText || interactive.footer || "").trim());
   const body: any = {
     number,
-    title: toWhatsappMarkdown(interactive.title || ""),
     description: toWhatsappMarkdown(interactive.description || "Escolha uma opção"),
-    footer: toWhatsappMarkdown(interactive.footerText || interactive.footer || ""),
     buttons,
   };
+  if (titleStr) body.title = titleStr;
+  if (footerStr) body.footer = footerStr;
   if (interactive.thumbnailUrl) body.thumbnailUrl = interactive.thumbnailUrl;
   if (interactive.mediaType) body.mediaType = interactive.mediaType;
 
