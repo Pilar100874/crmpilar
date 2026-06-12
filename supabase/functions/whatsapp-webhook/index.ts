@@ -1969,6 +1969,30 @@ function resolveEvolution(wahaUrl: string, wahaApiKey: string) {
   return { base, apiKey };
 }
 
+/**
+ * Converte markdown comum (gerado por LLMs) para a sintaxe que o WhatsApp
+ * realmente renderiza. Sem isso, o usuário vê literalmente `**texto**`,
+ * `__texto__`, `### título`, etc.
+ *
+ * Regras (WhatsApp):
+ *   *negrito*     — entre asteriscos simples
+ *   _itálico_     — entre underscores simples
+ *   ~tachado~     — entre tils
+ *   ```mono```    — bloco de código
+ */
+function toWhatsappMarkdown(input: string): string {
+  if (!input || typeof input !== "string") return input as any;
+  let out = input;
+  // Negrito: **texto** ou __texto__  →  *texto*
+  out = out.replace(/\*\*([^*\n]+?)\*\*/g, "*$1*");
+  out = out.replace(/(^|[^_])__([^_\n]+?)__(?!_)/g, "$1*$2*");
+  // Cabeçalhos markdown (### Título) → *Título*
+  out = out.replace(/^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$/gm, "*$1*");
+  // Links markdown [texto](url) → texto (url)
+  out = out.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, "$1 ($2)");
+  return out;
+}
+
 async function sendWahaTextMessage(
   toNumberOnly: string,
   text: string,
@@ -1994,7 +2018,7 @@ async function sendWahaTextMessage(
         Accept: "application/json",
         apikey: apiKey,
       },
-      body: JSON.stringify({ number, text }),
+      body: JSON.stringify({ number, text: toWhatsappMarkdown(text) }),
       signal: AbortSignal.timeout(60000),
     });
     const resultText = await resp.text().catch(() => "");
