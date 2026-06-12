@@ -69,12 +69,35 @@ const AI: InteractionKind = {
   title: "Processamento de IA",
 };
 
+const PAYMENT: InteractionKind = {
+  label: "Pix",
+  symbol: "💸",
+  className: "bg-emerald-100 text-emerald-700 border-emerald-300",
+  title: "Pagamento Pix (Evolution)",
+};
+
+const CAROUSEL: InteractionKind = {
+  label: "Carrossel",
+  symbol: "🎠",
+  className: "bg-sky-100 text-sky-700 border-sky-300",
+  title: "Carrossel de cards (Evolution)",
+};
+
 const MAP: Record<string, InteractionKind> = {
   // Botões
   reply_buttons: BUTTONS,
   ask_influencer: BUTTONS,
   ask_product_image: BUTTONS,
   opt_in_check: BUTTONS,
+
+  // Evolution-only buttons
+  button_url: BUTTONS,
+  button_copy: BUTTONS,
+  button_call: BUTTONS,
+  button_pix: PAYMENT,
+  buttons_mixed: BUTTONS,
+  buttons_media: BUTTONS,
+  carousel: CAROUSEL,
 
   // Listas
   list_buttons: LIST,

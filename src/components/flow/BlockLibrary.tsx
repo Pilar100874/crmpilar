@@ -54,6 +54,18 @@ const blockCategories = [
     blocks: ["reply_buttons", "list_buttons", "keyword_options", "message_template", "opt_in_out", "opt_in_check", "audience"] as NodeType[],
   },
   {
+    name: "WhatsApp Avançado (Evolution)",
+    icon: "Zap",
+    color: "blue",
+    gradient: "from-blue-500/10 to-sky-500/10",
+    border: "border-blue-500/20",
+    borderHover: "hover:border-blue-500/40",
+    iconColor: "text-blue-600",
+    iconHover: "group-hover:text-blue-700",
+    textHover: "group-hover:text-blue-700",
+    blocks: ["button_url", "button_copy", "button_call", "button_pix", "buttons_mixed", "buttons_media", "carousel"] as NodeType[],
+  },
+  {
     name: "Perguntas",
     icon: "HelpCircle",
     color: "blue",
