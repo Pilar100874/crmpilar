@@ -2234,14 +2234,21 @@ async function sendWahaButtonsMessage(
     return base;
   });
 
-  const titleStr = toWhatsappMarkdown(String(interactive.title || "").trim());
+  const rawTitle = String(interactive.title || "").trim();
+  const descStr = String(interactive.description || "Escolha uma opção").trim();
+  // Evolution renderiza "*${title}*\n\n${description}" SEMPRE — se title vier null/undefined
+  // aparece literalmente "*undefined*". Por isso garantimos um título não-vazio derivando da
+  // primeira linha da descrição quando o usuário não preencheu nada.
+  const fallbackFromDesc = descStr.split("\n")[0].slice(0, 60).trim();
+  const titleStr = toWhatsappMarkdown(rawTitle || fallbackFromDesc || "Atendimento");
+  const remainingDesc = rawTitle ? descStr : descStr.replace(fallbackFromDesc, "").replace(/^\n+/, "").trim();
   const footerStr = toWhatsappMarkdown(String(interactive.footerText || interactive.footer || "").trim());
   const body: any = {
     number,
-    description: toWhatsappMarkdown(interactive.description || "Escolha uma opção"),
+    title: titleStr,
+    description: toWhatsappMarkdown(remainingDesc || titleStr),
     buttons,
   };
-  if (titleStr) body.title = titleStr;
   if (footerStr) body.footer = footerStr;
   if (interactive.thumbnailUrl) body.thumbnailUrl = interactive.thumbnailUrl;
   if (interactive.mediaType) body.mediaType = interactive.mediaType;
