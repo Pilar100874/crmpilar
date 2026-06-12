@@ -469,6 +469,10 @@ serve(async (req) => {
           await sendWahaButtonsMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
           return;
         }
+        if (interactive?.type === "carousel") {
+          await sendWahaCarouselMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
+          return;
+        }
         if (mediaUrl && mediaType) {
           await sendWahaMediaMessage(from, text, mediaType, mediaUrl, wahaSession, WAHA_URL, WAHA_API_KEY);
         } else if (text) {
@@ -493,6 +497,15 @@ serve(async (req) => {
         if (interactive?.type === "buttons") {
           const ok = await sendCloudButtonsMessage(pnId, token, from, interactive, text);
           if (!ok && text) await sendCloudText(pnId, token, from, text);
+          return;
+        }
+        if (interactive?.type === "carousel") {
+          // Cloud API não suporta carousel custom — fallback texto.
+          let fallback = (interactive.title || "Opções:") + "";
+          (interactive.cards || []).forEach((c: any, i: number) => {
+            fallback += `\n${i + 1}. ${c.body || ""}${c.footer ? " — " + c.footer : ""}`;
+          });
+          await sendCloudText(pnId, token, from, fallback);
           return;
         }
         if (mediaUrl && mediaType) {
