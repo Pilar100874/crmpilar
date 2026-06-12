@@ -1207,7 +1207,7 @@ function BotBuilderContent() {
         });
       }, 200);
     }
-  }, [setNodes, setEdges]);
+  }, [setNodes, setEdges, reactFlowInstance]);
 
   // Carregar bot da URL automaticamente
   useEffect(() => {
