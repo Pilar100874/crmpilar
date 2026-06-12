@@ -3492,8 +3492,20 @@ async function executeNode(
         } else {
           // Modo advanced: Sim/Não → se Sim, pergunta método (Digitar / IA) → coleta
           const q = itp(cfg.askPrompt || "Deseja incluir conteúdo de texto (título/subtítulo/corpo) na peça?");
+          const tcButtons = [
+            { text: "Sim", id: "tc_sim" },
+            { text: "Não", id: "tc_nao" },
+            { text: "Sair", id: "__exit__" },
+          ];
+          const tcInteractive = {
+            type: "buttons",
+            title: "",
+            description: q,
+            footerText: "",
+            buttons: tcButtons,
+          };
           fallback = `${q}\n1. Sim\n2. Não\n3. Sair`;
-          await onResponse(fallback);
+          await onResponse(fallback, undefined, undefined, tcInteractive);
           context.vars.__tc_sub = "choice";
           context.pendingNodeId = node.id;
           const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
