@@ -1984,7 +1984,8 @@ function toWhatsappMarkdown(input: string): string {
   if (!input || typeof input !== "string") return input as any;
   let out = input;
   // Negrito: **texto** ou __texto__  →  *texto*
-  out = out.replace(/\*\*([^*\n]+?)\*\*/g, "*$1*");
+  // Substitui qualquer ocorrência de ** por * (cobre **bold**, ***bold***, **multi linha**, etc.)
+  out = out.replace(/\*\*+/g, "*");
   out = out.replace(/(^|[^_])__([^_\n]+?)__(?!_)/g, "$1*$2*");
   // Cabeçalhos markdown (### Título) → *Título*
   out = out.replace(/^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$/gm, "*$1*");
