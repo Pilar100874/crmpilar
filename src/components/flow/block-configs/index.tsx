@@ -128,6 +128,17 @@ export { TriggerWorkflowConfig } from './TriggerWorkflowConfig';
 // Retornar Resposta (modo síncrono)
 export { ReturnResponseConfig } from './ReturnResponseConfig';
 
+// ============= Evolution-only blocks =============
+export {
+  ButtonUrlConfig,
+  ButtonCopyConfig,
+  ButtonCallConfig,
+  ButtonPixConfig,
+  ButtonsMixedConfig,
+  ButtonsMediaConfig,
+  CarouselConfig,
+} from './EvolutionButtonsBlocks';
+
 
 
 

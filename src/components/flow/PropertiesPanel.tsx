@@ -308,6 +308,22 @@ export const PropertiesPanel = ({
       case "list_buttons":
         return <BlockConfigs.ListButtonsConfigNew {...configProps} />;
 
+      // Evolution-only blocks
+      case "button_url":
+        return <BlockConfigs.ButtonUrlConfig {...configProps} />;
+      case "button_copy":
+        return <BlockConfigs.ButtonCopyConfig {...configProps} />;
+      case "button_call":
+        return <BlockConfigs.ButtonCallConfig {...configProps} />;
+      case "button_pix":
+        return <BlockConfigs.ButtonPixConfig {...configProps} />;
+      case "buttons_mixed":
+        return <BlockConfigs.ButtonsMixedConfig {...configProps} />;
+      case "buttons_media":
+        return <BlockConfigs.ButtonsMediaConfig {...configProps} />;
+      case "carousel":
+        return <BlockConfigs.CarouselConfig {...configProps} />;
+
       // WhatsApp Blocks
       case "keyword_options":
         return <BlockConfigs.KeywordOptionsConfig {...configProps} />;

@@ -469,6 +469,10 @@ serve(async (req) => {
           await sendWahaButtonsMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
           return;
         }
+        if (interactive?.type === "carousel") {
+          await sendWahaCarouselMessage(from, interactive, wahaSession, WAHA_URL, WAHA_API_KEY);
+          return;
+        }
         if (mediaUrl && mediaType) {
           await sendWahaMediaMessage(from, text, mediaType, mediaUrl, wahaSession, WAHA_URL, WAHA_API_KEY);
         } else if (text) {
@@ -493,6 +497,15 @@ serve(async (req) => {
         if (interactive?.type === "buttons") {
           const ok = await sendCloudButtonsMessage(pnId, token, from, interactive, text);
           if (!ok && text) await sendCloudText(pnId, token, from, text);
+          return;
+        }
+        if (interactive?.type === "carousel") {
+          // Cloud API não suporta carousel custom — fallback texto.
+          let fallback = (interactive.title || "Opções:") + "";
+          (interactive.cards || []).forEach((c: any, i: number) => {
+            fallback += `\n${i + 1}. ${c.body || ""}${c.footer ? " — " + c.footer : ""}`;
+          });
+          await sendCloudText(pnId, token, from, fallback);
           return;
         }
         if (mediaUrl && mediaType) {
@@ -2104,19 +2117,38 @@ async function sendWahaButtonsMessage(
   const instance = sessionName || "default";
   const number = String(toNumberOnly).replace(/\D/g, "");
   const endpoint = `${base}/message/sendButtons/${encodeURIComponent(instance)}`;
-  const body = {
+
+  // Suporta múltiplos tipos por botão: reply, url, copy, call, pix.
+  // Mantém compatibilidade com formato antigo (text/value/id).
+  const buttons = (interactive.buttons || []).map((b: any, i: number) => {
+    const btnType = b.type || "reply";
+    const displayText = b.displayText || b.text || b.label || `Opção ${i + 1}`;
+    const base: any = { type: btnType, displayText };
+    if (btnType === "reply") base.id = b.id || b.value || `btn_${i}`;
+    if (btnType === "url") base.url = b.url || "";
+    if (btnType === "copy") base.copyCode = b.copyCode || b.code || "";
+    if (btnType === "call") base.phoneNumber = b.phoneNumber || b.phone || "";
+    if (btnType === "pix") {
+      base.currency = b.currency || "BRL";
+      base.name = b.name || "";
+      base.keyType = b.keyType || "email";
+      base.key = b.key || b.pixKey || "";
+    }
+    return base;
+  });
+
+  const body: any = {
     number,
     title: interactive.title || "",
     description: interactive.description || "Escolha uma opção",
-    footer: interactive.footerText || "",
-    buttons: (interactive.buttons || []).map((b: any, i: number) => ({
-      type: "reply",
-      displayText: b.text || b.displayText || `Opção ${i + 1}`,
-      id: b.id || b.value || `btn_${i}`,
-    })),
+    footer: interactive.footerText || interactive.footer || "",
+    buttons,
   };
+  if (interactive.thumbnailUrl) body.thumbnailUrl = interactive.thumbnailUrl;
+  if (interactive.mediaType) body.mediaType = interactive.mediaType;
+
   try {
-    console.log(`[EVOLUTION] Enviando BUTTONS -> ${number}`, { instance, count: body.buttons.length });
+    console.log(`[EVOLUTION] Enviando BUTTONS -> ${number}`, { instance, count: body.buttons.length, types: buttons.map((b: any) => b.type) });
     const resp = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json", apikey: apiKey },
@@ -2125,24 +2157,88 @@ async function sendWahaButtonsMessage(
     });
     const resultText = await resp.text().catch(() => "");
     console.log("[EVOLUTION] sendButtons result:", resp.status, resultText.slice(0, 500));
-    // Considera sucesso apenas quando a resposta contém uma "key" (id da mensagem entregue).
-    // Muitas instâncias Evolution/Baileys retornam 200 sem entregar botões interativos.
     const looksDelivered = resp.ok && /"key"\s*:/.test(resultText);
     if (!looksDelivered && allowTextFallback) {
-      console.warn("[EVOLUTION] sendButtons sem entrega confirmada — enviando fallback de texto numerado.");
+      console.warn("[EVOLUTION] sendButtons sem entrega confirmada — enviando fallback texto.");
       let fallback = `${body.description}\n`;
-      body.buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.displayText}`; });
+      buttons.forEach((b: any, i: number) => {
+        let extra = "";
+        if (b.type === "url") extra = ` → ${b.url}`;
+        else if (b.type === "copy") extra = ` (código: ${b.copyCode})`;
+        else if (b.type === "call") extra = ` (${b.phoneNumber})`;
+        else if (b.type === "pix") extra = ` (Pix ${b.keyType}: ${b.key})`;
+        fallback += `\n${i + 1}. ${b.displayText}${extra}`;
+      });
       await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey);
     }
   } catch (err) {
     console.error("[EVOLUTION] Erro no sendButtons:", err);
     if (allowTextFallback) {
       let fallback = `${body.description}\n`;
-      body.buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.displayText}`; });
+      buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.displayText}`; });
       try { await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey); } catch {}
     }
   }
 }
+
+async function sendWahaCarouselMessage(
+  toNumberOnly: string,
+  interactive: any,
+  sessionName: string,
+  wahaUrl: string,
+  wahaApiKey: string,
+) {
+  const { base, apiKey } = resolveEvolution(wahaUrl, wahaApiKey);
+  if (!base || !apiKey) return;
+  const instance = sessionName || "default";
+  const number = String(toNumberOnly).replace(/\D/g, "");
+  const endpoint = `${base}/message/sendCarousel/${encodeURIComponent(instance)}`;
+
+  const cards = (interactive.cards || []).slice(0, 10).map((c: any, i: number) => ({
+    header: c.header || c.imageUrl || "",
+    body: c.body || c.title || "",
+    footer: c.footer || "",
+    buttons: (c.buttons || [{ type: "reply", displayText: c.buttonText || "Selecionar", id: c.buttonId || `card_${i}` }]).map((b: any, bi: number) => ({
+      type: b.type || "reply",
+      displayText: b.displayText || b.text || "Selecionar",
+      ...(b.type === "url" ? { url: b.url || "" } : {}),
+      ...(b.type === "copy" ? { copyCode: b.copyCode || "" } : {}),
+      ...(b.type === "call" ? { phoneNumber: b.phoneNumber || "" } : {}),
+      ...((!b.type || b.type === "reply") ? { id: b.id || `card_${i}_btn_${bi}` } : {}),
+    })),
+  }));
+
+  const body = {
+    number,
+    title: interactive.title || "",
+    description: interactive.description || "",
+    footer: interactive.footer || interactive.footerText || "",
+    cards,
+  };
+
+  try {
+    console.log(`[EVOLUTION] Enviando CAROUSEL -> ${number}`, { instance, cardsCount: cards.length });
+    const resp = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json", apikey: apiKey },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(60000),
+    });
+    const resultText = await resp.text().catch(() => "");
+    console.log("[EVOLUTION] sendCarousel result:", resp.status, resultText.slice(0, 500));
+    const looksDelivered = resp.ok && /"key"\s*:/.test(resultText);
+    if (!looksDelivered) {
+      let fallback = (interactive.title || "Confira") + "\n";
+      cards.forEach((c: any, i: number) => {
+        fallback += `\n${i + 1}. ${c.body}${c.footer ? " — " + c.footer : ""}`;
+      });
+      await sendWahaTextMessage(toNumberOnly, fallback, sessionName, wahaUrl, wahaApiKey);
+    }
+  } catch (err) {
+    console.error("[EVOLUTION] Erro no sendCarousel:", err);
+  }
+}
+
 
 async function sendWahaMediaMessage(
   toNumberOnly: string,
@@ -2523,6 +2619,135 @@ async function executeNode(
       await onResponse(fallbackTxt, undefined, undefined, interactive);
       context.pendingNodeId = node.id;
 
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
+      await supabase.from("chat_sessions").upsert(
+        { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+        { onConflict: "session_id" },
+      );
+      return;
+    }
+    // ============ Evolution-only blocks ============
+    case "button_url":
+    case "button_copy":
+    case "button_call":
+    case "button_pix": {
+      const btnType = data.type.replace("button_", "") === "pix" ? "pix" : data.type.replace("button_", "");
+      const btn: any = { type: btnType, displayText: itp(cfg.displayText || "Abrir") };
+      if (btnType === "url") btn.url = itp(cfg.url || "");
+      if (btnType === "copy") btn.copyCode = itp(cfg.copyCode || "");
+      if (btnType === "call") btn.phoneNumber = itp(cfg.phoneNumber || "");
+      if (btnType === "pix") {
+        btn.currency = cfg.currency || "BRL";
+        btn.name = itp(cfg.name || "");
+        btn.keyType = cfg.keyType || "email";
+        btn.key = itp(cfg.pixKey || cfg.key || "");
+      }
+      const interactive = {
+        type: "buttons",
+        title: itp(cfg.title || ""),
+        description: itp(cfg.description || ""),
+        footerText: itp(cfg.footer || ""),
+        buttons: [btn],
+      };
+      await onResponse(itp(cfg.description || cfg.title || ""), undefined, undefined, interactive);
+      for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+      break;
+    }
+    case "buttons_mixed": {
+      const buttons = (cfg.buttons || []).slice(0, 3).map((b: any, i: number) => {
+        const t = b.type || "reply";
+        const out: any = { type: t, displayText: itp(b.displayText || `Opção ${i + 1}`) };
+        if (t === "reply") out.id = b.id || `btn_${i}`;
+        if (t === "url") out.url = itp(b.url || "");
+        if (t === "copy") out.copyCode = itp(b.copyCode || "");
+        if (t === "call") out.phoneNumber = itp(b.phoneNumber || "");
+        return out;
+      });
+      const interactive = {
+        type: "buttons",
+        title: itp(cfg.title || ""),
+        description: itp(cfg.description || ""),
+        footerText: itp(cfg.footer || ""),
+        buttons,
+      };
+      await onResponse(itp(cfg.description || ""), undefined, undefined, interactive);
+      // Se houver botões reply, fica pendente aguardando resposta
+      if (buttons.some((b: any) => b.type === "reply")) {
+        context.pendingNodeId = node.id;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
+        await supabase.from("chat_sessions").upsert(
+          { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+          { onConflict: "session_id" },
+        );
+        return;
+      }
+      for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+      break;
+    }
+    case "buttons_media": {
+      const buttons = (cfg.buttons || []).slice(0, 3).map((b: any, i: number) => ({
+        type: "reply",
+        displayText: itp(b.displayText || b.text || `Botão ${i + 1}`),
+        id: b.id || `btn_${i}`,
+      }));
+      const interactive = {
+        type: "buttons",
+        title: itp(cfg.title || ""),
+        description: itp(cfg.description || ""),
+        footerText: itp(cfg.footer || ""),
+        thumbnailUrl: itp(cfg.thumbnailUrl || ""),
+        mediaType: cfg.mediaType || "image",
+        buttons,
+      };
+      await onResponse(itp(cfg.description || ""), undefined, undefined, interactive);
+      context.pendingNodeId = node.id;
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
+      await supabase.from("chat_sessions").upsert(
+        { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+        { onConflict: "session_id" },
+      );
+      return;
+    }
+    case "carousel": {
+      let cards: any[] = [];
+      if (cfg.mode === "dynamic") {
+        try {
+          const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          let q = supabase.from("produtos").select("id, nome, preco, imagem_url").limit(Math.min(cfg.dynamicLimit || 10, 10));
+          if (cfg.dynamicGrupoId) q = q.eq("grupo_id", cfg.dynamicGrupoId);
+          if (cfg.dynamicCategoriaId) q = q.eq("categoria_id", cfg.dynamicCategoriaId);
+          const { data: prods } = await q;
+          cards = (prods || []).map((p: any, i: number) => ({
+            header: p.imagem_url || "",
+            body: `${p.nome}${p.preco ? ` — R$ ${Number(p.preco).toFixed(2)}` : ""}`,
+            footer: "",
+            buttonText: cfg.dynamicButtonText || "Selecionar",
+            buttonId: `prod_${p.id}`,
+          }));
+        } catch (e) {
+          console.error("[CAROUSEL] erro produtos dinâmicos:", e);
+        }
+      } else {
+        cards = (cfg.cards || []).slice(0, 10).map((c: any, i: number) => ({
+          header: itp(c.header || ""),
+          body: itp(c.body || ""),
+          footer: itp(c.footer || ""),
+          buttonText: itp(c.buttonText || "Selecionar"),
+          buttonId: c.buttonId || `card_${i}`,
+        }));
+      }
+      const interactive = {
+        type: "carousel",
+        title: itp(cfg.title || ""),
+        description: itp(cfg.description || ""),
+        footer: itp(cfg.footer || ""),
+        cards,
+      };
+      await onResponse(itp(cfg.description || cfg.title || ""), undefined, undefined, interactive);
+      context.pendingNodeId = node.id;
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
       await supabase.from("chat_sessions").upsert(
