@@ -77,15 +77,26 @@ export const FlowNode = memo((props: any) => {
     }
 
     // Botões de resposta - uma saída para cada botão
-    if (data.type === "reply_buttons" && config.buttons) {
-      const buttons = Array.isArray(config.buttons) 
-        ? config.buttons 
+    if ((data.type === "reply_buttons" || data.type === "buttons_mixed" || data.type === "buttons_media") && config.buttons) {
+      const buttons = Array.isArray(config.buttons)
+        ? config.buttons
         : [];
       return {
         buttons: buttons.map((btn: any, index: number) => ({
           id: `button_${index}`,
-          label: btn.text || `Botão ${index + 1}`,
+          label: btn.text || btn.displayText || btn.label || `Botão ${index + 1}`,
           color: "bg-purple-500"
+        }))
+      };
+    }
+
+    // Carrossel - uma saída por card
+    if (data.type === "carousel" && config.mode !== "dynamic" && Array.isArray(config.cards)) {
+      return {
+        buttons: config.cards.map((card: any, index: number) => ({
+          id: `card_${index}`,
+          label: card.buttonText || card.body || `Card ${index + 1}`,
+          color: "bg-sky-500"
         }))
       };
     }
