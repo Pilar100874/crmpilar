@@ -1030,6 +1030,14 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
         </DialogContent>
       </Dialog>
 
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDeleteBot}
+        itemName={botToDelete?.name}
+        isLoading={isDeleting}
+      />
+
     </div>
   );
 }
