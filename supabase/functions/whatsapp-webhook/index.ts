@@ -3860,9 +3860,9 @@ async function executeNode(
           ];
           const tcInteractive = {
             type: "buttons",
-            title: "",
+            title: itp(cfg.headerTitle || ""),
             description: q,
-            footerText: "",
+            footerText: itp(cfg.footerText || ""),
             buttons: tcButtons,
           };
           fallback = `${q}\n1. Sim\n2. Não\n3. Sair`;
