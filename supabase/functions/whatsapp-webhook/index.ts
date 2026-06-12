@@ -2319,13 +2319,14 @@ async function sendWahaCarouselMessage(
     return card;
   });
 
-  const titleStr = toWhatsappMarkdown(String(interactive.title || "").trim());
+  const rawCarouselTitle = String(interactive.title || "").trim();
+  const titleStr = toWhatsappMarkdown(rawCarouselTitle || "Confira as opções");
   const body: any = {
     number,
+    title: titleStr,
     cards,
     delay: 1200,
   };
-  if (titleStr) body.title = titleStr;
 
   try {
     console.log(`[EVOLUTION] Enviando CAROUSEL -> ${number}`, { instance, cardsCount: cards.length });
