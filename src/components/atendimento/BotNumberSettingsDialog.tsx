@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Settings } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Settings, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription,
@@ -11,6 +11,10 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "sonner";
+import {
+  detectEvolutionOnlyBlocks,
+  EVOLUTION_ONLY_BLOCK_LABELS,
+} from "@/lib/evolutionOnlyBlocks";
 
 interface BotNumberSettingsDialogProps {
   botId: string | null;
@@ -42,6 +46,7 @@ export function BotNumberSettingsDialog({
   const [numeroId, setNumeroId] = useState<string | null>(whatsappNumeroId);
   const [forwardId, setForwardId] = useState<string | null>(forwardToNumeroId ?? null);
   const [saving, setSaving] = useState(false);
+  const [evolutionOnlyTypes, setEvolutionOnlyTypes] = useState<string[]>([]);
 
   useEffect(() => {
     setNumeroId(whatsappNumeroId);
@@ -73,9 +78,39 @@ export function BotNumberSettingsDialog({
     })();
   }, [open, estabelecimentoId]);
 
+  // Detecta blocos Evolution-only no flow do bot
+  useEffect(() => {
+    if (!open || !botId) return;
+    (async () => {
+      const { data } = await supabase
+        .from("bot_flows")
+        .select("flow_data")
+        .eq("id", botId)
+        .maybeSingle();
+      const types = detectEvolutionOnlyBlocks((data as any)?.flow_data);
+      setEvolutionOnlyTypes(types);
+    })();
+  }, [open, botId]);
+
+  const selectedProvider = useMemo(
+    () => numeros.find((n) => n.id === numeroId)?.provider,
+    [numeros, numeroId],
+  );
+  const forwardProvider = useMemo(
+    () => numeros.find((n) => n.id === forwardId)?.provider,
+    [numeros, forwardId],
+  );
+
+  const blockedByCloud =
+    evolutionOnlyTypes.length > 0 &&
+    (selectedProvider === "cloud_api" || forwardProvider === "cloud_api");
+
   const handleSave = async () => {
+    if (blockedByCloud) {
+      toast.error("Não é possível vincular este bot a um número Cloud API: ele usa blocos exclusivos da Evolution.");
+      return;
+    }
     if (!botId) {
-      // Sem bot salvo ainda: só atualiza estado local
       onSaved(numeroId, forwardId);
       setOpen(false);
       return;
@@ -121,6 +156,26 @@ export function BotNumberSettingsDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          {blockedByCloud && (
+            <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 flex gap-2 text-sm">
+              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-semibold text-destructive">Vinculação bloqueada</p>
+                <p className="text-foreground/90">
+                  Este bot usa blocos exclusivos da Evolution API que não funcionam na Cloud API oficial do WhatsApp (Meta):
+                </p>
+                <ul className="list-disc list-inside text-xs text-foreground/80">
+                  {evolutionOnlyTypes.map((t) => (
+                    <li key={t}>{EVOLUTION_ONLY_BLOCK_LABELS[t] || t}</li>
+                  ))}
+                </ul>
+                <p className="text-xs text-muted-foreground">
+                  Selecione um número Evolution ou remova esses blocos do fluxo antes de salvar.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>Número vinculado ao bot</Label>
             <Select
@@ -167,7 +222,7 @@ export function BotNumberSettingsDialog({
           <Button variant="ghost" onClick={() => setOpen(false)}>
             Cancelar
           </Button>
-          <Button onClick={handleSave} disabled={saving}>
+          <Button onClick={handleSave} disabled={saving || blockedByCloud}>
             {saving ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>
