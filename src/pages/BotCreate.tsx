@@ -54,6 +54,9 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
   const [renameDescription, setRenameDescription] = useState("");
   const [isDuplicating, setIsDuplicating] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [botToDelete, setBotToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // WhatsApp Sessions
