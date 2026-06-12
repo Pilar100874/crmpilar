@@ -35,6 +35,7 @@ export const WORKFLOW_MODULES: WorkflowModule[] = [
   { key: "logistica", label: "Logística", table: "logistica_automacoes", nameCol: "nome" },
   { key: "ads", label: "Ads", table: "ads_automacoes", nameCol: "nome" },
   { key: "ai_studio", label: "AI Studio", table: "ai_studio_workflows", nameCol: "nome" },
+  { key: "marketing_automation", label: "Automação de Marketing", table: "marketing_automations", nameCol: "name" },
 ];
 
 export function TriggerWorkflowConfig({ data, onChange }: TriggerWorkflowConfigProps) {

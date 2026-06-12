@@ -3375,6 +3375,28 @@ async function executeNode(
           break;
         }
 
+        // 🎯 Módulo Marketing Automation — dispara via scheduler (mesma lógica do bloco legado trigger_automation)
+        if (moduleKey === "marketing_automation") {
+          try {
+            const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+            const { data, error } = await supabase.functions.invoke("marketing-automation-scheduler", {
+              body: {
+                automationId: workflowId,
+                params: variablesForWf,
+                triggeredBy: "whatsapp_bot",
+                phone: context.vars.from,
+              },
+            });
+            if (error) throw error;
+            context.vars[outVar] = { ok: true, module: moduleKey, workflowId, workflowName: wfName, result: data };
+          } catch (e: any) {
+            console.error("[FLOW] trigger_workflow(marketing_automation) erro:", e);
+            context.vars[outVar] = { ok: false, error: String(e?.message || e) };
+          }
+          for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+          break;
+        }
+
         // Outros módulos — apenas registra o disparo (compatível com simulador)
         context.vars[outVar] = {
           ok: true,
@@ -3386,6 +3408,7 @@ async function executeNode(
         for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
         break;
       }
+
 
       /* ============ DISPARO & LOOPS ============ */
       case "send_whatsapp_to_number": {
