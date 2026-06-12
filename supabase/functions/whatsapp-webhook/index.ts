@@ -1748,7 +1748,7 @@ async function sendCloudText(phoneNumberId: string, accessToken: string, to: str
   const r = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
-    body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body: text } }),
+    body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body: toWhatsappMarkdown(text) } }),
   });
   const res = await r.json().catch(() => ({}));
   if (!r.ok) console.error("[CLOUD] sendText error:", res);
@@ -1768,7 +1768,7 @@ async function sendCloudMedia(
   const typeMap: Record<string, string> = { image: "image", video: "video", audio: "audio", file: "document", document: "document" };
   const t = typeMap[(mediaType || "").toLowerCase()] || "document";
   const body: any = { messaging_product: "whatsapp", to, type: t, [t]: { link: mediaUrl } };
-  if (caption && (t === "image" || t === "video" || t === "document")) body[t].caption = caption;
+  if (caption && (t === "image" || t === "video" || t === "document")) body[t].caption = toWhatsappMarkdown(caption);
   const r = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
@@ -1789,11 +1789,11 @@ async function sendCloudListMessage(
   if (!phoneNumberId || !accessToken) return false;
   try {
     const sections = (interactive.sections || []).map((s: any) => ({
-      title: (s.title || "Opções").slice(0, 24),
+      title: toWhatsappMarkdown((s.title || "Opções")).slice(0, 24),
       rows: (s.rows || []).slice(0, 10).map((r: any) => ({
         id: String(r.id || r.rowId || r.title || "").slice(0, 200),
-        title: String(r.title || "Opção").slice(0, 24),
-        description: r.description ? String(r.description).slice(0, 72) : undefined,
+        title: toWhatsappMarkdown(String(r.title || "Opção")).slice(0, 24),
+        description: r.description ? toWhatsappMarkdown(String(r.description)).slice(0, 72) : undefined,
       })),
     }));
     const payload = {
@@ -1802,9 +1802,9 @@ async function sendCloudListMessage(
       type: "interactive",
       interactive: {
         type: "list",
-        header: interactive.title ? { type: "text", text: String(interactive.title).slice(0, 60) } : undefined,
-        body: { text: String(interactive.description || bodyText || "Escolha uma opção").slice(0, 1024) },
-        footer: interactive.footer ? { text: String(interactive.footer).slice(0, 60) } : undefined,
+        header: interactive.title ? { type: "text", text: toWhatsappMarkdown(String(interactive.title)).slice(0, 60) } : undefined,
+        body: { text: toWhatsappMarkdown(String(interactive.description || bodyText || "Escolha uma opção")).slice(0, 1024) },
+        footer: interactive.footer ? { text: toWhatsappMarkdown(String(interactive.footer)).slice(0, 60) } : undefined,
         action: {
           button: String(interactive.buttonText || "Ver opções").slice(0, 20),
           sections,
@@ -1841,8 +1841,8 @@ async function sendCloudButtonsMessage(
     const buttons = (interactive.buttons || []).slice(0, 3).map((b: any) => ({
       type: "reply",
       reply: {
-        id: String(b.id || b.title || "").slice(0, 256),
-        title: String(b.title || "OK").slice(0, 20),
+        id: String(b.id || b.title || b.text || "").slice(0, 256),
+        title: toWhatsappMarkdown(String(b.title || b.text || "OK")).slice(0, 20),
       },
     }));
     if (!buttons.length) return false;
@@ -1852,7 +1852,7 @@ async function sendCloudButtonsMessage(
       type: "interactive",
       interactive: {
         type: "button",
-        body: { text: String(interactive.description || bodyText || "Escolha uma opção").slice(0, 1024) },
+        body: { text: toWhatsappMarkdown(String(interactive.description || bodyText || "Escolha uma opção")).slice(0, 1024) },
         action: { buttons },
       },
     };
@@ -2057,10 +2057,21 @@ async function sendWahaListMessage(
     })),
   })).filter((s: any) => s.rows.length > 0);
 
-  const title = (interactive.title && String(interactive.title).trim()) ? String(interactive.title).trim().slice(0, 60) : "Escolha uma opção";
-  const description = (interactive.description && String(interactive.description).trim()) ? String(interactive.description).trim() : "Selecione abaixo";
+  const title = (interactive.title && String(interactive.title).trim()) ? toWhatsappMarkdown(String(interactive.title).trim()).slice(0, 60) : "Escolha uma opção";
+  const description = (interactive.description && String(interactive.description).trim()) ? toWhatsappMarkdown(String(interactive.description).trim()) : "Selecione abaixo";
   const buttonText = (interactive.buttonText && String(interactive.buttonText).trim()) ? String(interactive.buttonText).trim().slice(0, 20) : "Ver opções";
-  const footerText = (interactive.footerText && String(interactive.footerText).trim()) ? String(interactive.footerText).trim() : "Toque para escolher";
+  const footerText = (interactive.footerText && String(interactive.footerText).trim()) ? toWhatsappMarkdown(String(interactive.footerText).trim()) : "Toque para escolher";
+
+  // Aplica markdown WhatsApp nos títulos/descrições das rows
+  const sectionsForBody = sanitizedSections.map((sec: any) => ({
+    ...sec,
+    title: toWhatsappMarkdown(sec.title),
+    rows: sec.rows.map((r: any) => ({
+      ...r,
+      title: toWhatsappMarkdown(r.title),
+      description: toWhatsappMarkdown(r.description),
+    })),
+  }));
 
   const body: any = {
     number,
@@ -2068,8 +2079,8 @@ async function sendWahaListMessage(
     description,
     buttonText,
     footerText,
-    sections: sanitizedSections,
-    values: sanitizedSections,
+    sections: sectionsForBody,
+    values: sectionsForBody,
     delay: 1200,
   };
   try {
@@ -2146,7 +2157,7 @@ async function sendWahaButtonsMessage(
   // Mantém compatibilidade com formato antigo (text/value/id).
   const buttons = (interactive.buttons || []).map((b: any, i: number) => {
     const btnType = b.type || "reply";
-    const displayText = b.displayText || b.text || b.label || `Opção ${i + 1}`;
+    const displayText = toWhatsappMarkdown(String(b.displayText || b.text || b.label || `Opção ${i + 1}`));
     const base: any = { type: btnType, displayText };
     if (btnType === "reply") base.id = b.id || b.value || `btn_${i}`;
     if (btnType === "url") base.url = b.url || "";
@@ -2163,9 +2174,9 @@ async function sendWahaButtonsMessage(
 
   const body: any = {
     number,
-    title: interactive.title || "",
-    description: interactive.description || "Escolha uma opção",
-    footer: interactive.footerText || interactive.footer || "",
+    title: toWhatsappMarkdown(interactive.title || ""),
+    description: toWhatsappMarkdown(interactive.description || "Escolha uma opção"),
+    footer: toWhatsappMarkdown(interactive.footerText || interactive.footer || ""),
     buttons,
   };
   if (interactive.thumbnailUrl) body.thumbnailUrl = interactive.thumbnailUrl;
