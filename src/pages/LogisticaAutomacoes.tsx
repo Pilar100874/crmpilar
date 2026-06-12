@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Save, X, Plus, Play, ZoomIn, ZoomOut, Maximize2, Minimize2, Blocks, Zap, Copy, Trash2, Edit } from "lucide-react";
 import { WorkflowCard, WorkflowCardGrid } from "@/components/ui/workflow-card";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import {
   Dialog,
   DialogContent,
@@ -1282,6 +1283,14 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        itemName={automacaoToDelete?.nome}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }
