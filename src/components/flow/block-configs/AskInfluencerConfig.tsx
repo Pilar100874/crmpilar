@@ -172,6 +172,18 @@ export const AskInfluencerConfig = ({ config, handleConfigChange }: Props) => {
       <div className="space-y-2">
         <Label className="flex items-center gap-2">
           <UserSquare2 className="h-3.5 w-3.5 text-purple-600" />
+          Título do cabeçalho <span className="text-[10px] text-muted-foreground">(opcional, aparece em negrito acima da pergunta no WhatsApp)</span>
+        </Label>
+        <Input
+          value={config.headerTitle || ""}
+          onChange={(e) => handleConfigChange("headerTitle", e.target.value)}
+          placeholder="Ex.: Selecione o influencer"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="flex items-center gap-2">
+          <UserSquare2 className="h-3.5 w-3.5 text-purple-600" />
           Pergunta inicial
         </Label>
         <Input

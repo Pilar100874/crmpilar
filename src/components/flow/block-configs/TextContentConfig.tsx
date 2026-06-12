@@ -352,6 +352,16 @@ export const TextContentConfig = ({ config, handleConfigChange }: TextContentCon
 
       {blockMode === "advanced" && (
         <>
+          <div className="space-y-2">
+            <Label className="text-xs">
+              Título do cabeçalho <span className="text-[10px] text-muted-foreground">(opcional, aparece em negrito acima da pergunta no WhatsApp)</span>
+            </Label>
+            <Input
+              value={config.headerTitle || ""}
+              onChange={(e) => handleConfigChange("headerTitle", e.target.value)}
+              placeholder="Ex.: Conteúdo de texto"
+            />
+          </div>
           <FieldBlock fieldKey="title" config={config} handleConfigChange={handleConfigChange} />
           <FieldBlock fieldKey="subtitle" config={config} handleConfigChange={handleConfigChange} />
           <FieldBlock

@@ -1174,7 +1174,7 @@ serve(async (req) => {
             // 3 botões clicáveis (limite do WhatsApp). "Sair" via texto/typing.
             const interactive = {
               type: "buttons",
-              title: "",
+              title: cfg.headerTitle || "Imagem do produto",
               description: "Como você quer fornecer a imagem do produto?",
               footerText: "Digite 'sair' para cancelar",
               buttons: [
@@ -2234,14 +2234,21 @@ async function sendWahaButtonsMessage(
     return base;
   });
 
-  const titleStr = toWhatsappMarkdown(String(interactive.title || "").trim());
+  const rawTitle = String(interactive.title || "").trim();
+  const descStr = String(interactive.description || "Escolha uma opção").trim();
+  // Evolution renderiza "*${title}*\n\n${description}" SEMPRE — se title vier null/undefined
+  // aparece literalmente "*undefined*". Por isso garantimos um título não-vazio derivando da
+  // primeira linha da descrição quando o usuário não preencheu nada.
+  const fallbackFromDesc = descStr.split("\n")[0].slice(0, 60).trim();
+  const titleStr = toWhatsappMarkdown(rawTitle || fallbackFromDesc || "Atendimento");
+  const remainingDesc = rawTitle ? descStr : descStr.replace(fallbackFromDesc, "").replace(/^\n+/, "").trim();
   const footerStr = toWhatsappMarkdown(String(interactive.footerText || interactive.footer || "").trim());
   const body: any = {
     number,
-    description: toWhatsappMarkdown(interactive.description || "Escolha uma opção"),
+    title: titleStr,
+    description: toWhatsappMarkdown(remainingDesc || titleStr),
     buttons,
   };
-  if (titleStr) body.title = titleStr;
   if (footerStr) body.footer = footerStr;
   if (interactive.thumbnailUrl) body.thumbnailUrl = interactive.thumbnailUrl;
   if (interactive.mediaType) body.mediaType = interactive.mediaType;
@@ -2312,13 +2319,14 @@ async function sendWahaCarouselMessage(
     return card;
   });
 
-  const titleStr = toWhatsappMarkdown(String(interactive.title || "").trim());
+  const rawCarouselTitle = String(interactive.title || "").trim();
+  const titleStr = toWhatsappMarkdown(rawCarouselTitle || "Confira as opções");
   const body: any = {
     number,
+    title: titleStr,
     cards,
     delay: 1200,
   };
-  if (titleStr) body.title = titleStr;
 
   try {
     console.log(`[EVOLUTION] Enviando CAROUSEL -> ${number}`, { instance, cardsCount: cards.length });
@@ -3852,9 +3860,9 @@ async function executeNode(
           ];
           const tcInteractive = {
             type: "buttons",
-            title: "",
+            title: itp(cfg.headerTitle || ""),
             description: q,
-            footerText: "",
+            footerText: itp(cfg.footerText || ""),
             buttons: tcButtons,
           };
           fallback = `${q}\n1. Sim\n2. Não\n3. Sair`;
@@ -3933,9 +3941,9 @@ async function executeNode(
         ];
         const interactive = {
           type: "buttons",
-          title: "",
+          title: itp(cfg.headerTitle || ""),
           description: q,
-          footerText: "",
+          footerText: itp(cfg.footerText || ""),
           buttons,
         };
         let fallback = q;
