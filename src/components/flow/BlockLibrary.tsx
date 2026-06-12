@@ -135,7 +135,7 @@ const blockCategories = [
     iconColor: "text-rose-600",
     iconHover: "group-hover:text-rose-700",
     textHover: "group-hover:text-rose-700",
-    blocks: ["webhook", "dynamic_data", "api_loop", "trigger_automation", "trigger_workflow", "send_whatsapp_to_number", "return_response", "publish_social_post"] as NodeType[],
+    blocks: ["webhook", "dynamic_data", "api_loop", "trigger_workflow", "send_whatsapp_to_number", "return_response", "publish_social_post"] as NodeType[],
   },
 ];
 
