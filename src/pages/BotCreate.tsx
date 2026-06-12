@@ -615,6 +615,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                           setSelectedBot(bot);
                           setDuplicateName(`${bot.name} (cópia)`);
                           setDuplicateDescription(bot.description || "");
+                          setDuplicateCanal(bot.canais?.[0] || "whatsapp");
                           setDuplicateWhatsAppType(bot.whatsapp_type || "waha");
                           setDuplicateDialogOpen(true);
                         }}
