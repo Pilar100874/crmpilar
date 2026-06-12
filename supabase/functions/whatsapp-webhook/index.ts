@@ -124,15 +124,20 @@ function resolveWahaSession(raw: any): string {
 // Extrai texto da mensagem Evolution (data.message)
 function extractEvolutionText(msg: any): string {
   if (!msg) return "";
+  // IMPORTANTE: respostas clicáveis (lista/botão) vêm com o ID estável em
+  // selectedRowId / selectedButtonId / selectedId E ao mesmo tempo com o
+  // título visível em msg.conversation. Precisamos priorizar o ID para que
+  // handlers como "pim_pick_1", "infl_pick_2", "pim_m_text" funcionem.
   return (
+    msg.listResponseMessage?.singleSelectReply?.selectedRowId ||
+    msg.buttonsResponseMessage?.selectedButtonId ||
+    msg.templateButtonReplyMessage?.selectedId ||
+    msg.interactiveResponseMessage?.body?.text ||
     msg.conversation ||
     msg.extendedTextMessage?.text ||
     msg.imageMessage?.caption ||
     msg.videoMessage?.caption ||
     msg.documentMessage?.caption ||
-    msg.buttonsResponseMessage?.selectedButtonId ||
-    msg.listResponseMessage?.singleSelectReply?.selectedRowId ||
-    msg.templateButtonReplyMessage?.selectedId ||
     ""
   );
 }
