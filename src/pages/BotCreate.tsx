@@ -243,14 +243,20 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
     }
   };
 
-  const handleDeleteBot = async (botId: string, botName: string) => {
-    if (!confirm(`Tem certeza que deseja excluir o bot "${botName}"?`)) return;
+  const handleDeleteBot = (botId: string, botName: string) => {
+    setBotToDelete({ id: botId, name: botName });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDeleteBot = async () => {
+    if (!botToDelete) return;
+    setIsDeleting(true);
 
     try {
       const { error } = await supabase
         .from("bot_flows")
         .delete()
-        .eq("id", botId);
+        .eq("id", botToDelete.id);
 
       if (error) throw error;
 
@@ -259,6 +265,10 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
     } catch (error) {
       console.error("Error deleting bot:", error);
       toast.error("Erro ao excluir bot");
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setBotToDelete(null);
     }
   };
 
