@@ -1120,11 +1120,26 @@ serve(async (req) => {
             for (let i = 0; i < images.length; i++) {
               await respond(`Opção ${i + 1}`, images[i], "image");
             }
-            let menu = "Escolha a imagem do produto respondendo com o número:";
-            images.forEach((_, i) => { menu += `\n${i + 1}. ✅ Usar opção ${i + 1}`; });
-            menu += `\n${images.length + 1}. 🔄 Gerar mais ${count}`;
-            menu += `\n${images.length + 2}. Sair`;
-            await respond(menu);
+            const rows = images.map((_, i) => ({
+              rowId: `pim_pick_${i}`,
+              title: `Usar opção ${i + 1}`.slice(0, 24),
+              description: `✅ Selecionar imagem ${i + 1}`,
+            }));
+            rows.push({ rowId: "pim_regen", title: `Gerar mais ${count}`, description: "🔄 Novas variações" });
+            rows.push({ rowId: "pim_exit", title: "Sair", description: "Cancelar" });
+            const interactive = {
+              type: "list",
+              title: "Imagem do produto",
+              description: "Escolha a melhor imagem:",
+              buttonText: "Ver opções",
+              footerText: "Toque para escolher",
+              sections: [{ title: "Opções", rows }],
+            };
+            let fallback = "Escolha a imagem do produto respondendo com o número:";
+            images.forEach((_, i) => { fallback += `\n${i + 1}. ✅ Usar opção ${i + 1}`; });
+            fallback += `\n${images.length + 1}. 🔄 Gerar mais ${count}`;
+            fallback += `\n${images.length + 2}. Sair`;
+            await respond(fallback, undefined, undefined, interactive);
             shouldReturn = true;
           } catch (e: any) {
             console.error("[PIM] erro ao gerar amostras:", e);
@@ -1151,12 +1166,24 @@ serve(async (req) => {
             const codeP = cfg.codePrompt || "Digite o código (ou nome) do produto:";
             const photoP = cfg.photoPrompt || "📷 Envie agora a foto do produto como anexo no WhatsApp:";
             const textP = cfg.textPrompt || "Descreva o produto em texto:";
-            let menu = "Como você quer fornecer a imagem do produto?";
-            menu += `\n1. 🔢 Digitar código do produto`;
-            menu += `\n2. 📷 Enviar foto (anexo)`;
-            menu += `\n3. ✍️ Descrever em texto`;
-            menu += `\n4. Sair`;
-            await respond(menu);
+            // 3 botões clicáveis (limite do WhatsApp). "Sair" via texto/typing.
+            const interactive = {
+              type: "buttons",
+              title: "",
+              description: "Como você quer fornecer a imagem do produto?",
+              footerText: "Digite 'sair' para cancelar",
+              buttons: [
+                { type: "reply", id: "pim_m_code",  text: "🔢 Digitar código",  displayText: "🔢 Digitar código" },
+                { type: "reply", id: "pim_m_photo", text: "📷 Enviar foto",     displayText: "📷 Enviar foto" },
+                { type: "reply", id: "pim_m_text",  text: "✍️ Descrever",       displayText: "✍️ Descrever" },
+              ],
+            };
+            let fallback = "Como você quer fornecer a imagem do produto?";
+            fallback += `\n1. 🔢 Digitar código do produto`;
+            fallback += `\n2. 📷 Enviar foto (anexo)`;
+            fallback += `\n3. ✍️ Descrever em texto`;
+            fallback += `\n4. Sair`;
+            await respond(fallback, undefined, undefined, interactive);
             context.vars.__pim_sub = "method";
             context.vars.__pim_prompts = { code: codeP, photo: photoP, text: textP };
             shouldReturn = true;
@@ -1164,11 +1191,11 @@ serve(async (req) => {
         } else if (subState === "method") {
           const r = userResponse.toLowerCase();
           let method: string | null = null;
-          if (r === "1" || r.includes("codigo") || r.includes("código") || r === "code") method = "code";
-          else if (r === "2" || r.includes("foto") || r.includes("photo") || r.includes("url")) method = "photo";
-          else if (r === "3" || r.includes("texto") || r.includes("descre") || r === "text") method = "text";
+          if (r === "1" || r === "pim_m_code" || r.includes("codigo") || r.includes("código") || r === "code") method = "code";
+          else if (r === "2" || r === "pim_m_photo" || r.includes("foto") || r.includes("photo") || r.includes("url")) method = "photo";
+          else if (r === "3" || r === "pim_m_text" || r.includes("texto") || r.includes("descre") || r === "text") method = "text";
           if (!method) {
-            await respond("Por favor, responda com 1, 2 ou 3.");
+            await respond("Por favor, toque em uma das opções ou responda com 1, 2 ou 3.");
             shouldReturn = true;
           } else {
             const prompts = context.vars.__pim_prompts || {};
@@ -1236,11 +1263,15 @@ serve(async (req) => {
           }
         } else if (subState === "sample_select") {
           const samples: string[] = Array.isArray(context.vars.__pim_samples) ? context.vars.__pim_samples : [];
-          const idx = parseInt(userResponse) - 1;
+          const rRaw = userResponse.toLowerCase();
+          let idx = NaN;
+          const m = rRaw.match(/^pim_pick_(\d+)$/);
+          if (m) idx = parseInt(m[1]);
+          else idx = parseInt(userResponse) - 1;
           const regenIndex = samples.length;
           const exitIndex = samples.length + 1;
 
-          if (userResponse.toLowerCase() === "regen" || idx === regenIndex) {
+          if (rRaw === "regen" || rRaw === "pim_regen" || idx === regenIndex) {
             const desc = context.vars.__pim_description || context.vars[descVar] || "";
             if (!desc) {
               await respond("⚠️ Sem descrição para gerar novas opções. Descreva o produto novamente.");
@@ -1249,7 +1280,7 @@ serve(async (req) => {
             } else {
               await generateAndAskProductSamples(desc);
             }
-          } else if (userResponse.toLowerCase() === "cancelar" || idx === exitIndex) {
+          } else if (rRaw === "cancelar" || rRaw === "sair" || rRaw === "pim_exit" || idx === exitIndex) {
             await respond("Atendimento encerrado. Quando quiser retomar, é só enviar uma nova mensagem. 👋");
             context = { vars: { from, phoneNumber: from, session: wahaSession } };
             const sbCli = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -1258,7 +1289,7 @@ serve(async (req) => {
             shouldSaveContext = false;
             shouldReturn = true;
           } else if (isNaN(idx) || idx < 0 || idx >= samples.length) {
-            await respond(`Por favor, responda com um número entre 1 e ${samples.length + 2}.`);
+            await respond(`Por favor, toque em uma das opções da lista ou responda com um número entre 1 e ${samples.length + 2}.`);
             shouldReturn = true;
           } else {
             const selected = samples[idx];
