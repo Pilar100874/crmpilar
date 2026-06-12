@@ -403,7 +403,12 @@ function EcommerceRulesEditorInner() {
             onConnect={onConnect}
             onConnectStart={onConnectStart}
             onConnectEnd={onConnectEnd}
-            onInit={setReactFlowInstance}
+            onInit={(instance) => {
+              setReactFlowInstance(instance);
+              setTimeout(() => {
+                instance.fitView({ padding: 0.2, duration: 400, maxZoom: 1.0, minZoom: 0.5 });
+              }, 100);
+            }}
             onDrop={onDrop}
             onDragOver={onDragOver}
             onNodeClick={handleNodeClick}

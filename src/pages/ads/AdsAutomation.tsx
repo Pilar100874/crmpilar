@@ -916,8 +916,8 @@ function AdsAutomationContent() {
                 onInit={(instance) => {
                   setReactFlowInstance(instance);
                   setTimeout(() => {
-                    instance.setViewport({ x: 0, y: 0, zoom: 1.0 });
-                  }, 0);
+                    instance.fitView({ padding: 0.2, duration: 400, maxZoom: 1.0, minZoom: 0.5 });
+                  }, 100);
                 }}
                 onDrop={onDrop}
                 onDragOver={onDragOver}
