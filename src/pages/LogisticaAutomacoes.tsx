@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Save, X, Plus, Play, ZoomIn, ZoomOut, Maximize2, Minimize2, Blocks, Zap, Copy, Trash2, Edit } from "lucide-react";
 import { WorkflowCard, WorkflowCardGrid } from "@/components/ui/workflow-card";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import {
   Dialog,
   DialogContent,
@@ -888,8 +889,8 @@ function EditorContent({
             onInit={(instance) => {
               setReactFlowInstance(instance);
               setTimeout(() => {
-                instance.setViewport({ x: 0, y: 0, zoom: 1.0 });
-              }, 0);
+                instance.fitView({ padding: 0.2, duration: 400, maxZoom: 1.0, minZoom: 0.5 });
+              }, 100);
             }}
             onDrop={onDrop}
             onDragOver={onDragOver}
@@ -1039,6 +1040,9 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
   const [renameName, setRenameName] = useState("");
   const [isRenaming, setIsRenaming] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [automacaoToDelete, setAutomacaoToDelete] = useState<AutomacaoLogistica | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadAutomacoes();
@@ -1088,17 +1092,22 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Deseja realmente excluir esta automação?")) return;
+  const handleDelete = (automacao: AutomacaoLogistica) => {
+    setAutomacaoToDelete(automacao);
+    setDeleteDialogOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!automacaoToDelete) return;
+    setIsDeleting(true);
     try {
       const { error } = await (supabase as any)
         .from("logistica_automacoes")
         .delete()
-        .eq("id", id);
+        .eq("id", automacaoToDelete.id);
 
       if (error) throw error;
-      setAutomacoes(prev => prev.filter(a => a.id !== id));
+      setAutomacoes(prev => prev.filter(a => a.id !== automacaoToDelete.id));
       toast({ title: "Automação excluída" });
     } catch (error) {
       toast({
@@ -1106,6 +1115,11 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
         description: "Não foi possível excluir",
         variant: "destructive",
       });
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setAutomacaoToDelete(null);
+      setTimeout(() => { document.body.style.pointerEvents = ""; }, 100);
     }
   };
 
@@ -1215,7 +1229,7 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
               }}
               onDelete={() => {
                 setOpenMenuId(null);
-                handleDelete(automacao.id);
+                handleDelete(automacao);
               }}
               onOpenEditor={() => onEdit(automacao.id)}
             />
@@ -1269,6 +1283,14 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        itemName={automacaoToDelete?.nome}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

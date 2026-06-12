@@ -836,7 +836,12 @@ export default function OmnichannelBuilder() {
             onPaneClick={onPaneClick}
             onDrop={onDrop}
             onDragOver={onDragOver}
-            onInit={setReactFlowInstance}
+            onInit={(instance) => {
+              setReactFlowInstance(instance);
+              setTimeout(() => {
+                instance.fitView({ padding: 0.2, duration: 400, maxZoom: 1.0, minZoom: 0.5 });
+              }, 100);
+            }}
             nodeTypes={nodeTypes}
             nodesDraggable={!isLocked}
             nodesConnectable={!isLocked}

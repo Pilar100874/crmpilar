@@ -12,6 +12,7 @@ import {
   FolderOpen, FileJson, Copy, Check
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import NodeLibrary from './NodeLibrary';
 import EditorCanvas from './EditorCanvas';
 import NodeConfigPanel from './NodeConfigPanel';
@@ -31,6 +32,8 @@ const N8nWorkflowEditor: React.FC<N8nWorkflowEditorProps> = ({ estabelecimentoId
   const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('editor');
   const [copied, setCopied] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [workflowToDelete, setWorkflowToDelete] = useState<N8nWorkflow | null>(null);
 
   const { data: nodeTypes = [] } = useNodeTypes();
   const { data: credentialTypes = [] } = useCredentialTypes();
@@ -233,15 +236,25 @@ const N8nWorkflowEditor: React.FC<N8nWorkflowEditorProps> = ({ estabelecimentoId
     setActiveTab('editor');
   };
 
-  const handleDeleteWorkflow = async (id: string) => {
-    if (confirm('Tem certeza que deseja excluir este workflow?')) {
-      await deleteWorkflow.mutateAsync(id);
-      if (currentWorkflowId === id) {
+  const handleDeleteWorkflow = (workflow: N8nWorkflow) => {
+    setWorkflowToDelete(workflow);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDeleteWorkflow = async () => {
+    if (!workflowToDelete) return;
+    try {
+      await deleteWorkflow.mutateAsync(workflowToDelete.id);
+      if (currentWorkflowId === workflowToDelete.id) {
         setCurrentWorkflowId(null);
         setWorkflowName('Novo Workflow');
         setNodes([]);
         setEdges([]);
       }
+    } finally {
+      setDeleteDialogOpen(false);
+      setWorkflowToDelete(null);
+      setTimeout(() => { document.body.style.pointerEvents = ""; }, 100);
     }
   };
 
@@ -415,15 +428,15 @@ const N8nWorkflowEditor: React.FC<N8nWorkflowEditorProps> = ({ estabelecimentoId
                           <Badge variant={wf.ativo ? 'default' : 'secondary'}>
                             {wf.ativo ? 'Ativo' : 'Rascunho'}
                           </Badge>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteWorkflow(wf.id);
-                            }}
-                          >
+                            <Button
+                             variant="ghost"
+                             size="icon"
+                             className="h-8 w-8 text-destructive hover:text-destructive"
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               handleDeleteWorkflow(wf);
+                             }}
+                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -452,6 +465,14 @@ const N8nWorkflowEditor: React.FC<N8nWorkflowEditorProps> = ({ estabelecimentoId
         onClose={() => setSelectedNode(null)}
         onSave={handleNodeUpdate}
         onDelete={handleDeleteNode}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDeleteWorkflow}
+        itemName={workflowToDelete?.nome}
+        isLoading={deleteWorkflow.isPending}
       />
     </div>
   );

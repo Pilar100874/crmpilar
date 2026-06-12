@@ -780,7 +780,12 @@ function EditorRegrasContent() {
           onConnectStart={isLocked ? undefined : onConnectStart}
           onConnectEnd={isLocked ? undefined : onConnectEnd}
           onEdgesDelete={isLocked ? undefined : onEdgesDelete}
-          onInit={setReactFlowInstance}
+          onInit={(instance) => {
+            setReactFlowInstance(instance);
+            setTimeout(() => {
+              instance.fitView({ padding: 0.2, duration: 400, maxZoom: 1.0, minZoom: 0.5 });
+            }, 100);
+          }}
           onDrop={isLocked ? undefined : onDrop}
           onDragOver={isLocked ? undefined : onDragOver}
           onNodeClick={onNodeClick}
