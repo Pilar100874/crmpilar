@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Type, Info, Sparkles, MessageCircleQuestion, Lock, ListChecks, Plus, Trash2, Hash } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface TextContentConfigProps {
   config: any;
