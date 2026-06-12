@@ -2280,6 +2280,7 @@ async function sendWahaMediaMessage(
   }
   const instance = sessionName || "default";
   const number = String(toNumberOnly).replace(/\D/g, "");
+  if (caption) caption = toWhatsappMarkdown(caption);
 
   const lower = (mediaType || "").toLowerCase();
   // Evolution aceita: image | video | document | audio
