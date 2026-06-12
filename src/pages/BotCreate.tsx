@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Plus, Workflow, ArrowRight, Smartphone } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,6 +54,9 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
   const [renameDescription, setRenameDescription] = useState("");
   const [isDuplicating, setIsDuplicating] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [botToDelete, setBotToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // WhatsApp Sessions
@@ -239,14 +243,20 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
     }
   };
 
-  const handleDeleteBot = async (botId: string, botName: string) => {
-    if (!confirm(`Tem certeza que deseja excluir o bot "${botName}"?`)) return;
+  const handleDeleteBot = (botId: string, botName: string) => {
+    setBotToDelete({ id: botId, name: botName });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDeleteBot = async () => {
+    if (!botToDelete) return;
+    setIsDeleting(true);
 
     try {
       const { error } = await supabase
         .from("bot_flows")
         .delete()
-        .eq("id", botId);
+        .eq("id", botToDelete.id);
 
       if (error) throw error;
 
@@ -255,6 +265,10 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
     } catch (error) {
       console.error("Error deleting bot:", error);
       toast.error("Erro ao excluir bot");
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setBotToDelete(null);
     }
   };
 
@@ -1015,6 +1029,14 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDeleteBot}
+        itemName={botToDelete?.name}
+        isLoading={isDeleting}
+      />
 
     </div>
   );
