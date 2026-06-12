@@ -2519,10 +2519,8 @@ async function executeNode(
       }
       let fallbackTxt = bodyText + "";
       buttons.forEach((b: any, i: number) => { fallbackTxt += `\n${i + 1}. ${b.text || b.title}`; });
-      // No Evolution/WhatsApp real, reply buttons podem ficar PENDING após envio de mídia.
-      // Envia texto numerado para garantir que o bloco subsequente apareça e continue respondível por número.
-      const usePlainText = context?.vars?.session;
-      await onResponse(fallbackTxt, undefined, undefined, usePlainText ? undefined : interactive);
+      // Envia como reply buttons (quick reply) — sendWahaButtonsMessage já faz fallback de texto se a entrega falhar.
+      await onResponse(fallbackTxt, undefined, undefined, interactive);
       context.pendingNodeId = node.id;
 
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -3494,8 +3492,20 @@ async function executeNode(
         } else {
           // Modo advanced: Sim/Não → se Sim, pergunta método (Digitar / IA) → coleta
           const q = itp(cfg.askPrompt || "Deseja incluir conteúdo de texto (título/subtítulo/corpo) na peça?");
+          const tcButtons = [
+            { text: "Sim", id: "tc_sim" },
+            { text: "Não", id: "tc_nao" },
+            { text: "Sair", id: "__exit__" },
+          ];
+          const tcInteractive = {
+            type: "buttons",
+            title: "",
+            description: q,
+            footerText: "",
+            buttons: tcButtons,
+          };
           fallback = `${q}\n1. Sim\n2. Não\n3. Sair`;
-          await onResponse(fallback);
+          await onResponse(fallback, undefined, undefined, tcInteractive);
           context.vars.__tc_sub = "choice";
           context.pendingNodeId = node.id;
           const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -3577,10 +3587,8 @@ async function executeNode(
         };
         let fallback = q;
         buttons.forEach((b: any, i: number) => { fallback += `\n${i + 1}. ${b.text}`; });
-        // No Evolution, botões podem retornar 201 mas não aparecer no celular.
-        // Envia texto numerado para manter o mesmo comportamento confiável do tipo de conteúdo.
-        const usePlainText = context?.vars?.session;
-        await onResponse(fallback, undefined, undefined, usePlainText ? undefined : interactive);
+        // Envia como reply buttons (quick reply) — fallback de texto é automático em caso de falha.
+        await onResponse(fallback, undefined, undefined, interactive);
         context.pendingNodeId = node.id;
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
         const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
