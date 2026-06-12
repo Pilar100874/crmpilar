@@ -1018,15 +1018,30 @@ serve(async (req) => {
                 await respond("⚠️ Nenhum influencer disponível. Seguindo sem influencer.");
                 await advance();
               } else {
-                await respond(`Encontrei ${list.length} influencer(s). Veja as opções abaixo:`);
+                await respond(`Encontrei ${list.length} influencer(s). Veja as fotos abaixo e toque em *Ver opções* para escolher:`);
                 for (let i = 0; i < list.length; i++) {
                   const it = list[i];
                   await respond(`${i + 1}. ${it.nome || `Influencer ${i + 1}`}`, it.image_url, "image");
                 }
-                let menu = "Selecione um influencer respondendo com o número:";
-                list.forEach((it: any, i: number) => { menu += `\n${i + 1}. ${it.nome || `Influencer ${i + 1}`}`; });
-                menu += `\n${list.length + 1}. Sair`;
-                await respond(menu);
+                // Lista interativa clicável
+                const rows = list.slice(0, 9).map((it: any, i: number) => ({
+                  rowId: `infl_pick_${i}`,
+                  title: (it.nome || `Influencer ${i + 1}`).slice(0, 24),
+                  description: `Opção ${i + 1}`,
+                }));
+                rows.push({ rowId: "infl_pick_exit", title: "Sair", description: "Cancelar seleção" });
+                const interactive = {
+                  type: "list",
+                  title: "Influencers",
+                  description: "Selecione o influencer da peça:",
+                  buttonText: "Ver opções",
+                  footerText: "Toque para escolher",
+                  sections: [{ title: "Disponíveis", rows }],
+                };
+                let fallback = "Selecione um influencer respondendo com o número:";
+                list.forEach((it: any, i: number) => { fallback += `\n${i + 1}. ${it.nome || `Influencer ${i + 1}`}`; });
+                fallback += `\n${list.length + 1}. Sair`;
+                await respond(fallback, undefined, undefined, interactive);
                 context.vars.__infl_sub = "gallery_select";
                 context.vars.__infl_gallery = list.map((it: any) => ({ id: it.id, nome: it.nome, image_url: it.image_url }));
                 // mantém pendingNodeId
