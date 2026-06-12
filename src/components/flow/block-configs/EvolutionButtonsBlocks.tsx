@@ -26,6 +26,46 @@ const EvolutionWarning = () => (
   </div>
 );
 
+const TemplateToggle = ({ config, handleConfigChange }: ConfigProps) => (
+  <div className="rounded-lg border p-3 space-y-2">
+    <div className="flex items-center justify-between gap-3">
+      <div className="space-y-0.5">
+        <Label className="text-sm">É um template aprovado pela Meta?</Label>
+        <p className="text-xs text-muted-foreground">
+          Necessário para enviar este botão pela Cloud API oficial. Na Evolution funciona em qualquer caso.
+        </p>
+      </div>
+      <Switch
+        checked={config.isApprovedTemplate === true}
+        onCheckedChange={(v) => handleConfigChange("isApprovedTemplate", v)}
+      />
+    </div>
+    {config.isApprovedTemplate === true ? (
+      <div className="space-y-2 pt-1">
+        <Label className="text-xs">Nome do template aprovado *</Label>
+        <Input
+          value={config.templateName || ""}
+          onChange={(e) => handleConfigChange("templateName", e.target.value)}
+          placeholder="nome_do_template_meta"
+        />
+        <Label className="text-xs">Idioma (locale)</Label>
+        <Input
+          value={config.templateLanguage || "pt_BR"}
+          onChange={(e) => handleConfigChange("templateLanguage", e.target.value)}
+          placeholder="pt_BR"
+        />
+      </div>
+    ) : (
+      <div className="flex gap-2 text-xs bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded p-2">
+        <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+        <span className="text-amber-800 dark:text-amber-300">
+          Sem template aprovado, este bloco só funciona em números Evolution API.
+        </span>
+      </div>
+    )}
+  </div>
+);
+
 const TextBaseFields = ({ config, handleConfigChange }: ConfigProps) => (
   <>
     <div className="space-y-2">
@@ -64,7 +104,7 @@ export const ButtonUrlConfig = (props: ConfigProps) => {
   const { config, handleConfigChange } = props;
   return (
     <div className="space-y-4">
-      <EvolutionWarning />
+      <TemplateToggle {...props} />
       <TextBaseFields {...props} />
       <div className="space-y-2">
         <Label>Texto do botão</Label>
@@ -93,7 +133,7 @@ export const ButtonCopyConfig = (props: ConfigProps) => {
   const { config, handleConfigChange } = props;
   return (
     <div className="space-y-4">
-      <EvolutionWarning />
+      <TemplateToggle {...props} />
       <TextBaseFields {...props} />
       <div className="space-y-2">
         <Label>Texto do botão</Label>
@@ -122,7 +162,7 @@ export const ButtonCallConfig = (props: ConfigProps) => {
   const { config, handleConfigChange } = props;
   return (
     <div className="space-y-4">
-      <EvolutionWarning />
+      <TemplateToggle {...props} />
       <TextBaseFields {...props} />
       <div className="space-y-2">
         <Label>Texto do botão</Label>
