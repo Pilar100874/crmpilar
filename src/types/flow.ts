@@ -52,7 +52,14 @@ export type NodeType =
   | "ask_influencer"
   | "ask_product_image"
   | "trigger_workflow"
-  | "return_response";
+  | "return_response"
+  | "button_url"
+  | "button_copy"
+  | "button_call"
+  | "button_pix"
+  | "buttons_mixed"
+  | "buttons_media"
+  | "carousel";
 
 
 export interface BlockDefinition {
