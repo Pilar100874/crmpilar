@@ -1359,31 +1359,39 @@ serve(async (req) => {
 
         if (subState === "choice") {
           const r = userResponse.toLowerCase();
-          const isYes = r === "1" || r === "sim" || r === "s";
-          const isNo = r === "2" || r === "nao" || r === "não" || r === "n";
+          const isYes = r === "1" || r === "sim" || r === "s" || r === "tc_sim";
+          const isNo = r === "2" || r === "nao" || r === "não" || r === "n" || r === "tc_nao";
           if (!isYes && !isNo) {
-            await respond("Por favor, responda com 1 (Sim), 2 (Não) ou 3 (Sair).");
+            await respond("Por favor, toque em *Sim*, *Não* ou *Sair*.");
             shouldReturn = true;
           } else if (isNo) {
             context.vars.text_content_choice = "nao";
             await advanceTc();
           } else {
             context.vars.text_content_choice = "sim";
-            let menu = "Como você quer fornecer o texto?";
-            menu += `\n1. ✍️ Digitar eu mesmo`;
-            menu += `\n2. 🤖 Gerar com IA`;
-            menu += `\n3. Sair`;
-            await respond(menu);
+            const methodInteractive = {
+              type: "buttons",
+              title: cfg.headerTitle || "Conteúdo de texto",
+              description: "Como você quer fornecer o texto?",
+              footerText: "",
+              buttons: [
+                { type: "reply", id: "tc_m_type", text: "✍️ Digitar eu mesmo", displayText: "✍️ Digitar eu mesmo" },
+                { type: "reply", id: "tc_m_ai",   text: "🤖 Gerar com IA",    displayText: "🤖 Gerar com IA" },
+                { type: "reply", id: "__exit__",  text: "Sair",                displayText: "Sair" },
+              ],
+            };
+            const fallback = "Como você quer fornecer o texto?\n1. ✍️ Digitar eu mesmo\n2. 🤖 Gerar com IA\n3. Sair";
+            await respond(fallback, undefined, undefined, methodInteractive);
             context.vars.__tc_sub = "method";
             shouldReturn = true;
           }
         } else if (subState === "method") {
           const r = userResponse.toLowerCase();
           let method: string | null = null;
-          if (r === "1" || r.includes("digit")) method = "type";
-          else if (r === "2" || r.includes("ia") || r.includes("ai")) method = "ai";
+          if (r === "1" || r === "tc_m_type" || r.includes("digit")) method = "type";
+          else if (r === "2" || r === "tc_m_ai" || r.includes("ia") || r.includes("ai")) method = "ai";
           if (!method) {
-            await respond("Por favor, responda com 1, 2 ou 3.");
+            await respond("Por favor, toque em *Digitar eu mesmo*, *Gerar com IA* ou *Sair*.");
             shouldReturn = true;
           } else if (method === "type") {
             context.vars.__tc_method = "type";
