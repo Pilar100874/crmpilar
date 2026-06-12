@@ -3941,9 +3941,9 @@ async function executeNode(
         ];
         const interactive = {
           type: "buttons",
-          title: "",
+          title: itp(cfg.headerTitle || ""),
           description: q,
-          footerText: "",
+          footerText: itp(cfg.footerText || ""),
           buttons,
         };
         let fallback = q;
