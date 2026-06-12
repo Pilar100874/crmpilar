@@ -1039,6 +1039,9 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
   const [renameName, setRenameName] = useState("");
   const [isRenaming, setIsRenaming] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [automacaoToDelete, setAutomacaoToDelete] = useState<AutomacaoLogistica | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadAutomacoes();
@@ -1088,17 +1091,22 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Deseja realmente excluir esta automação?")) return;
+  const handleDelete = (automacao: AutomacaoLogistica) => {
+    setAutomacaoToDelete(automacao);
+    setDeleteDialogOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!automacaoToDelete) return;
+    setIsDeleting(true);
     try {
       const { error } = await (supabase as any)
         .from("logistica_automacoes")
         .delete()
-        .eq("id", id);
+        .eq("id", automacaoToDelete.id);
 
       if (error) throw error;
-      setAutomacoes(prev => prev.filter(a => a.id !== id));
+      setAutomacoes(prev => prev.filter(a => a.id !== automacaoToDelete.id));
       toast({ title: "Automação excluída" });
     } catch (error) {
       toast({
@@ -1106,6 +1114,11 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
         description: "Não foi possível excluir",
         variant: "destructive",
       });
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setAutomacaoToDelete(null);
+      setTimeout(() => { document.body.style.pointerEvents = ""; }, 100);
     }
   };
 
