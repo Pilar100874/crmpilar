@@ -2627,6 +2627,135 @@ async function executeNode(
       );
       return;
     }
+    // ============ Evolution-only blocks ============
+    case "button_url":
+    case "button_copy":
+    case "button_call":
+    case "button_pix": {
+      const btnType = data.type.replace("button_", "") === "pix" ? "pix" : data.type.replace("button_", "");
+      const btn: any = { type: btnType, displayText: itp(cfg.displayText || "Abrir") };
+      if (btnType === "url") btn.url = itp(cfg.url || "");
+      if (btnType === "copy") btn.copyCode = itp(cfg.copyCode || "");
+      if (btnType === "call") btn.phoneNumber = itp(cfg.phoneNumber || "");
+      if (btnType === "pix") {
+        btn.currency = cfg.currency || "BRL";
+        btn.name = itp(cfg.name || "");
+        btn.keyType = cfg.keyType || "email";
+        btn.key = itp(cfg.pixKey || cfg.key || "");
+      }
+      const interactive = {
+        type: "buttons",
+        title: itp(cfg.title || ""),
+        description: itp(cfg.description || ""),
+        footerText: itp(cfg.footer || ""),
+        buttons: [btn],
+      };
+      await onResponse(itp(cfg.description || cfg.title || ""), undefined, undefined, interactive);
+      for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+      break;
+    }
+    case "buttons_mixed": {
+      const buttons = (cfg.buttons || []).slice(0, 3).map((b: any, i: number) => {
+        const t = b.type || "reply";
+        const out: any = { type: t, displayText: itp(b.displayText || `Opção ${i + 1}`) };
+        if (t === "reply") out.id = b.id || `btn_${i}`;
+        if (t === "url") out.url = itp(b.url || "");
+        if (t === "copy") out.copyCode = itp(b.copyCode || "");
+        if (t === "call") out.phoneNumber = itp(b.phoneNumber || "");
+        return out;
+      });
+      const interactive = {
+        type: "buttons",
+        title: itp(cfg.title || ""),
+        description: itp(cfg.description || ""),
+        footerText: itp(cfg.footer || ""),
+        buttons,
+      };
+      await onResponse(itp(cfg.description || ""), undefined, undefined, interactive);
+      // Se houver botões reply, fica pendente aguardando resposta
+      if (buttons.some((b: any) => b.type === "reply")) {
+        context.pendingNodeId = node.id;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
+        await supabase.from("chat_sessions").upsert(
+          { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+          { onConflict: "session_id" },
+        );
+        return;
+      }
+      for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+      break;
+    }
+    case "buttons_media": {
+      const buttons = (cfg.buttons || []).slice(0, 3).map((b: any, i: number) => ({
+        type: "reply",
+        displayText: itp(b.displayText || b.text || `Botão ${i + 1}`),
+        id: b.id || `btn_${i}`,
+      }));
+      const interactive = {
+        type: "buttons",
+        title: itp(cfg.title || ""),
+        description: itp(cfg.description || ""),
+        footerText: itp(cfg.footer || ""),
+        thumbnailUrl: itp(cfg.thumbnailUrl || ""),
+        mediaType: cfg.mediaType || "image",
+        buttons,
+      };
+      await onResponse(itp(cfg.description || ""), undefined, undefined, interactive);
+      context.pendingNodeId = node.id;
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
+      await supabase.from("chat_sessions").upsert(
+        { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+        { onConflict: "session_id" },
+      );
+      return;
+    }
+    case "carousel": {
+      let cards: any[] = [];
+      if (cfg.mode === "dynamic") {
+        try {
+          const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          let q = supabase.from("produtos").select("id, nome, preco, imagem_url").limit(Math.min(cfg.dynamicLimit || 10, 10));
+          if (cfg.dynamicGrupoId) q = q.eq("grupo_id", cfg.dynamicGrupoId);
+          if (cfg.dynamicCategoriaId) q = q.eq("categoria_id", cfg.dynamicCategoriaId);
+          const { data: prods } = await q;
+          cards = (prods || []).map((p: any, i: number) => ({
+            header: p.imagem_url || "",
+            body: `${p.nome}${p.preco ? ` — R$ ${Number(p.preco).toFixed(2)}` : ""}`,
+            footer: "",
+            buttonText: cfg.dynamicButtonText || "Selecionar",
+            buttonId: `prod_${p.id}`,
+          }));
+        } catch (e) {
+          console.error("[CAROUSEL] erro produtos dinâmicos:", e);
+        }
+      } else {
+        cards = (cfg.cards || []).slice(0, 10).map((c: any, i: number) => ({
+          header: itp(c.header || ""),
+          body: itp(c.body || ""),
+          footer: itp(c.footer || ""),
+          buttonText: itp(c.buttonText || "Selecionar"),
+          buttonId: c.buttonId || `card_${i}`,
+        }));
+      }
+      const interactive = {
+        type: "carousel",
+        title: itp(cfg.title || ""),
+        description: itp(cfg.description || ""),
+        footer: itp(cfg.footer || ""),
+        cards,
+      };
+      await onResponse(itp(cfg.description || cfg.title || ""), undefined, undefined, interactive);
+      context.pendingNodeId = node.id;
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
+      await supabase.from("chat_sessions").upsert(
+        { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+        { onConflict: "session_id" },
+      );
+      return;
+    }
       case "list_buttons": {
         const headerTxt = itp(cfg.text || cfg.headerText || "");
         // Suporta dois formatos: { items: [...] } simples ou { sections: [{ title, rows }] }
