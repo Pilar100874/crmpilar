@@ -104,7 +104,7 @@ export const ButtonUrlConfig = (props: ConfigProps) => {
   const { config, handleConfigChange } = props;
   return (
     <div className="space-y-4">
-      <EvolutionWarning />
+      <TemplateToggle {...props} />
       <TextBaseFields {...props} />
       <div className="space-y-2">
         <Label>Texto do botão</Label>
@@ -133,7 +133,7 @@ export const ButtonCopyConfig = (props: ConfigProps) => {
   const { config, handleConfigChange } = props;
   return (
     <div className="space-y-4">
-      <EvolutionWarning />
+      <TemplateToggle {...props} />
       <TextBaseFields {...props} />
       <div className="space-y-2">
         <Label>Texto do botão</Label>
@@ -162,7 +162,7 @@ export const ButtonCallConfig = (props: ConfigProps) => {
   const { config, handleConfigChange } = props;
   return (
     <div className="space-y-4">
-      <EvolutionWarning />
+      <TemplateToggle {...props} />
       <TextBaseFields {...props} />
       <div className="space-y-2">
         <Label>Texto do botão</Label>
