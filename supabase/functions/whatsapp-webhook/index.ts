@@ -1018,15 +1018,30 @@ serve(async (req) => {
                 await respond("⚠️ Nenhum influencer disponível. Seguindo sem influencer.");
                 await advance();
               } else {
-                await respond(`Encontrei ${list.length} influencer(s). Veja as opções abaixo:`);
+                await respond(`Encontrei ${list.length} influencer(s). Veja as fotos abaixo e toque em *Ver opções* para escolher:`);
                 for (let i = 0; i < list.length; i++) {
                   const it = list[i];
                   await respond(`${i + 1}. ${it.nome || `Influencer ${i + 1}`}`, it.image_url, "image");
                 }
-                let menu = "Selecione um influencer respondendo com o número:";
-                list.forEach((it: any, i: number) => { menu += `\n${i + 1}. ${it.nome || `Influencer ${i + 1}`}`; });
-                menu += `\n${list.length + 1}. Sair`;
-                await respond(menu);
+                // Lista interativa clicável
+                const rows = list.slice(0, 9).map((it: any, i: number) => ({
+                  rowId: `infl_pick_${i}`,
+                  title: (it.nome || `Influencer ${i + 1}`).slice(0, 24),
+                  description: `Opção ${i + 1}`,
+                }));
+                rows.push({ rowId: "infl_pick_exit", title: "Sair", description: "Cancelar seleção" });
+                const interactive = {
+                  type: "list",
+                  title: "Influencers",
+                  description: "Selecione o influencer da peça:",
+                  buttonText: "Ver opções",
+                  footerText: "Toque para escolher",
+                  sections: [{ title: "Disponíveis", rows }],
+                };
+                let fallback = "Selecione um influencer respondendo com o número:";
+                list.forEach((it: any, i: number) => { fallback += `\n${i + 1}. ${it.nome || `Influencer ${i + 1}`}`; });
+                fallback += `\n${list.length + 1}. Sair`;
+                await respond(fallback, undefined, undefined, interactive);
                 context.vars.__infl_sub = "gallery_select";
                 context.vars.__infl_gallery = list.map((it: any) => ({ id: it.id, nome: it.nome, image_url: it.image_url }));
                 // mantém pendingNodeId
@@ -1036,15 +1051,25 @@ serve(async (req) => {
           }
         } else if (subState === "gallery_select") {
           const list: any[] = Array.isArray(context.vars.__infl_gallery) ? context.vars.__infl_gallery : [];
-          const idx = parseInt(userResponse) - 1;
-          if (isNaN(idx) || idx < 0 || idx >= list.length) {
-            await respond(`Por favor, responda com um número entre 1 e ${list.length} ou ${list.length + 1} para sair.`);
-            shouldReturn = true;
-          } else {
-            const item = list[idx];
-            context.vars[outVar] = item.image_url;
-            await respond(`✅ Influencer "${item.nome || "selecionado"}" registrado.`, item.image_url, "image");
+          // Aceita rowId clicável (infl_pick_N / infl_pick_exit) ou número digitado
+          const r = userResponse.toLowerCase();
+          if (r === "infl_pick_exit" || r === `${list.length + 1}` || r === "sair") {
+            context.vars.tem_influencer = "nao";
             await advance();
+          } else {
+            let idx = -1;
+            const m = r.match(/^infl_pick_(\d+)$/);
+            if (m) idx = parseInt(m[1]);
+            else idx = parseInt(userResponse) - 1;
+            if (isNaN(idx) || idx < 0 || idx >= list.length) {
+              await respond(`Por favor, toque em uma das opções da lista ou responda com um número entre 1 e ${list.length} (ou ${list.length + 1} para sair).`);
+              shouldReturn = true;
+            } else {
+              const item = list[idx];
+              context.vars[outVar] = item.image_url;
+              await respond(`✅ Influencer "${item.nome || "selecionado"}" registrado.`, item.image_url, "image");
+              await advance();
+            }
           }
         }
       }
@@ -1095,11 +1120,26 @@ serve(async (req) => {
             for (let i = 0; i < images.length; i++) {
               await respond(`Opção ${i + 1}`, images[i], "image");
             }
-            let menu = "Escolha a imagem do produto respondendo com o número:";
-            images.forEach((_, i) => { menu += `\n${i + 1}. ✅ Usar opção ${i + 1}`; });
-            menu += `\n${images.length + 1}. 🔄 Gerar mais ${count}`;
-            menu += `\n${images.length + 2}. Sair`;
-            await respond(menu);
+            const rows = images.map((_, i) => ({
+              rowId: `pim_pick_${i}`,
+              title: `Usar opção ${i + 1}`.slice(0, 24),
+              description: `✅ Selecionar imagem ${i + 1}`,
+            }));
+            rows.push({ rowId: "pim_regen", title: `Gerar mais ${count}`, description: "🔄 Novas variações" });
+            rows.push({ rowId: "pim_exit", title: "Sair", description: "Cancelar" });
+            const interactive = {
+              type: "list",
+              title: "Imagem do produto",
+              description: "Escolha a melhor imagem:",
+              buttonText: "Ver opções",
+              footerText: "Toque para escolher",
+              sections: [{ title: "Opções", rows }],
+            };
+            let fallback = "Escolha a imagem do produto respondendo com o número:";
+            images.forEach((_, i) => { fallback += `\n${i + 1}. ✅ Usar opção ${i + 1}`; });
+            fallback += `\n${images.length + 1}. 🔄 Gerar mais ${count}`;
+            fallback += `\n${images.length + 2}. Sair`;
+            await respond(fallback, undefined, undefined, interactive);
             shouldReturn = true;
           } catch (e: any) {
             console.error("[PIM] erro ao gerar amostras:", e);
@@ -1126,12 +1166,24 @@ serve(async (req) => {
             const codeP = cfg.codePrompt || "Digite o código (ou nome) do produto:";
             const photoP = cfg.photoPrompt || "📷 Envie agora a foto do produto como anexo no WhatsApp:";
             const textP = cfg.textPrompt || "Descreva o produto em texto:";
-            let menu = "Como você quer fornecer a imagem do produto?";
-            menu += `\n1. 🔢 Digitar código do produto`;
-            menu += `\n2. 📷 Enviar foto (anexo)`;
-            menu += `\n3. ✍️ Descrever em texto`;
-            menu += `\n4. Sair`;
-            await respond(menu);
+            // 3 botões clicáveis (limite do WhatsApp). "Sair" via texto/typing.
+            const interactive = {
+              type: "buttons",
+              title: "",
+              description: "Como você quer fornecer a imagem do produto?",
+              footerText: "Digite 'sair' para cancelar",
+              buttons: [
+                { type: "reply", id: "pim_m_code",  text: "🔢 Digitar código",  displayText: "🔢 Digitar código" },
+                { type: "reply", id: "pim_m_photo", text: "📷 Enviar foto",     displayText: "📷 Enviar foto" },
+                { type: "reply", id: "pim_m_text",  text: "✍️ Descrever",       displayText: "✍️ Descrever" },
+              ],
+            };
+            let fallback = "Como você quer fornecer a imagem do produto?";
+            fallback += `\n1. 🔢 Digitar código do produto`;
+            fallback += `\n2. 📷 Enviar foto (anexo)`;
+            fallback += `\n3. ✍️ Descrever em texto`;
+            fallback += `\n4. Sair`;
+            await respond(fallback, undefined, undefined, interactive);
             context.vars.__pim_sub = "method";
             context.vars.__pim_prompts = { code: codeP, photo: photoP, text: textP };
             shouldReturn = true;
@@ -1139,11 +1191,11 @@ serve(async (req) => {
         } else if (subState === "method") {
           const r = userResponse.toLowerCase();
           let method: string | null = null;
-          if (r === "1" || r.includes("codigo") || r.includes("código") || r === "code") method = "code";
-          else if (r === "2" || r.includes("foto") || r.includes("photo") || r.includes("url")) method = "photo";
-          else if (r === "3" || r.includes("texto") || r.includes("descre") || r === "text") method = "text";
+          if (r === "1" || r === "pim_m_code" || r.includes("codigo") || r.includes("código") || r === "code") method = "code";
+          else if (r === "2" || r === "pim_m_photo" || r.includes("foto") || r.includes("photo") || r.includes("url")) method = "photo";
+          else if (r === "3" || r === "pim_m_text" || r.includes("texto") || r.includes("descre") || r === "text") method = "text";
           if (!method) {
-            await respond("Por favor, responda com 1, 2 ou 3.");
+            await respond("Por favor, toque em uma das opções ou responda com 1, 2 ou 3.");
             shouldReturn = true;
           } else {
             const prompts = context.vars.__pim_prompts || {};
@@ -1211,11 +1263,15 @@ serve(async (req) => {
           }
         } else if (subState === "sample_select") {
           const samples: string[] = Array.isArray(context.vars.__pim_samples) ? context.vars.__pim_samples : [];
-          const idx = parseInt(userResponse) - 1;
+          const rRaw = userResponse.toLowerCase();
+          let idx = NaN;
+          const m = rRaw.match(/^pim_pick_(\d+)$/);
+          if (m) idx = parseInt(m[1]);
+          else idx = parseInt(userResponse) - 1;
           const regenIndex = samples.length;
           const exitIndex = samples.length + 1;
 
-          if (userResponse.toLowerCase() === "regen" || idx === regenIndex) {
+          if (rRaw === "regen" || rRaw === "pim_regen" || idx === regenIndex) {
             const desc = context.vars.__pim_description || context.vars[descVar] || "";
             if (!desc) {
               await respond("⚠️ Sem descrição para gerar novas opções. Descreva o produto novamente.");
@@ -1224,7 +1280,7 @@ serve(async (req) => {
             } else {
               await generateAndAskProductSamples(desc);
             }
-          } else if (userResponse.toLowerCase() === "cancelar" || idx === exitIndex) {
+          } else if (rRaw === "cancelar" || rRaw === "sair" || rRaw === "pim_exit" || idx === exitIndex) {
             await respond("Atendimento encerrado. Quando quiser retomar, é só enviar uma nova mensagem. 👋");
             context = { vars: { from, phoneNumber: from, session: wahaSession } };
             const sbCli = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -1233,7 +1289,7 @@ serve(async (req) => {
             shouldSaveContext = false;
             shouldReturn = true;
           } else if (isNaN(idx) || idx < 0 || idx >= samples.length) {
-            await respond(`Por favor, responda com um número entre 1 e ${samples.length + 2}.`);
+            await respond(`Por favor, toque em uma das opções da lista ou responda com um número entre 1 e ${samples.length + 2}.`);
             shouldReturn = true;
           } else {
             const selected = samples[idx];
@@ -1748,7 +1804,7 @@ async function sendCloudText(phoneNumberId: string, accessToken: string, to: str
   const r = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
-    body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body: text } }),
+    body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body: toWhatsappMarkdown(text) } }),
   });
   const res = await r.json().catch(() => ({}));
   if (!r.ok) console.error("[CLOUD] sendText error:", res);
@@ -1768,7 +1824,7 @@ async function sendCloudMedia(
   const typeMap: Record<string, string> = { image: "image", video: "video", audio: "audio", file: "document", document: "document" };
   const t = typeMap[(mediaType || "").toLowerCase()] || "document";
   const body: any = { messaging_product: "whatsapp", to, type: t, [t]: { link: mediaUrl } };
-  if (caption && (t === "image" || t === "video" || t === "document")) body[t].caption = caption;
+  if (caption && (t === "image" || t === "video" || t === "document")) body[t].caption = toWhatsappMarkdown(caption);
   const r = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
@@ -1789,11 +1845,11 @@ async function sendCloudListMessage(
   if (!phoneNumberId || !accessToken) return false;
   try {
     const sections = (interactive.sections || []).map((s: any) => ({
-      title: (s.title || "Opções").slice(0, 24),
+      title: toWhatsappMarkdown((s.title || "Opções")).slice(0, 24),
       rows: (s.rows || []).slice(0, 10).map((r: any) => ({
         id: String(r.id || r.rowId || r.title || "").slice(0, 200),
-        title: String(r.title || "Opção").slice(0, 24),
-        description: r.description ? String(r.description).slice(0, 72) : undefined,
+        title: toWhatsappMarkdown(String(r.title || "Opção")).slice(0, 24),
+        description: r.description ? toWhatsappMarkdown(String(r.description)).slice(0, 72) : undefined,
       })),
     }));
     const payload = {
@@ -1802,9 +1858,9 @@ async function sendCloudListMessage(
       type: "interactive",
       interactive: {
         type: "list",
-        header: interactive.title ? { type: "text", text: String(interactive.title).slice(0, 60) } : undefined,
-        body: { text: String(interactive.description || bodyText || "Escolha uma opção").slice(0, 1024) },
-        footer: interactive.footer ? { text: String(interactive.footer).slice(0, 60) } : undefined,
+        header: interactive.title ? { type: "text", text: toWhatsappMarkdown(String(interactive.title)).slice(0, 60) } : undefined,
+        body: { text: toWhatsappMarkdown(String(interactive.description || bodyText || "Escolha uma opção")).slice(0, 1024) },
+        footer: interactive.footer ? { text: toWhatsappMarkdown(String(interactive.footer)).slice(0, 60) } : undefined,
         action: {
           button: String(interactive.buttonText || "Ver opções").slice(0, 20),
           sections,
@@ -1841,8 +1897,8 @@ async function sendCloudButtonsMessage(
     const buttons = (interactive.buttons || []).slice(0, 3).map((b: any) => ({
       type: "reply",
       reply: {
-        id: String(b.id || b.title || "").slice(0, 256),
-        title: String(b.title || "OK").slice(0, 20),
+        id: String(b.id || b.title || b.text || "").slice(0, 256),
+        title: toWhatsappMarkdown(String(b.title || b.text || "OK")).slice(0, 20),
       },
     }));
     if (!buttons.length) return false;
@@ -1852,7 +1908,7 @@ async function sendCloudButtonsMessage(
       type: "interactive",
       interactive: {
         type: "button",
-        body: { text: String(interactive.description || bodyText || "Escolha uma opção").slice(0, 1024) },
+        body: { text: toWhatsappMarkdown(String(interactive.description || bodyText || "Escolha uma opção")).slice(0, 1024) },
         action: { buttons },
       },
     };
@@ -1984,7 +2040,8 @@ function toWhatsappMarkdown(input: string): string {
   if (!input || typeof input !== "string") return input as any;
   let out = input;
   // Negrito: **texto** ou __texto__  →  *texto*
-  out = out.replace(/\*\*([^*\n]+?)\*\*/g, "*$1*");
+  // Substitui qualquer ocorrência de ** por * (cobre **bold**, ***bold***, **multi linha**, etc.)
+  out = out.replace(/\*\*+/g, "*");
   out = out.replace(/(^|[^_])__([^_\n]+?)__(?!_)/g, "$1*$2*");
   // Cabeçalhos markdown (### Título) → *Título*
   out = out.replace(/^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$/gm, "*$1*");
@@ -2057,10 +2114,21 @@ async function sendWahaListMessage(
     })),
   })).filter((s: any) => s.rows.length > 0);
 
-  const title = (interactive.title && String(interactive.title).trim()) ? String(interactive.title).trim().slice(0, 60) : "Escolha uma opção";
-  const description = (interactive.description && String(interactive.description).trim()) ? String(interactive.description).trim() : "Selecione abaixo";
+  const title = (interactive.title && String(interactive.title).trim()) ? toWhatsappMarkdown(String(interactive.title).trim()).slice(0, 60) : "Escolha uma opção";
+  const description = (interactive.description && String(interactive.description).trim()) ? toWhatsappMarkdown(String(interactive.description).trim()) : "Selecione abaixo";
   const buttonText = (interactive.buttonText && String(interactive.buttonText).trim()) ? String(interactive.buttonText).trim().slice(0, 20) : "Ver opções";
-  const footerText = (interactive.footerText && String(interactive.footerText).trim()) ? String(interactive.footerText).trim() : "Toque para escolher";
+  const footerText = (interactive.footerText && String(interactive.footerText).trim()) ? toWhatsappMarkdown(String(interactive.footerText).trim()) : "Toque para escolher";
+
+  // Aplica markdown WhatsApp nos títulos/descrições das rows
+  const sectionsForBody = sanitizedSections.map((sec: any) => ({
+    ...sec,
+    title: toWhatsappMarkdown(sec.title),
+    rows: sec.rows.map((r: any) => ({
+      ...r,
+      title: toWhatsappMarkdown(r.title),
+      description: toWhatsappMarkdown(r.description),
+    })),
+  }));
 
   const body: any = {
     number,
@@ -2068,8 +2136,8 @@ async function sendWahaListMessage(
     description,
     buttonText,
     footerText,
-    sections: sanitizedSections,
-    values: sanitizedSections,
+    sections: sectionsForBody,
+    values: sectionsForBody,
     delay: 1200,
   };
   try {
@@ -2146,7 +2214,7 @@ async function sendWahaButtonsMessage(
   // Mantém compatibilidade com formato antigo (text/value/id).
   const buttons = (interactive.buttons || []).map((b: any, i: number) => {
     const btnType = b.type || "reply";
-    const displayText = b.displayText || b.text || b.label || `Opção ${i + 1}`;
+    const displayText = toWhatsappMarkdown(String(b.displayText || b.text || b.label || `Opção ${i + 1}`));
     const base: any = { type: btnType, displayText };
     if (btnType === "reply") base.id = b.id || b.value || `btn_${i}`;
     if (btnType === "url") base.url = b.url || "";
@@ -2163,9 +2231,9 @@ async function sendWahaButtonsMessage(
 
   const body: any = {
     number,
-    title: interactive.title || "",
-    description: interactive.description || "Escolha uma opção",
-    footer: interactive.footerText || interactive.footer || "",
+    title: toWhatsappMarkdown(interactive.title || ""),
+    description: toWhatsappMarkdown(interactive.description || "Escolha uma opção"),
+    footer: toWhatsappMarkdown(interactive.footerText || interactive.footer || ""),
     buttons,
   };
   if (interactive.thumbnailUrl) body.thumbnailUrl = interactive.thumbnailUrl;
