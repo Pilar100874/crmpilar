@@ -466,6 +466,14 @@ const N8nWorkflowEditor: React.FC<N8nWorkflowEditorProps> = ({ estabelecimentoId
         onSave={handleNodeUpdate}
         onDelete={handleDeleteNode}
       />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDeleteWorkflow}
+        itemName={workflowToDelete?.nome}
+        isLoading={deleteWorkflow.isPending}
+      />
     </div>
   );
 };
