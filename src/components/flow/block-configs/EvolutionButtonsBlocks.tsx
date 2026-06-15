@@ -395,23 +395,25 @@ const MediaUrlOrUpload = ({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 min-w-0">
       <Label>Mídia *</Label>
-      <div className="grid grid-cols-3 gap-2 items-end">
-        <div className="col-span-2 space-y-2">
-          <Input
-            value={url}
-            onChange={(e) => onUrlChange(e.target.value)}
-            placeholder="https://...imagem.jpg ou video.mp4"
-          />
+      <div className="space-y-2 min-w-0">
+        <Input
+          value={url}
+          onChange={(e) => onUrlChange(e.target.value)}
+          placeholder="https://...imagem.jpg ou video.mp4"
+          className="w-full"
+        />
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Tipo de mídia</Label>
+          <Select value={mediaType} onValueChange={onTypeChange}>
+            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="image">Imagem</SelectItem>
+              <SelectItem value="video">Vídeo</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={mediaType} onValueChange={onTypeChange}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="image">Imagem</SelectItem>
-            <SelectItem value="video">Vídeo</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
       <input
         ref={fileRef}
@@ -435,7 +437,9 @@ const MediaUrlOrUpload = ({
         )}
       </Button>
       {url && (
-        <p className="text-xs text-muted-foreground truncate">Atual: {url}</p>
+        <p className="text-xs text-muted-foreground break-all whitespace-normal">
+          Atual: {url}
+        </p>
       )}
     </div>
   );
