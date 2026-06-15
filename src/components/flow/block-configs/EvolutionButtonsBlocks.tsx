@@ -3,11 +3,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, Trash2, AlertTriangle, Upload, Loader2 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/lib/toast-config";
 
 interface ConfigProps {
   config: any;
@@ -354,6 +357,90 @@ export const ButtonsMixedConfig = (props: ConfigProps) => {
 };
 
 // ============= Botões com Mídia =============
+// Helper: URL field + upload to bot-media bucket
+const MediaUrlOrUpload = ({
+  url, mediaType, onUrlChange, onTypeChange,
+}: {
+  url: string;
+  mediaType: string;
+  onUrlChange: (v: string) => void;
+  onTypeChange: (v: string) => void;
+}) => {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      const ext = file.name.split(".").pop();
+      const path = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { data, error } = await supabase.storage
+        .from("bot-media")
+        .upload(path, file, { cacheControl: "3600", upsert: false });
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from("bot-media").getPublicUrl(data.path);
+      onUrlChange(publicUrl);
+      if (file.type.startsWith("video/")) onTypeChange("video");
+      else if (file.type.startsWith("image/")) onTypeChange("image");
+      toast.success("Mídia enviada com sucesso!");
+    } catch (err) {
+      console.error("Upload error:", err);
+      toast.error("Erro ao enviar mídia.");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label>Mídia *</Label>
+      <div className="grid grid-cols-3 gap-2 items-end">
+        <div className="col-span-2 space-y-2">
+          <Input
+            value={url}
+            onChange={(e) => onUrlChange(e.target.value)}
+            placeholder="https://...imagem.jpg ou video.mp4"
+          />
+        </div>
+        <Select value={mediaType} onValueChange={onTypeChange}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="image">Imagem</SelectItem>
+            <SelectItem value="video">Vídeo</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*,video/*"
+        className="hidden"
+        onChange={handleUpload}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => fileRef.current?.click()}
+        disabled={uploading}
+        className="w-full"
+      >
+        {uploading ? (
+          <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Enviando...</>
+        ) : (
+          <><Upload className="w-4 h-4 mr-2" /> Fazer upload do arquivo</>
+        )}
+      </Button>
+      {url && (
+        <p className="text-xs text-muted-foreground truncate">Atual: {url}</p>
+      )}
+    </div>
+  );
+};
+
 export const ButtonsMediaConfig = (props: ConfigProps) => {
   const { config, handleConfigChange } = props;
   const buttons = config.buttons || [];
@@ -379,29 +466,12 @@ export const ButtonsMediaConfig = (props: ConfigProps) => {
       <EvolutionWarning />
       <TextBaseFields {...props} />
 
-      <div className="grid grid-cols-3 gap-2 items-end">
-        <div className="col-span-2 space-y-2">
-          <Label>URL da mídia *</Label>
-          <Input
-            value={config.thumbnailUrl || ""}
-            onChange={(e) => handleConfigChange("thumbnailUrl", e.target.value)}
-            placeholder="https://...imagem.jpg ou video.mp4"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Tipo</Label>
-          <Select
-            value={config.mediaType || "image"}
-            onValueChange={(v) => handleConfigChange("mediaType", v)}
-          >
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="image">Imagem</SelectItem>
-              <SelectItem value="video">Vídeo</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <MediaUrlOrUpload
+        url={config.thumbnailUrl || ""}
+        mediaType={config.mediaType || "image"}
+        onUrlChange={(v) => handleConfigChange("thumbnailUrl", v)}
+        onTypeChange={(v) => handleConfigChange("mediaType", v)}
+      />
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
