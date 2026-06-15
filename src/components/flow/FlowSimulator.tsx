@@ -1874,6 +1874,47 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         console.log("Waiting for button input, pendingVariable:", normalizeVarName(config.variable || "button_response"));
         break;
 
+      case "buttons_media": {
+        const bmTitle = interpolateVariables(config.title || "", context);
+        const bmDesc = interpolateVariables(config.description || "", context);
+        const bmFooter = interpolateVariables(config.footer || "", context);
+        const bmMedia = config.thumbnailUrl || config.mediaUrl || config.image;
+        const bmMediaType = config.mediaType || "image";
+        const bmButtons = config.buttons || [];
+
+        if (bmMedia) {
+          addBotMediaMessage(bmMedia, bmMediaType, "", node.id);
+        }
+        if (bmTitle) {
+          safeSetTimeout(() => addBotMessage(`*${bmTitle}*`, node.id), bmMedia ? 400 : 0);
+        }
+        const bmDelay = (bmMedia ? 400 : 0) + (bmTitle ? 300 : 0);
+        safeSetTimeout(() => {
+          setMessages((prev) => [...prev, {
+            id: uid(),
+            sender: "bot",
+            text: bmDesc || (bmButtons.length > 0 ? "Escolha uma opção:" : ""),
+            timestamp: new Date(),
+            nodeId: node.id,
+            buttons: bmButtons.map((btn: any, idx: number) => ({
+              text: btn.label || btn.text || `Botão ${idx + 1}`,
+              value: btn.value || btn.text || `button_${idx}`,
+              buttonId: `button_${idx}`,
+            })),
+          }]);
+        }, bmDelay);
+        if (bmFooter) {
+          safeSetTimeout(() => addSystemMessage(`ℹ️ ${bmFooter}`), bmDelay + 300);
+        }
+
+        if (bmButtons.length > 0) {
+          setIsWaitingInput(true);
+          setCurrentBlockType("reply_buttons");
+          setPendingVariable(normalizeVarName(config.variable || "resposta_botao"));
+        }
+        break;
+      }
+
       case "list_buttons":
         const listText = interpolateVariables(config.text || "", context);
         const listHeader = config.header ? interpolateVariables(config.header, context) : null;
