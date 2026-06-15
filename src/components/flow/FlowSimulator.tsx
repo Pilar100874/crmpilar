@@ -1896,11 +1896,15 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             text: bmDesc || (bmButtons.length > 0 ? "Escolha uma opção:" : ""),
             timestamp: new Date(),
             nodeId: node.id,
-            buttons: bmButtons.map((btn: any, idx: number) => ({
-              text: btn.label || btn.text || `Botão ${idx + 1}`,
-              value: btn.value || btn.text || `button_${idx}`,
-              buttonId: `button_${idx}`,
-            })),
+            buttons: bmButtons.map((btn: any, idx: number) => {
+              const label = btn.displayText || btn.label || btn.text || `Botão ${idx + 1}`;
+              const id = btn.id || btn.value || `button_${idx}`;
+              return {
+                text: label,
+                value: label,
+                buttonId: String(id),
+              };
+            }),
           }]);
         }, bmDelay);
         if (bmFooter) {
