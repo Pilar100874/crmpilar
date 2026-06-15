@@ -1882,34 +1882,31 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         const bmMediaType = config.mediaType || "image";
         const bmButtons = config.buttons || [];
 
-        if (bmMedia) {
-          addBotMediaMessage(bmMedia, bmMediaType, "", node.id);
-        }
-        if (bmTitle) {
-          safeSetTimeout(() => addBotMessage(`*${bmTitle}*`, node.id), bmMedia ? 400 : 0);
-        }
-        const bmDelay = (bmMedia ? 400 : 0) + (bmTitle ? 300 : 0);
-        safeSetTimeout(() => {
-          setMessages((prev) => [...prev, {
-            id: uid(),
-            sender: "bot",
-            text: bmDesc || (bmButtons.length > 0 ? "Escolha uma opção:" : ""),
-            timestamp: new Date(),
-            nodeId: node.id,
-            buttons: bmButtons.map((btn: any, idx: number) => {
-              const label = btn.displayText || btn.label || btn.text || `Botão ${idx + 1}`;
-              const id = btn.id || btn.value || `button_${idx}`;
-              return {
-                text: label,
-                value: label,
-                buttonId: String(id),
-              };
-            }),
-          }]);
-        }, bmDelay);
-        if (bmFooter) {
-          safeSetTimeout(() => addSystemMessage(`ℹ️ ${bmFooter}`), bmDelay + 300);
-        }
+        // Monta um card unificado: mídia + título + descrição + (rodapé) + botões
+        const parts: string[] = [];
+        if (bmTitle) parts.push(`*${bmTitle}*`);
+        if (bmDesc) parts.push(bmDesc);
+        if (bmFooter) parts.push(`_${bmFooter}_`);
+        const unifiedText = parts.join("\n\n") || (bmButtons.length > 0 ? "Escolha uma opção:" : "");
+
+        setMessages((prev) => [...prev, {
+          id: uid(),
+          sender: "bot",
+          text: unifiedText,
+          mediaUrl: bmMedia || undefined,
+          mediaType: bmMedia ? bmMediaType : undefined,
+          timestamp: new Date(),
+          nodeId: node.id,
+          buttons: bmButtons.map((btn: any, idx: number) => {
+            const label = btn.displayText || btn.label || btn.text || `Botão ${idx + 1}`;
+            const id = btn.id || btn.value || `button_${idx}`;
+            return {
+              text: label,
+              value: label,
+              buttonId: String(id),
+            };
+          }),
+        }]);
 
         if (bmButtons.length > 0) {
           setIsWaitingInput(true);
