@@ -382,29 +382,12 @@ export const ButtonsMediaConfig = (props: ConfigProps) => {
       <EvolutionWarning />
       <TextBaseFields {...props} />
 
-      <div className="grid grid-cols-3 gap-2 items-end">
-        <div className="col-span-2 space-y-2">
-          <Label>URL da mídia *</Label>
-          <Input
-            value={config.thumbnailUrl || ""}
-            onChange={(e) => handleConfigChange("thumbnailUrl", e.target.value)}
-            placeholder="https://...imagem.jpg ou video.mp4"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Tipo</Label>
-          <Select
-            value={config.mediaType || "image"}
-            onValueChange={(v) => handleConfigChange("mediaType", v)}
-          >
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="image">Imagem</SelectItem>
-              <SelectItem value="video">Vídeo</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <MediaUrlOrUpload
+        url={config.thumbnailUrl || ""}
+        mediaType={config.mediaType || "image"}
+        onUrlChange={(v) => handleConfigChange("thumbnailUrl", v)}
+        onTypeChange={(v) => handleConfigChange("mediaType", v)}
+      />
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
