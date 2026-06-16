@@ -1867,7 +1867,7 @@ function BotBuilderContent() {
                 <button
                   type="button"
                   onClick={() => setShowSimulator(false)}
-                  className="lg:hidden absolute top-2 right-2 z-50 h-8 w-8 inline-flex items-center justify-center rounded-full bg-white/15 hover:bg-white/25 text-white"
+                  className="lg:hidden absolute top-2 left-2 z-50 h-8 w-8 inline-flex items-center justify-center rounded-full bg-white/15 hover:bg-white/25 text-white shadow-md"
                   aria-label="Fechar simulador"
                 >
                   ✕
@@ -1880,6 +1880,7 @@ function BotBuilderContent() {
                   skipNodes={skipNodes}
                   onContextChange={setSimulatorContext}
                   provider={simulatorProvider}
+                  onProviderChange={setSimulatorProvider}
                 />
               </div>
             </>

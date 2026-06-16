@@ -45,9 +45,10 @@ interface FlowSimulatorProps {
   onContextChange?: (context: Record<string, any>) => void;
   channel?: "whatsapp" | "facebook" | "instagram" | "telegram" | "webchat";
   provider?: "evolution" | "whatsapp_oficial";
+  onProviderChange?: (provider: "evolution" | "whatsapp_oficial") => void;
 }
 
-export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes = new Set(), skipNodes = new Set(), onContextChange, channel = "whatsapp", provider = "evolution" }: FlowSimulatorProps) => {
+export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes = new Set(), skipNodes = new Set(), onContextChange, channel = "whatsapp", provider = "evolution", onProviderChange }: FlowSimulatorProps) => {
   const isOficial = provider === "whatsapp_oficial" && channel === "whatsapp";
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -4649,27 +4650,41 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <CardHeader className={`flex-shrink-0 border-b ${channelStyle.headerBg}`}>
-        <div className="flex items-center justify-between">
-          <CardTitle className={`text-sm flex items-center gap-2 ${channelStyle.headerText}`}>
-            <span>{channelStyle.icon}</span>
-            <span>Simulador - {channelStyle.name}</span>
-            {channel === "whatsapp" && (
-              <Badge
-                variant="outline"
-                className={`ml-1 text-[10px] uppercase tracking-wide border-white/30 ${isOficial ? "bg-emerald-500/20 text-white" : "bg-amber-500/20 text-white"}`}
-                title={isOficial ? "WhatsApp Cloud API (Meta)" : "Evolution API / WAHA"}
-              >
-                {isOficial ? "Oficial" : "Evolution"}
-              </Badge>
-            )}
+      <CardHeader className={`flex-shrink-0 border-b ${channelStyle.headerBg} py-2.5 px-3 sm:px-4`}>
+        <div className="flex items-center justify-between gap-2 pl-9 lg:pl-0">
+          <CardTitle className={`text-sm flex items-center gap-2 min-w-0 ${channelStyle.headerText}`}>
+            <span className="shrink-0">{channelStyle.icon}</span>
+            <span className="truncate">Simulador - {channelStyle.name}</span>
           </CardTitle>
-          <Button size="sm" variant="outline" onClick={handleReset} className="bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-full">
+          <Button size="sm" variant="outline" onClick={handleReset} className="bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-full shrink-0 h-8 w-8 sm:w-auto sm:px-3 p-0" title="Reiniciar simulação">
             <RotateCcw className="w-4 h-4" />
             <span className="hidden sm:inline sm:ml-2">Reiniciar</span>
           </Button>
         </div>
+        {channel === "whatsapp" && (
+          <div className="mt-2 flex justify-center">
+            <div className="inline-flex items-center rounded-full border border-white/20 bg-white/10 p-0.5" title="Provedor para simulação">
+              <button
+                type="button"
+                onClick={() => onProviderChange?.("evolution")}
+                disabled={!onProviderChange}
+                className={`h-6 px-3 text-[11px] font-medium rounded-full transition-colors ${!isOficial ? "bg-amber-500 text-white shadow" : "text-white/80 hover:text-white"} ${!onProviderChange ? "cursor-default" : ""}`}
+              >
+                Evolution
+              </button>
+              <button
+                type="button"
+                onClick={() => onProviderChange?.("whatsapp_oficial")}
+                disabled={!onProviderChange}
+                className={`h-6 px-3 text-[11px] font-medium rounded-full transition-colors ${isOficial ? "bg-emerald-600 text-white shadow" : "text-white/80 hover:text-white"} ${!onProviderChange ? "cursor-default" : ""}`}
+              >
+                WhatsApp Oficial
+              </button>
+            </div>
+          </div>
+        )}
       </CardHeader>
+
 
       <CardContent className={`flex-1 min-h-0 flex flex-col p-0 overflow-hidden ${channelStyle.bg}`}>
         <div className="flex-1 overflow-y-auto p-4">
