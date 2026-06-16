@@ -1776,7 +1776,7 @@ function BotBuilderContent() {
               />
               <Controls
                 className="bg-card border border-border shadow-lg rounded-lg"
-                showInteractive={false}
+                showInteractive={true}
               />
               <MiniMap
                 nodeColor={(node) => {
