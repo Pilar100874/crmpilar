@@ -1,5 +1,6 @@
 import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
 import { WorkflowBlockPreview } from "@/components/workflow/WorkflowBlockPreview";
+import { EcommerceLivePreview, ECOMMERCE_PREVIEW_SUPPORTED } from "./EcommerceLivePreview";
 import { memo, useState } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { ECOMMERCE_RULE_BLOCKS } from "@/types/ecommerceRules";
