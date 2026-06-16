@@ -233,6 +233,8 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
 
         if (error) throw error;
         console.log("📋 Bots encontrados:", data?.length || 0);
+        botsCache.bots = data || [];
+        botsCache.loaded = true;
         setBots(data || []);
       } else {
         const { data, error } = await supabase
@@ -243,6 +245,8 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
 
         if (error) throw error;
         console.log("📋 Bots encontrados para estabelecimento:", data?.length || 0);
+        botsCache.bots = data || [];
+        botsCache.loaded = true;
         setBots(data || []);
       }
     } catch (error) {
