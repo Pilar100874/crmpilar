@@ -180,7 +180,7 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                         <button
                           type="button"
                           onClick={() => window.dispatchEvent(new CustomEvent("workflow:add-template", { detail: { template: "peca_ia_criativa" } }))}
-                          className="w-full mt-1 px-3 py-2 rounded-xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-all text-left"
+                          className="w-full mt-1 px-3 py-2 rounded-xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors duration-100 text-left"
                           title="Insere o roteiro completo: Tipo → Influencer → Produto → Texto → Gerar Mídia IA → Publicar"
                         >
                           <h4 className="text-[11px] font-medium text-foreground truncate">
