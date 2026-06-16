@@ -4,6 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Card } from '@/components/ui/card';
 import { Zap, Play, GitBranch, Shuffle, Sparkles, MessageCircle, HardDrive, Workflow, Cpu } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { N8nNodeType } from './types';
 
 interface NodeLibraryProps {
