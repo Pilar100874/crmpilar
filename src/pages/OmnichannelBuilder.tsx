@@ -6,7 +6,6 @@ import {
   BackgroundVariant,
   MiniMap,
   Controls,
-  Panel,
   addEdge,
   useNodesState,
   useEdgesState,
@@ -22,7 +21,7 @@ import { PropertiesPanel } from "@/components/omnichannel-builder/PropertiesPane
 import { FlowValidator } from "@/components/omnichannel-builder/FlowValidator";
 import { TemplateSelector } from "@/components/omnichannel-builder/TemplateSelector";
 import { FlowVersionHistory } from "@/components/omnichannel-builder/FlowVersionHistory";
-import { FlowExportImport } from "@/components/omnichannel-builder/FlowExportImport";
+
 import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 import { BotTriggerSelector } from "@/components/omnichannel-builder/BotTriggerSelector";
 import { FlowExecutionLogs } from "@/components/omnichannel-builder/FlowExecutionLogs";
