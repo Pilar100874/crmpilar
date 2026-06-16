@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Upload, Loader2, X } from "lucide-react";
+import { Upload, Loader2, X, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 
@@ -93,6 +93,32 @@ export const MediaUrlUploadField = ({
             <><Upload className="w-3.5 h-3.5 mr-2" /> Upload</>
           )}
         </Button>
+        {value && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              try {
+                const res = await fetch(value);
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = (value.split("/").pop() || "arquivo").split("?")[0];
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+              } catch {
+                window.open(value, "_blank", "noopener,noreferrer");
+              }
+            }}
+            title="Baixar arquivo anexado"
+          >
+            <Download className="w-3.5 h-3.5" />
+          </Button>
+        )}
         {value && (
           <Button
             type="button"
