@@ -766,7 +766,10 @@ function EditorRegrasContent() {
       />
 
       {/* Canvas */}
-      <div ref={reactFlowWrapper} className="flex-1 bg-muted/20">
+      <div ref={reactFlowWrapper} className="flex-1 bg-muted/20 relative">
+        {!isBlockLibraryExpanded && (
+          <FloatingAddBlockButton onClick={() => setIsBlockLibraryExpanded(true)} />
+        )}
         <ReactFlow
           nodes={nodes}
           edges={edges.map((edge) => ({
