@@ -248,7 +248,7 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                             </div>
                           )}
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors truncate">
+                            <h4 className="font-normal text-xs text-foreground group-hover:text-primary transition-colors truncate">
                               {blockDef.label}
                             </h4>
                           </div>
