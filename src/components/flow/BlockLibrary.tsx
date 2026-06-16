@@ -167,7 +167,7 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                             onDragStart={(event) => onDragStart(event, blockDef.type)}
                             onDoubleClick={() => window.dispatchEvent(new CustomEvent("workflow:add-block", { detail: { type: blockDef.type } }))}
                             title="Arraste ou clique 2x para adicionar"
-                            className="px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-all duration-150 select-none"
+                            className="px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-colors duration-100 select-none"
                           >
                             <h4 className="text-xs font-normal text-foreground truncate">
                               {blockDef.label}
