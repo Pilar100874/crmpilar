@@ -639,7 +639,7 @@ export default function Layout({ children }: LayoutProps) {
                           <button
                           type="button"
                           onClick={() => setOpenSubmenuId(isAtalhosOpen ? null : "Atalhos")}
-                          className={`w-12 h-12 flex items-center justify-center rounded-lg transition-all ${
+                          className={`w-12 h-12 flex items-center justify-center rounded-lg transition-colors duration-100 ${
                             isAtalhosOpen
                               ? "bg-sidebar-primary text-sidebar-primary-foreground"
                               : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -718,7 +718,7 @@ export default function Layout({ children }: LayoutProps) {
                         <button
                           type="button"
                           onClick={() => setOpenSubmenuId(isAtalhosOpen ? null : "Atalhos")}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-100 ${
                             isAtalhosOpen
                               ? "bg-sidebar-primary text-sidebar-primary-foreground"
                               : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -799,7 +799,7 @@ export default function Layout({ children }: LayoutProps) {
                         <button
                           type="button"
                           onClick={() => setOpenSubmenuId(isMenuOpen ? null : item.id)}
-                          className={`w-12 h-12 flex items-center justify-center rounded-lg transition-all relative ${
+                          className={`w-12 h-12 flex items-center justify-center rounded-lg transition-colors duration-100 relative ${
                             shouldHighlight
                               ? "bg-sidebar-primary text-sidebar-primary-foreground"
                               : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -869,7 +869,7 @@ export default function Layout({ children }: LayoutProps) {
                       <button
                         type="button"
                         onClick={() => setOpenSubmenuId(isMenuOpen ? null : item.id)}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-100 ${
                           shouldHighlight
                             ? "bg-sidebar-primary text-sidebar-primary-foreground"
                             : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -937,7 +937,7 @@ export default function Layout({ children }: LayoutProps) {
                       key={item.title}
                       to={item.url!}
                       className={({ isActive }) =>
-                        `w-12 h-12 flex items-center justify-center rounded-lg transition-all relative ${
+                        `w-12 h-12 flex items-center justify-center rounded-lg transition-colors duration-100 relative ${
                           isActive && !isInAtalhos
                             ? "bg-sidebar-primary text-sidebar-primary-foreground"
                             : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -963,7 +963,7 @@ export default function Layout({ children }: LayoutProps) {
                     key={item.title}
                     to={item.url!}
                     className={({ isActive }) =>
-                      `w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                      `w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-100 ${
                         isActive && !isInAtalhos
                           ? "bg-sidebar-primary text-sidebar-primary-foreground"
                           : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -994,7 +994,7 @@ export default function Layout({ children }: LayoutProps) {
                   menuLocked 
                     ? 'w-10 h-10 rounded-lg flex items-center justify-center' 
                     : 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg'
-                } text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all`}
+                } text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors duration-100`}
                 title={menuLocked ? "Destravar menu" : "Travar menu"}
               >
                 {menuLocked ? (
@@ -1189,7 +1189,7 @@ export default function Layout({ children }: LayoutProps) {
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="w-12 h-12 flex items-center justify-center rounded-lg transition-all text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                className="w-12 h-12 flex items-center justify-center rounded-lg transition-colors duration-100 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                 title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
               >
                 {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
@@ -1198,7 +1198,7 @@ export default function Layout({ children }: LayoutProps) {
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-100 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                 title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
               >
                 {isDarkMode ? <Sun className="w-5 h-5 flex-shrink-0" /> : <Moon className="w-5 h-5 flex-shrink-0" />}
@@ -1211,7 +1211,7 @@ export default function Layout({ children }: LayoutProps) {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="w-12 h-12 flex items-center justify-center rounded-lg transition-all text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                className="w-12 h-12 flex items-center justify-center rounded-lg transition-colors duration-100 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                 title="Sair"
               >
                 <LogOut className="w-6 h-6" />
@@ -1220,7 +1220,7 @@ export default function Layout({ children }: LayoutProps) {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-100 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                 title="Sair"
               >
                 <LogOut className="w-5 h-5 flex-shrink-0" />

@@ -77,7 +77,7 @@ export const EcommerceBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
             return (
               <Collapsible key={cat.name} open={isOpen} onOpenChange={() => toggleCategory(cat.name)}>
                 <CollapsibleTrigger
-                  className={`flex items-center justify-between w-full px-3 py-2 rounded-xl transition-all duration-150 text-left ${
+                  className={`flex items-center justify-between w-full px-3 py-2 rounded-xl transition-colors duration-100 text-left ${
                     isOpen ? "bg-foreground text-background" : "hover:bg-black/5 text-foreground"
                   }`}
                 >
@@ -103,7 +103,7 @@ export const EcommerceBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
                           onDragStart={(e) => onDragStart(e, block.type)}
                           onDoubleClick={() => window.dispatchEvent(new CustomEvent("workflow:add-block", { detail: { type: block.type } }))}
                           title="Arraste ou clique 2x para adicionar"
-                          className="px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-all duration-150 select-none"
+                          className="px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-colors duration-100 select-none"
                         >
                           <h4 className="text-xs font-normal text-foreground truncate">{block.label}</h4>
                         </Card>
