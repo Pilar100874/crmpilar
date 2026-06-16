@@ -68,11 +68,11 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // WhatsApp Sessions
-  const [whatsappSessions, setWhatsappSessions] = useState<any[]>([]);
+  const [whatsappSessions, setWhatsappSessions] = useState<any[]>(botsCache.sessions);
   const [selectedSessions, setSelectedSessions] = useState<Record<string, string>>({});
 
   // Números de WhatsApp cadastrados
-  const [whatsappNumeros, setWhatsappNumeros] = useState<any[]>([]);
+  const [whatsappNumeros, setWhatsappNumeros] = useState<any[]>(botsCache.numeros);
   const [selectedNumeroId, setSelectedNumeroId] = useState<string>("");
   const [duplicateNumeroId, setDuplicateNumeroId] = useState<string>("");
 
