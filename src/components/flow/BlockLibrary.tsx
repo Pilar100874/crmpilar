@@ -54,7 +54,7 @@ const blockCategories = [
     blocks: ["reply_buttons", "list_buttons", "keyword_options", "button_url", "button_copy", "button_call"] as NodeType[],
   },
   {
-    name: "WhatsApp Avançado (Evolution)",
+    name: "Evolution",
     icon: "Zap",
     color: "blue",
     gradient: "from-blue-500/10 to-sky-500/10",
