@@ -210,7 +210,6 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                 key={category.name}
                 open={isOpen}
                 onOpenChange={() => toggleCategory(category.name)}
-                className="group"
               >
                 <CollapsibleTrigger className={`flex items-center justify-between w-full px-2 py-1.5 rounded-lg hover:bg-muted transition-all duration-150 group border border-transparent ${category.borderHover}`}>
                   <div className="flex items-center gap-2">
@@ -249,7 +248,7 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                             </div>
                           )}
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors truncate">
+                            <h4 className="font-normal text-xs text-foreground group-hover:text-primary transition-colors truncate">
                               {blockDef.label}
                             </h4>
                           </div>
