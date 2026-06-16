@@ -106,6 +106,11 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
   
   const IconComponent = nodeIcons[type];
 
+  const updateNodeInternals = useUpdateNodeInternals();
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [id, updateNodeInternals, type, hasMultipleOutputs]);
+
   const getCardClassName = () =>
     getWorkflowBlockCardClass({ selected, isBreakpoint, isSkipped, isHighlighted, size: "default" });
 
