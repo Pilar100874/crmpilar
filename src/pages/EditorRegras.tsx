@@ -564,10 +564,12 @@ function EditorRegrasContent() {
       const regraData = {
         estabelecimento_id: estabelecimentoId,
         nome: nomeRegra,
+        descricao: descricaoRegra?.trim() || null,
         ativo: isAtiva,
         prioridade: prioridade,
         flow_data: flowData as any,
       };
+
 
       if (currentRegraId) {
         const { error } = await supabase
