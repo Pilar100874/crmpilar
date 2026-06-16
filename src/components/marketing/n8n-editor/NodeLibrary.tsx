@@ -65,14 +65,14 @@ const NodeLibrary: React.FC<NodeLibraryProps> = ({ nodeTypes, onDragStart }) => 
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#E8EAED] border-r border-border/30">
+    <div className="h-full flex flex-col bg-white border-r border-border/30">
       <div className="p-4 pb-2">
         <h3 className="font-semibold text-sm text-foreground mb-3">Menu</h3>
         <Input
           placeholder="Buscar..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="h-8 text-xs bg-white/60 border-0 shadow-sm"
+          className="h-8 text-xs bg-muted/40 border-0 shadow-sm"
         />
       </div>
 
@@ -111,7 +111,7 @@ const NodeLibrary: React.FC<NodeLibraryProps> = ({ nodeTypes, onDragStart }) => 
                           key={node.id}
                           draggable
                           onDragStart={(e) => handleDragStart(e, node)}
-                          className="px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-white border-0 shadow-none rounded-xl transition-all duration-150 select-none"
+                          className="px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-all duration-150 select-none"
                         >
                           <h4 className="text-xs font-normal text-foreground truncate">{node.nome_display}</h4>
                         </Card>
