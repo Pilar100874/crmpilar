@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Play, Save, Download, Upload, ZoomIn, ZoomOut, Maximize2, Lock, Unlock, X } from "lucide-react";
+import { Plus, Play, Save, ZoomIn, ZoomOut, Maximize2, Lock, Unlock, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
