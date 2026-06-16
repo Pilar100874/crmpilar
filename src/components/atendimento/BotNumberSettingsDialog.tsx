@@ -10,6 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "sonner";
 import {
@@ -39,6 +40,11 @@ interface BotOption {
   active: boolean;
 }
 
+type BotFlowRow = Database["public"]["Tables"]["bot_flows"]["Row"];
+type WhatsAppSessionRow = Database["public"]["Tables"]["whatsapp_sessions"]["Row"];
+
+type LinkedSession = Pick<WhatsAppSessionRow, "id" | "session_name" | "phone_number" | "status">;
+
 export function BotNumberSettingsDialog({
   botId,
   estabelecimentoId: estabIdProp,
@@ -51,7 +57,7 @@ export function BotNumberSettingsDialog({
   const [numeros, setNumeros] = useState<NumeroOption[]>([]);
   const [linkedNumero, setLinkedNumero] = useState<NumeroOption | null>(null);
   const [effectiveWhatsappNumeroId, setEffectiveWhatsappNumeroId] = useState<string | null>(whatsappNumeroId);
-  const [linkedSession, setLinkedSession] = useState<{ id: string; session_name: string; phone_number: string | null; status: string | null } | null>(null);
+  const [linkedSession, setLinkedSession] = useState<LinkedSession | null>(null);
   const [bots, setBots] = useState<BotOption[]>([]);
   const [forwardEnabled, setForwardEnabled] = useState(false);
   const [forwardBotId, setForwardBotId] = useState<string | null>(null);
@@ -68,20 +74,21 @@ export function BotNumberSettingsDialog({
         .eq("id", botId)
         .maybeSingle();
       if (data) {
-        setForwardEnabled(Boolean((data as any).forward_to_bot_enabled));
-        setForwardBotId((data as any).forward_to_bot_id ?? null);
-        setEffectiveWhatsappNumeroId((data as any).whatsapp_numero_id ?? whatsappNumeroId ?? null);
-        if ((data as any).estabelecimento_id) setEstabelecimentoId((data as any).estabelecimento_id);
-        const types = detectEvolutionOnlyBlocks((data as any).flow_data);
+        const botData = data as Pick<BotFlowRow, "flow_data" | "forward_to_bot_id" | "forward_to_bot_enabled" | "whatsapp_numero_id" | "estabelecimento_id">;
+        setForwardEnabled(Boolean(botData.forward_to_bot_enabled));
+        setForwardBotId(botData.forward_to_bot_id ?? null);
+        setEffectiveWhatsappNumeroId(botData.whatsapp_numero_id ?? whatsappNumeroId ?? null);
+        if (botData.estabelecimento_id) setEstabelecimentoId(botData.estabelecimento_id);
+        const types = detectEvolutionOnlyBlocks(botData.flow_data);
         setEvolutionOnlyTypes(types);
 
-        if (!(data as any).whatsapp_numero_id) {
+        if (!botData.whatsapp_numero_id) {
           const { data: sessionData } = await supabase
             .from("whatsapp_sessions")
             .select("id, session_name, phone_number, status")
             .eq("bot_flow_id", botId)
             .maybeSingle();
-          setLinkedSession((sessionData as any) ?? null);
+          setLinkedSession(sessionData ?? null);
         } else {
           setLinkedSession(null);
         }
@@ -110,7 +117,7 @@ export function BotNumberSettingsDialog({
         toast.error("Erro ao carregar números: " + error.message);
         return;
       }
-      setNumeros((data as any[]) || []);
+      setNumeros(data || []);
     })();
   }, [open, estabelecimentoId]);
 
@@ -133,7 +140,7 @@ export function BotNumberSettingsDialog({
         console.error("[BotNumberSettings] erro ao carregar bots:", error);
         return;
       }
-      setBots(((data as any[]) || []).filter((b) => b.id !== botId));
+      setBots((data || []).filter((b) => b.id !== botId));
     })();
   }, [open, estabelecimentoId, botId]);
 
@@ -175,7 +182,7 @@ export function BotNumberSettingsDialog({
         .eq("id", targetNumeroId)
         .maybeSingle();
       if (error) console.error("[BotNumberSettings] erro ao buscar número vinculado:", error);
-      if (data) setLinkedNumero(data as any);
+      if (data) setLinkedNumero(data);
     })();
   }, [open, whatsappNumeroId, effectiveWhatsappNumeroId, numeros, linkedSession]);
 
@@ -207,7 +214,7 @@ export function BotNumberSettingsDialog({
       .update({
         forward_to_bot_id: forwardEnabled ? forwardBotId : null,
         forward_to_bot_enabled: forwardEnabled,
-      } as any)
+      })
       .eq("id", botId);
     setSaving(false);
     if (error) {
