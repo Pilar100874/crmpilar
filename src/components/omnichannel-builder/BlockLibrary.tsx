@@ -3,6 +3,8 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import * as Icons from "lucide-react";
 import { useState } from "react";
 import type { OmnichannelBlockType, OmnichannelNode } from "@/types/omnichannelFlow";
 
@@ -18,18 +20,27 @@ interface BlockItem {
   type: OmnichannelBlockType;
   label: string;
   description: string;
+  category: string;
+  icon: string;
 }
 
 const blocks: BlockItem[] = [
-  { type: "fila", label: "Fila de Atendimento", description: "Cria uma fila de distribuição de chats" },
-  { type: "atendente", label: "Atendente", description: "Define um atendente no fluxo" },
-  { type: "skill", label: "Skill Requerida", description: "Adiciona requisito de habilidade" },
-  { type: "regra_roteamento", label: "Regra de Roteamento", description: "Define condições de distribuição" },
-  { type: "horario", label: "Horário de Funcionamento", description: "Define horários de atendimento" },
-  { type: "webhook", label: "Webhook", description: "Integra com sistemas externos" },
-  { type: "aguardar", label: "Aguardar", description: "Adiciona delay no fluxo" },
-  { type: "analytics", label: "Analytics", description: "Visualiza métricas do fluxo" },
-  { type: "return_response", label: "Retornar Resposta", description: "Devolve payload ao workflow chamador" },
+  { type: "fila", label: "Fila de Atendimento", description: "Cria uma fila de distribuição de chats", category: "Distribuição", icon: "Users" },
+  { type: "atendente", label: "Atendente", description: "Define um atendente no fluxo", category: "Distribuição", icon: "User" },
+  { type: "skill", label: "Skill Requerida", description: "Adiciona requisito de habilidade", category: "Distribuição", icon: "Award" },
+  { type: "regra_roteamento", label: "Regra de Roteamento", description: "Define condições de distribuição", category: "Lógica", icon: "GitBranch" },
+  { type: "horario", label: "Horário de Funcionamento", description: "Define horários de atendimento", category: "Lógica", icon: "Clock" },
+  { type: "webhook", label: "Webhook", description: "Integra com sistemas externos", category: "Integrações", icon: "Webhook" },
+  { type: "aguardar", label: "Aguardar", description: "Adiciona delay no fluxo", category: "Fluxo", icon: "Timer" },
+  { type: "analytics", label: "Analytics", description: "Visualiza métricas do fluxo", category: "Fluxo", icon: "BarChart3" },
+  { type: "return_response", label: "Retornar Resposta", description: "Devolve payload ao workflow chamador", category: "Integrações", icon: "ArrowLeft" },
+];
+
+const blockCategories = [
+  { name: "Distribuição", icon: "Users" },
+  { name: "Lógica", icon: "GitBranch" },
+  { name: "Integrações", icon: "Webhook" },
+  { name: "Fluxo", icon: "Zap" },
 ];
 
 export const BlockLibrary = ({
@@ -40,11 +51,18 @@ export const BlockLibrary = ({
   onNodeSelect,
 }: BlockLibraryProps) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [openCategories, setOpenCategories] = useState<string[]>(["Distribuição", "Lógica"]);
 
   const handleDragStart = (e: React.DragEvent, type: OmnichannelBlockType) => {
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("application/reactflow", type);
     onDragStart(type);
+  };
+
+  const toggleCategory = (categoryName: string) => {
+    setOpenCategories(prev =>
+      prev.includes(categoryName) ? prev.filter(c => c !== categoryName) : [...prev, categoryName]
+    );
   };
 
   const filteredNodes = nodes.filter(node => {
@@ -97,7 +115,7 @@ export const BlockLibrary = ({
                   <button
                     key={node.id}
                     onClick={() => handleSelect(node.id)}
-                    className="w-full text-left px-3 py-2 rounded-xl hover:bg-muted/60 transition-colors"
+                    className="w-full text-left px-3 py-2 rounded-xl hover:bg-muted/60 transition-colors duration-100"
                   >
                     <p className="text-xs font-normal text-foreground truncate">{d?.label || "Sem nome"}</p>
                   </button>
@@ -107,24 +125,53 @@ export const BlockLibrary = ({
           </div>
         )}
 
-        <div className="px-2 pb-4">
-          <p className="text-[10px] font-semibold text-muted-foreground mb-1 px-3 uppercase tracking-wide">
-            {searchQuery ? `Blocos (${filteredBlocks.length})` : "Blocos de atendimento"}
-          </p>
-          <div className="space-y-0.5">
-            {filteredBlocks.map((block) => (
-              <Card
-                key={block.type}
-                draggable
-                onDragStart={(e) => handleDragStart(e, block.type)}
-                onDoubleClick={() => window.dispatchEvent(new CustomEvent("workflow:add-block", { detail: { type: block.type } }))}
-                title="Arraste ou clique 2x para adicionar"
-                className="px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-colors duration-100 select-none"
-              >
-                <h4 className="text-xs font-normal text-foreground truncate">{block.label}</h4>
-              </Card>
-            ))}
-          </div>
+        <div className="px-2 pb-4 space-y-0.5">
+          {blockCategories.map((category) => {
+            const CategoryIcon = Icons[category.icon as keyof typeof Icons] as any;
+            const isOpen = openCategories.includes(category.name);
+            const categoryBlocks = filteredBlocks.filter(b => b.category === category.name);
+            if (categoryBlocks.length === 0 && searchQuery) return null;
+
+            return (
+              <Collapsible key={category.name} open={isOpen} onOpenChange={() => toggleCategory(category.name)}>
+                <CollapsibleTrigger
+                  className={`flex items-center justify-between w-full px-3 py-2 rounded-xl transition-colors duration-100 text-left ${
+                    isOpen ? "bg-foreground text-background" : "hover:bg-black/5 text-foreground"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    {CategoryIcon && (
+                      <CategoryIcon className={`w-4 h-4 ${isOpen ? "text-background" : "text-muted-foreground"}`} />
+                    )}
+                    <span className="text-xs font-medium">{category.name}</span>
+                  </div>
+                  <span className={`text-xs ${isOpen ? "text-background/70" : "text-muted-foreground"}`}>
+                    {isOpen ? "−" : "+"}
+                  </span>
+                </CollapsibleTrigger>
+
+                <CollapsibleContent className="animate-accordion-down">
+                  <div className="relative ml-5 pl-4 pt-1 pb-1">
+                    <div className="absolute left-0 top-0 bottom-0 w-px bg-border" />
+                    <div className="space-y-0.5">
+                      {categoryBlocks.map((block) => (
+                        <Card
+                          key={block.type}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, block.type)}
+                          onDoubleClick={() => window.dispatchEvent(new CustomEvent("workflow:add-block", { detail: { type: block.type } }))}
+                          title="Arraste ou clique 2x para adicionar"
+                          className="px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-colors duration-100 select-none"
+                        >
+                          <h4 className="text-xs font-normal text-foreground truncate">{block.label}</h4>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          })}
 
           {filteredBlocks.length === 0 && searchQuery && (
             <div className="text-center py-8 text-muted-foreground">
