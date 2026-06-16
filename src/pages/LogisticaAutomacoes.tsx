@@ -1,4 +1,6 @@
 import { FloatingAddBlockButton } from "@/components/workflow/FloatingAddBlockButton";
+import { WorkflowCreateDialog } from "@/components/workflow/WorkflowCreateDialog";
+
 import { useCallback, useRef, useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
