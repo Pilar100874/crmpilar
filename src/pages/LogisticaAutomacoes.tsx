@@ -820,14 +820,14 @@ function EditorContent({
               ...edge,
               selected: edge.id === selectedEdgeId,
               style: {
-                stroke: edge.selected || edge.id === selectedEdgeId ? '#ea580c' : '#f97316',
+                stroke: edge.selected || edge.id === selectedEdgeId ? 'hsl(var(--primary))' : 'hsl(var(--primary))',
                 strokeWidth: edge.selected || edge.id === selectedEdgeId ? 2.5 : 1.33,
               },
               markerEnd: {
                 type: 'arrowclosed' as any,
                 width: 20,
                 height: 20,
-                color: edge.selected || edge.id === selectedEdgeId ? '#ea580c' : '#f97316',
+                color: edge.selected || edge.id === selectedEdgeId ? 'hsl(var(--primary))' : 'hsl(var(--primary))',
               },
               type: 'smoothstep',
             }))}
@@ -869,12 +869,12 @@ function EditorContent({
             }}
             defaultEdgeOptions={{
               animated: true,
-              style: { stroke: '#f97316', strokeWidth: 2 },
+              style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
               markerEnd: {
                 type: 'arrowclosed' as any,
                 width: 20,
                 height: 20,
-                color: '#f97316',
+                color: 'hsl(var(--primary))',
               },
               type: 'smoothstep',
             }}
