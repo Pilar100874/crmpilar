@@ -1,4 +1,5 @@
 import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
+import { WorkflowBlockPreview } from "@/components/workflow/WorkflowBlockPreview";
 import { memo, useState } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { 
