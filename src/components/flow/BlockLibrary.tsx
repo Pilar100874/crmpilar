@@ -101,7 +101,12 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
       {/* Header */}
       <div className="p-4 pb-2">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-sm text-foreground">Menu</h3>
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 rounded-lg bg-foreground text-background flex items-center justify-center">
+              <Icons.Sparkles className="h-3.5 w-3.5" />
+            </div>
+            <h3 className="font-bold text-base text-foreground tracking-tight">Menu</h3>
+          </div>
           <Button
             variant="ghost"
             size="icon"
@@ -146,19 +151,25 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                     )}
                     <span className="text-xs font-medium">{category.name}</span>
                   </div>
-                  <span className={`text-xs ${isOpen ? "text-background/70" : "text-muted-foreground"}`}>
-                    {isOpen ? "−" : "+"}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-semibold flex items-center justify-center ${isOpen ? "bg-background/20 text-background" : "bg-foreground text-background"}`}>
+                      {category.blocks.length}
+                    </span>
+                    <span className={`text-xs ${isOpen ? "text-background/70" : "text-muted-foreground"}`}>
+                      {isOpen ? "−" : "+"}
+                    </span>
+                  </div>
                 </CollapsibleTrigger>
 
                 <CollapsibleContent className="animate-accordion-down">
                   <div className="relative ml-5 pl-4 pt-1 pb-1">
                     {/* Vertical line */}
-                    <div className="absolute left-0 top-0 bottom-0 w-px bg-border" />
+                    <div className="absolute left-0 top-0 bottom-0 w-px bg-foreground/40" />
                     <div className="space-y-0.5">
                       {category.blocks.map((blockType) => {
                         const blockDef = BLOCK_DEFINITIONS.find(b => b.type === blockType);
                         if (!blockDef) return null;
+                        const BlockIcon = Icons[blockDef.icon as keyof typeof Icons] as any;
 
                         return (
                           <Card
@@ -169,9 +180,12 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                             title="Arraste ou clique 2x para adicionar"
                             className="px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-colors duration-100 select-none"
                           >
-                            <h4 className="text-xs font-normal text-foreground truncate">
-                              {blockDef.label}
-                            </h4>
+                            <div className="flex items-center gap-2">
+                              {BlockIcon && <BlockIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+                              <h4 className="text-xs font-normal text-foreground truncate">
+                                {blockDef.label}
+                              </h4>
+                            </div>
                           </Card>
                         );
                       })}
