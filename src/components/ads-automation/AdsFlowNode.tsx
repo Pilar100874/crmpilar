@@ -1,5 +1,6 @@
 import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
 import { WorkflowBlockPreview } from "@/components/workflow/WorkflowBlockPreview";
+import { AdsLivePreview, ADS_PREVIEW_SUPPORTED } from "./AdsLivePreview";
 import { memo, useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { ADS_BLOCK_DEFINITIONS, AdsBlockType, AdsFlowNodeData } from "@/types/adsFlow";
@@ -430,11 +431,15 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
             </div>
           )}
 
-          <WorkflowBlockPreview
-            domain="ads"
-            type={data.type}
-            config={(data as any).config}
-          />
+          {ADS_PREVIEW_SUPPORTED.has(data.type) ? (
+            <AdsLivePreview type={data.type} config={(data as any).config} />
+          ) : (
+            <WorkflowBlockPreview
+              domain="ads"
+              type={data.type}
+              config={(data as any).config}
+            />
+          )}
         </div>
 
         {/* Note indicator */}

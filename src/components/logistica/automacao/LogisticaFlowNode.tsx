@@ -1,5 +1,6 @@
 import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
 import { WorkflowBlockPreview } from "@/components/workflow/WorkflowBlockPreview";
+import { LogisticaLivePreview, LOGISTICA_PREVIEW_SUPPORTED } from "./LogisticaLivePreview";
 import { memo, useState } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { 
@@ -482,11 +483,15 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
           </div>
         )}
 
-        <WorkflowBlockPreview
-          domain="logistica"
-          type={data.type as string}
-          config={(data as any).config}
-        />
+        {LOGISTICA_PREVIEW_SUPPORTED.has(data.type as string) ? (
+          <LogisticaLivePreview type={data.type as string} config={(data as any).config} />
+        ) : (
+          <WorkflowBlockPreview
+            domain="logistica"
+            type={data.type as string}
+            config={(data as any).config}
+          />
+        )}
       </div>
 
       {/* Note indicator */}

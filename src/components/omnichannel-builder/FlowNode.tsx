@@ -1,5 +1,6 @@
 import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
 import { WorkflowBlockPreview } from "@/components/workflow/WorkflowBlockPreview";
+import { OmnichannelLivePreview, OMNICHANNEL_PREVIEW_SUPPORTED } from "./OmnichannelLivePreview";
 import { memo, useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import {
@@ -236,7 +237,11 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
                 </div>
               )}
 
-              <WorkflowBlockPreview domain="omnichannel" type={type} config={data.config} />
+              {OMNICHANNEL_PREVIEW_SUPPORTED.has(type) ? (
+                <OmnichannelLivePreview type={type} config={data.config} />
+              ) : (
+                <WorkflowBlockPreview domain="omnichannel" type={type} config={data.config} />
+              )}
             </div>
 
             {/* Handles de saída */}
