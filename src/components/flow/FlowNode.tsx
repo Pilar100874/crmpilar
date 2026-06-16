@@ -43,12 +43,16 @@ export const FlowNode = memo((props: any) => {
   const blockDef = BLOCK_DEFINITIONS.find((b) => b.type === data.type);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [iconCustomizerOpen, setIconCustomizerOpen] = useState(false);
   
   const isStartBlock = data.type === 'inicio' || data.type === 'start';
   
   if (!blockDef) return null;
 
-  const IconComponent = Icons[blockDef.icon as keyof typeof Icons] as any;
+  const customIcon: string | undefined = data.config?.customIcon;
+  const customIconColor: string | undefined = data.config?.customIconColor;
+  const effectiveIconName = customIcon || blockDef.icon;
+  const IconComponent = Icons[effectiveIconName as keyof typeof Icons] as any;
 
   // Determinar saídas dinâmicas baseadas no tipo de bloco e configuração
   const getDynamicHandles = () => {
