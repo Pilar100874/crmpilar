@@ -1,5 +1,4 @@
 import { pdf } from "@react-pdf/renderer";
-import { createElement } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { CatalogPDFDocument } from "@/components/marketing/catalogo/PDFDocument";
@@ -175,15 +174,15 @@ export async function generateCatalogPdf(
     catalog.config.showPriceTable !== false,
   );
   const blob = await pdf(
-    createElement(CatalogPDFDocument, {
-      config: catalog.config,
-      coverPage: catalog.cover_page,
-      productsPage: catalog.products_page,
-      backcoverPage: catalog.backcover_page,
-      groupImages: catalog.config.groupImages || {},
-      groupedProducts,
-      pages,
-    } as any),
+    <CatalogPDFDocument
+      config={catalog.config}
+      coverPage={catalog.cover_page}
+      productsPage={catalog.products_page}
+      backcoverPage={catalog.backcover_page}
+      groupImages={catalog.config.groupImages || {}}
+      groupedProducts={groupedProducts}
+      pages={pages}
+    />
   ).toBlob();
   const fileName = `catalogo_${catalog.nome.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
   return { url: URL.createObjectURL(blob), fileName, blob };
