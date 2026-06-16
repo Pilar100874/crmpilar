@@ -102,26 +102,27 @@ export function WorkflowBuilderLayout({
   return (
     <div className="workflow-shell fixed inset-0 z-50 flex flex-col bg-background">
       {/* Header */}
-      <div className="h-14 min-h-[3.5rem] border-b border-border flex items-center justify-between px-2 sm:px-4 bg-card shadow-sm">
+      <div className="h-14 min-h-[3.5rem] border-b border-border flex items-center justify-between gap-2 px-2 sm:px-4 bg-card shadow-sm">
         {/* Left Section */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-          <div className="hidden lg:block">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 overflow-x-auto scrollbar-none">
+          <div className="hidden lg:block flex-shrink-0">
             <h2 className="text-sm font-bold text-foreground leading-tight truncate">{title}</h2>
             {subtitle && (
               <p className="text-xs text-muted-foreground leading-tight truncate">{subtitle}</p>
             )}
           </div>
 
-          <div className="hidden lg:block h-8 w-px bg-border" />
+          <div className="hidden lg:block h-8 w-px bg-border flex-shrink-0" />
 
           {flowName !== undefined && onFlowNameChange && (
             <Input
               value={flowName}
               onChange={(e) => onFlowNameChange(e.target.value)}
-              className="w-[120px] sm:w-[160px] md:w-[200px] h-8 text-xs sm:text-sm"
+              className="w-[120px] sm:w-[160px] md:w-[200px] h-8 text-xs sm:text-sm flex-shrink-0"
               placeholder="Nome do fluxo"
             />
           )}
+
 
           {/* Zoom / View Controls */}
           {(onZoomIn || onZoomOut || onFitView || onAddBlock || onToggleLock) && (
