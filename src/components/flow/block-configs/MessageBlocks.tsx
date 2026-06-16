@@ -296,35 +296,35 @@ export const MediaConfig = ({ config, handleConfigChange }: ConfigProps) => {
         />
 
         {mediaType === "file" ? (
-          <div className="space-y-2">
-            <Label className="text-white text-sm font-semibold flex items-center gap-2">
+          <div className="space-y-2 min-w-0">
+            <Label className="text-foreground text-sm font-semibold flex items-center gap-2">
               <span className="w-1 h-4 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
               Upload de Arquivo
             </Label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 min-w-0">
               <Input
                 type="file"
                 onChange={handleFileUpload}
                 disabled={uploading}
-                className="bg-foreground/90/80 border-muted-foreground/50 text-white file:text-white file:bg-gradient-to-r file:from-cyan-500/20 file:to-blue-500/20 file:border-0 file:mr-4 file:py-2 file:px-4 hover:file:from-cyan-500/30 hover:file:to-blue-500/30 file:rounded"
+                className="bg-background border-border text-foreground file:text-foreground file:bg-muted file:border-0 file:mr-3 file:py-1.5 file:px-3 file:rounded hover:file:bg-muted/80 cursor-pointer min-w-0 flex-1"
               />
-              {uploading && <Loader2 className="w-5 h-5 animate-spin text-cyan-500" />}
+              {uploading && <Loader2 className="w-5 h-5 animate-spin text-cyan-500 shrink-0" />}
             </div>
-            
+
             {url && (
-              <div className="flex items-center gap-2 p-2 bg-foreground/50 rounded border border-muted-foreground/50">
-                <span className="text-xs text-muted-foreground truncate flex-1">{url}</span>
+              <div className="flex items-start gap-2 p-2 bg-muted/40 rounded border border-border min-w-0">
+                <span className="text-xs text-foreground break-all flex-1 min-w-0">{url}</span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => handleConfigChange("url", "")}
-                  className="h-6 px-2 text-muted-foreground hover:text-white"
+                  className="h-6 px-2 text-muted-foreground hover:text-foreground shrink-0"
                 >
                   <X className="w-3 h-3" />
                 </Button>
               </div>
             )}
-            
+
             {!url && (
               <ConfigInfo variant="warning">
                 ⚠️ Faça upload de um arquivo
@@ -332,12 +332,12 @@ export const MediaConfig = ({ config, handleConfigChange }: ConfigProps) => {
             )}
           </div>
         ) : (
-          <ConfigInput
+          <MediaUrlUploadField
             label="URL da Mídia"
             value={url}
             onChange={(v) => handleConfigChange("url", v)}
+            accept={mediaType === "video" ? "video/*" : mediaType === "audio" ? "audio/*" : "image/*"}
             placeholder="https://exemplo.com/imagem.jpg"
-            required
           />
         )}
 
