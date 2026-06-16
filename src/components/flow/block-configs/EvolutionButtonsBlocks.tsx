@@ -73,11 +73,11 @@ const TemplateToggle = ({ config, handleConfigChange }: ConfigProps) => (
 const TextBaseFields = ({ config, handleConfigChange }: ConfigProps) => (
   <>
     <div className="space-y-2">
-      <Label>Título</Label>
+      <Label>Cabeçalho (opcional)</Label>
       <Input
         value={config.title || ""}
         onChange={(e) => handleConfigChange("title", e.target.value)}
-        placeholder="Título da mensagem"
+        placeholder="Cabeçalho da mensagem"
         maxLength={60}
       />
     </div>
