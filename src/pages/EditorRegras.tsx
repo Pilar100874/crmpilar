@@ -836,10 +836,10 @@ function EditorRegrasContent() {
             color="hsl(var(--muted-foreground))"
             className="opacity-20"
           />
-          <Controls 
-            className="bg-card border border-border shadow-lg rounded-lg"
-            showInteractive={false}
-          />
+            <Controls
+              className="bg-card border border-border shadow-lg rounded-lg"
+              showInteractive={true}
+            />
           <MiniMap 
             className="bg-card border border-border shadow-lg rounded-lg"
             nodeColor="#8B5CF6"

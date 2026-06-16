@@ -814,7 +814,7 @@ export default function OmnichannelBuilder() {
             />
             <Controls
               className="bg-card border border-border shadow-lg rounded-lg"
-              showInteractive={false}
+              showInteractive={true}
             />
             <MiniMap
               className="bg-card border border-border rounded-lg shadow-lg"
