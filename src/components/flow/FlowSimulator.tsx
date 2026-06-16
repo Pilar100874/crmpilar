@@ -4507,6 +4507,12 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       console.warn("Mensagem de mídia ignorada sem URL válida:", { mediaUrl, mediaType, caption });
       return;
     }
+    // Auto-detecta tipo pela extensão da URL — garante que imagens/vídeos sempre apareçam abertos
+    let resolvedType: "image" | "video" | "audio" | "file" = mediaType || "file";
+    const _u = safeMediaUrl.toLowerCase().split("?")[0];
+    if (/\.(jpg|jpeg|png|gif|webp|bmp|svg|heic|avif)$/.test(_u)) resolvedType = "image";
+    else if (/\.(mp4|webm|mov|m4v|3gp|mkv)$/.test(_u)) resolvedType = "video";
+    else if (/\.(mp3|wav|ogg|m4a|aac|opus)$/.test(_u)) resolvedType = "audio";
     const msg: Message = {
       id: uid(),
       sender: "bot",
@@ -4514,7 +4520,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       timestamp: new Date(),
       nodeId,
       mediaUrl: safeMediaUrl,
-      mediaType,
+      mediaType: resolvedType,
     };
     setMessages((prev) => {
       console.log("Media messages before:", prev.length, "after:", prev.length + 1);
