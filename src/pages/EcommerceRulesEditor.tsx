@@ -385,11 +385,14 @@ function EcommerceRulesEditorInner() {
     >
       <div className="flex flex-1 h-full overflow-hidden">
         {/* Block Library - Left Panel */}
-        <EcommerceBlockLibrary
-          onDragStart={handleDragStart}
-          isExpanded={isLibraryExpanded}
-          onToggleExpanded={setIsLibraryExpanded}
-        />
+        {isLibraryExpanded && (
+          <EcommerceBlockLibrary
+            onDragStart={handleDragStart}
+            isExpanded={isLibraryExpanded}
+            onToggleExpanded={setIsLibraryExpanded}
+          />
+        )}
+
 
 
         {/* Canvas */}
