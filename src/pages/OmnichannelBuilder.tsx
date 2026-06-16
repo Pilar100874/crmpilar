@@ -945,6 +945,6 @@ export default function OmnichannelBuilder() {
         currentNote={currentNoteNodeId ? (nodes.find(n => n.id === currentNoteNodeId)?.data.note || "") : ""}
         onSave={handleSaveNote}
       />
-    </div>
+    </WorkflowBuilderLayout>
   );
 }
