@@ -616,6 +616,22 @@ export const FlowNode = memo((props: any) => {
         ...getBlockHelp("bot", data.type, String(data.label || blockDef.label || data.type), String(blockDef.description || data.type)),
       }}
     />
+
+    <BlockIconCustomizer
+      open={iconCustomizerOpen}
+      onOpenChange={setIconCustomizerOpen}
+      currentIcon={customIcon}
+      currentColor={customIconColor}
+      defaultIcon={blockDef.icon}
+      onSave={(newIcon, newColor) => {
+        const nextConfig = { ...(data.config || {}) };
+        if (newIcon) nextConfig.customIcon = newIcon;
+        else delete nextConfig.customIcon;
+        if (newColor) nextConfig.customIconColor = newColor;
+        else delete nextConfig.customIconColor;
+        data.onUpdateNodeData?.(id, { config: nextConfig });
+      }}
+    />
   </>
   );
 });
