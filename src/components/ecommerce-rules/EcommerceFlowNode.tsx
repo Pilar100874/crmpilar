@@ -165,11 +165,18 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
             </div>
           )}
 
-          <WorkflowBlockPreview
-            domain="ecommerce"
-            type={(data as any).type}
-            config={(data as any).config}
-          />
+          {ECOMMERCE_PREVIEW_SUPPORTED.has((data as any).type) ? (
+            <EcommerceLivePreview
+              type={(data as any).type}
+              config={(data as any).config}
+            />
+          ) : (
+            <WorkflowBlockPreview
+              domain="ecommerce"
+              type={(data as any).type}
+              config={(data as any).config}
+            />
+          )}
         </div>
 
         {/* Single or multi source handles */}
