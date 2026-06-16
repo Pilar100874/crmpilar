@@ -271,13 +271,7 @@ export const PropertiesPanel = ({
     };
 
     const fields = renderConfigSwitch(nodeData, configProps);
-    const showPreview = PREVIEW_SUPPORTED_TYPES.has(nodeData.type);
-    return (
-      <>
-        {showPreview && <LiveBlockPreview type={nodeData.type} config={config} />}
-        {fields}
-      </>
-    );
+    return <>{fields}</>;
   };
 
   const renderConfigSwitch = (nodeData: any, configProps: any) => {
