@@ -130,7 +130,7 @@ export const BlockLibrary = ({
           </div>
         )}
 
-        <div className="w-full px-2 pb-4 space-y-0.5">
+        <div className="w-[240px] max-w-full px-2 pb-4 space-y-0.5">
           {blockCategories.map((category) => {
             const CategoryIcon = Icons[category.icon as keyof typeof Icons] as any;
             const isOpen = openCategories.includes(category.name);

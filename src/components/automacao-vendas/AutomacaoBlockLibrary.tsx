@@ -64,7 +64,7 @@ export const AutomacaoBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="w-full px-2 pb-4 space-y-0.5">
+        <div className="w-[240px] max-w-full px-2 pb-4 space-y-0.5">
           {filteredCategories.map((category) => {
             const CategoryIcon = Icons[category.icon as keyof typeof Icons] as any;
             const isOpen = openCategories.includes(category.name);
