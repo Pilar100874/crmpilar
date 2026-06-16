@@ -42,21 +42,8 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
   const isBreakpoint = (data as any).isBreakpoint;
   const isSkipped = (data as any).isSkipped;
 
-  const getCardClassName = () => {
-    const baseClass = "min-w-[260px] max-w-[300px] transition-all duration-200 shadow-lg";
-
-    if (isBreakpoint) {
-      return `${baseClass} bg-card border-2 border-orange-500 ${selected ? "ring-2 ring-primary" : ""}`;
-    }
-    if (isSkipped) {
-      return `${baseClass} bg-card/60 border-2 border-border opacity-60 ${selected ? "ring-2 ring-primary" : ""}`;
-    }
-    return `${baseClass} bg-card dark:bg-card border border-border ${
-      selected 
-        ? "ring-2 ring-primary border-primary" 
-        : "hover:border-border"
-    }`;
-  };
+  const getCardClassName = () =>
+    getWorkflowBlockCardClass({ selected, isBreakpoint, isSkipped, size: "default" });
 
   return (
     <>

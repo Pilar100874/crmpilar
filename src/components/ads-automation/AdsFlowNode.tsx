@@ -112,25 +112,13 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
 
   const outputsConfig = getOutputsConfig();
 
-  const getCardClassName = () => {
-    const baseClass = isCollapsed 
-      ? "min-w-[120px] max-w-[160px] transition-all duration-200 shadow-lg"
-      : "min-w-[220px] max-w-[280px] transition-all duration-200 shadow-lg";
-    
-    if (data.isBreakpoint) {
-      return `${baseClass} bg-card border-2 border-orange-500 ${selected ? "ring-2 ring-primary" : ""}`;
-    }
-    
-    if (data.isSkipped) {
-      return `${baseClass} bg-card/60 border-2 border-muted-foreground opacity-60 ${selected ? "ring-2 ring-primary" : ""}`;
-    }
-    
-    return `${baseClass} bg-card border-2 ${
-      selected 
-        ? "ring-2 ring-primary border-primary" 
-        : "border-border hover:border-muted-foreground"
-    }`;
-  };
+  const getCardClassName = () =>
+    getWorkflowBlockCardClass({
+      selected,
+      isBreakpoint: data.isBreakpoint,
+      isSkipped: data.isSkipped,
+      size: isCollapsed ? "collapsed" : "compact",
+    });
 
   const getConfigPreview = () => {
     const config = data.config || {};
