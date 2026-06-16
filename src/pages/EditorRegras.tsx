@@ -74,7 +74,9 @@ function EditorRegrasContent() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [currentRegraId, setCurrentRegraId] = useState<string | null>(null);
-  const [nomeRegra, setNomeRegra] = useState("Nova Regra");
+  const [nomeRegra, setNomeRegra] = useState(((location.state as any)?.initialName as string) || "Nova Regra");
+  const [descricaoRegra, setDescricaoRegra] = useState<string>(((location.state as any)?.initialDescription as string) || "");
+
   const [isAtiva, setIsAtiva] = useState(true);
   const [prioridade, setPrioridade] = useState(1);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(false);
