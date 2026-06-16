@@ -429,6 +429,12 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
               <span>Bloco será pulado</span>
             </div>
           )}
+
+          <WorkflowBlockPreview
+            domain="ads"
+            type={data.type}
+            config={(data as any).config}
+          />
         </div>
 
         {/* Note indicator */}
