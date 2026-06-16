@@ -60,6 +60,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const [isActive, setIsActive] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
   const contextRef = useRef<Record<string, any>>({});
@@ -4623,11 +4624,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                   </div>
                 ) : (
                   <div
-                    className={`max-w-[80%] overflow-hidden shadow-sm ${
+                    className={`relative max-w-[80%] overflow-hidden shadow-sm ${
                       channel === 'whatsapp'
                         ? msg.sender === 'user'
-                          ? 'rounded-lg rounded-tr-none shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]'
-                          : 'rounded-lg rounded-tl-none shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]'
+                          ? 'rounded-lg rounded-tr-none shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] wa-bubble wa-bubble-user'
+                          : 'rounded-lg rounded-tl-none shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] wa-bubble wa-bubble-bot'
                         : 'rounded-2xl'
                     } ${
                       msg.sender === "user"
@@ -4636,19 +4637,25 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                     }`}
                   >
                     {msg.mediaUrl && (
-                      <div className="w-full">
+                      <div className={`w-full ${channel === 'whatsapp' ? 'p-[3px]' : ''}`}>
                         {msg.mediaType === "image" && (
-                          <img 
-                            src={msg.mediaUrl} 
-                            alt={msg.text || "Mídia"} 
-                            className="w-64 aspect-square max-w-full object-cover"
-                            loading="lazy"
-                            onError={(e) => {
-                              console.error("Image failed to load:", msg.mediaUrl);
-                              e.currentTarget.style.display = 'block';
-                              e.currentTarget.alt = "Imagem indisponível";
-                            }}
-                          />
+                          <button
+                            type="button"
+                            onClick={() => setLightboxUrl(msg.mediaUrl!)}
+                            className={`block w-full ${channel === 'whatsapp' ? 'rounded-md overflow-hidden' : ''}`}
+                            aria-label="Ampliar imagem"
+                          >
+                            <img 
+                              src={msg.mediaUrl} 
+                              alt={msg.text || "Mídia"} 
+                              className="w-72 max-w-full aspect-square object-cover cursor-zoom-in hover:opacity-95 transition-opacity"
+                              loading="lazy"
+                              onError={(e) => {
+                                console.error("Image failed to load:", msg.mediaUrl);
+                                e.currentTarget.alt = "Imagem indisponível";
+                              }}
+                            />
+                          </button>
                         )}
                         {msg.mediaType === "video" && (
                           <video 
@@ -4710,11 +4717,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                         )}
                       </div>
                     )}
-                    <div className={`flex items-start gap-2 ${msg.mediaUrl ? 'px-4 py-2' : 'px-4 py-2'}`}>
-                      {msg.sender === "bot" && <Bot className="w-4 h-4 mt-0.5" />}
-                      {msg.sender === "user" && <User className="w-4 h-4 mt-0.5" />}
-                      <div className="flex-1">
-                        {msg.text && <p className="text-sm whitespace-pre-wrap">{formatText(msg.text)}</p>}
+                    <div className={`flex items-start gap-2 ${msg.mediaUrl ? (channel === 'whatsapp' ? 'px-2 py-1.5' : 'px-4 py-2') : 'px-3 py-1.5'}`}>
+                      {channel !== 'whatsapp' && msg.sender === "bot" && <Bot className="w-4 h-4 mt-0.5" />}
+                      {channel !== 'whatsapp' && msg.sender === "user" && <User className="w-4 h-4 mt-0.5" />}
+                      <div className="flex-1 min-w-0">
+                        {msg.text && <p className={`${channel === 'whatsapp' ? 'text-[14.5px] leading-[19px] text-[#111B21]' : 'text-sm'} whitespace-pre-wrap break-words`}>{formatText(msg.text)}</p>}
 
                         {msg.socialLinks && msg.socialLinks.length > 0 && (
                           <div className="mt-3 grid grid-cols-1 gap-2">
@@ -4901,9 +4908,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                           )
                         )}
                         
-                        <span className="text-xs opacity-70 mt-1 block">
-                          {msg.timestamp.toLocaleTimeString()}
-                        </span>
+                        <div className={`flex items-center gap-1 mt-1 ${channel === 'whatsapp' ? 'justify-end' : ''}`}>
+                          <span className={`text-[11px] ${channel === 'whatsapp' ? 'text-[#667781]' : 'opacity-70'}`}>
+                            {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          {channel === 'whatsapp' && msg.sender === 'user' && (
+                            <CheckCheck className="w-3.5 h-3.5 text-[#53BDEB]" />
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -5008,6 +5020,59 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           </div>
         </div>
       </CardContent>
+
+      {/* Lightbox para ampliar imagens (estilo WhatsApp) */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setLightboxUrl(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setLightboxUrl(null); }}
+            className="absolute top-4 right-4 h-10 w-10 inline-flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white"
+            aria-label="Fechar imagem"
+          >
+            <XIcon className="w-5 h-5" />
+          </button>
+          <img
+            src={lightboxUrl}
+            alt="Imagem ampliada"
+            className="max-w-full max-h-full object-contain rounded-md shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <a
+            href={lightboxUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="absolute bottom-4 right-4 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs inline-flex items-center gap-1.5"
+          >
+            <ExternalLink className="w-3.5 h-3.5" /> Abrir original
+          </a>
+        </div>
+      )}
+
+      {/* Caudas das bolhas estilo WhatsApp */}
+      <style>{`
+        .wa-bubble { position: relative; }
+        .wa-bubble-bot::before {
+          content: "";
+          position: absolute; top: 0; left: -8px;
+          width: 8px; height: 13px;
+          background: inherit;
+          clip-path: polygon(100% 0, 0 0, 100% 100%);
+        }
+        .wa-bubble-user::before {
+          content: "";
+          position: absolute; top: 0; right: -8px;
+          width: 8px; height: 13px;
+          background: inherit;
+          clip-path: polygon(0 0, 100% 0, 0 100%);
+        }
+      `}</style>
     </div>
   );
 };
