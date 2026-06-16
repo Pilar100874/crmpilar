@@ -18,7 +18,7 @@ import { FlowVariable } from "./VariableManager";
 import { VariableInput, VariableTextarea } from "./VariableInput";
 import { VariablePickerDialog } from "./VariablePickerDialog";
 import * as BlockConfigs from "./block-configs";
-import { LiveBlockPreview, PREVIEW_SUPPORTED_TYPES } from "./block-configs/LiveBlockPreview";
+// import { LiveBlockPreview, PREVIEW_SUPPORTED_TYPES } from "./block-configs/LiveBlockPreview";
 
 interface PropertiesPanelProps {
   selectedNode: Node | null;
