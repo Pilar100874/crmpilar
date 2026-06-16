@@ -327,6 +327,18 @@ export const FlowNode = memo((props: any) => {
                 <StickyNote className="w-4 h-4 mr-2 text-yellow-500" />
                 {data.note ? "Editar Nota" : "Adicionar Nota"}
               </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onClick={() => {
+                  setIconCustomizerOpen(true);
+                  setDropdownOpen(false);
+                }}
+                className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
+              >
+                <Palette className="w-4 h-4 mr-2 text-violet-500" />
+                Personalizar Ícone
+              </DropdownMenuItem>
+
               
               <DropdownMenuSeparator className="bg-muted" />
               
