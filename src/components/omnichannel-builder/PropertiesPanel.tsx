@@ -89,13 +89,14 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
 
   if (!selectedNode) {
     return (
-      <Card className="h-full flex items-center justify-center text-muted-foreground">
+      <Card className="w-80 h-[calc(100%-1rem)] m-2 rounded-2xl border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border shadow-lg flex items-center justify-center text-muted-foreground">
         <div className="text-center p-6">
           <p>Selecione um bloco</p>
           <p className="text-sm mt-1">para ver suas propriedades</p>
         </div>
       </Card>
     );
+
   }
 
   const { data } = selectedNode;
