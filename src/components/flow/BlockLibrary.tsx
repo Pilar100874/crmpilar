@@ -134,7 +134,7 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                 onOpenChange={() => toggleCategory(category.name)}
               >
                 <CollapsibleTrigger
-                  className={`flex items-center justify-between w-full px-3 py-2 rounded-xl transition-all duration-150 text-left ${
+                  className={`flex items-center justify-between w-full px-3 py-2 rounded-xl transition-colors duration-100 text-left ${
                     isOpen
                       ? "bg-foreground text-background"
                       : "hover:bg-black/5 text-foreground"
