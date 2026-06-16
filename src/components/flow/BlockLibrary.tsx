@@ -200,7 +200,7 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-2 space-y-1">
+        <div className="p-2 space-y-1.5">
           {filteredCategories.map((category) => {
             const CategoryIcon = Icons[category.icon as keyof typeof Icons] as any;
             const isOpen = openCategories.includes(category.name);
@@ -210,63 +210,47 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                 key={category.name}
                 open={isOpen}
                 onOpenChange={() => toggleCategory(category.name)}
-                className="group"
               >
-                <CollapsibleTrigger className={`flex items-center justify-between w-full px-2 py-1.5 rounded-lg hover:bg-muted transition-all duration-150 group border border-transparent ${category.borderHover}`}>
-                  <div className="flex items-center gap-2">
+                <CollapsibleTrigger
+                  className={`group flex items-center justify-between w-full px-2.5 py-2 rounded-lg border border-border/60 bg-gradient-to-r ${category.gradient} hover:border-border transition-all`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
                     {CategoryIcon && (
-                      <div className={`p-1 rounded-md bg-gradient-to-br ${category.gradient} border ${category.border} group-hover:${category.border.replace('/20', '/40')} transition-all`}>
-                        <CategoryIcon className={`w-3 h-3 ${category.iconColor} ${category.iconHover}`} />
-                      </div>
+                      <CategoryIcon className={`w-3.5 h-3.5 ${category.iconColor} shrink-0`} />
                     )}
-                    <span className={`font-semibold text-xs text-foreground ${category.textHover} transition-colors`}>{category.name}</span>
+                    <span className="font-semibold text-xs text-foreground truncate">
+                      {category.name}
+                    </span>
                   </div>
-                  <ChevronDown 
-                    className={`w-3 h-3 text-muted-foreground transition-all duration-150 ${isOpen ? `rotate-180 ${category.iconColor}` : category.iconHover}`}
-                  />
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[10px] font-medium text-muted-foreground tabular-nums px-1.5 py-0.5 rounded-md bg-background/60 border border-border/50">
+                      {category.blocks.length}
+                    </span>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                    />
+                  </div>
                 </CollapsibleTrigger>
 
-                <CollapsibleContent className="pt-1 space-y-1 animate-accordion-down">
+                <CollapsibleContent className="pt-1 pl-2 space-y-0.5 animate-accordion-down">
                   {category.blocks.map((blockType) => {
                     const blockDef = BLOCK_DEFINITIONS.find(b => b.type === blockType);
                     if (!blockDef) return null;
 
-                    const IconComponent = Icons[blockDef.icon as keyof typeof Icons] as any;
-                    
                     return (
-                      <Card
+                      <div
                         key={blockDef.type}
                         draggable
                         onDragStart={(event) => onDragStart(event, blockDef.type)}
                         onDoubleClick={() => window.dispatchEvent(new CustomEvent("workflow:add-block", { detail: { type: blockDef.type } }))}
                         title="Arraste ou clique 2x para adicionar"
-                        className="p-2 ml-5 cursor-grab active:cursor-grabbing bg-muted/50 hover:bg-muted hover:border-primary/40 transition-all duration-150 hover:shadow-md group rounded-2xl select-none"
+                        className="group flex items-center px-2.5 py-1.5 rounded-md cursor-grab active:cursor-grabbing hover:bg-muted/70 hover:translate-x-0.5 transition-all select-none"
                       >
-                        <div className="flex items-center gap-2">
-                          {IconComponent && (
-                            <div className="p-1 rounded-md bg-gradient-to-br from-primary/15 to-primary/10 border border-primary/25 group-hover:border-primary/50 transition-all flex-shrink-0">
-                              <IconComponent className="w-3 h-3 text-primary group-hover:text-primary" />
-                            </div>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <h4 className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors truncate">
-                              {blockDef.label}
-                            </h4>
-                          </div>
-                          {(() => {
-                            const kind = getInteractionKind(blockDef.type);
-                            if (!kind) return null;
-                            return (
-                              <span
-                                title={`${kind.label} — ${kind.title}`}
-                                className={`shrink-0 inline-flex items-center justify-center w-5 h-5 text-[11px] leading-none rounded-full border ${kind.className}`}
-                              >
-                                {kind.symbol}
-                              </span>
-                            );
-                          })()}
-                        </div>
-                      </Card>
+                        <span className={`w-1 h-1 rounded-full ${category.iconColor.replace("text-", "bg-")} mr-2 opacity-60 group-hover:opacity-100`} />
+                        <span className="text-xs text-foreground/90 truncate group-hover:text-foreground">
+                          {blockDef.label}
+                        </span>
+                      </div>
                     );
                   })}
 
@@ -274,21 +258,14 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                     <button
                       type="button"
                       onClick={() => window.dispatchEvent(new CustomEvent("workflow:add-template", { detail: { template: "peca_ia_criativa" } }))}
-                      className="w-full ml-5 mt-2 p-2 rounded-2xl border border-dashed border-purple-500/40 bg-gradient-to-br from-purple-500/10 to-violet-500/5 hover:from-purple-500/20 hover:to-violet-500/10 transition-all text-left group"
-                      title="Insere o roteiro completo: Tipo → Influencer → Produto → Texto → Gerar Mídia IA → Publicar"
+                      className="w-full mt-1.5 px-2.5 py-2 rounded-md border border-dashed border-purple-500/40 bg-purple-500/5 hover:bg-purple-500/10 transition-all text-left"
+                      title="Insere o roteiro completo"
                     >
                       <div className="flex items-center gap-2">
-                        <div className="p-1 rounded-md bg-purple-500/20 border border-purple-500/30">
-                          <Icons.Wand2 className="w-3 h-3 text-purple-700" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h4 className="font-semibold text-[11px] text-foreground group-hover:text-purple-700 truncate">
-                            ✨ Roteiro: Criar Peça com IA
-                          </h4>
-                          <p className="text-[9px] text-muted-foreground truncate">
-                            6 blocos conectados, prontos para usar
-                          </p>
-                        </div>
+                        <Icons.Wand2 className="w-3 h-3 text-purple-600 shrink-0" />
+                        <span className="text-[11px] font-medium text-foreground truncate">
+                          Roteiro: Criar Peça com IA
+                        </span>
                       </div>
                     </button>
                   )}
@@ -296,7 +273,7 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
               </Collapsible>
             );
           })}
-          
+
           {filteredCategories.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               <div className="p-3 rounded-full bg-muted w-12 h-12 mx-auto mb-3 flex items-center justify-center">
@@ -308,6 +285,7 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
           )}
         </div>
       </ScrollArea>
+
     </div>
   );
 };
