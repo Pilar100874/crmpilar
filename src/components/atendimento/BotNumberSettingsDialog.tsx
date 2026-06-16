@@ -72,13 +72,15 @@ export function BotNumberSettingsDialog({
     (async () => {
       const { data } = await supabase
         .from("bot_flows")
-        .select("flow_data, forward_to_bot_id, forward_to_bot_enabled, whatsapp_numero_id, estabelecimento_id")
+        .select("flow_data, forward_to_bot_id, forward_to_bot_enabled, forward_to_numero_id, whatsapp_numero_id, estabelecimento_id")
         .eq("id", botId)
         .maybeSingle();
       if (data) {
-        const botData = data as Pick<BotFlowRow, "flow_data" | "forward_to_bot_id" | "forward_to_bot_enabled" | "whatsapp_numero_id" | "estabelecimento_id">;
+        const botData = data as Pick<BotFlowRow, "flow_data" | "forward_to_bot_id" | "forward_to_bot_enabled" | "forward_to_numero_id" | "whatsapp_numero_id" | "estabelecimento_id">;
         setForwardEnabled(Boolean(botData.forward_to_bot_enabled));
         setForwardBotId(botData.forward_to_bot_id ?? null);
+        setForwardNumeroId(botData.forward_to_numero_id ?? null);
+        setForwardTargetType(botData.forward_to_numero_id ? "numero" : "bot");
         setEffectiveWhatsappNumeroId(botData.whatsapp_numero_id ?? whatsappNumeroId ?? null);
         if (botData.estabelecimento_id) setEstabelecimentoId(botData.estabelecimento_id);
         const types = detectEvolutionOnlyBlocks(botData.flow_data);
