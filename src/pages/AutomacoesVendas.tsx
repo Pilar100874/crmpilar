@@ -178,10 +178,11 @@ export default function AutomacoesVendas() {
               <p className="text-muted-foreground mb-4">
                 Crie sua primeira regra para o orçamento
               </p>
-              <Button onClick={() => navigate("/editor-regras", { state: { from: location.pathname + location.search } })}>
+              <Button onClick={() => setCreateDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Criar primeira regra
               </Button>
+
             </div>
           </div>
         </Card>
