@@ -201,6 +201,12 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
             </div>
           </div>
         )}
+
+        <WorkflowBlockPreview
+          domain="automacao-vendas"
+          type={(data as any).type}
+          config={(data as any).config}
+        />
         </div>
 
         {/* Handle inferior - renderizar múltiplas saídas para valida_faixa_faturamento */}
