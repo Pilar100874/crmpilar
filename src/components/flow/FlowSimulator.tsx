@@ -4624,11 +4624,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                   </div>
                 ) : (
                   <div
-                    className={`max-w-[80%] overflow-hidden shadow-sm ${
+                    className={`relative max-w-[80%] overflow-hidden shadow-sm ${
                       channel === 'whatsapp'
                         ? msg.sender === 'user'
-                          ? 'rounded-lg rounded-tr-none shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]'
-                          : 'rounded-lg rounded-tl-none shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]'
+                          ? 'rounded-lg rounded-tr-none shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] wa-bubble wa-bubble-user'
+                          : 'rounded-lg rounded-tl-none shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] wa-bubble wa-bubble-bot'
                         : 'rounded-2xl'
                     } ${
                       msg.sender === "user"
@@ -4637,19 +4637,25 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                     }`}
                   >
                     {msg.mediaUrl && (
-                      <div className="w-full">
+                      <div className={`w-full ${channel === 'whatsapp' ? 'p-[3px]' : ''}`}>
                         {msg.mediaType === "image" && (
-                          <img 
-                            src={msg.mediaUrl} 
-                            alt={msg.text || "Mídia"} 
-                            className="w-64 aspect-square max-w-full object-cover"
-                            loading="lazy"
-                            onError={(e) => {
-                              console.error("Image failed to load:", msg.mediaUrl);
-                              e.currentTarget.style.display = 'block';
-                              e.currentTarget.alt = "Imagem indisponível";
-                            }}
-                          />
+                          <button
+                            type="button"
+                            onClick={() => setLightboxUrl(msg.mediaUrl!)}
+                            className={`block w-full ${channel === 'whatsapp' ? 'rounded-md overflow-hidden' : ''}`}
+                            aria-label="Ampliar imagem"
+                          >
+                            <img 
+                              src={msg.mediaUrl} 
+                              alt={msg.text || "Mídia"} 
+                              className="w-72 max-w-full aspect-square object-cover cursor-zoom-in hover:opacity-95 transition-opacity"
+                              loading="lazy"
+                              onError={(e) => {
+                                console.error("Image failed to load:", msg.mediaUrl);
+                                e.currentTarget.alt = "Imagem indisponível";
+                              }}
+                            />
+                          </button>
                         )}
                         {msg.mediaType === "video" && (
                           <video 
