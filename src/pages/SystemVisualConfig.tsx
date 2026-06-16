@@ -132,6 +132,50 @@ export default function SystemVisualConfig() {
     }
   };
 
+  const handlePreviewColor = (hex: string) => {
+    setPrimaryHex(hex);
+    const hsl = hexToHslString(hex);
+    if (hsl) applyPrimaryColor(hsl);
+  };
+
+  const handleSavePrimaryColor = async () => {
+    const hsl = hexToHslString(primaryHex);
+    if (!hsl) { toast.error("Cor inválida"); return; }
+    setSavingColor(true);
+    try {
+      const estId = await getEstabelecimentoId();
+      if (!estId) { toast.error("Estabelecimento não encontrado"); return; }
+      const { error } = await supabase
+        .from("system_visual_config")
+        .upsert({ estabelecimento_id: estId, primary_color_hsl: hsl } as any, { onConflict: "estabelecimento_id" });
+      if (error) { toast.error("Erro ao salvar: " + error.message); return; }
+      applyPrimaryColor(hsl);
+      localStorage.setItem("system_primary_hsl", hsl);
+      toast.success("Cor primária aplicada em todo o sistema!");
+    } finally {
+      setSavingColor(false);
+    }
+  };
+
+  const handleResetColor = async () => {
+    setPrimaryHex(hslStringToHex(DEFAULT_HSL));
+    applyPrimaryColor(DEFAULT_HSL);
+    const estId = await getEstabelecimentoId();
+    if (estId) {
+      await supabase
+        .from("system_visual_config")
+        .upsert({ estabelecimento_id: estId, primary_color_hsl: DEFAULT_HSL } as any, { onConflict: "estabelecimento_id" });
+    }
+    localStorage.setItem("system_primary_hsl", DEFAULT_HSL);
+    toast.success("Cor restaurada para o laranja padrão");
+  };
+
+  const PRESET_COLORS = [
+    "#f97316", "#ef4444", "#ec4899", "#a855f7",
+    "#6366f1", "#3b82f6", "#0ea5e9", "#06b6d4",
+    "#10b981", "#22c55e", "#84cc16", "#eab308",
+  ];
+
   if (loading) {
     return (
       <div className="p-6 flex justify-center">
