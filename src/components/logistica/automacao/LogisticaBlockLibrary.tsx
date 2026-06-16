@@ -86,16 +86,23 @@ export function LogisticaBlockLibrary({ onDragStart, isExpanded, onToggleExpand 
                     )}
                     <span className="text-xs font-medium">{category.label}</span>
                   </div>
-                  <span className={`text-xs ${isOpen ? "text-background/70" : "text-muted-foreground"}`}>
-                    {isOpen ? "−" : "+"}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-semibold flex items-center justify-center ${isOpen ? "bg-background/20 text-background" : "bg-foreground text-background"}`}>
+                      {blocks.length}
+                    </span>
+                    <span className={`text-xs ${isOpen ? "text-background/70" : "text-muted-foreground"}`}>
+                      {isOpen ? "−" : "+"}
+                    </span>
+                  </div>
                 </CollapsibleTrigger>
 
                 <CollapsibleContent className="animate-accordion-down">
                   <div className="relative ml-5 pl-4 pt-1 pb-1">
-                    <div className="absolute left-0 top-0 bottom-0 w-px bg-border" />
+                    <div className="absolute left-0 top-0 bottom-0 w-px bg-foreground/40" />
                     <div className="space-y-0.5">
-                      {blocks.map((block) => (
+                      {blocks.map((block) => {
+                        const BlockIcon = LucideIcons[(block as any).icon as keyof typeof LucideIcons] as any;
+                        return (
                         <Card
                           key={block.type}
                           draggable
@@ -104,9 +111,13 @@ export function LogisticaBlockLibrary({ onDragStart, isExpanded, onToggleExpand 
                           title="Arraste ou clique 2x para adicionar"
                           className="px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-colors duration-100 select-none"
                         >
-                          <h4 className="text-xs font-normal text-foreground truncate">{block.label}</h4>
+                          <div className="flex items-center gap-2">
+                            {BlockIcon && <BlockIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+                            <h4 className="text-xs font-normal text-foreground truncate">{block.label}</h4>
+                          </div>
                         </Card>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </CollapsibleContent>
