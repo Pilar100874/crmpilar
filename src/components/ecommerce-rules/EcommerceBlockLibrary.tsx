@@ -43,14 +43,9 @@ export const EcommerceBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
     ),
   })).filter(cat => cat.blocks.length > 0);
 
-  if (!isExpanded) {
-    return (
-      <Button variant="outline" size="sm" onClick={() => onToggleExpanded(true)} className="absolute left-4 top-20 z-10">
-        <Icons.Plus className="h-4 w-4 mr-2" />
-        Blocos
-      </Button>
-    );
-  }
+  if (!isExpanded) return null;
+
+
 
   return (
     <div className="w-60 flex flex-col h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border relative overflow-hidden animate-slide-in">

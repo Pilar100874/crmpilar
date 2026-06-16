@@ -1,3 +1,4 @@
+import { FloatingAddBlockButton } from "@/components/workflow/FloatingAddBlockButton";
 import { useCallback, useRef, useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -1546,7 +1547,6 @@ function BotBuilderContent() {
       onZoomIn={handleZoomIn}
       onZoomOut={handleZoomOut}
       onFitView={handleFitView}
-      onAddBlock={() => setIsBlockLibraryExpanded(true)}
       isLocked={isLocked}
       onToggleLock={handleToggleLock}
       hasUnsavedChanges={hasUnsavedChanges}
@@ -1606,6 +1606,9 @@ function BotBuilderContent() {
           />
 
           <div className={`${showSimulator ? "lg:mr-96" : ""} flex-1 relative`} ref={reactFlowWrapper} style={{ touchAction: 'none' }}>
+            {!isBlockLibraryExpanded && (
+              <FloatingAddBlockButton onClick={() => setIsBlockLibraryExpanded(true)} />
+            )}
             <ReactFlow
               nodes={nodes.map(node => ({
                 ...node,

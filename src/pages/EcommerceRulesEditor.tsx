@@ -1,3 +1,4 @@
+import { FloatingAddBlockButton } from "@/components/workflow/FloatingAddBlockButton";
 import { useCallback, useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -353,7 +354,6 @@ function EcommerceRulesEditorInner() {
       onZoomIn={() => reactFlowInstance?.zoomIn()}
       onZoomOut={() => reactFlowInstance?.zoomOut()}
       onFitView={() => reactFlowInstance?.fitView()}
-      onAddBlock={() => setIsLibraryExpanded(!isLibraryExpanded)}
       onTest={() => { if (!showSimulator) setSelectedNode(null); setShowSimulator((v) => !v); }}
       showTest={showSimulator}
       isTestActive={showSimulator}
@@ -393,19 +393,15 @@ function EcommerceRulesEditorInner() {
           />
         )}
 
+
+
         {/* Canvas */}
         <div ref={reactFlowWrapper} className="flex-1 h-full relative">
           {!isLibraryExpanded && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsLibraryExpanded(true)}
-              className="absolute left-4 top-4 z-10 shadow-md"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Blocos
-            </Button>
+            <FloatingAddBlockButton onClick={() => setIsLibraryExpanded(true)} />
           )}
+
+
           <ReactFlow
             nodes={nodes}
             edges={edges}

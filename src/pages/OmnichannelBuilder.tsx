@@ -1,3 +1,4 @@
+import { FloatingAddBlockButton } from "@/components/workflow/FloatingAddBlockButton";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
@@ -637,7 +638,6 @@ export default function OmnichannelBuilder() {
       onZoomIn={handleZoomIn}
       onZoomOut={handleZoomOut}
       onFitView={handleFitView}
-      onAddBlock={() => setIsBlockLibraryExpanded(true)}
       onToggleLock={handleToggleLock}
       isLocked={isLocked}
       onClose={() => navigate(originUrl)}
@@ -734,6 +734,9 @@ export default function OmnichannelBuilder() {
           ref={reactFlowWrapper}
           style={{ touchAction: 'none' }}
         >
+          {!isBlockLibraryExpanded && (
+            <FloatingAddBlockButton onClick={() => setIsBlockLibraryExpanded(true)} />
+          )}
           <ReactFlow
             nodes={nodes.map(node => ({
               ...node,

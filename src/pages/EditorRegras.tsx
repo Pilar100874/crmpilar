@@ -1,3 +1,4 @@
+import { FloatingAddBlockButton } from "@/components/workflow/FloatingAddBlockButton";
 import { useCallback, useRef, useState, useEffect } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -718,7 +719,6 @@ function EditorRegrasContent() {
       onZoomIn={handleZoomIn}
       onZoomOut={handleZoomOut}
       onFitView={handleFitView}
-      onAddBlock={() => setIsBlockLibraryExpanded(true)}
       isLocked={isLocked}
       onToggleLock={handleToggleLock}
       onTest={() => { if (!showSimulator) setSelectedNode(null); setShowSimulator((v) => !v); }}
@@ -767,7 +767,10 @@ function EditorRegrasContent() {
       />
 
       {/* Canvas */}
-      <div ref={reactFlowWrapper} className="flex-1 bg-muted/20">
+      <div ref={reactFlowWrapper} className="flex-1 bg-muted/20 relative">
+        {!isBlockLibraryExpanded && (
+          <FloatingAddBlockButton onClick={() => setIsBlockLibraryExpanded(true)} />
+        )}
         <ReactFlow
           nodes={nodes}
           edges={edges.map((edge) => ({

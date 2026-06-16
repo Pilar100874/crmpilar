@@ -1,3 +1,4 @@
+import { FloatingAddBlockButton } from "@/components/workflow/FloatingAddBlockButton";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -824,7 +825,6 @@ function AdsAutomationContent() {
           onZoomIn={() => reactFlowInstance?.zoomIn({ duration: 200 })}
           onZoomOut={() => reactFlowInstance?.zoomOut({ duration: 200 })}
           onFitView={() => reactFlowInstance?.fitView({ duration: 300, padding: 0.2 })}
-          onAddBlock={() => setIsBlockLibraryExpanded(true)}
           hasUnsavedChanges={hasUnsavedChanges}
           onClose={() => { setIsEditing(false); setSelectedAutomation(null); }}
           aiGeneratorContent={
@@ -871,6 +871,9 @@ function AdsAutomationContent() {
 
             {/* Canvas */}
             <div className="flex-1 relative" ref={reactFlowWrapper}>
+              {!isBlockLibraryExpanded && (
+                <FloatingAddBlockButton onClick={() => setIsBlockLibraryExpanded(true)} />
+              )}
               <ReactFlow
                 nodes={nodes}
                 edges={styledEdges}
