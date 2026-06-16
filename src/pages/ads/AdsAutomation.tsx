@@ -678,21 +678,21 @@ function AdsAutomationContent() {
   return (
     <div className="min-h-screen bg-background">
       {!isEditing ? (
-        <div className="p-6">
-          <div className="max-w-6xl mx-auto space-y-6">
+        <div className="p-3 sm:p-6">
+          <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent truncate">
                   Automações de Anúncios
                 </h1>
-                <p className="text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   Crie regras automáticas para gerenciar seus anúncios
                 </p>
               </div>
               <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
                 <DialogTrigger asChild>
-                  <Button className="gap-2">
+                  <Button className="gap-2 w-full sm:w-auto flex-shrink-0">
                     <Plus className="h-4 w-4" />
                     Nova Automação
                   </Button>

@@ -1084,15 +1084,15 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Automações de Logística</h1>
-          <p className="text-muted-foreground">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold truncate">Automações de Logística</h1>
+          <p className="text-sm text-muted-foreground">
             Configure regras automáticas para monitoramento de veículos
           </p>
         </div>
-        <Button onClick={onNew}>
+        <Button onClick={onNew} className="w-full sm:w-auto flex-shrink-0">
           <Plus className="h-4 w-4 mr-2" />
           Nova Automação
         </Button>
