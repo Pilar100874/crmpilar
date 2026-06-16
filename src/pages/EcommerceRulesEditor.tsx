@@ -397,6 +397,9 @@ function EcommerceRulesEditorInner() {
 
         {/* Canvas */}
         <div ref={reactFlowWrapper} className="flex-1 h-full relative">
+          {!isLibraryExpanded && (
+            <FloatingAddBlockButton onClick={() => setIsLibraryExpanded(true)} />
+          )}
 
 
           <ReactFlow
