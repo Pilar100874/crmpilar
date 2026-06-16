@@ -385,13 +385,12 @@ function EcommerceRulesEditorInner() {
     >
       <div className="flex flex-1 h-full overflow-hidden">
         {/* Block Library - Left Panel */}
-        {isLibraryExpanded && (
-          <EcommerceBlockLibrary
-            onDragStart={handleDragStart}
-            isExpanded={isLibraryExpanded}
-            onToggleExpanded={setIsLibraryExpanded}
-          />
-        )}
+        <EcommerceBlockLibrary
+          onDragStart={handleDragStart}
+          isExpanded={isLibraryExpanded}
+          onToggleExpanded={setIsLibraryExpanded}
+        />
+
 
         {/* Canvas */}
         <div ref={reactFlowWrapper} className="flex-1 h-full relative">
