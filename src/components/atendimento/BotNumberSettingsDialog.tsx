@@ -222,9 +222,9 @@ export function BotNumberSettingsDialog({
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              Quando o cliente responder neste bot (Canal A), um novo contato será criado no Canal B
-              e a mensagem será reenviada para lá.
+              Apenas números ativos cadastrados em <span className="font-medium">Canais de Atendimento</span> aparecem aqui. Quando o cliente responder neste bot, a mensagem será encaminhada para o número selecionado.
             </p>
+
           </div>
         </div>
 
