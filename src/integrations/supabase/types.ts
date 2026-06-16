@@ -1636,6 +1636,8 @@ export type Database = {
           description: string | null
           estabelecimento_id: string | null
           flow_data: Json
+          forward_to_bot_enabled: boolean
+          forward_to_bot_id: string | null
           forward_to_numero_id: string | null
           id: string
           name: string
@@ -1650,6 +1652,8 @@ export type Database = {
           description?: string | null
           estabelecimento_id?: string | null
           flow_data: Json
+          forward_to_bot_enabled?: boolean
+          forward_to_bot_id?: string | null
           forward_to_numero_id?: string | null
           id?: string
           name: string
@@ -1664,6 +1668,8 @@ export type Database = {
           description?: string | null
           estabelecimento_id?: string | null
           flow_data?: Json
+          forward_to_bot_enabled?: boolean
+          forward_to_bot_id?: string | null
           forward_to_numero_id?: string | null
           id?: string
           name?: string
@@ -1677,6 +1683,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_flows_forward_to_bot_id_fkey"
+            columns: ["forward_to_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bot_flows"
             referencedColumns: ["id"]
           },
           {
