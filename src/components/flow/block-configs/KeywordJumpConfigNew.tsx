@@ -51,7 +51,7 @@ export const KeywordJumpConfigNew = ({ config, handleConfigChange }: ConfigProps
                 value={keyword.text || ""}
                 onChange={(e) => updateKeyword(index, e.target.value)}
                 placeholder="Digite a palavra-chave"
-                className="flex-1 bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+                className="flex-1 bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
               />
               <Button 
                 variant="ghost" 

@@ -111,14 +111,14 @@ export const ReplyButtonsConfig = ({ config, handleConfigChange, nodes, edges, s
                 value={button.text || ""}
                 onChange={(e) => updateButton(index, "text", e.target.value)}
                 placeholder="Texto do botão"
-                className="bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
+                className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
               />
 
               <Input
                 value={button.value || ""}
                 onChange={(e) => updateButton(index, "value", e.target.value)}
                 placeholder="Valor armazenado (opcional)"
-                className="bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
+                className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
               />
 
               <div className="flex items-center gap-2">
@@ -127,7 +127,7 @@ export const ReplyButtonsConfig = ({ config, handleConfigChange, nodes, edges, s
                   value={button.imageUrl || ""}
                   onChange={(e) => updateButton(index, "imageUrl", e.target.value)}
                   placeholder="URL da imagem do botão (opcional)"
-                  className="bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium text-xs"
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium text-xs"
                 />
               </div>
             </div>
@@ -273,7 +273,7 @@ export const ListButtonsConfig = ({ config, handleConfigChange, nodes, edges, se
                 value={section.title || ""}
                 onChange={(e) => updateSection(sectionIndex, "title", e.target.value)}
                 placeholder="Título da seção"
-                className="bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
+                className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
               />
 
               <div className="pl-3 border-l-2 border-cyan-500/30 space-y-2">
@@ -307,13 +307,13 @@ export const ListButtonsConfig = ({ config, handleConfigChange, nodes, edges, se
                       value={item.title || ""}
                       onChange={(e) => updateItem(sectionIndex, itemIndex, "title", e.target.value)}
                       placeholder="Título"
-                      className="text-xs bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+                      className="text-xs bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
                     />
                     <Input
                       value={item.description || ""}
                       onChange={(e) => updateItem(sectionIndex, itemIndex, "description", e.target.value)}
                       placeholder="Descrição (opcional)"
-                      className="text-xs bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+                      className="text-xs bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
                     />
                   </div>
                 ))}

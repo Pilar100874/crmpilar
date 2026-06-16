@@ -53,7 +53,7 @@ export const LeadScoringConfigNew = ({ config, handleConfigChange }: ConfigProps
                 value={config.scoreField || "score"}
                 onChange={(e) => handleConfigChange("scoreField", e.target.value)}
                 placeholder="score"
-                className="pl-7 bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
+                className="pl-7 bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
               />
             </div>
             <Button variant="default" size="sm" className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600">
@@ -94,7 +94,7 @@ export const LeadScoringConfigNew = ({ config, handleConfigChange }: ConfigProps
                   value={group.field || ""}
                   onChange={(e) => updateRuleGroup(index, "field", e.target.value)}
                   placeholder="Digite ou selecione o campo"
-                  className="pl-16 bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
+                  className="pl-16 bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
                 />
               </div>
             </div>
