@@ -13339,6 +13339,7 @@ export type Database = {
           created_at: string
           estabelecimento_id: string
           id: string
+          primary_color_hsl: string | null
           splash_video_loop: boolean
           splash_video_url: string | null
           updated_at: string
@@ -13347,6 +13348,7 @@ export type Database = {
           created_at?: string
           estabelecimento_id: string
           id?: string
+          primary_color_hsl?: string | null
           splash_video_loop?: boolean
           splash_video_url?: string | null
           updated_at?: string
@@ -13355,6 +13357,7 @@ export type Database = {
           created_at?: string
           estabelecimento_id?: string
           id?: string
+          primary_color_hsl?: string | null
           splash_video_loop?: boolean
           splash_video_url?: string | null
           updated_at?: string

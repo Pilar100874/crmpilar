@@ -1,0 +1,1 @@
+ALTER TABLE public.system_visual_config ADD COLUMN IF NOT EXISTS primary_color_hsl text;
