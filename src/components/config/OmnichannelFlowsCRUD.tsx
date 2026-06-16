@@ -33,6 +33,8 @@ export const OmnichannelFlowsCRUD = ({ estabelecimentoId }: OmnichannelFlowsCRUD
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [renameFlow, setRenameFlow] = useState<OmnichannelFlow | null>(null);
   const [newName, setNewName] = useState("");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
 
   useEffect(() => {
     if (estabelecimentoId) {
