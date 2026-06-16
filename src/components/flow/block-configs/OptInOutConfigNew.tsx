@@ -16,32 +16,32 @@ export const OptInOutConfigNew = ({ config, handleConfigChange, inputRefs, openV
   return (
     <div className="space-y-6">
       <div className="bg-muted/50 rounded-lg p-4">
-        <h3 className="font-semibold mb-2">Get new subscribers</h3>
+        <h3 className="font-semibold mb-2">Captar novos assinantes</h3>
         <p className="text-sm text-muted-foreground">
-          Ask your users if they want to subscribe to your WhatsApp Business. If they choose Yes – or the button associated with the green output – they will be automatically added to your Subscribers list.
+          Pergunte aos usuários se desejam se inscrever no seu WhatsApp Business. Se escolherem Sim – ou o botão associado à saída verde – serão adicionados automaticamente à sua lista de Assinantes.
         </p>
       </div>
 
       <div className="space-y-2">
-        <Label>Header (optional)</Label>
+        <Label>Cabeçalho (opcional)</Label>
         <VariableTextarea
           ref={(el) => inputRefs && (inputRefs.current['header'] = el)}
-          value={config.header || "Subscribe!"}
+          value={config.header || "Inscreva-se!"}
           onChange={(e) => handleConfigChange("header", e.target.value)}
           onVariableRequest={() => inputRefs?.current['header'] && openVariablePicker?.(inputRefs.current['header'])}
-          placeholder="Subscribe!"
+          placeholder="Inscreva-se!"
           rows={3}
         />
       </div>
 
       <div className="space-y-2">
-        <Label>Text</Label>
+        <Label>Descrição</Label>
         <VariableTextarea
           ref={(el) => inputRefs && (inputRefs.current['text'] = el)}
-          value={config.text || "Would you like to receive news & updates from us?"}
+          value={config.text || "Deseja receber novidades e atualizações nossas?"}
           onChange={(e) => handleConfigChange("text", e.target.value)}
           onVariableRequest={() => inputRefs?.current['text'] && openVariablePicker?.(inputRefs.current['text'])}
-          placeholder="Would you like to receive news & updates from us?"
+          placeholder="Deseja receber novidades e atualizações nossas?"
           rows={3}
         />
         <div className="flex gap-2">
@@ -57,25 +57,25 @@ export const OptInOutConfigNew = ({ config, handleConfigChange, inputRefs, openV
             className="ml-auto"
             onClick={() => inputRefs?.current['text'] && openVariablePicker?.(inputRefs.current['text'])}
           >
-            usar variavel
+            Usar variável
           </Button>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label>Footer (optional)</Label>
+        <Label>Rodapé (opcional)</Label>
         <VariableTextarea
           ref={(el) => inputRefs && (inputRefs.current['footer'] = el)}
-          value={config.footer || "Choose Yes to confirm"}
+          value={config.footer || "Escolha Sim para confirmar"}
           onChange={(e) => handleConfigChange("footer", e.target.value)}
           onVariableRequest={() => inputRefs?.current['footer'] && openVariablePicker?.(inputRefs.current['footer'])}
-          placeholder="Choose Yes to confirm"
+          placeholder="Escolha Sim para confirmar"
           rows={3}
         />
       </div>
 
       <div className="space-y-3">
-        <Label>Buttons</Label>
+        <Label>Botões</Label>
         
         <div className="space-y-2">
           <div className="flex items-center gap-2 bg-pink-500 text-white p-3 rounded">

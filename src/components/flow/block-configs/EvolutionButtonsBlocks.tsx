@@ -82,7 +82,7 @@ const TextBaseFields = ({ config, handleConfigChange }: ConfigProps) => (
       />
     </div>
     <div className="space-y-2">
-      <Label>Descrição / Corpo</Label>
+      <Label>Descrição</Label>
       <Textarea
         value={config.description || ""}
         onChange={(e) => handleConfigChange("description", e.target.value)}
