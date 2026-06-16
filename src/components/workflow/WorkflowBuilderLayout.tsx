@@ -197,18 +197,7 @@ export function WorkflowBuilderLayout({
             <>
               <div className="hidden sm:block h-8 w-px bg-border flex-shrink-0" />
 
-              {/* Add block - always visible (essential) */}
-              {onAddBlock && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={onAddBlock}
-                  className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex-shrink-0"
-                  title="Adicionar bloco"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              )}
+
 
               {/* Inline zoom/lock controls on xl+ */}
               <div className="hidden xl:flex items-center gap-1 flex-shrink-0">
