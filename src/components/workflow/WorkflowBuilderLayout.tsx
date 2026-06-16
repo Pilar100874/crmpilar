@@ -112,6 +112,18 @@ export function WorkflowBuilderLayout({
     else navigate(originUrl);
   };
 
+  const saveAndExit = async () => {
+    if (!onSave) return;
+    try {
+      await Promise.resolve(onSave());
+    } catch {
+      return;
+    }
+    setShowExitDialog(false);
+    if (onClose) onClose();
+    else navigate(originUrl);
+  };
+
   // Auto fit-view when viewport size changes (debounced) so blocks always fit
   const fitRef = useRef(onFitView);
   fitRef.current = onFitView;
@@ -345,11 +357,16 @@ export function WorkflowBuilderLayout({
               Você tem alterações não salvas. Tem certeza que deseja sair sem salvar?
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={confirmExit} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Sair sem salvar
             </AlertDialogAction>
+            {onSave && (
+              <AlertDialogAction onClick={(e) => { e.preventDefault(); saveAndExit(); }} disabled={isSaving}>
+                {isSaving ? "Salvando..." : "Salvar e sair"}
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
