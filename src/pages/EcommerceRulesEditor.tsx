@@ -53,7 +53,7 @@ function EcommerceRulesEditorInner() {
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [flowName, setFlowName] = useState("Nova Regra E-commerce");
+  const [flowName, setFlowName] = useState((location.state as any)?.initialName || "Nova Regra E-commerce");
   const [isSaving, setIsSaving] = useState(false);
   const [isLibraryExpanded, setIsLibraryExpanded] = useState(true);
   const [showSimulator, setShowSimulator] = useState(false);
