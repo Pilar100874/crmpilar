@@ -1935,6 +1935,114 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         break;
       }
 
+      case "button_url":
+      case "button_copy":
+      case "button_call":
+      case "button_pix": {
+        const t = interpolateVariables(config.title || "", context);
+        const d = interpolateVariables(config.description || "", context);
+        const f = interpolateVariables(config.footer || "", context);
+
+        let actionLabel = config.displayText || "";
+        let extraLine = "";
+        if (nodeData.type === "button_url") {
+          actionLabel = actionLabel || (config.url ? `🔗 ${config.url}` : "Visitar");
+          if (!actionLabel.startsWith("🔗")) actionLabel = `🔗 ${actionLabel}`;
+        } else if (nodeData.type === "button_copy") {
+          actionLabel = `📋 ${actionLabel || `Copiar ${config.copyCode || ""}`}`.trim();
+          if (config.copyCode) extraLine = `Código: *${config.copyCode}*`;
+        } else if (nodeData.type === "button_call") {
+          actionLabel = `📞 ${actionLabel || config.phoneNumber || "Ligar"}`;
+          if (config.phoneNumber) extraLine = `Telefone: ${config.phoneNumber}`;
+        } else if (nodeData.type === "button_pix") {
+          actionLabel = `💠 Pagar com Pix (${config.currency || "BRL"})`;
+          const parts: string[] = [];
+          if (config.keyType) parts.push(String(config.keyType).toUpperCase());
+          if (config.pixKey) parts.push(config.pixKey);
+          if (config.name) parts.push(config.name);
+          if (parts.length) extraLine = parts.join(" • ");
+        }
+
+        const parts: string[] = [];
+        if (t) parts.push(`*${t}*`);
+        if (d) parts.push(d);
+        if (extraLine) parts.push(extraLine);
+        if (f) parts.push(`_${f}_`);
+
+        setMessages((prev) => [...prev, {
+          id: uid(),
+          sender: "bot",
+          text: parts.join("\n\n"),
+          timestamp: new Date(),
+          nodeId: node.id,
+          buttons: [{
+            text: actionLabel,
+            value: actionLabel,
+            buttonId: `action_${nodeData.type}`,
+          }],
+        }]);
+
+        // Botões de ação não esperam resposta — auto-avança
+        safeSetTimeout(() => {
+          const nextNode = getNextNode(node.id);
+          if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+          else { addSuccessMessage("Fluxo concluído!"); }
+        }, 800);
+        break;
+      }
+
+      case "buttons_mixed": {
+        const bmxTitle = interpolateVariables(config.title || "", context);
+        const bmxDesc = interpolateVariables(config.description || "", context);
+        const bmxFooter = interpolateVariables(config.footer || "", context);
+        let bmxButtons = config.buttons || [];
+
+        if (isOficial && bmxButtons.length > 3) {
+          addSystemMessage(`⚠️ WhatsApp Oficial permite no máximo 3 botões. ${bmxButtons.length - 3} ignorado(s).`);
+          bmxButtons = bmxButtons.slice(0, 3);
+        }
+
+        const iconFor: Record<string, string> = { url: "🔗", copy: "📋", call: "📞", reply: "💬", pix: "💠" };
+        const parts: string[] = [];
+        if (bmxTitle) parts.push(`*${bmxTitle}*`);
+        if (bmxDesc) parts.push(bmxDesc);
+        if (bmxFooter) parts.push(`_${bmxFooter}_`);
+
+        const renderedButtons = bmxButtons.map((b: any, idx: number) => {
+          const icon = iconFor[b.type] || "▫️";
+          const label = b.displayText || b.label || b.text || `Botão ${idx + 1}`;
+          return {
+            text: `${icon} ${label}`,
+            value: label,
+            buttonId: String(b.id || `button_${idx}`),
+          };
+        });
+
+        setMessages((prev) => [...prev, {
+          id: uid(),
+          sender: "bot",
+          text: parts.join("\n\n") || (bmxButtons.length ? "Escolha uma opção:" : ""),
+          timestamp: new Date(),
+          nodeId: node.id,
+          buttons: renderedButtons,
+        }]);
+
+        const hasReply = bmxButtons.some((b: any) => b.type === "reply");
+        if (hasReply) {
+          setIsWaitingInput(true);
+          setCurrentBlockType("reply_buttons");
+          setPendingVariable(normalizeVarName(config.variable || "resposta_botao"));
+        } else {
+          safeSetTimeout(() => {
+            const nextNode = getNextNode(node.id);
+            if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+            else { addSuccessMessage("Fluxo concluído!"); }
+          }, 800);
+        }
+        break;
+      }
+
+
       case "list_buttons":
         const listText = interpolateVariables(config.text || "", context);
         const listHeader = config.header ? interpolateVariables(config.header, context) : null;
