@@ -151,6 +151,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
       if (error) {
         console.error("Error loading whatsapp_numeros:", error);
       } else {
+        botsCache.numeros = data || [];
         setWhatsappNumeros(data || []);
       }
     } catch (e) {
