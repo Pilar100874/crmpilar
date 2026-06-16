@@ -45,9 +45,10 @@ interface FlowSimulatorProps {
   onContextChange?: (context: Record<string, any>) => void;
   channel?: "whatsapp" | "facebook" | "instagram" | "telegram" | "webchat";
   provider?: "evolution" | "whatsapp_oficial";
+  onProviderChange?: (provider: "evolution" | "whatsapp_oficial") => void;
 }
 
-export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes = new Set(), skipNodes = new Set(), onContextChange, channel = "whatsapp", provider = "evolution" }: FlowSimulatorProps) => {
+export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes = new Set(), skipNodes = new Set(), onContextChange, channel = "whatsapp", provider = "evolution", onProviderChange }: FlowSimulatorProps) => {
   const isOficial = provider === "whatsapp_oficial" && channel === "whatsapp";
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
