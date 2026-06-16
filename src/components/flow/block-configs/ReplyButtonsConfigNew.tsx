@@ -38,17 +38,15 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
     <div className="space-y-6">
       <div className="space-y-2">
         <Label>Imagem (opcional)</Label>
-        <VariableInput
-          ref={(el) => inputRefs && (inputRefs.current['image'] = el)}
+        <MediaUrlUploadField
+          label=""
           value={config.image || ""}
-          onChange={(e) => handleConfigChange("image", e.target.value)}
-          onVariableRequest={() => inputRefs?.current['image'] && openVariablePicker?.(inputRefs.current['image'])}
+          onChange={(url) => handleConfigChange("image", url)}
           placeholder="https://..."
+          helperText="URL da imagem exibida acima dos botões. Você pode colar a URL ou fazer upload."
         />
-        <p className="text-xs text-muted-foreground">
-          URL da imagem a ser exibida acima dos botões
-        </p>
       </div>
+
 
       <div className="space-y-2">
         <Label>Cabeçalho (opcional)</Label>
