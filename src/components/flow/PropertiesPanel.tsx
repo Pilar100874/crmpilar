@@ -270,6 +270,18 @@ export const PropertiesPanel = ({
       selectedNode,
     };
 
+    const fields = renderConfigSwitch(nodeData, configProps);
+    const showPreview = PREVIEW_SUPPORTED_TYPES.has(nodeData.type);
+    return (
+      <>
+        {showPreview && <LiveBlockPreview type={nodeData.type} config={config} />}
+        {fields}
+      </>
+    );
+  };
+
+  const renderConfigSwitch = (nodeData: any, configProps: any) => {
+
     switch (nodeData.type) {
       // Message Blocks
       case "send_message":
