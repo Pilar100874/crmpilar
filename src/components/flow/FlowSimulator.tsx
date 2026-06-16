@@ -4717,11 +4717,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                         )}
                       </div>
                     )}
-                    <div className={`flex items-start gap-2 ${msg.mediaUrl ? 'px-4 py-2' : 'px-4 py-2'}`}>
-                      {msg.sender === "bot" && <Bot className="w-4 h-4 mt-0.5" />}
-                      {msg.sender === "user" && <User className="w-4 h-4 mt-0.5" />}
-                      <div className="flex-1">
-                        {msg.text && <p className="text-sm whitespace-pre-wrap">{formatText(msg.text)}</p>}
+                    <div className={`flex items-start gap-2 ${msg.mediaUrl ? (channel === 'whatsapp' ? 'px-2 py-1.5' : 'px-4 py-2') : 'px-3 py-1.5'}`}>
+                      {channel !== 'whatsapp' && msg.sender === "bot" && <Bot className="w-4 h-4 mt-0.5" />}
+                      {channel !== 'whatsapp' && msg.sender === "user" && <User className="w-4 h-4 mt-0.5" />}
+                      <div className="flex-1 min-w-0">
+                        {msg.text && <p className={`${channel === 'whatsapp' ? 'text-[14.5px] leading-[19px] text-[#111B21]' : 'text-sm'} whitespace-pre-wrap break-words`}>{formatText(msg.text)}</p>}
 
                         {msg.socialLinks && msg.socialLinks.length > 0 && (
                           <div className="mt-3 grid grid-cols-1 gap-2">
