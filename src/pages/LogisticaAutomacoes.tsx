@@ -409,6 +409,7 @@ function EditorContent({
             setNodes(nodesWithCallbacks);
           }
           if (flowData.edges) setEdges(flowData.edges);
+          baselineSignatureRef.current = null; // re-baselina após carga
         }
       }
     } catch (error) {
