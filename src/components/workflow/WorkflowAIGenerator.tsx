@@ -179,12 +179,13 @@ export function WorkflowAIGenerator({
         variant="outline"
         size="sm"
         onClick={() => setOpen(true)}
-        className="gap-1.5 h-8 text-xs sm:text-sm bg-gradient-to-r from-violet-500/10 to-purple-500/10 border-violet-300 dark:border-violet-700 hover:from-violet-500/20 hover:to-purple-500/20"
+        title="Gerar com IA"
+        className="gap-1.5 h-8 text-xs xl:text-sm px-2 flex-shrink-0 bg-gradient-to-r from-violet-500/10 to-purple-500/10 border-violet-300 dark:border-violet-700 hover:from-violet-500/20 hover:to-purple-500/20"
       >
         <Wand2 className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
-        <span className="hidden sm:inline">Gerar com IA</span>
-        <span className="sm:hidden">IA</span>
+        <span className="hidden xl:inline">Gerar com IA</span>
       </Button>
+
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-lg">
