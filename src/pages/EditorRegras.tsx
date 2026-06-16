@@ -21,8 +21,7 @@ import {
   BackgroundVariant,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { FlowTemplateManager } from "@/components/flow/FlowTemplateManager";
-import { FlowExportImportGeneric } from "@/components/flow/FlowExportImportGeneric";
+import { WorkflowFilesMenu } from "@/components/workflow/WorkflowFilesMenu";
 import { boxSelectionProps } from "@/lib/flowSelection";
 import { 
   AlertDialog, 
@@ -741,12 +740,24 @@ function EditorRegrasContent() {
         />
       }
       rightContent={
-        selectedEdgeId ? (
-          <Button variant="outline" size="sm" className="h-8 text-xs sm:text-sm px-2 sm:px-3" onClick={handleDeleteSelectedEdge}>
-            <span className="hidden sm:inline">Remover conexão</span>
-            <span className="sm:hidden">Remover</span>
-          </Button>
-        ) : null
+        <>
+          <WorkflowFilesMenu
+            nodes={nodes}
+            edges={edges}
+            selectedNodes={nodes.filter((n) => n.selected)}
+            onImport={(n, e) => { setNodes(n as any); setEdges(e as any); }}
+            onLoadTemplate={(newNodes, newEdges) => {
+              setNodes((nds) => [...nds, ...newNodes]);
+              setEdges((eds) => [...eds, ...newEdges]);
+            }}
+          />
+          {selectedEdgeId ? (
+            <Button variant="outline" size="sm" className="h-8 text-xs sm:text-sm px-2 sm:px-3" onClick={handleDeleteSelectedEdge}>
+              <span className="hidden sm:inline">Remover conexão</span>
+              <span className="sm:hidden">Remover</span>
+            </Button>
+          ) : null}
+        </>
       }
     >
       {/* Block Library */}
@@ -835,25 +846,6 @@ function EditorRegrasContent() {
             nodeColor="#8B5CF6"
             maskColor="rgba(0, 0, 0, 0.1)"
           />
-          <Panel position="top-right" className="!m-2 flex gap-1.5 bg-card/95 backdrop-blur border border-border rounded-lg p-1 shadow-lg">
-            <FlowExportImportGeneric
-              nodes={nodes}
-              edges={edges}
-              onImport={(n, e) => {
-                setNodes(n as any);
-                setEdges(e as any);
-              }}
-            />
-            <FlowTemplateManager
-              nodes={nodes}
-              edges={edges}
-              selectedNodes={nodes.filter((n) => n.selected)}
-              onLoadTemplate={(newNodes, newEdges) => {
-                setNodes((nds) => [...nds, ...newNodes]);
-                setEdges((eds) => [...eds, ...newEdges]);
-              }}
-            />
-          </Panel>
         </ReactFlow>
         {connectMenu && (
           <SmartConnectMenu
