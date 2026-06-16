@@ -1625,24 +1625,6 @@ function BotBuilderContent() {
               <Save className={`h-4 w-4 mr-1.5 ${isSaving ? "animate-pulse" : ""}`} />
               <span className="hidden sm:inline">{isSaving ? "..." : "Salvar"}</span>
             </Button>
-            {currentBotCanais.includes('whatsapp') && (
-              <div className="inline-flex items-center rounded-full border border-border bg-muted p-0.5" title="Provedor para simulação">
-                <button
-                  type="button"
-                  onClick={() => setSimulatorProvider("evolution")}
-                  className={`h-6 px-2.5 text-[11px] font-medium rounded-full transition-colors ${simulatorProvider === 'evolution' ? "bg-amber-500 text-white shadow" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  Evolution
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSimulatorProvider("whatsapp_oficial")}
-                  className={`h-6 px-2.5 text-[11px] font-medium rounded-full transition-colors ${simulatorProvider === 'whatsapp_oficial' ? "bg-emerald-600 text-white shadow" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  WhatsApp Oficial
-                </button>
-              </div>
-            )}
             <Button size="sm" onClick={handleTest} className="h-8 px-2 bg-gradient-to-r from-primary to-primary/90">
               <Play className="h-4 w-4 mr-1.5" />
               <span className="hidden sm:inline">{showSimulator ? "Parar" : "Testar"}</span>

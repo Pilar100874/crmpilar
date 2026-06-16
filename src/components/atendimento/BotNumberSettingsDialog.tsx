@@ -10,6 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "sonner";
 import {
@@ -30,6 +31,7 @@ interface NumeroOption {
   nome: string;
   provider: string;
   telefone?: string | null;
+  session_name?: string | null;
 }
 
 interface BotOption {
@@ -37,6 +39,11 @@ interface BotOption {
   name: string;
   active: boolean;
 }
+
+type BotFlowRow = Database["public"]["Tables"]["bot_flows"]["Row"];
+type WhatsAppSessionRow = Database["public"]["Tables"]["whatsapp_sessions"]["Row"];
+
+type LinkedSession = Pick<WhatsAppSessionRow, "id" | "session_name" | "phone_number" | "status">;
 
 export function BotNumberSettingsDialog({
   botId,
@@ -49,6 +56,8 @@ export function BotNumberSettingsDialog({
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(estabIdProp ?? null);
   const [numeros, setNumeros] = useState<NumeroOption[]>([]);
   const [linkedNumero, setLinkedNumero] = useState<NumeroOption | null>(null);
+  const [effectiveWhatsappNumeroId, setEffectiveWhatsappNumeroId] = useState<string | null>(whatsappNumeroId);
+  const [linkedSession, setLinkedSession] = useState<LinkedSession | null>(null);
   const [bots, setBots] = useState<BotOption[]>([]);
   const [forwardEnabled, setForwardEnabled] = useState(false);
   const [forwardBotId, setForwardBotId] = useState<string | null>(null);
@@ -61,17 +70,31 @@ export function BotNumberSettingsDialog({
     (async () => {
       const { data } = await supabase
         .from("bot_flows")
-        .select("flow_data, forward_to_bot_id, forward_to_bot_enabled, whatsapp_numero_id")
+        .select("flow_data, forward_to_bot_id, forward_to_bot_enabled, whatsapp_numero_id, estabelecimento_id")
         .eq("id", botId)
         .maybeSingle();
       if (data) {
-        setForwardEnabled(Boolean((data as any).forward_to_bot_enabled));
-        setForwardBotId((data as any).forward_to_bot_id ?? null);
-        const types = detectEvolutionOnlyBlocks((data as any).flow_data);
+        const botData = data as Pick<BotFlowRow, "flow_data" | "forward_to_bot_id" | "forward_to_bot_enabled" | "whatsapp_numero_id" | "estabelecimento_id">;
+        setForwardEnabled(Boolean(botData.forward_to_bot_enabled));
+        setForwardBotId(botData.forward_to_bot_id ?? null);
+        setEffectiveWhatsappNumeroId(botData.whatsapp_numero_id ?? whatsappNumeroId ?? null);
+        if (botData.estabelecimento_id) setEstabelecimentoId(botData.estabelecimento_id);
+        const types = detectEvolutionOnlyBlocks(botData.flow_data);
         setEvolutionOnlyTypes(types);
+
+        if (!botData.whatsapp_numero_id) {
+          const { data: sessionData } = await supabase
+            .from("whatsapp_sessions")
+            .select("id, session_name, phone_number, status")
+            .eq("bot_flow_id", botId)
+            .maybeSingle();
+          setLinkedSession(sessionData ?? null);
+        } else {
+          setLinkedSession(null);
+        }
       }
     })();
-  }, [open, botId]);
+  }, [open, botId, whatsappNumeroId]);
 
   // Carrega lista de números ativos (para exibir o vinculado se estiver na lista)
   useEffect(() => {
@@ -85,7 +108,7 @@ export function BotNumberSettingsDialog({
       if (!estabId) return;
       const { data, error } = await supabase
         .from("whatsapp_numeros")
-        .select("id, nome, provider, telefone")
+        .select("id, nome, provider, telefone, session_name")
         .eq("estabelecimento_id", estabId)
         .eq("ativo", true)
         .order("nome");
@@ -94,7 +117,7 @@ export function BotNumberSettingsDialog({
         toast.error("Erro ao carregar números: " + error.message);
         return;
       }
-      setNumeros((data as any[]) || []);
+      setNumeros(data || []);
     })();
   }, [open, estabelecimentoId]);
 
@@ -117,25 +140,51 @@ export function BotNumberSettingsDialog({
         console.error("[BotNumberSettings] erro ao carregar bots:", error);
         return;
       }
-      setBots(((data as any[]) || []).filter((b) => b.id !== botId));
+      setBots((data || []).filter((b) => b.id !== botId));
     })();
   }, [open, estabelecimentoId, botId]);
 
   // Busca o número vinculado ao bot mesmo se estiver inativo
   useEffect(() => {
-    if (!open || !whatsappNumeroId) { setLinkedNumero(null); return; }
-    const inList = numeros.find((n) => n.id === whatsappNumeroId);
+    const normalizePhone = (phone?: string | null) => (phone || "").replace(/\D/g, "");
+    const targetNumeroId = effectiveWhatsappNumeroId ?? whatsappNumeroId;
+
+    if (!open || !targetNumeroId) {
+      if (linkedSession) {
+        const matchedNumero = numeros.find((n) =>
+          (linkedSession.session_name && n.session_name === linkedSession.session_name) ||
+          (!!normalizePhone(linkedSession.phone_number) && normalizePhone(n.telefone) === normalizePhone(linkedSession.phone_number))
+        );
+        if (matchedNumero) {
+          setLinkedNumero(matchedNumero);
+          setEffectiveWhatsappNumeroId(matchedNumero.id);
+        } else {
+          setLinkedNumero({
+            id: linkedSession.id,
+            nome: linkedSession.session_name,
+            telefone: linkedSession.phone_number,
+            provider: "waha",
+            session_name: linkedSession.session_name,
+          });
+        }
+        return;
+      }
+      setLinkedNumero(null);
+      return;
+    }
+
+    const inList = numeros.find((n) => n.id === targetNumeroId);
     if (inList) { setLinkedNumero(inList); return; }
     (async () => {
       const { data, error } = await supabase
         .from("whatsapp_numeros")
-        .select("id, nome, provider, telefone")
-        .eq("id", whatsappNumeroId)
+        .select("id, nome, provider, telefone, session_name")
+        .eq("id", targetNumeroId)
         .maybeSingle();
       if (error) console.error("[BotNumberSettings] erro ao buscar número vinculado:", error);
-      if (data) setLinkedNumero(data as any);
+      if (data) setLinkedNumero(data);
     })();
-  }, [open, whatsappNumeroId, numeros]);
+  }, [open, whatsappNumeroId, effectiveWhatsappNumeroId, numeros, linkedSession]);
 
   const selectedProvider = useMemo(
     () => linkedNumero?.provider,
@@ -155,7 +204,7 @@ export function BotNumberSettingsDialog({
       return;
     }
     if (!botId) {
-      onSaved(whatsappNumeroId, null);
+      onSaved(effectiveWhatsappNumeroId ?? whatsappNumeroId, null);
       setOpen(false);
       return;
     }
@@ -165,14 +214,14 @@ export function BotNumberSettingsDialog({
       .update({
         forward_to_bot_id: forwardEnabled ? forwardBotId : null,
         forward_to_bot_enabled: forwardEnabled,
-      } as any)
+      })
       .eq("id", botId);
     setSaving(false);
     if (error) {
       toast.error("Erro ao salvar: " + error.message);
       return;
     }
-    onSaved(whatsappNumeroId, null);
+    onSaved(effectiveWhatsappNumeroId ?? whatsappNumeroId, null);
     toast.success("Configurações salvas");
     setOpen(false);
   };
