@@ -5014,7 +5014,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                                 <button
                                   key={idx}
                                   onClick={() => handleButtonClick(button, msg.nodeId)}
-                                  disabled={!isWaitingInput}
+                                  disabled={!isWaitingInput && !button.action}
                                   className="w-full px-4 py-2.5 border-t border-[#E9EDEF] text-[#00A884] font-medium text-[14px] hover:bg-[#F5F6F6] disabled:opacity-50 disabled:cursor-not-allowed text-center"
                                 >
                                   {button.text}
