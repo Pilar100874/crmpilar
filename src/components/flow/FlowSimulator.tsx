@@ -1940,7 +1940,31 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         const listHeader = config.header ? interpolateVariables(config.header, context) : null;
         const listFooter = config.footer ? interpolateVariables(config.footer, context) : null;
         const buttonText = config.buttonText || config.listHeader || "Ver opções";
-        const sections = config.sections || [];
+        let sections = config.sections || [];
+
+        // WhatsApp Oficial: máx 10 seções e 10 itens por seção; títulos obrigatórios
+        if (isOficial) {
+          const totalItems = sections.reduce((a: number, s: any) => a + ((s?.items || []).length), 0);
+          if (sections.length > 10) {
+            addSystemMessage(`⚠️ WhatsApp Oficial permite no máximo 10 seções na lista. ${sections.length - 10} ignorada(s).`);
+            sections = sections.slice(0, 10);
+          }
+          sections = sections.map((s: any, i: number) => {
+            const items = s?.items || [];
+            const cut = items.length > 10 ? items.slice(0, 10) : items;
+            if (items.length > 10) {
+              addSystemMessage(`⚠️ Seção "${s.title || `#${i + 1}`}" excedeu 10 itens; ${items.length - 10} ignorado(s).`);
+            }
+            if (!s?.title) {
+              addSystemMessage(`⚠️ Seção #${i + 1} sem título — WhatsApp Oficial exige título por seção.`);
+            }
+            return { ...s, items: cut };
+          });
+          if (totalItems === 0) {
+            addSystemMessage("⚠️ Lista vazia: WhatsApp Oficial exige ao menos 1 item.");
+          }
+        }
+
         
         if (listHeader) {
           addSystemMessage(`📌 ${listHeader}`);
