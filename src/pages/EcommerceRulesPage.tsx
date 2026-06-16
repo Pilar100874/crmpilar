@@ -57,6 +57,9 @@ export default function EcommerceRulesPage() {
   const [isRenaming, setIsRenaming] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("todas");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createName, setCreateName] = useState("");
+
 
   useEffect(() => { loadRules(); }, []);
 
