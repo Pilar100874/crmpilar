@@ -18,6 +18,7 @@ import { FlowVariable } from "./VariableManager";
 import { VariableInput, VariableTextarea } from "./VariableInput";
 import { VariablePickerDialog } from "./VariablePickerDialog";
 import * as BlockConfigs from "./block-configs";
+import { LiveBlockPreview, PREVIEW_SUPPORTED_TYPES } from "./block-configs/LiveBlockPreview";
 
 interface PropertiesPanelProps {
   selectedNode: Node | null;
@@ -268,6 +269,18 @@ export const PropertiesPanel = ({
       edges,
       selectedNode,
     };
+
+    const fields = renderConfigSwitch(nodeData, configProps);
+    const showPreview = PREVIEW_SUPPORTED_TYPES.has(nodeData.type);
+    return (
+      <>
+        {showPreview && <LiveBlockPreview type={nodeData.type} config={config} />}
+        {fields}
+      </>
+    );
+  };
+
+  const renderConfigSwitch = (nodeData: any, configProps: any) => {
 
     switch (nodeData.type) {
       // Message Blocks

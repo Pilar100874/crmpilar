@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
+import { MediaUrlUploadField } from "./MediaUrlUploadField";
 
 interface ConfigProps {
   config: any;
@@ -604,11 +605,13 @@ export const CarouselConfig = (props: ConfigProps) => {
                   <Trash2 className="w-4 h-4 text-destructive" />
                 </Button>
               </div>
-              <Input
+              <MediaUrlUploadField
+                label="Imagem do card"
                 value={card.header || ""}
-                onChange={(e) => updateCard(i, { header: e.target.value })}
+                onChange={(url) => updateCard(i, { header: url })}
                 placeholder="URL da imagem do card"
               />
+
               <Input
                 value={card.body || ""}
                 onChange={(e) => updateCard(i, { body: e.target.value })}
