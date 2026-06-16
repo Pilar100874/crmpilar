@@ -234,11 +234,19 @@ export const FlowNode = memo((props: any) => {
             <div className="flex items-center gap-2 mb-1">
               {IconComponent && (
                 <div
-                  className="p-1 rounded border"
-                  style={{
-                    backgroundColor: customIconColor ? `${customIconColor}15` : undefined,
-                    borderColor: customIconColor ? `${customIconColor}40` : undefined,
-                  }}
+                  className={
+                    customIconColor
+                      ? "p-1 rounded border"
+                      : "p-1 rounded bg-primary/5 border border-primary/20"
+                  }
+                  style={
+                    customIconColor
+                      ? {
+                          backgroundColor: `${customIconColor}15`,
+                          borderColor: `${customIconColor}40`,
+                        }
+                      : undefined
+                  }
                 >
                   <IconComponent
                     className={customIconColor ? "w-3.5 h-3.5" : "w-3.5 h-3.5 text-primary"}
