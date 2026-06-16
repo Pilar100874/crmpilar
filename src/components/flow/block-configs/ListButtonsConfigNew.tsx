@@ -72,7 +72,7 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
       </div>
 
       <div className="space-y-2">
-        <Label>Texto (máx. 1024 caracteres) *</Label>
+        <Label>Descrição (máx. 1024 caracteres) *</Label>
         <Textarea
           value={config.text || ""}
           onChange={(e) => handleConfigChange("text", e.target.value)}

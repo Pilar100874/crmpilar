@@ -62,7 +62,7 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
       </div>
 
       <div className="space-y-2">
-        <Label>Texto (máx. 1024 caracteres)</Label>
+        <Label>Descrição (máx. 1024 caracteres)</Label>
         <VariableTextarea
           ref={(el) => inputRefs && (inputRefs.current['text'] = el)}
           value={config.text || ""}
