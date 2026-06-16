@@ -89,7 +89,7 @@ const NodeLibrary: React.FC<NodeLibraryProps> = ({ nodeTypes, onDragStart }) => 
             return (
               <Collapsible key={category} open={isOpen} onOpenChange={() => toggleCategory(category)}>
                 <CollapsibleTrigger
-                  className={`flex items-center justify-between w-full px-3 py-2 rounded-xl transition-all duration-150 text-left ${
+                  className={`flex items-center justify-between w-full px-3 py-2 rounded-xl transition-colors duration-100 text-left ${
                     isOpen ? 'bg-foreground text-background' : 'hover:bg-black/5 text-foreground'
                   }`}
                 >
@@ -111,7 +111,7 @@ const NodeLibrary: React.FC<NodeLibraryProps> = ({ nodeTypes, onDragStart }) => 
                           key={node.id}
                           draggable
                           onDragStart={(e) => handleDragStart(e, node)}
-                          className="px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-all duration-150 select-none"
+                          className="px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-colors duration-100 select-none"
                         >
                           <h4 className="text-xs font-normal text-foreground truncate">{node.nome_display}</h4>
                         </Card>
