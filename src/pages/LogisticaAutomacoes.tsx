@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Save, X, Plus, Play, ZoomIn, ZoomOut, Maximize2, Minimize2, Blocks, Zap, Copy, Trash2, Edit } from "lucide-react";
+import { Save, X, Plus, Play, ZoomIn, ZoomOut, Maximize2, Blocks, Zap, Copy, Trash2, Edit } from "lucide-react";
 import { WorkflowCard, WorkflowCardGrid } from "@/components/ui/workflow-card";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import {
