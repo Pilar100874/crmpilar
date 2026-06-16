@@ -60,7 +60,9 @@ export function BotNumberSettingsDialog({
   const [linkedSession, setLinkedSession] = useState<LinkedSession | null>(null);
   const [bots, setBots] = useState<BotOption[]>([]);
   const [forwardEnabled, setForwardEnabled] = useState(false);
+  const [forwardTargetType, setForwardTargetType] = useState<"bot" | "numero">("bot");
   const [forwardBotId, setForwardBotId] = useState<string | null>(null);
+  const [forwardNumeroId, setForwardNumeroId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [evolutionOnlyTypes, setEvolutionOnlyTypes] = useState<string[]>([]);
 
@@ -70,13 +72,15 @@ export function BotNumberSettingsDialog({
     (async () => {
       const { data } = await supabase
         .from("bot_flows")
-        .select("flow_data, forward_to_bot_id, forward_to_bot_enabled, whatsapp_numero_id, estabelecimento_id")
+        .select("flow_data, forward_to_bot_id, forward_to_bot_enabled, forward_to_numero_id, whatsapp_numero_id, estabelecimento_id")
         .eq("id", botId)
         .maybeSingle();
       if (data) {
-        const botData = data as Pick<BotFlowRow, "flow_data" | "forward_to_bot_id" | "forward_to_bot_enabled" | "whatsapp_numero_id" | "estabelecimento_id">;
+        const botData = data as Pick<BotFlowRow, "flow_data" | "forward_to_bot_id" | "forward_to_bot_enabled" | "forward_to_numero_id" | "whatsapp_numero_id" | "estabelecimento_id">;
         setForwardEnabled(Boolean(botData.forward_to_bot_enabled));
         setForwardBotId(botData.forward_to_bot_id ?? null);
+        setForwardNumeroId(botData.forward_to_numero_id ?? null);
+        setForwardTargetType(botData.forward_to_numero_id ? "numero" : "bot");
         setEffectiveWhatsappNumeroId(botData.whatsapp_numero_id ?? whatsappNumeroId ?? null);
         if (botData.estabelecimento_id) setEstabelecimentoId(botData.estabelecimento_id);
         const types = detectEvolutionOnlyBlocks(botData.flow_data);
@@ -194,14 +198,32 @@ export function BotNumberSettingsDialog({
   const blockedByCloud =
     evolutionOnlyTypes.length > 0 && selectedProvider === "cloud_api";
 
+  const linkedNumeroId = effectiveWhatsappNumeroId ?? whatsappNumeroId ?? linkedNumero?.id ?? null;
+  const evolutionNumeros = useMemo(
+    () => numeros.filter((n) => n.provider !== "cloud_api" && n.id !== linkedNumeroId),
+    [numeros, linkedNumeroId],
+  );
+
   const handleSave = async () => {
     if (blockedByCloud) {
       toast.error("Este bot usa blocos exclusivos da Evolution e está vinculado a um número Cloud API.");
       return;
     }
-    if (forwardEnabled && !forwardBotId) {
-      toast.error("Selecione o bot de destino para o encaminhamento.");
-      return;
+    if (forwardEnabled) {
+      if (forwardTargetType === "bot" && !forwardBotId) {
+        toast.error("Selecione o bot de destino para o encaminhamento.");
+        return;
+      }
+      if (forwardTargetType === "numero") {
+        if (!forwardNumeroId) {
+          toast.error("Selecione o número de destino para o encaminhamento.");
+          return;
+        }
+        if (forwardNumeroId === linkedNumeroId) {
+          toast.error("O número de destino não pode ser o mesmo número vinculado ao bot.");
+          return;
+        }
+      }
     }
     if (!botId) {
       onSaved(effectiveWhatsappNumeroId ?? whatsappNumeroId, null);
@@ -212,7 +234,8 @@ export function BotNumberSettingsDialog({
     const { error } = await supabase
       .from("bot_flows")
       .update({
-        forward_to_bot_id: forwardEnabled ? forwardBotId : null,
+        forward_to_bot_id: forwardEnabled && forwardTargetType === "bot" ? forwardBotId : null,
+        forward_to_numero_id: forwardEnabled && forwardTargetType === "numero" ? forwardNumeroId : null,
         forward_to_bot_enabled: forwardEnabled,
       })
       .eq("id", botId);
@@ -221,7 +244,8 @@ export function BotNumberSettingsDialog({
       toast.error("Erro ao salvar: " + error.message);
       return;
     }
-    onSaved(effectiveWhatsappNumeroId ?? whatsappNumeroId, null);
+    const savedForwardNumeroId = forwardEnabled && forwardTargetType === "numero" ? forwardNumeroId : null;
+    onSaved(effectiveWhatsappNumeroId ?? whatsappNumeroId, savedForwardNumeroId);
     toast.success("Configurações salvas");
     setOpen(false);
   };
@@ -298,27 +322,80 @@ export function BotNumberSettingsDialog({
             </div>
 
             {forwardEnabled && (
-              <div className="space-y-2 pt-1">
-                <Label>Bot de destino</Label>
-                <Select
-                  value={forwardBotId ?? ""}
-                  onValueChange={(v) => setForwardBotId(v || null)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um bot" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {bots.length === 0 ? (
-                      <div className="px-3 py-2 text-xs text-muted-foreground">Nenhum outro bot disponível</div>
-                    ) : (
-                      bots.map((b) => (
-                        <SelectItem key={b.id} value={b.id}>
-                          {b.name} {b.active ? "" : "· inativo"}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-3 pt-1">
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={forwardTargetType === "bot" ? "default" : "outline"}
+                    onClick={() => setForwardTargetType("bot")}
+                    className="flex-1"
+                  >
+                    Outro bot
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={forwardTargetType === "numero" ? "default" : "outline"}
+                    onClick={() => setForwardTargetType("numero")}
+                    className="flex-1"
+                  >
+                    Número Evolution
+                  </Button>
+                </div>
+
+                {forwardTargetType === "bot" ? (
+                  <div className="space-y-2">
+                    <Label>Bot de destino</Label>
+                    <Select
+                      value={forwardBotId ?? ""}
+                      onValueChange={(v) => setForwardBotId(v || null)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um bot" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {bots.length === 0 ? (
+                          <div className="px-3 py-2 text-xs text-muted-foreground">Nenhum outro bot disponível</div>
+                        ) : (
+                          bots.map((b) => (
+                            <SelectItem key={b.id} value={b.id}>
+                              {b.name} {b.active ? "" : "· inativo"}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label>Número de destino (Evolution)</Label>
+                    <Select
+                      value={forwardNumeroId ?? ""}
+                      onValueChange={(v) => setForwardNumeroId(v || null)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um número" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {evolutionNumeros.length === 0 ? (
+                          <div className="px-3 py-2 text-xs text-muted-foreground">
+                            Nenhum outro número Evolution disponível
+                          </div>
+                        ) : (
+                          evolutionNumeros.map((n) => (
+                            <SelectItem key={n.id} value={n.id}>
+                              {n.nome}{n.telefone ? ` (${n.telefone})` : ""}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      O número vinculado a este bot não pode ser selecionado.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
