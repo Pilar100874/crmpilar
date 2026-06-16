@@ -4908,9 +4908,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                           )
                         )}
                         
-                        <span className="text-xs opacity-70 mt-1 block">
-                          {msg.timestamp.toLocaleTimeString()}
-                        </span>
+                        <div className={`flex items-center gap-1 mt-1 ${channel === 'whatsapp' ? 'justify-end' : ''}`}>
+                          <span className={`text-[11px] ${channel === 'whatsapp' ? 'text-[#667781]' : 'opacity-70'}`}>
+                            {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          {channel === 'whatsapp' && msg.sender === 'user' && (
+                            <CheckCheck className="w-3.5 h-3.5 text-[#53BDEB]" />
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
