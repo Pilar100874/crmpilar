@@ -29,7 +29,7 @@ interface Message {
   nodeId?: string;
   mediaUrl?: string;
   mediaType?: "image" | "video" | "audio" | "file";
-  buttons?: Array<{ text: string; value: string; buttonId?: string }>;
+  buttons?: Array<{ text: string; value: string; buttonId?: string; action?: { type: "url" | "copy" | "call" | "pix"; payload: string } }>;
   isListButton?: boolean;
   listButtonText?: string;
   listSections?: Array<{ title: string; items: Array<{ label: string; value: string; description?: string }> }>;
