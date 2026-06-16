@@ -50,6 +50,7 @@ import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConne
 import { WorkflowFilesMenu } from "@/components/workflow/WorkflowFilesMenu";
 import { BotNumberSettingsDialog } from "@/components/atendimento/BotNumberSettingsDialog";
 import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
+import { boxSelectionProps } from "@/lib/flowSelection";
 
 const nodeTypes = {
   custom: FlowNode,
@@ -1735,15 +1736,10 @@ function BotBuilderContent() {
               nodesFocusable={!isLocked}
               edgesFocusable={!isLocked}
               className="bg-background"
-              deleteKeyCode={isLocked ? null : ["Delete", "Backspace"]}
               connectOnClick={false}
               autoPanOnConnect={false}
               autoPanOnNodeDrag={true}
-              selectionOnDrag={!isLocked && !showSimulator}
-              selectionKeyCode={!isLocked && !showSimulator ? "Shift" : null}
-              panOnDrag={isLocked || showSimulator ? true : [1, 2]}
-              selectionMode={SelectionMode.Partial}
-              multiSelectionKeyCode={["Meta", "Control", "Shift"]}
+              {...boxSelectionProps({ disabled: isLocked || showSimulator })}
               onBeforeDelete={async ({ nodes: nodesToDelete, edges: edgesToDelete }) => {
                 const filtered = nodesToDelete.filter(n => (n.data as any)?.type !== "start");
                 if (filtered.length === nodesToDelete.length) return true;
