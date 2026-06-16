@@ -455,7 +455,7 @@ function EcommerceRulesEditorInner() {
 
         {/* Properties Panel - Right */}
         {selectedNode && !showSimulator && (
-          <div className="w-80 h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border overflow-auto">
+          <div className="w-80 h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border overflow-auto animate-slide-in-right">
             <EcommercePropertiesPanel
               node={selectedNode}
               onUpdate={handleUpdateNodeData}
