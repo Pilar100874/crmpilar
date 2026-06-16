@@ -939,8 +939,7 @@ function AdsAutomationContent() {
                 blockDefinitions={ADS_BLOCK_DEFINITIONS as any}
               />
             )}
-          </div>
-        </div>
+        </WorkflowBuilderLayout>
       )}
 
       {/* Note Dialog */}
