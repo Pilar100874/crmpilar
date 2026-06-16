@@ -143,6 +143,11 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
 
   const outputsConfig = getOutputsConfig();
 
+  const updateNodeInternals = useUpdateNodeInternals();
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [id, updateNodeInternals, outputsConfig.type, outputsConfig.outputs?.length, isCollapsed]);
+
   const getCardClassName = () =>
     getWorkflowBlockCardClass({
       selected,
