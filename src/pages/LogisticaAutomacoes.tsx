@@ -739,6 +739,7 @@ function EditorContent({
         toast({ title: "Automação criada!" });
       }
 
+      baselineSignatureRef.current = buildSignature();
       setHasUnsavedChanges(false);
       onBack();
     } catch (error) {
