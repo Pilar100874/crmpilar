@@ -23,7 +23,6 @@ import {
   MiniMap,
   Controls,
   Background,
-  Panel,
   useNodesState,
   useEdgesState,
   addEdge,
