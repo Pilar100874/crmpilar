@@ -1,0 +1,151 @@
+import { useEffect, useState } from "react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, BookOpen, Calendar, AlertCircle, Package } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { loadActiveCatalogs, SavedCatalog } from "@/lib/catalogPdfGenerator";
+
+interface Props {
+  selectedNode: any;
+  handleConfigChange: (key: string, value: any) => void;
+}
+
+export const AttachCatalogConfig = ({ selectedNode, handleConfigChange }: Props) => {
+  const config = selectedNode?.data?.config || {};
+  const mode: "latest" | "specific" = config.mode || "latest";
+  const selectedIds: string[] = Array.isArray(config.catalogIds) ? config.catalogIds : [];
+  const caption: string = config.caption || "";
+
+  const [catalogs, setCatalogs] = useState<SavedCatalog[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        setCatalogs(await loadActiveCatalogs());
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const toggleCatalog = (id: string, checked: boolean) => {
+    const next = checked ? [...selectedIds, id] : selectedIds.filter((x) => x !== id);
+    handleConfigChange("catalogIds", next);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label className="text-xs">Como enviar o catálogo?</Label>
+        <RadioGroup
+          value={mode}
+          onValueChange={(v) => handleConfigChange("mode", v)}
+          className="space-y-2"
+        >
+          <div className="flex items-start gap-2 p-3 rounded-lg border border-border hover:bg-muted/40 transition-colors">
+            <RadioGroupItem value="latest" id="cat-latest" className="mt-0.5" />
+            <Label htmlFor="cat-latest" className="cursor-pointer flex-1 font-normal">
+              <div className="text-sm font-semibold">Mais recente</div>
+              <div className="text-[11px] text-muted-foreground">
+                Envia sempre o catálogo ativo mais recentemente atualizado.
+              </div>
+            </Label>
+          </div>
+          <div className="flex items-start gap-2 p-3 rounded-lg border border-border hover:bg-muted/40 transition-colors">
+            <RadioGroupItem value="specific" id="cat-specific" className="mt-0.5" />
+            <Label htmlFor="cat-specific" className="cursor-pointer flex-1 font-normal">
+              <div className="text-sm font-semibold">Catálogo(s) específico(s)</div>
+              <div className="text-[11px] text-muted-foreground">
+                Selecione um ou mais catálogos abaixo (somente ativos).
+              </div>
+            </Label>
+          </div>
+        </RadioGroup>
+      </div>
+
+      {mode === "specific" && (
+        <div className="space-y-2">
+          <Label className="text-xs">Catálogos ativos</Label>
+          <ScrollArea className="h-64 rounded-lg border border-border bg-background">
+            <div className="p-2 space-y-1">
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : catalogs.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground text-xs">
+                  <BookOpen className="h-6 w-6 mx-auto mb-2 opacity-50" />
+                  Nenhum catálogo ativo encontrado.
+                </div>
+              ) : (
+                catalogs.map((c) => {
+                  const checked = selectedIds.includes(c.id);
+                  return (
+                    <label
+                      key={c.id}
+                      className="flex items-start gap-2 p-2 rounded-md hover:bg-muted/50 cursor-pointer"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(v) => toggleCatalog(c.id, !!v)}
+                        className="mt-0.5"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-medium truncate text-foreground">
+                            {c.nome}
+                          </span>
+                          <Badge variant="secondary" className="text-[10px] flex-shrink-0">
+                            <Package className="h-3 w-3 mr-1" />
+                            {c.products_page?.products?.length || 0}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-3 mt-0.5 text-[10px] text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {format(new Date(c.updated_at), "dd/MM/yy", { locale: ptBR })}
+                          </span>
+                          {!c.data_indeterminada && c.data_validade && (
+                            <span className="flex items-center gap-1 text-amber-600">
+                              <AlertCircle className="h-3 w-3" />
+                              Até {format(new Date(c.data_validade), "dd/MM/yy")}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })
+              )}
+            </div>
+          </ScrollArea>
+          {selectedIds.length > 0 && (
+            <p className="text-[11px] text-muted-foreground">
+              {selectedIds.length} catálogo(s) selecionado(s).
+            </p>
+          )}
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <Label className="text-xs">Legenda (opcional)</Label>
+        <Input
+          value={caption}
+          onChange={(e) => handleConfigChange("caption", e.target.value)}
+          placeholder="Mensagem enviada junto com o PDF"
+        />
+      </div>
+    </div>
+  );
+};
+
+export default AttachCatalogConfig;
