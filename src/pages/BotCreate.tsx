@@ -29,12 +29,20 @@ interface BotCreateProps {
   embedded?: boolean;
 }
 
+// Cache em memória para evitar "reload" visível ao revisitar a tela
+const botsCache: {
+  bots: any[];
+  sessions: any[];
+  numeros: any[];
+  loaded: boolean;
+} = { bots: [], sessions: [], numeros: [], loaded: false };
+
 export default function BotCreate({ embedded = false }: BotCreateProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { openSubmenu } = useLayout();
-  const [bots, setBots] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [bots, setBots] = useState<any[]>(botsCache.bots);
+  const [loading, setLoading] = useState(!botsCache.loaded);
   const [newBotDialogOpen, setNewBotDialogOpen] = useState(false);
   const [newBotName, setNewBotName] = useState("");
   const [newBotDescription, setNewBotDescription] = useState("");
