@@ -1827,10 +1827,16 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         const replyHeader = interpolateVariables(config.header || "", context);
         const replyText = interpolateVariables(config.text || "", context);
         const replyFooter = interpolateVariables(config.footer || "", context);
-        const replyButtons = config.buttons || [];
+        let replyButtons = config.buttons || [];
         const replyImage = config.image || config.mediaUrl;
         
         console.log("reply_buttons config:", { replyButtons, variable: config.variable, context });
+        
+        // WhatsApp Oficial: máx 3 botões de resposta rápida
+        if (isOficial && replyButtons.length > 3) {
+          addSystemMessage(`⚠️ WhatsApp Oficial permite no máximo 3 botões. ${replyButtons.length - 3} botão(ões) ignorado(s).`);
+          replyButtons = replyButtons.slice(0, 3);
+        }
         
         // Exibir imagem se houver
         if (replyImage) {
