@@ -129,6 +129,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
         console.error("Error loading WhatsApp sessions:", error);
       } else if (data) {
         console.log("Loaded WhatsApp sessions:", data);
+        botsCache.sessions = data;
         setWhatsappSessions(data);
       }
     } catch (error) {
