@@ -178,22 +178,32 @@ export function BotNumberSettingsDialog({
 
           <div className="space-y-2">
             <Label>Número vinculado ao bot</Label>
-            <Select
-              value={numeroId ?? NONE}
-              onValueChange={(v) => setNumeroId(v === NONE ? null : v)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um número" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>— Usar número padrão do estabelecimento —</SelectItem>
-                {numeros.map(renderOption)}
-              </SelectContent>
-            </Select>
+            {(() => {
+              const linked = numeros.find((n) => n.id === numeroId);
+              return (
+                <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+                  {linked ? (
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium text-foreground">
+                        {linked.nome}{linked.numero ? ` (${linked.numero})` : ""}
+                      </span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-background border border-border text-muted-foreground">
+                        {linked.provider === "cloud_api" ? "Meta" : "Evolution"}
+                      </span>
+                    </div>
+                  ) : numeroId ? (
+                    <span className="text-muted-foreground">Carregando número vinculado…</span>
+                  ) : (
+                    <span className="text-muted-foreground">Nenhum número vinculado a este bot. Vincule um número nos Canais de Atendimento.</span>
+                  )}
+                </div>
+              );
+            })()}
             <p className="text-xs text-muted-foreground">
-              As mensagens enviadas por este bot sairão por este número.
+              Este é o número ao qual o bot está vinculado nos Canais de Atendimento. Para alterar, edite o canal correspondente.
             </p>
           </div>
+
 
           <div className="space-y-2">
             <Label>Encaminhar respostas para outro número</Label>
@@ -212,9 +222,9 @@ export function BotNumberSettingsDialog({
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              Quando o cliente responder neste bot (Canal A), um novo contato será criado no Canal B
-              e a mensagem será reenviada para lá.
+              Apenas números ativos cadastrados em <span className="font-medium">Canais de Atendimento</span> aparecem aqui. Quando o cliente responder neste bot, a mensagem será encaminhada para o número selecionado.
             </p>
+
           </div>
         </div>
 
