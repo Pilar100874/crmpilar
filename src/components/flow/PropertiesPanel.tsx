@@ -395,6 +395,11 @@ export const PropertiesPanel = ({
             });
           }}
         />;
+      case "attach_catalog":
+        return <BlockConfigs.AttachCatalogConfig
+          selectedNode={selectedNode}
+          handleConfigChange={handleConfigChange}
+        />;
 
       // Routing Blocks
       case "transferir_omnichannel":

@@ -13,6 +13,7 @@ import { maskCNPJ } from "@/lib/masks";
 import { BLOCK_DEFINITIONS } from "@/types/flow";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { loadActiveCatalogs, generateCatalogPdf } from "@/lib/catalogPdfGenerator";
 
 interface SocialLink {
   platform: string; // instagram | facebook | tiktok | linkedin | twitter | youtube
@@ -1825,6 +1826,63 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           }
         } catch (e: any) {
           addSystemMessage(`❌ Erro ao gerar relatório: ${e?.message || e}`);
+        }
+        break;
+      }
+
+      case "attach_catalog": {
+        try {
+          const mode: "latest" | "specific" = config.mode === "specific" ? "specific" : "latest";
+          const caption = interpolateVariables(config.caption || "", context);
+          addSystemMessage("📚 Preparando catálogo(s)...");
+
+          const allCatalogs = await loadActiveCatalogs();
+          if (allCatalogs.length === 0) {
+            addSystemMessage("❌ Nenhum catálogo ativo disponível.");
+            break;
+          }
+
+          let targets = [] as typeof allCatalogs;
+          if (mode === "latest") {
+            targets = [allCatalogs[0]]; // já vem ordenado por updated_at desc
+          } else {
+            const ids: string[] = Array.isArray(config.catalogIds) ? config.catalogIds : [];
+            targets = allCatalogs.filter((c) => ids.includes(c.id));
+            if (targets.length === 0) {
+              addSystemMessage("❌ Nenhum catálogo selecionado foi encontrado entre os ativos.");
+              break;
+            }
+          }
+
+          let sucesso = 0;
+          for (const cat of targets) {
+            try {
+              const result = await generateCatalogPdf(cat);
+              if (!result) {
+                addSystemMessage(`⚠️ Catálogo "${cat.nome}" está incompleto e foi ignorado.`);
+                continue;
+              }
+              addBotMediaMessage(result.url, "file", caption || cat.nome, node.id);
+              sucesso++;
+            } catch (err: any) {
+              addSystemMessage(`❌ Erro ao gerar "${cat.nome}": ${err?.message || err}`);
+            }
+          }
+
+          const outputVar = normalizeVarName(config.outputVariable || "catalogo_enviado");
+          if (outputVar) {
+            setContext((prev) => ({ ...prev, [outputVar]: sucesso > 0 ? "Sucesso" : "Falha" }));
+          }
+
+          safeSetTimeout(() => {
+            const nextNode = getNextNode(node.id);
+            if (nextNode) {
+              setCurrentNodeId(nextNode.id);
+              executeNode(nextNode);
+            }
+          }, 500);
+        } catch (e: any) {
+          addSystemMessage(`❌ Erro ao anexar catálogo: ${e?.message || e}`);
         }
         break;
       }

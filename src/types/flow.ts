@@ -59,7 +59,8 @@ export type NodeType =
   | "button_pix"
   | "buttons_mixed"
   | "buttons_media"
-  | "carousel";
+  | "carousel"
+  | "attach_catalog";
 
 
 export interface BlockDefinition {
@@ -395,6 +396,19 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       relatorioId: "",
       apiVariables: {},
       outputVariable: "relatorio_gerado"
+    },
+  },
+  {
+    type: "attach_catalog",
+    label: "Anexar Catálogo (PDF)",
+    description: "Gera e envia o PDF de um ou mais catálogos. Pode usar o mais recente ou catálogos específicos.",
+    icon: "BookOpen",
+    color: "text-indigo-600",
+    defaultData: {
+      mode: "latest", // "latest" | "specific"
+      catalogIds: [] as string[],
+      caption: "",
+      outputVariable: "catalogo_enviado",
     },
   },
   // Roteamento Omnichannel
