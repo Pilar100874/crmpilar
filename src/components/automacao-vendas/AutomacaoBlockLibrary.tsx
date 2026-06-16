@@ -76,13 +76,13 @@ export const AutomacaoBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
                     isOpen ? "bg-foreground text-background" : "hover:bg-black/5 text-foreground"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     {CategoryIcon && (
-                      <CategoryIcon className={`w-4 h-4 ${isOpen ? "text-background" : "text-muted-foreground"}`} />
+                      <CategoryIcon className={`w-4 h-4 flex-shrink-0 ${isOpen ? "text-background" : "text-muted-foreground"}`} />
                     )}
-                    <span className="text-xs font-medium">{category.name}</span>
+                    <span className="text-xs font-medium truncate">{category.name}</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-semibold flex items-center justify-center ${isOpen ? "bg-background/20 text-background" : "bg-foreground text-background"}`}>
                       {category.blocks.length}
                     </span>
