@@ -1735,6 +1735,15 @@ function BotBuilderContent() {
                   },
                   onDelete: handleDeleteNode,
                   onAddNote: handleAddNote,
+                  onUpdateNodeData: (nodeId: string, partial: any) => {
+                    setNodes((nds) =>
+                      nds.map((n) =>
+                        n.id === nodeId
+                          ? { ...n, data: { ...n.data, ...partial } }
+                          : n
+                      )
+                    );
+                  },
                 },
               }))}
               edges={edges.map((edge) => ({
