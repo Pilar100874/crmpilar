@@ -18,9 +18,9 @@ interface WorkflowBuilderLayoutProps {
   children: ReactNode;
   title: string;
   subtitle?: string;
-  flowName: string;
-  onFlowNameChange: (name: string) => void;
-  onSave: () => void;
+  flowName?: string;
+  onFlowNameChange?: (name: string) => void;
+  onSave?: () => void;
   isSaving?: boolean;
   onTest?: () => void;
   showTest?: boolean;
@@ -38,6 +38,7 @@ interface WorkflowBuilderLayoutProps {
   rightContent?: ReactNode;
   centerContent?: ReactNode;
   aiGeneratorContent?: ReactNode;
+  onClose?: () => void;
 }
 
 export function WorkflowBuilderLayout({
@@ -64,12 +65,12 @@ export function WorkflowBuilderLayout({
   rightContent,
   centerContent,
   aiGeneratorContent,
+  onClose,
 }: WorkflowBuilderLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [showExitDialog, setShowExitDialog] = useState(false);
 
-  // Captura a URL de origem para retornar ao fechar
   const [originUrl] = useState(() => {
     const state = location.state as { from?: string } | null;
     return state?.from || defaultReturnUrl;
@@ -78,6 +79,8 @@ export function WorkflowBuilderLayout({
   const handleClose = () => {
     if (hasUnsavedChanges) {
       setShowExitDialog(true);
+    } else if (onClose) {
+      onClose();
     } else {
       navigate(originUrl);
     }
@@ -85,7 +88,8 @@ export function WorkflowBuilderLayout({
 
   const confirmExit = () => {
     setShowExitDialog(false);
-    navigate(originUrl);
+    if (onClose) onClose();
+    else navigate(originUrl);
   };
 
   return (
@@ -94,7 +98,6 @@ export function WorkflowBuilderLayout({
       <div className="h-14 min-h-[3.5rem] border-b border-border flex items-center justify-between px-2 sm:px-4 bg-card shadow-sm">
         {/* Left Section */}
         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-          {/* Title - Hidden on small screens */}
           <div className="hidden lg:block">
             <h2 className="text-sm font-bold text-foreground leading-tight truncate">{title}</h2>
             {subtitle && (
@@ -102,16 +105,16 @@ export function WorkflowBuilderLayout({
             )}
           </div>
 
-          {/* Separator */}
           <div className="hidden lg:block h-8 w-px bg-border" />
 
-          {/* Flow Name Input */}
-          <Input
-            value={flowName}
-            onChange={(e) => onFlowNameChange(e.target.value)}
-            className="w-[120px] sm:w-[160px] md:w-[200px] h-8 text-xs sm:text-sm"
-            placeholder="Nome do fluxo"
-          />
+          {flowName !== undefined && onFlowNameChange && (
+            <Input
+              value={flowName}
+              onChange={(e) => onFlowNameChange(e.target.value)}
+              className="w-[120px] sm:w-[160px] md:w-[200px] h-8 text-xs sm:text-sm"
+              placeholder="Nome do fluxo"
+            />
+          )}
 
           {/* Zoom Controls */}
           {(onZoomIn || onZoomOut || onFitView || onAddBlock || onToggleLock) && (
@@ -210,15 +213,17 @@ export function WorkflowBuilderLayout({
           )}
 
           {/* Save Button */}
-          <Button
-            size="sm"
-            onClick={onSave}
-            disabled={isSaving}
-            className={`h-8 text-xs sm:text-sm px-2 sm:px-3 ${isSaving ? 'bg-green-600' : ''}`}
-          >
-            <Save className={`h-4 w-4 mr-1 sm:mr-2 ${isSaving ? 'animate-pulse' : ''}`} />
-            <span className="hidden sm:inline">{isSaving ? "Salvando..." : "Salvar"}</span>
-          </Button>
+          {onSave && (
+            <Button
+              size="sm"
+              onClick={onSave}
+              disabled={isSaving}
+              className={`h-8 text-xs sm:text-sm px-2 sm:px-3 ${isSaving ? 'bg-green-600' : ''}`}
+            >
+              <Save className={`h-4 w-4 mr-1 sm:mr-2 ${isSaving ? 'animate-pulse' : ''}`} />
+              <span className="hidden sm:inline">{isSaving ? "Salvando..." : "Salvar"}</span>
+            </Button>
+          )}
 
           {/* Close Button */}
           <Button

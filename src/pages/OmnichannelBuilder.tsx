@@ -38,6 +38,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import type { OmnichannelBlockType, OmnichannelNode, OmnichannelEdge, OmnichannelFlowData } from "@/types/omnichannelFlow";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
+import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
 import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 
 const OMNICHANNEL_BLOCK_DEFS = [
@@ -626,105 +627,53 @@ export default function OmnichannelBuilder() {
   };
 
   return (
-    <div className="workflow-shell fixed inset-0 z-50 flex flex-col bg-background">
-      <div className="min-h-14 px-2 sm:px-3 py-1.5 border-b border-border bg-card flex flex-wrap items-center justify-between gap-y-1.5 gap-x-2 shadow-sm shrink-0">
-        {/* Left section */}
-        <div className="flex items-center gap-2 flex-wrap min-w-0">
-          <div className="hidden sm:block">
-            <h2 className="text-sm font-bold text-foreground whitespace-nowrap">OMNICHANNEL</h2>
-          </div>
-
-          <Input
-            value={flowName}
-            onChange={(e) => setFlowName(e.target.value)}
-            className="w-[150px] sm:w-[200px] h-8 text-xs sm:text-sm"
-            placeholder="Nome do fluxo"
-          />
-
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setIsBlockLibraryExpanded(true)}
-              className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg"
-              title="Adicionar blocos"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" onClick={handleZoomIn} className="h-8 w-8" title="Aumentar zoom">
-              <ZoomIn className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" onClick={handleZoomOut} className="h-8 w-8" title="Diminuir zoom">
-              <ZoomOut className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" onClick={handleFitView} className="h-8 w-8" title="Centralizar">
-              <Maximize2 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleToggleLock}
-              className={`h-8 w-8 ${isLocked ? 'bg-cyan-600 text-white hover:bg-cyan-700' : ''}`}
-              title={isLocked ? "Desbloquear canvas" : "Bloquear canvas"}
-            >
-              {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-            </Button>
-          </div>
-
-          <WorkflowAIGenerator
-            workflowType="Omnichannel"
-            blockDefinitions={OMNICHANNEL_BLOCK_DEFS}
-            onGenerated={(newNodes, newEdges) => {
-              setNodes(nds => [...nds, ...newNodes as OmnichannelNode[]]);
-              setEdges(eds => [...eds, ...newEdges as OmnichannelEdge[]]);
-            }}
-          />
-        </div>
-
-        {/* Right section - Action buttons */}
-        <div className="flex items-center gap-1.5 flex-wrap justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowValidator(!showValidator)}
-            className="h-8 px-2 hidden lg:flex"
-          >
+    <WorkflowBuilderLayout
+      title="OMNICHANNEL"
+      flowName={flowName}
+      onFlowNameChange={setFlowName}
+      onSave={handleSave}
+      isSaving={isSaving}
+      onTest={() => setShowSimulator(!showSimulator)}
+      showTest={showSimulator}
+      testLabel="Testar"
+      isTestActive={showSimulator}
+      onZoomIn={handleZoomIn}
+      onZoomOut={handleZoomOut}
+      onFitView={handleFitView}
+      onAddBlock={() => setIsBlockLibraryExpanded(true)}
+      onToggleLock={handleToggleLock}
+      isLocked={isLocked}
+      onClose={() => navigate(originUrl)}
+      aiGeneratorContent={
+        <WorkflowAIGenerator
+          workflowType="Omnichannel"
+          blockDefinitions={OMNICHANNEL_BLOCK_DEFS}
+          onGenerated={(newNodes, newEdges) => {
+            setNodes(nds => [...nds, ...newNodes as OmnichannelNode[]]);
+            setEdges(eds => [...eds, ...newEdges as OmnichannelEdge[]]);
+          }}
+        />
+      }
+      rightContent={
+        <>
+          <Button variant="outline" size="sm" onClick={() => setShowValidator(!showValidator)} className="h-8 px-2 hidden lg:flex">
             <AlertCircle className="h-4 w-4 mr-1.5" />
             <span className="hidden xl:inline">Validar</span>
           </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowAnalytics(!showAnalytics)}
-            className="h-8 px-2 hidden lg:flex"
-          >
+          <Button variant="outline" size="sm" onClick={() => setShowAnalytics(!showAnalytics)} className="h-8 px-2 hidden lg:flex">
             <Activity className="h-4 w-4 mr-1.5" />
             <span className="hidden xl:inline">Analytics</span>
           </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowTemplates(true)}
-            className="h-8 px-2 hidden xl:flex"
-          >
+          <Button variant="outline" size="sm" onClick={() => setShowTemplates(true)} className="h-8 px-2 hidden xl:flex">
             <FileText className="h-4 w-4 mr-1.5" />
             Templates
           </Button>
-
           {id && (
             <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowVersions(true)}
-                className="h-8 px-2 hidden xl:flex"
-              >
+              <Button variant="outline" size="sm" onClick={() => setShowVersions(true)} className="h-8 px-2 hidden xl:flex">
                 <History className="h-4 w-4 mr-1.5" />
                 Versões
               </Button>
-
               <BotTriggerSelector
                 flowId={id}
                 currentBotId={currentBotId}
@@ -732,13 +681,11 @@ export default function OmnichannelBuilder() {
               />
             </>
           )}
-
           <FlowExportImport
             flowData={{ nodes, edges, viewport: { x: 0, y: 0, zoom: 1 } }}
             flowName={flowName}
             onImport={handleImportFlow}
           />
-
           {id && (
             <div className="hidden md:flex items-center gap-2 px-3 h-8 border rounded-full bg-card/50 backdrop-blur-sm">
               <Star className={`h-4 w-4 ${isDefault ? 'text-primary fill-primary' : 'text-muted-foreground'}`} />
@@ -752,25 +699,10 @@ export default function OmnichannelBuilder() {
               />
             </div>
           )}
+        </>
+      }
+    >
 
-          <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving} className="h-8 px-2">
-            <Save className={`h-4 w-4 mr-1.5 ${isSaving ? "animate-pulse" : ""}`} />
-            <span className="hidden sm:inline">{isSaving ? "..." : "Salvar"}</span>
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => setShowSimulator(!showSimulator)}
-            className="h-8 px-2 bg-gradient-to-r from-primary to-primary/90"
-          >
-            <Play className="h-4 w-4 mr-1.5" />
-            <span className="hidden sm:inline">{showSimulator ? "Parar" : "Testar"}</span>
-          </Button>
-          <Button variant="destructive" size="sm" onClick={() => navigate(originUrl)} className="h-8 px-2">
-            <X className="h-4 w-4 mr-1.5" />
-            <span className="hidden sm:inline">Fechar</span>
-          </Button>
-        </div>
-      </div>
 
       <div className="flex-1 flex overflow-hidden relative">
         {showValidator && (
@@ -1013,6 +945,6 @@ export default function OmnichannelBuilder() {
         currentNote={currentNoteNodeId ? (nodes.find(n => n.id === currentNoteNodeId)?.data.note || "") : ""}
         onSave={handleSaveNote}
       />
-    </div>
+    </WorkflowBuilderLayout>
   );
 }

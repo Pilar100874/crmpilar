@@ -42,7 +42,7 @@ export const AutomacaoBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
   if (!isExpanded) return null;
 
   return (
-    <div className="w-64 bg-[#E8EAED] border-r border-border/30 flex flex-col h-full relative">
+    <div className="w-64 bg-white border-r border-border/30 flex flex-col h-full relative">
       <div className="p-4 pb-2">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold text-sm text-foreground">Menu</h3>
@@ -54,7 +54,7 @@ export const AutomacaoBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
           placeholder="Buscar..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="h-8 text-xs bg-white/60 border-0 shadow-sm"
+          className="h-8 text-xs bg-muted/40 border-0 shadow-sm"
         />
       </div>
 
@@ -93,7 +93,7 @@ export const AutomacaoBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
                           onDragStart={(event) => onDragStart(event, block.type)}
                           onDoubleClick={() => window.dispatchEvent(new CustomEvent("workflow:add-block", { detail: { type: block.type } }))}
                           title="Arraste ou clique 2x para adicionar"
-                          className="px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-white border-0 shadow-none rounded-xl transition-all duration-150 select-none"
+                          className="px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-all duration-150 select-none"
                         >
                           <h4 className="text-xs font-normal text-foreground truncate">{block.label}</h4>
                         </Card>
