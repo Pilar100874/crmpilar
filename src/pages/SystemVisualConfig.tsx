@@ -42,6 +42,8 @@ export default function SystemVisualConfig() {
       if (data) {
         setSplashVideoUrl(data.splash_video_url || "");
         setSplashVideoLoop(data.splash_video_loop ?? true);
+        const hsl = (data as any).primary_color_hsl;
+        if (hsl) setPrimaryHex(hslStringToHex(hsl));
       }
     } catch (err) {
       console.error("Erro ao carregar config visual:", err);
