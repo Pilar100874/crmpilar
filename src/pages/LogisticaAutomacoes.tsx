@@ -24,7 +24,6 @@ import {
   Background,
   Controls,
   MiniMap,
-  Panel,
   addEdge,
   useNodesState,
   useEdgesState,
