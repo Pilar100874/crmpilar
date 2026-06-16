@@ -210,16 +210,20 @@ export function WorkflowBuilderLayout({
           )}
 
 
-          {/* AI Generator */}
-          {aiGeneratorContent}
-
           {/* Custom Left Content */}
           {leftContent}
         </div>
 
+        {/* AI Generator - kept outside scrollable area so it's always visible */}
+        {aiGeneratorContent && (
+          <div className="flex items-center flex-shrink-0">
+            {aiGeneratorContent}
+          </div>
+        )}
+
         {/* Center Content */}
         {centerContent && (
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2 flex-shrink-0">
             {centerContent}
           </div>
         )}
