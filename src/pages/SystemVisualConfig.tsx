@@ -18,6 +18,9 @@ export default function SystemVisualConfig() {
   const [splashVideoUrl, setSplashVideoUrl] = useState("");
   const [splashVideoLoop, setSplashVideoLoop] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [primaryHex, setPrimaryHex] = useState("#f97316");
+  const [savingColor, setSavingColor] = useState(false);
+  const DEFAULT_HSL = "25 95% 53%";
   const videoInputRef = useRef<HTMLInputElement>(null);
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
 
