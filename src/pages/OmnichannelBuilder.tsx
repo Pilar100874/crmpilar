@@ -734,6 +734,9 @@ export default function OmnichannelBuilder() {
           ref={reactFlowWrapper}
           style={{ touchAction: 'none' }}
         >
+          {!isBlockLibraryExpanded && (
+            <FloatingAddBlockButton onClick={() => setIsBlockLibraryExpanded(true)} />
+          )}
           <ReactFlow
             nodes={nodes.map(node => ({
               ...node,
