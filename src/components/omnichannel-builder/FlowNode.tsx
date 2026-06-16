@@ -1,8 +1,8 @@
 import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
 import { WorkflowBlockPreview } from "@/components/workflow/WorkflowBlockPreview";
 import { OmnichannelLivePreview, OMNICHANNEL_PREVIEW_SUPPORTED } from "./OmnichannelLivePreview";
-import { memo, useState } from "react";
-import { Handle, Position } from "@xyflow/react";
+import { memo, useState, useEffect } from "react";
+import { Handle, Position, useUpdateNodeInternals } from "@xyflow/react";
 import {
   Users, 
   User, 
