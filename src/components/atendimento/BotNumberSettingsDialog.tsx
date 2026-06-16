@@ -322,27 +322,80 @@ export function BotNumberSettingsDialog({
             </div>
 
             {forwardEnabled && (
-              <div className="space-y-2 pt-1">
-                <Label>Bot de destino</Label>
-                <Select
-                  value={forwardBotId ?? ""}
-                  onValueChange={(v) => setForwardBotId(v || null)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um bot" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {bots.length === 0 ? (
-                      <div className="px-3 py-2 text-xs text-muted-foreground">Nenhum outro bot disponível</div>
-                    ) : (
-                      bots.map((b) => (
-                        <SelectItem key={b.id} value={b.id}>
-                          {b.name} {b.active ? "" : "· inativo"}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-3 pt-1">
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={forwardTargetType === "bot" ? "default" : "outline"}
+                    onClick={() => setForwardTargetType("bot")}
+                    className="flex-1"
+                  >
+                    Outro bot
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={forwardTargetType === "numero" ? "default" : "outline"}
+                    onClick={() => setForwardTargetType("numero")}
+                    className="flex-1"
+                  >
+                    Número Evolution
+                  </Button>
+                </div>
+
+                {forwardTargetType === "bot" ? (
+                  <div className="space-y-2">
+                    <Label>Bot de destino</Label>
+                    <Select
+                      value={forwardBotId ?? ""}
+                      onValueChange={(v) => setForwardBotId(v || null)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um bot" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {bots.length === 0 ? (
+                          <div className="px-3 py-2 text-xs text-muted-foreground">Nenhum outro bot disponível</div>
+                        ) : (
+                          bots.map((b) => (
+                            <SelectItem key={b.id} value={b.id}>
+                              {b.name} {b.active ? "" : "· inativo"}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label>Número de destino (Evolution)</Label>
+                    <Select
+                      value={forwardNumeroId ?? ""}
+                      onValueChange={(v) => setForwardNumeroId(v || null)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um número" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {evolutionNumeros.length === 0 ? (
+                          <div className="px-3 py-2 text-xs text-muted-foreground">
+                            Nenhum outro número Evolution disponível
+                          </div>
+                        ) : (
+                          evolutionNumeros.map((n) => (
+                            <SelectItem key={n.id} value={n.id}>
+                              {n.nome}{n.telefone ? ` (${n.telefone})` : ""}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      O número vinculado a este bot não pode ser selecionado.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
