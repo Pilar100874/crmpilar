@@ -148,6 +148,25 @@ export const AttachCatalogConfig = ({ selectedNode, handleConfigChange }: Props)
                           )}
                         </div>
                       </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 flex-shrink-0"
+                        title="Baixar PDF deste catálogo"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleDownload(c);
+                        }}
+                        disabled={downloadingId === c.id}
+                      >
+                        {downloadingId === c.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Download className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
                     </label>
                   );
                 })
@@ -160,6 +179,28 @@ export const AttachCatalogConfig = ({ selectedNode, handleConfigChange }: Props)
             </p>
           )}
         </div>
+      )}
+
+      {mode === "latest" && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="w-full"
+          disabled={loading || catalogs.length === 0 || downloadingId !== null}
+          onClick={() => {
+            const latest = [...catalogs].sort(
+              (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+            )[0];
+            if (latest) handleDownload(latest);
+          }}
+        >
+          {downloadingId ? (
+            <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Gerando PDF...</>
+          ) : (
+            <><Download className="w-3.5 h-3.5 mr-2" /> Baixar catálogo mais recente</>
+          )}
+        </Button>
       )}
 
       <div className="space-y-2">
