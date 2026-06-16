@@ -1,4 +1,5 @@
 import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
+import { WorkflowBlockPreview } from "@/components/workflow/WorkflowBlockPreview";
 import { memo, useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { ADS_BLOCK_DEFINITIONS, AdsBlockType, AdsFlowNodeData } from "@/types/adsFlow";
