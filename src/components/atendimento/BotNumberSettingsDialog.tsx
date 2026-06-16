@@ -196,7 +196,7 @@ export function BotNumberSettingsDialog({
           <div className="space-y-2">
             <Label>Número vinculado ao bot</Label>
             {(() => {
-              const linked = numeros.find((n) => n.id === numeroId);
+              const linked = linkedNumero || numeros.find((n) => n.id === numeroId);
               return (
                 <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
                   {linked ? (
