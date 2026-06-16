@@ -291,6 +291,152 @@ export const LiveBlockPreview = ({ type, config }: LiveBlockPreviewProps) => {
         );
       }
 
+      case "ask_influencer": {
+        const mode = c.influencerMode === "selection" ? "selection" : "fixed";
+        const fixedUrl = c.fixedInfluencerUrl;
+        return card(
+          <>
+            {c.headerTitle && <Header title={c.headerTitle} />}
+            <Body>{c.askQuestion || "A peça terá um influencer?"}</Body>
+            <Footer>{c.footer}</Footer>
+            {mode === "fixed" && fixedUrl ? (
+              <MediaPreview url={fixedUrl} type="image" />
+            ) : (
+              <div className="px-3 pb-2 text-[11px] text-muted-foreground italic">
+                {mode === "selection"
+                  ? `Usuário escolherá entre ${(c.allowedInfluencerIds?.length || 0) || "todos"} influencer(s)`
+                  : "Influencer fixo não selecionado"}
+              </div>
+            )}
+          </>,
+        );
+      }
+
+      case "ask_product_image": {
+        return card(
+          <>
+            {c.headerTitle && <Header title={c.headerTitle} />}
+            <Body>{c.askQuestion || "A peça terá imagem do produto?"}</Body>
+            <Footer>{c.footer}</Footer>
+            <div className="bg-muted/30">
+              <PreviewButton label="📦 Código do produto" />
+              <PreviewButton label="📷 Tirar/enviar foto" />
+              <PreviewButton label="✏️ Descrever em texto" />
+            </div>
+          </>,
+        );
+      }
+
+      case "content_type": {
+        const opts = c.options || c.types || [];
+        return card(
+          <>
+            {c.header && <Header title={c.header} />}
+            <Body>{c.question || c.text || "Escolha o tipo de conteúdo"}</Body>
+            <Footer>{c.footer}</Footer>
+            <div className="bg-muted/30">
+              {opts.length === 0 ? (
+                <div className="py-2 text-xs text-center text-muted-foreground">
+                  Nenhuma opção configurada
+                </div>
+              ) : (
+                opts.map((o: any, i: number) => (
+                  <PreviewButton key={i} label={o.label || o.title || o.value || `Opção ${i + 1}`} />
+                ))
+              )}
+            </div>
+          </>,
+        );
+      }
+
+      case "text_content": {
+        const mode = c.mode || c.advancedMode;
+        const opts = c.buttons || c.options || [];
+        const isYesNo = !mode || mode === "yesno" || mode === "yes_no";
+        return card(
+          <>
+            {c.header && <Header title={c.header} />}
+            <Body>{c.text || c.question || c.message || "Texto do bloco"}</Body>
+            <Footer>{c.footer}</Footer>
+            <div className="bg-muted/30">
+              {isYesNo ? (
+                <>
+                  <PreviewButton label="Sim" />
+                  <PreviewButton label="Não" />
+                </>
+              ) : opts.length === 0 ? (
+                <div className="py-2 text-xs text-center text-muted-foreground">
+                  Nenhuma opção configurada
+                </div>
+              ) : (
+                opts.map((o: any, i: number) => (
+                  <PreviewButton key={i} label={o.label || o.title || `Opção ${i + 1}`} />
+                ))
+              )}
+            </div>
+          </>,
+        );
+      }
+
+      case "opt_in_check":
+      case "opt_in_out": {
+        return card(
+          <>
+            {c.header && <Header title={c.header} />}
+            <Body>{c.text || c.message || ""}</Body>
+            <Footer>{c.footer}</Footer>
+            <div className="bg-muted/30">
+              <PreviewButton label={c.yesLabel || "Sim"} />
+              <PreviewButton label={c.noLabel || "Não"} />
+            </div>
+          </>,
+        );
+      }
+
+      case "message_template": {
+        return card(
+          <>
+            {c.header && <Header title={c.header} />}
+            <Body>{c.body || c.text || c.templateName || "Template do WhatsApp"}</Body>
+            <Footer>{c.footer}</Footer>
+            {(c.buttons || []).map((b: any, i: number) => (
+              <PreviewButton key={i} label={b.text || b.label || `Botão ${i + 1}`} />
+            ))}
+          </>,
+        );
+      }
+
+      case "ask_name":
+      case "ask_question":
+      case "ask_email":
+      case "ask_number":
+      case "ask_phone":
+      case "ask_date":
+      case "ask_file":
+      case "ask_address":
+      case "ask_url":
+      case "ask_cnpj":
+      case "ask_cep": {
+        return <Bubble>{c.question || c.text || c.message || "Aguardando resposta..."}</Bubble>;
+      }
+
+      case "attach_catalog": {
+        return card(
+          <>
+            <div className="w-full aspect-[4/3] bg-muted flex flex-col items-center justify-center text-muted-foreground">
+              <div className="text-4xl">📎</div>
+              <div className="text-xs mt-1">Catálogo PDF</div>
+            </div>
+            {c.caption && <Body>{c.caption}</Body>}
+            <div className="px-3 pb-2 text-[11px] text-muted-foreground italic">
+              {c.mode === "specific"
+                ? `${(c.catalogIds?.length || 0)} catálogo(s) selecionado(s)`
+                : "Envia sempre o catálogo mais recente"}
+            </div>
+          </>,
+        );
+      }
+
       default:
         return null;
     }
@@ -326,4 +472,23 @@ export const PREVIEW_SUPPORTED_TYPES = new Set<string>([
   "buttons_media",
   "carousel",
   "keyword_options",
+  "ask_influencer",
+  "ask_product_image",
+  "content_type",
+  "text_content",
+  "opt_in_check",
+  "opt_in_out",
+  "message_template",
+  "ask_name",
+  "ask_question",
+  "ask_email",
+  "ask_number",
+  "ask_phone",
+  "ask_date",
+  "ask_file",
+  "ask_address",
+  "ask_url",
+  "ask_cnpj",
+  "ask_cep",
+  "attach_catalog",
 ]);
