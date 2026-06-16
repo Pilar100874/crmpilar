@@ -24,6 +24,7 @@ import VinculosContatos from "./pages/VinculosContatos";
 import ListasHub from "./pages/ListasHub";
 import Config from "./pages/Config";
 import SystemVisualConfig from "./pages/SystemVisualConfig";
+import SystemThemeLoader from "./components/SystemThemeLoader";
 import GlobalVariables from "./pages/GlobalVariables";
 import Desenho from "./pages/Desenho";
 import MarketingHub from "./pages/MarketingHub";
@@ -182,6 +183,7 @@ const App = () => (
         
         <BrowserRouter>
           <UnsavedChangesProvider>
+          <SystemThemeLoader />
           <WatchRedirectWrapper />
           <PWAInstallPrompt />
           <PWAUpdateNotifier />

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, Trash2, Save, Paintbrush, Video, Play, Pause } from "lucide-react";
+import { ArrowLeft, Upload, Trash2, Save, Paintbrush, Video, Play, Pause, Palette, RotateCcw } from "lucide-react";
+import { hexToHslString, hslStringToHex, applyPrimaryColor } from "@/components/SystemThemeLoader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -17,6 +18,9 @@ export default function SystemVisualConfig() {
   const [splashVideoUrl, setSplashVideoUrl] = useState("");
   const [splashVideoLoop, setSplashVideoLoop] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [primaryHex, setPrimaryHex] = useState("#f97316");
+  const [savingColor, setSavingColor] = useState(false);
+  const DEFAULT_HSL = "25 95% 53%";
   const videoInputRef = useRef<HTMLInputElement>(null);
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
 
@@ -38,6 +42,8 @@ export default function SystemVisualConfig() {
       if (data) {
         setSplashVideoUrl(data.splash_video_url || "");
         setSplashVideoLoop(data.splash_video_loop ?? true);
+        const hsl = (data as any).primary_color_hsl;
+        if (hsl) setPrimaryHex(hslStringToHex(hsl));
       }
     } catch (err) {
       console.error("Erro ao carregar config visual:", err);
@@ -125,6 +131,50 @@ export default function SystemVisualConfig() {
       }
     }
   };
+
+  const handlePreviewColor = (hex: string) => {
+    setPrimaryHex(hex);
+    const hsl = hexToHslString(hex);
+    if (hsl) applyPrimaryColor(hsl);
+  };
+
+  const handleSavePrimaryColor = async () => {
+    const hsl = hexToHslString(primaryHex);
+    if (!hsl) { toast.error("Cor inválida"); return; }
+    setSavingColor(true);
+    try {
+      const estId = await getEstabelecimentoId();
+      if (!estId) { toast.error("Estabelecimento não encontrado"); return; }
+      const { error } = await supabase
+        .from("system_visual_config")
+        .upsert({ estabelecimento_id: estId, primary_color_hsl: hsl } as any, { onConflict: "estabelecimento_id" });
+      if (error) { toast.error("Erro ao salvar: " + error.message); return; }
+      applyPrimaryColor(hsl);
+      localStorage.setItem("system_primary_hsl", hsl);
+      toast.success("Cor primária aplicada em todo o sistema!");
+    } finally {
+      setSavingColor(false);
+    }
+  };
+
+  const handleResetColor = async () => {
+    setPrimaryHex(hslStringToHex(DEFAULT_HSL));
+    applyPrimaryColor(DEFAULT_HSL);
+    const estId = await getEstabelecimentoId();
+    if (estId) {
+      await supabase
+        .from("system_visual_config")
+        .upsert({ estabelecimento_id: estId, primary_color_hsl: DEFAULT_HSL } as any, { onConflict: "estabelecimento_id" });
+    }
+    localStorage.setItem("system_primary_hsl", DEFAULT_HSL);
+    toast.success("Cor restaurada para o laranja padrão");
+  };
+
+  const PRESET_COLORS = [
+    "#f97316", "#ef4444", "#ec4899", "#a855f7",
+    "#6366f1", "#3b82f6", "#0ea5e9", "#06b6d4",
+    "#10b981", "#22c55e", "#84cc16", "#eab308",
+  ];
 
   if (loading) {
     return (
@@ -226,6 +276,91 @@ export default function SystemVisualConfig() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Cor Primária do Sistema */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Palette className="h-4 w-4" />
+            Cor Primária do Sistema
+          </CardTitle>
+          <CardDescription>
+            Substitui o laranja em botões, hover, links, ícones e destaques em todo o sistema.
+            As mudanças são aplicadas em tempo real.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div
+              className="w-16 h-16 rounded-xl border-2 border-border shadow-sm"
+              style={{ backgroundColor: primaryHex }}
+            />
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={primaryHex}
+                onChange={(e) => handlePreviewColor(e.target.value)}
+                className="h-10 w-14 rounded cursor-pointer border border-border bg-transparent"
+              />
+              <input
+                type="text"
+                value={primaryHex}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setPrimaryHex(v);
+                  if (/^#[0-9a-f]{6}$/i.test(v)) {
+                    const hsl = hexToHslString(v);
+                    if (hsl) applyPrimaryColor(hsl);
+                  }
+                }}
+                className="h-10 w-28 px-3 rounded-md border border-input bg-background text-sm font-mono uppercase"
+                maxLength={7}
+              />
+            </div>
+            <div className="flex gap-2 ml-auto">
+              <Button variant="outline" onClick={handleResetColor}>
+                <RotateCcw className="h-4 w-4 mr-2" /> Restaurar
+              </Button>
+              <Button onClick={handleSavePrimaryColor} disabled={savingColor}>
+                <Save className="h-4 w-4 mr-2" />
+                {savingColor ? "Salvando..." : "Salvar e Aplicar"}
+              </Button>
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-xs text-muted-foreground mb-2 block">Cores sugeridas</Label>
+            <div className="flex flex-wrap gap-2">
+              {PRESET_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => handlePreviewColor(c)}
+                  className={`w-9 h-9 rounded-lg border-2 transition-all hover:scale-110 ${
+                    primaryHex.toLowerCase() === c.toLowerCase()
+                      ? "border-foreground ring-2 ring-ring ring-offset-2"
+                      : "border-border"
+                  }`}
+                  style={{ backgroundColor: c }}
+                  aria-label={`Selecionar ${c}`}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border p-4 bg-muted/30 space-y-3">
+            <Label className="text-xs text-muted-foreground">Pré-visualização</Label>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button>Botão Primário</Button>
+              <Button variant="outline">Outline</Button>
+              <Button variant="ghost">Ghost</Button>
+              <span className="text-primary font-semibold">Texto Primário</span>
+              <div className="px-3 py-1.5 rounded-md bg-primary/10 text-primary text-sm">Badge</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
+
