@@ -111,6 +111,32 @@ function EditorContent({
   const [currentNoteNodeId, setCurrentNoteNodeId] = useState<string | null>(null);
   const [currentNoteValue, setCurrentNoteValue] = useState("");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const baselineSignatureRef = useRef<string | null>(null);
+  const buildSignature = useCallback(() => {
+    return JSON.stringify({
+      n: nodes.map((n) => ({
+        id: n.id,
+        type: (n.data as any)?.type,
+        label: (n.data as any)?.label,
+        config: (n.data as any)?.config,
+        note: (n.data as any)?.note,
+      })),
+      e: edges.map((e) => ({ s: e.source, t: e.target, sh: e.sourceHandle, th: e.targetHandle })),
+      name: nomeAutomacao,
+      ativo: isAtiva,
+    });
+  }, [nodes, edges, nomeAutomacao, isAtiva]);
+  useEffect(() => {
+    const sig = buildSignature();
+    if (baselineSignatureRef.current === null) {
+      if (nodes.length > 0) {
+        baselineSignatureRef.current = sig;
+        setHasUnsavedChanges(false);
+      }
+      return;
+    }
+    setHasUnsavedChanges(sig !== baselineSignatureRef.current);
+  }, [buildSignature, nodes.length]);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [showSimulator, setShowSimulator] = useState(false);
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
@@ -383,6 +409,7 @@ function EditorContent({
             setNodes(nodesWithCallbacks);
           }
           if (flowData.edges) setEdges(flowData.edges);
+          baselineSignatureRef.current = null; // re-baselina após carga
         }
       }
     } catch (error) {
@@ -712,6 +739,7 @@ function EditorContent({
         toast({ title: "Automação criada!" });
       }
 
+      baselineSignatureRef.current = buildSignature();
       setHasUnsavedChanges(false);
       onBack();
     } catch (error) {

@@ -68,6 +68,30 @@ function AdsAutomationContent() {
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(true);
   const [showSimulator, setShowSimulator] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const baselineSignatureRef = useRef<string | null>(null);
+  const buildSignature = useCallback(() => {
+    return JSON.stringify({
+      n: nodes.map((n: any) => ({
+        id: n.id,
+        type: (n.data as any)?.type,
+        label: (n.data as any)?.label,
+        config: (n.data as any)?.config,
+        note: (n.data as any)?.note,
+      })),
+      e: edges.map((e: any) => ({ s: e.source, t: e.target, sh: e.sourceHandle, th: e.targetHandle })),
+    });
+  }, [nodes, edges]);
+  useEffect(() => {
+    const sig = buildSignature();
+    if (baselineSignatureRef.current === null) {
+      if (nodes.length > 0) {
+        baselineSignatureRef.current = sig;
+        setHasUnsavedChanges(false);
+      }
+      return;
+    }
+    setHasUnsavedChanges(sig !== baselineSignatureRef.current);
+  }, [buildSignature, nodes.length]);
   const [isSaving, setIsSaving] = useState(false);
   
   // Note dialog state
@@ -152,6 +176,7 @@ function AdsAutomationContent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ads_automacoes"] });
+      baselineSignatureRef.current = buildSignature();
       setHasUnsavedChanges(false);
     },
     onError: (error: any) => {
@@ -276,6 +301,7 @@ function AdsAutomationContent() {
       }
     }));
     
+    baselineSignatureRef.current = null; // re-baselina após carregar
     setNodes(nodesWithCallbacks);
     setEdges(flowData.edges || []);
     setIsEditing(true);
