@@ -294,18 +294,48 @@ export const LiveBlockPreview = ({ type, config }: LiveBlockPreviewProps) => {
       case "ask_influencer": {
         const mode = c.influencerMode === "selection" ? "selection" : "fixed";
         const fixedUrl = c.fixedInfluencerUrl;
+        const thumbs: any[] = Array.isArray(c.allowedInfluencerThumbs) ? c.allowedInfluencerThumbs : [];
         return card(
           <>
             {c.headerTitle && <Header title={c.headerTitle} />}
             <Body>{c.askQuestion || "A peça terá um influencer?"}</Body>
             <Footer>{c.footer}</Footer>
-            {mode === "fixed" && fixedUrl ? (
-              <MediaPreview url={fixedUrl} type="image" />
+            {mode === "fixed" ? (
+              fixedUrl ? (
+                <div className="px-3 pb-3">
+                  <img
+                    src={fixedUrl}
+                    alt="Influencer"
+                    className="w-24 h-24 rounded-lg object-cover border border-border mx-auto"
+                  />
+                </div>
+              ) : (
+                <div className="px-3 pb-2 text-[11px] text-muted-foreground italic">
+                  Influencer fixo não selecionado
+                </div>
+              )
+            ) : thumbs.length > 0 ? (
+              <div className="px-3 pb-3">
+                <div className="grid grid-cols-4 gap-1.5">
+                  {thumbs.slice(0, 8).map((t: any, i: number) => (
+                    <img
+                      key={t.id || i}
+                      src={t.image_url}
+                      alt={t.nome || `Influencer ${i + 1}`}
+                      title={t.nome || ""}
+                      className="aspect-square w-full rounded-md object-cover border border-border"
+                    />
+                  ))}
+                  {thumbs.length > 8 && (
+                    <div className="aspect-square w-full rounded-md bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground border border-border">
+                      +{thumbs.length - 8}
+                    </div>
+                  )}
+                </div>
+              </div>
             ) : (
               <div className="px-3 pb-2 text-[11px] text-muted-foreground italic">
-                {mode === "selection"
-                  ? `Usuário escolherá entre ${(c.allowedInfluencerIds?.length || 0) || "todos"} influencer(s)`
-                  : "Influencer fixo não selecionado"}
+                Usuário escolherá entre todos os influencers da galeria
               </div>
             )}
           </>,
