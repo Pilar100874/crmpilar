@@ -57,6 +57,9 @@ export default function EcommerceRulesPage() {
   const [isRenaming, setIsRenaming] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("todas");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createName, setCreateName] = useState("");
+
 
   useEffect(() => { loadRules(); }, []);
 
@@ -159,10 +162,11 @@ export default function EcommerceRulesPage() {
             Gerencie descontos, promoções, frete, banners e regras de pagamento
           </p>
         </div>
-        <Button onClick={() => navigate("/ecommerce-rules-editor", { state: { from: location.pathname } })} size="sm">
+        <Button onClick={() => { setCreateName(""); setCreateDialogOpen(true); }} size="sm">
           <Plus className="h-4 w-4 mr-2" />
           Nova Regra
         </Button>
+
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
@@ -311,6 +315,45 @@ export default function EcommerceRulesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nova Regra</DialogTitle>
+            <DialogDescription>Dê um nome para sua nova regra antes de começar.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome da regra</Label>
+              <Input
+                value={createName}
+                onChange={e => setCreateName(e.target.value)}
+                placeholder="Ex: Desconto Black Friday"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && createName.trim()) {
+                    setCreateDialogOpen(false);
+                    navigate("/ecommerce-rules-editor", { state: { from: location.pathname, initialName: createName.trim() } });
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Cancelar</Button>
+            <Button
+              disabled={!createName.trim()}
+              onClick={() => {
+                setCreateDialogOpen(false);
+                navigate("/ecommerce-rules-editor", { state: { from: location.pathname, initialName: createName.trim() } });
+              }}
+            >
+              Criar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
