@@ -1,38 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { 
-  Search, 
-  Zap, 
-  Clock, 
-  Globe, 
-  Code, 
-  GitBranch, 
-  Bot, 
-  Database,
-  Mail,
-  MessageSquare,
-  Webhook,
-  Filter,
-  Layers,
-  GitMerge,
-  Send,
-  Settings,
-  Link,
-  Brain,
-  Shuffle,
-  Edit,
-  Play,
-  ChevronDown,
-  ChevronRight,
-  Sparkles,
-  MessageCircle,
-  HardDrive,
-  Cpu,
-  Workflow
-} from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Zap, Play, GitBranch, Shuffle, Sparkles, MessageCircle, HardDrive, Workflow, Cpu } from 'lucide-react';
 import { N8nNodeType } from './types';
 
 interface NodeLibraryProps {
@@ -40,37 +11,15 @@ interface NodeLibraryProps {
   onDragStart: (nodeType: N8nNodeType) => void;
 }
 
-const iconMap: Record<string, React.ElementType> = {
-  webhook: Webhook,
-  clock: Clock,
-  globe: Globe,
-  'git-branch': GitBranch,
-  shuffle: Shuffle,
-  edit: Edit,
-  code: Code,
-  'git-merge': GitMerge,
-  layers: Layers,
-  bot: Bot,
-  send: Send,
-  hash: MessageSquare,
-  mail: Mail,
-  database: Database,
-  reply: Send,
-  brain: Brain,
-  link: Link,
-  filter: Filter,
-  play: Play,
-};
-
-const categoryConfig: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  trigger: { label: 'Triggers', icon: Zap, color: '#22c55e' },
-  action: { label: 'Ações', icon: Play, color: '#3b82f6' },
-  logic: { label: 'Lógica', icon: GitBranch, color: '#f59e0b' },
-  transform: { label: 'Transformação', icon: Shuffle, color: '#64748b' },
-  ai: { label: 'IA / LLM', icon: Sparkles, color: '#8b5cf6' },
-  communication: { label: 'Comunicação', icon: MessageCircle, color: '#06b6d4' },
-  data: { label: 'Dados', icon: HardDrive, color: '#10b981' },
-  other: { label: 'Outros', icon: Workflow, color: '#6b7280' },
+const categoryConfig: Record<string, { label: string; icon: React.ElementType }> = {
+  trigger: { label: 'Triggers', icon: Zap },
+  action: { label: 'Ações', icon: Play },
+  logic: { label: 'Lógica', icon: GitBranch },
+  transform: { label: 'Transformação', icon: Shuffle },
+  ai: { label: 'IA / LLM', icon: Sparkles },
+  communication: { label: 'Comunicação', icon: MessageCircle },
+  data: { label: 'Dados', icon: HardDrive },
+  other: { label: 'Outros', icon: Workflow },
 };
 
 const categoryOrder = ['trigger', 'action', 'logic', 'transform', 'ai', 'communication', 'data', 'other'];
@@ -109,120 +58,65 @@ const NodeLibrary: React.FC<NodeLibraryProps> = ({ nodeTypes, onDragStart }) => 
   const toggleCategory = (category: string) => {
     setExpandedCategories((prev) => {
       const next = new Set(prev);
-      if (next.has(category)) {
-        next.delete(category);
-      } else {
-        next.add(category);
-      }
+      if (next.has(category)) next.delete(category);
+      else next.add(category);
       return next;
     });
   };
 
-  const expandAll = () => setExpandedCategories(new Set(categoryOrder));
-  const collapseAll = () => setExpandedCategories(new Set());
-
   return (
-    <div className="h-full flex flex-col border-r bg-background">
-      <div className="p-3 border-b space-y-2">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar nós..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 h-9"
-          />
-        </div>
-        <div className="flex gap-1">
-          <button
-            onClick={expandAll}
-            className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Expandir todos
-          </button>
-          <span className="text-muted-foreground">|</span>
-          <button
-            onClick={collapseAll}
-            className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Recolher todos
-          </button>
-        </div>
+    <div className="h-full flex flex-col bg-[#E8EAED] border-r border-border/30">
+      <div className="p-4 pb-2">
+        <h3 className="font-semibold text-sm text-foreground mb-3">Menu</h3>
+        <Input
+          placeholder="Buscar..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-8 text-xs bg-white/60 border-0 shadow-sm"
+        />
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-2 space-y-1">
+        <div className="px-2 pb-4 space-y-0.5">
           {categoryOrder.map((category) => {
             const nodes = groupedNodes[category];
             if (!nodes || nodes.length === 0) return null;
 
             const config = categoryConfig[category] || categoryConfig.other;
             const CategoryIcon = config.icon;
-            const isExpanded = expandedCategories.has(category);
+            const isOpen = expandedCategories.has(category);
 
             return (
-              <Collapsible
-                key={category}
-                open={isExpanded}
-                onOpenChange={() => toggleCategory(category)}
-              >
-                <CollapsibleTrigger className="flex items-center justify-between w-full p-2 rounded-lg hover:bg-muted transition-colors group">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="p-1 rounded text-white"
-                      style={{ backgroundColor: config.color }}
-                    >
-                      <CategoryIcon className="h-3 w-3" />
-                    </div>
-                    <span className="text-sm font-medium">{config.label}</span>
-                    <Badge variant="secondary" className="h-5 text-[10px]">
-                      {nodes.length}
-                    </Badge>
+              <Collapsible key={category} open={isOpen} onOpenChange={() => toggleCategory(category)}>
+                <CollapsibleTrigger
+                  className={`flex items-center justify-between w-full px-3 py-2 rounded-xl transition-all duration-150 text-left ${
+                    isOpen ? 'bg-foreground text-background' : 'hover:bg-black/5 text-foreground'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <CategoryIcon className={`w-4 h-4 ${isOpen ? 'text-background' : 'text-muted-foreground'}`} />
+                    <span className="text-xs font-medium">{config.label}</span>
                   </div>
-                  {isExpanded ? (
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  )}
+                  <span className={`text-xs ${isOpen ? 'text-background/70' : 'text-muted-foreground'}`}>
+                    {isOpen ? '−' : '+'}
+                  </span>
                 </CollapsibleTrigger>
-                
-                <CollapsibleContent>
-                  <div className="pl-2 space-y-1 mt-1">
-                    {nodes.map((node) => {
-                      const IconComponent = iconMap[node.icone || ''] || Zap;
-                      const color = node.cor || '#64748b';
 
-                      return (
-                        <div
+                <CollapsibleContent className="animate-accordion-down">
+                  <div className="relative ml-5 pl-4 pt-1 pb-1">
+                    <div className="absolute left-0 top-0 bottom-0 w-px bg-border" />
+                    <div className="space-y-0.5">
+                      {nodes.map((node) => (
+                        <Card
                           key={node.id}
                           draggable
                           onDragStart={(e) => handleDragStart(e, node)}
-                          className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted cursor-grab active:cursor-grabbing transition-colors group border border-transparent hover:border-border"
+                          className="px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-white border-0 shadow-none rounded-xl transition-all duration-150 select-none"
                         >
-                          <div
-                            className="p-1.5 rounded text-white flex-shrink-0"
-                            style={{ backgroundColor: color }}
-                          >
-                            <IconComponent className="h-3.5 w-3.5" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium truncate">
-                              {node.nome_display}
-                            </div>
-                            {node.descricao && (
-                              <div className="text-[10px] text-muted-foreground truncate">
-                                {node.descricao}
-                              </div>
-                            )}
-                            {node.credential_type_id && (
-                              <Badge variant="outline" className="text-[10px] h-4 mt-0.5">
-                                🔑 Credencial
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                          <h4 className="text-xs font-normal text-foreground truncate">{node.nome_display}</h4>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 </CollapsibleContent>
               </Collapsible>
@@ -230,9 +124,9 @@ const NodeLibrary: React.FC<NodeLibraryProps> = ({ nodeTypes, onDragStart }) => 
           })}
 
           {Object.keys(groupedNodes).length === 0 && (
-            <div className="text-center py-8 text-muted-foreground text-sm">
+            <div className="text-center py-8 text-muted-foreground">
               <Cpu className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              Nenhum nó encontrado
+              <p className="text-xs font-medium">Nenhum nó encontrado</p>
             </div>
           )}
         </div>
