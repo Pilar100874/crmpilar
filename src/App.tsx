@@ -182,6 +182,7 @@ const App = () => (
         
         <BrowserRouter>
           <UnsavedChangesProvider>
+          <SystemThemeLoader />
           <WatchRedirectWrapper />
           <PWAInstallPrompt />
           <PWAUpdateNotifier />
