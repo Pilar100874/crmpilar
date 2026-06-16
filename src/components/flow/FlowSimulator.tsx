@@ -4476,6 +4476,15 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           <CardTitle className={`text-sm flex items-center gap-2 ${channelStyle.headerText}`}>
             <span>{channelStyle.icon}</span>
             <span>Simulador - {channelStyle.name}</span>
+            {channel === "whatsapp" && (
+              <Badge
+                variant="outline"
+                className={`ml-1 text-[10px] uppercase tracking-wide border-white/30 ${isOficial ? "bg-emerald-500/20 text-white" : "bg-amber-500/20 text-white"}`}
+                title={isOficial ? "WhatsApp Cloud API (Meta)" : "Evolution API / WAHA"}
+              >
+                {isOficial ? "Oficial" : "Evolution"}
+              </Badge>
+            )}
           </CardTitle>
           <Button size="sm" variant="outline" onClick={handleReset} className="bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-full">
             <RotateCcw className="w-4 h-4 mr-2" />
