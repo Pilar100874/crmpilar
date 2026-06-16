@@ -29,12 +29,20 @@ interface BotCreateProps {
   embedded?: boolean;
 }
 
+// Cache em memória para evitar "reload" visível ao revisitar a tela
+const botsCache: {
+  bots: any[];
+  sessions: any[];
+  numeros: any[];
+  loaded: boolean;
+} = { bots: [], sessions: [], numeros: [], loaded: false };
+
 export default function BotCreate({ embedded = false }: BotCreateProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { openSubmenu } = useLayout();
-  const [bots, setBots] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [bots, setBots] = useState<any[]>(botsCache.bots);
+  const [loading, setLoading] = useState(!botsCache.loaded);
   const [newBotDialogOpen, setNewBotDialogOpen] = useState(false);
   const [newBotName, setNewBotName] = useState("");
   const [newBotDescription, setNewBotDescription] = useState("");
@@ -60,11 +68,11 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // WhatsApp Sessions
-  const [whatsappSessions, setWhatsappSessions] = useState<any[]>([]);
+  const [whatsappSessions, setWhatsappSessions] = useState<any[]>(botsCache.sessions);
   const [selectedSessions, setSelectedSessions] = useState<Record<string, string>>({});
 
   // Números de WhatsApp cadastrados
-  const [whatsappNumeros, setWhatsappNumeros] = useState<any[]>([]);
+  const [whatsappNumeros, setWhatsappNumeros] = useState<any[]>(botsCache.numeros);
   const [selectedNumeroId, setSelectedNumeroId] = useState<string>("");
   const [duplicateNumeroId, setDuplicateNumeroId] = useState<string>("");
 
@@ -121,6 +129,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
         console.error("Error loading WhatsApp sessions:", error);
       } else if (data) {
         console.log("Loaded WhatsApp sessions:", data);
+        botsCache.sessions = data;
         setWhatsappSessions(data);
       }
     } catch (error) {
@@ -142,6 +151,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
       if (error) {
         console.error("Error loading whatsapp_numeros:", error);
       } else {
+        botsCache.numeros = data || [];
         setWhatsappNumeros(data || []);
       }
     } catch (e) {
@@ -223,6 +233,8 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
 
         if (error) throw error;
         console.log("📋 Bots encontrados:", data?.length || 0);
+        botsCache.bots = data || [];
+        botsCache.loaded = true;
         setBots(data || []);
       } else {
         const { data, error } = await supabase
@@ -233,6 +245,8 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
 
         if (error) throw error;
         console.log("📋 Bots encontrados para estabelecimento:", data?.length || 0);
+        botsCache.bots = data || [];
+        botsCache.loaded = true;
         setBots(data || []);
       }
     } catch (error) {
