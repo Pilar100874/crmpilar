@@ -2010,15 +2010,20 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
         let actionLabel = config.displayText || "";
         let extraLine = "";
+        let actionInfo: { type: "url" | "copy" | "call" | "pix"; payload: string } | undefined;
         if (nodeData.type === "button_url") {
-          actionLabel = actionLabel || (config.url ? `🔗 ${config.url}` : "Visitar");
+          const rawUrl = interpolateVariables(config.url || "", context);
+          actionLabel = actionLabel || (rawUrl ? `🔗 Abrir` : "Visitar");
           if (!actionLabel.startsWith("🔗")) actionLabel = `🔗 ${actionLabel}`;
+          if (rawUrl) actionInfo = { type: "url", payload: rawUrl };
         } else if (nodeData.type === "button_copy") {
-          actionLabel = `📋 ${actionLabel || `Copiar ${config.copyCode || ""}`}`.trim();
-          if (config.copyCode) extraLine = `Código: *${config.copyCode}*`;
+          const code = interpolateVariables(config.copyCode || "", context);
+          actionLabel = `📋 ${actionLabel || `Copiar ${code || ""}`}`.trim();
+          if (code) { extraLine = `Código: *${code}*`; actionInfo = { type: "copy", payload: code }; }
         } else if (nodeData.type === "button_call") {
-          actionLabel = `📞 ${actionLabel || config.phoneNumber || "Ligar"}`;
-          if (config.phoneNumber) extraLine = `Telefone: ${config.phoneNumber}`;
+          const phone = interpolateVariables(config.phoneNumber || "", context);
+          actionLabel = `📞 ${actionLabel || phone || "Ligar"}`;
+          if (phone) { extraLine = `Telefone: ${phone}`; actionInfo = { type: "call", payload: phone }; }
         } else if (nodeData.type === "button_pix") {
           actionLabel = `💠 Pagar com Pix (${config.currency || "BRL"})`;
           const parts: string[] = [];
@@ -2026,6 +2031,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           if (config.pixKey) parts.push(config.pixKey);
           if (config.name) parts.push(config.name);
           if (parts.length) extraLine = parts.join(" • ");
+          if (config.pixKey) actionInfo = { type: "pix", payload: String(config.pixKey) };
         }
 
         const parts: string[] = [];
@@ -2044,6 +2050,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             text: actionLabel,
             value: actionLabel,
             buttonId: `action_${nodeData.type}`,
+            action: actionInfo,
           }],
         }]);
 
