@@ -2083,10 +2083,16 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         const renderedButtons = bmxButtons.map((b: any, idx: number) => {
           const icon = iconFor[b.type] || "▫️";
           const label = b.displayText || b.label || b.text || `Botão ${idx + 1}`;
+          let action: { type: "url" | "copy" | "call" | "pix"; payload: string } | undefined;
+          if (b.type === "url" && b.url) action = { type: "url", payload: interpolateVariables(String(b.url), context) };
+          else if (b.type === "copy" && (b.copyCode || b.code)) action = { type: "copy", payload: interpolateVariables(String(b.copyCode || b.code), context) };
+          else if (b.type === "call" && (b.phoneNumber || b.phone)) action = { type: "call", payload: interpolateVariables(String(b.phoneNumber || b.phone), context) };
+          else if (b.type === "pix" && (b.pixKey || b.key)) action = { type: "pix", payload: interpolateVariables(String(b.pixKey || b.key), context) };
           return {
             text: `${icon} ${label}`,
             value: label,
             buttonId: String(b.id || `button_${idx}`),
+            action,
           };
         });
 
