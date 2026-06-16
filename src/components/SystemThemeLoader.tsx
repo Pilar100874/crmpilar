@@ -59,15 +59,24 @@ export function applyPrimaryColor(hsl: string) {
   const h = m[1], s = m[2], l = m[3];
   const glowL = Math.min(parseFloat(l) + 10, 95);
   const root = document.documentElement;
+  const isDark = root.classList.contains("dark");
+  // Accent: light tint in light mode, dark tint in dark mode — used by hover states (ghost/outline/dropdown)
+  const accentL = isDark ? 20 : 95;
+  const accentS = isDark ? 30 : parseFloat(s);
   root.style.setProperty("--primary", `${h} ${s}% ${l}%`);
   root.style.setProperty("--primary-glow", `${h} ${s}% ${glowL}%`);
   root.style.setProperty("--ring", `${h} ${s}% ${l}%`);
   root.style.setProperty("--sidebar-primary", `${h} ${s}% ${l}%`);
+  root.style.setProperty("--accent", `${h} ${accentS}% ${accentL}%`);
+  root.style.setProperty("--accent-foreground", `${h} ${s}% ${l}%`);
+  root.style.setProperty("--sidebar-accent", `${h} ${accentS}% ${accentL}%`);
+  root.style.setProperty("--sidebar-accent-foreground", `${h} ${s}% ${l}%`);
   root.style.setProperty(
     "--gradient-primary",
     `linear-gradient(135deg, hsl(${h} ${s}% ${l}%) 0%, hsl(${h} ${s}% ${glowL}%) 100%)`
   );
 }
+
 
 export default function SystemThemeLoader() {
   useEffect(() => {
