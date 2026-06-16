@@ -813,6 +813,18 @@ function AdsAutomationContent() {
               }}
             />
           }
+          rightContent={
+            <WorkflowFilesMenu
+              nodes={nodes}
+              edges={edges}
+              selectedNodes={nodes.filter((n) => n.selected)}
+              onImport={(n, e) => { setNodes(n as any); setEdges(e as any); }}
+              onLoadTemplate={(newNodes, newEdges) => {
+                setNodes((nds) => [...nds, ...newNodes]);
+                setEdges((eds) => [...eds, ...newEdges]);
+              }}
+            />
+          }
           leftContent={
             <Button
               variant="outline"
