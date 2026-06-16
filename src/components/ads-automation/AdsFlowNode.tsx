@@ -115,6 +115,11 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
 
   const outputsConfig = getOutputsConfig();
 
+  const updateNodeInternals = useUpdateNodeInternals();
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [id, updateNodeInternals, outputsConfig.type, outputsConfig.outputs?.length, isCollapsed]);
+
   const getCardClassName = () =>
     getWorkflowBlockCardClass({
       selected,
