@@ -213,15 +213,17 @@ export function WorkflowBuilderLayout({
           )}
 
           {/* Save Button */}
-          <Button
-            size="sm"
-            onClick={onSave}
-            disabled={isSaving}
-            className={`h-8 text-xs sm:text-sm px-2 sm:px-3 ${isSaving ? 'bg-green-600' : ''}`}
-          >
-            <Save className={`h-4 w-4 mr-1 sm:mr-2 ${isSaving ? 'animate-pulse' : ''}`} />
-            <span className="hidden sm:inline">{isSaving ? "Salvando..." : "Salvar"}</span>
-          </Button>
+          {onSave && (
+            <Button
+              size="sm"
+              onClick={onSave}
+              disabled={isSaving}
+              className={`h-8 text-xs sm:text-sm px-2 sm:px-3 ${isSaving ? 'bg-green-600' : ''}`}
+            >
+              <Save className={`h-4 w-4 mr-1 sm:mr-2 ${isSaving ? 'animate-pulse' : ''}`} />
+              <span className="hidden sm:inline">{isSaving ? "Salvando..." : "Salvar"}</span>
+            </Button>
+          )}
 
           {/* Close Button */}
           <Button
