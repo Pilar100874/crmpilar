@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Info, Plus, GripVertical, Trash2 } from "lucide-react";
 import { Bold, Italic } from "lucide-react";
 import { VariableInput, VariableTextarea } from "@/components/flow/VariableInput";
+import { MediaUrlUploadField } from "./MediaUrlUploadField";
+
 
 interface ConfigProps {
   config: any;
