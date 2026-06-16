@@ -3958,8 +3958,42 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     setInput("");
   };
 
-  const handleButtonClick = (button: { text: string; value: string; buttonId?: string; keywords?: string[] }, nodeId?: string) => {
+  const handleButtonClick = (button: { text: string; value: string; buttonId?: string; keywords?: string[]; action?: { type: "url" | "copy" | "call" | "pix"; payload: string } }, nodeId?: string) => {
     console.log("🔘 Button clicked:", { button, nodeId, pendingVariable, currentBlockType });
+
+    // === Ação nativa (URL / Copiar / Ligar / Pix) ===
+    if (button.action) {
+      const { type, payload } = button.action;
+      try {
+        if (type === "url") {
+          let url = String(payload || "").trim();
+          if (url && !/^[a-z][a-z0-9+.-]*:\/\//i.test(url) && !url.startsWith("tel:") && !url.startsWith("mailto:") && !url.startsWith("whatsapp:")) {
+            url = `https://${url}`;
+          }
+          if (url) {
+            const opened = window.open(url, "_blank", "noopener,noreferrer");
+            if (!opened) window.location.href = url;
+            addSystemMessage(`🔗 Abrindo: ${url}`);
+          }
+        } else if (type === "call") {
+          const digits = String(payload || "").replace(/[^\d+]/g, "");
+          if (digits) { window.location.href = `tel:${digits}`; addSystemMessage(`📞 Ligando para ${digits}`); }
+        } else if (type === "copy") {
+          navigator.clipboard?.writeText(String(payload || ""));
+          toast.success("Código copiado!");
+          addSystemMessage(`📋 Copiado: ${payload}`);
+        } else if (type === "pix") {
+          navigator.clipboard?.writeText(String(payload || ""));
+          toast.success("Chave Pix copiada!");
+          addSystemMessage(`💠 Chave Pix copiada: ${payload}`);
+        }
+      } catch (err) {
+        console.error("Action button error:", err);
+      }
+      // Não interrompe o fluxo — apenas executa a ação e segue para o handler normal abaixo (se aplicável)
+      // Para botões de ação puros (sem pendingVariable e sem block aguardando) o fluxo já auto-avançou
+      return;
+    }
 
     // === Saída universal: encerra o atendimento ===
     if (button.value === "__exit__") {
