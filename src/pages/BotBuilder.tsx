@@ -47,7 +47,7 @@ import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
-import { FlowTemplateManager } from "@/components/flow/FlowTemplateManager";
+import { WorkflowFilesMenu } from "@/components/workflow/WorkflowFilesMenu";
 import { BotNumberSettingsDialog } from "@/components/atendimento/BotNumberSettingsDialog";
 import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
 
@@ -1574,18 +1574,12 @@ function BotBuilderContent() {
       }
       rightContent={
         <>
-          <Button variant="outline" size="sm" onClick={handleImport} className="h-8 px-2">
-            <Upload className="h-4 w-4 xl:mr-1.5" />
-            <span className="hidden xl:inline">Importar</span>
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleExport} className="h-8 px-2">
-            <Download className="h-4 w-4 xl:mr-1.5" />
-            <span className="hidden xl:inline">Exportar</span>
-          </Button>
-          <FlowTemplateManager
+          <WorkflowFilesMenu
             nodes={nodes}
             edges={edges}
             selectedNodes={nodes.filter((n) => n.selected)}
+            customImport={{ onClick: handleImport }}
+            customExport={{ onClick: handleExport }}
             onLoadTemplate={(newNodes, newEdges) => {
               setNodes((nds) => [...nds, ...newNodes]);
               setEdges((eds) => [...eds, ...newEdges]);
