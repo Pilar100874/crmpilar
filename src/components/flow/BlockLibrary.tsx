@@ -123,7 +123,7 @@ const blockCategories = [
     iconColor: "text-indigo-600",
     iconHover: "group-hover:text-indigo-700",
     textHover: "group-hover:text-indigo-700",
-    blocks: ["crm_cadastro_empresa", "crm_agenda_rapida", "crm_gerar_relatorio", "product_search_select"] as NodeType[],
+    blocks: ["crm_cadastro_empresa", "crm_agenda_rapida", "crm_gerar_relatorio", "product_search_select", "attach_catalog"] as NodeType[],
   },
   {
     name: "Integrações & Código",

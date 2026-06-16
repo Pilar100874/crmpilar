@@ -60,9 +60,10 @@ export {
   CRMGerarRelatorioConfig,
 } from './CRMGerarRelatorioConfig';
 
-export {
-  AgendaRapidaConfig,
-} from './AgendaRapidaConfig';
+export { AgendaRapidaConfig } from './AgendaRapidaConfig';
+
+// Anexar Catálogo (PDF)
+export { AttachCatalogConfig } from './AttachCatalogConfig';
 
 // Additional Blocks
 export { ABTestConfig } from './ABTestConfig';
