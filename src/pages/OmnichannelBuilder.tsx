@@ -14,7 +14,7 @@ import {
   type NodeTypes,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { FlowTemplateManager } from "@/components/flow/FlowTemplateManager";
+import { WorkflowFilesMenu } from "@/components/workflow/WorkflowFilesMenu";
 import { boxSelectionProps } from "@/lib/flowSelection";
 import { FlowNode } from "@/components/omnichannel-builder/FlowNode";
 import { BlockLibrary } from "@/components/omnichannel-builder/BlockLibrary";
@@ -668,11 +668,24 @@ export default function OmnichannelBuilder() {
               </div>
             </>
           )}
-          <FlowExportImport
-            flowData={{ nodes, edges, viewport: { x: 0, y: 0, zoom: 1 } }}
-            flowName={flowName}
-            onImport={handleImportFlow}
+          <WorkflowFilesMenu
+            nodes={nodes as any}
+            edges={edges as any}
+            selectedNodes={(nodes as any[]).filter((n) => n.selected)}
+            customImport={{ label: "Importar fluxo (JSON)", onClick: () => (document.getElementById("omni-import-trigger") as HTMLButtonElement | null)?.click() }}
+            customExport={{ label: "Exportar fluxo (JSON)", onClick: () => (document.getElementById("omni-export-trigger") as HTMLButtonElement | null)?.click() }}
+            onLoadTemplate={(newNodes, newEdges) => {
+              setNodes((nds) => [...nds, ...(newNodes as any)] as any);
+              setEdges((eds) => [...eds, ...(newEdges as any)] as any);
+            }}
           />
+          <div className="hidden">
+            <FlowExportImport
+              flowData={{ nodes, edges, viewport: { x: 0, y: 0, zoom: 1 } }}
+              flowName={flowName}
+              onImport={handleImportFlow}
+            />
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 px-2">
