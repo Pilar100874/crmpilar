@@ -627,6 +627,7 @@ export default function OmnichannelBuilder() {
   return (
     <WorkflowBuilderLayout
       title="OMNICHANNEL"
+      subtitle="Configure seu fluxo multicanal de atendimento"
       flowName={flowName}
       onFlowNameChange={setFlowName}
       onSave={handleSave}
