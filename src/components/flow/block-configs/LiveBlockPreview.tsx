@@ -1,0 +1,329 @@
+import { Card } from "@/components/ui/card";
+import { MessageSquare, Phone, Copy, ExternalLink, QrCode, Image as ImageIcon, Video } from "lucide-react";
+
+interface LiveBlockPreviewProps {
+  type: string;
+  config: any;
+}
+
+/**
+ * Live preview of the block as it appears to the end-user in WhatsApp /
+ * chat. Renders title, description, footer, media, buttons, cards, etc.
+ * based on the block type. Updates live with config changes.
+ */
+const Bubble = ({ children, className = "" }: any) => (
+  <div
+    className={
+      "max-w-full rounded-2xl rounded-tl-sm bg-[#dcf8c6] dark:bg-emerald-900/40 text-foreground px-3 py-2 shadow-sm text-sm whitespace-pre-wrap break-words " +
+      className
+    }
+  >
+    {children}
+  </div>
+);
+
+const MediaPreview = ({ url, type }: { url?: string; type?: string }) => {
+  if (!url) {
+    return (
+      <div className="w-full aspect-video rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
+        {type === "video" ? <Video className="w-8 h-8" /> : <ImageIcon className="w-8 h-8" />}
+        <span className="ml-2 text-xs">Sem mídia</span>
+      </div>
+    );
+  }
+  if (type === "video" || /\.(mp4|webm|mov)$/i.test(url)) {
+    return <video src={url} controls className="w-full rounded-lg max-h-56 bg-black" />;
+  }
+  if (type === "audio" || /\.(mp3|ogg|wav|m4a)$/i.test(url)) {
+    return <audio src={url} controls className="w-full" />;
+  }
+  return (
+    <img
+      src={url}
+      alt="preview"
+      className="w-full rounded-lg max-h-56 object-cover bg-muted"
+      onError={(e) => ((e.currentTarget.style.display = "none"))}
+    />
+  );
+};
+
+const PreviewButton = ({ icon: Icon, label }: any) => (
+  <div className="border-t border-border/60 first:border-t-0 py-2 px-3 text-center text-sm text-primary font-medium flex items-center justify-center gap-2 hover:bg-muted/40 cursor-default">
+    {Icon && <Icon className="w-3.5 h-3.5" />}
+    {label || "Botão"}
+  </div>
+);
+
+const Header = ({ title }: { title: string }) => (
+  <div className="px-3 pt-2 text-xs uppercase tracking-wide text-muted-foreground">{title}</div>
+);
+
+const Title = ({ children }: any) =>
+  children ? <div className="px-3 pt-1 font-semibold leading-tight">{children}</div> : null;
+const Body = ({ children }: any) =>
+  children ? (
+    <div className="px-3 py-1 text-sm whitespace-pre-wrap break-words">{children}</div>
+  ) : null;
+const Footer = ({ children }: any) =>
+  children ? <div className="px-3 pb-2 text-xs italic text-muted-foreground">{children}</div> : null;
+
+export const LiveBlockPreview = ({ type, config }: LiveBlockPreviewProps) => {
+  const c = config || {};
+
+  const card = (
+    children: React.ReactNode,
+    extraClass = "",
+  ) => (
+    <Card className={`overflow-hidden bg-background border ${extraClass}`}>{children}</Card>
+  );
+
+  const renderInner = () => {
+    switch (type) {
+      case "send_message":
+        return <Bubble>{c.message || c.text || "Mensagem do bot"}</Bubble>;
+
+      case "goodbye":
+        return <Bubble>{c.message || "Até logo! 👋"}</Bubble>;
+
+      case "media": {
+        const url = c.media?.url || c.url || "";
+        const mtype = c.media?.type || c.mediaType || "image";
+        return card(
+          <>
+            <MediaPreview url={url} type={mtype} />
+            {c.caption && <Body>{c.caption}</Body>}
+          </>,
+        );
+      }
+
+      case "reply_buttons": {
+        const buttons = c.buttons || [];
+        return card(
+          <>
+            {c.image && <MediaPreview url={c.image} type="image" />}
+            {c.header && <Header title={c.header} />}
+            <Body>{c.text || ""}</Body>
+            <Footer>{c.footer}</Footer>
+            <div className="bg-muted/30">
+              {buttons.length === 0 ? (
+                <div className="py-2 text-xs text-center text-muted-foreground">
+                  Nenhum botão adicionado
+                </div>
+              ) : (
+                buttons.map((b: any, i: number) => (
+                  <PreviewButton key={i} label={b.label || b.text || b.displayText} />
+                ))
+              )}
+            </div>
+          </>,
+        );
+      }
+
+      case "list_buttons": {
+        const sections = c.sections || [];
+        return card(
+          <>
+            {c.header && <Header title={c.header} />}
+            <Body>{c.text || c.body || ""}</Body>
+            <Footer>{c.footer}</Footer>
+            <div className="bg-muted/30 max-h-60 overflow-auto">
+              {sections.length === 0 && (
+                <div className="py-2 text-xs text-center text-muted-foreground">
+                  {c.buttonText || "Ver opções"}
+                </div>
+              )}
+              {sections.map((s: any, i: number) => (
+                <div key={i}>
+                  <div className="px-3 pt-2 text-[11px] uppercase text-muted-foreground">
+                    {s.title || `Seção ${i + 1}`}
+                  </div>
+                  {(s.rows || []).map((r: any, ri: number) => (
+                    <PreviewButton key={ri} label={r.title || r.text || `Item ${ri + 1}`} />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </>,
+        );
+      }
+
+      case "button_url":
+        return card(
+          <>
+            <Title>{c.title}</Title>
+            <Body>{c.description}</Body>
+            <Footer>{c.footer}</Footer>
+            <PreviewButton icon={ExternalLink} label={c.displayText || c.url || "Visitar"} />
+          </>,
+        );
+
+      case "button_copy":
+        return card(
+          <>
+            <Title>{c.title}</Title>
+            <Body>{c.description}</Body>
+            <Footer>{c.footer}</Footer>
+            <PreviewButton icon={Copy} label={c.displayText || `Copiar ${c.copyCode || ""}`} />
+          </>,
+        );
+
+      case "button_call":
+        return card(
+          <>
+            <Title>{c.title}</Title>
+            <Body>{c.description}</Body>
+            <Footer>{c.footer}</Footer>
+            <PreviewButton icon={Phone} label={c.displayText || c.phoneNumber || "Ligar"} />
+          </>,
+        );
+
+      case "button_pix":
+        return card(
+          <>
+            <Title>{c.title}</Title>
+            <Body>{c.description}</Body>
+            <div className="px-3 text-xs text-muted-foreground">
+              {c.keyType?.toUpperCase()} • {c.pixKey || "chave pix"} • {c.name || ""}
+            </div>
+            <Footer>{c.footer}</Footer>
+            <PreviewButton icon={QrCode} label={`Pagar com Pix (${c.currency || "BRL"})`} />
+          </>,
+        );
+
+      case "buttons_mixed": {
+        const buttons = c.buttons || [];
+        const iconFor: any = { url: ExternalLink, copy: Copy, call: Phone, reply: MessageSquare };
+        return card(
+          <>
+            <Title>{c.title}</Title>
+            <Body>{c.description}</Body>
+            <Footer>{c.footer}</Footer>
+            <div className="bg-muted/30">
+              {buttons.length === 0 ? (
+                <div className="py-2 text-xs text-center text-muted-foreground">
+                  Sem botões
+                </div>
+              ) : (
+                buttons.map((b: any, i: number) => (
+                  <PreviewButton key={i} icon={iconFor[b.type]} label={b.displayText || `Botão ${i + 1}`} />
+                ))
+              )}
+            </div>
+          </>,
+        );
+      }
+
+      case "buttons_media": {
+        const buttons = c.buttons || [];
+        return card(
+          <>
+            <MediaPreview url={c.thumbnailUrl} type={c.mediaType || "image"} />
+            <Title>{c.title}</Title>
+            <Body>{c.description}</Body>
+            <Footer>{c.footer}</Footer>
+            <div className="bg-muted/30">
+              {buttons.length === 0 ? (
+                <div className="py-2 text-xs text-center text-muted-foreground">
+                  Sem botões
+                </div>
+              ) : (
+                buttons.map((b: any, i: number) => (
+                  <PreviewButton key={i} label={b.displayText || `Botão ${i + 1}`} />
+                ))
+              )}
+            </div>
+          </>,
+        );
+      }
+
+      case "carousel": {
+        const cards = c.cards || [];
+        if (c.mode === "dynamic") {
+          return (
+            <div className="text-xs text-muted-foreground italic px-2">
+              Carrossel dinâmico — cards gerados em runtime a partir do catálogo
+              {c.dynamicGrupoId && ` (grupo ${c.dynamicGrupoId})`}
+              {c.dynamicCategoriaId && ` (categoria ${c.dynamicCategoriaId})`}.
+            </div>
+          );
+        }
+        return (
+          <div className="space-y-2">
+            <Title>{c.title}</Title>
+            <Body>{c.description}</Body>
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {cards.length === 0 && (
+                <div className="text-xs text-muted-foreground py-4">Sem cards ainda</div>
+              )}
+              {cards.map((card: any, i: number) => (
+                <Card key={i} className="min-w-[180px] max-w-[180px] overflow-hidden">
+                  <MediaPreview url={card.header} type="image" />
+                  <Body>{card.body}</Body>
+                  <Footer>{card.footer}</Footer>
+                  <PreviewButton label={card.buttonText || "Selecionar"} />
+                </Card>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      case "keyword_options": {
+        const opts = c.buttons || c.options || [];
+        return card(
+          <>
+            <Body>{c.question || "Escolha uma opção"}</Body>
+            <div className="bg-muted/30">
+              {opts.length === 0 ? (
+                <div className="py-2 text-xs text-center text-muted-foreground">
+                  Nenhuma opção adicionada
+                </div>
+              ) : (
+                opts.map((o: any, i: number) => (
+                  <div key={i}>
+                    {o.imageUrl && <MediaPreview url={o.imageUrl} type="image" />}
+                    <PreviewButton label={o.title || o.label || `Opção ${i + 1}`} />
+                  </div>
+                ))
+              )}
+            </div>
+          </>,
+        );
+      }
+
+      default:
+        return null;
+    }
+  };
+
+  const inner = renderInner();
+  if (!inner) return null;
+
+  return (
+    <div className="mb-4 rounded-xl border border-dashed bg-muted/30 p-3">
+      <div className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-2">
+        Pré-visualização ao vivo
+      </div>
+      <div className="max-w-sm">{inner}</div>
+    </div>
+  );
+};
+
+export default LiveBlockPreview;
+
+/** Block types that have a meaningful live preview. */
+export const PREVIEW_SUPPORTED_TYPES = new Set<string>([
+  "send_message",
+  "goodbye",
+  "media",
+  "reply_buttons",
+  "list_buttons",
+  "button_url",
+  "button_copy",
+  "button_call",
+  "button_pix",
+  "buttons_mixed",
+  "buttons_media",
+  "carousel",
+  "keyword_options",
+]);
