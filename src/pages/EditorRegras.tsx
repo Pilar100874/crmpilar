@@ -256,6 +256,8 @@ function EditorRegrasContent() {
         if (data) {
         setCurrentRegraId(data.id);
         setNomeRegra(data.nome);
+        setDescricaoRegra((data as any).descricao || "");
+
         setIsAtiva(data.ativo);
         setPrioridade(data.prioridade || 1);
 
