@@ -198,14 +198,32 @@ export function BotNumberSettingsDialog({
   const blockedByCloud =
     evolutionOnlyTypes.length > 0 && selectedProvider === "cloud_api";
 
+  const linkedNumeroId = effectiveWhatsappNumeroId ?? whatsappNumeroId ?? linkedNumero?.id ?? null;
+  const evolutionNumeros = useMemo(
+    () => numeros.filter((n) => n.provider !== "cloud_api" && n.id !== linkedNumeroId),
+    [numeros, linkedNumeroId],
+  );
+
   const handleSave = async () => {
     if (blockedByCloud) {
       toast.error("Este bot usa blocos exclusivos da Evolution e está vinculado a um número Cloud API.");
       return;
     }
-    if (forwardEnabled && !forwardBotId) {
-      toast.error("Selecione o bot de destino para o encaminhamento.");
-      return;
+    if (forwardEnabled) {
+      if (forwardTargetType === "bot" && !forwardBotId) {
+        toast.error("Selecione o bot de destino para o encaminhamento.");
+        return;
+      }
+      if (forwardTargetType === "numero") {
+        if (!forwardNumeroId) {
+          toast.error("Selecione o número de destino para o encaminhamento.");
+          return;
+        }
+        if (forwardNumeroId === linkedNumeroId) {
+          toast.error("O número de destino não pode ser o mesmo número vinculado ao bot.");
+          return;
+        }
+      }
     }
     if (!botId) {
       onSaved(effectiveWhatsappNumeroId ?? whatsappNumeroId, null);
@@ -216,7 +234,8 @@ export function BotNumberSettingsDialog({
     const { error } = await supabase
       .from("bot_flows")
       .update({
-        forward_to_bot_id: forwardEnabled ? forwardBotId : null,
+        forward_to_bot_id: forwardEnabled && forwardTargetType === "bot" ? forwardBotId : null,
+        forward_to_numero_id: forwardEnabled && forwardTargetType === "numero" ? forwardNumeroId : null,
         forward_to_bot_enabled: forwardEnabled,
       })
       .eq("id", botId);
@@ -225,7 +244,8 @@ export function BotNumberSettingsDialog({
       toast.error("Erro ao salvar: " + error.message);
       return;
     }
-    onSaved(effectiveWhatsappNumeroId ?? whatsappNumeroId, null);
+    const savedForwardNumeroId = forwardEnabled && forwardTargetType === "numero" ? forwardNumeroId : null;
+    onSaved(effectiveWhatsappNumeroId ?? whatsappNumeroId, savedForwardNumeroId);
     toast.success("Configurações salvas");
     setOpen(false);
   };
