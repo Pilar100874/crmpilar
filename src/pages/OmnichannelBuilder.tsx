@@ -6,7 +6,6 @@ import {
   BackgroundVariant,
   MiniMap,
   Controls,
-  Panel,
   addEdge,
   useNodesState,
   useEdgesState,
@@ -14,7 +13,7 @@ import {
   type NodeTypes,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { FlowTemplateManager } from "@/components/flow/FlowTemplateManager";
+import { WorkflowFilesMenu } from "@/components/workflow/WorkflowFilesMenu";
 import { boxSelectionProps } from "@/lib/flowSelection";
 import { FlowNode } from "@/components/omnichannel-builder/FlowNode";
 import { BlockLibrary } from "@/components/omnichannel-builder/BlockLibrary";
@@ -22,7 +21,7 @@ import { PropertiesPanel } from "@/components/omnichannel-builder/PropertiesPane
 import { FlowValidator } from "@/components/omnichannel-builder/FlowValidator";
 import { TemplateSelector } from "@/components/omnichannel-builder/TemplateSelector";
 import { FlowVersionHistory } from "@/components/omnichannel-builder/FlowVersionHistory";
-import { FlowExportImport } from "@/components/omnichannel-builder/FlowExportImport";
+
 import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 import { BotTriggerSelector } from "@/components/omnichannel-builder/BotTriggerSelector";
 import { FlowExecutionLogs } from "@/components/omnichannel-builder/FlowExecutionLogs";
@@ -668,10 +667,16 @@ export default function OmnichannelBuilder() {
               </div>
             </>
           )}
-          <FlowExportImport
-            flowData={{ nodes, edges, viewport: { x: 0, y: 0, zoom: 1 } }}
+          <WorkflowFilesMenu
+            nodes={nodes as any}
+            edges={edges as any}
             flowName={flowName}
-            onImport={handleImportFlow}
+            selectedNodes={(nodes as any[]).filter((n) => n.selected)}
+            onImport={(n, e, name) => handleImportFlow({ nodes: n as any, edges: e as any, viewport: { x: 0, y: 0, zoom: 1 } } as any, name || flowName)}
+            onLoadTemplate={(newNodes, newEdges) => {
+              setNodes((nds) => [...nds, ...(newNodes as any)] as any);
+              setEdges((eds) => [...eds, ...(newEdges as any)] as any);
+            }}
           />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -811,17 +816,6 @@ export default function OmnichannelBuilder() {
               className="bg-card border border-border rounded-lg shadow-lg"
               maskColor="rgba(255, 255, 255, 0.8)"
             />
-            <Panel position="top-right" className="!m-2 flex gap-1.5 bg-card/95 backdrop-blur border border-border rounded-lg p-1 shadow-lg">
-              <FlowTemplateManager
-                nodes={nodes as any}
-                edges={edges as any}
-                selectedNodes={(nodes as any[]).filter((n) => n.selected)}
-                onLoadTemplate={(newNodes, newEdges) => {
-                  setNodes((nds) => [...nds, ...(newNodes as any)] as any);
-                  setEdges((eds) => [...eds, ...(newEdges as any)] as any);
-                }}
-              />
-            </Panel>
           </ReactFlow>
           {connectMenu && (
             <SmartConnectMenu
