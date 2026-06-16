@@ -824,7 +824,6 @@ function AdsAutomationContent() {
           onZoomIn={() => reactFlowInstance?.zoomIn({ duration: 200 })}
           onZoomOut={() => reactFlowInstance?.zoomOut({ duration: 200 })}
           onFitView={() => reactFlowInstance?.fitView({ duration: 300, padding: 0.2 })}
-          onAddBlock={() => setIsBlockLibraryExpanded(true)}
           hasUnsavedChanges={hasUnsavedChanges}
           onClose={() => { setIsEditing(false); setSelectedAutomation(null); }}
           aiGeneratorContent={

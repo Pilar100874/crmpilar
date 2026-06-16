@@ -353,7 +353,6 @@ function EcommerceRulesEditorInner() {
       onZoomIn={() => reactFlowInstance?.zoomIn()}
       onZoomOut={() => reactFlowInstance?.zoomOut()}
       onFitView={() => reactFlowInstance?.fitView()}
-      onAddBlock={() => setIsLibraryExpanded(!isLibraryExpanded)}
       onTest={() => { if (!showSimulator) setSelectedNode(null); setShowSimulator((v) => !v); }}
       showTest={showSimulator}
       isTestActive={showSimulator}

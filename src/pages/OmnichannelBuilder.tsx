@@ -637,7 +637,6 @@ export default function OmnichannelBuilder() {
       onZoomIn={handleZoomIn}
       onZoomOut={handleZoomOut}
       onFitView={handleFitView}
-      onAddBlock={() => setIsBlockLibraryExpanded(true)}
       onToggleLock={handleToggleLock}
       isLocked={isLocked}
       onClose={() => navigate(originUrl)}

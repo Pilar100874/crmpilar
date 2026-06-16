@@ -1546,7 +1546,6 @@ function BotBuilderContent() {
       onZoomIn={handleZoomIn}
       onZoomOut={handleZoomOut}
       onFitView={handleFitView}
-      onAddBlock={() => setIsBlockLibraryExpanded(true)}
       isLocked={isLocked}
       onToggleLock={handleToggleLock}
       hasUnsavedChanges={hasUnsavedChanges}

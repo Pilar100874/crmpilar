@@ -718,7 +718,6 @@ function EditorRegrasContent() {
       onZoomIn={handleZoomIn}
       onZoomOut={handleZoomOut}
       onFitView={handleFitView}
-      onAddBlock={() => setIsBlockLibraryExpanded(true)}
       isLocked={isLocked}
       onToggleLock={handleToggleLock}
       onTest={() => { if (!showSimulator) setSelectedNode(null); setShowSimulator((v) => !v); }}
