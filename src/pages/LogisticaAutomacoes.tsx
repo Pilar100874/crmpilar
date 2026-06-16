@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Save, X, Plus, Play, ZoomIn, ZoomOut, Maximize2, Minimize2, Blocks, Zap, Copy, Trash2, Edit } from "lucide-react";
+import { Save, X, Plus, Play, ZoomIn, ZoomOut, Maximize2, Blocks, Zap, Copy, Trash2, Edit } from "lucide-react";
 import { WorkflowCard, WorkflowCardGrid } from "@/components/ui/workflow-card";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import {
@@ -762,22 +762,17 @@ function EditorContent({
         />
       }
       rightContent={
-        <>
-          <WorkflowFilesMenu
-            nodes={nodes}
-            edges={edges}
-            selectedNodes={nodes.filter((n) => n.selected)}
-            onImport={(n, e) => { setNodes(n as any); setEdges(e as any); }}
-            onLoadTemplate={(newNodes, newEdges) => {
-              setNodes((nds) => [...nds, ...newNodes]);
-              setEdges((eds) => [...eds, ...newEdges]);
-              setHasUnsavedChanges(true);
-            }}
-          />
-          <Button variant="outline" size="icon" onClick={handleCollapseAll} className="h-8 w-8" title="Encolher todos">
-            <Minimize2 className="h-4 w-4" />
-          </Button>
-        </>
+        <WorkflowFilesMenu
+          nodes={nodes}
+          edges={edges}
+          selectedNodes={nodes.filter((n) => n.selected)}
+          onImport={(n, e) => { setNodes(n as any); setEdges(e as any); }}
+          onLoadTemplate={(newNodes, newEdges) => {
+            setNodes((nds) => [...nds, ...newNodes]);
+            setEdges((eds) => [...eds, ...newEdges]);
+            setHasUnsavedChanges(true);
+          }}
+        />
       }
     >
 
