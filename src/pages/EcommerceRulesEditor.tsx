@@ -107,6 +107,8 @@ function EcommerceRulesEditorInner() {
     const { data, error } = await supabase.from("ecommerce_rules").select("*").eq("id", id).single();
     if (error || !data) { toast({ title: "Erro", description: "Regra não encontrada", variant: "destructive" }); return; }
     setFlowName(data.nome);
+    setFlowDescription((data as any).descricao || "");
+
     const flowData = data.flow_data as any;
     if (flowData?.nodes) {
       const loadedNodes = flowData.nodes.map((n: any) => ({
