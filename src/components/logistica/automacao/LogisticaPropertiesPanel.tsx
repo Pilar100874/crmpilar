@@ -460,7 +460,7 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
   };
 
   return (
-    <div className="workflow-props w-80 border-l bg-card flex flex-col overflow-x-hidden">
+    <div className="workflow-props w-80 h-[calc(100%-1rem)] m-2 rounded-2xl border border-border/20 bg-gradient-to-b from-card to-muted/30 shadow-lg flex flex-col overflow-x-hidden">
       <div className="p-4 border-b">
         <h3 className="font-semibold">Propriedades</h3>
         <p className="text-sm text-muted-foreground">{blockDef?.label || nodeData.label}</p>
