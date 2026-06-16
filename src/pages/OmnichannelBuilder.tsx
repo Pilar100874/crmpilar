@@ -128,6 +128,8 @@ export default function OmnichannelBuilder() {
       if (data) {
         console.log("✅ Fluxo carregado:", data.nome);
         setFlowName(data.nome);
+        setFlowDescription((data as any).descricao || "");
+
         setCurrentBotId(data.trigger_bot_id || undefined);
         setIsDefault(data.is_default || false);
         const flowData = data.flow_data as unknown as OmnichannelFlowData;
