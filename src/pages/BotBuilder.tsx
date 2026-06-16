@@ -1606,6 +1606,9 @@ function BotBuilderContent() {
           />
 
           <div className={`${showSimulator ? "lg:mr-96" : ""} flex-1 relative`} ref={reactFlowWrapper} style={{ touchAction: 'none' }}>
+            {!isBlockLibraryExpanded && (
+              <FloatingAddBlockButton onClick={() => setIsBlockLibraryExpanded(true)} />
+            )}
             <ReactFlow
               nodes={nodes.map(node => ({
                 ...node,
