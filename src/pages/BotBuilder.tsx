@@ -1870,6 +1870,7 @@ function BotBuilderContent() {
                   breakpointNodes={breakpointNodes}
                   skipNodes={skipNodes}
                   onContextChange={setSimulatorContext}
+                  provider={simulatorProvider}
                 />
               </div>
             </>
