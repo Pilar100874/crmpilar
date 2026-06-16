@@ -2,7 +2,13 @@ import { ReactNode, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Save, Play, ZoomIn, ZoomOut, Maximize2, Lock, Unlock, Plus } from "lucide-react";
+import { X, Save, Play, ZoomIn, ZoomOut, Maximize2, Lock, Unlock, Plus, Settings2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
 
 interface WorkflowBuilderLayoutProps {
   children: ReactNode;
@@ -116,52 +123,37 @@ export function WorkflowBuilderLayout({
             />
           )}
 
-          {/* Zoom Controls */}
+          {/* Zoom / View Controls */}
           {(onZoomIn || onZoomOut || onFitView || onAddBlock || onToggleLock) && (
             <>
               <div className="hidden sm:block h-8 w-px bg-border" />
-              <div className="hidden sm:flex items-center gap-1">
-                {onAddBlock && (
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={onAddBlock}
-                    className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
-                    title="Adicionar bloco"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                )}
+              {/* Add block - always visible (essential) */}
+              {onAddBlock && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={onAddBlock}
+                  className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex-shrink-0"
+                  title="Adicionar bloco"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              )}
+
+              {/* Inline zoom/lock controls on xl+ */}
+              <div className="hidden xl:flex items-center gap-1">
                 {onZoomIn && (
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={onZoomIn}
-                    className="h-8 w-8 rounded-full"
-                    title="Aumentar zoom"
-                  >
+                  <Button variant="outline" size="icon" onClick={onZoomIn} className="h-8 w-8 rounded-full" title="Aumentar zoom">
                     <ZoomIn className="h-4 w-4" />
                   </Button>
                 )}
                 {onZoomOut && (
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={onZoomOut}
-                    className="h-8 w-8 rounded-full"
-                    title="Diminuir zoom"
-                  >
+                  <Button variant="outline" size="icon" onClick={onZoomOut} className="h-8 w-8 rounded-full" title="Diminuir zoom">
                     <ZoomOut className="h-4 w-4" />
                   </Button>
                 )}
                 {onFitView && (
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={onFitView}
-                    className="h-8 w-8 rounded-full"
-                    title="Centralizar"
-                  >
+                  <Button variant="outline" size="icon" onClick={onFitView} className="h-8 w-8 rounded-full" title="Centralizar">
                     <Maximize2 className="h-4 w-4" />
                   </Button>
                 )}
@@ -177,8 +169,45 @@ export function WorkflowBuilderLayout({
                   </Button>
                 )}
               </div>
+
+              {/* Collapsed dropdown on tablet/mobile (<xl) */}
+              {(onZoomIn || onZoomOut || onFitView || onToggleLock) && (
+                <div className="xl:hidden">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon" className="h-8 w-8 rounded-full flex-shrink-0" title="Visualizar">
+                        <Settings2 className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="z-[60]">
+                      {onZoomIn && (
+                        <DropdownMenuItem onClick={onZoomIn}>
+                          <ZoomIn className="h-4 w-4 mr-2" /> Aumentar zoom
+                        </DropdownMenuItem>
+                      )}
+                      {onZoomOut && (
+                        <DropdownMenuItem onClick={onZoomOut}>
+                          <ZoomOut className="h-4 w-4 mr-2" /> Diminuir zoom
+                        </DropdownMenuItem>
+                      )}
+                      {onFitView && (
+                        <DropdownMenuItem onClick={onFitView}>
+                          <Maximize2 className="h-4 w-4 mr-2" /> Centralizar
+                        </DropdownMenuItem>
+                      )}
+                      {onToggleLock && (
+                        <DropdownMenuItem onClick={onToggleLock}>
+                          {isLocked ? <Lock className="h-4 w-4 mr-2" /> : <Unlock className="h-4 w-4 mr-2" />}
+                          {isLocked ? "Desbloquear canvas" : "Bloquear canvas"}
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )}
             </>
           )}
+
 
           {/* AI Generator */}
           {aiGeneratorContent}
