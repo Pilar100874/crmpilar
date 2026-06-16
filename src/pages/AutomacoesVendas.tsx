@@ -266,6 +266,27 @@ export default function AutomacoesVendas() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <WorkflowCreateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        title="Nova Regra"
+        description="Dê um nome e uma descrição para sua nova regra antes de começar."
+        nameLabel="Nome da regra"
+        namePlaceholder="Ex: Desconto Cliente VIP"
+        descriptionPlaceholder="Descreva o objetivo desta regra (opcional)"
+        onConfirm={({ name, description }) => {
+          setCreateDialogOpen(false);
+          navigate("/editor-regras", {
+            state: {
+              from: location.pathname + location.search,
+              initialName: name,
+              initialDescription: description,
+            },
+          });
+        }}
+      />
     </div>
   );
 }
+
