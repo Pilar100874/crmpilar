@@ -234,6 +234,8 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
                   📝 {data.note || data.config?.nota}
                 </div>
               )}
+
+              <WorkflowBlockPreview domain="omnichannel" type={type} config={data.config} />
             </div>
 
             {/* Handles de saída */}
