@@ -301,6 +301,7 @@ function AdsAutomationContent() {
       }
     }));
     
+    baselineSignatureRef.current = null; // re-baselina após carregar
     setNodes(nodesWithCallbacks);
     setEdges(flowData.edges || []);
     setIsEditing(true);
