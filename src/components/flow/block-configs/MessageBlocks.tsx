@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { ConfigSection, ConfigInput, ConfigTextarea, ConfigSelect, ConfigSwitch, ConfigInfo } from "./ConfigField";
 import { FormattingToolbar } from "./FormattingToolbar";
+import { MediaUrlUploadField } from "./MediaUrlUploadField";
 
 // Normaliza placeholders legados para o formato {{...}}
 const normalizeLegacyTokens = (value?: string) => {
