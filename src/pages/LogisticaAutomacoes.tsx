@@ -1242,6 +1242,9 @@ export default function LogisticaAutomacoes() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [view, setView] = useState<'list' | 'editor'>('list');
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [initialName, setInitialName] = useState<string | undefined>(undefined);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createName, setCreateName] = useState("");
 
   useEffect(() => {
     const id = searchParams.get('id');
@@ -1252,17 +1255,27 @@ export default function LogisticaAutomacoes() {
   }, [searchParams]);
 
   const handleNew = () => {
+    setCreateName("");
+    setCreateDialogOpen(true);
+  };
+
+  const handleConfirmCreate = () => {
+    if (!createName.trim()) return;
     setEditingId(null);
+    setInitialName(createName.trim());
     setView('editor');
+    setCreateDialogOpen(false);
   };
 
   const handleEdit = (id: string) => {
     setEditingId(id);
+    setInitialName(undefined);
     setView('editor');
   };
 
   const handleBack = () => {
     setEditingId(null);
+    setInitialName(undefined);
     setView('list');
     setSearchParams({});
   };
@@ -1272,8 +1285,34 @@ export default function LogisticaAutomacoes() {
       {view === 'list' ? (
         <ListContent onEdit={handleEdit} onNew={handleNew} />
       ) : (
-        <EditorContent automacaoId={editingId} onBack={handleBack} />
+        <EditorContent automacaoId={editingId} onBack={handleBack} initialName={initialName} />
       )}
+
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nova Automação</DialogTitle>
+            <DialogDescription>Dê um nome para sua nova automação antes de começar.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome da automação</Label>
+              <Input
+                value={createName}
+                onChange={(e) => setCreateName(e.target.value)}
+                placeholder="Ex: Alerta de Velocidade"
+                autoFocus
+                onKeyDown={(e) => { if (e.key === "Enter") handleConfirmCreate(); }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Cancelar</Button>
+            <Button disabled={!createName.trim()} onClick={handleConfirmCreate}>Criar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </ReactFlowProvider>
   );
 }
+
