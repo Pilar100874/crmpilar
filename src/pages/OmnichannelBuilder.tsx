@@ -817,17 +817,6 @@ export default function OmnichannelBuilder() {
               className="bg-card border border-border rounded-lg shadow-lg"
               maskColor="rgba(255, 255, 255, 0.8)"
             />
-            <Panel position="top-right" className="!m-2 flex gap-1.5 bg-card/95 backdrop-blur border border-border rounded-lg p-1 shadow-lg">
-              <FlowTemplateManager
-                nodes={nodes as any}
-                edges={edges as any}
-                selectedNodes={(nodes as any[]).filter((n) => n.selected)}
-                onLoadTemplate={(newNodes, newEdges) => {
-                  setNodes((nds) => [...nds, ...(newNodes as any)] as any);
-                  setEdges((eds) => [...eds, ...(newEdges as any)] as any);
-                }}
-              />
-            </Panel>
           </ReactFlow>
           {connectMenu && (
             <SmartConnectMenu
