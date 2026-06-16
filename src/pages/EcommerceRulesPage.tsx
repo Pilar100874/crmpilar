@@ -21,6 +21,8 @@ import { WorkflowCard, WorkflowCardGrid } from "@/components/ui/workflow-card";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { WorkflowCreateDialog } from "@/components/workflow/WorkflowCreateDialog";
+
 
 interface EcommerceRule {
   id: string;
