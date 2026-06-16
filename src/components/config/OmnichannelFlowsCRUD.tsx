@@ -191,10 +191,11 @@ export const OmnichannelFlowsCRUD = ({ estabelecimentoId }: OmnichannelFlowsCRUD
             Gerencie os fluxos de roteamento de atendimento
           </p>
         </div>
-        <Button onClick={() => navigate("/omnichannel-builder", { state: { from: location.pathname + location.search } })}>
+        <Button onClick={() => setCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Novo Fluxo
         </Button>
+
       </div>
 
       {flows.length === 0 ? (
