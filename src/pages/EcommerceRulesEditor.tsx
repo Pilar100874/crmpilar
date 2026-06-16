@@ -152,9 +152,10 @@ function EcommerceRulesEditorInner() {
         estabelecimento_id: estabelecimentoId,
         nome: flowName,
         flow_data: { nodes: cleanNodes, edges } as any,
-        descricao: `Regra com ${cleanNodes.length} blocos`,
+        descricao: flowDescription?.trim() ? flowDescription.trim() : `Regra com ${cleanNodes.length} blocos`,
         categoria,
       };
+
 
       if (ruleId) {
         const { error } = await supabase.from("ecommerce_rules").update(payload).eq("id", ruleId);
