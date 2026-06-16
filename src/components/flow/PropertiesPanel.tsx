@@ -79,7 +79,7 @@ export const PropertiesPanel = ({
 
   if (!selectedNode) {
     return (
-      <div className="w-96 bg-background border-l border-border p-6">
+      <div className="w-96 flex flex-col h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border border-border/20 bg-gradient-to-b from-card to-muted/30 p-6">
         <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
           <div className="w-20 h-20 rounded-2xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center">
             <span className="text-3xl">👆</span>
@@ -930,7 +930,7 @@ export const PropertiesPanel = ({
   };
 
   return (
-    <div className="workflow-props fixed inset-y-0 right-0 z-40 w-full sm:w-96 lg:static lg:inset-auto lg:z-auto bg-background border-l border-border flex flex-col h-full shadow-2xl lg:shadow-none overflow-x-hidden">
+    <div className="workflow-props fixed inset-y-0 right-0 z-40 w-full sm:w-96 lg:static lg:inset-auto lg:z-auto lg:h-[calc(100%-1rem)] lg:m-2 lg:rounded-2xl lg:border lg:border-border/20 lg:bg-gradient-to-b lg:from-card lg:to-muted/30 lg:shadow-lg bg-background border-l border-border flex flex-col h-full shadow-2xl overflow-x-hidden">
       {/* Header */}
       <div className="p-4 border-b border-border bg-white">
         <div className="flex items-center justify-between gap-2">

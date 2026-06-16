@@ -621,7 +621,7 @@ export const AdsPropertiesPanel = ({ selectedNode, onUpdateNode, onClose }: AdsP
   };
 
   return (
-    <Card className="workflow-props w-80 h-full border-l shadow-lg flex flex-col overflow-x-hidden">
+    <Card className="workflow-props w-80 h-[calc(100%-1rem)] m-2 rounded-2xl border border-border/20 bg-gradient-to-b from-card to-muted/30 shadow-lg flex flex-col overflow-x-hidden">
       <CardHeader className="pb-3 border-b flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

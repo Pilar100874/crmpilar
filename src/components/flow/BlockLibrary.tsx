@@ -97,7 +97,7 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
   }
 
   return (
-    <div className="w-64 bg-white border-r border-border/30 flex flex-col h-full relative">
+    <div className="w-64 flex flex-col h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border border-border/20 bg-gradient-to-b from-card to-muted/30 relative">
       {/* Header */}
       <div className="p-4 pb-2">
         <div className="flex items-center justify-between mb-3">
