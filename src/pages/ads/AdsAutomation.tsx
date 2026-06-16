@@ -176,6 +176,7 @@ function AdsAutomationContent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ads_automacoes"] });
+      baselineSignatureRef.current = buildSignature();
       setHasUnsavedChanges(false);
     },
     onError: (error: any) => {
