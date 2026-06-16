@@ -1,3 +1,4 @@
+import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
 import { memo, useState } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { AUTOMACAO_VENDAS_BLOCKS } from "@/types/automacaoVendas";
