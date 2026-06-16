@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -290,7 +290,6 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
         <div className="p-3">
           {/* Header */}
           <div className="flex items-start gap-2 mb-2">
-            <Checkbox className="mt-0.5 h-4 w-4 border-muted-foreground" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <div 

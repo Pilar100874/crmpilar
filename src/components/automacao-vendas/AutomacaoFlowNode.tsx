@@ -5,7 +5,7 @@ import { memo, useState } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { AUTOMACAO_VENDAS_BLOCKS } from "@/types/automacaoVendas";
 import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import * as Icons from "lucide-react";
 import {
   DropdownMenu,
@@ -61,9 +61,8 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
         )}
         
         <div className="p-3">
-          {/* Cabeçalho com checkbox, ícone, título e menu */}
+          {/* Cabeçalho com ícone, título e menu */}
           <div className="flex items-start gap-2 mb-3">
-            <Checkbox className="mt-0.5 h-4 w-4 border-border" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 {IconComponent && (

@@ -27,7 +27,7 @@ import {
 import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
 import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
 import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -123,9 +123,8 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
             )}
 
             <div className="p-3">
-              {/* Cabeçalho com checkbox, ícone, título e menu */}
+              {/* Cabeçalho com ícone, título e menu */}
               <div className="flex items-start gap-2 mb-3">
-                <Checkbox className="mt-0.5 h-4 w-4 border-border" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     {IconComponent && (

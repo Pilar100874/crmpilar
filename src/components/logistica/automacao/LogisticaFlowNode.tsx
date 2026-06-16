@@ -23,7 +23,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Card } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+
 
 const iconMap: Record<string, any> = {
   Play,
@@ -282,7 +282,6 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
       <div className="p-3">
         {/* Header */}
         <div className="flex items-start gap-2 mb-2">
-          <Checkbox className="mt-0.5 h-4 w-4 border-muted-foreground" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <div 
