@@ -253,18 +253,6 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
                               {blockDef.label}
                             </h4>
                           </div>
-                          {(() => {
-                            const kind = getInteractionKind(blockDef.type);
-                            if (!kind) return null;
-                            return (
-                              <span
-                                title={`${kind.label} — ${kind.title}`}
-                                className={`shrink-0 inline-flex items-center justify-center w-5 h-5 text-[11px] leading-none rounded-full border ${kind.className}`}
-                              >
-                                {kind.symbol}
-                              </span>
-                            );
-                          })()}
                         </div>
                       </Card>
                     );
