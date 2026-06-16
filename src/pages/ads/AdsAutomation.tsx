@@ -871,6 +871,9 @@ function AdsAutomationContent() {
 
             {/* Canvas */}
             <div className="flex-1 relative" ref={reactFlowWrapper}>
+              {!isBlockLibraryExpanded && (
+                <FloatingAddBlockButton onClick={() => setIsBlockLibraryExpanded(true)} />
+              )}
               <ReactFlow
                 nodes={nodes}
                 edges={styledEdges}
