@@ -750,14 +750,14 @@ export default function OmnichannelBuilder() {
             edges={edges.map((edge) => ({
               ...edge,
               style: {
-                stroke: edge.selected ? '#ea580c' : '#f97316',
+                stroke: edge.selected ? 'hsl(var(--primary))' : 'hsl(var(--primary))',
                 strokeWidth: edge.selected ? 2.5 : 1.33,
               },
               markerEnd: {
                 type: 'arrowclosed',
                 width: 20,
                 height: 20,
-                color: edge.selected ? '#ea580c' : '#f97316',
+                color: edge.selected ? 'hsl(var(--primary))' : 'hsl(var(--primary))',
               },
               type: 'smoothstep',
             }))}
@@ -795,12 +795,12 @@ export default function OmnichannelBuilder() {
             className="bg-background"
             defaultEdgeOptions={{
               animated: true,
-              style: { stroke: '#f97316', strokeWidth: 2 },
+              style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
               markerEnd: {
                 type: 'arrowclosed',
                 width: 20,
                 height: 20,
-                color: '#f97316',
+                color: 'hsl(var(--primary))',
               },
               type: 'smoothstep',
             }}
