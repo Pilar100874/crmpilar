@@ -50,6 +50,7 @@ import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConne
 import { WorkflowFilesMenu } from "@/components/workflow/WorkflowFilesMenu";
 import { BotNumberSettingsDialog } from "@/components/atendimento/BotNumberSettingsDialog";
 import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
+import { boxSelectionProps } from "@/lib/flowSelection";
 
 const nodeTypes = {
   custom: FlowNode,
