@@ -34,6 +34,7 @@ import {
 import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
 import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
 import { getInteractionKind } from "./blockInteractionKind";
+import { LiveBlockPreview, PREVIEW_SUPPORTED_TYPES } from "./block-configs/LiveBlockPreview";
 
 export const FlowNode = memo((props: any) => {
   const { data, selected, id } = props;
@@ -335,7 +336,14 @@ export const FlowNode = memo((props: any) => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        
+
+        {/* Pré-visualização ao vivo do bloco */}
+        {PREVIEW_SUPPORTED_TYPES.has(data.type) && (
+          <div className="mb-2 nodrag">
+            <LiveBlockPreview type={data.type} config={data.config || {}} />
+          </div>
+        )}
+
         {/* Mostrar opções com handles à direita */}
         {dynamicHandles && (
           <div className="space-y-1.5">
