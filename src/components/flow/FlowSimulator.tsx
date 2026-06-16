@@ -5030,7 +5030,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                                   size="sm"
                                   className={`w-full justify-start ${channel === 'telegram' ? 'bg-[#3390EC] hover:bg-[#2B7FD9] text-white border-transparent' : ''}`}
                                   onClick={() => handleButtonClick(button, msg.nodeId)}
-                                  disabled={!isWaitingInput}
+                                  disabled={!isWaitingInput && !button.action}
                                 >
                                   {button.text}
                                 </Button>
