@@ -1,4 +1,5 @@
 import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
+import { WorkflowBlockPreview } from "@/components/workflow/WorkflowBlockPreview";
 import { memo, useState } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { 
@@ -480,6 +481,12 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
             <span>Bloco será pulado</span>
           </div>
         )}
+
+        <WorkflowBlockPreview
+          domain="logistica"
+          type={data.type as string}
+          config={(data as any).config}
+        />
       </div>
 
       {/* Note indicator */}

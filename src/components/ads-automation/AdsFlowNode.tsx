@@ -1,4 +1,5 @@
 import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
+import { WorkflowBlockPreview } from "@/components/workflow/WorkflowBlockPreview";
 import { memo, useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { ADS_BLOCK_DEFINITIONS, AdsBlockType, AdsFlowNodeData } from "@/types/adsFlow";
@@ -428,6 +429,12 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
               <span>Bloco será pulado</span>
             </div>
           )}
+
+          <WorkflowBlockPreview
+            domain="ads"
+            type={data.type}
+            config={(data as any).config}
+          />
         </div>
 
         {/* Note indicator */}

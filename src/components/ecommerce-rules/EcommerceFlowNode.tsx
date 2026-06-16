@@ -1,4 +1,5 @@
 import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
+import { WorkflowBlockPreview } from "@/components/workflow/WorkflowBlockPreview";
 import { memo, useState } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { ECOMMERCE_RULE_BLOCKS } from "@/types/ecommerceRules";
@@ -162,6 +163,12 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
               ))}
             </div>
           )}
+
+          <WorkflowBlockPreview
+            domain="ecommerce"
+            type={(data as any).type}
+            config={(data as any).config}
+          />
         </div>
 
         {/* Single or multi source handles */}
