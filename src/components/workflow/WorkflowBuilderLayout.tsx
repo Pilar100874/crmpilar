@@ -112,6 +112,18 @@ export function WorkflowBuilderLayout({
     else navigate(originUrl);
   };
 
+  const saveAndExit = async () => {
+    if (!onSave) return;
+    try {
+      await Promise.resolve(onSave());
+    } catch {
+      return;
+    }
+    setShowExitDialog(false);
+    if (onClose) onClose();
+    else navigate(originUrl);
+  };
+
   // Auto fit-view when viewport size changes (debounced) so blocks always fit
   const fitRef = useRef(onFitView);
   fitRef.current = onFitView;
