@@ -315,6 +315,45 @@ export default function EcommerceRulesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nova Regra</DialogTitle>
+            <DialogDescription>Dê um nome para sua nova regra antes de começar.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome da regra</Label>
+              <Input
+                value={createName}
+                onChange={e => setCreateName(e.target.value)}
+                placeholder="Ex: Desconto Black Friday"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && createName.trim()) {
+                    setCreateDialogOpen(false);
+                    navigate("/ecommerce-rules-editor", { state: { from: location.pathname, initialName: createName.trim() } });
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Cancelar</Button>
+            <Button
+              disabled={!createName.trim()}
+              onClick={() => {
+                setCreateDialogOpen(false);
+                navigate("/ecommerce-rules-editor", { state: { from: location.pathname, initialName: createName.trim() } });
+              }}
+            >
+              Criar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
