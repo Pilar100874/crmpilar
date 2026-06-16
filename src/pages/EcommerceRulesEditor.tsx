@@ -395,17 +395,8 @@ function EcommerceRulesEditorInner() {
 
         {/* Canvas */}
         <div ref={reactFlowWrapper} className="flex-1 h-full relative">
-          {!isLibraryExpanded && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsLibraryExpanded(true)}
-              className="absolute left-4 top-4 z-10 shadow-md"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Blocos
-            </Button>
-          )}
+
+
           <ReactFlow
             nodes={nodes}
             edges={edges}
