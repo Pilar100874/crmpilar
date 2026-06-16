@@ -5020,6 +5020,59 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           </div>
         </div>
       </CardContent>
+
+      {/* Lightbox para ampliar imagens (estilo WhatsApp) */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setLightboxUrl(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setLightboxUrl(null); }}
+            className="absolute top-4 right-4 h-10 w-10 inline-flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white"
+            aria-label="Fechar imagem"
+          >
+            <XIcon className="w-5 h-5" />
+          </button>
+          <img
+            src={lightboxUrl}
+            alt="Imagem ampliada"
+            className="max-w-full max-h-full object-contain rounded-md shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <a
+            href={lightboxUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="absolute bottom-4 right-4 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs inline-flex items-center gap-1.5"
+          >
+            <ExternalLink className="w-3.5 h-3.5" /> Abrir original
+          </a>
+        </div>
+      )}
+
+      {/* Caudas das bolhas estilo WhatsApp */}
+      <style>{`
+        .wa-bubble { position: relative; }
+        .wa-bubble-bot::before {
+          content: "";
+          position: absolute; top: 0; left: -8px;
+          width: 8px; height: 13px;
+          background: inherit;
+          clip-path: polygon(100% 0, 0 0, 100% 100%);
+        }
+        .wa-bubble-user::before {
+          content: "";
+          position: absolute; top: 0; right: -8px;
+          width: 8px; height: 13px;
+          background: inherit;
+          clip-path: polygon(0 0, 100% 0, 0 100%);
+        }
+      `}</style>
     </div>
   );
 };
