@@ -94,10 +94,12 @@ interface AutomacaoLogistica {
 
 function EditorContent({ 
   automacaoId, 
-  onBack 
+  onBack,
+  initialName,
 }: { 
   automacaoId: string | null; 
   onBack: () => void;
+  initialName?: string;
 }) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -105,7 +107,8 @@ function EditorContent({
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [currentId, setCurrentId] = useState<string | null>(automacaoId);
-  const [nomeAutomacao, setNomeAutomacao] = useState("Nova Automação");
+  const [nomeAutomacao, setNomeAutomacao] = useState(initialName || "Nova Automação");
+
   const [isAtiva, setIsAtiva] = useState(true);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(true);
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
