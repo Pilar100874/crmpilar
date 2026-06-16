@@ -162,10 +162,11 @@ export default function EcommerceRulesPage() {
             Gerencie descontos, promoções, frete, banners e regras de pagamento
           </p>
         </div>
-        <Button onClick={() => navigate("/ecommerce-rules-editor", { state: { from: location.pathname } })} size="sm">
+        <Button onClick={() => { setCreateName(""); setCreateDialogOpen(true); }} size="sm">
           <Plus className="h-4 w-4 mr-2" />
           Nova Regra
         </Button>
+
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
