@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Settings, AlertTriangle } from "lucide-react";
+import { Settings, AlertTriangle, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -28,10 +29,14 @@ interface NumeroOption {
   id: string;
   nome: string;
   provider: string;
-  numero?: string | null;
+  telefone?: string | null;
 }
 
-const NONE = "__none__";
+interface BotOption {
+  id: string;
+  name: string;
+  active: boolean;
+}
 
 export function BotNumberSettingsDialog({
   botId,
@@ -43,19 +48,32 @@ export function BotNumberSettingsDialog({
   const [open, setOpen] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(estabIdProp ?? null);
   const [numeros, setNumeros] = useState<NumeroOption[]>([]);
-  const [numeroId, setNumeroId] = useState<string | null>(whatsappNumeroId);
-  const [forwardId, setForwardId] = useState<string | null>(forwardToNumeroId ?? null);
   const [linkedNumero, setLinkedNumero] = useState<NumeroOption | null>(null);
+  const [bots, setBots] = useState<BotOption[]>([]);
+  const [forwardEnabled, setForwardEnabled] = useState(false);
+  const [forwardBotId, setForwardBotId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [evolutionOnlyTypes, setEvolutionOnlyTypes] = useState<string[]>([]);
 
+  // Carregar config atual do bot ao abrir
   useEffect(() => {
-    setNumeroId(whatsappNumeroId);
-  }, [whatsappNumeroId]);
-  useEffect(() => {
-    setForwardId(forwardToNumeroId ?? null);
-  }, [forwardToNumeroId]);
+    if (!open || !botId) return;
+    (async () => {
+      const { data } = await supabase
+        .from("bot_flows")
+        .select("flow_data, forward_to_bot_id, forward_to_bot_enabled, whatsapp_numero_id")
+        .eq("id", botId)
+        .maybeSingle();
+      if (data) {
+        setForwardEnabled(Boolean((data as any).forward_to_bot_enabled));
+        setForwardBotId((data as any).forward_to_bot_id ?? null);
+        const types = detectEvolutionOnlyBlocks((data as any).flow_data);
+        setEvolutionOnlyTypes(types);
+      }
+    })();
+  }, [open, botId]);
 
+  // Carrega lista de números ativos (para exibir o vinculado se estiver na lista)
   useEffect(() => {
     if (!open) return;
     (async () => {
@@ -67,68 +85,77 @@ export function BotNumberSettingsDialog({
       if (!estabId) return;
       const { data, error } = await supabase
         .from("whatsapp_numeros")
-        .select("id, nome, provider, numero")
+        .select("id, nome, provider, telefone")
         .eq("estabelecimento_id", estabId)
         .eq("ativo", true)
         .order("nome");
       if (error) {
-        toast.error("Erro ao carregar números");
+        console.error("[BotNumberSettings] erro ao carregar números:", error);
+        toast.error("Erro ao carregar números: " + error.message);
         return;
       }
       setNumeros((data as any[]) || []);
     })();
   }, [open, estabelecimentoId]);
 
+  // Carrega lista de bots disponíveis para encaminhamento
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      let estabId = estabelecimentoId;
+      if (!estabId) {
+        estabId = await getEstabelecimentoId();
+        setEstabelecimentoId(estabId);
+      }
+      if (!estabId) return;
+      const { data, error } = await supabase
+        .from("bot_flows")
+        .select("id, name, active")
+        .eq("estabelecimento_id", estabId)
+        .order("name");
+      if (error) {
+        console.error("[BotNumberSettings] erro ao carregar bots:", error);
+        return;
+      }
+      setBots(((data as any[]) || []).filter((b) => b.id !== botId));
+    })();
+  }, [open, estabelecimentoId, botId]);
+
   // Busca o número vinculado ao bot mesmo se estiver inativo
   useEffect(() => {
-    if (!open || !numeroId) { setLinkedNumero(null); return; }
-    const inList = numeros.find((n) => n.id === numeroId);
+    if (!open || !whatsappNumeroId) { setLinkedNumero(null); return; }
+    const inList = numeros.find((n) => n.id === whatsappNumeroId);
     if (inList) { setLinkedNumero(inList); return; }
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("whatsapp_numeros")
-        .select("id, nome, provider, numero")
-        .eq("id", numeroId)
+        .select("id, nome, provider, telefone")
+        .eq("id", whatsappNumeroId)
         .maybeSingle();
+      if (error) console.error("[BotNumberSettings] erro ao buscar número vinculado:", error);
       if (data) setLinkedNumero(data as any);
     })();
-  }, [open, numeroId, numeros]);
-
-
-  // Detecta blocos Evolution-only no flow do bot
-  useEffect(() => {
-    if (!open || !botId) return;
-    (async () => {
-      const { data } = await supabase
-        .from("bot_flows")
-        .select("flow_data")
-        .eq("id", botId)
-        .maybeSingle();
-      const types = detectEvolutionOnlyBlocks((data as any)?.flow_data);
-      setEvolutionOnlyTypes(types);
-    })();
-  }, [open, botId]);
+  }, [open, whatsappNumeroId, numeros]);
 
   const selectedProvider = useMemo(
-    () => numeros.find((n) => n.id === numeroId)?.provider,
-    [numeros, numeroId],
-  );
-  const forwardProvider = useMemo(
-    () => numeros.find((n) => n.id === forwardId)?.provider,
-    [numeros, forwardId],
+    () => linkedNumero?.provider,
+    [linkedNumero],
   );
 
   const blockedByCloud =
-    evolutionOnlyTypes.length > 0 &&
-    (selectedProvider === "cloud_api" || forwardProvider === "cloud_api");
+    evolutionOnlyTypes.length > 0 && selectedProvider === "cloud_api";
 
   const handleSave = async () => {
     if (blockedByCloud) {
-      toast.error("Não é possível vincular este bot a um número Cloud API: ele usa blocos exclusivos da Evolution.");
+      toast.error("Este bot usa blocos exclusivos da Evolution e está vinculado a um número Cloud API.");
+      return;
+    }
+    if (forwardEnabled && !forwardBotId) {
+      toast.error("Selecione o bot de destino para o encaminhamento.");
       return;
     }
     if (!botId) {
-      onSaved(numeroId, forwardId);
+      onSaved(whatsappNumeroId, null);
       setOpen(false);
       return;
     }
@@ -136,8 +163,8 @@ export function BotNumberSettingsDialog({
     const { error } = await supabase
       .from("bot_flows")
       .update({
-        whatsapp_numero_id: numeroId,
-        forward_to_numero_id: forwardId,
+        forward_to_bot_id: forwardEnabled ? forwardBotId : null,
+        forward_to_bot_enabled: forwardEnabled,
       } as any)
       .eq("id", botId);
     setSaving(false);
@@ -145,16 +172,10 @@ export function BotNumberSettingsDialog({
       toast.error("Erro ao salvar: " + error.message);
       return;
     }
-    onSaved(numeroId, forwardId);
+    onSaved(whatsappNumeroId, null);
     toast.success("Configurações salvas");
     setOpen(false);
   };
-
-  const renderOption = (n: NumeroOption) => (
-    <SelectItem key={n.id} value={n.id}>
-      {n.nome} {n.numero ? `(${n.numero})` : ""} · {n.provider === "cloud_api" ? "Meta" : "Evolution"}
-    </SelectItem>
-  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -166,9 +187,9 @@ export function BotNumberSettingsDialog({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Configurações de número do bot</DialogTitle>
+          <DialogTitle>Configurações do bot</DialogTitle>
           <DialogDescription>
-            Defina qual número WhatsApp este bot usa e, opcionalmente, para qual número as respostas devem ser encaminhadas.
+            Veja o número vinculado e configure o encaminhamento das respostas para outro bot.
           </DialogDescription>
         </DialogHeader>
 
@@ -177,71 +198,80 @@ export function BotNumberSettingsDialog({
             <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 flex gap-2 text-sm">
               <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
               <div className="space-y-1">
-                <p className="font-semibold text-destructive">Vinculação bloqueada</p>
+                <p className="font-semibold text-destructive">Atenção</p>
                 <p className="text-foreground/90">
-                  Este bot usa blocos exclusivos da Evolution API que não funcionam na Cloud API oficial do WhatsApp (Meta):
+                  Este bot usa blocos exclusivos da Evolution API que não funcionam na Cloud API oficial (Meta):
                 </p>
                 <ul className="list-disc list-inside text-xs text-foreground/80">
                   {evolutionOnlyTypes.map((t) => (
                     <li key={t}>{EVOLUTION_ONLY_BLOCK_LABELS[t] || t}</li>
                   ))}
                 </ul>
-                <p className="text-xs text-muted-foreground">
-                  Selecione um número Evolution ou remova esses blocos do fluxo antes de salvar.
-                </p>
               </div>
             </div>
           )}
 
           <div className="space-y-2">
             <Label>Número vinculado ao bot</Label>
-            {(() => {
-              const linked = linkedNumero || numeros.find((n) => n.id === numeroId);
-              return (
-                <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
-                  {linked ? (
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium text-foreground">
-                        {linked.nome}{linked.numero ? ` (${linked.numero})` : ""}
-                      </span>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-background border border-border text-muted-foreground">
-                        {linked.provider === "cloud_api" ? "Meta" : "Evolution"}
-                      </span>
-                    </div>
-                  ) : numeroId ? (
-                    <span className="text-muted-foreground">Carregando número vinculado…</span>
-                  ) : (
-                    <span className="text-muted-foreground">Nenhum número vinculado a este bot. Vincule um número nos Canais de Atendimento.</span>
-                  )}
+            <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+              {linkedNumero ? (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium text-foreground">
+                    {linkedNumero.nome}{linkedNumero.telefone ? ` (${linkedNumero.telefone})` : ""}
+                  </span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-background border border-border text-muted-foreground">
+                    {linkedNumero.provider === "cloud_api" ? "Meta" : "Evolution"}
+                  </span>
                 </div>
-              );
-            })()}
+              ) : whatsappNumeroId ? (
+                <span className="text-muted-foreground">Carregando número vinculado…</span>
+              ) : (
+                <span className="text-muted-foreground">Nenhum número vinculado. Vincule um número nos Canais de Atendimento.</span>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">
-              Este é o número ao qual o bot está vinculado nos Canais de Atendimento. Para alterar, edite o canal correspondente.
+              Para alterar, edite o canal correspondente em Canais de Atendimento.
             </p>
           </div>
 
+          <div className="space-y-3 rounded-lg border border-border p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-0.5">
+                <Label className="flex items-center gap-2">
+                  <ArrowRightLeft className="h-4 w-4 text-primary" />
+                  Encaminhar respostas para outro bot
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Quando ativado, qualquer resposta recebida neste bot será transferida automaticamente para o bot escolhido abaixo.
+                </p>
+              </div>
+              <Switch checked={forwardEnabled} onCheckedChange={setForwardEnabled} />
+            </div>
 
-          <div className="space-y-2">
-            <Label>Encaminhar respostas para outro número</Label>
-            <Select
-              value={forwardId ?? NONE}
-              onValueChange={(v) => setForwardId(v === NONE ? null : v)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sem encaminhamento" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>— Sem encaminhamento —</SelectItem>
-                {numeros
-                  .filter((n) => n.id !== numeroId)
-                  .map(renderOption)}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Apenas números ativos cadastrados em <span className="font-medium">Canais de Atendimento</span> aparecem aqui. Quando o cliente responder neste bot, a mensagem será encaminhada para o número selecionado.
-            </p>
-
+            {forwardEnabled && (
+              <div className="space-y-2 pt-1">
+                <Label>Bot de destino</Label>
+                <Select
+                  value={forwardBotId ?? ""}
+                  onValueChange={(v) => setForwardBotId(v || null)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um bot" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {bots.length === 0 ? (
+                      <div className="px-3 py-2 text-xs text-muted-foreground">Nenhum outro bot disponível</div>
+                    ) : (
+                      bots.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.name} {b.active ? "" : "· inativo"}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </div>
 
@@ -249,7 +279,7 @@ export function BotNumberSettingsDialog({
           <Button variant="ghost" onClick={() => setOpen(false)}>
             Cancelar
           </Button>
-          <Button onClick={handleSave} disabled={saving || blockedByCloud}>
+          <Button onClick={handleSave} disabled={saving}>
             {saving ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>
