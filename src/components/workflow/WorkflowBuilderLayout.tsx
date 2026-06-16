@@ -160,37 +160,16 @@ export function WorkflowBuilderLayout({
 
           <div className="hidden lg:block h-8 w-px bg-border flex-shrink-0" />
 
-          {/* Flow name: inline on md+, popover on smaller screens */}
-          {flowName !== undefined && onFlowNameChange && (
-            <>
-              <Input
-                value={flowName}
-                onChange={(e) => onFlowNameChange(e.target.value)}
-                className="hidden md:block w-[160px] lg:w-[200px] h-8 text-sm flex-shrink-0"
-                placeholder="Nome do fluxo"
-              />
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="md:hidden h-8 w-8 flex-shrink-0"
-                    title={flowName || "Nome do fluxo"}
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="w-64 p-2 z-[60]">
-                  <Input
-                    autoFocus
-                    value={flowName}
-                    onChange={(e) => onFlowNameChange(e.target.value)}
-                    className="h-8 text-sm"
-                    placeholder="Nome do fluxo"
-                  />
-                </PopoverContent>
-              </Popover>
-            </>
+          {/* Flow name: read-only display. Renaming é feito pelo card na tela de listagem. */}
+          {flowName !== undefined && (
+            <div
+              className="hidden md:flex items-center h-8 px-3 rounded-md bg-muted/40 border border-border max-w-[220px] flex-shrink-0"
+              title={flowName || "Nome do fluxo"}
+            >
+              <span className="text-sm font-medium text-foreground truncate">
+                {flowName || "Sem nome"}
+              </span>
+            </div>
           )}
 
           {hasViewControls && (
