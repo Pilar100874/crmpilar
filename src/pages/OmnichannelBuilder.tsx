@@ -671,21 +671,14 @@ export default function OmnichannelBuilder() {
           <WorkflowFilesMenu
             nodes={nodes as any}
             edges={edges as any}
+            flowName={flowName}
             selectedNodes={(nodes as any[]).filter((n) => n.selected)}
-            customImport={{ label: "Importar fluxo (JSON)", onClick: () => (document.getElementById("omni-import-trigger") as HTMLButtonElement | null)?.click() }}
-            customExport={{ label: "Exportar fluxo (JSON)", onClick: () => (document.getElementById("omni-export-trigger") as HTMLButtonElement | null)?.click() }}
+            onImport={(n, e, name) => handleImportFlow({ nodes: n as any, edges: e as any, viewport: { x: 0, y: 0, zoom: 1 } } as any, name || flowName)}
             onLoadTemplate={(newNodes, newEdges) => {
               setNodes((nds) => [...nds, ...(newNodes as any)] as any);
               setEdges((eds) => [...eds, ...(newEdges as any)] as any);
             }}
           />
-          <div className="hidden">
-            <FlowExportImport
-              flowData={{ nodes, edges, viewport: { x: 0, y: 0, zoom: 1 } }}
-              flowName={flowName}
-              onImport={handleImportFlow}
-            />
-          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 px-2">
