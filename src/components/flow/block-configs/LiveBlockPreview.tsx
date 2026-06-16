@@ -55,7 +55,7 @@ const PreviewButton = ({ icon: Icon, label }: any) => (
 );
 
 const Header = ({ title }: { title: string }) => (
-  <div className="px-3 pt-2 text-xs uppercase tracking-wide text-muted-foreground">{title}</div>
+  <div className="px-3 pt-2 text-sm font-semibold text-foreground">{title}</div>
 );
 
 const Title = ({ children }: any) =>
