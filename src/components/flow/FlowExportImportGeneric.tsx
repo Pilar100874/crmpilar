@@ -23,6 +23,7 @@ export function FlowExportImportGeneric({
   edges,
   flowName = "workflow",
   onImport,
+  asMenuItems = false,
 }: FlowExportImportGenericProps) {
   const fileRef = useRef<HTMLInputElement>(null);
 
