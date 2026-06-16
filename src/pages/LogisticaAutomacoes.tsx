@@ -814,6 +814,9 @@ function EditorContent({
 
         {/* Flow Canvas */}
         <div ref={reactFlowWrapper} className={`${showSimulator ? "mr-[350px]" : ""} flex-1 relative`}>
+          {!isBlockLibraryExpanded && (
+            <FloatingAddBlockButton onClick={() => setIsBlockLibraryExpanded(true)} />
+          )}
           <ReactFlow
             nodes={nodes}
             edges={edges.map((edge) => ({
