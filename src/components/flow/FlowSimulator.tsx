@@ -4665,8 +4665,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             )}
           </CardTitle>
           <Button size="sm" variant="outline" onClick={handleReset} className="bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-full">
-            <RotateCcw className="w-4 h-4 mr-2" />
-            Reiniciar
+            <RotateCcw className="w-4 h-4" />
+            <span className="hidden sm:inline sm:ml-2">Reiniciar</span>
           </Button>
         </div>
       </CardHeader>
