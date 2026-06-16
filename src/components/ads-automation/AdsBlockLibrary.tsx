@@ -55,7 +55,7 @@ export const AdsBlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: A
   if (!isExpanded) return null;
 
   return (
-    <div className="w-64 flex flex-col h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-muted/50 relative">
+    <div className="w-64 flex flex-col h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-muted/70 relative">
       <div className="p-4 pb-2">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold text-sm text-foreground">Menu</h3>
