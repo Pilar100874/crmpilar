@@ -29,7 +29,7 @@ interface Message {
   nodeId?: string;
   mediaUrl?: string;
   mediaType?: "image" | "video" | "audio" | "file";
-  buttons?: Array<{ text: string; value: string; buttonId?: string }>;
+  buttons?: Array<{ text: string; value: string; buttonId?: string; action?: { type: "url" | "copy" | "call" | "pix"; payload: string } }>;
   isListButton?: boolean;
   listButtonText?: string;
   listSections?: Array<{ title: string; items: Array<{ label: string; value: string; description?: string }> }>;
@@ -2010,15 +2010,20 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
         let actionLabel = config.displayText || "";
         let extraLine = "";
+        let actionInfo: { type: "url" | "copy" | "call" | "pix"; payload: string } | undefined;
         if (nodeData.type === "button_url") {
-          actionLabel = actionLabel || (config.url ? `🔗 ${config.url}` : "Visitar");
+          const rawUrl = interpolateVariables(config.url || "", context);
+          actionLabel = actionLabel || (rawUrl ? `🔗 Abrir` : "Visitar");
           if (!actionLabel.startsWith("🔗")) actionLabel = `🔗 ${actionLabel}`;
+          if (rawUrl) actionInfo = { type: "url", payload: rawUrl };
         } else if (nodeData.type === "button_copy") {
-          actionLabel = `📋 ${actionLabel || `Copiar ${config.copyCode || ""}`}`.trim();
-          if (config.copyCode) extraLine = `Código: *${config.copyCode}*`;
+          const code = interpolateVariables(config.copyCode || "", context);
+          actionLabel = `📋 ${actionLabel || `Copiar ${code || ""}`}`.trim();
+          if (code) { extraLine = `Código: *${code}*`; actionInfo = { type: "copy", payload: code }; }
         } else if (nodeData.type === "button_call") {
-          actionLabel = `📞 ${actionLabel || config.phoneNumber || "Ligar"}`;
-          if (config.phoneNumber) extraLine = `Telefone: ${config.phoneNumber}`;
+          const phone = interpolateVariables(config.phoneNumber || "", context);
+          actionLabel = `📞 ${actionLabel || phone || "Ligar"}`;
+          if (phone) { extraLine = `Telefone: ${phone}`; actionInfo = { type: "call", payload: phone }; }
         } else if (nodeData.type === "button_pix") {
           actionLabel = `💠 Pagar com Pix (${config.currency || "BRL"})`;
           const parts: string[] = [];
@@ -2026,6 +2031,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           if (config.pixKey) parts.push(config.pixKey);
           if (config.name) parts.push(config.name);
           if (parts.length) extraLine = parts.join(" • ");
+          if (config.pixKey) actionInfo = { type: "pix", payload: String(config.pixKey) };
         }
 
         const parts: string[] = [];
@@ -2044,6 +2050,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             text: actionLabel,
             value: actionLabel,
             buttonId: `action_${nodeData.type}`,
+            action: actionInfo,
           }],
         }]);
 
@@ -2076,10 +2083,16 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         const renderedButtons = bmxButtons.map((b: any, idx: number) => {
           const icon = iconFor[b.type] || "▫️";
           const label = b.displayText || b.label || b.text || `Botão ${idx + 1}`;
+          let action: { type: "url" | "copy" | "call" | "pix"; payload: string } | undefined;
+          if (b.type === "url" && b.url) action = { type: "url", payload: interpolateVariables(String(b.url), context) };
+          else if (b.type === "copy" && (b.copyCode || b.code)) action = { type: "copy", payload: interpolateVariables(String(b.copyCode || b.code), context) };
+          else if (b.type === "call" && (b.phoneNumber || b.phone)) action = { type: "call", payload: interpolateVariables(String(b.phoneNumber || b.phone), context) };
+          else if (b.type === "pix" && (b.pixKey || b.key)) action = { type: "pix", payload: interpolateVariables(String(b.pixKey || b.key), context) };
           return {
             text: `${icon} ${label}`,
             value: label,
             buttonId: String(b.id || `button_${idx}`),
+            action,
           };
         });
 
@@ -3945,8 +3958,42 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     setInput("");
   };
 
-  const handleButtonClick = (button: { text: string; value: string; buttonId?: string; keywords?: string[] }, nodeId?: string) => {
+  const handleButtonClick = (button: { text: string; value: string; buttonId?: string; keywords?: string[]; action?: { type: "url" | "copy" | "call" | "pix"; payload: string } }, nodeId?: string) => {
     console.log("🔘 Button clicked:", { button, nodeId, pendingVariable, currentBlockType });
+
+    // === Ação nativa (URL / Copiar / Ligar / Pix) ===
+    if (button.action) {
+      const { type, payload } = button.action;
+      try {
+        if (type === "url") {
+          let url = String(payload || "").trim();
+          if (url && !/^[a-z][a-z0-9+.-]*:\/\//i.test(url) && !url.startsWith("tel:") && !url.startsWith("mailto:") && !url.startsWith("whatsapp:")) {
+            url = `https://${url}`;
+          }
+          if (url) {
+            const opened = window.open(url, "_blank", "noopener,noreferrer");
+            if (!opened) window.location.href = url;
+            addSystemMessage(`🔗 Abrindo: ${url}`);
+          }
+        } else if (type === "call") {
+          const digits = String(payload || "").replace(/[^\d+]/g, "");
+          if (digits) { window.location.href = `tel:${digits}`; addSystemMessage(`📞 Ligando para ${digits}`); }
+        } else if (type === "copy") {
+          navigator.clipboard?.writeText(String(payload || ""));
+          toast.success("Código copiado!");
+          addSystemMessage(`📋 Copiado: ${payload}`);
+        } else if (type === "pix") {
+          navigator.clipboard?.writeText(String(payload || ""));
+          toast.success("Chave Pix copiada!");
+          addSystemMessage(`💠 Chave Pix copiada: ${payload}`);
+        }
+      } catch (err) {
+        console.error("Action button error:", err);
+      }
+      // Não interrompe o fluxo — apenas executa a ação e segue para o handler normal abaixo (se aplicável)
+      // Para botões de ação puros (sem pendingVariable e sem block aguardando) o fluxo já auto-avançou
+      return;
+    }
 
     // === Saída universal: encerra o atendimento ===
     if (button.value === "__exit__") {
@@ -4967,7 +5014,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                                 <button
                                   key={idx}
                                   onClick={() => handleButtonClick(button, msg.nodeId)}
-                                  disabled={!isWaitingInput}
+                                  disabled={!isWaitingInput && !button.action}
                                   className="w-full px-4 py-2.5 border-t border-[#E9EDEF] text-[#00A884] font-medium text-[14px] hover:bg-[#F5F6F6] disabled:opacity-50 disabled:cursor-not-allowed text-center"
                                 >
                                   {button.text}
@@ -4983,7 +5030,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                                   size="sm"
                                   className={`w-full justify-start ${channel === 'telegram' ? 'bg-[#3390EC] hover:bg-[#2B7FD9] text-white border-transparent' : ''}`}
                                   onClick={() => handleButtonClick(button, msg.nodeId)}
-                                  disabled={!isWaitingInput}
+                                  disabled={!isWaitingInput && !button.action}
                                 >
                                   {button.text}
                                 </Button>
