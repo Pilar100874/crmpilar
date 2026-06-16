@@ -352,8 +352,25 @@ export default function SystemVisualConfig() {
             <Label className="text-xs text-muted-foreground">Pré-visualização</Label>
             <div className="flex flex-wrap items-center gap-3">
               <Button>Botão Primário</Button>
-              <Button variant="outline">Outline</Button>
-              <Button variant="ghost">Ghost</Button>
+              <Button
+                variant="outline"
+                style={{
+                  borderColor: primaryHex,
+                  color: primaryHex,
+                  backgroundColor: `${primaryHex}15`,
+                }}
+              >
+                Outline
+              </Button>
+              <Button
+                variant="ghost"
+                style={{
+                  color: primaryHex,
+                  backgroundColor: `${primaryHex}1A`,
+                }}
+              >
+                Ghost
+              </Button>
               <span className="text-primary font-semibold">Texto Primário</span>
               <div className="px-3 py-1.5 rounded-md bg-primary/10 text-primary text-sm">Badge</div>
             </div>
