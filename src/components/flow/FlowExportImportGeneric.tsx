@@ -83,27 +83,45 @@ export function FlowExportImportGeneric({
         onChange={handleFile}
         className="hidden"
       />
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => fileRef.current?.click()}
-        className="h-8 px-2"
-        title="Importar workflow de arquivo JSON"
-      >
-        <Upload className="h-4 w-4 xl:mr-1.5" />
-        <span className="hidden xl:inline">Importar</span>
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleExport}
-        disabled={nodes.length === 0}
-        className="h-8 px-2"
-        title="Exportar workflow para arquivo JSON"
-      >
-        <Download className="h-4 w-4 xl:mr-1.5" />
-        <span className="hidden xl:inline">Exportar</span>
-      </Button>
+      {asMenuItems ? (
+        <>
+          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); fileRef.current?.click(); }}>
+            <Upload className="h-4 w-4 mr-2" />
+            Importar
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={nodes.length === 0}
+            onSelect={(e) => { e.preventDefault(); handleExport(); }}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exportar
+          </DropdownMenuItem>
+        </>
+      ) : (
+        <>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fileRef.current?.click()}
+            className="h-8 px-2"
+            title="Importar workflow de arquivo JSON"
+          >
+            <Upload className="h-4 w-4 xl:mr-1.5" />
+            <span className="hidden xl:inline">Importar</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExport}
+            disabled={nodes.length === 0}
+            className="h-8 px-2"
+            title="Exportar workflow para arquivo JSON"
+          >
+            <Download className="h-4 w-4 xl:mr-1.5" />
+            <span className="hidden xl:inline">Exportar</span>
+          </Button>
+        </>
+      )}
     </>
   );
 }
