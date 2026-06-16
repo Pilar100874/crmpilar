@@ -1191,9 +1191,9 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
       case "media":
         console.log("media config:", config);
-        const mediaType = config.mediaType || "image";
-        const mediaUrl = interpolateVariables(config.url || "", context);
-        const caption = interpolateVariables(config.caption || "", context);
+        const mediaType = config.media?.type || config.mediaType || "image";
+        const mediaUrl = interpolateVariables(config.media?.url || config.url || config.mediaUrl || "", context);
+        const caption = interpolateVariables(config.media?.caption || config.caption || "", context);
         console.log("media details:", { mediaType, mediaUrl, caption });
         
         if (!mediaUrl) {
