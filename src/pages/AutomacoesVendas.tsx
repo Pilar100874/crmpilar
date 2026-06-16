@@ -155,10 +155,11 @@ export default function AutomacoesVendas() {
             Gerencie regras automáticas de desconto e promoções
           </p>
         </div>
-        <Button onClick={() => navigate("/editor-regras", { state: { from: location.pathname + location.search } })} size="lg">
+        <Button onClick={() => setCreateDialogOpen(true)} size="lg">
           <Plus className="h-5 w-5 mr-2" />
           Nova Regra
         </Button>
+
       </div>
 
       {/* Lista de Automações */}
