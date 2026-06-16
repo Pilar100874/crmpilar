@@ -98,10 +98,12 @@ function EditorContent({
   automacaoId, 
   onBack,
   initialName,
+  initialDescription,
 }: { 
   automacaoId: string | null; 
   onBack: () => void;
   initialName?: string;
+  initialDescription?: string;
 }) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -110,6 +112,8 @@ function EditorContent({
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [currentId, setCurrentId] = useState<string | null>(automacaoId);
   const [nomeAutomacao, setNomeAutomacao] = useState(initialName || "Nova Automação");
+  const [descricaoAutomacao, setDescricaoAutomacao] = useState<string>(initialDescription || "");
+
 
   const [isAtiva, setIsAtiva] = useState(true);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(true);
