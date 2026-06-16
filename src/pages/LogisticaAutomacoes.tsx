@@ -395,7 +395,9 @@ function EditorContent({
       if (data) {
         setCurrentId(data.id);
         setNomeAutomacao(data.nome);
+        setDescricaoAutomacao((data as any).descricao || "");
         setIsAtiva(data.ativo);
+
 
         if (data.flow_data) {
           const flowData = typeof data.flow_data === "string" 
