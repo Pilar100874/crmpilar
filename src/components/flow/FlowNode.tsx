@@ -30,10 +30,12 @@ import {
   Trash2,
   StickyNote,
   HelpCircle,
+  Palette,
 } from "lucide-react";
 import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
 import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
 import { getInteractionKind } from "./blockInteractionKind";
+import { BlockIconCustomizer } from "./BlockIconCustomizer";
 import { LiveBlockPreview, PREVIEW_SUPPORTED_TYPES } from "./block-configs/LiveBlockPreview";
 
 export const FlowNode = memo((props: any) => {
@@ -41,12 +43,16 @@ export const FlowNode = memo((props: any) => {
   const blockDef = BLOCK_DEFINITIONS.find((b) => b.type === data.type);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [iconCustomizerOpen, setIconCustomizerOpen] = useState(false);
   
   const isStartBlock = data.type === 'inicio' || data.type === 'start';
   
   if (!blockDef) return null;
 
-  const IconComponent = Icons[blockDef.icon as keyof typeof Icons] as any;
+  const customIcon: string | undefined = data.config?.customIcon;
+  const customIconColor: string | undefined = data.config?.customIconColor;
+  const effectiveIconName = customIcon || blockDef.icon;
+  const IconComponent = Icons[effectiveIconName as keyof typeof Icons] as any;
 
   // Determinar saídas dinâmicas baseadas no tipo de bloco e configuração
   const getDynamicHandles = () => {
@@ -227,8 +233,25 @@ export const FlowNode = memo((props: any) => {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               {IconComponent && (
-                <div className="p-1 rounded bg-primary/5 border border-primary/20">
-                  <IconComponent className="w-3.5 h-3.5 text-primary" />
+                <div
+                  className={
+                    customIconColor
+                      ? "p-1 rounded border"
+                      : "p-1 rounded bg-primary/5 border border-primary/20"
+                  }
+                  style={
+                    customIconColor
+                      ? {
+                          backgroundColor: `${customIconColor}15`,
+                          borderColor: `${customIconColor}40`,
+                        }
+                      : undefined
+                  }
+                >
+                  <IconComponent
+                    className={customIconColor ? "w-3.5 h-3.5" : "w-3.5 h-3.5 text-primary"}
+                    style={customIconColor ? { color: customIconColor } : undefined}
+                  />
                 </div>
               )}
               <span className="font-semibold text-sm text-foreground truncate">{blockDef.label}</span>
@@ -304,6 +327,18 @@ export const FlowNode = memo((props: any) => {
                 <StickyNote className="w-4 h-4 mr-2 text-yellow-500" />
                 {data.note ? "Editar Nota" : "Adicionar Nota"}
               </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onClick={() => {
+                  setIconCustomizerOpen(true);
+                  setDropdownOpen(false);
+                }}
+                className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
+              >
+                <Palette className="w-4 h-4 mr-2 text-violet-500" />
+                Personalizar Ícone
+              </DropdownMenuItem>
+
               
               <DropdownMenuSeparator className="bg-muted" />
               
@@ -579,6 +614,22 @@ export const FlowNode = memo((props: any) => {
         icon: blockDef.icon,
         color: (blockDef as any).color,
         ...getBlockHelp("bot", data.type, String(data.label || blockDef.label || data.type), String(blockDef.description || data.type)),
+      }}
+    />
+
+    <BlockIconCustomizer
+      open={iconCustomizerOpen}
+      onOpenChange={setIconCustomizerOpen}
+      currentIcon={customIcon}
+      currentColor={customIconColor}
+      defaultIcon={blockDef.icon}
+      onSave={(newIcon, newColor) => {
+        const nextConfig = { ...(data.config || {}) };
+        if (newIcon) nextConfig.customIcon = newIcon;
+        else delete nextConfig.customIcon;
+        if (newColor) nextConfig.customIconColor = newColor;
+        else delete nextConfig.customIconColor;
+        data.onUpdateNodeData?.(id, { config: nextConfig });
       }}
     />
   </>
