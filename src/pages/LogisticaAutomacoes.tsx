@@ -1,4 +1,6 @@
 import { FloatingAddBlockButton } from "@/components/workflow/FloatingAddBlockButton";
+import { WorkflowCreateDialog } from "@/components/workflow/WorkflowCreateDialog";
+
 import { useCallback, useRef, useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -96,10 +98,12 @@ function EditorContent({
   automacaoId, 
   onBack,
   initialName,
+  initialDescription,
 }: { 
   automacaoId: string | null; 
   onBack: () => void;
   initialName?: string;
+  initialDescription?: string;
 }) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -108,6 +112,8 @@ function EditorContent({
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [currentId, setCurrentId] = useState<string | null>(automacaoId);
   const [nomeAutomacao, setNomeAutomacao] = useState(initialName || "Nova Automação");
+  const [descricaoAutomacao, setDescricaoAutomacao] = useState<string>(initialDescription || "");
+
 
   const [isAtiva, setIsAtiva] = useState(true);
   const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(true);
@@ -389,7 +395,9 @@ function EditorContent({
       if (data) {
         setCurrentId(data.id);
         setNomeAutomacao(data.nome);
+        setDescricaoAutomacao((data as any).descricao || "");
         setIsAtiva(data.ativo);
+
 
         if (data.flow_data) {
           const flowData = typeof data.flow_data === "string" 
@@ -719,9 +727,11 @@ function EditorContent({
       const automacaoData = {
         estabelecimento_id: estabelecimentoId,
         nome: nomeAutomacao,
+        descricao: descricaoAutomacao?.trim() || null,
         ativo: isAtiva,
         flow_data: flowData,
       };
+
 
       if (currentId) {
         const { error } = await (supabase as any)
@@ -1243,8 +1253,8 @@ export default function LogisticaAutomacoes() {
   const [view, setView] = useState<'list' | 'editor'>('list');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [initialName, setInitialName] = useState<string | undefined>(undefined);
+  const [initialDescription, setInitialDescription] = useState<string | undefined>(undefined);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [createName, setCreateName] = useState("");
 
   useEffect(() => {
     const id = searchParams.get('id');
@@ -1255,27 +1265,20 @@ export default function LogisticaAutomacoes() {
   }, [searchParams]);
 
   const handleNew = () => {
-    setCreateName("");
     setCreateDialogOpen(true);
-  };
-
-  const handleConfirmCreate = () => {
-    if (!createName.trim()) return;
-    setEditingId(null);
-    setInitialName(createName.trim());
-    setView('editor');
-    setCreateDialogOpen(false);
   };
 
   const handleEdit = (id: string) => {
     setEditingId(id);
     setInitialName(undefined);
+    setInitialDescription(undefined);
     setView('editor');
   };
 
   const handleBack = () => {
     setEditingId(null);
     setInitialName(undefined);
+    setInitialDescription(undefined);
     setView('list');
     setSearchParams({});
   };
@@ -1285,34 +1288,32 @@ export default function LogisticaAutomacoes() {
       {view === 'list' ? (
         <ListContent onEdit={handleEdit} onNew={handleNew} />
       ) : (
-        <EditorContent automacaoId={editingId} onBack={handleBack} initialName={initialName} />
+        <EditorContent
+          automacaoId={editingId}
+          onBack={handleBack}
+          initialName={initialName}
+          initialDescription={initialDescription}
+        />
       )}
 
-      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Nova Automação</DialogTitle>
-            <DialogDescription>Dê um nome para sua nova automação antes de começar.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Nome da automação</Label>
-              <Input
-                value={createName}
-                onChange={(e) => setCreateName(e.target.value)}
-                placeholder="Ex: Alerta de Velocidade"
-                autoFocus
-                onKeyDown={(e) => { if (e.key === "Enter") handleConfirmCreate(); }}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Cancelar</Button>
-            <Button disabled={!createName.trim()} onClick={handleConfirmCreate}>Criar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <WorkflowCreateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        title="Nova Automação"
+        description="Dê um nome e uma descrição para sua nova automação antes de começar."
+        nameLabel="Nome da automação"
+        namePlaceholder="Ex: Alerta de Velocidade"
+        descriptionPlaceholder="Descreva o objetivo desta automação (opcional)"
+        onConfirm={({ name, description }) => {
+          setEditingId(null);
+          setInitialName(name);
+          setInitialDescription(description);
+          setView('editor');
+          setCreateDialogOpen(false);
+        }}
+      />
     </ReactFlowProvider>
   );
 }
+
 

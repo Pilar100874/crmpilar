@@ -18,6 +18,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { WorkflowCreateDialog } from "@/components/workflow/WorkflowCreateDialog";
+
 
 interface AutomacaoVenda {
   id: string;
@@ -36,6 +38,8 @@ export default function AutomacoesVendas() {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAutomacaoId, setSelectedAutomacaoId] = useState<string | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
 
   useEffect(() => {
     loadAutomacoes();
@@ -151,10 +155,11 @@ export default function AutomacoesVendas() {
             Gerencie regras automáticas de desconto e promoções
           </p>
         </div>
-        <Button onClick={() => navigate("/editor-regras", { state: { from: location.pathname + location.search } })} size="lg">
+        <Button onClick={() => setCreateDialogOpen(true)} size="lg">
           <Plus className="h-5 w-5 mr-2" />
           Nova Regra
         </Button>
+
       </div>
 
       {/* Lista de Automações */}
@@ -173,10 +178,11 @@ export default function AutomacoesVendas() {
               <p className="text-muted-foreground mb-4">
                 Crie sua primeira regra para o orçamento
               </p>
-              <Button onClick={() => navigate("/editor-regras", { state: { from: location.pathname + location.search } })}>
+              <Button onClick={() => setCreateDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Criar primeira regra
               </Button>
+
             </div>
           </div>
         </Card>
@@ -260,6 +266,27 @@ export default function AutomacoesVendas() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <WorkflowCreateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        title="Nova Regra"
+        description="Dê um nome e uma descrição para sua nova regra antes de começar."
+        nameLabel="Nome da regra"
+        namePlaceholder="Ex: Desconto Cliente VIP"
+        descriptionPlaceholder="Descreva o objetivo desta regra (opcional)"
+        onConfirm={({ name, description }) => {
+          setCreateDialogOpen(false);
+          navigate("/editor-regras", {
+            state: {
+              from: location.pathname + location.search,
+              initialName: name,
+              initialDescription: description,
+            },
+          });
+        }}
+      />
     </div>
   );
 }
+

@@ -54,6 +54,8 @@ function EcommerceRulesEditorInner() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [flowName, setFlowName] = useState((location.state as any)?.initialName || "Nova Regra E-commerce");
+  const [flowDescription, setFlowDescription] = useState<string>((location.state as any)?.initialDescription || "");
+
   const [isSaving, setIsSaving] = useState(false);
   const [isLibraryExpanded, setIsLibraryExpanded] = useState(true);
   const [showSimulator, setShowSimulator] = useState(false);
@@ -105,6 +107,8 @@ function EcommerceRulesEditorInner() {
     const { data, error } = await supabase.from("ecommerce_rules").select("*").eq("id", id).single();
     if (error || !data) { toast({ title: "Erro", description: "Regra não encontrada", variant: "destructive" }); return; }
     setFlowName(data.nome);
+    setFlowDescription((data as any).descricao || "");
+
     const flowData = data.flow_data as any;
     if (flowData?.nodes) {
       const loadedNodes = flowData.nodes.map((n: any) => ({
@@ -150,9 +154,10 @@ function EcommerceRulesEditorInner() {
         estabelecimento_id: estabelecimentoId,
         nome: flowName,
         flow_data: { nodes: cleanNodes, edges } as any,
-        descricao: `Regra com ${cleanNodes.length} blocos`,
+        descricao: flowDescription?.trim() ? flowDescription.trim() : `Regra com ${cleanNodes.length} blocos`,
         categoria,
       };
+
 
       if (ruleId) {
         const { error } = await supabase.from("ecommerce_rules").update(payload).eq("id", ruleId);

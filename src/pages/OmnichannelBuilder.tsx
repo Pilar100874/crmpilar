@@ -85,7 +85,9 @@ export default function OmnichannelBuilder() {
   const [nodes, setNodes, onNodesChange] = useNodesState<OmnichannelNode>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState<OmnichannelNode | null>(null);
-  const [flowName, setFlowName] = useState("Novo Fluxo Omnichannel");
+  const [flowName, setFlowName] = useState(((location.state as any)?.initialName as string) || "Novo Fluxo Omnichannel");
+  const [flowDescription, setFlowDescription] = useState<string>(((location.state as any)?.initialDescription as string) || "");
+
   const [isSaving, setIsSaving] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [draggedType, setDraggedType] = useState<OmnichannelBlockType | null>(null);
@@ -126,6 +128,8 @@ export default function OmnichannelBuilder() {
       if (data) {
         console.log("✅ Fluxo carregado:", data.nome);
         setFlowName(data.nome);
+        setFlowDescription((data as any).descricao || "");
+
         setCurrentBotId(data.trigger_bot_id || undefined);
         setIsDefault(data.is_default || false);
         const flowData = data.flow_data as unknown as OmnichannelFlowData;
@@ -578,6 +582,7 @@ export default function OmnichannelBuilder() {
           .from("omnichannel_flows")
           .update({
             nome: flowName,
+            descricao: flowDescription?.trim() || null,
             flow_data: flowData as any,
             is_default: isDefault,
             updated_at: new Date().toISOString(),
@@ -596,9 +601,11 @@ export default function OmnichannelBuilder() {
           .insert({
             estabelecimento_id: estabId,
             nome: flowName,
+            descricao: flowDescription?.trim() || null,
             flow_data: flowData as any,
             ativo: true,
           });
+
 
         if (error) throw error;
         toast.success("Fluxo criado com sucesso!");

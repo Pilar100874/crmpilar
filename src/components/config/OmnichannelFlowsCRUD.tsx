@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { WorkflowCreateDialog } from "@/components/workflow/WorkflowCreateDialog";
+
 
 interface OmnichannelFlowsCRUDProps {
   estabelecimentoId?: string;
@@ -31,6 +33,8 @@ export const OmnichannelFlowsCRUD = ({ estabelecimentoId }: OmnichannelFlowsCRUD
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [renameFlow, setRenameFlow] = useState<OmnichannelFlow | null>(null);
   const [newName, setNewName] = useState("");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
 
   useEffect(() => {
     if (estabelecimentoId) {
@@ -187,10 +191,11 @@ export const OmnichannelFlowsCRUD = ({ estabelecimentoId }: OmnichannelFlowsCRUD
             Gerencie os fluxos de roteamento de atendimento
           </p>
         </div>
-        <Button onClick={() => navigate("/omnichannel-builder", { state: { from: location.pathname + location.search } })}>
+        <Button onClick={() => setCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Novo Fluxo
         </Button>
+
       </div>
 
       {flows.length === 0 ? (
@@ -268,6 +273,27 @@ export const OmnichannelFlowsCRUD = ({ estabelecimentoId }: OmnichannelFlowsCRUD
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <WorkflowCreateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        title="Novo Fluxo Omnichannel"
+        description="Dê um nome e uma descrição para seu novo fluxo antes de começar."
+        nameLabel="Nome do fluxo"
+        namePlaceholder="Ex: Atendimento Comercial"
+        descriptionPlaceholder="Descreva o objetivo deste fluxo (opcional)"
+        onConfirm={({ name, description }) => {
+          setCreateDialogOpen(false);
+          navigate("/omnichannel-builder", {
+            state: {
+              from: location.pathname + location.search,
+              initialName: name,
+              initialDescription: description,
+            },
+          });
+        }}
+      />
     </div>
   );
 };
+
