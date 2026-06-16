@@ -85,7 +85,9 @@ export default function OmnichannelBuilder() {
   const [nodes, setNodes, onNodesChange] = useNodesState<OmnichannelNode>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState<OmnichannelNode | null>(null);
-  const [flowName, setFlowName] = useState("Novo Fluxo Omnichannel");
+  const [flowName, setFlowName] = useState(((location.state as any)?.initialName as string) || "Novo Fluxo Omnichannel");
+  const [flowDescription, setFlowDescription] = useState<string>(((location.state as any)?.initialDescription as string) || "");
+
   const [isSaving, setIsSaving] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [draggedType, setDraggedType] = useState<OmnichannelBlockType | null>(null);
