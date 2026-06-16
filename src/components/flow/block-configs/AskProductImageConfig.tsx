@@ -26,24 +26,38 @@ export const AskProductImageConfig = ({ config, handleConfigChange }: Props) => 
       <div className="space-y-2">
         <Label className="flex items-center gap-2">
           <Package className="h-3.5 w-3.5 text-amber-600" />
-          Título do cabeçalho <span className="text-[10px] text-muted-foreground">(opcional, aparece em negrito acima da pergunta no WhatsApp)</span>
+          Cabeçalho (opcional)
         </Label>
         <Input
           value={config.headerTitle || ""}
           onChange={(e) => handleConfigChange("headerTitle", e.target.value)}
           placeholder="Ex.: Imagem do produto"
+          maxLength={60}
         />
       </div>
 
       <div className="space-y-2">
         <Label className="flex items-center gap-2">
           <Package className="h-3.5 w-3.5 text-amber-600" />
-          Pergunta inicial
+          Descrição
         </Label>
         <Input
           value={config.askQuestion || ""}
           onChange={(e) => handleConfigChange("askQuestion", e.target.value)}
           placeholder="A peça terá imagem do produto?"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="flex items-center gap-2">
+          <Package className="h-3.5 w-3.5 text-amber-600" />
+          Rodapé (opcional)
+        </Label>
+        <Input
+          value={config.footer || ""}
+          onChange={(e) => handleConfigChange("footer", e.target.value)}
+          placeholder="Texto pequeno no rodapé"
+          maxLength={60}
         />
       </div>
 
