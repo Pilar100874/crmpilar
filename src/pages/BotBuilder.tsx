@@ -1850,7 +1850,6 @@ function BotBuilderContent() {
               onClose={() => setSelectedNode(null)}
             />
           )}
-        </div>
 
         {/* Dialog de erro */}
         <ErrorDialog
