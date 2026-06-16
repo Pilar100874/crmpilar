@@ -52,11 +52,14 @@ export const boxSelectionProps = (opts: { disabled?: boolean } = {}) => {
   }
 
   return {
-    selectionOnDrag: !disabled,
-    panOnDrag: disabled ? true : ([1, 2] as number[]),
+    // Sem Shift: arrastar com o botão esquerdo faz pan da tela.
+    // Segurando Shift: arrastar desenha o retângulo de seleção.
+    selectionOnDrag: false,
+    panOnDrag: true,
     selectionMode: SelectionMode.Partial,
     selectionKeyCode: disabled ? null : "Shift",
-    multiSelectionKeyCode: ["Meta", "Control", "Shift"] as string[],
+    // Ctrl/Cmd: adiciona um bloco por vez à seleção (clique a clique).
+    multiSelectionKeyCode: disabled ? null : (["Meta", "Control"] as string[]),
     deleteKeyCode: disabled ? null : (["Delete", "Backspace"] as string[]),
   };
 };
