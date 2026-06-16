@@ -1552,7 +1552,7 @@ function BotBuilderContent() {
       onToggleLock={handleToggleLock}
       hasUnsavedChanges={hasUnsavedChanges}
       defaultReturnUrl={originUrl}
-      onClose={handleExit}
+      onClose={() => navigate(originUrl)}
       aiGeneratorContent={
         <WorkflowAIGenerator
           workflowType="Bot Builder"
