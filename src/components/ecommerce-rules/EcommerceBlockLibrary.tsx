@@ -45,12 +45,17 @@ export const EcommerceBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
 
   if (!isExpanded) {
     return (
-      <Button variant="outline" size="sm" onClick={() => onToggleExpanded(true)} className="absolute left-4 top-20 z-10">
-        <Icons.Plus className="h-4 w-4 mr-2" />
-        Blocos
+      <Button
+        size="icon"
+        onClick={() => onToggleExpanded(true)}
+        className="absolute left-4 top-4 z-10 h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+        title="Adicionar bloco"
+      >
+        <Icons.Plus className="h-5 w-5" />
       </Button>
     );
   }
+
 
   return (
     <div className="w-60 flex flex-col h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border relative overflow-hidden animate-slide-in">
