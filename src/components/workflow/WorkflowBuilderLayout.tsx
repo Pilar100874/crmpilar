@@ -2,7 +2,13 @@ import { ReactNode, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Save, Play, ZoomIn, ZoomOut, Maximize2, Lock, Unlock, Plus } from "lucide-react";
+import { X, Save, Play, ZoomIn, ZoomOut, Maximize2, Lock, Unlock, Plus, Settings2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
 
 interface WorkflowBuilderLayoutProps {
   children: ReactNode;
