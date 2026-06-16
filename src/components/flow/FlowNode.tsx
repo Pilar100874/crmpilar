@@ -1,5 +1,5 @@
-import { memo, useState } from "react";
-import { Handle, Position, NodeProps } from "@xyflow/react";
+import { memo, useState, useEffect } from "react";
+import { Handle, Position, NodeProps, useUpdateNodeInternals } from "@xyflow/react";
 import { FlowNodeData } from "@/types/flow";
 import { BLOCK_DEFINITIONS } from "@/types/flow";
 import * as Icons from "lucide-react";
