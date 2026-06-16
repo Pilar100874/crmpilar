@@ -815,7 +815,8 @@ function AdsAutomationContent() {
       ) : (
         <WorkflowBuilderLayout
           title="Automação de Ads"
-          subtitle={selectedAutomation?.nome || 'Automação de Anúncios'}
+          subtitle="Gerencie campanhas publicitárias automatizadas"
+          flowName={selectedAutomation?.nome || 'Automação de Anúncios'}
           onSave={handleSave}
           isSaving={isSaving}
           onTest={() => { if (!showSimulator) setSelectedNode(null); setShowSimulator((v) => !v); }}

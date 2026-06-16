@@ -1537,7 +1537,8 @@ function BotBuilderContent() {
   return (
     <WorkflowBuilderLayout
       title="CRIAR BOT"
-      subtitle={currentBotName}
+      subtitle="Configure seu fluxo de atendimento automático"
+      flowName={currentBotName}
       onSave={() => handleSave(false)}
       isSaving={isSaving}
       onTest={handleTest}
