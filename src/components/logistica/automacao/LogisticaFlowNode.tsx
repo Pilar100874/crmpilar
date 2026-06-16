@@ -1,8 +1,8 @@
 import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
 import { WorkflowBlockPreview } from "@/components/workflow/WorkflowBlockPreview";
 import { LogisticaLivePreview, LOGISTICA_PREVIEW_SUPPORTED } from "./LogisticaLivePreview";
-import { memo, useState } from 'react';
-import { Handle, Position, NodeProps } from '@xyflow/react';
+import { memo, useState, useEffect } from 'react';
+import { Handle, Position, NodeProps, useUpdateNodeInternals } from '@xyflow/react';
 import { 
   Play, Pause, Gauge, MapPin, MapPinOff, Clock, 
   MessageCircle, Bell, Mail, Copy, Trash2, StickyNote,
@@ -142,6 +142,11 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
   };
 
   const outputsConfig = getOutputsConfig();
+
+  const updateNodeInternals = useUpdateNodeInternals();
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [id, updateNodeInternals, outputsConfig.type, outputsConfig.outputs?.length, isCollapsed]);
 
   const getCardClassName = () =>
     getWorkflowBlockCardClass({

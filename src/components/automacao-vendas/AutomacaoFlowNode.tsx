@@ -1,8 +1,8 @@
 import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
 import { WorkflowBlockPreview } from "@/components/workflow/WorkflowBlockPreview";
 import { AutomacaoLivePreview, AUTOMACAO_PREVIEW_SUPPORTED } from "./AutomacaoLivePreview";
-import { memo, useState } from "react";
-import { Handle, Position, NodeProps } from "@xyflow/react";
+import { memo, useState, useEffect } from "react";
+import { Handle, Position, NodeProps, useUpdateNodeInternals } from "@xyflow/react";
 import { AUTOMACAO_VENDAS_BLOCKS } from "@/types/automacaoVendas";
 import { Card } from "@/components/ui/card";
 
@@ -44,6 +44,12 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
 
   const isBreakpoint = (data as any).isBreakpoint;
   const isSkipped = (data as any).isSkipped;
+
+  const faixasLen = ((data as any).config?.faixas || []).length;
+  const updateNodeInternals = useUpdateNodeInternals();
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [id, updateNodeInternals, (data as any).type, faixasLen]);
 
   const getCardClassName = () =>
     getWorkflowBlockCardClass({ selected, isBreakpoint, isSkipped, size: "default" });

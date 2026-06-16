@@ -1,8 +1,8 @@
 import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
 import { WorkflowBlockPreview } from "@/components/workflow/WorkflowBlockPreview";
 import { AdsLivePreview, ADS_PREVIEW_SUPPORTED } from "./AdsLivePreview";
-import { memo, useState } from "react";
-import { Handle, Position } from "@xyflow/react";
+import { memo, useState, useEffect } from "react";
+import { Handle, Position, useUpdateNodeInternals } from "@xyflow/react";
 import { ADS_BLOCK_DEFINITIONS, AdsBlockType, AdsFlowNodeData } from "@/types/adsFlow";
 import { 
   MoreVertical, Pause, SkipForward, Copy, Trash2, StickyNote, X, ArrowRight, HelpCircle,
@@ -114,6 +114,11 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
   };
 
   const outputsConfig = getOutputsConfig();
+
+  const updateNodeInternals = useUpdateNodeInternals();
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [id, updateNodeInternals, outputsConfig.type, outputsConfig.outputs?.length, isCollapsed]);
 
   const getCardClassName = () =>
     getWorkflowBlockCardClass({

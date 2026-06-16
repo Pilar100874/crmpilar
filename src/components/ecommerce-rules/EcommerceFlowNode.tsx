@@ -1,8 +1,8 @@
 import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
 import { WorkflowBlockPreview } from "@/components/workflow/WorkflowBlockPreview";
 import { EcommerceLivePreview, ECOMMERCE_PREVIEW_SUPPORTED } from "./EcommerceLivePreview";
-import { memo, useState } from "react";
-import { Handle, Position, NodeProps } from "@xyflow/react";
+import { memo, useState, useEffect } from "react";
+import { Handle, Position, NodeProps, useUpdateNodeInternals } from "@xyflow/react";
 import { ECOMMERCE_RULE_BLOCKS } from "@/types/ecommerceRules";
 import { Card } from "@/components/ui/card";
 import * as Icons from "lucide-react";
@@ -45,6 +45,11 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
 
   const isBreakpoint = (data as any).isBreakpoint;
   const isSkipped = (data as any).isSkipped;
+
+  const updateNodeInternals = useUpdateNodeInternals();
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [id, updateNodeInternals, isMultiOutput, faixas.length]);
 
   const getCardClassName = () =>
     getWorkflowBlockCardClass({ selected, isBreakpoint, isSkipped, size: "wide" });

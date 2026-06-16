@@ -1,5 +1,5 @@
-import { memo, useState } from "react";
-import { Handle, Position, NodeProps } from "@xyflow/react";
+import { memo, useState, useEffect } from "react";
+import { Handle, Position, NodeProps, useUpdateNodeInternals } from "@xyflow/react";
 import { FlowNodeData } from "@/types/flow";
 import { BLOCK_DEFINITIONS } from "@/types/flow";
 import * as Icons from "lucide-react";
@@ -191,6 +191,23 @@ export const FlowNode = memo((props: any) => {
   };
 
   const dynamicHandles = getDynamicHandles();
+
+  const updateNodeInternals = useUpdateNodeInternals();
+  const handlesSignature = dynamicHandles
+    ? [
+        dynamicHandles.conditions?.map((c: any) => c.id).join(",") || "",
+        dynamicHandles.keywords?.map((k: any) => k.id).join(",") || "",
+        dynamicHandles.buttons?.map((b: any) => b.id).join(",") || "",
+        dynamicHandles.paths?.map((p: any) => p.id).join(",") || "",
+        dynamicHandles.listSections
+          ?.map((s: any) => s.items?.map((i: any) => i.id).join("|"))
+          .join(";") || "",
+        dynamicHandles.fallback?.id || "",
+      ].join("##")
+    : "none";
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [id, updateNodeInternals, handlesSignature]);
 
   // Determinar cor do card baseado no estado de debug
   const getCardClassName = () => {
