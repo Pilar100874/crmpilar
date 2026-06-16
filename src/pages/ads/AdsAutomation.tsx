@@ -850,17 +850,6 @@ function AdsAutomationContent() {
               }}
             />
           }
-          leftContent={
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleCollapseAll}
-              className="h-8 w-8 hidden sm:flex"
-              title="Encolher todos"
-            >
-              <Minimize2 className="h-4 w-4" />
-            </Button>
-          }
         >
             {/* Block Library */}
             <AdsBlockLibrary
