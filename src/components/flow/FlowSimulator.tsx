@@ -1191,9 +1191,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
       case "media":
         console.log("media config:", config);
-        const mediaType = config.media?.type || config.mediaType || "image";
+        let mediaType = config.media?.type || config.mediaType || "image";
         const mediaUrl = interpolateVariables(config.media?.url || config.url || config.mediaUrl || "", context);
         const caption = interpolateVariables(config.media?.caption || config.caption || "", context);
+        // Auto-detect tipo pela extensão da URL (sobrepõe mediaType incorreto como "file")
+        const _urlLow = mediaUrl.toLowerCase().split("?")[0];
+        if (/\.(jpg|jpeg|png|gif|webp|bmp|svg|heic)$/.test(_urlLow)) mediaType = "image";
+        else if (/\.(mp4|webm|mov|m4v|3gp|mkv)$/.test(_urlLow)) mediaType = "video";
+        else if (/\.(mp3|wav|ogg|m4a|aac|opus)$/.test(_urlLow)) mediaType = "audio";
         console.log("media details:", { mediaType, mediaUrl, caption });
         
         if (!mediaUrl) {
