@@ -1,5 +1,6 @@
 import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
 import { WorkflowBlockPreview } from "@/components/workflow/WorkflowBlockPreview";
+import { AutomacaoLivePreview, AUTOMACAO_PREVIEW_SUPPORTED } from "./AutomacaoLivePreview";
 import { memo, useState } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { AUTOMACAO_VENDAS_BLOCKS } from "@/types/automacaoVendas";
@@ -202,11 +203,15 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
           </div>
         )}
 
-        <WorkflowBlockPreview
-          domain="automacao-vendas"
-          type={(data as any).type}
-          config={(data as any).config}
-        />
+        {AUTOMACAO_PREVIEW_SUPPORTED.has((data as any).type) ? (
+          <AutomacaoLivePreview type={(data as any).type} config={(data as any).config} />
+        ) : (
+          <WorkflowBlockPreview
+            domain="automacao-vendas"
+            type={(data as any).type}
+            config={(data as any).config}
+          />
+        )}
         </div>
 
         {/* Handle inferior - renderizar múltiplas saídas para valida_faixa_faturamento */}
