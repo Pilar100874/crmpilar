@@ -45,6 +45,7 @@ export function BotNumberSettingsDialog({
   const [numeros, setNumeros] = useState<NumeroOption[]>([]);
   const [numeroId, setNumeroId] = useState<string | null>(whatsappNumeroId);
   const [forwardId, setForwardId] = useState<string | null>(forwardToNumeroId ?? null);
+  const [linkedNumero, setLinkedNumero] = useState<NumeroOption | null>(null);
   const [saving, setSaving] = useState(false);
   const [evolutionOnlyTypes, setEvolutionOnlyTypes] = useState<string[]>([]);
 
@@ -77,6 +78,22 @@ export function BotNumberSettingsDialog({
       setNumeros((data as any[]) || []);
     })();
   }, [open, estabelecimentoId]);
+
+  // Busca o número vinculado ao bot mesmo se estiver inativo
+  useEffect(() => {
+    if (!open || !numeroId) { setLinkedNumero(null); return; }
+    const inList = numeros.find((n) => n.id === numeroId);
+    if (inList) { setLinkedNumero(inList); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("whatsapp_numeros")
+        .select("id, nome, provider, numero")
+        .eq("id", numeroId)
+        .maybeSingle();
+      if (data) setLinkedNumero(data as any);
+    })();
+  }, [open, numeroId, numeros]);
+
 
   // Detecta blocos Evolution-only no flow do bot
   useEffect(() => {
@@ -179,7 +196,7 @@ export function BotNumberSettingsDialog({
           <div className="space-y-2">
             <Label>Número vinculado ao bot</Label>
             {(() => {
-              const linked = numeros.find((n) => n.id === numeroId);
+              const linked = linkedNumero || numeros.find((n) => n.id === numeroId);
               return (
                 <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
                   {linked ? (
