@@ -170,8 +170,12 @@ All colors MUST be HSL.
   .slide-out-menu-tab:hover {
     width: 32px;
     transform: translateY(-50%) scale(1.05);
-    background: hsl(var(--sidebar-accent));
+    background: hsl(var(--primary));
     box-shadow: 2px 0 14px rgba(0, 0, 0, 0.25);
+  }
+
+  .slide-out-menu-tab:hover svg {
+    color: hsl(var(--primary-foreground));
   }
 
   .slide-out-menu-tab.menu-open {
