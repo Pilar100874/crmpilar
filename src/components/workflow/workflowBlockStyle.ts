@@ -1,10 +1,7 @@
 /**
  * Estilo visual compartilhado para os cards de bloco de TODOS os workflows.
  * Editar este arquivo afeta: Bot, Omnichannel, Ads, Automação Vendas,
- * E-commerce Rules e Logística.
- *
- * Mantemos o mesmo padrão visual do Bot Builder (cards brancos, bordas suaves,
- * sombra, estados de breakpoint/skip/highlight, e ring no selecionado).
+ * E-commerce Rules e Logística (padrão visual do Bot Builder).
  */
 
 export interface WorkflowBlockCardOptions {
@@ -12,14 +9,16 @@ export interface WorkflowBlockCardOptions {
   isBreakpoint?: boolean;
   isSkipped?: boolean;
   isHighlighted?: boolean;
-  /** Largura mínima do card. Default 260px. */
-  minWidth?: number;
-  /** Largura máxima do card. Default 300px. */
-  maxWidth?: number;
+  /** "default" 260-300px (Bot/Omni/Vendas), "wide" 260-320px (Ecom), "compact" 220-280px (Ads/Logística), "collapsed" 120-160px */
+  size?: "default" | "wide" | "compact" | "collapsed";
 }
 
-const DEFAULT_MIN = 260;
-const DEFAULT_MAX = 300;
+const SIZE_CLASSES: Record<NonNullable<WorkflowBlockCardOptions["size"]>, string> = {
+  default: "min-w-[260px] max-w-[300px]",
+  wide: "min-w-[260px] max-w-[320px]",
+  compact: "min-w-[220px] max-w-[280px]",
+  collapsed: "min-w-[120px] max-w-[160px]",
+};
 
 export function getWorkflowBlockCardClass(opts: WorkflowBlockCardOptions = {}): string {
   const {
@@ -27,11 +26,10 @@ export function getWorkflowBlockCardClass(opts: WorkflowBlockCardOptions = {}): 
     isBreakpoint = false,
     isSkipped = false,
     isHighlighted = false,
-    minWidth = DEFAULT_MIN,
-    maxWidth = DEFAULT_MAX,
+    size = "default",
   } = opts;
 
-  const base = `min-w-[${minWidth}px] max-w-[${maxWidth}px] transition-all duration-200 shadow-md hover:shadow-lg rounded-2xl`;
+  const base = `${SIZE_CLASSES[size]} transition-all duration-200 shadow-md hover:shadow-lg rounded-2xl`;
 
   if (isHighlighted) {
     return `${base} bg-card border-2 border-green-500 ring-4 ring-green-500/40 ring-offset-2 shadow-xl scale-[1.02]`;
