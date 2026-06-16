@@ -264,7 +264,7 @@ export const AutomacaoPropertiesPanel = ({
   };
 
   return (
-    <div className="workflow-props w-80 h-[calc(100%-1rem)] m-2 rounded-2xl border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border shadow-lg flex flex-col overflow-x-hidden">
+    <div className="workflow-props animate-slide-in-right w-80 h-[calc(100%-1rem)] m-2 rounded-2xl border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border shadow-lg flex flex-col overflow-x-hidden">
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-between bg-gradient-to-r from-primary/5 to-primary/10">
         <h3 className="font-bold text-sm text-foreground">Propriedades</h3>
