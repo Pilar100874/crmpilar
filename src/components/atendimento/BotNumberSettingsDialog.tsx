@@ -60,7 +60,9 @@ export function BotNumberSettingsDialog({
   const [linkedSession, setLinkedSession] = useState<LinkedSession | null>(null);
   const [bots, setBots] = useState<BotOption[]>([]);
   const [forwardEnabled, setForwardEnabled] = useState(false);
+  const [forwardTargetType, setForwardTargetType] = useState<"bot" | "numero">("bot");
   const [forwardBotId, setForwardBotId] = useState<string | null>(null);
+  const [forwardNumeroId, setForwardNumeroId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [evolutionOnlyTypes, setEvolutionOnlyTypes] = useState<string[]>([]);
 
