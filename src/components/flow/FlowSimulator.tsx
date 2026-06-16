@@ -4708,28 +4708,6 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             <span className="hidden sm:inline sm:ml-2">Reiniciar</span>
           </Button>
         </div>
-        {channel === "whatsapp" && (
-          <div className="mt-2 flex justify-center">
-            <div className="inline-flex items-center rounded-full border border-white/20 bg-white/10 p-0.5" title="Provedor para simulação">
-              <button
-                type="button"
-                onClick={() => onProviderChange?.("evolution")}
-                disabled={!onProviderChange}
-                className={`h-6 px-3 text-[11px] font-medium rounded-full transition-colors ${!isOficial ? "bg-amber-500 text-white shadow" : "text-white/80 hover:text-white"} ${!onProviderChange ? "cursor-default" : ""}`}
-              >
-                Evolution
-              </button>
-              <button
-                type="button"
-                onClick={() => onProviderChange?.("whatsapp_oficial")}
-                disabled={!onProviderChange}
-                className={`h-6 px-3 text-[11px] font-medium rounded-full transition-colors ${isOficial ? "bg-emerald-600 text-white shadow" : "text-white/80 hover:text-white"} ${!onProviderChange ? "cursor-default" : ""}`}
-              >
-                WhatsApp Oficial
-              </button>
-            </div>
-          </div>
-        )}
       </CardHeader>
 
 
