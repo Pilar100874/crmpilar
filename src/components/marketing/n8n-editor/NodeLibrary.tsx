@@ -66,7 +66,7 @@ const NodeLibrary: React.FC<NodeLibraryProps> = ({ nodeTypes, onDragStart }) => 
   };
 
   return (
-    <div className="h-full flex flex-col bg-white border-r border-border/30">
+    <div className="h-full flex flex-col bg-white border-r border-border/30 animate-slide-in">
       <div className="p-4 pb-2">
         <div className="flex items-center gap-2 mb-3">
           <div className="h-6 w-6 rounded-lg bg-foreground text-background flex items-center justify-center">
