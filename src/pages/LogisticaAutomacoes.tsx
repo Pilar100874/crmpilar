@@ -762,22 +762,17 @@ function EditorContent({
         />
       }
       rightContent={
-        <>
-          <WorkflowFilesMenu
-            nodes={nodes}
-            edges={edges}
-            selectedNodes={nodes.filter((n) => n.selected)}
-            onImport={(n, e) => { setNodes(n as any); setEdges(e as any); }}
-            onLoadTemplate={(newNodes, newEdges) => {
-              setNodes((nds) => [...nds, ...newNodes]);
-              setEdges((eds) => [...eds, ...newEdges]);
-              setHasUnsavedChanges(true);
-            }}
-          />
-          <Button variant="outline" size="icon" onClick={handleCollapseAll} className="h-8 w-8" title="Encolher todos">
-            <Minimize2 className="h-4 w-4" />
-          </Button>
-        </>
+        <WorkflowFilesMenu
+          nodes={nodes}
+          edges={edges}
+          selectedNodes={nodes.filter((n) => n.selected)}
+          onImport={(n, e) => { setNodes(n as any); setEdges(e as any); }}
+          onLoadTemplate={(newNodes, newEdges) => {
+            setNodes((nds) => [...nds, ...newNodes]);
+            setEdges((eds) => [...eds, ...newEdges]);
+            setHasUnsavedChanges(true);
+          }}
+        />
       }
     >
 
