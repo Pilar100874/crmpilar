@@ -1,3 +1,4 @@
+import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
 import { memo, useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import {
@@ -105,31 +106,8 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
   
   const IconComponent = nodeIcons[type];
 
-  const getCardClassName = () => {
-    const baseClass = "min-w-[260px] max-w-[300px] transition-all duration-200 shadow-lg";
-    
-    if (isBreakpoint) {
-      return `${baseClass} bg-white border-2 border-orange-500 ${
-        selected ? "ring-2 ring-primary" : ""
-      }`;
-    }
-    
-    if (isSkipped) {
-      return `${baseClass} bg-white/60 border-2 border-border opacity-60 ${
-        selected ? "ring-2 ring-primary" : ""
-      }`;
-    }
-
-    if (isHighlighted) {
-      return `${baseClass} bg-white border-2 border-green-500 ring-4 ring-green-500 ring-offset-2 shadow-xl scale-105 animate-pulse`;
-    }
-    
-    return `${baseClass} bg-white border border-border ${
-      selected 
-        ? "ring-2 ring-primary border-primary" 
-        : "hover:border-border"
-    }`;
-  };
+  const getCardClassName = () =>
+    getWorkflowBlockCardClass({ selected, isBreakpoint, isSkipped, isHighlighted, size: "default" });
 
   return (
     <>

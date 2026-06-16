@@ -32,7 +32,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Save, FileText, History, AlertCircle, FileCode, X, BarChart3, Plus, PlayCircle, Play, Download, Upload, Activity, Search, ZoomIn, ZoomOut, Maximize2, Lock, Unlock, Star } from "lucide-react";
+import { Save, FileText, History, AlertCircle, FileCode, X, BarChart3, Plus, PlayCircle, Play, Download, Upload, Activity, Search, ZoomIn, ZoomOut, Maximize2, Lock, Unlock, Star, MoreVertical } from "lucide-react";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -655,30 +656,19 @@ export default function OmnichannelBuilder() {
         />
       }
       rightContent={
-        <>
-          <Button variant="outline" size="sm" onClick={() => setShowValidator(!showValidator)} className="h-8 px-2 hidden lg:flex">
-            <AlertCircle className="h-4 w-4 mr-1.5" />
-            <span className="hidden xl:inline">Validar</span>
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setShowAnalytics(!showAnalytics)} className="h-8 px-2 hidden lg:flex">
-            <Activity className="h-4 w-4 mr-1.5" />
-            <span className="hidden xl:inline">Analytics</span>
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setShowTemplates(true)} className="h-8 px-2 hidden xl:flex">
-            <FileText className="h-4 w-4 mr-1.5" />
-            Templates
-          </Button>
+        <div className="flex items-center gap-1 sm:gap-2">
           {id && (
             <>
-              <Button variant="outline" size="sm" onClick={() => setShowVersions(true)} className="h-8 px-2 hidden xl:flex">
-                <History className="h-4 w-4 mr-1.5" />
-                Versões
-              </Button>
               <BotTriggerSelector
                 flowId={id}
                 currentBotId={currentBotId}
                 onUpdate={(botId) => setCurrentBotId(botId)}
               />
+              <div className="hidden md:flex items-center gap-1.5 px-2.5 h-8 border rounded-full bg-card/50">
+                <Star className={`h-3.5 w-3.5 ${isDefault ? 'text-primary fill-primary' : 'text-muted-foreground'}`} />
+                <Label htmlFor="default-switch" className="text-xs cursor-pointer whitespace-nowrap">Padrão</Label>
+                <Switch id="default-switch" checked={isDefault} onCheckedChange={setIsDefault} />
+              </div>
             </>
           )}
           <FlowExportImport
@@ -686,20 +676,31 @@ export default function OmnichannelBuilder() {
             flowName={flowName}
             onImport={handleImportFlow}
           />
-          {id && (
-            <div className="hidden md:flex items-center gap-2 px-3 h-8 border rounded-full bg-card/50 backdrop-blur-sm">
-              <Star className={`h-4 w-4 ${isDefault ? 'text-primary fill-primary' : 'text-muted-foreground'}`} />
-              <Label htmlFor="default-switch" className="text-xs cursor-pointer whitespace-nowrap">
-                Padrão
-              </Label>
-              <Switch
-                id="default-switch"
-                checked={isDefault}
-                onCheckedChange={setIsDefault}
-              />
-            </div>
-          )}
-        </>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 px-2">
+                <MoreVertical className="h-4 w-4" />
+                <span className="hidden sm:inline ml-1">Mais</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 bg-popover">
+              <DropdownMenuItem onClick={() => setShowValidator(!showValidator)}>
+                <AlertCircle className="h-4 w-4 mr-2" />Validar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowAnalytics(!showAnalytics)}>
+                <Activity className="h-4 w-4 mr-2" />Analytics
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowTemplates(true)}>
+                <FileText className="h-4 w-4 mr-2" />Templates
+              </DropdownMenuItem>
+              {id && (
+                <DropdownMenuItem onClick={() => setShowVersions(true)}>
+                  <History className="h-4 w-4 mr-2" />Versões
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       }
     >
 

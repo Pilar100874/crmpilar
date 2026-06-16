@@ -1,3 +1,4 @@
+import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
 import { memo, useState } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { 
@@ -140,33 +141,14 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
 
   const outputsConfig = getOutputsConfig();
 
-  const getCardClassName = () => {
-    const baseClass = isCollapsed
-      ? "min-w-[120px] max-w-[160px] transition-all duration-200 shadow-lg"
-      : "min-w-[220px] max-w-[280px] transition-all duration-200 shadow-lg";
-    
-    if (data.isHighlighted) {
-      return `${baseClass} bg-card border-2 border-yellow-500 ring-2 ring-yellow-400 animate-pulse`;
-    }
-    
-    if (data.isBreakpoint) {
-      return `${baseClass} bg-card border-2 border-orange-500 ${
-        selected ? "ring-2 ring-primary" : ""
-      }`;
-    }
-    
-    if (data.isSkipped) {
-      return `${baseClass} bg-card/60 border-2 border-muted-foreground opacity-60 ${
-        selected ? "ring-2 ring-primary" : ""
-      }`;
-    }
-    
-    return `${baseClass} bg-card border-2 ${
-      selected 
-        ? "ring-2 ring-primary border-primary" 
-        : "border-border hover:border-muted-foreground"
-    }`;
-  };
+  const getCardClassName = () =>
+    getWorkflowBlockCardClass({
+      selected,
+      isBreakpoint: data.isBreakpoint,
+      isSkipped: data.isSkipped,
+      isHighlighted: data.isHighlighted,
+      size: isCollapsed ? "collapsed" : "compact",
+    });
 
   // Collapsed view
   if (isCollapsed) {
