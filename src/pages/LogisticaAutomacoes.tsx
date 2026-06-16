@@ -725,9 +725,11 @@ function EditorContent({
       const automacaoData = {
         estabelecimento_id: estabelecimentoId,
         nome: nomeAutomacao,
+        descricao: descricaoAutomacao?.trim() || null,
         ativo: isAtiva,
         flow_data: flowData,
       };
+
 
       if (currentId) {
         const { error } = await (supabase as any)
