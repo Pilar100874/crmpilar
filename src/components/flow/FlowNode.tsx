@@ -192,6 +192,23 @@ export const FlowNode = memo((props: any) => {
 
   const dynamicHandles = getDynamicHandles();
 
+  const updateNodeInternals = useUpdateNodeInternals();
+  const handlesSignature = dynamicHandles
+    ? [
+        dynamicHandles.conditions?.map((c: any) => c.id).join(",") || "",
+        dynamicHandles.keywords?.map((k: any) => k.id).join(",") || "",
+        dynamicHandles.buttons?.map((b: any) => b.id).join(",") || "",
+        dynamicHandles.paths?.map((p: any) => p.id).join(",") || "",
+        dynamicHandles.listSections
+          ?.map((s: any) => s.items?.map((i: any) => i.id).join("|"))
+          .join(";") || "",
+        dynamicHandles.fallback?.id || "",
+      ].join("##")
+    : "none";
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [id, updateNodeInternals, handlesSignature]);
+
   // Determinar cor do card baseado no estado de debug
   const getCardClassName = () => {
     const baseClass = "min-w-[260px] max-w-[300px] transition-all duration-200 shadow-lg";
