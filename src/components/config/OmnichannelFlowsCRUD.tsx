@@ -273,6 +273,27 @@ export const OmnichannelFlowsCRUD = ({ estabelecimentoId }: OmnichannelFlowsCRUD
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <WorkflowCreateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        title="Novo Fluxo Omnichannel"
+        description="Dê um nome e uma descrição para seu novo fluxo antes de começar."
+        nameLabel="Nome do fluxo"
+        namePlaceholder="Ex: Atendimento Comercial"
+        descriptionPlaceholder="Descreva o objetivo deste fluxo (opcional)"
+        onConfirm={({ name, description }) => {
+          setCreateDialogOpen(false);
+          navigate("/omnichannel-builder", {
+            state: {
+              from: location.pathname + location.search,
+              initialName: name,
+              initialDescription: description,
+            },
+          });
+        }}
+      />
     </div>
   );
 };
+
