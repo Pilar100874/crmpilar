@@ -49,6 +49,11 @@ export const AskInfluencerConfig = ({ config, handleConfigChange }: Props) => {
       ? allowedIds.filter((x) => x !== id)
       : [...allowedIds, id];
     handleConfigChange("allowedInfluencerIds", next);
+    // Persist thumbs for live preview rendering
+    const thumbs = influencers
+      .filter((i) => next.includes(i.id))
+      .map((i) => ({ id: i.id, image_url: i.image_url, nome: i.nome }));
+    handleConfigChange("allowedInfluencerThumbs", thumbs);
   };
 
   return (
