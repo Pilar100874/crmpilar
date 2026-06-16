@@ -127,6 +127,7 @@ function BotBuilderContent() {
   const [botToDelete, setBotToDelete] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [simulatorProvider, setSimulatorProvider] = useState<"evolution" | "whatsapp_oficial">("evolution");
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [currentNoteNodeId, setCurrentNoteNodeId] = useState<string | null>(null);
