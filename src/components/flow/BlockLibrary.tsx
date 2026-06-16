@@ -7,7 +7,7 @@ import { ChevronDown, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getInteractionKind } from "./blockInteractionKind";
+
 
 interface BlockLibraryProps {
   onDragStart: (event: React.DragEvent, nodeType: string) => void;
