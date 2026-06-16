@@ -92,7 +92,7 @@ export const EcommerceBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
                     )}
                     <span className="text-xs font-medium truncate">{cat.name}</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-semibold flex items-center justify-center ${isOpen ? "bg-background/20 text-background" : "bg-foreground text-background"}`}>
                       {cat.blocks.length}
                     </span>
