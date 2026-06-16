@@ -65,7 +65,7 @@ export function LogisticaBlockLibrary({ onDragStart, isExpanded, onToggleExpand 
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="px-2 pb-4 space-y-0.5">
+        <div className="w-full px-2 pb-4 space-y-0.5">
           {categories.map((category) => {
             const blocks = getBlocksByCategory(category.id);
             if (blocks.length === 0) return null;
