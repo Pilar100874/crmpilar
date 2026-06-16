@@ -67,7 +67,7 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
   
   if (!selectedNode) {
     return (
-      <div className="w-80 border-l bg-card p-4">
+      <div className="w-80 flex flex-col h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border border-border/20 bg-gradient-to-b from-card to-muted/30 p-4 items-center justify-center">
         <p className="text-sm text-muted-foreground text-center mt-8">
           Selecione um bloco para editar suas propriedades
         </p>
