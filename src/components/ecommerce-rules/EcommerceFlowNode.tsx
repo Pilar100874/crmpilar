@@ -1,5 +1,6 @@
 import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
 import { WorkflowBlockPreview } from "@/components/workflow/WorkflowBlockPreview";
+import { EcommerceLivePreview, ECOMMERCE_PREVIEW_SUPPORTED } from "./EcommerceLivePreview";
 import { memo, useState } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { ECOMMERCE_RULE_BLOCKS } from "@/types/ecommerceRules";
@@ -164,11 +165,18 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
             </div>
           )}
 
-          <WorkflowBlockPreview
-            domain="ecommerce"
-            type={(data as any).type}
-            config={(data as any).config}
-          />
+          {ECOMMERCE_PREVIEW_SUPPORTED.has((data as any).type) ? (
+            <EcommerceLivePreview
+              type={(data as any).type}
+              config={(data as any).config}
+            />
+          ) : (
+            <WorkflowBlockPreview
+              domain="ecommerce"
+              type={(data as any).type}
+              config={(data as any).config}
+            />
+          )}
         </div>
 
         {/* Single or multi source handles */}
