@@ -150,10 +150,6 @@ export const BlockLibrary = ({
                     )}
                     <span className="text-xs font-medium">{category.name}</span>
                   </div>
-                  <span className={`text-xs ${isOpen ? "text-background/70" : "text-muted-foreground"}`}>
-                    {isOpen ? "−" : "+"}
-                  </span>
-                </CollapsibleTrigger>
 
                   <div className="flex items-center gap-2">
                     <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-semibold flex items-center justify-center ${isOpen ? "bg-background/20 text-background" : "bg-foreground text-background"}`}>
