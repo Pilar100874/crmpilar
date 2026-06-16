@@ -736,122 +736,39 @@ function EditorContent({
   };
 
   return (
-    <div className="workflow-shell fixed inset-0 z-50 flex flex-col bg-background">
-      {/* Header - Estilo Bot Builder */}
-      <div className="flex items-center justify-between gap-2 sm:gap-4 p-2 sm:p-3 border-b border-border bg-card h-14">
-        <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-          <div className="flex items-center gap-2">
-            <p className="text-xs sm:text-sm text-muted-foreground hidden md:block">
-              Arraste blocos para criar seu fluxo
-            </p>
-          </div>
-          
-          <div className="flex gap-1 sm:border-l sm:border-border sm:pl-6">
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={() => setIsBlockLibraryExpanded(true)}
-              className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
-              title="Adicionar blocos"
-            >
-              <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={handleZoomIn}
-              className="h-8 w-8 sm:h-9 sm:w-9"
-              title="Aumentar zoom"
-            >
-              <ZoomIn className="h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={handleZoomOut}
-              className="h-8 w-8 sm:h-9 sm:w-9"
-              title="Diminuir zoom"
-            >
-              <ZoomOut className="h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={handleFitView}
-              className="h-8 w-8 sm:h-9 sm:w-9"
-              title="Centralizar"
-            >
-              <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={handleCollapseAll}
-              className="h-8 w-8 sm:h-9 sm:w-9"
-              title="Encolher todos"
-            >
-              <Minimize2 className="h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
-            
-            {/* Nome da Automação */}
-            <div className="hidden md:flex items-center gap-2 border-l border-border pl-3 sm:pl-4">
-              <label className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">
-                Nome:
-              </label>
-              <Input
-                value={nomeAutomacao}
-                onChange={(e) => {
-                  setNomeAutomacao(e.target.value);
-                  setHasUnsavedChanges(true);
-                }}
-                className="h-8 sm:h-9 w-[150px] sm:w-[200px] text-xs sm:text-sm"
-                placeholder="Nome da automação"
-              />
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap items-center">
-          <WorkflowAIGenerator
-            workflowType="Logística"
-            blockDefinitions={LOGISTICA_BLOCKS}
-            onGenerated={(newNodes, newEdges) => {
-              setNodes(nds => [...nds, ...newNodes]);
-              setEdges(eds => [...eds, ...newEdges]);
-              setHasUnsavedChanges(true);
-            }}
-          />
-          <Button
-            variant="outline" 
-            size="sm" 
-            onClick={handleSave}
-            className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
-          >
-            <Save className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-            Salvar
-          </Button>
-          <Button 
-            size="sm" 
-            onClick={handleToggleSimulator}
-            className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white shadow-lg h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
-          >
-            <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">{showSimulator ? "Fechar Teste" : "Testar"}</span>
-            <span className="sm:hidden">Testar</span>
-          </Button>
-          <Button 
-            variant="destructive" 
-            size="sm" 
-            onClick={handleBack}
-            className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
-          >
-            <X className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">Fechar</span>
-          </Button>
-        </div>
-      </div>
+    <WorkflowBuilderLayout
+      title="LOGÍSTICA"
+      subtitle="Arraste blocos para criar seu fluxo"
+      flowName={nomeAutomacao}
+      onFlowNameChange={(v) => { setNomeAutomacao(v); setHasUnsavedChanges(true); }}
+      onSave={handleSave}
+      onTest={handleToggleSimulator}
+      showTest={showSimulator}
+      testLabel="Testar"
+      isTestActive={showSimulator}
+      onZoomIn={handleZoomIn}
+      onZoomOut={handleZoomOut}
+      onFitView={handleFitView}
+      onAddBlock={() => setIsBlockLibraryExpanded(true)}
+      onClose={handleBack}
+      aiGeneratorContent={
+        <WorkflowAIGenerator
+          workflowType="Logística"
+          blockDefinitions={LOGISTICA_BLOCKS}
+          onGenerated={(newNodes, newEdges) => {
+            setNodes(nds => [...nds, ...newNodes]);
+            setEdges(eds => [...eds, ...newEdges]);
+            setHasUnsavedChanges(true);
+          }}
+        />
+      }
+      rightContent={
+        <Button variant="outline" size="icon" onClick={handleCollapseAll} className="h-8 w-8" title="Encolher todos">
+          <Minimize2 className="h-4 w-4" />
+        </Button>
+      }
+    >
 
-      {/* Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Block Library */}
         <LogisticaBlockLibrary
