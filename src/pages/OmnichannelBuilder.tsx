@@ -52,7 +52,6 @@ const OMNICHANNEL_BLOCK_DEFS = [
   { type: "webhook", label: "Webhook", description: "Integra com sistemas externos", category: "acao" },
   { type: "aguardar", label: "Aguardar", description: "Adiciona delay no fluxo", category: "acao" },
   { type: "analytics", label: "Analytics", description: "Visualiza métricas do fluxo", category: "acao" },
-  { type: "publicar_rede_social", label: "Publicar em Redes Sociais", description: "Publica conteúdo nas redes sociais configuradas", category: "acao" },
 ];
 
 const nodeTypes: NodeTypes = {
@@ -230,7 +229,6 @@ export default function OmnichannelBuilder() {
         aguardar: "Aguardar",
         analytics: "Analytics",
         inicio: "Início",
-        publicar_rede_social: "Publicar em Redes Sociais",
         return_response: "Retornar Resposta"
       };
 
@@ -265,7 +263,6 @@ export default function OmnichannelBuilder() {
         aguardar: "Aguardar",
         analytics: "Analytics",
         inicio: "Início",
-        publicar_rede_social: "Publicar em Redes Sociais",
         return_response: "Retornar Resposta"
       };
       const bounds = reactFlowWrapper.current.getBoundingClientRect();
