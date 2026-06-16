@@ -67,7 +67,7 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
   
   if (!selectedNode) {
     return (
-      <div className="w-80 flex flex-col h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-muted p-4 items-center justify-center">
+      <div className="w-80 flex flex-col h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border p-4 items-center justify-center">
         <p className="text-sm text-muted-foreground text-center mt-8">
           Selecione um bloco para editar suas propriedades
         </p>
@@ -460,7 +460,7 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
   };
 
   return (
-    <div className="workflow-props w-80 h-[calc(100%-1rem)] m-2 rounded-2xl border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-muted shadow-lg flex flex-col overflow-x-hidden">
+    <div className="workflow-props w-80 h-[calc(100%-1rem)] m-2 rounded-2xl border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border shadow-lg flex flex-col overflow-x-hidden">
       <div className="p-4 border-b">
         <h3 className="font-semibold">Propriedades</h3>
         <p className="text-sm text-muted-foreground">{blockDef?.label || nodeData.label}</p>
