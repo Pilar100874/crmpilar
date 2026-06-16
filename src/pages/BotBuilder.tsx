@@ -127,6 +127,7 @@ function BotBuilderContent() {
   const [botToDelete, setBotToDelete] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [simulatorProvider, setSimulatorProvider] = useState<"evolution" | "whatsapp_oficial">("evolution");
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [currentNoteNodeId, setCurrentNoteNodeId] = useState<string | null>(null);
@@ -1624,6 +1625,22 @@ function BotBuilderContent() {
               <Save className={`h-4 w-4 mr-1.5 ${isSaving ? "animate-pulse" : ""}`} />
               <span className="hidden sm:inline">{isSaving ? "..." : "Salvar"}</span>
             </Button>
+            <div className="hidden md:inline-flex items-center rounded-full border border-border bg-muted/40 p-0.5" title="Provedor para simulação">
+              <button
+                type="button"
+                onClick={() => setSimulatorProvider("evolution")}
+                className={`h-7 px-2.5 text-[11px] font-medium rounded-full transition-colors ${simulatorProvider === "evolution" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Evolution
+              </button>
+              <button
+                type="button"
+                onClick={() => setSimulatorProvider("whatsapp_oficial")}
+                className={`h-7 px-2.5 text-[11px] font-medium rounded-full transition-colors ${simulatorProvider === "whatsapp_oficial" ? "bg-emerald-600 text-white shadow" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                WhatsApp Oficial
+              </button>
+            </div>
             <Button size="sm" onClick={handleTest} className="h-8 px-2 bg-gradient-to-r from-primary to-primary/90">
               <Play className="h-4 w-4 mr-1.5" />
               <span className="hidden sm:inline">{showSimulator ? "Parar" : "Testar"}</span>
@@ -1853,6 +1870,7 @@ function BotBuilderContent() {
                   breakpointNodes={breakpointNodes}
                   skipNodes={skipNodes}
                   onContextChange={setSimulatorContext}
+                  provider={simulatorProvider}
                 />
               </div>
             </>

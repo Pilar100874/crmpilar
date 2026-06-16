@@ -43,9 +43,11 @@ interface FlowSimulatorProps {
   skipNodes?: Set<string>;
   onContextChange?: (context: Record<string, any>) => void;
   channel?: "whatsapp" | "facebook" | "instagram" | "telegram" | "webchat";
+  provider?: "evolution" | "whatsapp_oficial";
 }
 
-export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes = new Set(), skipNodes = new Set(), onContextChange, channel = "whatsapp" }: FlowSimulatorProps) => {
+export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes = new Set(), skipNodes = new Set(), onContextChange, channel = "whatsapp", provider = "evolution" }: FlowSimulatorProps) => {
+  const isOficial = provider === "whatsapp_oficial" && channel === "whatsapp";
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
@@ -1825,10 +1827,16 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         const replyHeader = interpolateVariables(config.header || "", context);
         const replyText = interpolateVariables(config.text || "", context);
         const replyFooter = interpolateVariables(config.footer || "", context);
-        const replyButtons = config.buttons || [];
+        let replyButtons = config.buttons || [];
         const replyImage = config.image || config.mediaUrl;
         
         console.log("reply_buttons config:", { replyButtons, variable: config.variable, context });
+        
+        // WhatsApp Oficial: máx 3 botões de resposta rápida
+        if (isOficial && replyButtons.length > 3) {
+          addSystemMessage(`⚠️ WhatsApp Oficial permite no máximo 3 botões. ${replyButtons.length - 3} botão(ões) ignorado(s).`);
+          replyButtons = replyButtons.slice(0, 3);
+        }
         
         // Exibir imagem se houver
         if (replyImage) {
@@ -1880,7 +1888,18 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         const bmFooter = interpolateVariables(config.footer || "", context);
         const bmMedia = config.thumbnailUrl || config.mediaUrl || config.image;
         const bmMediaType = config.mediaType || "image";
-        const bmButtons = config.buttons || [];
+        let bmButtons = config.buttons || [];
+
+        // WhatsApp Oficial: máx 3 botões; áudio não é suportado como header interativo
+        if (isOficial) {
+          if (bmButtons.length > 3) {
+            addSystemMessage(`⚠️ WhatsApp Oficial permite no máximo 3 botões. ${bmButtons.length - 3} ignorado(s).`);
+            bmButtons = bmButtons.slice(0, 3);
+          }
+          if (bmMediaType === "audio") {
+            addSystemMessage("⚠️ WhatsApp Oficial não permite áudio como header de mensagem interativa.");
+          }
+        }
 
         // Monta um card unificado: mídia + título + descrição + (rodapé) + botões
         const parts: string[] = [];
@@ -1921,7 +1940,31 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         const listHeader = config.header ? interpolateVariables(config.header, context) : null;
         const listFooter = config.footer ? interpolateVariables(config.footer, context) : null;
         const buttonText = config.buttonText || config.listHeader || "Ver opções";
-        const sections = config.sections || [];
+        let sections = config.sections || [];
+
+        // WhatsApp Oficial: máx 10 seções e 10 itens por seção; títulos obrigatórios
+        if (isOficial) {
+          const totalItems = sections.reduce((a: number, s: any) => a + ((s?.items || []).length), 0);
+          if (sections.length > 10) {
+            addSystemMessage(`⚠️ WhatsApp Oficial permite no máximo 10 seções na lista. ${sections.length - 10} ignorada(s).`);
+            sections = sections.slice(0, 10);
+          }
+          sections = sections.map((s: any, i: number) => {
+            const items = s?.items || [];
+            const cut = items.length > 10 ? items.slice(0, 10) : items;
+            if (items.length > 10) {
+              addSystemMessage(`⚠️ Seção "${s.title || `#${i + 1}`}" excedeu 10 itens; ${items.length - 10} ignorado(s).`);
+            }
+            if (!s?.title) {
+              addSystemMessage(`⚠️ Seção #${i + 1} sem título — WhatsApp Oficial exige título por seção.`);
+            }
+            return { ...s, items: cut };
+          });
+          if (totalItems === 0) {
+            addSystemMessage("⚠️ Lista vazia: WhatsApp Oficial exige ao menos 1 item.");
+          }
+        }
+
         
         if (listHeader) {
           addSystemMessage(`📌 ${listHeader}`);
@@ -4433,6 +4476,15 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           <CardTitle className={`text-sm flex items-center gap-2 ${channelStyle.headerText}`}>
             <span>{channelStyle.icon}</span>
             <span>Simulador - {channelStyle.name}</span>
+            {channel === "whatsapp" && (
+              <Badge
+                variant="outline"
+                className={`ml-1 text-[10px] uppercase tracking-wide border-white/30 ${isOficial ? "bg-emerald-500/20 text-white" : "bg-amber-500/20 text-white"}`}
+                title={isOficial ? "WhatsApp Cloud API (Meta)" : "Evolution API / WAHA"}
+              >
+                {isOficial ? "Oficial" : "Evolution"}
+              </Badge>
+            )}
           </CardTitle>
           <Button size="sm" variant="outline" onClick={handleReset} className="bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-full">
             <RotateCcw className="w-4 h-4 mr-2" />
