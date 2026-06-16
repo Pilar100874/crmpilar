@@ -20,7 +20,6 @@ import {
   ArrowRight,
   StickyNote,
   HelpCircle,
-  Share2,
   Reply,
 } from "lucide-react";
 import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
@@ -83,7 +82,6 @@ const nodeIcons: Record<OmnichannelBlockType, any> = {
   webhook: Webhook,
   aguardar: Timer,
   analytics: BarChart3,
-  publicar_rede_social: Share2,
   return_response: Reply,
 };
 

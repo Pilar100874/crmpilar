@@ -29,7 +29,6 @@ const blocks: BlockItem[] = [
   { type: "webhook", label: "Webhook", description: "Integra com sistemas externos" },
   { type: "aguardar", label: "Aguardar", description: "Adiciona delay no fluxo" },
   { type: "analytics", label: "Analytics", description: "Visualiza métricas do fluxo" },
-  { type: "publicar_rede_social", label: "Publicar em Redes Sociais", description: "Publica conteúdo nas redes sociais configuradas" },
   { type: "return_response", label: "Retornar Resposta", description: "Devolve payload ao workflow chamador" },
 ];
 

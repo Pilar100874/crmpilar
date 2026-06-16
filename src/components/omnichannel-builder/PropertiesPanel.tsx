@@ -12,7 +12,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
-import { PublishSocialPostConfig } from "@/components/flow/block-configs/PublishSocialPostConfig";
+
 
 interface PropertiesPanelProps {
   selectedNode: OmnichannelNode | null;
@@ -887,14 +887,6 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
                 />
               </div>
             </>
-          )}
-
-          {/* Configurações específicas para Publicar em Redes Sociais */}
-          {data.type === 'publicar_rede_social' && (
-            <PublishSocialPostConfig
-              config={data.config || {}}
-              handleConfigChange={(key, value) => updateConfig(key, value)}
-            />
           )}
         </div>
       </ScrollArea>
