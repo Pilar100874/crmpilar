@@ -66,7 +66,7 @@ const NodeLibrary: React.FC<NodeLibraryProps> = ({ nodeTypes, onDragStart }) => 
   };
 
   return (
-    <div className="h-full flex flex-col bg-white border-r border-border/30">
+    <div className="h-full flex flex-col bg-white border-r border-border/30 animate-slide-in">
       <div className="p-4 pb-2">
         <div className="flex items-center gap-2 mb-3">
           <div className="h-6 w-6 rounded-lg bg-foreground text-background flex items-center justify-center">
@@ -83,7 +83,7 @@ const NodeLibrary: React.FC<NodeLibraryProps> = ({ nodeTypes, onDragStart }) => 
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="px-2 pb-4 space-y-0.5">
+        <div className="w-full px-2 pb-4 space-y-0.5">
           {categoryOrder.map((category) => {
             const nodes = groupedNodes[category];
             if (!nodes || nodes.length === 0) return null;

@@ -53,7 +53,7 @@ export const EcommerceBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
   }
 
   return (
-    <div className="w-60 flex flex-col h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border relative">
+    <div className="w-60 flex flex-col h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border relative overflow-hidden animate-slide-in">
       <div className="p-4 pb-2">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -75,7 +75,7 @@ export const EcommerceBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="px-2 pb-4 space-y-0.5">
+        <div className="w-[240px] max-w-full px-2 pb-4 space-y-0.5">
           {filteredCategories.map((cat) => {
             const CatIcon = Icons[cat.icon as keyof typeof Icons] as any;
             const isOpen = !!openCategories[cat.name];
@@ -92,7 +92,7 @@ export const EcommerceBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
                     )}
                     <span className="text-xs font-medium truncate">{cat.name}</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-semibold flex items-center justify-center ${isOpen ? "bg-background/20 text-background" : "bg-foreground text-background"}`}>
                       {cat.blocks.length}
                     </span>

@@ -86,7 +86,7 @@ export const BlockLibrary = ({
   if (!isExpanded) return null;
 
   return (
-    <div className="w-60 flex flex-col h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border relative">
+    <div className="w-60 flex flex-col h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border relative overflow-hidden animate-slide-in">
       <div className="p-4 pb-2">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -130,7 +130,7 @@ export const BlockLibrary = ({
           </div>
         )}
 
-        <div className="px-2 pb-4 space-y-0.5">
+        <div className="w-[240px] max-w-full px-2 pb-4 space-y-0.5">
           {blockCategories.map((category) => {
             const CategoryIcon = Icons[category.icon as keyof typeof Icons] as any;
             const isOpen = openCategories.includes(category.name);
