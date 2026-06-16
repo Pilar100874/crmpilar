@@ -4703,10 +4703,30 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             <span className="shrink-0">{channelStyle.icon}</span>
             <span className="truncate">Simulador - {channelStyle.name}</span>
           </CardTitle>
-          <Button size="sm" variant="outline" onClick={handleReset} className="bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-full shrink-0 h-8 w-8 sm:w-auto sm:px-3 p-0" title="Reiniciar simulação">
-            <RotateCcw className="w-4 h-4" />
-            <span className="hidden sm:inline sm:ml-2">Reiniciar</span>
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            {channel === "whatsapp" && onProviderChange && (
+              <div className="inline-flex items-center rounded-full border border-primary-foreground/20 bg-background/15 p-0.5" title="Provedor para simulação">
+                <button
+                  type="button"
+                  onClick={() => onProviderChange("evolution")}
+                  className={`h-6 px-2 text-[11px] font-medium rounded-full transition-colors ${provider === "evolution" ? "bg-primary text-primary-foreground shadow-sm" : "text-primary-foreground/80 hover:text-primary-foreground"}`}
+                >
+                  Evolution
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onProviderChange("whatsapp_oficial")}
+                  className={`h-6 px-2 text-[11px] font-medium rounded-full transition-colors ${provider === "whatsapp_oficial" ? "bg-primary text-primary-foreground shadow-sm" : "text-primary-foreground/80 hover:text-primary-foreground"}`}
+                >
+                  WhatsApp Oficial
+                </button>
+              </div>
+            )}
+            <Button size="sm" variant="outline" onClick={handleReset} className="bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-full shrink-0 h-8 w-8 sm:w-auto sm:px-3 p-0" title="Reiniciar simulação">
+              <RotateCcw className="w-4 h-4" />
+              <span className="hidden sm:inline sm:ml-2">Reiniciar</span>
+            </Button>
+          </div>
         </div>
       </CardHeader>
 
