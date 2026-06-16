@@ -858,6 +858,10 @@ function EditorContent({
               color="#cbd5e1"
               className="opacity-40"
             />
+            <Controls
+              className="bg-card border border-border shadow-lg rounded-lg"
+              showInteractive={false}
+            />
             <MiniMap
               nodeColor={() => "#06b6d4"}
               className="bg-card border border-border rounded-lg shadow-lg"

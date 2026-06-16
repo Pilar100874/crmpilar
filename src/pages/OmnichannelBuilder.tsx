@@ -812,6 +812,10 @@ export default function OmnichannelBuilder() {
               color="#cbd5e1"
               className="opacity-40"
             />
+            <Controls
+              className="bg-card border border-border shadow-lg rounded-lg"
+              showInteractive={false}
+            />
             <MiniMap
               className="bg-card border border-border rounded-lg shadow-lg"
               maskColor="rgba(255, 255, 255, 0.8)"

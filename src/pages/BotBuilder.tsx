@@ -1774,6 +1774,10 @@ function BotBuilderContent() {
                 color="#cbd5e1"
                 className="opacity-40"
               />
+              <Controls
+                className="bg-card border border-border shadow-lg rounded-lg"
+                showInteractive={false}
+              />
               <MiniMap
                 nodeColor={(node) => {
                   const nodeData = node.data as any;
