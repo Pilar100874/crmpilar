@@ -49,6 +49,7 @@ import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 import { FlowTemplateManager } from "@/components/flow/FlowTemplateManager";
 import { BotNumberSettingsDialog } from "@/components/atendimento/BotNumberSettingsDialog";
+import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
 
 const nodeTypes = {
   custom: FlowNode,
@@ -1534,109 +1535,77 @@ function BotBuilderContent() {
   }, [navigate, originUrl]);
 
   return (
-    <div className="workflow-shell fixed inset-0 z-50 flex flex-col bg-background">
-        <div className="min-h-14 px-2 sm:px-3 py-1.5 border-b border-border bg-card flex flex-wrap items-center justify-between gap-y-1.5 gap-x-2 shadow-sm shrink-0">
-          {/* Left section */}
-          <div className="flex items-center gap-2 flex-wrap min-w-0">
-            <div className="hidden sm:block">
-              <h2 className="text-sm font-bold text-foreground whitespace-nowrap">CRIAR BOT</h2>
-            </div>
-            
-            <div className="flex items-center gap-1">
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={() => setIsBlockLibraryExpanded(true)}
-                className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg"
-                title="Adicionar blocos"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" onClick={handleZoomIn} className="h-8 w-8" title="Aumentar zoom">
-                <ZoomIn className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" onClick={handleZoomOut} className="h-8 w-8" title="Diminuir zoom">
-                <ZoomOut className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" onClick={handleFitView} disabled={!!selectedNode} className="h-8 w-8" title="Centralizar">
-                <Maximize2 className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" onClick={handleToggleLock} className={`h-8 w-8 ${isLocked ? 'bg-cyan-600 text-white hover:bg-cyan-700' : ''}`} title={isLocked ? "Desbloquear" : "Bloquear"}>
-                {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-              </Button>
-            </div>
-
-            <WorkflowAIGenerator
-              workflowType="Bot Builder"
-              blockDefinitions={BLOCK_DEFINITIONS}
-              onGenerated={(newNodes, newEdges) => {
-                setNodes(nds => [...nds, ...newNodes]);
-                setEdges(eds => [...eds, ...newEdges]);
-                setHasUnsavedChanges(true);
-              }}
-            />
-
-            <div className="hidden lg:flex items-center gap-1">
-              <VariableManager variables={flowVariables} onVariablesChange={setFlowVariables} globalVariables={globalVariables} />
-              <VariableMonitor variables={allVariables} context={simulatorContext} />
-              <BlockMonitor selectedNode={selectedNode} nodes={nodes} edges={edges} context={simulatorContext} allVariables={allVariables} />
-              <EmpresaFieldValidator selectedNode={selectedNode} context={simulatorContext} />
-            </div>
-            
-            {/* Bot name */}
-            <div className="hidden md:flex items-center gap-2 border-l border-border pl-3">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">Bot:</span>
-              <span className="text-sm font-medium truncate max-w-[150px]">{currentBotName}</span>
-            </div>
-          </div>
-          
-          {/* Right section - Action buttons */}
-          <div className="flex items-center gap-1.5 flex-wrap justify-end">
-            <Button variant="outline" size="sm" onClick={handleImport} className="h-8 px-2">
-              <Upload className="h-4 w-4 xl:mr-1.5" />
-              <span className="hidden xl:inline">Importar</span>
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleExport} className="h-8 px-2">
-              <Download className="h-4 w-4 xl:mr-1.5" />
-              <span className="hidden xl:inline">Exportar</span>
-            </Button>
-            <FlowTemplateManager
-              nodes={nodes}
-              edges={edges}
-              selectedNodes={nodes.filter((n) => n.selected)}
-              onLoadTemplate={(newNodes, newEdges) => {
-                setNodes((nds) => [...nds, ...newNodes]);
-                setEdges((eds) => [...eds, ...newEdges]);
-                setHasUnsavedChanges(true);
-              }}
-            />
-            {currentBotCanais.includes('whatsapp') && (
-              <BotNumberSettingsDialog
-                botId={currentBotId || botIdFromUrl}
-                whatsappNumeroId={currentBotWhatsAppNumeroId}
-                forwardToNumeroId={currentBotForwardToNumeroId}
-                onSaved={(numId, fwdId) => {
-                  setCurrentBotWhatsAppNumeroId(numId);
-                  setCurrentBotForwardToNumeroId(fwdId);
-                }}
-              />
-            )}
-            <Button variant="outline" size="sm" onClick={() => handleSave(false)} disabled={isSaving} className="h-8 px-2">
-              <Save className={`h-4 w-4 mr-1.5 ${isSaving ? "animate-pulse" : ""}`} />
-              <span className="hidden sm:inline">{isSaving ? "..." : "Salvar"}</span>
-            </Button>
-            <Button size="sm" onClick={handleTest} className="h-8 px-2 bg-gradient-to-r from-primary to-primary/90">
-              <Play className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">{showSimulator ? "Parar" : "Testar"}</span>
-            </Button>
-            <Button variant="destructive" size="sm" onClick={handleExit} disabled={isSaving} className="h-8 px-2">
-              <X className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">Fechar</span>
-            </Button>
-          </div>
+    <WorkflowBuilderLayout
+      title="CRIAR BOT"
+      subtitle={currentBotName}
+      onSave={() => handleSave(false)}
+      isSaving={isSaving}
+      onTest={handleTest}
+      showTest={showSimulator}
+      testLabel="Testar"
+      isTestActive={showSimulator}
+      onZoomIn={handleZoomIn}
+      onZoomOut={handleZoomOut}
+      onFitView={handleFitView}
+      onAddBlock={() => setIsBlockLibraryExpanded(true)}
+      isLocked={isLocked}
+      onToggleLock={handleToggleLock}
+      hasUnsavedChanges={hasUnsavedChanges}
+      defaultReturnUrl={originUrl}
+      onClose={handleExit}
+      aiGeneratorContent={
+        <WorkflowAIGenerator
+          workflowType="Bot Builder"
+          blockDefinitions={BLOCK_DEFINITIONS}
+          onGenerated={(newNodes, newEdges) => {
+            setNodes(nds => [...nds, ...newNodes]);
+            setEdges(eds => [...eds, ...newEdges]);
+            setHasUnsavedChanges(true);
+          }}
+        />
+      }
+      leftContent={
+        <div className="hidden lg:flex items-center gap-1">
+          <VariableManager variables={flowVariables} onVariablesChange={setFlowVariables} globalVariables={globalVariables} />
+          <VariableMonitor variables={allVariables} context={simulatorContext} />
+          <BlockMonitor selectedNode={selectedNode} nodes={nodes} edges={edges} context={simulatorContext} allVariables={allVariables} />
+          <EmpresaFieldValidator selectedNode={selectedNode} context={simulatorContext} />
         </div>
-
-        <div className="flex-1 flex overflow-hidden">
+      }
+      rightContent={
+        <>
+          <Button variant="outline" size="sm" onClick={handleImport} className="h-8 px-2">
+            <Upload className="h-4 w-4 xl:mr-1.5" />
+            <span className="hidden xl:inline">Importar</span>
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExport} className="h-8 px-2">
+            <Download className="h-4 w-4 xl:mr-1.5" />
+            <span className="hidden xl:inline">Exportar</span>
+          </Button>
+          <FlowTemplateManager
+            nodes={nodes}
+            edges={edges}
+            selectedNodes={nodes.filter((n) => n.selected)}
+            onLoadTemplate={(newNodes, newEdges) => {
+              setNodes((nds) => [...nds, ...newNodes]);
+              setEdges((eds) => [...eds, ...newEdges]);
+              setHasUnsavedChanges(true);
+            }}
+          />
+          {currentBotCanais.includes('whatsapp') && (
+            <BotNumberSettingsDialog
+              botId={currentBotId || botIdFromUrl}
+              whatsappNumeroId={currentBotWhatsAppNumeroId}
+              forwardToNumeroId={currentBotForwardToNumeroId}
+              onSaved={(numId, fwdId) => {
+                setCurrentBotWhatsAppNumeroId(numId);
+                setCurrentBotForwardToNumeroId(fwdId);
+              }}
+            />
+          )}
+        </>
+      }
+    >
           <BlockLibrary 
             onDragStart={onDragStart} 
             isExpanded={isBlockLibraryExpanded}
@@ -1881,7 +1850,6 @@ function BotBuilderContent() {
               onClose={() => setSelectedNode(null)}
             />
           )}
-        </div>
 
         {/* Dialog de erro */}
         <ErrorDialog
@@ -1938,7 +1906,7 @@ function BotBuilderContent() {
           currentNote={currentNoteValue}
           onSave={handleSaveNote}
         />
-      </div>
+      </WorkflowBuilderLayout>
   );
 }
 

@@ -45,6 +45,7 @@ import { ADS_BLOCK_DEFINITIONS, AdsFlowNodeData } from "@/types/adsFlow";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
 import { WorkflowSimulator } from "@/components/workflow-simulator/WorkflowSimulator";
 import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
+import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
 
 const nodeTypes = {
   custom: AdsFlowNode,
@@ -787,117 +788,44 @@ function AdsAutomationContent() {
           </div>
         </div>
       ) : (
-        <div className="fixed inset-0 z-50 flex flex-col bg-background">
-          {/* Editor Header - Estilo Bot Builder */}
-          <div className="flex items-center justify-between gap-2 sm:gap-4 p-2 sm:p-3 border-b border-border bg-card min-h-14 flex-wrap">
-            <div className="flex items-center gap-2 sm:gap-4 flex-wrap min-w-0">
-              <div className="flex items-center gap-2 min-w-0">
-                <Zap className="h-4 w-4 text-primary shrink-0" />
-                <h1 className="text-sm sm:text-base font-bold truncate max-w-[180px] sm:max-w-xs">
-                  {selectedAutomation?.nome || 'Automação de Anúncios'}
-                </h1>
-                {hasUnsavedChanges && (
-                  <Badge variant="outline" className="text-orange-600 border-orange-600 text-[10px] shrink-0">
-                    Não salvo
-                  </Badge>
-                )}
-              </div>
-              
-              
-              <div className="flex gap-1 sm:border-l sm:border-border sm:pl-6">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={() => setIsBlockLibraryExpanded(true)}
-                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
-                  title="Adicionar blocos"
-                >
-                  <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={() => reactFlowInstance?.zoomIn({ duration: 200 })}
-                  className="h-8 w-8 sm:h-9 sm:w-9"
-                  title="Aumentar zoom"
-                >
-                  <ZoomIn className="h-3 w-3 sm:h-4 sm:w-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={() => reactFlowInstance?.zoomOut({ duration: 200 })}
-                  className="h-8 w-8 sm:h-9 sm:w-9"
-                  title="Diminuir zoom"
-                >
-                  <ZoomOut className="h-3 w-3 sm:h-4 sm:w-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={() => reactFlowInstance?.fitView({ duration: 300, padding: 0.2 })}
-                  className="h-8 w-8 sm:h-9 sm:w-9"
-                  title="Centralizar"
-                >
-                  <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={handleCollapseAll}
-                  className="h-8 w-8 sm:h-9 sm:w-9"
-                  title="Encolher todos"
-                >
-                  <Minimize2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                </Button>
-                
-              </div>
-            </div>
-            
-
-            
-            <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap items-center">
-              <WorkflowAIGenerator
-                workflowType="Automação de Ads"
-                blockDefinitions={ADS_BLOCK_DEFINITIONS}
-                onGenerated={(newNodes, newEdges) => {
-                  setNodes(nds => [...nds, ...newNodes]);
-                  setEdges(eds => [...eds, ...newEdges]);
-                  setHasUnsavedChanges(true);
-                }}
-              />
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleSave}
-                disabled={isSaving}
-                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
-              >
-                {isSaving ? <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" /> : <Save className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />}
-                Salvar
-              </Button>
-              <Button 
-                size="sm" 
-                onClick={() => { if (!showSimulator) setSelectedNode(null); setShowSimulator((v) => !v); }}
-                className={`bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white shadow-lg h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 ${showSimulator ? 'ring-2 ring-primary/40' : ''}`}
-              >
-                <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">{showSimulator ? 'Fechar' : 'Simular'}</span>
-              </Button>
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                onClick={() => { setIsEditing(false); setSelectedAutomation(null); }}
-                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
-              >
-                <X className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Fechar</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Flow Editor */}
-          <div className="flex-1 flex overflow-hidden">
+        <WorkflowBuilderLayout
+          title="Automação de Ads"
+          subtitle={selectedAutomation?.nome || 'Automação de Anúncios'}
+          onSave={handleSave}
+          isSaving={isSaving}
+          onTest={() => { if (!showSimulator) setSelectedNode(null); setShowSimulator((v) => !v); }}
+          showTest={showSimulator}
+          testLabel="Simular"
+          isTestActive={showSimulator}
+          onZoomIn={() => reactFlowInstance?.zoomIn({ duration: 200 })}
+          onZoomOut={() => reactFlowInstance?.zoomOut({ duration: 200 })}
+          onFitView={() => reactFlowInstance?.fitView({ duration: 300, padding: 0.2 })}
+          onAddBlock={() => setIsBlockLibraryExpanded(true)}
+          hasUnsavedChanges={hasUnsavedChanges}
+          onClose={() => { setIsEditing(false); setSelectedAutomation(null); }}
+          aiGeneratorContent={
+            <WorkflowAIGenerator
+              workflowType="Automação de Ads"
+              blockDefinitions={ADS_BLOCK_DEFINITIONS}
+              onGenerated={(newNodes, newEdges) => {
+                setNodes(nds => [...nds, ...newNodes]);
+                setEdges(eds => [...eds, ...newEdges]);
+                setHasUnsavedChanges(true);
+              }}
+            />
+          }
+          leftContent={
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleCollapseAll}
+              className="h-8 w-8 hidden sm:flex"
+              title="Encolher todos"
+            >
+              <Minimize2 className="h-4 w-4" />
+            </Button>
+          }
+        >
             {/* Block Library */}
             <AdsBlockLibrary
               onDragStart={onDragStart}
@@ -1011,8 +939,7 @@ function AdsAutomationContent() {
                 blockDefinitions={ADS_BLOCK_DEFINITIONS as any}
               />
             )}
-          </div>
-        </div>
+        </WorkflowBuilderLayout>
       )}
 
       {/* Note Dialog */}
