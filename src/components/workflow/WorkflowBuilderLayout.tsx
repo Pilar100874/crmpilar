@@ -1,14 +1,27 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Save, Play, ZoomIn, ZoomOut, Maximize2, Lock, Unlock, Plus, Settings2 } from "lucide-react";
+import {
+  X,
+  Save,
+  Play,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Lock,
+  Unlock,
+  Plus,
+  Settings2,
+  Pencil,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -99,13 +112,34 @@ export function WorkflowBuilderLayout({
     else navigate(originUrl);
   };
 
+  // Auto fit-view when viewport size changes (debounced) so blocks always fit
+  const fitRef = useRef(onFitView);
+  fitRef.current = onFitView;
+  useEffect(() => {
+    if (!onFitView) return;
+    let t: ReturnType<typeof setTimeout> | null = null;
+    const handler = () => {
+      if (t) clearTimeout(t);
+      t = setTimeout(() => fitRef.current?.(), 250);
+    };
+    window.addEventListener("resize", handler);
+    window.addEventListener("orientationchange", handler);
+    return () => {
+      if (t) clearTimeout(t);
+      window.removeEventListener("resize", handler);
+      window.removeEventListener("orientationchange", handler);
+    };
+  }, [onFitView]);
+
+  const hasViewControls = !!(onZoomIn || onZoomOut || onFitView || onAddBlock || onToggleLock);
+
   return (
     <div className="workflow-shell fixed inset-0 z-50 flex flex-col bg-background">
       {/* Header */}
-      <div className="h-14 min-h-[3.5rem] border-b border-border flex items-center justify-between gap-2 px-2 sm:px-4 bg-card shadow-sm">
-        {/* Left Section */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 overflow-x-auto scrollbar-none">
-          <div className="hidden lg:block flex-shrink-0">
+      <div className="h-14 min-h-[3.5rem] border-b border-border flex items-center justify-between gap-1.5 sm:gap-2 px-2 sm:px-4 bg-card shadow-sm">
+        {/* Left Section: title + flow name + view controls */}
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-shrink">
+          <div className="hidden lg:block flex-shrink min-w-0">
             <h2 className="text-sm font-bold text-foreground leading-tight truncate">{title}</h2>
             {subtitle && (
               <p className="text-xs text-muted-foreground leading-tight truncate">{subtitle}</p>
@@ -114,20 +148,43 @@ export function WorkflowBuilderLayout({
 
           <div className="hidden lg:block h-8 w-px bg-border flex-shrink-0" />
 
+          {/* Flow name: inline on md+, popover on smaller screens */}
           {flowName !== undefined && onFlowNameChange && (
-            <Input
-              value={flowName}
-              onChange={(e) => onFlowNameChange(e.target.value)}
-              className="w-[120px] sm:w-[160px] md:w-[200px] h-8 text-xs sm:text-sm flex-shrink-0"
-              placeholder="Nome do fluxo"
-            />
+            <>
+              <Input
+                value={flowName}
+                onChange={(e) => onFlowNameChange(e.target.value)}
+                className="hidden md:block w-[160px] lg:w-[200px] h-8 text-sm flex-shrink-0"
+                placeholder="Nome do fluxo"
+              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="md:hidden h-8 w-8 flex-shrink-0"
+                    title={flowName || "Nome do fluxo"}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-64 p-2 z-[60]">
+                  <Input
+                    autoFocus
+                    value={flowName}
+                    onChange={(e) => onFlowNameChange(e.target.value)}
+                    className="h-8 text-sm"
+                    placeholder="Nome do fluxo"
+                  />
+                </PopoverContent>
+              </Popover>
+            </>
           )}
 
-
-          {/* Zoom / View Controls */}
-          {(onZoomIn || onZoomOut || onFitView || onAddBlock || onToggleLock) && (
+          {hasViewControls && (
             <>
-              <div className="hidden sm:block h-8 w-px bg-border" />
+              <div className="hidden sm:block h-8 w-px bg-border flex-shrink-0" />
+
               {/* Add block - always visible (essential) */}
               {onAddBlock && (
                 <Button
@@ -142,7 +199,7 @@ export function WorkflowBuilderLayout({
               )}
 
               {/* Inline zoom/lock controls on xl+ */}
-              <div className="hidden xl:flex items-center gap-1">
+              <div className="hidden xl:flex items-center gap-1 flex-shrink-0">
                 {onZoomIn && (
                   <Button variant="outline" size="icon" onClick={onZoomIn} className="h-8 w-8 rounded-full" title="Aumentar zoom">
                     <ZoomIn className="h-4 w-4" />
@@ -163,7 +220,7 @@ export function WorkflowBuilderLayout({
                     variant="outline"
                     size="icon"
                     onClick={onToggleLock}
-                    className={`h-8 w-8 rounded-full ${isLocked ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
+                    className={`h-8 w-8 rounded-full ${isLocked ? "bg-primary text-primary-foreground hover:bg-primary/90" : ""}`}
                     title={isLocked ? "Desbloquear canvas" : "Bloquear canvas"}
                   >
                     {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
@@ -173,10 +230,10 @@ export function WorkflowBuilderLayout({
 
               {/* Collapsed dropdown on tablet/mobile (<xl) */}
               {(onZoomIn || onZoomOut || onFitView || onToggleLock) && (
-                <div className="xl:hidden">
+                <div className="xl:hidden flex-shrink-0">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="icon" className="h-8 w-8 rounded-full flex-shrink-0" title="Visualizar">
+                      <Button variant="outline" size="icon" className="h-8 w-8 rounded-full" title="Visualizar">
                         <Settings2 className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -209,12 +266,11 @@ export function WorkflowBuilderLayout({
             </>
           )}
 
-
-          {/* Custom Left Content */}
+          {/* Custom Left Content (hidden by callers on mobile when needed) */}
           {leftContent}
         </div>
 
-        {/* AI Generator - kept outside scrollable area so it's always visible */}
+        {/* AI Generator - always visible, never clipped */}
         {aiGeneratorContent && (
           <div className="flex items-center flex-shrink-0">
             {aiGeneratorContent}
@@ -230,7 +286,6 @@ export function WorkflowBuilderLayout({
 
         {/* Right Section */}
         <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-
           {/* Custom Right Content */}
           {rightContent}
 
@@ -240,9 +295,10 @@ export function WorkflowBuilderLayout({
               variant="outline"
               size="sm"
               onClick={onTest}
-              className={`h-8 text-xs sm:text-sm px-2 sm:px-3 ${isTestActive ? 'bg-primary/10' : ''}`}
+              title={showTest ? "Fechar" : testLabel}
+              className={`h-8 px-2 sm:px-3 text-xs sm:text-sm flex-shrink-0 ${isTestActive ? "bg-primary/10" : ""}`}
             >
-              <Play className="h-4 w-4 mr-1 sm:mr-2" />
+              <Play className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">{showTest ? "Fechar" : testLabel}</span>
             </Button>
           )}
@@ -253,9 +309,10 @@ export function WorkflowBuilderLayout({
               size="sm"
               onClick={onSave}
               disabled={isSaving}
-              className={`h-8 text-xs sm:text-sm px-2 sm:px-3 ${isSaving ? 'bg-green-600' : ''}`}
+              title={isSaving ? "Salvando..." : "Salvar"}
+              className={`h-8 px-2 sm:px-3 text-xs sm:text-sm flex-shrink-0 ${isSaving ? "bg-green-600" : ""}`}
             >
-              <Save className={`h-4 w-4 mr-1 sm:mr-2 ${isSaving ? 'animate-pulse' : ''}`} />
+              <Save className={`h-4 w-4 sm:mr-2 ${isSaving ? "animate-pulse" : ""}`} />
               <span className="hidden sm:inline">{isSaving ? "Salvando..." : "Salvar"}</span>
             </Button>
           )}
@@ -265,9 +322,10 @@ export function WorkflowBuilderLayout({
             variant="destructive"
             size="sm"
             onClick={handleClose}
-            className="h-8 text-xs sm:text-sm px-2 sm:px-3"
+            title="Fechar"
+            className="h-8 px-2 sm:px-3 text-xs sm:text-sm flex-shrink-0"
           >
-            <X className="h-4 w-4 mr-1 sm:mr-2" />
+            <X className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Fechar</span>
           </Button>
         </div>
