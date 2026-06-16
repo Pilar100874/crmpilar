@@ -38,6 +38,8 @@ export default function AutomacoesVendas() {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAutomacaoId, setSelectedAutomacaoId] = useState<string | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
 
   useEffect(() => {
     loadAutomacoes();
