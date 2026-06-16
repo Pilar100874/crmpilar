@@ -1025,7 +1025,7 @@ function BotBuilderContent() {
           arr.map((n) => ({
             id: n.id,
             type: n.type,
-            position: n.position,
+            // position intencionalmente omitida da assinatura
             data: {
               ...(n.data?.label !== undefined ? { label: n.data.label } : {}),
               ...(n.data?.type !== undefined ? { type: n.data.type } : {}),
