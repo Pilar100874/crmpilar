@@ -30,10 +30,12 @@ import {
   Trash2,
   StickyNote,
   HelpCircle,
+  Palette,
 } from "lucide-react";
 import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
 import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
 import { getInteractionKind } from "./blockInteractionKind";
+import { BlockIconCustomizer } from "./BlockIconCustomizer";
 import { LiveBlockPreview, PREVIEW_SUPPORTED_TYPES } from "./block-configs/LiveBlockPreview";
 
 export const FlowNode = memo((props: any) => {
