@@ -84,6 +84,13 @@ export default function SystemThemeLoader() {
     const cached = localStorage.getItem("system_primary_hsl");
     if (cached) applyPrimaryColor(cached);
 
+    // Reaplica quando o tema (dark/light) mudar para recalcular --accent
+    const observer = new MutationObserver(() => {
+      const hsl = localStorage.getItem("system_primary_hsl");
+      if (hsl) applyPrimaryColor(hsl);
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
     (async () => {
       try {
         const estId = await getEstabelecimentoId();
@@ -102,6 +109,9 @@ export default function SystemThemeLoader() {
         console.error("SystemThemeLoader error:", err);
       }
     })();
+
+    return () => observer.disconnect();
   }, []);
   return null;
 }
+
