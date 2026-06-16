@@ -89,7 +89,12 @@ export const BlockLibrary = ({
     <div className="w-60 flex flex-col h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border relative">
       <div className="p-4 pb-2">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-sm text-foreground">Menu</h3>
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 rounded-lg bg-foreground text-background flex items-center justify-center">
+              <Icons.Sparkles className="h-3.5 w-3.5" />
+            </div>
+            <h3 className="font-bold text-base text-foreground tracking-tight">Menu</h3>
+          </div>
           <Button variant="ghost" size="icon" onClick={() => onToggleExpanded(false)} className="h-7 w-7 rounded-md hover:bg-black/5">
             <X className="h-4 w-4" />
           </Button>
