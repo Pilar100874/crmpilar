@@ -168,7 +168,7 @@ export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: Bloc
   }
 
   return (
-    <div className="w-64 bg-card border-r border-border flex flex-col h-full shadow-lg relative">
+    <div className="w-64 bg-card/80 backdrop-blur-md border-r border-border flex flex-col h-full shadow-lg relative">
       {/* Header compacto */}
       <div className="p-3 border-b border-border bg-gradient-to-r from-primary/20 to-primary/10 relative overflow-hidden">
         
