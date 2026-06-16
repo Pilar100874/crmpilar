@@ -1,4 +1,4 @@
-import { Users, User, Award, GitBranch, Clock, Webhook, Timer, PlayCircle, BarChart3, X, Search, Share2, Reply } from "lucide-react";
+import { X, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -17,90 +17,28 @@ interface BlockLibraryProps {
 interface BlockItem {
   type: OmnichannelBlockType;
   label: string;
-  icon: React.ReactNode;
   description: string;
-  color: string;
 }
 
 const blocks: BlockItem[] = [
-  {
-    type: "fila",
-    label: "Fila de Atendimento",
-    icon: <Users className="h-5 w-5" />,
-    description: "Cria uma fila de distribuição de chats",
-    color: "text-blue-500"
-  },
-  {
-    type: "atendente",
-    label: "Atendente",
-    icon: <User className="h-5 w-5" />,
-    description: "Define um atendente no fluxo",
-    color: "text-green-500"
-  },
-  {
-    type: "skill",
-    label: "Skill Requerida",
-    icon: <Award className="h-5 w-5" />,
-    description: "Adiciona requisito de habilidade",
-    color: "text-yellow-500"
-  },
-  {
-    type: "regra_roteamento",
-    label: "Regra de Roteamento",
-    icon: <GitBranch className="h-5 w-5" />,
-    description: "Define condições de distribuição",
-    color: "text-purple-500"
-  },
-  {
-    type: "horario",
-    label: "Horário de Funcionamento",
-    icon: <Clock className="h-5 w-5" />,
-    description: "Define horários de atendimento",
-    color: "text-orange-500"
-  },
-  {
-    type: "webhook",
-    label: "Webhook",
-    icon: <Webhook className="h-5 w-5" />,
-    description: "Integra com sistemas externos",
-    color: "text-cyan-500"
-  },
-  {
-    type: "aguardar",
-    label: "Aguardar",
-    icon: <Timer className="h-5 w-5" />,
-    description: "Adiciona delay no fluxo",
-    color: "text-pink-500"
-  },
-  {
-    type: "analytics",
-    label: "Analytics",
-    icon: <BarChart3 className="h-5 w-5" />,
-    description: "Visualiza métricas do fluxo",
-    color: "text-emerald-500"
-  },
-  {
-    type: "publicar_rede_social",
-    label: "Publicar em Redes Sociais",
-    icon: <Share2 className="h-5 w-5" />,
-    description: "Publica conteúdo nas redes sociais configuradas",
-    color: "text-pink-500"
-  },
-  {
-    type: "return_response",
-    label: "Retornar Resposta",
-    icon: <Reply className="h-5 w-5" />,
-    description: "Devolve payload ao workflow chamador (modo síncrono) e encerra o fluxo",
-    color: "text-teal-500"
-  },
+  { type: "fila", label: "Fila de Atendimento", description: "Cria uma fila de distribuição de chats" },
+  { type: "atendente", label: "Atendente", description: "Define um atendente no fluxo" },
+  { type: "skill", label: "Skill Requerida", description: "Adiciona requisito de habilidade" },
+  { type: "regra_roteamento", label: "Regra de Roteamento", description: "Define condições de distribuição" },
+  { type: "horario", label: "Horário de Funcionamento", description: "Define horários de atendimento" },
+  { type: "webhook", label: "Webhook", description: "Integra com sistemas externos" },
+  { type: "aguardar", label: "Aguardar", description: "Adiciona delay no fluxo" },
+  { type: "analytics", label: "Analytics", description: "Visualiza métricas do fluxo" },
+  { type: "publicar_rede_social", label: "Publicar em Redes Sociais", description: "Publica conteúdo nas redes sociais configuradas" },
+  { type: "return_response", label: "Retornar Resposta", description: "Devolve payload ao workflow chamador" },
 ];
 
-export const BlockLibrary = ({ 
-  onDragStart, 
-  isExpanded, 
+export const BlockLibrary = ({
+  onDragStart,
+  isExpanded,
   onToggleExpanded,
   nodes,
-  onNodeSelect 
+  onNodeSelect,
 }: BlockLibraryProps) => {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -110,24 +48,17 @@ export const BlockLibrary = ({
     onDragStart(type);
   };
 
-  // Filtrar nós pela busca
   const filteredNodes = nodes.filter(node => {
-    const query = searchQuery.toLowerCase();
-    const nodeData = node.data as any;
-    const label = nodeData?.label || "";
-    const type = nodeData?.type || "";
-    const description = nodeData?.description || "";
-    
-    return label.toLowerCase().includes(query) ||
-           type.toLowerCase().includes(query) ||
-           description.toLowerCase().includes(query);
+    const q = searchQuery.toLowerCase();
+    const d = node.data as any;
+    return (d?.label || "").toLowerCase().includes(q) ||
+      (d?.type || "").toLowerCase().includes(q) ||
+      (d?.description || "").toLowerCase().includes(q);
   });
 
-  // Filtrar blocos pela busca
-  const filteredBlocks = blocks.filter(block => {
-    const query = searchQuery.toLowerCase();
-    return block.label.toLowerCase().includes(query) ||
-           block.description.toLowerCase().includes(query);
+  const filteredBlocks = blocks.filter(b => {
+    const q = searchQuery.toLowerCase();
+    return b.label.toLowerCase().includes(q) || b.description.toLowerCase().includes(q);
   });
 
   const handleSelect = (nodeId: string) => {
@@ -135,60 +66,41 @@ export const BlockLibrary = ({
     setSearchQuery("");
   };
 
-  if (!isExpanded) {
-    return null;
-  }
+  if (!isExpanded) return null;
 
   return (
-    <div className="w-64 bg-card border-r border-border flex flex-col h-full shadow-lg">
-      {/* Header com busca */}
-      <div className="p-3 border-b border-border bg-gradient-to-r from-primary/20 to-primary/10">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-bold text-sm text-foreground">Blocos</h3>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onToggleExpanded(false)}
-            className="h-7 w-7 rounded-md"
-          >
+    <div className="w-64 bg-[#E8EAED] border-r border-border/30 flex flex-col h-full relative">
+      <div className="p-4 pb-2">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-sm text-foreground">Menu</h3>
+          <Button variant="ghost" size="icon" onClick={() => onToggleExpanded(false)} className="h-7 w-7 rounded-md hover:bg-black/5">
             <X className="h-4 w-4" />
           </Button>
         </div>
-        
-        {/* Search bar */}
-        <div className="relative">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-          <Input
-            placeholder="Buscar blocos ou nós..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 text-xs pl-7"
-          />
-        </div>
+        <Input
+          placeholder="Buscar..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="h-8 text-xs bg-white/60 border-0 shadow-sm"
+        />
       </div>
 
       <ScrollArea className="flex-1">
-        {/* Resultados da busca de nós */}
         {searchQuery && filteredNodes.length > 0 && (
-          <div className="p-2 border-b border-border">
-            <p className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-              Nós no Fluxo ({filteredNodes.length})
+          <div className="px-2 pb-2">
+            <p className="text-[10px] font-semibold text-muted-foreground mb-1 px-3 uppercase tracking-wide">
+              Nós no fluxo ({filteredNodes.length})
             </p>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {filteredNodes.map((node) => {
-                const nodeData = node.data as any;
+                const d = node.data as any;
                 return (
                   <button
                     key={node.id}
                     onClick={() => handleSelect(node.id)}
-                    className="w-full text-left p-2 rounded-lg hover:bg-muted transition-colors"
+                    className="w-full text-left px-3 py-2 rounded-xl hover:bg-white transition-colors"
                   >
-                    <p className="text-xs font-medium text-foreground">
-                      {nodeData?.label || "Sem nome"}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {nodeData?.type || "Sem tipo"}
-                    </p>
+                    <p className="text-xs font-normal text-foreground truncate">{d?.label || "Sem nome"}</p>
                   </button>
                 );
               })}
@@ -196,37 +108,30 @@ export const BlockLibrary = ({
           </div>
         )}
 
-        {/* Blocos disponíveis */}
-        <div className="p-2">
-          <p className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-            {searchQuery ? `Blocos Disponíveis (${filteredBlocks.length})` : "Blocos de Atendimento"}
+        <div className="px-2 pb-4">
+          <p className="text-[10px] font-semibold text-muted-foreground mb-1 px-3 uppercase tracking-wide">
+            {searchQuery ? `Blocos (${filteredBlocks.length})` : "Blocos de atendimento"}
           </p>
-          
-          <div className="space-y-2">
+          <div className="space-y-0.5">
             {filteredBlocks.map((block) => (
-              <div
+              <Card
                 key={block.type}
                 draggable
                 onDragStart={(e) => handleDragStart(e, block.type)}
                 onDoubleClick={() => window.dispatchEvent(new CustomEvent("workflow:add-block", { detail: { type: block.type } }))}
                 title="Arraste ou clique 2x para adicionar"
-                className="flex items-start gap-3 p-3 border rounded-2xl cursor-grab active:cursor-grabbing hover:bg-accent hover:border-primary transition-all select-none"
+                className="px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-white border-0 shadow-none rounded-xl transition-all duration-150 select-none"
               >
-                <div className={`flex-shrink-0 mt-0.5 ${block.color}`}>
-                  {block.icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm">{block.label}</div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {block.description}
-                  </div>
-                </div>
-              </div>
+                <h4 className="text-xs font-normal text-foreground truncate">{block.label}</h4>
+              </Card>
             ))}
           </div>
 
           {filteredBlocks.length === 0 && searchQuery && (
             <div className="text-center py-8 text-muted-foreground">
+              <div className="p-3 rounded-full bg-muted w-12 h-12 mx-auto mb-3 flex items-center justify-center">
+                <Plus className="w-6 h-6" />
+              </div>
               <p className="text-xs font-medium">Nenhum bloco encontrado</p>
               <p className="text-[10px] mt-1">Tente outra busca</p>
             </div>
