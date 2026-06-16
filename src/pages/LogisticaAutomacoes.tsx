@@ -57,6 +57,7 @@ import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 import { LOGISTICA_BLOCKS } from "@/types/automacaoLogistica";
 import { toast } from "@/hooks/use-toast";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
+import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
 import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 
 const nodeTypes = {
@@ -945,7 +946,7 @@ function EditorContent({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </WorkflowBuilderLayout>
   );
 }
 
