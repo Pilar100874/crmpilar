@@ -79,7 +79,7 @@ export const PropertiesPanel = ({
 
   if (!selectedNode) {
     return (
-      <div className="w-96 bg-background border-l border-border p-6">
+      <div className="w-96 flex flex-col h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border border-border/20 bg-gradient-to-b from-card to-muted/30 p-6">
         <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
           <div className="w-20 h-20 rounded-2xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center">
             <span className="text-3xl">👆</span>
