@@ -1606,7 +1606,6 @@ function BotBuilderContent() {
         </>
       }
     >
-      <></>
           <BlockLibrary 
             onDragStart={onDragStart} 
             isExpanded={isBlockLibraryExpanded}
@@ -1908,7 +1907,7 @@ function BotBuilderContent() {
           currentNote={currentNoteValue}
           onSave={handleSaveNote}
         />
-      </div>
+      </WorkflowBuilderLayout>
   );
 }
 
