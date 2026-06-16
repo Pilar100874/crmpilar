@@ -68,7 +68,12 @@ const NodeLibrary: React.FC<NodeLibraryProps> = ({ nodeTypes, onDragStart }) => 
   return (
     <div className="h-full flex flex-col bg-white border-r border-border/30">
       <div className="p-4 pb-2">
-        <h3 className="font-semibold text-sm text-foreground mb-3">Menu</h3>
+        <div className="flex items-center gap-2 mb-3">
+          <div className="h-6 w-6 rounded-lg bg-foreground text-background flex items-center justify-center">
+            <Sparkles className="h-3.5 w-3.5" />
+          </div>
+          <h3 className="font-bold text-base text-foreground tracking-tight">Menu</h3>
+        </div>
         <Input
           placeholder="Buscar..."
           value={search}
