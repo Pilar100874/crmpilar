@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { Node, Edge } from "@xyflow/react";
 import { Button } from "@/components/ui/button";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Download, Upload } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 
@@ -9,6 +10,7 @@ interface FlowExportImportGenericProps {
   edges: Edge[];
   flowName?: string;
   onImport: (nodes: Node[], edges: Edge[], name?: string) => void;
+  asMenuItems?: boolean;
 }
 
 /**

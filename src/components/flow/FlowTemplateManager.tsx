@@ -12,6 +12,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Library, Save, Trash2, FileText, Clock, Loader2 } from "lucide-react";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { toast } from "@/lib/toast-config";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { format } from "date-fns";
@@ -32,6 +33,7 @@ interface FlowTemplateManagerProps {
   edges: Edge[];
   selectedNodes?: Node[];
   onLoadTemplate: (nodes: Node[], edges: Edge[]) => void;
+  asMenuItems?: boolean;
 }
 
 async function fetchTemplates(): Promise<FlowTemplate[]> {
@@ -61,6 +63,7 @@ export function FlowTemplateManager({
   edges,
   selectedNodes = [],
   onLoadTemplate,
+  asMenuItems = false,
 }: FlowTemplateManagerProps) {
   const [openList, setOpenList] = useState(false);
   const [openSave, setOpenSave] = useState(false);
@@ -184,26 +187,42 @@ export function FlowTemplateManager({
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setOpenSave(true)}
-        className="h-8 px-2"
-        title="Salvar fluxo atual como modelo"
-      >
-        <Save className="h-4 w-4 xl:mr-1.5" />
-        <span className="hidden xl:inline">Salvar Modelo</span>
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setOpenList(true)}
-        className="h-8 px-2"
-        title="Inserir modelo salvo"
-      >
-        <Library className="h-4 w-4 xl:mr-1.5" />
-        <span className="hidden xl:inline">Modelos</span>
-      </Button>
+      {asMenuItems ? (
+        <>
+          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setOpenSave(true); }}>
+            <Save className="h-4 w-4 mr-2" />
+            Salvar Modelo
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setOpenList(true); }}>
+            <Library className="h-4 w-4 mr-2" />
+            Modelos
+          </DropdownMenuItem>
+        </>
+      ) : (
+        <>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setOpenSave(true)}
+            className="h-8 px-2"
+            title="Salvar fluxo atual como modelo"
+          >
+            <Save className="h-4 w-4 xl:mr-1.5" />
+            <span className="hidden xl:inline">Salvar Modelo</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setOpenList(true)}
+            className="h-8 px-2"
+            title="Inserir modelo salvo"
+          >
+            <Library className="h-4 w-4 xl:mr-1.5" />
+            <span className="hidden xl:inline">Modelos</span>
+          </Button>
+        </>
+      )}
+
 
       {/* Save dialog */}
       <Dialog open={openSave} onOpenChange={setOpenSave}>
