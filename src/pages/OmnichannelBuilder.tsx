@@ -580,6 +580,7 @@ export default function OmnichannelBuilder() {
           .from("omnichannel_flows")
           .update({
             nome: flowName,
+            descricao: flowDescription?.trim() || null,
             flow_data: flowData as any,
             is_default: isDefault,
             updated_at: new Date().toISOString(),
@@ -598,9 +599,11 @@ export default function OmnichannelBuilder() {
           .insert({
             estabelecimento_id: estabId,
             nome: flowName,
+            descricao: flowDescription?.trim() || null,
             flow_data: flowData as any,
             ativo: true,
           });
+
 
         if (error) throw error;
         toast.success("Fluxo criado com sucesso!");
