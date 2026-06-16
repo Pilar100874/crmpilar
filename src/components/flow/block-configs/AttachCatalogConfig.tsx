@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, BookOpen, Calendar, AlertCircle, Package } from "lucide-react";
+import { Loader2, BookOpen, Calendar, AlertCircle, Package, Download } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { loadActiveCatalogs, SavedCatalog } from "@/lib/catalogPdfGenerator";
+import { loadActiveCatalogs, generateCatalogPdf, SavedCatalog } from "@/lib/catalogPdfGenerator";
+import { toast } from "@/lib/toast-config";
 
 interface Props {
   selectedNode: any;
@@ -23,6 +25,30 @@ export const AttachCatalogConfig = ({ selectedNode, handleConfigChange }: Props)
 
   const [catalogs, setCatalogs] = useState<SavedCatalog[]>([]);
   const [loading, setLoading] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const handleDownload = async (catalog: SavedCatalog) => {
+    try {
+      setDownloadingId(catalog.id);
+      const result = await generateCatalogPdf(catalog);
+      if (!result) {
+        toast.error("Catálogo incompleto — não foi possível gerar o PDF.");
+        return;
+      }
+      const a = document.createElement("a");
+      a.href = result.url;
+      a.download = result.fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(result.url), 1000);
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || "Erro ao gerar PDF do catálogo.");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   useEffect(() => {
     (async () => {
