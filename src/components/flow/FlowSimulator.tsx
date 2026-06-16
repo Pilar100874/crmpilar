@@ -1888,7 +1888,18 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         const bmFooter = interpolateVariables(config.footer || "", context);
         const bmMedia = config.thumbnailUrl || config.mediaUrl || config.image;
         const bmMediaType = config.mediaType || "image";
-        const bmButtons = config.buttons || [];
+        let bmButtons = config.buttons || [];
+
+        // WhatsApp Oficial: máx 3 botões; áudio não é suportado como header interativo
+        if (isOficial) {
+          if (bmButtons.length > 3) {
+            addSystemMessage(`⚠️ WhatsApp Oficial permite no máximo 3 botões. ${bmButtons.length - 3} ignorado(s).`);
+            bmButtons = bmButtons.slice(0, 3);
+          }
+          if (bmMediaType === "audio") {
+            addSystemMessage("⚠️ WhatsApp Oficial não permite áudio como header de mensagem interativa.");
+          }
+        }
 
         // Monta um card unificado: mídia + título + descrição + (rodapé) + botões
         const parts: string[] = [];
