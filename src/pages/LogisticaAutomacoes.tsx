@@ -777,7 +777,7 @@ function EditorContent({
       onZoomOut={handleZoomOut}
       onFitView={handleFitView}
       onAddBlock={() => setIsBlockLibraryExpanded(true)}
-      onClose={handleBack}
+      onClose={onBack}
       aiGeneratorContent={
         <WorkflowAIGenerator
           workflowType="Logística"

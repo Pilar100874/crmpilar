@@ -1193,11 +1193,9 @@ function BotBuilderContent() {
         } catch {}
       }
       
-      // Definir assinatura como estado salvo após carregar
-      setTimeout(() => {
-        lastSavedSignatureRef.current = getFlowSignature();
-        setHasUnsavedChanges(false);
-      }, 0);
+      // A próxima verificação cria a baseline com o fluxo já carregado.
+      lastSavedSignatureRef.current = null;
+      setHasUnsavedChanges(false);
 
       // Centralizar os blocos ao abrir o bot
       setTimeout(() => {
@@ -1552,7 +1550,7 @@ function BotBuilderContent() {
       onToggleLock={handleToggleLock}
       hasUnsavedChanges={hasUnsavedChanges}
       defaultReturnUrl={originUrl}
-      onClose={handleExit}
+      onClose={() => navigate(originUrl)}
       aiGeneratorContent={
         <WorkflowAIGenerator
           workflowType="Bot Builder"
