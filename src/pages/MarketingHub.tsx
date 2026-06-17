@@ -177,49 +177,52 @@ const MarketingHub: React.FC = () => {
 
           {/* Desktop: Sidebar menu */}
           <div className={cn(
-            "hidden lg:flex lg:flex-col lg:border-r lg:bg-muted/20 lg:p-3 lg:gap-1 lg:overflow-y-auto lg:shrink-0 transition-all duration-300",
+            "hidden lg:flex lg:flex-col lg:shrink-0 transition-all duration-300 m-2 rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border overflow-hidden",
             isMenuCollapsed ? "lg:w-16" : "lg:w-64"
           )}>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setIsMenuCollapsed(!isMenuCollapsed)} 
-              className="mb-2 self-end"
-            >
-              {isMenuCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-            </Button>
-            <TooltipProvider delayDuration={0}>
-              {tabItems.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                const menuButton = (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-left w-full",
-                      isActive 
-                        ? "bg-primary text-primary-foreground shadow-sm" 
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                      isMenuCollapsed && "justify-center"
-                    )}
-                  >
-                    <Icon className={cn("h-4 w-4 shrink-0", !isActive && "opacity-70")} />
-                    {!isMenuCollapsed && <span className="truncate">{tab.label}</span>}
-                  </button>
-                );
-                if (isMenuCollapsed) {
-                  return (
-                    <Tooltip key={tab.id}>
-                      <TooltipTrigger asChild>{menuButton}</TooltipTrigger>
-                      <TooltipContent side="right">{tab.label}</TooltipContent>
-                    </Tooltip>
+            <div className="p-3 flex flex-col gap-1 overflow-y-auto h-full">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setIsMenuCollapsed(!isMenuCollapsed)} 
+                className="mb-2 self-end h-7 w-7 rounded-md hover:bg-black/5 dark:hover:bg-white/10"
+              >
+                {isMenuCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+              </Button>
+              <TooltipProvider delayDuration={0}>
+                {tabItems.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  const menuButton = (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-colors duration-100 text-left w-full",
+                        isActive 
+                          ? "bg-foreground text-background shadow-sm" 
+                          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                        isMenuCollapsed && "justify-center"
+                      )}
+                    >
+                      <Icon className={cn("h-4 w-4 shrink-0", !isActive && "opacity-70")} />
+                      {!isMenuCollapsed && <span className="truncate">{tab.label}</span>}
+                    </button>
                   );
-                }
-                return menuButton;
-              })}
-            </TooltipProvider>
+                  if (isMenuCollapsed) {
+                    return (
+                      <Tooltip key={tab.id}>
+                        <TooltipTrigger asChild>{menuButton}</TooltipTrigger>
+                        <TooltipContent side="right">{tab.label}</TooltipContent>
+                      </Tooltip>
+                    );
+                  }
+                  return menuButton;
+                })}
+              </TooltipProvider>
+            </div>
           </div>
+
 
           {/* Content area */}
           <div className="flex-1 overflow-auto p-3 sm:p-6">
