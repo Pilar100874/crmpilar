@@ -920,12 +920,11 @@ serve(async (req) => {
 
         let selectedIndex = -1;
         const asNum = parseInt(userResponse);
-        if (!isNaN(asNum) && asNum >= 1 && asNum <= replyButtons.length) {
-          selectedIndex = replyButtons[asNum - 1].i;
+        // Aceita escolha numérica considerando TODOS os botões (reply + url/copy/call/pix)
+        if (!isNaN(asNum) && asNum >= 1 && asNum <= allButtons.length) {
+          selectedIndex = asNum - 1;
         } else {
-          // Match por id, displayText/text/label
           const found = allButtons.findIndex((b: any) => {
-            if ((b.type || "reply") !== "reply") return false;
             const candidates = [b.id, b.value, b.displayText, b.text, b.label]
               .filter(Boolean)
               .map((s: any) => String(s).toLowerCase().trim());
@@ -934,15 +933,36 @@ serve(async (req) => {
           selectedIndex = found;
         }
 
-        if (selectedIndex < 0) {
+        const chosen = selectedIndex >= 0 ? allButtons[selectedIndex] : null;
+        const chosenType = chosen?.type || "reply";
+
+        if (!chosen) {
+          const replyNums = replyButtons.map(({ i }) => i + 1).join(", ");
           await respond(
             replyButtons.length
-              ? `Por favor, responda com um número entre 1 e ${replyButtons.length} ou o texto do botão.`
+              ? `Por favor, responda com o número de um botão de resposta (${replyNums || "1"}) ou o texto do botão.`
               : "Esta mensagem não aceita resposta. Aguarde a próxima instrução.",
           );
           shouldReturn = true;
+        } else if (chosenType !== "reply") {
+          // Botão de ação escolhido via texto/número → reenvia a informação e continua aguardando
+          let info = "";
+          if (chosenType === "url") info = `🔗 Acesse: ${chosen.url || ""}`;
+          else if (chosenType === "copy") info = `📋 Código para copiar: ${chosen.copyCode || chosen.code || ""}`;
+          else if (chosenType === "call") info = `📞 Ligue: ${chosen.phoneNumber || chosen.phone || ""}`;
+          else if (chosenType === "pix") info = `💠 Chave Pix (${chosen.keyType || ""}): ${chosen.key || chosen.pixKey || ""}`;
+          if (info) await respond(info);
+          if (replyButtons.length) {
+            const replyNums = replyButtons.map(({ i }) => i + 1).join(", ");
+            await respond(`Para continuar, escolha um botão de resposta (${replyNums}).`);
+            shouldReturn = true;
+          } else {
+            delete context.pendingNodeId;
+            const edge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
+            const nextNode = edge && flowData.flow_data.nodes.find((n: any) => n.id === edge.target);
+            if (nextNode) await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+          }
         } else {
-          const chosen = allButtons[selectedIndex];
           context.vars[variable] = chosen.value || chosen.id || chosen.displayText || chosen.text || chosen.label;
           delete context.pendingNodeId;
           const handle = `button_${selectedIndex}`;
@@ -2805,25 +2825,52 @@ async function executeNode(
       break;
     }
     case "buttons_mixed": {
-      const buttons = (cfg.buttons || []).slice(0, 3).map((b: any, i: number) => {
+      const rawButtons = (cfg.buttons || []).slice(0, 3).map((b: any, i: number) => {
         const t = b.type || "reply";
         const out: any = { type: t, displayText: itp(b.displayText || `Opção ${i + 1}`) };
         if (t === "reply") out.id = b.id || `btn_${i}`;
         if (t === "url") out.url = itp(b.url || "");
         if (t === "copy") out.copyCode = itp(b.copyCode || "");
         if (t === "call") out.phoneNumber = itp(b.phoneNumber || "");
+        if (t === "pix") {
+          out.currency = b.currency || "BRL";
+          out.name = itp(b.name || "");
+          out.keyType = b.keyType || "email";
+          out.key = itp(b.key || b.pixKey || "");
+        }
         return out;
       });
-      const interactive = {
-        type: "buttons",
-        title: itp(cfg.title || ""),
-        description: itp(cfg.description || ""),
-        footerText: itp(cfg.footer || ""),
-        buttons,
-      };
-      await onResponse(itp(cfg.description || ""), undefined, undefined, interactive);
+
+      // Evolution NÃO aceita reply + url/copy/call/pix no mesmo sendButtons.
+      // Solução: separa em grupos homogêneos e envia uma mensagem por grupo.
+      const replyGroup = rawButtons.filter((b: any) => b.type === "reply");
+      const actionGroups: any[][] = rawButtons
+        .filter((b: any) => b.type !== "reply")
+        .map((b: any) => [b]); // 1 botão de ação por mensagem (Evolution limita 1 por tipo)
+
+      const titleStr = itp(cfg.title || "");
+      const descStr = itp(cfg.description || "");
+      const footerStr = itp(cfg.footer || "");
+
+      const groups = [
+        ...(replyGroup.length ? [replyGroup] : []),
+        ...actionGroups,
+      ];
+
+      for (let gi = 0; gi < groups.length; gi++) {
+        const isFirst = gi === 0;
+        const interactive = {
+          type: "buttons",
+          title: isFirst ? titleStr : "",
+          description: isFirst ? descStr : "",
+          footerText: gi === groups.length - 1 ? footerStr : "",
+          buttons: groups[gi],
+        };
+        await onResponse(isFirst ? descStr : "", undefined, undefined, interactive);
+      }
+
       // Se houver botões reply, fica pendente aguardando resposta
-      if (buttons.some((b: any) => b.type === "reply")) {
+      if (replyGroup.length) {
         context.pendingNodeId = node.id;
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
         const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
