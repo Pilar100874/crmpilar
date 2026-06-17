@@ -885,7 +885,7 @@ All colors MUST be HSL.
 }
 .dark[data-visual-preset="liquid"] .hub-menu {
   background:
-9433 100%);
+    linear-gradient(160deg, hsl(0 0% 100% / 0.07) 0%, hsl(0 0% 100% / 0.014) 100%);
   border-color: hsl(0 0% 100% / 0.098);
   box-shadow:
     0 20px 50px -10px hsl(0 0% 0% / 0.35),
