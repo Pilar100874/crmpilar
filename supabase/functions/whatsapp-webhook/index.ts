@@ -1475,10 +1475,14 @@ serve(async (req) => {
         let variable = cfg.variable || "resposta";
 
         if (blockType === "keyword_options") {
-          options = (cfg.buttons || cfg.keywords || []).map((b: any, i: number) => ({
+          const keywordItems = Array.isArray(cfg.buttons)
+            ? cfg.buttons
+            : (Array.isArray(cfg.keywords) ? cfg.keywords : []);
+          options = keywordItems.map((b: any, i: number) => ({
             label: b.label || b.text || `Opção ${i + 1}`,
             value: b.value || b.label || b.text || `opcao_${i + 1}`,
             handle: `button_${i}`,
+            keywords: Array.isArray(b.keywords) ? b.keywords : (b.keyword ? [b.keyword] : []),
           }));
           variable = cfg.variable || "opcao_escolhida";
         } else if (blockType === "content_type") {
@@ -1537,10 +1541,11 @@ serve(async (req) => {
         } else {
           const lower = userResponse.toLowerCase();
           const normalizedResponse = blockType === "content_type" ? normalizeContentTypeResponse(userResponse) : lower;
-          selectedIndex = options.findIndex((o) => {
+          selectedIndex = options.findIndex((o: any) => {
             const label = blockType === "content_type" ? normalizeContentTypeResponse(o.label) : String(o.label || "").toLowerCase();
             const value = blockType === "content_type" ? normalizeContentTypeResponse(o.value) : String(o.value || "").toLowerCase();
-            return label === normalizedResponse || value === normalizedResponse;
+            const keywords = Array.isArray(o.keywords) ? o.keywords.map((k: any) => String(k || "").trim().toLowerCase()).filter(Boolean) : [];
+            return label === normalizedResponse || value === normalizedResponse || keywords.includes(lower);
           });
           // Reconhece rowId/buttonId enviado por listas/botões interativos do WhatsApp (ex: "ct_1", "section_0_item_0", custom rowIds)
           if (selectedIndex < 0) {
