@@ -184,6 +184,7 @@ export default function SystemVisualConfig() {
     { id: "menu", title: "Menu (Bot Style)", description: "Cards com gradiente sutil, bordas brancas e cantos arredondados. Menu lateral flutuante." },
     { id: "minimal", title: "Minimalista", description: "Visual limpo e plano, sem sombras nem gradientes. Foco em conteúdo." },
     { id: "classic", title: "Clássico", description: "Cards com borda definida e leve sombra. Menu lateral tradicional com destaque na cor primária." },
+    { id: "liquid", title: "Liquid Glass", description: "Estilo glassmorphism Apple-like: vidro translúcido com blur, brilho sutil e profundidade." },
   ];
 
   const handleSelectPreset = async (preset: VisualPreset) => {

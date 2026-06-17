@@ -78,8 +78,8 @@ export function applyPrimaryColor(hsl: string) {
 }
 
 /* ====================== VISUAL PRESET (menu/minimal/classic) ====================== */
-export type VisualPreset = "menu" | "minimal" | "classic";
-export const VISUAL_PRESETS: VisualPreset[] = ["menu", "minimal", "classic"];
+export type VisualPreset = "menu" | "minimal" | "classic" | "liquid";
+export const VISUAL_PRESETS: VisualPreset[] = ["menu", "minimal", "classic", "liquid"];
 export const DEFAULT_VISUAL_PRESET: VisualPreset = "menu";
 
 export function applyVisualPreset(preset: VisualPreset) {
