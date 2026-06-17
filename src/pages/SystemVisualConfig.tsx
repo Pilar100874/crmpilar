@@ -197,6 +197,36 @@ export default function SystemVisualConfig() {
     toast.success(`Estilo "${VISUAL_PRESET_OPTIONS.find(p => p.id === preset)?.title}" aplicado!`);
   };
 
+  const handleUploadLiquidBg = async (file: File) => {
+    if (!file.type.startsWith("image/")) { toast.error("Selecione uma imagem"); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error("Imagem muito grande (máx 10MB)"); return; }
+    setUploadingBg(true);
+    try {
+      const estId = await getEstabelecimentoId();
+      if (!estId) { toast.error("Estabelecimento não encontrado"); return; }
+      const ext = file.name.split(".").pop();
+      const path = `${estId}/liquid_bg_${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("ecommerce-assets").upload(path, file, { upsert: true });
+      if (error) { toast.error("Erro no upload: " + error.message); return; }
+      const { data: urlData } = supabase.storage.from("ecommerce-assets").getPublicUrl(path);
+      const url = urlData.publicUrl;
+      setLiquidBgUrl(url);
+      localStorage.setItem("system_liquid_bg_url", url);
+      applyLiquidBackground(url);
+      toast.success("Imagem de fundo aplicada!");
+    } finally {
+      setUploadingBg(false);
+    }
+  };
+
+  const handleRemoveLiquidBg = () => {
+    setLiquidBgUrl("");
+    localStorage.removeItem("system_liquid_bg_url");
+    applyLiquidBackground(null);
+    toast.success("Imagem de fundo removida");
+  };
+
+
 
   if (loading) {
     return (
