@@ -1748,6 +1748,7 @@ const AICreativeStudioInner: React.FC = () => {
                     <WorkflowCard
                       key={w.id}
                       id={w.id}
+                      variant="menu"
                       title={w.nome}
                       description={w.descricao}
                       isActive={true}
