@@ -66,6 +66,28 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
     handleConfigChange("buttons", newButtons);
   };
 
+  const moveButton = (from: number, to: number) => {
+    if (from === to || to < 0 || to >= buttons.length) return;
+    const newButtons = [...buttons];
+    const [moved] = newButtons.splice(from, 1);
+    newButtons.splice(to, 0, moved);
+    handleConfigChange("buttons", newButtons);
+  };
+
+  const onDragStart = (e: React.DragEvent, index: number) => {
+    e.dataTransfer.setData("text/plain", String(index));
+    e.dataTransfer.effectAllowed = "move";
+  };
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+  const onDrop = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    const from = parseInt(e.dataTransfer.getData("text/plain"), 10);
+    if (!isNaN(from)) moveButton(from, index);
+  };
+
   const addKeyword = (buttonIndex: number) => {
     const newButtons = [...buttons];
     const keywords = newButtons[buttonIndex].keywords || [];
@@ -76,6 +98,12 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
   const updateKeyword = (buttonIndex: number, keywordIndex: number, value: string) => {
     const newButtons = [...buttons];
     newButtons[buttonIndex].keywords[keywordIndex] = value;
+    handleConfigChange("buttons", newButtons);
+  };
+
+  const removeKeyword = (buttonIndex: number, keywordIndex: number) => {
+    const newButtons = [...buttons];
+    newButtons[buttonIndex].keywords = (newButtons[buttonIndex].keywords || []).filter((_: any, i: number) => i !== keywordIndex);
     handleConfigChange("buttons", newButtons);
   };
 
@@ -106,20 +134,42 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
         <Label>Botões</Label>
         
         {buttons.map((button: any, index: number) => (
-          <div key={button.id || index} className="space-y-3 p-4 bg-pink-500/10 border-2 border-pink-500 rounded-lg">
+          <div
+            key={button.id || index}
+            draggable
+            onDragStart={(e) => onDragStart(e, index)}
+            onDragOver={onDragOver}
+            onDrop={(e) => onDrop(e, index)}
+            className="space-y-3 p-4 bg-pink-500/10 border-2 border-pink-500 rounded-lg"
+          >
             <div className="flex items-center gap-2">
               <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
-              <Button 
-                variant="ghost" 
-                className="flex-1 bg-pink-500 text-white hover:bg-pink-600"
+              <Input
+                value={button.label || ""}
+                onChange={(e) => updateButton(index, "label", e.target.value)}
+                placeholder={`Texto do botão ${index + 1}`}
+                className="flex-1"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                title="Mover para cima"
+                onClick={() => moveButton(index, index - 1)}
+                disabled={index === 0}
               >
-                Clique para editar
+                ↑
               </Button>
-              <Button variant="ghost" size="icon">
-                <GripVertical className="h-4 w-4" />
+              <Button
+                variant="ghost"
+                size="icon"
+                title="Mover para baixo"
+                onClick={() => moveButton(index, index + 1)}
+                disabled={index === buttons.length - 1}
+              >
+                ↓
               </Button>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="icon"
                 onClick={() => removeButton(index)}
               >
@@ -127,26 +177,34 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
               </Button>
             </div>
 
-            <div className="bg-muted-foreground rounded-lg p-3 space-y-2">
-              <div className="flex items-center gap-2 text-white">
-                <span className="text-sm">{index + 1}</span>
+            <div className="bg-muted rounded-lg p-3 space-y-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <span className="text-xs font-semibold">Palavras-chave ({index + 1})</span>
               </div>
-              
+
               {(button.keywords || []).map((keyword: string, kIndex: number) => (
-                <Input
-                  key={kIndex}
-                  value={keyword}
-                  onChange={(e) => updateKeyword(index, kIndex, e.target.value)}
-                  placeholder="Digite a palavra-chave"
-                  className="bg-muted-foreground/80 border-muted-foreground text-white placeholder:text-muted-foreground"
-                />
+                <div key={kIndex} className="flex items-center gap-2">
+                  <Input
+                    value={keyword}
+                    onChange={(e) => updateKeyword(index, kIndex, e.target.value)}
+                    placeholder="Digite a palavra-chave"
+                    className="flex-1"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeKeyword(index, kIndex)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               ))}
 
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => addKeyword(index)}
-                className="w-full text-white hover:bg-muted-foreground/80"
+                className="w-full"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Adicionar palavra-chave
@@ -155,11 +213,11 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
           </div>
         ))}
 
-        <Button 
-          variant="default" 
-          size="lg" 
+        <Button
+          variant="default"
+          size="lg"
           onClick={addButton}
-          className="w-full bg-muted-foreground hover:bg-foreground/80 text-white"
+          className="w-full"
         >
           <Plus className="w-4 h-4 mr-2" />
           Adicionar outro botão

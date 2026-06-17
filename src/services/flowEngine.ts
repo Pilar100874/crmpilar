@@ -402,14 +402,25 @@ export class FlowEngine {
           });
         }
       });
-    } else if (data.type === "keyword_options" && config.cards) {
-      const cards = Array.isArray(config.cards) ? config.cards : [];
-      const cardIndex = cards.findIndex((card: any) => 
-        card.keyword === userChoice || card.title === userChoice
+    } else if (data.type === "keyword_options") {
+      const items: any[] = Array.isArray(config.buttons)
+        ? config.buttons
+        : (Array.isArray(config.cards) ? config.cards : []);
+      const lowerChoice = String(userChoice || "").toLowerCase().trim();
+      let idx = items.findIndex((b: any) =>
+        b.label === userChoice ||
+        b.keyword === userChoice ||
+        b.title === userChoice ||
+        (Array.isArray(b.keywords) && b.keywords.some((k: string) => String(k).toLowerCase().trim() === lowerChoice))
       );
-      if (cardIndex >= 0) {
+      // Permitir escolha pelo número (1, 2, 3...)
+      if (idx < 0) {
+        const n = parseInt(lowerChoice, 10);
+        if (!isNaN(n) && n >= 1 && n <= items.length) idx = n - 1;
+      }
+      if (idx >= 0) {
         targetEdge = this.edges.find(
-          (e) => e.source === node.id && e.sourceHandle === `card_${cardIndex}`
+          (e) => e.source === node.id && e.sourceHandle === `button_${idx}`
         );
       }
     }
