@@ -302,8 +302,57 @@ export default function SystemVisualConfig() {
         </CardContent>
       </Card>
 
+      {/* Liquid Glass Background Image — only relevant for liquid preset */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <ImageIcon className="h-4 w-4" />
+            Imagem de Fundo (Liquid Glass)
+          </CardTitle>
+          <CardDescription>
+            Envie uma imagem para ficar como fundo de todas as telas. Funciona melhor com o estilo <strong>Liquid Glass</strong> para o efeito de vidro translúcido estilo Apple/Windows 11.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {liquidBgUrl ? (
+            <div className="relative rounded-xl overflow-hidden border max-w-lg mx-auto bg-muted">
+              <img src={liquidBgUrl} alt="Fundo Liquid Glass" className="w-full max-h-[260px] object-cover" />
+              <div className="absolute bottom-2 right-2">
+                <Button variant="destructive" size="sm" className="opacity-90" onClick={handleRemoveLiquidBg}>
+                  <Trash2 className="h-3 w-3 mr-1" />Remover
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="border-2 border-dashed rounded-xl p-8 text-center text-muted-foreground max-w-lg mx-auto">
+              <ImageIcon className="h-12 w-12 mx-auto mb-3 opacity-40" />
+              <p className="text-sm mb-1">Envie uma imagem para o fundo do sistema</p>
+              <p className="text-xs opacity-60">JPG/PNG/WebP, máx 10MB. Imagens com cores vivas e desfoque natural funcionam melhor.</p>
+            </div>
+          )}
+          <div className="flex justify-center">
+            <input
+              ref={bgInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => e.target.files?.[0] && handleUploadLiquidBg(e.target.files[0])}
+            />
+            <Button variant="outline" onClick={() => bgInputRef.current?.click()} disabled={uploadingBg}>
+              <Upload className="h-4 w-4 mr-2" />
+              {uploadingBg ? "Enviando..." : liquidBgUrl ? "Trocar Imagem" : "Enviar Imagem"}
+            </Button>
+          </div>
+          {visualPreset !== "liquid" && liquidBgUrl && (
+            <p className="text-xs text-center text-muted-foreground">
+              ℹ️ A imagem só aparece com o estilo <strong>Liquid Glass</strong> ativo.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Splash Screen Video */}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
