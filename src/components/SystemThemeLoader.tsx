@@ -78,8 +78,8 @@ export function applyPrimaryColor(hsl: string) {
 }
 
 /* ====================== VISUAL PRESET (menu/minimal/classic) ====================== */
-export type VisualPreset = "menu" | "minimal" | "classic" | "liquid";
-export const VISUAL_PRESETS: VisualPreset[] = ["menu", "minimal", "classic", "liquid"];
+export type VisualPreset = "menu" | "minimal" | "classic";
+export const VISUAL_PRESETS: VisualPreset[] = ["menu", "minimal", "classic"];
 export const DEFAULT_VISUAL_PRESET: VisualPreset = "menu";
 
 export function applyVisualPreset(preset: VisualPreset) {
@@ -90,22 +90,6 @@ export function applyVisualPreset(preset: VisualPreset) {
 export function getCurrentVisualPreset(): VisualPreset {
   const v = (localStorage.getItem("system_visual_preset") as VisualPreset) || DEFAULT_VISUAL_PRESET;
   return VISUAL_PRESETS.includes(v) ? v : DEFAULT_VISUAL_PRESET;
-}
-
-/* ---------- Liquid Glass background image ---------- */
-export function applyLiquidBackground(url: string | null | undefined) {
-  const root = document.documentElement;
-  if (url && url.trim()) {
-    root.style.setProperty("--liquid-bg-image", `url("${url}")`);
-    root.setAttribute("data-liquid-bg", "true");
-  } else {
-    root.style.removeProperty("--liquid-bg-image");
-    root.removeAttribute("data-liquid-bg");
-  }
-}
-
-export function getCurrentLiquidBackground(): string {
-  return localStorage.getItem("system_liquid_bg_url") || "";
 }
 
 
@@ -119,10 +103,6 @@ export default function SystemThemeLoader() {
 
     // Aplica preset visual salvo
     applyVisualPreset(getCurrentVisualPreset());
-
-    // Aplica imagem de fundo Liquid Glass salva
-    applyLiquidBackground(getCurrentLiquidBackground());
-
 
 
 

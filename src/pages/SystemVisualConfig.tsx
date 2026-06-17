@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, Trash2, Save, Paintbrush, Video, Play, Pause, Palette, RotateCcw, LayoutGrid, Check, Image as ImageIcon } from "lucide-react";
-import { hexToHslString, hslStringToHex, applyPrimaryColor, applyVisualPreset, getCurrentVisualPreset, VISUAL_PRESETS, applyLiquidBackground, getCurrentLiquidBackground, type VisualPreset } from "@/components/SystemThemeLoader";
+import { ArrowLeft, Upload, Trash2, Save, Paintbrush, Video, Play, Pause, Palette, RotateCcw, LayoutGrid, Check } from "lucide-react";
+import { hexToHslString, hslStringToHex, applyPrimaryColor, applyVisualPreset, getCurrentVisualPreset, VISUAL_PRESETS, type VisualPreset } from "@/components/SystemThemeLoader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -23,12 +23,9 @@ export default function SystemVisualConfig() {
   const [primaryHex, setPrimaryHex] = useState("#f97316");
   const [savingColor, setSavingColor] = useState(false);
   const [visualPreset, setVisualPreset] = useState<VisualPreset>(getCurrentVisualPreset());
-  const [liquidBgUrl, setLiquidBgUrl] = useState<string>(getCurrentLiquidBackground());
-  const [uploadingBg, setUploadingBg] = useState(false);
   const DEFAULT_HSL = "25 95% 53%";
   const videoInputRef = useRef<HTMLInputElement>(null);
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
-  const bgInputRef = useRef<HTMLInputElement>(null);
 
 
   useEffect(() => {
@@ -187,7 +184,6 @@ export default function SystemVisualConfig() {
     { id: "menu", title: "Menu (Bot Style)", description: "Cards com gradiente sutil, bordas brancas e cantos arredondados. Menu lateral flutuante." },
     { id: "minimal", title: "Minimalista", description: "Visual limpo e plano, sem sombras nem gradientes. Foco em conteúdo." },
     { id: "classic", title: "Clássico", description: "Cards com borda definida e leve sombra. Menu lateral tradicional com destaque na cor primária." },
-    { id: "liquid", title: "Liquid Glass", description: "Estilo glassmorphism Apple-like: vidro translúcido com blur, brilho sutil e profundidade." },
   ];
 
   const handleSelectPreset = async (preset: VisualPreset) => {
@@ -196,36 +192,6 @@ export default function SystemVisualConfig() {
     localStorage.setItem("system_visual_preset", preset);
     toast.success(`Estilo "${VISUAL_PRESET_OPTIONS.find(p => p.id === preset)?.title}" aplicado!`);
   };
-
-  const handleUploadLiquidBg = async (file: File) => {
-    if (!file.type.startsWith("image/")) { toast.error("Selecione uma imagem"); return; }
-    if (file.size > 10 * 1024 * 1024) { toast.error("Imagem muito grande (máx 10MB)"); return; }
-    setUploadingBg(true);
-    try {
-      const estId = await getEstabelecimentoId();
-      if (!estId) { toast.error("Estabelecimento não encontrado"); return; }
-      const ext = file.name.split(".").pop();
-      const path = `${estId}/liquid_bg_${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("ecommerce-assets").upload(path, file, { upsert: true });
-      if (error) { toast.error("Erro no upload: " + error.message); return; }
-      const { data: urlData } = supabase.storage.from("ecommerce-assets").getPublicUrl(path);
-      const url = urlData.publicUrl;
-      setLiquidBgUrl(url);
-      localStorage.setItem("system_liquid_bg_url", url);
-      applyLiquidBackground(url);
-      toast.success("Imagem de fundo aplicada!");
-    } finally {
-      setUploadingBg(false);
-    }
-  };
-
-  const handleRemoveLiquidBg = () => {
-    setLiquidBgUrl("");
-    localStorage.removeItem("system_liquid_bg_url");
-    applyLiquidBackground(null);
-    toast.success("Imagem de fundo removida");
-  };
-
 
 
   if (loading) {
@@ -263,7 +229,7 @@ export default function SystemVisualConfig() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {VISUAL_PRESET_OPTIONS.map((opt) => {
               const isSelected = visualPreset === opt.id;
               return (
@@ -302,57 +268,8 @@ export default function SystemVisualConfig() {
         </CardContent>
       </Card>
 
-      {/* Liquid Glass Background Image — only relevant for liquid preset */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <ImageIcon className="h-4 w-4" />
-            Imagem de Fundo (Liquid Glass)
-          </CardTitle>
-          <CardDescription>
-            Envie uma imagem para ficar como fundo de todas as telas. Funciona melhor com o estilo <strong>Liquid Glass</strong> para o efeito de vidro translúcido estilo Apple/Windows 11.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {liquidBgUrl ? (
-            <div className="relative rounded-xl overflow-hidden border max-w-lg mx-auto bg-muted">
-              <img src={liquidBgUrl} alt="Fundo Liquid Glass" className="w-full max-h-[260px] object-cover" />
-              <div className="absolute bottom-2 right-2">
-                <Button variant="destructive" size="sm" className="opacity-90" onClick={handleRemoveLiquidBg}>
-                  <Trash2 className="h-3 w-3 mr-1" />Remover
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="border-2 border-dashed rounded-xl p-8 text-center text-muted-foreground max-w-lg mx-auto">
-              <ImageIcon className="h-12 w-12 mx-auto mb-3 opacity-40" />
-              <p className="text-sm mb-1">Envie uma imagem para o fundo do sistema</p>
-              <p className="text-xs opacity-60">JPG/PNG/WebP, máx 10MB. Imagens com cores vivas e desfoque natural funcionam melhor.</p>
-            </div>
-          )}
-          <div className="flex justify-center">
-            <input
-              ref={bgInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => e.target.files?.[0] && handleUploadLiquidBg(e.target.files[0])}
-            />
-            <Button variant="outline" onClick={() => bgInputRef.current?.click()} disabled={uploadingBg}>
-              <Upload className="h-4 w-4 mr-2" />
-              {uploadingBg ? "Enviando..." : liquidBgUrl ? "Trocar Imagem" : "Enviar Imagem"}
-            </Button>
-          </div>
-          {visualPreset !== "liquid" && liquidBgUrl && (
-            <p className="text-xs text-center text-muted-foreground">
-              ℹ️ A imagem só aparece com o estilo <strong>Liquid Glass</strong> ativo.
-            </p>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Splash Screen Video */}
-
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
