@@ -101,6 +101,11 @@ export default function SystemThemeLoader() {
     const cached = localStorage.getItem("system_primary_hsl");
     if (cached) applyPrimaryColor(cached);
 
+    // Aplica preset visual salvo
+    applyVisualPreset(getCurrentVisualPreset());
+
+
+
     // Reaplica quando o tema (dark/light) mudar para recalcular --accent
     const observer = new MutationObserver(() => {
       const hsl = localStorage.getItem("system_primary_hsl");
