@@ -598,3 +598,143 @@ All colors MUST be HSL.
   box-shadow: 0 6px 16px -2px hsl(var(--primary) / 0.5) !important;
 }
 
+/* ============================================================
+   VISUAL PRESETS — menu / minimal / classic
+   Controlled by [data-visual-preset] on <html>
+   Applied to:
+     .preset-card        → all <Card> instances
+     .hub-menu           → hub sidebar container
+     .hub-menu-item      → hub sidebar item
+     .hub-menu-item.is-active
+   ============================================================ */
+
+/* ---------- Preset: MENU (default, bot-blocks style) ---------- */
+:root, [data-visual-preset="menu"] {
+  --preset-card-radius: 1rem;
+  --preset-card-bg: linear-gradient(to bottom, hsl(var(--background)), hsl(var(--border)));
+  --preset-card-border: 2px solid hsl(0 0% 100%);
+  --preset-card-shadow: 0 10px 15px -3px hsl(var(--foreground) / 0.1), 0 4px 6px -4px hsl(var(--foreground) / 0.1);
+}
+.dark[data-visual-preset="menu"], .dark:root {
+  --preset-card-border: 2px solid hsl(0 0% 100% / 0.1);
+}
+
+[data-visual-preset="menu"] .preset-card,
+:root .preset-card {
+  border-radius: var(--preset-card-radius);
+  background: var(--preset-card-bg);
+  border: var(--preset-card-border);
+  box-shadow: var(--preset-card-shadow);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+[data-visual-preset="menu"] .preset-card:hover,
+:root .preset-card:hover {
+  box-shadow: 0 20px 25px -5px hsl(var(--foreground) / 0.12), 0 8px 10px -6px hsl(var(--foreground) / 0.1);
+}
+
+[data-visual-preset="menu"] .hub-menu,
+:root .hub-menu {
+  margin: 0.5rem;
+  border-radius: 1rem;
+  border: 2px solid hsl(0 0% 100%);
+  background: linear-gradient(to bottom, hsl(var(--background)), hsl(var(--border)));
+  box-shadow: 0 10px 15px -3px hsl(var(--foreground) / 0.1);
+  overflow: hidden;
+}
+.dark[data-visual-preset="menu"] .hub-menu,
+.dark:root .hub-menu {
+  border-color: hsl(0 0% 100% / 0.1);
+}
+[data-visual-preset="menu"] .hub-menu-item,
+:root .hub-menu-item {
+  border-radius: 0.75rem;
+  font-weight: 500;
+  font-size: 0.75rem;
+  transition: background 0.1s, color 0.1s;
+}
+[data-visual-preset="menu"] .hub-menu-item:hover:not(.is-active),
+:root .hub-menu-item:hover:not(.is-active) {
+  background: hsl(var(--muted) / 0.6);
+  color: hsl(var(--foreground));
+}
+[data-visual-preset="menu"] .hub-menu-item.is-active,
+:root .hub-menu-item.is-active {
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+  box-shadow: 0 1px 2px hsl(var(--foreground) / 0.1);
+}
+
+/* ---------- Preset: MINIMAL (flat) ---------- */
+[data-visual-preset="minimal"] .preset-card {
+  border-radius: 0.5rem;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / 0.5);
+  box-shadow: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+[data-visual-preset="minimal"] .preset-card:hover {
+  background: hsl(var(--muted) / 0.3);
+  border-color: hsl(var(--border));
+  box-shadow: none;
+  transform: none !important;
+}
+[data-visual-preset="minimal"] .hub-menu {
+  margin: 0;
+  border-radius: 0;
+  border: 0;
+  border-right: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+  box-shadow: none;
+}
+[data-visual-preset="minimal"] .hub-menu-item {
+  border-radius: 0.375rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: background 0.15s, color 0.15s;
+}
+[data-visual-preset="minimal"] .hub-menu-item:hover:not(.is-active) {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+[data-visual-preset="minimal"] .hub-menu-item.is-active {
+  background: hsl(var(--muted));
+  color: hsl(var(--primary));
+  font-weight: 600;
+}
+
+/* ---------- Preset: CLASSIC (bordered) ---------- */
+[data-visual-preset="classic"] .preset-card {
+  border-radius: 0.375rem;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 1px 3px hsl(var(--foreground) / 0.06);
+  transition: box-shadow 0.2s;
+}
+[data-visual-preset="classic"] .preset-card:hover {
+  box-shadow: 0 4px 8px hsl(var(--foreground) / 0.08);
+  transform: none !important;
+}
+[data-visual-preset="classic"] .hub-menu {
+  margin: 0;
+  border-radius: 0;
+  border: 0;
+  border-right: 1px solid hsl(var(--border));
+  background: hsl(var(--muted) / 0.2);
+  box-shadow: none;
+}
+[data-visual-preset="classic"] .hub-menu-item {
+  border-radius: 0.375rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: background 0.2s, color 0.2s;
+}
+[data-visual-preset="classic"] .hub-menu-item:hover:not(.is-active) {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+[data-visual-preset="classic"] .hub-menu-item.is-active {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  box-shadow: 0 1px 2px hsl(var(--primary) / 0.3);
+}
+
