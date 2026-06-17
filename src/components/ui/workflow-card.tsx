@@ -38,6 +38,7 @@ export interface WorkflowCardProps {
   customContent?: ReactNode;
   showDefaultOption?: boolean;
   deleteDisabled?: boolean;
+  variant?: 'default' | 'menu';
 }
 
 export const WorkflowCard = ({
