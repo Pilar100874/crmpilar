@@ -743,14 +743,14 @@ All colors MUST be HSL.
 /* Ambient background: very subtle animated gradient so glass has something to refract */
 [data-visual-preset="liquid"] body {
   background:
-    radial-gradient(ellipse 80% 60% at 20% 30%, hsl(var(--primary) / 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 70%, hsl(var(--primary) / 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 60% at 20% 30%, hsl(var(--primary) / 0.042) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 70%, hsl(var(--primary) / 0.028) 0%, transparent 60%),
     hsl(var(--background));
 }
 .dark[data-visual-preset="liquid"] body {
   background:
-    radial-gradient(ellipse 80% 60% at 20% 30%, hsl(var(--primary) / 0.10) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 70%, hsl(220 40% 50% / 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 60% at 20% 30%, hsl(var(--primary) / 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 70%, hsl(220 40% 50% / 0.056) 0%, transparent 60%),
     hsl(var(--background));
 }
 
@@ -787,109 +787,110 @@ All colors MUST be HSL.
   content: "";
   position: fixed;
   inset: 0;
-  background: linear-gradient(180deg, hsl(0 0% 0% / 0.18) 0%, hsl(0 0% 0% / 0.28) 100%);
+  background: linear-gradient(180deg, hsl(0 0% 0% / 0.126) 0%, hsl(0 0% 0% / 0.196) 100%);
   z-index: -1;
   pointer-events: none;
 }
 .dark[data-visual-preset="liquid"][data-liquid-bg="true"]::after {
-  background: linear-gradient(180deg, hsl(0 0% 0% / 0.35) 0%, hsl(0 0% 0% / 0.55) 100%);
+  background: linear-gradient(180deg, hsl(0 0% 0% / 0.245) 0%, hsl(0 0% 0% / 0.385) 100%);
 }
 
 /* Legibility: text-shadow on all text inside liquid-glass surfaces */
-[data-visual-preset="liquid"][data-liquid-bg="true"] .hub-menu,
-[data-visual-preset="liquid"][data-liquid-bg="true"] .hub-menu-item,
-[data-visual-preset="liquid"][data-liquid-bg="true"] .preset-card,
-[data-visual-preset="liquid"][data-liquid-bg="true"] main,
-[data-visual-preset="liquid"][data-liquid-bg="true"] header,
-[data-visual-preset="liquid"][data-liquid-bg="true"] aside {
-  text-shadow: 0 1px 2px hsl(0 0% 0% / 0.35);
+[data-visual-preset="liquid"] .hub-menu,
+[data-visual-preset="liquid"] .hub-menu-item,
+[data-visual-preset="liquid"] .preset-card,
+[data-visual-preset="liquid"] main,
+[data-visual-preset="liquid"] header,
+[data-visual-preset="liquid"] aside {
+  text-shadow: 0 1px 2px hsl(0 0% 0% / 0.245);
 }
-/* Boost contrast for menu items and headings */
+/* Force white text for all menu items in liquid glass */
+[data-visual-preset="liquid"] .hub-menu-item,
 [data-visual-preset="liquid"][data-liquid-bg="true"] .hub-menu-item,
+[data-visual-preset="liquid"] h1,
+[data-visual-preset="liquid"] h2,
+[data-visual-preset="liquid"] h3,
 [data-visual-preset="liquid"][data-liquid-bg="true"] h1,
 [data-visual-preset="liquid"][data-liquid-bg="true"] h2,
 [data-visual-preset="liquid"][data-liquid-bg="true"] h3 {
   color: hsl(0 0% 100%) !important;
-  text-shadow: 0 1px 3px hsl(0 0% 0% / 0.55), 0 0 1px hsl(0 0% 0% / 0.4);
+  text-shadow: 0 1px 3px hsl(0 0% 0% / 0.385), 0 0 1px hsl(0 0% 0% / 0.28);
 }
 /* Stronger card backgrounds when image is behind for readability */
 [data-visual-preset="liquid"][data-liquid-bg="true"] .preset-card {
-  background: linear-gradient(160deg, hsl(0 0% 100% / 0.22) 0%, hsl(0 0% 100% / 0.10) 100%) !important;
-  border-color: hsl(0 0% 100% / 0.35) !important;
+  background: linear-gradient(160deg, hsl(0 0% 100% / 0.154) 0%, hsl(0 0% 100% / 0.07) 100%) !important;
+  border-color: hsl(0 0% 100% / 0.245) !important;
 }
 [data-visual-preset="liquid"][data-liquid-bg="true"] .hub-menu {
-  background: linear-gradient(160deg, hsl(0 0% 0% / 0.30) 0%, hsl(0 0% 0% / 0.15) 100%) !important;
-  border-color: hsl(0 0% 100% / 0.25) !important;
+  background: linear-gradient(160deg, hsl(0 0% 0% / 0.21) 0%, hsl(0 0% 0% / 0.105) 100%) !important;
+  border-color: hsl(0 0% 100% / 0.175) !important;
 }
-
-
-
 
 [data-visual-preset="liquid"] .preset-card {
   border-radius: 1.5rem;
   /* Ultra-transparent — almost see-through */
   background:
-    linear-gradient(160deg, hsl(0 0% 100% / 0.35) 0%, hsl(0 0% 100% / 0.08) 100%);
-  border: 1px solid hsl(0 0% 100% / 0.45);
+    linear-gradient(160deg, hsl(0 0% 100% / 0.245) 0%, hsl(0 0% 100% / 0.056) 100%);
+  border: 1px solid hsl(0 0% 100% / 0.315);
   backdrop-filter: blur(40px) saturate(220%);
   -webkit-backdrop-filter: blur(40px) saturate(220%);
   box-shadow:
     /* outer depth shadow */
-    0 20px 50px -10px hsl(var(--foreground) / 0.10),
-    0 4px 12px -4px hsl(var(--foreground) / 0.06),
+    0 20px 50px -10px hsl(var(--foreground) / 0.07),
+    0 4px 12px -4px hsl(var(--foreground) / 0.042),
     /* top specular highlight — the Apple glass "shine" */
-    inset 0 1px 0 0 hsl(0 0% 100% / 0.65),
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.455),
     /* bottom inner shadow for thickness */
-    inset 0 -1px 0 0 hsl(0 0% 0% / 0.04);
+    inset 0 -1px 0 0 hsl(0 0% 0% / 0.028);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .dark[data-visual-preset="liquid"] .preset-card {
   background:
-    linear-gradient(160deg, hsl(0 0% 100% / 0.12) 0%, hsl(0 0% 100% / 0.02) 100%);
-  border-color: hsl(0 0% 100% / 0.18);
+    linear-gradient(160deg, hsl(0 0% 100% / 0.084) 0%, hsl(0 0% 100% / 0.014) 100%);
+  border-color: hsl(0 0% 100% / 0.126);
   box-shadow:
-    0 20px 50px -10px hsl(0 0% 0% / 0.45),
-    0 4px 12px -4px hsl(0 0% 0% / 0.25),
-    inset 0 1px 0 0 hsl(0 0% 100% / 0.25),
-    inset 0 -1px 0 0 hsl(0 0% 0% / 0.20);
+    0 20px 50px -10px hsl(0 0% 0% / 0.315),
+    0 4px 12px -4px hsl(0 0% 0% / 0.175),
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.175),
+    inset 0 -1px 0 0 hsl(0 0% 0% / 0.14);
 }
 [data-visual-preset="liquid"] .preset-card:hover {
   background:
-    linear-gradient(160deg, hsl(0 0% 100% / 0.50) 0%, hsl(0 0% 100% / 0.15) 100%);
+    linear-gradient(160deg, hsl(0 0% 100% / 0.35) 0%, hsl(0 0% 100% / 0.105) 100%);
   box-shadow:
-    0 28px 60px -12px hsl(var(--foreground) / 0.14),
-    0 6px 16px -4px hsl(var(--foreground) / 0.08),
-    inset 0 1px 0 0 hsl(0 0% 100% / 0.75),
-    inset 0 -1px 0 0 hsl(0 0% 0% / 0.04);
+    0 28px 60px -12px hsl(var(--foreground) / 0.098),
+    0 6px 16px -4px hsl(var(--foreground) / 0.056),
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.525),
+    inset 0 -1px 0 0 hsl(0 0% 0% / 0.028);
   transform: translateY(-3px) scale(1.005);
 }
 .dark[data-visual-preset="liquid"] .preset-card:hover {
   background:
-    linear-gradient(160deg, hsl(0 0% 100% / 0.18) 0%, hsl(0 0% 100% / 0.05) 100%);
+    linear-gradient(160deg, hsl(0 0% 100% / 0.126) 0%, hsl(0 0% 100% / 0.035) 100%);
 }
 
 [data-visual-preset="liquid"] .hub-menu {
   margin: 0.5rem;
   border-radius: 1.5rem;
-  border: 1px solid hsl(0 0% 100% / 0.40);
+  border: 1px solid hsl(0 0% 100% / 0.28);
   background:
-    linear-gradient(160deg, hsl(0 0% 100% / 0.30) 0%, hsl(0 0% 100% / 0.06) 100%);
+    linear-gradient(160deg, hsl(0 0% 100% / 0.21) 0%, hsl(0 0% 100% / 0.042) 100%);
   backdrop-filter: blur(48px) saturate(220%);
   -webkit-backdrop-filter: blur(48px) saturate(220%);
   box-shadow:
-    0 20px 50px -10px hsl(var(--foreground) / 0.10),
-    inset 0 1px 0 0 hsl(0 0% 100% / 0.55),
-    inset 0 -1px 0 0 hsl(0 0% 0% / 0.03);
+    0 20px 50px -10px hsl(var(--foreground) / 0.07),
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.385),
+    inset 0 -1px 0 0 hsl(0 0% 0% / 0.021);
   overflow: hidden;
 }
 .dark[data-visual-preset="liquid"] .hub-menu {
   background:
-    linear-gradient(160deg, hsl(0 0% 100% / 0.10) 0%, hsl(0 0% 100% / 0.02) 100%);
-  border-color: hsl(0 0% 100% / 0.14);
+9433 100%);
+  border-color: hsl(0 0% 100% / 0.098);
   box-shadow:
-    0 20px 50px -10px hsl(0 0% 0% / 0.50),
-    inset 0 1px 0 0 hsl(0 0% 100% / 0.18),
-    inset 0 -1px 0 0 hsl(0 0% 0% / 0.25);
+    0 20px 50px -10px hsl(0 0% 0% / 0.35),
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.126),
+    inset 0 -1px 0 0 hsl(0 0% 0% / 0.175);
 }
 [data-visual-preset="liquid"] .hub-menu-item {
   border-radius: 1rem;
@@ -897,29 +898,30 @@ All colors MUST be HSL.
   font-size: 0.8125rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  color: hsl(0 0% 100%);
 }
 [data-visual-preset="liquid"] .hub-menu-item:hover:not(.is-active) {
-  background: hsl(0 0% 100% / 0.22);
-  color: hsl(var(--foreground));
+  background: hsl(0 0% 100% / 0.154);
+  color: hsl(0 0% 100%);
   backdrop-filter: blur(12px);
 }
 .dark[data-visual-preset="liquid"] .hub-menu-item:hover:not(.is-active) {
-  background: hsl(0 0% 100% / 0.08);
+  background: hsl(0 0% 100% / 0.056);
 }
 [data-visual-preset="liquid"] .hub-menu-item.is-active {
   background:
-    linear-gradient(135deg, hsl(var(--primary) / 0.90), hsl(var(--primary) / 0.70));
+    linear-gradient(135deg, hsl(var(--primary) / 0.63), hsl(var(--primary) / 0.49));
   color: hsl(var(--primary-foreground));
   box-shadow:
-    0 6px 18px hsl(var(--primary) / 0.40),
-    inset 0 1px 0 0 hsl(0 0% 100% / 0.45);
+    0 6px 18px hsl(var(--primary) / 0.28),
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.315);
   backdrop-filter: blur(16px) saturate(180%);
 }
 .dark[data-visual-preset="liquid"] .hub-menu-item.is-active {
   background:
-    linear-gradient(135deg, hsl(var(--primary) / 0.85), hsl(var(--primary) / 0.60));
+    linear-gradient(135deg, hsl(var(--primary) / 0.595), hsl(var(--primary) / 0.42));
   box-shadow:
-    0 6px 18px hsl(var(--primary) / 0.35),
-    inset 0 1px 0 0 hsl(0 0% 100% / 0.20);
+    0 6px 18px hsl(var(--primary) / 0.245),
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.14);
 }
 
