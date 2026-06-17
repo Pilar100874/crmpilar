@@ -23,9 +23,12 @@ export default function SystemVisualConfig() {
   const [primaryHex, setPrimaryHex] = useState("#f97316");
   const [savingColor, setSavingColor] = useState(false);
   const [visualPreset, setVisualPreset] = useState<VisualPreset>(getCurrentVisualPreset());
+  const [liquidBgUrl, setLiquidBgUrl] = useState<string>(getCurrentLiquidBackground());
+  const [uploadingBg, setUploadingBg] = useState(false);
   const DEFAULT_HSL = "25 95% 53%";
   const videoInputRef = useRef<HTMLInputElement>(null);
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
+  const bgInputRef = useRef<HTMLInputElement>(null);
 
 
   useEffect(() => {
