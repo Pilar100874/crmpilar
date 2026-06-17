@@ -134,13 +134,15 @@ export const FlowNode = memo((props: any) => {
       }
     }
 
-    // Keyword options (carousel) - uma saída para cada card
-    if (data.type === "keyword_options" && config.cards) {
-      const cards = Array.isArray(config.cards) ? config.cards : [];
+    // Keyword options - uma saída para cada botão
+    if (data.type === "keyword_options" && (config.buttons || config.cards)) {
+      const items = Array.isArray(config.buttons)
+        ? config.buttons
+        : (Array.isArray(config.cards) ? config.cards : []);
       return {
-        buttons: cards.map((card: any, index: number) => ({
-          id: `card_${index}`,
-          label: card.keyword || `Card ${index + 1}`,
+        buttons: items.map((btn: any, index: number) => ({
+          id: `button_${index}`,
+          label: btn.label || btn.keyword || `Opção ${index + 1}`,
           color: "bg-primary"
         }))
       };
