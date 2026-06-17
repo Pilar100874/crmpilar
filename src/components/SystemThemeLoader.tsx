@@ -120,6 +120,10 @@ export default function SystemThemeLoader() {
     // Aplica preset visual salvo
     applyVisualPreset(getCurrentVisualPreset());
 
+    // Aplica imagem de fundo Liquid Glass salva
+    applyLiquidBackground(getCurrentLiquidBackground());
+
+
 
 
     // Reaplica quando o tema (dark/light) mudar para recalcular --accent
