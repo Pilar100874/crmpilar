@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, Trash2, Save, Paintbrush, Video, Play, Pause, Palette, RotateCcw } from "lucide-react";
-import { hexToHslString, hslStringToHex, applyPrimaryColor } from "@/components/SystemThemeLoader";
+import { ArrowLeft, Upload, Trash2, Save, Paintbrush, Video, Play, Pause, Palette, RotateCcw, LayoutGrid, Check } from "lucide-react";
+import { hexToHslString, hslStringToHex, applyPrimaryColor, applyVisualPreset, getCurrentVisualPreset, VISUAL_PRESETS, type VisualPreset } from "@/components/SystemThemeLoader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
 
 export default function SystemVisualConfig() {
   const navigate = useNavigate();
