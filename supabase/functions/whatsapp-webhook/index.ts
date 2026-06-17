@@ -903,25 +903,51 @@ serve(async (req) => {
         shouldSaveContext = false;
         shouldReturn = true;
       }
-      // Processa resposta para reply_buttons
-      else if (pendingNode?.data?.type === "reply_buttons") {
+      // Processa resposta para reply_buttons / buttons_mixed / buttons_media
+      else if (
+        pendingNode?.data?.type === "reply_buttons" ||
+        pendingNode?.data?.type === "buttons_mixed" ||
+        pendingNode?.data?.type === "buttons_media"
+      ) {
         const cfg = pendingNode.data.config || {};
         const variable = cfg.variable || "button_response";
-        const userResponse = (context.vars.userMessage || "").trim();
-        const idx = parseInt(userResponse) - 1;
+        const userResponse = (context.vars.userMessage || "").trim().toLowerCase();
+        const allButtons: any[] = cfg.buttons || [];
+        // Para buttons_mixed só clica em botões "reply" — os de URL/Copy/Call/Pix não retornam evento
+        const replyButtons = allButtons
+          .map((b: any, i: number) => ({ b, i }))
+          .filter(({ b }) => (b.type || "reply") === "reply");
 
-        if (idx >= 0 && idx < (cfg.buttons?.length || 0)) {
-          context.vars[variable] = cfg.buttons[idx].value;
+        let selectedIndex = -1;
+        const asNum = parseInt(userResponse);
+        if (!isNaN(asNum) && asNum >= 1 && asNum <= replyButtons.length) {
+          selectedIndex = replyButtons[asNum - 1].i;
         } else {
-          const m = (cfg.buttons || []).find((b: any) => b.text?.toLowerCase() === userResponse.toLowerCase());
-          context.vars[variable] = m ? m.value : userResponse;
+          // Match por id, displayText/text/label
+          const found = allButtons.findIndex((b: any) => {
+            if ((b.type || "reply") !== "reply") return false;
+            const candidates = [b.id, b.value, b.displayText, b.text, b.label]
+              .filter(Boolean)
+              .map((s: any) => String(s).toLowerCase().trim());
+            return candidates.includes(userResponse);
+          });
+          selectedIndex = found;
         }
 
-        delete context.pendingNodeId;
-        const selectedIndex = (cfg.buttons || []).findIndex((b: any) => b.value === context.vars[variable]);
-        if (selectedIndex >= 0) {
+        if (selectedIndex < 0) {
+          await respond(
+            replyButtons.length
+              ? `Por favor, responda com um número entre 1 e ${replyButtons.length} ou o texto do botão.`
+              : "Esta mensagem não aceita resposta. Aguarde a próxima instrução.",
+          );
+          shouldReturn = true;
+        } else {
+          const chosen = allButtons[selectedIndex];
+          context.vars[variable] = chosen.value || chosen.id || chosen.displayText || chosen.text || chosen.label;
+          delete context.pendingNodeId;
           const handle = `button_${selectedIndex}`;
-          const edge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id && e.sourceHandle === handle);
+          let edge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id && e.sourceHandle === handle);
+          if (!edge) edge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
           const nextNode = edge && flowData.flow_data.nodes.find((n: any) => n.id === edge.target);
           if (nextNode) await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
         }

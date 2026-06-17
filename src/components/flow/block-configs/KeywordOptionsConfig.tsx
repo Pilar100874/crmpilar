@@ -110,10 +110,22 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
   return (
     <div className="space-y-6">
       <div className="space-y-2">
+        <Label>Título (opcional)</Label>
+        <Input
+          value={config.title || ""}
+          onChange={(e) => handleConfigChange("title", e.target.value)}
+          placeholder="Ex: Atendimento"
+        />
+        <p className="text-xs text-muted-foreground">
+          Aparece em negrito no topo da mensagem (WhatsApp).
+        </p>
+      </div>
+
+      <div className="space-y-2">
         <Label>Texto da pergunta</Label>
         <Textarea
           ref={(el) => (inputRefs.current['question'] = el)}
-          value={config.question || "Escolhas por número e palavra"}
+          value={config.question || ""}
           onChange={(e) => handleConfigChange("question", e.target.value)}
           placeholder="Escolhas por número e palavra"
           rows={2}
@@ -128,6 +140,15 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
         >
           Usar campo
         </Button>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Rodapé (opcional)</Label>
+        <Input
+          value={config.footer || ""}
+          onChange={(e) => handleConfigChange("footer", e.target.value)}
+          placeholder="Ex: Pilar Papéis"
+        />
       </div>
 
       <div className="space-y-3">
