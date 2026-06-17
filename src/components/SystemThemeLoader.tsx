@@ -92,6 +92,22 @@ export function getCurrentVisualPreset(): VisualPreset {
   return VISUAL_PRESETS.includes(v) ? v : DEFAULT_VISUAL_PRESET;
 }
 
+/* ---------- Liquid Glass background image ---------- */
+export function applyLiquidBackground(url: string | null | undefined) {
+  const root = document.documentElement;
+  if (url && url.trim()) {
+    root.style.setProperty("--liquid-bg-image", `url("${url}")`);
+    root.setAttribute("data-liquid-bg", "true");
+  } else {
+    root.style.removeProperty("--liquid-bg-image");
+    root.removeAttribute("data-liquid-bg");
+  }
+}
+
+export function getCurrentLiquidBackground(): string {
+  return localStorage.getItem("system_liquid_bg_url") || "";
+}
+
 
 
 
