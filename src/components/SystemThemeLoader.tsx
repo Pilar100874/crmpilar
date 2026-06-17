@@ -77,6 +77,23 @@ export function applyPrimaryColor(hsl: string) {
   );
 }
 
+/* ====================== VISUAL PRESET (menu/minimal/classic) ====================== */
+export type VisualPreset = "menu" | "minimal" | "classic";
+export const VISUAL_PRESETS: VisualPreset[] = ["menu", "minimal", "classic"];
+export const DEFAULT_VISUAL_PRESET: VisualPreset = "menu";
+
+export function applyVisualPreset(preset: VisualPreset) {
+  if (!VISUAL_PRESETS.includes(preset)) preset = DEFAULT_VISUAL_PRESET;
+  document.documentElement.setAttribute("data-visual-preset", preset);
+}
+
+export function getCurrentVisualPreset(): VisualPreset {
+  const v = (localStorage.getItem("system_visual_preset") as VisualPreset) || DEFAULT_VISUAL_PRESET;
+  return VISUAL_PRESETS.includes(v) ? v : DEFAULT_VISUAL_PRESET;
+}
+
+
+
 
 export default function SystemThemeLoader() {
   useEffect(() => {
