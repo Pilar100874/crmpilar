@@ -66,6 +66,28 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
     handleConfigChange("buttons", newButtons);
   };
 
+  const moveButton = (from: number, to: number) => {
+    if (from === to || to < 0 || to >= buttons.length) return;
+    const newButtons = [...buttons];
+    const [moved] = newButtons.splice(from, 1);
+    newButtons.splice(to, 0, moved);
+    handleConfigChange("buttons", newButtons);
+  };
+
+  const onDragStart = (e: React.DragEvent, index: number) => {
+    e.dataTransfer.setData("text/plain", String(index));
+    e.dataTransfer.effectAllowed = "move";
+  };
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+  const onDrop = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    const from = parseInt(e.dataTransfer.getData("text/plain"), 10);
+    if (!isNaN(from)) moveButton(from, index);
+  };
+
   const addKeyword = (buttonIndex: number) => {
     const newButtons = [...buttons];
     const keywords = newButtons[buttonIndex].keywords || [];
@@ -76,6 +98,12 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
   const updateKeyword = (buttonIndex: number, keywordIndex: number, value: string) => {
     const newButtons = [...buttons];
     newButtons[buttonIndex].keywords[keywordIndex] = value;
+    handleConfigChange("buttons", newButtons);
+  };
+
+  const removeKeyword = (buttonIndex: number, keywordIndex: number) => {
+    const newButtons = [...buttons];
+    newButtons[buttonIndex].keywords = (newButtons[buttonIndex].keywords || []).filter((_: any, i: number) => i !== keywordIndex);
     handleConfigChange("buttons", newButtons);
   };
 
