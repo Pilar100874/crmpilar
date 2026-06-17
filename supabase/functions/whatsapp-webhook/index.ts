@@ -2825,25 +2825,52 @@ async function executeNode(
       break;
     }
     case "buttons_mixed": {
-      const buttons = (cfg.buttons || []).slice(0, 3).map((b: any, i: number) => {
+      const rawButtons = (cfg.buttons || []).slice(0, 3).map((b: any, i: number) => {
         const t = b.type || "reply";
         const out: any = { type: t, displayText: itp(b.displayText || `Opção ${i + 1}`) };
         if (t === "reply") out.id = b.id || `btn_${i}`;
         if (t === "url") out.url = itp(b.url || "");
         if (t === "copy") out.copyCode = itp(b.copyCode || "");
         if (t === "call") out.phoneNumber = itp(b.phoneNumber || "");
+        if (t === "pix") {
+          out.currency = b.currency || "BRL";
+          out.name = itp(b.name || "");
+          out.keyType = b.keyType || "email";
+          out.key = itp(b.key || b.pixKey || "");
+        }
         return out;
       });
-      const interactive = {
-        type: "buttons",
-        title: itp(cfg.title || ""),
-        description: itp(cfg.description || ""),
-        footerText: itp(cfg.footer || ""),
-        buttons,
-      };
-      await onResponse(itp(cfg.description || ""), undefined, undefined, interactive);
+
+      // Evolution NÃO aceita reply + url/copy/call/pix no mesmo sendButtons.
+      // Solução: separa em grupos homogêneos e envia uma mensagem por grupo.
+      const replyGroup = rawButtons.filter((b: any) => b.type === "reply");
+      const actionGroups: any[][] = rawButtons
+        .filter((b: any) => b.type !== "reply")
+        .map((b: any) => [b]); // 1 botão de ação por mensagem (Evolution limita 1 por tipo)
+
+      const titleStr = itp(cfg.title || "");
+      const descStr = itp(cfg.description || "");
+      const footerStr = itp(cfg.footer || "");
+
+      const groups = [
+        ...(replyGroup.length ? [replyGroup] : []),
+        ...actionGroups,
+      ];
+
+      for (let gi = 0; gi < groups.length; gi++) {
+        const isFirst = gi === 0;
+        const interactive = {
+          type: "buttons",
+          title: isFirst ? titleStr : "",
+          description: isFirst ? descStr : "",
+          footerText: gi === groups.length - 1 ? footerStr : "",
+          buttons: groups[gi],
+        };
+        await onResponse(isFirst ? descStr : "", undefined, undefined, interactive);
+      }
+
       // Se houver botões reply, fica pendente aguardando resposta
-      if (buttons.some((b: any) => b.type === "reply")) {
+      if (replyGroup.length) {
         context.pendingNodeId = node.id;
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
         const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
