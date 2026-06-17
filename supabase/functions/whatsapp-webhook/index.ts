@@ -3255,13 +3255,35 @@ async function executeNode(
       /* ============ WHATSAPP ESSENCIAL extras ============ */
       case "keyword_options": {
         const question = itp(cfg.question || "Escolha uma opção:");
-        const buttons: any[] = cfg.buttons || cfg.keywords || [];
-        let txt = question;
-        buttons.forEach((b: any, i: number) => {
-          const label = b.label || b.text || `Opção ${i + 1}`;
-          txt += `\n${i + 1}. ${label}`;
+        const options: any[] = Array.isArray(cfg.buttons)
+          ? cfg.buttons
+          : (Array.isArray(cfg.keywords) ? cfg.keywords : []);
+        const replyButtons = options.slice(0, 3).map((b: any, i: number) => {
+          const label = itp(String(b.label || b.text || b.keyword || `Opção ${i + 1}`)).trim() || `Opção ${i + 1}`;
+          return {
+            type: "reply",
+            id: `button_${i}`,
+            text: `${i + 1}. ${label}`,
+            title: `${i + 1}. ${label}`,
+            displayText: `${i + 1}. ${label}`,
+          };
         });
-        await onResponse(txt);
+        let fallback = question;
+        options.forEach((b: any, i: number) => {
+          const label = itp(String(b.label || b.text || b.keyword || `Opção ${i + 1}`)).trim() || `Opção ${i + 1}`;
+          fallback += `\n${i + 1}. ${label}`;
+        });
+        if (replyButtons.length) {
+          await onResponse(fallback, undefined, undefined, {
+            type: "buttons",
+            title: cfg.title || "",
+            description: question,
+            footerText: cfg.footer || cfg.footerText || "",
+            buttons: replyButtons,
+          });
+        } else {
+          await onResponse(fallback);
+        }
         context.pendingNodeId = node.id;
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
         const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
