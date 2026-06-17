@@ -177,7 +177,7 @@ const MarketingHub: React.FC = () => {
 
           {/* Desktop: Sidebar menu */}
           <div className={cn(
-            "hidden lg:flex lg:flex-col lg:shrink-0 transition-all duration-300 m-2 rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border overflow-hidden",
+            "hub-menu hidden lg:flex lg:flex-col lg:shrink-0 transition-all duration-300",
             isMenuCollapsed ? "lg:w-16" : "lg:w-64"
           )}>
             <div className="p-3 flex flex-col gap-1 overflow-y-auto h-full">
@@ -185,7 +185,7 @@ const MarketingHub: React.FC = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setIsMenuCollapsed(!isMenuCollapsed)} 
-                className="mb-2 self-end h-7 w-7 rounded-md hover:bg-black/5 dark:hover:bg-white/10"
+                className="mb-2 self-end h-7 w-7"
               >
                 {isMenuCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
               </Button>
@@ -198,10 +198,8 @@ const MarketingHub: React.FC = () => {
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-colors duration-100 text-left w-full",
-                        isActive 
-                          ? "bg-foreground text-background shadow-sm" 
-                          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                        "hub-menu-item flex items-center gap-3 px-3 py-2.5 text-left w-full text-muted-foreground",
+                        isActive && "is-active",
                         isMenuCollapsed && "justify-center"
                       )}
                     >
@@ -222,6 +220,7 @@ const MarketingHub: React.FC = () => {
               </TooltipProvider>
             </div>
           </div>
+
 
 
           {/* Content area */}
