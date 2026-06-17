@@ -230,7 +230,7 @@ export default function SystemVisualConfig() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {VISUAL_PRESET_OPTIONS.map((opt) => {
               const isSelected = visualPreset === opt.id;
               return (
