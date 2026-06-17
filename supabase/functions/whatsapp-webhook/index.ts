@@ -1475,10 +1475,14 @@ serve(async (req) => {
         let variable = cfg.variable || "resposta";
 
         if (blockType === "keyword_options") {
-          options = (cfg.buttons || cfg.keywords || []).map((b: any, i: number) => ({
+          const keywordItems = Array.isArray(cfg.buttons)
+            ? cfg.buttons
+            : (Array.isArray(cfg.keywords) ? cfg.keywords : []);
+          options = keywordItems.map((b: any, i: number) => ({
             label: b.label || b.text || `Opção ${i + 1}`,
             value: b.value || b.label || b.text || `opcao_${i + 1}`,
             handle: `button_${i}`,
+            keywords: Array.isArray(b.keywords) ? b.keywords : (b.keyword ? [b.keyword] : []),
           }));
           variable = cfg.variable || "opcao_escolhida";
         } else if (blockType === "content_type") {
@@ -1537,10 +1541,11 @@ serve(async (req) => {
         } else {
           const lower = userResponse.toLowerCase();
           const normalizedResponse = blockType === "content_type" ? normalizeContentTypeResponse(userResponse) : lower;
-          selectedIndex = options.findIndex((o) => {
+          selectedIndex = options.findIndex((o: any) => {
             const label = blockType === "content_type" ? normalizeContentTypeResponse(o.label) : String(o.label || "").toLowerCase();
             const value = blockType === "content_type" ? normalizeContentTypeResponse(o.value) : String(o.value || "").toLowerCase();
-            return label === normalizedResponse || value === normalizedResponse;
+            const keywords = Array.isArray(o.keywords) ? o.keywords.map((k: any) => String(k || "").trim().toLowerCase()).filter(Boolean) : [];
+            return label === normalizedResponse || value === normalizedResponse || keywords.includes(lower);
           });
           // Reconhece rowId/buttonId enviado por listas/botões interativos do WhatsApp (ex: "ct_1", "section_0_item_0", custom rowIds)
           if (selectedIndex < 0) {
@@ -3255,13 +3260,35 @@ async function executeNode(
       /* ============ WHATSAPP ESSENCIAL extras ============ */
       case "keyword_options": {
         const question = itp(cfg.question || "Escolha uma opção:");
-        const buttons: any[] = cfg.buttons || cfg.keywords || [];
-        let txt = question;
-        buttons.forEach((b: any, i: number) => {
-          const label = b.label || b.text || `Opção ${i + 1}`;
-          txt += `\n${i + 1}. ${label}`;
+        const options: any[] = Array.isArray(cfg.buttons)
+          ? cfg.buttons
+          : (Array.isArray(cfg.keywords) ? cfg.keywords : []);
+        const replyButtons = options.slice(0, 3).map((b: any, i: number) => {
+          const label = itp(String(b.label || b.text || b.keyword || `Opção ${i + 1}`)).trim() || `Opção ${i + 1}`;
+          return {
+            type: "reply",
+            id: `button_${i}`,
+            text: `${i + 1}. ${label}`,
+            title: `${i + 1}. ${label}`,
+            displayText: `${i + 1}. ${label}`,
+          };
         });
-        await onResponse(txt);
+        let fallback = question;
+        options.forEach((b: any, i: number) => {
+          const label = itp(String(b.label || b.text || b.keyword || `Opção ${i + 1}`)).trim() || `Opção ${i + 1}`;
+          fallback += `\n${i + 1}. ${label}`;
+        });
+        if (replyButtons.length) {
+          await onResponse(fallback, undefined, undefined, {
+            type: "buttons",
+            title: cfg.title || "",
+            description: question,
+            footerText: cfg.footer || cfg.footerText || "",
+            buttons: replyButtons,
+          });
+        } else {
+          await onResponse(fallback);
+        }
         context.pendingNodeId = node.id;
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
         const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
