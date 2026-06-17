@@ -339,7 +339,7 @@ const AdsHub: React.FC = () => {
 
           {/* Desktop: Sidebar menu */}
           <div className={cn(
-            "hidden lg:flex lg:flex-col lg:border-r lg:bg-muted/20 lg:p-3 lg:gap-1 lg:overflow-y-auto lg:shrink-0 transition-all duration-300",
+            "hub-menu hidden lg:flex lg:flex-col lg:p-3 lg:gap-1 lg:overflow-y-auto lg:shrink-0 transition-all duration-300",
             isMenuCollapsed ? "lg:w-16" : "lg:w-72"
           )}>
             <Button 
@@ -358,10 +358,8 @@ const AdsHub: React.FC = () => {
                   <button
                     onClick={() => setActiveTab('dashboard')}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-left w-full",
-                      isActive 
-                        ? "bg-primary text-primary-foreground shadow-sm" 
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                      "hub-menu-item flex items-center gap-3 px-3 py-2.5 text-left w-full text-muted-foreground",
+                      isActive && "is-active",
                       isMenuCollapsed && "justify-center"
                     )}
                   >
@@ -392,10 +390,8 @@ const AdsHub: React.FC = () => {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-left w-full",
-                      isActive 
-                        ? "bg-primary text-primary-foreground shadow-sm" 
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                      "hub-menu-item flex items-center gap-3 px-3 py-2.5 text-left w-full text-muted-foreground",
+                      isActive && "is-active",
                       isMenuCollapsed && "justify-center"
                     )}
                   >
@@ -417,6 +413,7 @@ const AdsHub: React.FC = () => {
               })}
             </TooltipProvider>
           </div>
+
 
           {/* Content area */}
           <div className="flex-1 overflow-auto p-3 sm:p-6">
