@@ -29,7 +29,7 @@ interface Message {
   nodeId?: string;
   mediaUrl?: string;
   mediaType?: "image" | "video" | "audio" | "file";
-  buttons?: Array<{ text: string; value: string; buttonId?: string; action?: { type: "url" | "copy" | "call" | "pix"; payload: string } }>;
+  buttons?: Array<{ text: string; value: string; buttonId?: string; keywords?: string[]; action?: { type: "url" | "copy" | "call" | "pix"; payload: string } }>;
   isListButton?: boolean;
   listButtonText?: string;
   listSections?: Array<{ title: string; items: Array<{ label: string; value: string; description?: string }> }>;
@@ -2187,11 +2187,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         const koQuestion = interpolateVariables(config.question || "Escolha uma opção:", context);
         const koButtons = config.buttons || [];
         const showValidation = config.showValidationError !== false;
-        
-        // Mostrar pergunta
-        addBotMessage(koQuestion, node.id);
-        
-        // Criar botões numerados clicáveis
+
+        if (!koButtons.length) {
+          addBotMessage(koQuestion, node.id);
+          addSystemMessage("⚠️ Nenhuma opção configurada neste bloco.");
+          break;
+        }
+
+        // Mostrar pergunta com botões clicáveis na mesma mensagem
         safeSetTimeout(() => {
           const numberedButtons = koButtons.map((btn: any, idx: number) => ({
             text: `${idx + 1}. ${btn.label || `Opção ${idx + 1}`}`,
@@ -2202,13 +2205,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           
           setMessages((prev) => [...prev, {
             id: uid(),
-            sender: "system",
-            text: "",
+            sender: "bot",
+            text: koQuestion,
             timestamp: new Date(),
             buttons: numberedButtons,
             nodeId: node.id,
           }]);
-        }, 500);
+        }, 0);
         
         setIsWaitingInput(true);
         setCurrentBlockType("keyword_options");
