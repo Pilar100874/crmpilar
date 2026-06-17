@@ -769,9 +769,16 @@ All colors MUST be HSL.
 /* Make app surfaces transparent so the image shows through the glass */
 [data-visual-preset="liquid"][data-liquid-bg="true"],
 [data-visual-preset="liquid"][data-liquid-bg="true"] body,
-[data-visual-preset="liquid"][data-liquid-bg="true"] #root {
-  background: transparent !important;
+[data-visual-preset="liquid"][data-liquid-bg="true"] #root,
+[data-visual-preset="liquid"][data-liquid-bg="true"] #root > div,
+[data-visual-preset="liquid"][data-liquid-bg="true"] .bg-background,
+[data-visual-preset="liquid"][data-liquid-bg="true"] main,
+[data-visual-preset="liquid"][data-liquid-bg="true"] aside,
+[data-visual-preset="liquid"][data-liquid-bg="true"] header {
+  background-color: transparent !important;
+  background-image: none !important;
 }
+
 .dark[data-visual-preset="liquid"][data-liquid-bg="true"]::before {
   filter: brightness(0.65);
 }
