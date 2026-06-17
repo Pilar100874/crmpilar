@@ -217,6 +217,58 @@ export default function SystemVisualConfig() {
         </div>
       </div>
 
+      {/* Estilo Visual: Menus e Cards */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <LayoutGrid className="h-4 w-4" />
+            Estilo dos Menus e Cards
+          </CardTitle>
+          <CardDescription>
+            Escolha o estilo visual aplicado em todos os menus laterais (Marketing, Vendas, Logística, Atendimento, etc.) e cards do sistema.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {VISUAL_PRESET_OPTIONS.map((opt) => {
+              const isSelected = visualPreset === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => handleSelectPreset(opt.id)}
+                  className={cn(
+                    "relative text-left rounded-xl border-2 p-4 transition-all hover:shadow-md",
+                    isSelected ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"
+                  )}
+                >
+                  {isSelected && (
+                    <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                      <Check className="h-3.5 w-3.5" />
+                    </div>
+                  )}
+                  {/* Mini preview */}
+                  <div className="mb-3 h-24 rounded-lg overflow-hidden flex" data-visual-preset={opt.id}>
+                    <div className="hub-menu w-12 flex flex-col gap-1 p-1.5">
+                      <div className="hub-menu-item is-active h-3" />
+                      <div className="hub-menu-item h-3 bg-muted/40" />
+                      <div className="hub-menu-item h-3 bg-muted/40" />
+                    </div>
+                    <div className="flex-1 p-2 grid grid-cols-2 gap-1.5">
+                      <div className="preset-card" />
+                      <div className="preset-card" />
+                    </div>
+                  </div>
+                  <div className="font-semibold text-sm mb-1">{opt.title}</div>
+                  <div className="text-xs text-muted-foreground leading-snug">{opt.description}</div>
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+
       {/* Splash Screen Video */}
       <Card>
         <CardHeader>
