@@ -464,7 +464,7 @@ export default function AtendimentoConfig() {
           </div>
 
           {/* Desktop: Sidebar menu */}
-          <div className={`hidden lg:flex lg:flex-col lg:border-r lg:bg-muted/20 lg:p-3 lg:gap-1 lg:overflow-y-auto lg:shrink-0 transition-all duration-300 ${isMenuCollapsed ? 'lg:w-16' : 'lg:w-64'}`}>
+          <div className={`hub-menu hidden lg:flex lg:flex-col lg:p-3 lg:gap-1 lg:overflow-y-auto lg:shrink-0 transition-all duration-300 ${isMenuCollapsed ? 'lg:w-16' : 'lg:w-64'}`}>
             <Button variant="ghost" size="sm" onClick={() => setIsMenuCollapsed(!isMenuCollapsed)} className="mb-2 self-end">
               {isMenuCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
             </Button>
@@ -476,7 +476,7 @@ export default function AtendimentoConfig() {
                   <button
                     key={tab.id}
                     onClick={() => handleTabChange(tab.id)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-left w-full ${isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'} ${isMenuCollapsed ? 'justify-center' : ''}`}
+                    className={`hub-menu-item flex items-center gap-3 px-3 py-2.5 text-left w-full text-muted-foreground ${isActive ? 'is-active' : ''} ${isMenuCollapsed ? 'justify-center' : ''}`}
                   >
                     <Icon className={`h-4 w-4 shrink-0 ${isActive ? '' : 'opacity-70'}`} />
                     {!isMenuCollapsed && <span className="truncate">{tab.label}</span>}
