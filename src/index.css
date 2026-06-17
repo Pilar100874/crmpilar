@@ -780,8 +780,48 @@ All colors MUST be HSL.
 }
 
 .dark[data-visual-preset="liquid"][data-liquid-bg="true"]::before {
-  filter: brightness(0.65);
+  filter: brightness(0.55);
 }
+/* Subtle dark scrim over the image for text legibility */
+[data-visual-preset="liquid"][data-liquid-bg="true"]::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, hsl(0 0% 0% / 0.18) 0%, hsl(0 0% 0% / 0.28) 100%);
+  z-index: -1;
+  pointer-events: none;
+}
+.dark[data-visual-preset="liquid"][data-liquid-bg="true"]::after {
+  background: linear-gradient(180deg, hsl(0 0% 0% / 0.35) 0%, hsl(0 0% 0% / 0.55) 100%);
+}
+
+/* Legibility: text-shadow on all text inside liquid-glass surfaces */
+[data-visual-preset="liquid"][data-liquid-bg="true"] .hub-menu,
+[data-visual-preset="liquid"][data-liquid-bg="true"] .hub-menu-item,
+[data-visual-preset="liquid"][data-liquid-bg="true"] .preset-card,
+[data-visual-preset="liquid"][data-liquid-bg="true"] main,
+[data-visual-preset="liquid"][data-liquid-bg="true"] header,
+[data-visual-preset="liquid"][data-liquid-bg="true"] aside {
+  text-shadow: 0 1px 2px hsl(0 0% 0% / 0.35);
+}
+/* Boost contrast for menu items and headings */
+[data-visual-preset="liquid"][data-liquid-bg="true"] .hub-menu-item,
+[data-visual-preset="liquid"][data-liquid-bg="true"] h1,
+[data-visual-preset="liquid"][data-liquid-bg="true"] h2,
+[data-visual-preset="liquid"][data-liquid-bg="true"] h3 {
+  color: hsl(0 0% 100%) !important;
+  text-shadow: 0 1px 3px hsl(0 0% 0% / 0.55), 0 0 1px hsl(0 0% 0% / 0.4);
+}
+/* Stronger card backgrounds when image is behind for readability */
+[data-visual-preset="liquid"][data-liquid-bg="true"] .preset-card {
+  background: linear-gradient(160deg, hsl(0 0% 100% / 0.22) 0%, hsl(0 0% 100% / 0.10) 100%) !important;
+  border-color: hsl(0 0% 100% / 0.35) !important;
+}
+[data-visual-preset="liquid"][data-liquid-bg="true"] .hub-menu {
+  background: linear-gradient(160deg, hsl(0 0% 0% / 0.30) 0%, hsl(0 0% 0% / 0.15) 100%) !important;
+  border-color: hsl(0 0% 100% / 0.25) !important;
+}
+
 
 
 
