@@ -68,7 +68,7 @@ export const WorkflowCard = ({
   customContent,
   showDefaultOption = false,
   deleteDisabled = false,
-  variant = 'default',
+  variant = 'menu',
 }: WorkflowCardProps) => {
   const hasImage = mediaTypes?.includes('image');
   const hasVideo = mediaTypes?.includes('video');
