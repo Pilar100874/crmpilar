@@ -180,6 +180,20 @@ export default function SystemVisualConfig() {
     "#10b981", "#22c55e", "#84cc16", "#eab308",
   ];
 
+  const VISUAL_PRESET_OPTIONS: { id: VisualPreset; title: string; description: string }[] = [
+    { id: "menu", title: "Menu (Bot Style)", description: "Cards com gradiente sutil, bordas brancas e cantos arredondados. Menu lateral flutuante." },
+    { id: "minimal", title: "Minimalista", description: "Visual limpo e plano, sem sombras nem gradientes. Foco em conteúdo." },
+    { id: "classic", title: "Clássico", description: "Cards com borda definida e leve sombra. Menu lateral tradicional com destaque na cor primária." },
+  ];
+
+  const handleSelectPreset = async (preset: VisualPreset) => {
+    setVisualPreset(preset);
+    applyVisualPreset(preset);
+    localStorage.setItem("system_visual_preset", preset);
+    toast.success(`Estilo "${VISUAL_PRESET_OPTIONS.find(p => p.id === preset)?.title}" aplicado!`);
+  };
+
+
   if (loading) {
     return (
       <div className="p-6 flex justify-center">
