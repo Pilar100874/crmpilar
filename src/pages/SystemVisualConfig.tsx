@@ -22,9 +22,11 @@ export default function SystemVisualConfig() {
   const [isPlaying, setIsPlaying] = useState(true);
   const [primaryHex, setPrimaryHex] = useState("#f97316");
   const [savingColor, setSavingColor] = useState(false);
+  const [visualPreset, setVisualPreset] = useState<VisualPreset>(getCurrentVisualPreset());
   const DEFAULT_HSL = "25 95% 53%";
   const videoInputRef = useRef<HTMLInputElement>(null);
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
+
 
   useEffect(() => {
     loadConfig();
