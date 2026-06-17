@@ -754,6 +754,28 @@ All colors MUST be HSL.
     hsl(var(--background));
 }
 
+/* Liquid Glass background image — applied behind everything, fixed to viewport */
+[data-visual-preset="liquid"][data-liquid-bg="true"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: var(--liquid-bg-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  z-index: -1;
+  pointer-events: none;
+}
+/* Soften the app background so the image shows through the glass */
+[data-visual-preset="liquid"][data-liquid-bg="true"] body {
+  background: transparent !important;
+}
+.dark[data-visual-preset="liquid"][data-liquid-bg="true"] body::before {
+  filter: brightness(0.7);
+}
+
+
 [data-visual-preset="liquid"] .preset-card {
   border-radius: 1.5rem;
   /* Ultra-transparent — almost see-through */
