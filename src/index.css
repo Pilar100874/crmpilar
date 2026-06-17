@@ -755,7 +755,7 @@ All colors MUST be HSL.
 }
 
 /* Liquid Glass background image — applied behind everything, fixed to viewport */
-[data-visual-preset="liquid"][data-liquid-bg="true"] body::before {
+[data-visual-preset="liquid"][data-liquid-bg="true"]::before {
   content: "";
   position: fixed;
   inset: 0;
@@ -763,17 +763,19 @@ All colors MUST be HSL.
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: fixed;
   z-index: -1;
   pointer-events: none;
 }
-/* Soften the app background so the image shows through the glass */
-[data-visual-preset="liquid"][data-liquid-bg="true"] body {
+/* Make app surfaces transparent so the image shows through the glass */
+[data-visual-preset="liquid"][data-liquid-bg="true"],
+[data-visual-preset="liquid"][data-liquid-bg="true"] body,
+[data-visual-preset="liquid"][data-liquid-bg="true"] #root {
   background: transparent !important;
 }
-.dark[data-visual-preset="liquid"][data-liquid-bg="true"] body::before {
-  filter: brightness(0.7);
+.dark[data-visual-preset="liquid"][data-liquid-bg="true"]::before {
+  filter: brightness(0.65);
 }
+
 
 
 [data-visual-preset="liquid"] .preset-card {
