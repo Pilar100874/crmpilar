@@ -38,6 +38,7 @@ export interface WorkflowCardProps {
   customContent?: ReactNode;
   showDefaultOption?: boolean;
   deleteDisabled?: boolean;
+  variant?: 'default' | 'menu';
 }
 
 export const WorkflowCard = ({
@@ -67,26 +68,34 @@ export const WorkflowCard = ({
   customContent,
   showDefaultOption = false,
   deleteDisabled = false,
+  variant = 'default',
 }: WorkflowCardProps) => {
   const hasImage = mediaTypes?.includes('image');
   const hasVideo = mediaTypes?.includes('video');
+
+  const isMenu = variant === 'menu';
 
   return (
     <div
       draggable={draggable}
       onDragStart={onDragStart}
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl",
-        "bg-card [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_2px_4px_rgba(0,0,0,.05),0_12px_24px_rgba(0,0,0,.05)]",
-        "transform-gpu dark:[border:1px_solid_rgba(255,255,255,.1)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff1f_inset]",
-        "transition-all duration-300 hover:shadow-lg hover:scale-[1.02]",
+        "group relative flex flex-col overflow-hidden",
+        isMenu
+          ? "rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
+          : cn(
+              "rounded-xl",
+              "bg-card [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_2px_4px_rgba(0,0,0,.05),0_12px_24px_rgba(0,0,0,.05)]",
+              "transform-gpu dark:[border:1px_solid_rgba(255,255,255,.1)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff1f_inset]",
+              "transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+            ),
         draggable && "cursor-grab active:cursor-grabbing",
         isDefault && "ring-2 ring-primary",
         className
       )}
     >
       {/* Hover overlay */}
-      <div className="pointer-events-none absolute inset-0 transform-gpu transition-all duration-300 group-hover:bg-black/[.02] group-hover:dark:bg-neutral-800/10" />
+      <div className={cn("pointer-events-none absolute inset-0 transform-gpu transition-all duration-300", !isMenu && "group-hover:bg-black/[.02] group-hover:dark:bg-neutral-800/10")} />
 
       {/* Header */}
       <div className="relative z-10 p-4 pb-3">
