@@ -4038,8 +4038,11 @@ async function executeNode(
             console.error(`[FLOW] generate_ai_media: nenhuma imagem retornada`, data?.errors);
             await onResponse("⚠️ Não foi possível gerar a mídia.");
           } else {
+            const mediaCap = buildMediaCaption(cfg);
+            let first = true;
             for (const url of urls.slice(0, 4)) {
-              await onResponse("", url, "image");
+              await onResponse(first ? mediaCap : "", url, "image");
+              first = false;
               // pequeno respiro entre mídias para não saturar o Evolution/WhatsApp
               await new Promise((r) => setTimeout(r, 600));
             }
