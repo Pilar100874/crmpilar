@@ -535,9 +535,9 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                     <Select value={iaModel} onValueChange={setIaModel}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="google/gemini-2.5-flash-image">Gemini 2.5 Flash Image (Nano Banana) — rápido</SelectItem>
-                        <SelectItem value="google/gemini-3.1-flash-image-preview">Gemini 3.1 Flash Image (Nano Banana 2) — rápido + alta qualidade</SelectItem>
-                        <SelectItem value="google/gemini-3-pro-image-preview">Gemini 3 Pro Image — máxima qualidade</SelectItem>
+                        {IMAGE_MODELS.map((m) => (
+                          <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground mt-1">Modelos Pro consomem mais créditos.</p>
