@@ -1058,6 +1058,9 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
+            <Button variant="outline" onClick={() => { setShowCostDialog(false); setShowPromptPreviewDialog(true); }}>
+              <Eye className="h-4 w-4 mr-1" /> Ver prompts
+            </Button>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={startIaGeneration}>Confirmar e gerar</AlertDialogAction>
           </AlertDialogFooter>
