@@ -1301,7 +1301,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
           <div className="overflow-y-auto flex-1 min-h-0 px-3 sm:px-6 py-3 sm:py-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5 h-auto bg-muted/50 p-0.5 sm:p-1 rounded-lg gap-0.5 sm:gap-1">
+              <TabsList className="grid w-full grid-cols-6 h-auto bg-muted/50 p-0.5 sm:p-1 rounded-lg gap-0.5 sm:gap-1">
                 <TabsTrigger 
                   value="basico" 
                   className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
