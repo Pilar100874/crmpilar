@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Megaphone, Info, MessageCircleQuestion, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EmojiInput } from "./EmojiFields";
+
 import divulgacaoRef from "@/assets/content-type/divulgacao.jpg";
 import promocaoRef from "@/assets/content-type/promocao.jpg";
 import institucionalRef from "@/assets/content-type/institucional.jpg";
