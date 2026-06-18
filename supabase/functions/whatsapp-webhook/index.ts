@@ -3825,17 +3825,41 @@ async function executeNode(
         return;
       }
       case "message_template": {
-        const name = cfg.templateName || "";
+        const name = cfg.templateName || cfg.template || "";
         const lang = cfg.language || "pt_BR";
-        const bodyTxt = itp(cfg.body || cfg.text || "");
-        if (bodyTxt) {
-          await onResponse(bodyTxt);
-        } else {
-          await onResponse(`📧 [Template: ${name} / ${lang}]`);
+        const fallbackTxt = itp(cfg.fallbackText || cfg.body || cfg.text || "");
+        const bodyVars: string[] = Array.isArray(cfg.bodyVariables)
+          ? cfg.bodyVariables.map((v: any) => itp(String(v ?? "")))
+          : [];
+        const headerParam = cfg.headerParam
+          ? { type: cfg.headerParam.type || "text", value: itp(String(cfg.headerParam.value ?? "")) }
+          : undefined;
+
+        let sent = false;
+        if (name && activeProvider === "cloud_api" && cloudPhoneNumberId && cloudAccessToken) {
+          sent = await sendCloudTemplate(
+            cloudPhoneNumberId,
+            cloudAccessToken,
+            context.vars.from || "",
+            name,
+            lang,
+            bodyVars,
+            headerParam,
+          );
+        }
+        if (!sent) {
+          if (fallbackTxt) {
+            await onResponse(fallbackTxt);
+          } else if (!name) {
+            await onResponse(`📧 [Template não configurado]`);
+          } else {
+            await onResponse(`📧 [Template: ${name} / ${lang} — não enviado, configure Cloud API ou fallback]`);
+          }
         }
         for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
         break;
       }
+
       case "opt_in_out": {
         const action = cfg.action || "opt-in";
         const category = cfg.category || "marketing";
