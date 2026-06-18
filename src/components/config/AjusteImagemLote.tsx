@@ -363,7 +363,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
             <CardDescription>Refine por nome, categoria e grupo, e marque os produtos que deseja ajustar</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               <div>
                 <Label>Nome do produto</Label>
                 <Input value={filterNome} onChange={(e) => setFilterNome(e.target.value)} placeholder="Buscar por nome..." />
@@ -385,6 +385,17 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                   <SelectContent>
                     <SelectItem value="all">Todos</SelectItem>
                     {grupos.map((g) => <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Foto</Label>
+                <Select value={filterFoto} onValueChange={(v) => setFilterFoto(v as any)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="com">Com foto</SelectItem>
+                    <SelectItem value="sem">Sem foto</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
