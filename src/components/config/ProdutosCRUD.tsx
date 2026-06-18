@@ -836,7 +836,12 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
             await supabase.storage.from('produtos').remove(paths);
           }
         }
-        // 2. Atualiza/insere registros
+        // 2. Limpa is_principal para evitar conflito de índice único, depois atualiza/insere
+        await supabase
+          .from('produto_imagens')
+          .update({ is_principal: false })
+          .eq('produto_id', produtoId);
+
         for (const img of uploadedImages) {
           if (img.id) {
             await supabase.from('produto_imagens').update({
@@ -854,6 +859,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
             });
           }
         }
+
       }
 
       setShowDialog(false);
