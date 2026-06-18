@@ -808,13 +808,15 @@ export const AskCEPConfig = ({ config, handleConfigChange, nodes, edges, selecte
       </ConfigSection>
 
       <ConfigSection title="Validação">
-        <ConfigTextarea
+        <DefaultableTextField
           label="Mensagem de Erro"
-          value={config.errorMessage || ""}
-          onChange={(v) => handleConfigChange("errorMessage", v)}
-          placeholder="Por favor, insira um CEP válido"
+          defaultValue="Por favor, informe um CEP válido no formato XXXXX-XXX."
+          value={config.errorMessage}
+          onChange={(v) => handleConfigChange("errorMessage", v ?? "")}
+          multiline
           rows={2}
         />
+
       </ConfigSection>
 
       <ConfigSection title="Campos de Dados">
