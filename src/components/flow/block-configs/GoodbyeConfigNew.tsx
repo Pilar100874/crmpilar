@@ -1,8 +1,14 @@
 import { ConfigSection, ConfigSwitch } from "./ConfigField";
 import { FormattingToolbar } from "./FormattingToolbar";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { EmojiPickerButton } from "./EmojiPickerButton";
+import { Info } from "lucide-react";
 import { useRef } from "react";
+
+const GOODBYE_DEFAULT = "Até logo!";
+
 
 
 interface ConfigProps {
