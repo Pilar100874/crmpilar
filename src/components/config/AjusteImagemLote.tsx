@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,14 +8,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
   ArrowLeft, ArrowRight, Upload, Image as ImageIcon, Wand2, Loader2,
-  Check, RefreshCw, X, Trash2, Filter, Sparkles,
+  Check, RefreshCw, X, Trash2, Filter, Sparkles, Pause, Play, Eye, Save,
 } from "lucide-react";
 import { normalizeImageToSquare, dataUrlToFile } from "@/lib/imageNormalize";
 
