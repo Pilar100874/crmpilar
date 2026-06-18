@@ -296,6 +296,24 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     defaultData: { keywords: [] },
   },
   {
+    type: "global_redirect",
+    label: "Redirecionamento Global",
+    description: "Em qualquer momento, se o cliente digitar a palavra-chave, redireciona para workflow, atendente, número de WhatsApp ou outro bot",
+    icon: "Shuffle",
+    color: "text-primary",
+    defaultData: {
+      triggerText: "",
+      caseSensitive: false,
+      matchMode: "exact", // exact | contains | startsWith
+      destinationType: "omnichannel", // omnichannel | atendente | whatsapp_number | bot
+      omnichannelFlowId: "",
+      atendenteId: "",
+      whatsappNumber: "",
+      botFlowId: "",
+      handoffMessage: "Encaminhando seu atendimento, aguarde um instante...",
+    },
+  },
+  {
     type: "global_keywords",
     label: "Palavras-chave globais",
     description: "Palavras-chave globais",
