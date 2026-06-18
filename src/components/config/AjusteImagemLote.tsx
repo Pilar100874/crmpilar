@@ -82,7 +82,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
     (async () => {
       try {
         setLoading(true);
-        const [pRes, cRes, gRes] = await Promise.all([
+        const [pRes, cRes, gRes, viRes] = await Promise.all([
           supabase
             .from("produtos")
             .select("id, nome, codigo, foto_url, categoria_id, grupo_id, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
@@ -90,10 +90,17 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
             .order("nome"),
           supabase.from("produto_categorias").select("id, nome").eq("estabelecimento_id", estabelecimentoId).order("nome"),
           supabase.from("produto_grupos").select("id, nome").eq("estabelecimento_id", estabelecimentoId).order("nome"),
+          supabase.from("studio_visual_identity").select("prompt, is_active, use_prompt").eq("estabelecimento_id", estabelecimentoId).maybeSingle(),
         ]);
         setProdutos((pRes.data as any) || []);
         setCategorias(cRes.data || []);
         setGrupos(gRes.data || []);
+        const vi: any = viRes.data;
+        if (vi?.prompt) {
+          setHasVisualIdentity(true);
+          setVisualIdentityPrompt(vi.prompt);
+          setUseVisualIdentity(!!vi.is_active && !!vi.use_prompt);
+        }
       } catch (e: any) {
         toast.error("Erro ao carregar produtos");
       } finally {
