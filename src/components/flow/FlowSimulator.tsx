@@ -4025,6 +4025,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       return;
     }
 
+    // === Reiniciar conversa (botão Recomeçar do bloco Despedida) ===
+    if (button.value === "__restart__") {
+      addUserMessage(button.text || "Recomeçar");
+      setTimeout(() => handleReset(), 300);
+      return;
+    }
+
     // === Saída universal: encerra o atendimento ===
     if (button.value === "__exit__") {
       addUserMessage(button.text || "Sair");
