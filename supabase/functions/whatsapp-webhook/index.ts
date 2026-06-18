@@ -1380,7 +1380,10 @@ serve(async (req) => {
         const generateTextSamples = async (theme: string) => {
           const count = Math.max(1, Math.min(6, Number(cfg.sampleCount) || 3));
           context.vars.__tc_theme = theme;
-          await respond(`✍️ Gerando ${count} opç${count > 1 ? "ões" : "ão"} de texto, aguarde...`);
+          if (cfg.waitingMessageEnabled !== false) {
+            const customWait = typeof cfg.waitingMessage === "string" ? cfg.waitingMessage.trim() : "";
+            await respond(customWait || `✍️ Gerando ${count} opç${count > 1 ? "ões" : "ão"} de texto, aguarde...`);
+          }
           try {
             const sbCli = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
             const { data, error } = await sbCli.functions.invoke("bot-generate-text-samples", {
