@@ -396,6 +396,10 @@ serve(async (req) => {
       flowData = data;
     }
 
+    if (!estabelecimentoId && flowData?.estabelecimento_id) {
+      estabelecimentoId = flowData.estabelecimento_id;
+    }
+
     // ====== Resolve número vinculado ao bot (multi-provider) ======
     // Prioridade: bot_flows.whatsapp_numero_id -> whatsapp_numeros
     // Fallback Meta: busca número por cloud_phone_number_id == phoneNumberId
