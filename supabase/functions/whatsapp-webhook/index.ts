@@ -826,8 +826,11 @@ serve(async (req) => {
     // bloco "global_redirect", interrompe o fluxo e encaminha ao destino.
     try {
       const incomingText = String(body || "").trim();
+      const activeIds: string[] = Array.isArray(context.vars?.__active_global_redirects)
+        ? context.vars.__active_global_redirects
+        : [];
       const globalRedirects = (flowData.flow_data.nodes || []).filter(
-        (n: any) => n?.data?.type === "global_redirect"
+        (n: any) => n?.data?.type === "global_redirect" && activeIds.includes(n.id)
       );
       let matchedRedirect: any = null;
       for (const node of globalRedirects) {
