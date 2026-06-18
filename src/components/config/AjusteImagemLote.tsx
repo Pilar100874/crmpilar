@@ -100,6 +100,8 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
   const [paused, setPaused] = useState(false);
   const pausedRef = useRef(false);
   const cancelGenRef = useRef(false);
+  const [genStartedAt, setGenStartedAt] = useState<number | null>(null);
+  const [nowTick, setNowTick] = useState(Date.now());
 
   // templates de textos extras (localStorage)
   const [templates, setTemplates] = useState<{ id: string; nome: string; texto: string }[]>([]);
