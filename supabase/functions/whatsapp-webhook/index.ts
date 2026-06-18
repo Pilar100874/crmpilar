@@ -2854,7 +2854,7 @@ async function executeNode(
     }
     case "goodbye": {
       let text = itp(cfg.message || cfg.text || "Até logo!");
-      const actionButtons: any[] = [];
+      const socialButtons: any[] = [];
 
       if (cfg.showSocialButtons) {
         try {
@@ -2875,7 +2875,7 @@ async function executeNode(
               ];
               for (const item of socials) {
                 const url = item.enabled ? normalizeUrl(item.url, item.kind as any) : "";
-                if (url) actionButtons.push({ type: "url", displayText: item.label, url });
+                if (url) socialButtons.push({ type: "url", displayText: item.label, url });
               }
             }
           }
@@ -2886,19 +2886,25 @@ async function executeNode(
 
       const showRestart = cfg.showStartAgainButton !== false;
       if (showRestart) {
-        actionButtons.unshift({ type: "reply", displayText: "🔄 Recomeçar", id: "recomeçar" });
-      }
-
-      if (actionButtons.length) {
         await onResponse(text, undefined, undefined, {
           type: "buttons",
           title: "",
           description: text,
-          buttons: actionButtons,
+          buttons: [{ type: "reply", displayText: "🔄 Recomeçar", id: "recomeçar" }],
         });
-        if (showRestart) context.pendingNodeId = node.id;
+        context.pendingNodeId = node.id;
       } else {
         await onResponse(text);
+      }
+
+      for (let i = 0; i < socialButtons.length; i++) {
+        const button = socialButtons[i];
+        await onResponse("", undefined, undefined, {
+          type: "buttons",
+          title: "",
+          description: i === 0 ? "Nos acompanhe em nossas redes sociais:" : `Abrir ${button.displayText}`,
+          buttons: [button],
+        });
       }
       // limpa pendência — encerra fluxo
       if (!showRestart) context.pendingNodeId = null;
