@@ -1511,51 +1511,22 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                     </div>
                   )}
 
-                  {/* Foto e Status */}
-                  <div className="space-y-3 sm:space-y-4">
-                    <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Foto e Status</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div className="space-y-1.5 sm:space-y-2">
-                        <Label className="text-xs sm:text-sm font-medium">Foto do Produto</Label>
-                        <div className="flex items-center gap-2 sm:gap-3">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => document.getElementById('file-upload')?.click()}
-                            disabled={uploading}
-                            className="text-xs sm:text-sm"
-                          >
-                            <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                            {selectedFile ? 'Trocar' : 'Selecionar'}
-                          </Button>
-                          {(formData.foto_url || selectedFile) && (
-                            <img 
-                              src={formData.foto_url} 
-                              alt="Preview" 
-                              className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded border"
-                            />
-                          )}
-                        </div>
-                        <input
-                          id="file-upload"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileSelect}
-                          className="hidden"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2 sm:gap-3 sm:mt-7">
-                        <Switch
-                          checked={formData.ativo}
-                          onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
-                        />
-                        <Label className="text-xs sm:text-sm">Produto ativo</Label>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </TabsContent>
+
+              <TabsContent value="foto" className="mt-4 sm:mt-6">
+                <ProductPhotoTab
+                  productName={formData.nome}
+                  currentPhotoUrl={formData.foto_url}
+                  selectedFile={selectedFile}
+                  onFileSelect={handleFileSelect}
+                  onPhotoChange={(url) => {
+                    setSelectedFile(null);
+                    setFormData((prev) => ({ ...prev, foto_url: url }));
+                  }}
+                />
+              </TabsContent>
+
 
             <TabsContent value="preco" className="mt-4">
               <div className="space-y-4">
