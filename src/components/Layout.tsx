@@ -60,7 +60,7 @@ import { IncomingCallNotification } from "@/components/softphone/IncomingCallNot
 import { ChatAvisosFloatingButton } from "@/components/chat-interno/ChatAvisosFloatingButton";
 import { SupportTicketFloatingButton } from "@/components/support/SupportTicketFloatingButton";
 import { ChatInternoProvider } from "@/contexts/ChatInternoContext";
-import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { getEstabelecimentoId, isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
 import { MENUS_DISPONIVEIS } from "@/lib/menus";
 import { LayoutContext } from "@/contexts/LayoutContext";
 import { useAtalhos } from "@/hooks/useAtalhos";
