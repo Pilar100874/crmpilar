@@ -175,13 +175,14 @@ export const ButtonCallConfig = (props: ConfigProps) => {
       <TextBaseFields {...props} />
       <div className="space-y-2">
         <Label>Texto do botão</Label>
-        <Input
+        <EmojiInput
           value={config.displayText || ""}
-          onChange={(e) => handleConfigChange("displayText", e.target.value)}
+          onChange={(v) => handleConfigChange("displayText", v)}
           placeholder="Ligar Agora"
           maxLength={20}
         />
       </div>
+
       <div className="space-y-2">
         <Label>Número de telefone *</Label>
         <Input
