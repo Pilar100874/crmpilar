@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Info, Plus, GripVertical, Trash2 } from "lucide-react";
 import { Bold, Italic, Smile, Code, Heading, List, ListOrdered, Link, Quote } from "lucide-react";
+import { EmojiInput, EmojiTextarea } from "./EmojiFields";
+
 
 interface ConfigProps {
   config: any;
