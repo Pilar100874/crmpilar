@@ -12,6 +12,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Workflow } from "lucide-react";
+import { WaitingMessageField } from "./WaitingMessageField";
 
 interface TriggerWorkflowConfigProps {
   data: any;
