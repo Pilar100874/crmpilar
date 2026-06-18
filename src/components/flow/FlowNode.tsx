@@ -343,7 +343,7 @@ export const FlowNode = memo((props: any) => {
                 className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
               >
                 <Palette className="w-4 h-4 mr-2 text-violet-500" />
-                Personalizar Ícone
+                Personalizar Bloco
               </DropdownMenuItem>
 
               
