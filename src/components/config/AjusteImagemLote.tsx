@@ -242,6 +242,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
     // 2) insere a nova como principal
     await supabase.from("produto_imagens").insert({
       produto_id: produtoId,
+      estabelecimento_id: estabelecimentoId,
       url,
       storage_path: path,
       is_principal: true,
