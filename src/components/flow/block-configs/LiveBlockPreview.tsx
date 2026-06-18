@@ -467,6 +467,56 @@ export const LiveBlockPreview = ({ type, config }: LiveBlockPreviewProps) => {
         );
       }
 
+      case "crm_gerar_relatorio": {
+        const out = (c.outputType || "pdf").toUpperCase();
+        const reportVars = c.reportVariables ? Object.keys(c.reportVariables).length : 0;
+        const apiVars = c.apiVariables ? Object.keys(c.apiVariables).length : 0;
+        return card(
+          <>
+            <div className="w-full aspect-[4/3] bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/40 flex flex-col items-center justify-center text-indigo-700 dark:text-indigo-300">
+              <div className="text-4xl">📊</div>
+              <div className="text-xs mt-1 font-semibold">Relatório {out}</div>
+            </div>
+            <Body>
+              <span className="italic text-muted-foreground">⏳ Aguarde... gerando relatório em tempo real.</span>
+            </Body>
+            <div className="px-3 pb-2 text-[11px] text-muted-foreground italic">
+              {c.relatorioId
+                ? `Modelo selecionado · ${reportVars} variável(eis) · ${apiVars} parâmetro(s)`
+                : "Nenhum relatório selecionado"}
+            </div>
+          </>,
+        );
+      }
+
+      case "crm_cadastro_empresa": {
+        const fields: any[] = c.campos || c.fields || [];
+        return card(
+          <>
+            <Header title="🏢 Cadastro de Empresa" />
+            <Body>{c.descricao || "Coleta dados e cria a empresa no CRM."}</Body>
+            <div className="px-3 pb-2 text-[11px] text-muted-foreground italic">
+              {fields.length > 0
+                ? `${fields.length} campo(s) configurado(s)`
+                : "Campos padrão (razão social, CNPJ, contato)"}
+            </div>
+          </>,
+        );
+      }
+
+      case "crm_agenda_rapida": {
+        return card(
+          <>
+            <Header title="📅 Agendar Compromisso" />
+            <Body>{c.titulo || c.title || "Novo compromisso na agenda"}</Body>
+            <div className="px-3 pb-2 text-[11px] text-muted-foreground italic">
+              {c.duracao ? `Duração: ${c.duracao} min` : "Duração padrão"}
+              {c.tipo ? ` · ${c.tipo}` : ""}
+            </div>
+          </>,
+        );
+      }
+
       default:
         return null;
     }
