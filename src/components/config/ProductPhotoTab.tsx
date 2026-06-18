@@ -3,39 +3,73 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Sparkles, Loader2, Upload, Camera, X, Check } from "lucide-react";
+import { Sparkles, Loader2, Upload, Camera, X, Star, StarOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
+import { normalizeImageToSquare, dataUrlToFile } from "@/lib/imageNormalize";
+import { cn } from "@/lib/utils";
+
+export interface ProductImage {
+  id?: string;            // id do registro em produto_imagens (apenas para já salvas)
+  url: string;            // URL pública ou blob URL para preview
+  storage_path?: string;  // path no storage (para já salvas)
+  file?: File;            // arquivo a ser enviado (apenas para novas)
+  is_principal: boolean;
+  ordem: number;
+}
 
 interface Props {
   productName: string;
-  currentPhotoUrl: string;
-  selectedFile: File | null;
-  onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onPhotoChange: (url: string) => void;
+  images: ProductImage[];
+  onChange: (images: ProductImage[]) => void;
 }
 
-type RefSource = "none" | "current" | "upload";
+type RefSource = "none" | "principal" | "upload";
 
-export function ProductPhotoTab({
-  productName,
-  currentPhotoUrl,
-  selectedFile,
-  onFileSelect,
-  onPhotoChange,
-}: Props) {
+export function ProductPhotoTab({ productName, images, onChange }: Props) {
   const [prompt, setPrompt] = useState("");
-  const [refSource, setRefSource] = useState<RefSource>(currentPhotoUrl ? "current" : "none");
+  const [refSource, setRefSource] = useState<RefSource>("none");
   const [refUploadFile, setRefUploadFile] = useState<File | null>(null);
   const [refUploadUrl, setRefUploadUrl] = useState<string>("");
   const [generating, setGenerating] = useState(false);
-  const [generatedImage, setGeneratedImage] = useState<string>("");
+  const [processing, setProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const refInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!prompt && productName) setPrompt(productName);
   }, [productName]);
+
+  const principal = images.find((i) => i.is_principal);
+
+  const addImage = async (file: File) => {
+    setProcessing(true);
+    try {
+      const normalized = await normalizeImageToSquare(file, 1024);
+      const url = URL.createObjectURL(normalized);
+      const next: ProductImage = {
+        url,
+        file: normalized,
+        is_principal: images.length === 0, // primeira vira principal automaticamente
+        ordem: images.length,
+      };
+      onChange([...images, next]);
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Erro ao processar imagem");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    for (const f of files) {
+      if (!f.type.startsWith("image/")) continue;
+      await addImage(f);
+    }
+  };
 
   const handleRefUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -63,11 +97,14 @@ export function ProductPhotoTab({
       return;
     }
     setGenerating(true);
-    setGeneratedImage("");
     try {
       let referenceImageUrl: string | undefined;
-      if (refSource === "current" && currentPhotoUrl) {
-        referenceImageUrl = currentPhotoUrl;
+      if (refSource === "principal" && principal?.url) {
+        if (principal.file) {
+          referenceImageUrl = await fileToDataUrl(principal.file);
+        } else {
+          referenceImageUrl = principal.url;
+        }
       } else if (refSource === "upload" && refUploadFile) {
         referenceImageUrl = await fileToDataUrl(refUploadFile);
       }
@@ -77,8 +114,10 @@ export function ProductPhotoTab({
       });
       if (error) throw error;
       if (!data?.image) throw new Error(data?.error || "Falha ao gerar imagem");
-      setGeneratedImage(data.image);
-      toast.success("Imagem gerada! Clique em 'Usar esta imagem' para aplicar.");
+
+      const file = dataUrlToFile(data.image, `ia-${Date.now()}.png`);
+      await addImage(file);
+      toast.success("Imagem gerada e adicionada à galeria");
     } catch (err: any) {
       console.error(err);
       const msg = err?.message || "";
@@ -90,60 +129,107 @@ export function ProductPhotoTab({
     }
   };
 
-  const handleUseGenerated = () => {
-    if (!generatedImage) return;
-    onPhotoChange(generatedImage);
-    setGeneratedImage("");
-    toast.success("Imagem aplicada ao produto");
+  const setPrincipal = (idx: number) => {
+    onChange(images.map((img, i) => ({ ...img, is_principal: i === idx })));
+  };
+
+  const removeImage = (idx: number) => {
+    const wasPrincipal = images[idx].is_principal;
+    let next = images.filter((_, i) => i !== idx).map((img, i) => ({ ...img, ordem: i }));
+    if (wasPrincipal && next.length > 0) {
+      next = next.map((img, i) => ({ ...img, is_principal: i === 0 }));
+    }
+    onChange(next);
   };
 
   return (
     <div className="space-y-6">
-      {/* Foto atual + upload manual */}
+      {/* Galeria */}
       <div className="space-y-3">
-        <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Foto Atual</h4>
-        <div className="flex items-start gap-4">
-          <div className="w-32 h-32 rounded-lg border-2 border-dashed bg-muted/30 flex items-center justify-center overflow-hidden shrink-0">
-            {currentPhotoUrl ? (
-              <img src={currentPhotoUrl} alt="Foto do produto" className="w-full h-full object-cover" />
-            ) : (
-              <Camera className="w-8 h-8 text-muted-foreground" />
-            )}
-          </div>
-          <div className="flex-1 space-y-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              {selectedFile || currentPhotoUrl ? "Trocar foto" : "Enviar foto"}
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={onFileSelect}
-              className="hidden"
-            />
-            {currentPhotoUrl && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onPhotoChange("")}
-                className="text-destructive hover:text-destructive"
-              >
-                <X className="w-4 h-4 mr-2" />
-                Remover
-              </Button>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Envie uma foto manualmente ou gere com IA abaixo.
+        <div className="flex items-center justify-between border-b pb-2">
+          <h4 className="text-xs sm:text-sm font-medium text-muted-foreground">
+            Galeria de Fotos ({images.length})
+          </h4>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={processing}
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Adicionar foto
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleUpload}
+            className="hidden"
+          />
+        </div>
+
+        {images.length === 0 ? (
+          <div className="rounded-lg border-2 border-dashed bg-muted/30 p-8 text-center">
+            <Camera className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
+            <p className="text-sm text-muted-foreground">
+              Nenhuma foto adicionada. Envie uma foto ou gere com IA abaixo.
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Todas as imagens são padronizadas em 1024×1024 (quadrado).
             </p>
           </div>
-        </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {images.map((img, idx) => (
+              <div
+                key={idx}
+                className={cn(
+                  "relative group aspect-square rounded-lg overflow-hidden border-2 bg-muted/30",
+                  img.is_principal ? "border-primary ring-2 ring-primary/30" : "border-border",
+                )}
+              >
+                <img src={img.url} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                {img.is_principal && (
+                  <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-current" />
+                    Principal
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                  {!img.is_principal && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setPrincipal(idx)}
+                      className="h-8 text-xs"
+                    >
+                      <Star className="w-3 h-3 mr-1" />
+                      Tornar principal
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => removeImage(idx)}
+                    className="h-8 text-xs"
+                  >
+                    <X className="w-3 h-3 mr-1" />
+                    Remover
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {processing && (
+          <p className="text-xs text-muted-foreground flex items-center gap-2">
+            <Loader2 className="w-3 h-3 animate-spin" /> Processando imagem...
+          </p>
+        )}
       </div>
 
       {/* Geração por IA */}
@@ -168,23 +254,32 @@ export function ProductPhotoTab({
 
         <div className="space-y-2">
           <Label className="text-xs">Imagem de referência (opcional)</Label>
-          <RadioGroup value={refSource} onValueChange={(v) => setRefSource(v as RefSource)} className="gap-2">
+          <RadioGroup
+            value={refSource}
+            onValueChange={(v) => setRefSource(v as RefSource)}
+            className="gap-2"
+          >
             <div className="flex items-center gap-2">
               <RadioGroupItem value="none" id="ref-none" />
               <Label htmlFor="ref-none" className="text-xs cursor-pointer">Sem referência</Label>
             </div>
             <div className="flex items-center gap-2">
-              <RadioGroupItem value="current" id="ref-current" disabled={!currentPhotoUrl} />
-              <Label htmlFor="ref-current" className={`text-xs cursor-pointer ${!currentPhotoUrl ? "opacity-50" : ""}`}>
-                Usar foto atual do produto
+              <RadioGroupItem value="principal" id="ref-principal" disabled={!principal} />
+              <Label
+                htmlFor="ref-principal"
+                className={cn("text-xs cursor-pointer", !principal && "opacity-50")}
+              >
+                Usar foto principal do produto
               </Label>
-              {currentPhotoUrl && refSource === "current" && (
-                <img src={currentPhotoUrl} alt="" className="w-8 h-8 object-cover rounded border ml-1" />
+              {principal && refSource === "principal" && (
+                <img src={principal.url} alt="" className="w-8 h-8 object-cover rounded border ml-1" />
               )}
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <RadioGroupItem value="upload" id="ref-upload" />
-              <Label htmlFor="ref-upload" className="text-xs cursor-pointer">Enviar imagem de referência</Label>
+              <Label htmlFor="ref-upload" className="text-xs cursor-pointer">
+                Enviar imagem de referência
+              </Label>
               <Button
                 type="button"
                 variant="outline"
@@ -227,25 +322,9 @@ export function ProductPhotoTab({
             </>
           )}
         </Button>
-
-        {generatedImage && (
-          <div className="space-y-2 pt-2 border-t">
-            <Label className="text-xs">Pré-visualização</Label>
-            <div className="rounded-lg overflow-hidden border bg-background">
-              <img src={generatedImage} alt="Gerada" className="w-full max-h-80 object-contain" />
-            </div>
-            <div className="flex gap-2">
-              <Button type="button" size="sm" onClick={handleUseGenerated} className="flex-1">
-                <Check className="w-4 h-4 mr-2" />
-                Usar esta imagem
-              </Button>
-              <Button type="button" size="sm" variant="outline" onClick={() => setGeneratedImage("")}>
-                <X className="w-4 h-4 mr-2" />
-                Descartar
-              </Button>
-            </div>
-          </div>
-        )}
+        <p className="text-[11px] text-muted-foreground text-center">
+          A imagem gerada é adicionada automaticamente à galeria.
+        </p>
       </div>
     </div>
   );
