@@ -3094,16 +3094,15 @@ ${recentMessages}
         toast.error("Mensagem salva, mas não enviada ao cliente");
       }
 
-      // Update conversation timestamp and pause bot (agent took over)
+      // Update conversation timestamp (bot continues active)
       await supabase
         .from("conversations")
         .update({ 
-          updated_at: new Date().toISOString(),
-          bot_active: false
+          updated_at: new Date().toISOString()
         })
         .eq("id", selectedConversation);
 
-      toast.success("Mensagem enviada • Bot pausado");
+      toast.success("Mensagem enviada");
     } catch (error) {
       console.error("❌ Erro ao enviar mensagem:", error);
       toast.error("Erro ao enviar mensagem");
