@@ -403,6 +403,7 @@ const N8nWorkflowEditor: React.FC<N8nWorkflowEditorProps> = ({ estabelecimentoId
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
+              isValidConnection={isValidConnection}
               onDrop={onDrop}
               onDragOver={onDragOver}
               onNodeClick={handleNodeClick}

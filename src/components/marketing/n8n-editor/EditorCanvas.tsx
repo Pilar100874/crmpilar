@@ -146,6 +146,7 @@ interface EditorCanvasProps {
   onNodesChange: OnNodesChange<Node<CustomNodeData>>;
   onEdgesChange: OnEdgesChange<Edge>;
   onConnect: OnConnect;
+  isValidConnection?: (conn: any) => boolean;
   onDrop: (event: React.DragEvent) => void;
   onDragOver: (event: React.DragEvent) => void;
   onNodeClick: (event: React.MouseEvent, node: Node) => void;
@@ -158,6 +159,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
   onNodesChange,
   onEdgesChange,
   onConnect,
+  isValidConnection,
   onDrop,
   onDragOver,
   onNodeClick,
@@ -171,6 +173,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        isValidConnection={isValidConnection}
         onDrop={onDrop}
         onDragOver={onDragOver}
         onNodeClick={onNodeClick}
