@@ -192,7 +192,12 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
     );
     try {
       const { data, error } = await supabase.functions.invoke("generate-product-image", {
-        body: { prompt: promptText, productName: promptText },
+        body: {
+          prompt: promptText,
+          productName: promptText,
+          model: iaModel,
+          visualIdentityPrompt: useVisualIdentity && hasVisualIdentity ? visualIdentityPrompt : undefined,
+        },
       });
       if (error) throw error;
       if (!data?.image) throw new Error(data?.error || "Falha ao gerar");
