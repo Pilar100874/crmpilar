@@ -70,6 +70,10 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
 
   // ia
   const [iaItems, setIaItems] = useState<IaItem[]>([]);
+  const [iaModel, setIaModel] = useState<string>("google/gemini-2.5-flash-image");
+  const [useVisualIdentity, setUseVisualIdentity] = useState(false);
+  const [visualIdentityPrompt, setVisualIdentityPrompt] = useState<string>("");
+  const [hasVisualIdentity, setHasVisualIdentity] = useState(false);
 
   // execução
   const [processing, setProcessing] = useState(false);
