@@ -491,7 +491,11 @@ export const LiveBlockPreview = ({ type, config }: LiveBlockPreviewProps) => {
                 </div>
                 <div className="px-3 pb-2 text-[11px] text-muted-foreground italic">
                   {c.relatorioId
-                    ? `Modelo selecionado · ${reportVars} variável(eis) · ${apiVars} parâmetro(s)`
+                    ? `📄 ${c.relatorioNome || "Relatório selecionado"}${
+                        reportVars + apiVars > 0
+                          ? ` · ${reportVars} variável(eis) · ${apiVars} parâmetro(s)`
+                          : ""
+                      }`
                     : "Nenhum relatório selecionado"}
                 </div>
               </>,
