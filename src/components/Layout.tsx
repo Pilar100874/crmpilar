@@ -196,15 +196,6 @@ const menuItems: MenuItem[] = [
     ]
   },
   { id: "Mapa de Calor", title: "Mapa de Calor", url: "/mapa-calor-sistema", icon: LucideIcons.Flame },
-  {
-    id: "Admin",
-    title: "Admin",
-    icon: LucideIcons.ShieldCheck,
-    subItems: [
-      { id: "Admin Macros", title: "Macros", url: "/macros", icon: LucideIcons.Zap },
-      { id: "Admin Support Tickets", title: "Tickets de Suporte", url: "/admin/support-tickets", icon: LucideIcons.LifeBuoy },
-    ]
-  },
   { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
 ];
 
@@ -1108,7 +1099,28 @@ export default function Layout({ children }: LayoutProps) {
                           <KeyRound className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">Alterar Senha</span>
                         </button>
-                        
+
+                        {isAdmin && (
+                          <>
+                            <NavLink
+                              to="/macros"
+                              onClick={() => setOpenSubmenuId(null)}
+                              className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
+                            >
+                              <Zap className="w-4 h-4 flex-shrink-0" />
+                              <span className="text-sm">Macros</span>
+                            </NavLink>
+                            <NavLink
+                              to="/admin/support-tickets"
+                              onClick={() => setOpenSubmenuId(null)}
+                              className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
+                            >
+                              <LifeBuoy className="w-4 h-4 flex-shrink-0" />
+                              <span className="text-sm">Tickets de Suporte</span>
+                            </NavLink>
+                          </>
+                        )}
+
                       </div>
                     </div>
                   </div>
@@ -1195,6 +1207,27 @@ export default function Layout({ children }: LayoutProps) {
                       <KeyRound className="w-4 h-4 flex-shrink-0" />
                       <span className="text-sm">Alterar Senha</span>
                     </button>
+
+                    {isAdmin && (
+                      <>
+                        <NavLink
+                          to="/macros"
+                          onClick={() => setOpenSubmenuId(null)}
+                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
+                        >
+                          <Zap className="w-4 h-4 flex-shrink-0" />
+                          <span className="text-sm">Macros</span>
+                        </NavLink>
+                        <NavLink
+                          to="/admin/support-tickets"
+                          onClick={() => setOpenSubmenuId(null)}
+                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
+                        >
+                          <LifeBuoy className="w-4 h-4 flex-shrink-0" />
+                          <span className="text-sm">Tickets de Suporte</span>
+                        </NavLink>
+                      </>
+                    )}
                     
                   </div>
                 )}
