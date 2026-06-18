@@ -113,9 +113,9 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
     <div className="space-y-6">
       <div className="space-y-2">
         <Label>Título (opcional)</Label>
-        <Input
+        <EmojiInput
           value={config.title || ""}
-          onChange={(e) => handleConfigChange("title", e.target.value)}
+          onChange={(v) => handleConfigChange("title", v)}
           placeholder="Ex: Atendimento"
         />
         <p className="text-xs text-muted-foreground">
@@ -125,10 +125,9 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
 
       <div className="space-y-2">
         <Label>Texto da pergunta</Label>
-        <Textarea
-          ref={(el) => (inputRefs.current['question'] = el)}
+        <EmojiTextarea
           value={config.question || ""}
-          onChange={(e) => handleConfigChange("question", e.target.value)}
+          onChange={(v) => handleConfigChange("question", v)}
           placeholder="Escolhas por número e palavra"
           rows={2}
           className="resize-none"
@@ -146,12 +145,13 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
 
       <div className="space-y-2">
         <Label>Rodapé (opcional)</Label>
-        <Input
+        <EmojiInput
           value={config.footer || ""}
-          onChange={(e) => handleConfigChange("footer", e.target.value)}
+          onChange={(v) => handleConfigChange("footer", v)}
           placeholder="Ex: Pilar Papéis"
         />
       </div>
+
 
       <div className="space-y-3">
         <Label>Botões</Label>
