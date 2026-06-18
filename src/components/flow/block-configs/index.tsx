@@ -80,6 +80,7 @@ export { WebhookConfigNew } from './WebhookConfigNew';
 export { TriggerAutomationConfigNew } from './TriggerAutomationConfigNew';
 export { FormulasConfigNew } from './FormulasConfigNew';
 export { GlobalKeywordsConfigNew } from './GlobalKeywordsConfigNew';
+export { GlobalRedirectConfig } from './GlobalRedirectConfig';
 export { GoalConfigNew } from './GoalConfigNew';
 export { GoodbyeConfigNew } from './GoodbyeConfigNew';
 export { KeywordJumpConfigNew } from './KeywordJumpConfigNew';
