@@ -46,7 +46,12 @@ interface Props {
 }
 
 export function AjusteImagemLote({ estabelecimentoId }: Props) {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | "prompts" | 3>(1);
+
+  // ---- textos extras para IA (por produto + filtro local + aplicação em lote)
+  const [iaExtras, setIaExtras] = useState<Record<string, string>>({});
+  const [bulkExtra, setBulkExtra] = useState("");
+  const [promptsFilterNome, setPromptsFilterNome] = useState("");
 
   // ---- dados base
   const [produtos, setProdutos] = useState<Produto[]>([]);
@@ -188,20 +193,29 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
       return;
     }
     if (metodo === "ia") {
-      setShowCostDialog(true);
+      // antes de gerar, abre a etapa de prompts (textos extras)
+      setStep("prompts");
       return;
     }
     setStep(3);
   };
 
+  const goToCostFromPrompts = () => {
+    setShowCostDialog(true);
+  };
+
   const startIaGeneration = async () => {
     setShowCostDialog(false);
-    const items: IaItem[] = selectedProdutos.map((p) => ({
-      produtoId: p.id,
-      nome: p.nome,
-      status: "pending",
-      prompt: p.nome,
-    }));
+    const items: IaItem[] = selectedProdutos.map((p) => {
+      const extra = (iaExtras[p.id] || "").trim();
+      const prompt = extra ? `${p.nome} — ${extra}` : p.nome;
+      return {
+        produtoId: p.id,
+        nome: p.nome,
+        status: "pending",
+        prompt,
+      };
+    });
     setIaItems(items);
     setStep(3);
     for (const it of items) {
@@ -375,7 +389,10 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
         <div className="flex items-center gap-2">
           <div className={`px-3 py-1 rounded-full text-xs ${step === 1 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>1. Filtrar</div>
           <div className={`px-3 py-1 rounded-full text-xs ${step === 2 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>2. Escolher método</div>
-          <div className={`px-3 py-1 rounded-full text-xs ${step === 3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>3. Revisar e aplicar</div>
+          {metodo === "ia" && (
+            <div className={`px-3 py-1 rounded-full text-xs ${step === "prompts" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>3. Textos extras</div>
+          )}
+          <div className={`px-3 py-1 rounded-full text-xs ${step === 3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{metodo === "ia" ? "4" : "3"}. Revisar e aplicar</div>
         </div>
         <div className="text-sm text-muted-foreground">
           {selectedIds.size} produto(s) selecionado(s)
@@ -595,7 +612,121 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                 <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
               </Button>
               <Button onClick={goToStep3}>
-                {metodo === "ia" ? "Gerar imagens" : "Continuar"} <ArrowRight className="h-4 w-4 ml-1" />
+                {metodo === "ia" ? "Continuar" : "Continuar"} <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* STEP PROMPTS (apenas IA) */}
+      {step === "prompts" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Sparkles className="h-4 w-4" /> Textos extras para a geração
+            </CardTitle>
+            <CardDescription>
+              Adicione descrições/contexto extra para cada produto. Você pode filtrar para localizar itens e aplicar um texto em lote — todos os produtos serão gerados ao avançar.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+              <div>
+                <Label>Filtrar por nome</Label>
+                <Input
+                  value={promptsFilterNome}
+                  onChange={(e) => setPromptsFilterNome(e.target.value)}
+                  placeholder="Buscar nos selecionados..."
+                />
+              </div>
+              <div className="text-xs text-muted-foreground self-end pb-2">
+                {selectedProdutos.length} produto(s) — todos serão gerados
+              </div>
+            </div>
+
+            <div className="border rounded-md p-3 space-y-2 bg-muted/30">
+              <Label className="text-xs">Aplicar texto extra em lote</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={bulkExtra}
+                  onChange={(e) => setBulkExtra(e.target.value)}
+                  placeholder="Ex.: fundo branco, estilo fotográfico, vista frontal..."
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const alvo = selectedProdutos.filter((p) =>
+                      !promptsFilterNome || p.nome.toLowerCase().includes(promptsFilterNome.toLowerCase())
+                    );
+                    setIaExtras((prev) => {
+                      const next = { ...prev };
+                      alvo.forEach((p) => { next[p.id] = bulkExtra; });
+                      return next;
+                    });
+                    toast.success(`Texto aplicado em ${alvo.length} produto(s)`);
+                  }}
+                  disabled={!bulkExtra.trim()}
+                >
+                  Aplicar aos filtrados
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    const alvo = selectedProdutos.filter((p) =>
+                      !promptsFilterNome || p.nome.toLowerCase().includes(promptsFilterNome.toLowerCase())
+                    );
+                    setIaExtras((prev) => {
+                      const next = { ...prev };
+                      alvo.forEach((p) => { delete next[p.id]; });
+                      return next;
+                    });
+                  }}
+                >
+                  Limpar
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                O filtro afeta apenas a visualização e a aplicação em lote. Todos os {selectedProdutos.length} produto(s) selecionados terão imagem gerada.
+              </p>
+            </div>
+
+            <div className="border rounded-md divide-y max-h-[28rem] overflow-auto">
+              {selectedProdutos
+                .filter((p) => !promptsFilterNome || p.nome.toLowerCase().includes(promptsFilterNome.toLowerCase()))
+                .map((p) => (
+                  <div key={p.id} className="flex items-start gap-3 p-2">
+                    <div className="w-10 h-10 rounded bg-muted overflow-hidden flex items-center justify-center shrink-0">
+                      {p.foto_url ? (
+                        <img src={p.foto_url} alt={p.nome} className="w-full h-full object-cover" />
+                      ) : (
+                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">{p.nome}</div>
+                      <Input
+                        className="h-8 text-xs mt-1"
+                        placeholder="Texto extra para este produto (opcional)"
+                        value={iaExtras[p.id] || ""}
+                        onChange={(e) =>
+                          setIaExtras((prev) => ({ ...prev, [p.id]: e.target.value }))
+                        }
+                      />
+                    </div>
+                  </div>
+                ))}
+              {selectedProdutos.filter((p) => !promptsFilterNome || p.nome.toLowerCase().includes(promptsFilterNome.toLowerCase())).length === 0 && (
+                <div className="p-4 text-sm text-muted-foreground">Nenhum produto corresponde ao filtro</div>
+              )}
+            </div>
+
+            <div className="flex justify-between border-t pt-4">
+              <Button variant="outline" onClick={() => setStep(2)}>
+                <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
+              </Button>
+              <Button onClick={goToCostFromPrompts}>
+                <Sparkles className="h-4 w-4 mr-1" /> Gerar imagens
               </Button>
             </div>
           </CardContent>
