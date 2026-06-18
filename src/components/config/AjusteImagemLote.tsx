@@ -84,12 +84,15 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
   // execução
   const [processing, setProcessing] = useState(false);
 
-  // estimativa aproximada de créditos por imagem por modelo
-  const COST_PER_IMAGE: Record<string, number> = {
-    "google/gemini-2.5-flash-image": 0.04,
-    "google/gemini-3.1-flash-image-preview": 0.06,
-    "google/gemini-3-pro-image-preview": 0.20,
-  };
+  // catálogo de modelos disponíveis no Lovable AI Gateway
+  const IMAGE_MODELS: { value: string; label: string; cost: number; supportsRef: boolean }[] = [
+    { value: "google/gemini-2.5-flash-image", label: "🟦 Gemini 2.5 Flash Image (Nano Banana) — rápido", cost: 0.04, supportsRef: true },
+    { value: "google/gemini-3.1-flash-image-preview", label: "🟦 Gemini 3.1 Flash Image (Nano Banana 2) — rápido + alta qualidade", cost: 0.06, supportsRef: true },
+    { value: "google/gemini-3-pro-image-preview", label: "🟦 Gemini 3 Pro Image — máxima qualidade", cost: 0.20, supportsRef: true },
+    { value: "openai/gpt-image-2", label: "🟢 OpenAI GPT Image 2 — fotorrealismo premium", cost: 0.15, supportsRef: false },
+    { value: "openai/gpt-image-1-mini", label: "🟢 OpenAI GPT Image 1 Mini — econômico", cost: 0.05, supportsRef: false },
+  ];
+  const COST_PER_IMAGE: Record<string, number> = Object.fromEntries(IMAGE_MODELS.map((m) => [m.value, m.cost]));
   const estimatedCost = (COST_PER_IMAGE[iaModel] ?? 0.05) * selectedIds.size;
 
   useEffect(() => {
