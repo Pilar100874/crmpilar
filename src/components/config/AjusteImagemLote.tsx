@@ -389,7 +389,10 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
         <div className="flex items-center gap-2">
           <div className={`px-3 py-1 rounded-full text-xs ${step === 1 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>1. Filtrar</div>
           <div className={`px-3 py-1 rounded-full text-xs ${step === 2 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>2. Escolher método</div>
-          <div className={`px-3 py-1 rounded-full text-xs ${step === 3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>3. Revisar e aplicar</div>
+          {metodo === "ia" && (
+            <div className={`px-3 py-1 rounded-full text-xs ${step === "prompts" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>3. Textos extras</div>
+          )}
+          <div className={`px-3 py-1 rounded-full text-xs ${step === 3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{metodo === "ia" ? "4" : "3"}. Revisar e aplicar</div>
         </div>
         <div className="text-sm text-muted-foreground">
           {selectedIds.size} produto(s) selecionado(s)
