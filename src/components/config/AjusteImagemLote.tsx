@@ -698,6 +698,35 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
           </CardContent>
         </Card>
       )}
+
+      <AlertDialog open={showCostDialog} onOpenChange={setShowCostDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar geração por IA</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  Serão geradas <strong>{selectedIds.size}</strong> imagens com o modelo{" "}
+                  <strong>{iaModel.split("/").pop()}</strong>.
+                </p>
+                <p>
+                  Custo estimado: <strong>~{estimatedCost.toFixed(2)} créditos</strong>{" "}
+                  <span className="text-muted-foreground">
+                    (aprox. {(COST_PER_IMAGE[iaModel] ?? 0.05).toFixed(2)} por imagem)
+                  </span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Valor aproximado — o custo real pode variar conforme o provedor. Regerar imagens consome créditos adicionais.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={startIaGeneration}>Confirmar e gerar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
