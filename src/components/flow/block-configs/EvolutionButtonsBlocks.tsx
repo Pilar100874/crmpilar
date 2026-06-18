@@ -309,12 +309,13 @@ export const ButtonsMixedConfig = (props: ConfigProps) => {
                 ))}
               </SelectContent>
             </Select>
-            <Input
+            <EmojiInput
               value={btn.displayText || ""}
-              onChange={(e) => updateButton(i, { displayText: e.target.value })}
+              onChange={(v) => updateButton(i, { displayText: v })}
               placeholder="Texto do botão"
               maxLength={20}
             />
+
             {btn.type === "url" && (
               <Input
                 value={btn.url || ""}
