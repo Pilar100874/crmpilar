@@ -191,6 +191,16 @@ export function TriggerWorkflowConfig({ data, onChange }: TriggerWorkflowConfigP
           Recebe <code>{`{ ok, workflowId, module, result? }`}</code>.
         </p>
       </div>
+
+      <WaitingMessageField
+        enabled={config.waitingMessageEnabled !== false}
+        message={config.waitingMessage || ""}
+        defaultMessage="⏳ Estou gerando agora. Já te envio assim que ficar pronto!"
+        onChange={(patch) => {
+          if ("waitingMessageEnabled" in patch) update({ waitingMessageEnabled: patch.waitingMessageEnabled });
+          if ("waitingMessage" in patch) update({ waitingMessage: patch.waitingMessage });
+        }}
+      />
     </div>
   );
 }
