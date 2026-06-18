@@ -43,7 +43,8 @@ export const ConfigInput = ({
   required = false,
   info,
   prefix,
-  className
+  className,
+  emoji = false,
 }: { 
   label: string; 
   value: string | number; 
@@ -54,30 +55,43 @@ export const ConfigInput = ({
   info?: string;
   prefix?: string;
   className?: string;
-}) => (
+  emoji?: boolean;
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  return (
   <div className="space-y-2">
     <Label className="text-foreground text-sm font-medium flex items-center gap-2">
       <span className="w-1 h-4 bg-primary rounded-full"></span>
       {label}
       {required && <Badge variant="outline" className="ml-1 text-[10px] h-4 border-primary/20 text-primary">obrigatório</Badge>}
     </Label>
-    <div className="relative">
-      {prefix && (
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary font-bold">
-          {prefix}
-        </span>
-      )}
-      <Input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className={cn(
-          "bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20",
-          prefix && "pl-7",
-          className
+    <div className="relative flex items-start gap-2">
+      <div className="relative flex-1">
+        {prefix && (
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary font-bold">
+            {prefix}
+          </span>
         )}
-      />
+        <Input
+          ref={inputRef}
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={cn(
+            "bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20",
+            prefix && "pl-7",
+            className
+          )}
+        />
+      </div>
+      {emoji && type === "text" && (
+        <EmojiPickerButton
+          targetRef={inputRef as any}
+          value={String(value || "")}
+          onChange={onChange}
+        />
+      )}
     </div>
     {info && (
       <p className="text-xs text-foreground/70 flex items-start gap-1.5 bg-primary/5 p-2 rounded border border-primary/20">
@@ -86,7 +100,9 @@ export const ConfigInput = ({
       </p>
     )}
   </div>
-);
+  );
+};
+
 
 // Campo de texto longo
 export const ConfigTextarea = ({ 
