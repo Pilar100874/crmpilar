@@ -716,6 +716,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
             )}
 
