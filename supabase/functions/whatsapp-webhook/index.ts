@@ -2024,6 +2024,59 @@ async function sendCloudText(phoneNumberId: string, accessToken: string, to: str
   return r.ok;
 }
 
+async function sendCloudTemplate(
+  phoneNumberId: string,
+  accessToken: string,
+  to: string,
+  templateName: string,
+  language: string,
+  bodyParams: string[] = [],
+  headerParam?: { type: "text" | "image" | "video" | "document"; value: string },
+) {
+  if (!phoneNumberId || !accessToken || !templateName) {
+    console.error("[CLOUD] template: phoneNumberId/accessToken/templateName ausentes");
+    return false;
+  }
+  const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+  const components: any[] = [];
+  if (headerParam) {
+    if (headerParam.type === "text") {
+      components.push({ type: "header", parameters: [{ type: "text", text: headerParam.value }] });
+    } else {
+      components.push({
+        type: "header",
+        parameters: [{ type: headerParam.type, [headerParam.type]: { link: headerParam.value } }],
+      });
+    }
+  }
+  if (bodyParams.length > 0) {
+    components.push({
+      type: "body",
+      parameters: bodyParams.map((p) => ({ type: "text", text: String(p ?? "") })),
+    });
+  }
+  const payload: any = {
+    messaging_product: "whatsapp",
+    to,
+    type: "template",
+    template: {
+      name: templateName,
+      language: { code: language || "pt_BR" },
+      ...(components.length > 0 ? { components } : {}),
+    },
+  };
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify(payload),
+  });
+  const res = await r.json().catch(() => ({}));
+  if (!r.ok) console.error("[CLOUD] sendTemplate error:", res);
+  return r.ok;
+}
+
+
+
 async function sendCloudMedia(
   phoneNumberId: string,
   accessToken: string,
@@ -3772,17 +3825,41 @@ async function executeNode(
         return;
       }
       case "message_template": {
-        const name = cfg.templateName || "";
+        const name = cfg.templateName || cfg.template || "";
         const lang = cfg.language || "pt_BR";
-        const bodyTxt = itp(cfg.body || cfg.text || "");
-        if (bodyTxt) {
-          await onResponse(bodyTxt);
-        } else {
-          await onResponse(`📧 [Template: ${name} / ${lang}]`);
+        const fallbackTxt = itp(cfg.fallbackText || cfg.body || cfg.text || "");
+        const bodyVars: string[] = Array.isArray(cfg.bodyVariables)
+          ? cfg.bodyVariables.map((v: any) => itp(String(v ?? "")))
+          : [];
+        const headerParam = cfg.headerParam
+          ? { type: cfg.headerParam.type || "text", value: itp(String(cfg.headerParam.value ?? "")) }
+          : undefined;
+
+        let sent = false;
+        if (name && activeProvider === "cloud_api" && cloudPhoneNumberId && cloudAccessToken) {
+          sent = await sendCloudTemplate(
+            cloudPhoneNumberId,
+            cloudAccessToken,
+            context.vars.from || "",
+            name,
+            lang,
+            bodyVars,
+            headerParam,
+          );
+        }
+        if (!sent) {
+          if (fallbackTxt) {
+            await onResponse(fallbackTxt);
+          } else if (!name) {
+            await onResponse(`📧 [Template não configurado]`);
+          } else {
+            await onResponse(`📧 [Template: ${name} / ${lang} — não enviado, configure Cloud API ou fallback]`);
+          }
         }
         for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
         break;
       }
+
       case "opt_in_out": {
         const action = cfg.action || "opt-in";
         const category = cfg.category || "marketing";
