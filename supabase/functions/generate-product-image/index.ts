@@ -39,22 +39,41 @@ Fundo branco/neutro limpo, iluminação de estúdio, alta nitidez, composição 
 ${referenceImageUrl ? "Use a imagem de referência fornecida como base visual do produto, mantendo formato, cores e proporções." : ""}${viBlock}
 IMPORTANTE: Sem textos, sem marcas d'água, sem logotipos.`;
 
-    const userContent: any[] = [{ type: "text", text: fullPrompt }];
-    if (referenceImageUrl) {
-      const dataUrl = await urlToDataUrl(referenceImageUrl);
-      userContent.push({ type: "image_url", image_url: { url: dataUrl } });
-    }
-
     const selectedModel = model || "google/gemini-2.5-flash-image";
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
+    // Route por família de modelo
+    const isOpenAIImages = selectedModel.startsWith("openai/gpt-image");
+    const endpoint = isOpenAIImages
+      ? "https://ai.gateway.lovable.dev/v1/images/generations"
+      : "https://ai.gateway.lovable.dev/v1/chat/completions";
+
+    let body: any;
+    if (isOpenAIImages) {
+      // OpenAI images-generations não aceita referência multimodal nesta rota
+      body = {
+        model: selectedModel,
+        prompt: fullPrompt,
+        size: "1024x1024",
+        n: 1,
+        quality: "low",
+      };
+    } else {
+      const userContent: any[] = [{ type: "text", text: fullPrompt }];
+      if (referenceImageUrl) {
+        const dataUrl = await urlToDataUrl(referenceImageUrl);
+        userContent.push({ type: "image_url", image_url: { url: dataUrl } });
+      }
+      body = {
         model: selectedModel,
         messages: [{ role: "user", content: userContent }],
         modalities: ["image", "text"],
-      }),
+      };
+    }
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
@@ -68,11 +87,19 @@ IMPORTANTE: Sem textos, sem marcas d'água, sem logotipos.`;
         return new Response(JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      throw new Error(`AI Gateway error: ${response.status}`);
+      throw new Error(`AI Gateway error: ${response.status} - ${errorText.slice(0, 200)}`);
     }
 
     const data = await response.json();
-    const imageData = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+    let imageData: string | undefined;
+    if (isOpenAIImages) {
+      const b64 = data?.data?.[0]?.b64_json;
+      if (b64) imageData = `data:image/png;base64,${b64}`;
+    } else {
+      imageData = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    }
+
     if (!imageData) {
       return new Response(JSON.stringify({ error: "Não foi possível gerar a imagem" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
