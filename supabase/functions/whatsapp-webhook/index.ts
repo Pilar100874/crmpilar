@@ -3477,8 +3477,9 @@ async function executeNode(
         break;
       }
       case "global_keywords":
-      case "keyword_jump": {
-        // No WhatsApp tratamos como pass-through (regras são avaliadas no roteador de entrada)
+      case "keyword_jump":
+      case "global_redirect": {
+        // Pass-through na execução normal — o gatilho é avaliado no roteador de entrada.
         for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
         break;
       }
