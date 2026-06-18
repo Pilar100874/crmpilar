@@ -20,6 +20,14 @@ interface ConfigProps {
 
 export const GoodbyeConfigNew = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isCustom = typeof config.message === "string" && config.message.length > 0;
+  const displayMessage = isCustom ? (config.message as string) : GOODBYE_DEFAULT;
+
+  const toggleCustom = (on: boolean) => {
+    handleConfigChange("message", on ? GOODBYE_DEFAULT : "");
+  };
+
+
 
   const insertFormatting = (format: string) => {
     const textarea = textareaRef.current;
