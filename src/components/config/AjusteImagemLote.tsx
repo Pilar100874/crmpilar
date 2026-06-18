@@ -903,7 +903,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
 
             {metodo === "ia" && (
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Button
                     size="sm"
                     variant="outline"
@@ -926,16 +926,51 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                   >
                     <X className="h-3 w-3 mr-1" /> Desaprovar todas
                   </Button>
+                  <div className="ml-auto flex items-center gap-2">
+                    {!paused ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => { pausedRef.current = true; setPaused(true); toast.info("Fila pausada após a geração atual"); }}
+                        disabled={iaItems.every((i) => i.status !== "pending" && i.status !== "generating")}
+                      >
+                        <Pause className="h-3 w-3 mr-1" /> Pausar fila
+                      </Button>
+                    ) : (
+                      <Button size="sm" variant="default" onClick={resumeQueue}>
+                        <Play className="h-3 w-3 mr-1" /> Retomar
+                      </Button>
+                    )}
+                    <span className="text-xs text-muted-foreground">
+                      {iaItems.filter((i) => i.status === "ready" || i.status === "approved").length}/{iaItems.length} prontas
+                    </span>
+                  </div>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                   {iaItems.map((item) => (
                   <div key={item.produtoId} className={`border rounded-md p-3 space-y-2 ${item.status === "approved" ? "border-primary bg-primary/5" : ""}`}>
-                    <div className="aspect-square rounded bg-muted overflow-hidden flex items-center justify-center">
-                      {item.status === "generating" && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
-                      {item.status === "ready" && item.imageDataUrl && <img src={item.imageDataUrl} className="w-full h-full object-cover" alt={item.nome} />}
-                      {item.status === "approved" && item.imageDataUrl && <img src={item.imageDataUrl} className="w-full h-full object-cover" alt={item.nome} />}
-                      {item.status === "error" && <div className="text-xs text-destructive p-2 text-center">{item.error}</div>}
-                      {item.status === "pending" && <ImageIcon className="h-6 w-6 text-muted-foreground" />}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <div className="text-[10px] uppercase text-muted-foreground text-center">Atual</div>
+                        <div className="aspect-square rounded bg-muted overflow-hidden flex items-center justify-center">
+                          {item.currentPhotoUrl ? (
+                            <img src={item.currentPhotoUrl} className="w-full h-full object-cover" alt="atual" />
+                          ) : (
+                            <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-[10px] uppercase text-muted-foreground text-center">Nova</div>
+                        <div className="aspect-square rounded bg-muted overflow-hidden flex items-center justify-center">
+                          {item.status === "generating" && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
+                          {(item.status === "ready" || item.status === "approved") && item.imageDataUrl && (
+                            <img src={item.imageDataUrl} className="w-full h-full object-cover" alt={item.nome} />
+                          )}
+                          {item.status === "error" && <div className="text-[10px] text-destructive p-1 text-center">{item.error}</div>}
+                          {item.status === "pending" && <ImageIcon className="h-6 w-6 text-muted-foreground/40" />}
+                        </div>
+                      </div>
                     </div>
                     <div className="text-sm font-medium truncate">{item.nome}</div>
                     <Input
@@ -946,6 +981,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                       className="h-8 text-xs"
                       placeholder="Ajustar prompt..."
                     />
+
                     <div className="flex gap-1">
                       <Button
                         size="sm"
