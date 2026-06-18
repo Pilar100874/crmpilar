@@ -317,13 +317,17 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
         },
       });
       if (error) throw error;
-      if (!data?.image) throw new Error(data?.error || "Falha ao gerar");
+      const img: string | undefined = data?.image;
+      // valida formato mínimo (data URL base64 ou http(s))
+      const isValid = typeof img === "string" && (img.startsWith("data:image/") || img.startsWith("http"));
+      if (!isValid) throw new Error(data?.error || "Resposta da IA sem imagem válida");
       setIaItems((prev) =>
         prev.map((i) =>
-          i.produtoId === produtoId ? { ...i, status: "ready", imageDataUrl: data.image } : i
+          i.produtoId === produtoId ? { ...i, status: "ready", imageDataUrl: img } : i
         )
       );
     } catch (e: any) {
+      console.error("[generateIaImage] erro:", e);
       setIaItems((prev) =>
         prev.map((i) =>
           i.produtoId === produtoId
