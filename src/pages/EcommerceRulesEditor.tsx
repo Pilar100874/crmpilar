@@ -35,6 +35,7 @@ import { ECOMMERCE_RULE_BLOCKS } from "@/types/ecommerceRules";
 import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
 import { WorkflowSimulator } from "@/components/workflow-simulator/WorkflowSimulator";
 import { toast } from "@/hooks/use-toast";
+import { isSingleEdgePerHandleAllowed, SINGLE_OUTPUT_TOAST } from "@/lib/flow-edge-utils";
 import type { EcommerceRuleBlockType } from "@/types/ecommerceRules";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
 import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
@@ -181,9 +182,18 @@ function EcommerceRulesEditorInner() {
 
 
 
+  const isValidConnection = useCallback(
+    (conn: Connection) => isSingleEdgePerHandleAllowed(conn, edges),
+    [edges],
+  );
+
   const onConnect = useCallback((params: Connection) => {
+    if (!isSingleEdgePerHandleAllowed(params, edges)) {
+      toast({ title: "Saída já conectada", description: SINGLE_OUTPUT_TOAST, variant: "destructive" });
+      return;
+    }
     setEdges(eds => addEdge({ ...params, animated: true, style: { strokeWidth: 2 } }, eds));
-  }, [setEdges]);
+  }, [setEdges, edges]);
 
   // ===== Smart connect =====
   const connectStartRef = useRef<{ nodeId: string | null; handleId: string | null; handleType: 'source' | 'target' } | null>(null);
@@ -199,12 +209,16 @@ function EcommerceRulesEditorInner() {
     if (!start || !start.nodeId || !reactFlowInstance) return;
     const target = event.target as HTMLElement;
     if (!target?.classList?.contains('react-flow__pane')) return;
+    if (start.handleType === 'source' && !isSingleEdgePerHandleAllowed({ source: start.nodeId, sourceHandle: start.handleId ?? null } as any, edges)) {
+      toast({ title: "Saída já conectada", description: SINGLE_OUTPUT_TOAST, variant: "destructive" });
+      return;
+    }
     const clientX = event.clientX ?? event.changedTouches?.[0]?.clientX;
     const clientY = event.clientY ?? event.changedTouches?.[0]?.clientY;
     if (clientX == null) return;
     const flowPos = reactFlowInstance.screenToFlowPosition({ x: clientX, y: clientY });
     setConnectMenu({ x: clientX, y: clientY, flowX: flowPos.x, flowY: flowPos.y, fromNodeId: start.nodeId, handleType: start.handleType });
-  }, [reactFlowInstance]);
+  }, [reactFlowInstance, edges]);
 
   const handleSmartPick = useCallback((type: string) => {
     if (!connectMenu) return;
@@ -413,6 +427,7 @@ function EcommerceRulesEditorInner() {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            isValidConnection={isValidConnection}
             onConnectStart={onConnectStart}
             onConnectEnd={onConnectEnd}
             onInit={(instance) => {

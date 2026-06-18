@@ -35,6 +35,7 @@ import { Label } from "@/components/ui/label";
 import { Save, FileText, History, AlertCircle, FileCode, X, BarChart3, Plus, PlayCircle, Play, Download, Upload, Activity, Search, ZoomIn, ZoomOut, Maximize2, Lock, Unlock, Star, MoreVertical } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { toast } from "@/lib/toast-config";
+import { isSingleEdgePerHandleAllowed, SINGLE_OUTPUT_TOAST } from "@/lib/flow-edge-utils";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import type { OmnichannelBlockType, OmnichannelNode, OmnichannelEdge, OmnichannelFlowData } from "@/types/omnichannelFlow";
@@ -142,8 +143,17 @@ export default function OmnichannelBuilder() {
     }
   };
 
+  const isValidConnection = useCallback(
+    (conn: Connection) => isSingleEdgePerHandleAllowed(conn, edges),
+    [edges],
+  );
+
   const onConnect = useCallback(
     (params: Connection) => {
+      if (!isSingleEdgePerHandleAllowed(params, edges)) {
+        toast.error(SINGLE_OUTPUT_TOAST);
+        return;
+      }
       const edge = {
         ...params,
         type: "smoothstep",
@@ -152,7 +162,7 @@ export default function OmnichannelBuilder() {
       };
       setEdges((eds) => addEdge(edge as any, eds));
     },
-    [setEdges]
+    [setEdges, edges]
   );
 
   // ===== Smart connect (make.com style) =====
@@ -169,12 +179,16 @@ export default function OmnichannelBuilder() {
     if (!start || !start.nodeId || !reactFlowInstance) return;
     const target = event.target as HTMLElement;
     if (!target?.classList?.contains('react-flow__pane')) return;
+    if (start.handleType === 'source' && !isSingleEdgePerHandleAllowed({ source: start.nodeId, sourceHandle: start.handleId ?? null } as any, edges)) {
+      toast.error(SINGLE_OUTPUT_TOAST);
+      return;
+    }
     const clientX = event.clientX ?? event.changedTouches?.[0]?.clientX;
     const clientY = event.clientY ?? event.changedTouches?.[0]?.clientY;
     if (clientX == null) return;
     const flowPos = reactFlowInstance.screenToFlowPosition({ x: clientX, y: clientY });
     setConnectMenu({ x: clientX, y: clientY, flowX: flowPos.x, flowY: flowPos.y, fromNodeId: start.nodeId, handleType: start.handleType });
-  }, [reactFlowInstance]);
+  }, [reactFlowInstance, edges]);
 
   const handleSmartPick = useCallback((type: string) => {
     if (!connectMenu) return;
@@ -775,6 +789,7 @@ export default function OmnichannelBuilder() {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            isValidConnection={isValidConnection}
             onConnectStart={onConnectStart}
             onConnectEnd={onConnectEnd}
             onEdgesDelete={onEdgesDelete}
