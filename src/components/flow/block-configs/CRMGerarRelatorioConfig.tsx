@@ -5,6 +5,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Input } from "@/components/ui/input";
+import { WaitingMessageField } from "./WaitingMessageField";
+
+const DEFAULT_WAITING_REPORT = "⏳ Aguarde... gerando relatório em tempo real.";
 
 interface ConfigProps {
   config: any;
@@ -478,6 +481,13 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
           )}
         </>
       )}
+
+      <WaitingMessageField
+        enabled={config.waitingMessageEnabled !== false}
+        message={config.waitingMessage || ""}
+        defaultMessage={DEFAULT_WAITING_REPORT}
+        onChange={(patch) => handleConfigChange(patch)}
+      />
 
       <div className="space-y-2 border-t pt-4">
         <Label>Variável de saída</Label>

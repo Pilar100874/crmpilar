@@ -451,19 +451,26 @@ export const LiveBlockPreview = ({ type, config }: LiveBlockPreviewProps) => {
       }
 
       case "attach_catalog": {
-        return card(
-          <>
-            <div className="w-full aspect-[4/3] bg-muted flex flex-col items-center justify-center text-muted-foreground">
-              <div className="text-4xl">📎</div>
-              <div className="text-xs mt-1">Catálogo PDF</div>
-            </div>
-            {c.caption && <Body>{c.caption}</Body>}
-            <div className="px-3 pb-2 text-[11px] text-muted-foreground italic">
-              {c.mode === "specific"
-                ? `${(c.catalogIds?.length || 0)} catálogo(s) selecionado(s)`
-                : "Envia sempre o catálogo mais recente"}
-            </div>
-          </>,
+        const waitEnabled = c.waitingMessageEnabled !== false;
+        const waitMsg = c.waitingMessage || "⏳ Aguarde... gerando catálogo em tempo real.";
+        return (
+          <div className="space-y-2">
+            {waitEnabled && <Bubble>{waitMsg}</Bubble>}
+            {card(
+              <>
+                <div className="w-full aspect-[4/3] bg-muted flex flex-col items-center justify-center text-muted-foreground">
+                  <div className="text-4xl">📎</div>
+                  <div className="text-xs mt-1">Catálogo PDF</div>
+                </div>
+                {c.caption && <Body>{c.caption}</Body>}
+                <div className="px-3 pb-2 text-[11px] text-muted-foreground italic">
+                  {c.mode === "specific"
+                    ? `${(c.catalogIds?.length || 0)} catálogo(s) selecionado(s)`
+                    : "Envia sempre o catálogo mais recente"}
+                </div>
+              </>,
+            )}
+          </div>
         );
       }
 
@@ -471,21 +478,50 @@ export const LiveBlockPreview = ({ type, config }: LiveBlockPreviewProps) => {
         const out = (c.outputType || "pdf").toUpperCase();
         const reportVars = c.reportVariables ? Object.keys(c.reportVariables).length : 0;
         const apiVars = c.apiVariables ? Object.keys(c.apiVariables).length : 0;
-        return card(
-          <>
-            <div className="w-full aspect-[4/3] bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/40 flex flex-col items-center justify-center text-indigo-700 dark:text-indigo-300">
-              <div className="text-4xl">📊</div>
-              <div className="text-xs mt-1 font-semibold">Relatório {out}</div>
-            </div>
-            <Body>
-              <span className="italic text-muted-foreground">⏳ Aguarde... gerando relatório em tempo real.</span>
-            </Body>
-            <div className="px-3 pb-2 text-[11px] text-muted-foreground italic">
-              {c.relatorioId
-                ? `Modelo selecionado · ${reportVars} variável(eis) · ${apiVars} parâmetro(s)`
-                : "Nenhum relatório selecionado"}
-            </div>
-          </>,
+        const waitEnabled = c.waitingMessageEnabled !== false;
+        const waitMsg = c.waitingMessage || "⏳ Aguarde... gerando relatório em tempo real.";
+        return (
+          <div className="space-y-2">
+            {waitEnabled && <Bubble>{waitMsg}</Bubble>}
+            {card(
+              <>
+                <div className="w-full aspect-[4/3] bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/40 flex flex-col items-center justify-center text-indigo-700 dark:text-indigo-300">
+                  <div className="text-4xl">📊</div>
+                  <div className="text-xs mt-1 font-semibold">Relatório {out}</div>
+                </div>
+                <div className="px-3 pb-2 text-[11px] text-muted-foreground italic">
+                  {c.relatorioId
+                    ? `Modelo selecionado · ${reportVars} variável(eis) · ${apiVars} parâmetro(s)`
+                    : "Nenhum relatório selecionado"}
+                </div>
+              </>,
+            )}
+          </div>
+        );
+      }
+
+      case "generate_ai_media": {
+        const waitEnabled = c.waitingMessageEnabled !== false;
+        const waitMsg = c.waitingMessage || "🎨 Gerando mídia, aguarde alguns instantes...";
+        const mediaType = c.mediaType || "image";
+        const variations = c.variations || 1;
+        return (
+          <div className="space-y-2">
+            {waitEnabled && <Bubble>{waitMsg}</Bubble>}
+            {card(
+              <>
+                <div className="w-full aspect-square bg-gradient-to-br from-fuchsia-50 to-purple-50 dark:from-fuchsia-950/40 dark:to-purple-950/40 flex flex-col items-center justify-center text-fuchsia-700 dark:text-fuchsia-300">
+                  <div className="text-4xl">{mediaType === "video" ? "🎬" : "🖼️"}</div>
+                  <div className="text-xs mt-1 font-semibold">
+                    {mediaType === "video" ? "Vídeo IA" : "Imagem IA"} · {variations}x
+                  </div>
+                </div>
+                <div className="px-3 pb-2 text-[11px] text-muted-foreground italic">
+                  {c.aspectRatio ? `Proporção ${c.aspectRatio}` : "Mídia gerada por IA"}
+                </div>
+              </>,
+            )}
+          </div>
         );
       }
 
@@ -574,4 +610,5 @@ export const PREVIEW_SUPPORTED_TYPES = new Set<string>([
   "crm_gerar_relatorio",
   "crm_cadastro_empresa",
   "crm_agenda_rapida",
+  "generate_ai_media",
 ]);

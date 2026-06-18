@@ -11,6 +11,9 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { loadActiveCatalogs, generateCatalogPdf, SavedCatalog } from "@/lib/catalogPdfGenerator";
 import { toast } from "@/lib/toast-config";
+import { WaitingMessageField } from "./WaitingMessageField";
+
+const DEFAULT_WAITING_CATALOG = "⏳ Aguarde... gerando catálogo em tempo real.";
 
 interface Props {
   selectedNode: any;
@@ -217,6 +220,18 @@ export const AttachCatalogConfig = ({ selectedNode, handleConfigChange }: Props)
           )}
         </Button>
       )}
+
+      <WaitingMessageField
+        enabled={config.waitingMessageEnabled !== false}
+        message={config.waitingMessage || ""}
+        defaultMessage={DEFAULT_WAITING_CATALOG}
+        onChange={(patch) => {
+          if ("waitingMessageEnabled" in patch)
+            handleConfigChange("waitingMessageEnabled", patch.waitingMessageEnabled);
+          if ("waitingMessage" in patch)
+            handleConfigChange("waitingMessage", patch.waitingMessage);
+        }}
+      />
 
       <div className="space-y-2">
         <Label className="text-xs">Legenda (opcional)</Label>
