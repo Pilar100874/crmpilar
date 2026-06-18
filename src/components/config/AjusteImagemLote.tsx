@@ -1093,23 +1093,28 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
 
       {/* Preview do prompt final */}
       <Dialog open={showPromptPreviewDialog} onOpenChange={setShowPromptPreviewDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] flex flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle>Preview do prompt final</DialogTitle>
             <DialogDescription>
               Combinação de nome do produto + texto extra{useVisualIdentity && hasVisualIdentity ? " + identidade visual" : ""}.
+              {selectedProdutos.length > 50 && (
+                <span className="block mt-1 text-xs">
+                  Exibindo os primeiros 50 de {selectedProdutos.length} produtos selecionados.
+                </span>
+              )}
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[60vh] overflow-auto space-y-2 text-sm">
-            {selectedProdutos.map((p) => {
+          <div className="flex-1 min-h-0 overflow-auto space-y-2 text-sm pr-1">
+            {selectedProdutos.slice(0, 50).map((p) => {
               const base = buildPromptFor(p);
               const final = useVisualIdentity && hasVisualIdentity
                 ? `${base}\n\n[Identidade Visual]: ${visualIdentityPrompt}`
                 : base;
               return (
-                <div key={p.id} className="border rounded-md p-2">
-                  <div className="text-xs font-medium text-muted-foreground">{p.nome}</div>
-                  <pre className="text-xs whitespace-pre-wrap mt-1 font-mono">{final}</pre>
+                <div key={p.id} className="border rounded-md p-2 min-w-0">
+                  <div className="text-xs font-medium text-muted-foreground break-words">{p.nome}</div>
+                  <pre className="text-xs whitespace-pre-wrap break-words mt-1 font-mono max-w-full">{final}</pre>
                 </div>
               );
             })}
@@ -1122,14 +1127,14 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
 
       {/* Templates de textos extras */}
       <Dialog open={showTemplatesDialog} onOpenChange={setShowTemplatesDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md w-[95vw] max-h-[85vh] flex flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle>Templates de textos extras</DialogTitle>
             <DialogDescription>
               Salve frases reutilizáveis e aplique rapidamente na geração em lote.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
+          <div className="flex-1 min-h-0 overflow-auto space-y-3 pr-1">
             <div className="space-y-2 border rounded-md p-3 bg-muted/30">
               <Label className="text-xs">Salvar texto atual como template</Label>
               <Input
@@ -1137,19 +1142,19 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                 onChange={(e) => setNewTemplateNome(e.target.value)}
                 placeholder="Nome do template (ex.: Fundo branco)"
               />
-              <div className="text-xs text-muted-foreground line-clamp-2">
+              <div className="text-xs text-muted-foreground break-words line-clamp-2">
                 Texto: <em>{bulkExtra || "(vazio — preencha o campo de texto extra antes)"}</em>
               </div>
               <Button size="sm" onClick={saveBulkAsTemplate} disabled={!bulkExtra.trim() || !newTemplateNome.trim()}>
                 <Save className="h-3 w-3 mr-1" /> Salvar template
               </Button>
             </div>
-            <div className="space-y-1 max-h-60 overflow-auto">
+            <div className="space-y-1">
               {templates.length === 0 && (
                 <p className="text-xs text-muted-foreground text-center py-4">Nenhum template salvo ainda.</p>
               )}
               {templates.map((t) => (
-                <div key={t.id} className="flex items-center gap-2 border rounded-md p-2">
+                <div key={t.id} className="flex items-center gap-2 border rounded-md p-2 min-w-0">
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate">{t.nome}</div>
                     <div className="text-xs text-muted-foreground truncate">{t.texto}</div>
