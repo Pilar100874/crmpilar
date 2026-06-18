@@ -1151,7 +1151,10 @@ serve(async (req) => {
           const count = Math.max(1, Math.min(6, Number(cfg.sampleCount) || 3));
           context.vars.__pim_description = description;
           context.vars.__pim_sample_count = count;
-          await respond(`🎨 Gerando ${count} opção${count > 1 ? "s" : ""} de imagem do produto, aguarde...`);
+          if (cfg.waitingMessageEnabled !== false) {
+            const customWait = typeof cfg.waitingMessage === "string" ? cfg.waitingMessage.trim() : "";
+            await respond(customWait || `🎨 Gerando ${count} opção${count > 1 ? "s" : ""} de imagem do produto, aguarde...`);
+          }
 
           try {
             const sbCli = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
