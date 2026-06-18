@@ -79,46 +79,55 @@ IMPORTANTE: Sem textos, sem marcas d'água, sem logotipos.`;
       };
     }
 
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("AI Gateway error:", response.status, errorText);
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns segundos." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      throw new Error(`AI Gateway error: ${response.status} - ${errorText.slice(0, 200)}`);
-    }
-
-    const data = await response.json();
-
-    // O Gateway normaliza Gemini para o shape OpenAI Images: data.data[0].b64_json
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
     let imageData: string | undefined;
-    const b64 = data?.data?.[0]?.b64_json;
-    if (b64) {
-      imageData = `data:image/png;base64,${b64}`;
-    } else {
-      // Fallbacks defensivos (caso o gateway mude o shape)
-      const urlInData = data?.data?.[0]?.url;
-      if (urlInData) imageData = urlInData;
-      else {
-        const chatUrl = data?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-        if (chatUrl) imageData = chatUrl;
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => "");
+        console.error(`AI Gateway error (tentativa ${attempt}):`, response.status, errorText.slice(0, 200));
+        if (response.status === 402) {
+          return new Response(JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }),
+            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        if (response.status === 429) {
+          if (attempt < 3) { await sleep(2000 * attempt); continue; }
+          return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns segundos." }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        if (attempt < 3) { await sleep(1000 * attempt); continue; }
+        throw new Error(`AI Gateway error: ${response.status} - ${errorText.slice(0, 200)}`);
       }
+
+      const data = await response.json();
+      imageData = undefined;
+      const b64 = data?.data?.[0]?.b64_json;
+      if (b64) {
+        imageData = `data:image/png;base64,${b64}`;
+      } else {
+        const urlInData = data?.data?.[0]?.url;
+        if (urlInData) imageData = urlInData;
+        else {
+          const chatUrl = data?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+          if (chatUrl) imageData = chatUrl;
+        }
+      }
+
+      if (looksLikeImageData(imageData)) break;
+
+      console.error(`Resposta sem imagem válida (tentativa ${attempt}). Keys:`, Object.keys(data || {}), "sample:", JSON.stringify(data).slice(0, 400));
+      imageData = undefined;
+      if (attempt < 3) await sleep(1200 * attempt);
     }
 
     if (!looksLikeImageData(imageData)) {
-      console.error("Resposta sem imagem. Keys:", Object.keys(data || {}), "data sample:", JSON.stringify(data).slice(0, 400));
-      return new Response(JSON.stringify({ error: "Não foi possível gerar a imagem (resposta sem dados)" }),
+      return new Response(JSON.stringify({ error: "Não foi possível gerar a imagem após 3 tentativas (resposta sem dados)" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
