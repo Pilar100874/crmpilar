@@ -150,6 +150,15 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
     [produtos, selectedIds]
   );
 
+  const promptsFilteredProdutos = useMemo(() => {
+    return selectedProdutos.filter((p) => {
+      if (promptsFilterNome && !p.nome.toLowerCase().includes(promptsFilterNome.toLowerCase())) return false;
+      if (promptsFilterCategoria !== "all" && p.categoria_id !== promptsFilterCategoria) return false;
+      if (promptsFilterGrupo !== "all" && p.grupo_id !== promptsFilterGrupo) return false;
+      return true;
+    });
+  }, [selectedProdutos, promptsFilterNome, promptsFilterCategoria, promptsFilterGrupo]);
+
   const toggleSelect = (id: string) =>
     setSelectedIds((prev) => {
       const next = new Set(prev);
