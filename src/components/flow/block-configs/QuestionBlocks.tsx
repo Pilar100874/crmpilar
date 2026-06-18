@@ -368,13 +368,15 @@ export const AskPhoneConfig = ({ config, handleConfigChange, nodes, edges, selec
         onChange={(checked) => handleConfigChange("validateFormat", checked)}
       />
 
-      <ConfigTextarea
+      <DefaultableTextField
         label="Mensagem de Erro"
-        value={config.errorMessage || ""}
-        onChange={(v) => handleConfigChange("errorMessage", v)}
-        placeholder="Por favor, insira um telefone válido"
+        defaultValue="Por favor, informe um telefone válido."
+        value={config.errorMessage}
+        onChange={(v) => handleConfigChange("errorMessage", v ?? "")}
+        multiline
         rows={2}
       />
+
     </ConfigSection>
 
     <div className="space-y-2">
