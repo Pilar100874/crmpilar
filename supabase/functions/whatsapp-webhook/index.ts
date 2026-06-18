@@ -848,6 +848,36 @@ serve(async (req) => {
       console.error("[RESTART] erro:", e);
     }
 
+    // ====== Reinício automático após Despedida ======
+    // Se a última interação parou em um bloco "goodbye" (com botão Recomeçar),
+    // qualquer nova mensagem do contato reinicia o fluxo do início.
+    try {
+      if (context?.pendingNodeId) {
+        const pendingGoodbye = (flowData.flow_data.nodes || []).find(
+          (n: any) => n.id === context.pendingNodeId && n?.data?.type === "goodbye"
+        );
+        const raw = String(body || "").trim();
+        if (pendingGoodbye && raw.length > 0) {
+          console.log("[RESTART] Mensagem recebida após despedida — reiniciando fluxo");
+          context = { vars: { userMessage: body, from, phoneNumber: from, session: wahaSession, estabelecimento_id: estabelecimentoId } };
+          const startNode = flowData.flow_data.nodes.find((n: any) => n.data.type === "start");
+          if (startNode) {
+            await executeFlow({ nodes: flowData.flow_data.nodes, edges: flowData.flow_data.edges }, context, startNode, onResponse);
+          }
+          await supabase.from("chat_sessions").upsert(
+            { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+            { onConflict: "session_id" },
+          );
+          return new Response(JSON.stringify({ success: true, restarted: true, reason: "after_goodbye" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+    } catch (e) {
+      console.error("[RESTART after goodbye] erro:", e);
+    }
+
+
     // ====== Roteador: Redirecionamento Global ======
     // Em qualquer momento, se o cliente digitar a palavra-chave configurada num
     // bloco "global_redirect", interrompe o fluxo e encaminha ao destino.
