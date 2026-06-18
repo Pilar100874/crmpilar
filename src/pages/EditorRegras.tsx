@@ -810,6 +810,7 @@ function EditorRegrasContent() {
           onNodesChange={isLocked ? undefined : onNodesChange}
           onEdgesChange={isLocked ? undefined : onEdgesChange}
           onConnect={isLocked ? undefined : onConnect}
+          isValidConnection={isValidConnection}
           onConnectStart={isLocked ? undefined : onConnectStart}
           onConnectEnd={isLocked ? undefined : onConnectEnd}
           onEdgesDelete={isLocked ? undefined : onEdgesDelete}
