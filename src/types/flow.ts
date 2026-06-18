@@ -60,7 +60,8 @@ export type NodeType =
   | "buttons_mixed"
   | "buttons_media"
   | "carousel"
-  | "attach_catalog";
+  | "attach_catalog"
+  | "global_redirect";
 
 
 export interface BlockDefinition {
@@ -293,6 +294,24 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     icon: "CornerDownRight",
     color: "text-warning",
     defaultData: { keywords: [] },
+  },
+  {
+    type: "global_redirect",
+    label: "Redirecionamento Global",
+    description: "Em qualquer momento, se o cliente digitar a palavra-chave, redireciona para workflow, atendente, número de WhatsApp ou outro bot",
+    icon: "Shuffle",
+    color: "text-primary",
+    defaultData: {
+      triggerText: "",
+      caseSensitive: false,
+      matchMode: "exact", // exact | contains | startsWith
+      destinationType: "omnichannel", // omnichannel | atendente | whatsapp_number | bot
+      omnichannelFlowId: "",
+      atendenteId: "",
+      whatsappNumber: "",
+      botFlowId: "",
+      handoffMessage: "Encaminhando seu atendimento, aguarde um instante...",
+    },
   },
   {
     type: "global_keywords",
