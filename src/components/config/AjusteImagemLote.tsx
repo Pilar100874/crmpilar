@@ -93,6 +93,17 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
   const [hasVisualIdentity, setHasVisualIdentity] = useState(false);
   const [showCostDialog, setShowCostDialog] = useState(false);
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const [showPromptPreviewDialog, setShowPromptPreviewDialog] = useState(false);
+
+  // pausa/retomar geração
+  const [paused, setPaused] = useState(false);
+  const pausedRef = useRef(false);
+  const cancelGenRef = useRef(false);
+
+  // templates de textos extras (localStorage)
+  const [templates, setTemplates] = useState<{ id: string; nome: string; texto: string }[]>([]);
+  const [showTemplatesDialog, setShowTemplatesDialog] = useState(false);
+  const [newTemplateNome, setNewTemplateNome] = useState("");
 
   // execução
   const [processing, setProcessing] = useState(false);
