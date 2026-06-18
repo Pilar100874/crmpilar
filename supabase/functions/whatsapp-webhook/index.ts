@@ -3165,9 +3165,14 @@ async function executeNode(
             }
           }
 
-          // Aviso ao cliente antes de enviar o(s) PDF(s)
-          await onResponse("⏳ Aguarde... gerando catálogo em tempo real.");
-          await new Promise((r) => setTimeout(r, 600));
+          // Aviso ao cliente antes de enviar o(s) PDF(s) (opcional, configurável)
+          if (cfg.waitingMessageEnabled !== false) {
+            const waitMsg = (typeof cfg.waitingMessage === "string" && cfg.waitingMessage.trim())
+              ? itp(cfg.waitingMessage)
+              : "⏳ Aguarde... gerando catálogo em tempo real.";
+            await onResponse(waitMsg);
+            await new Promise((r) => setTimeout(r, 600));
+          }
 
 
           let sucesso = 0;
