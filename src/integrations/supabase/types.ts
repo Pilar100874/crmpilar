@@ -2276,6 +2276,8 @@ export type Database = {
           estabelecimento_id: string
           id: string
           nome: string
+          pdf_generated_at: string | null
+          pdf_url: string | null
           products_page: Json | null
           thumbnail: string | null
           updated_at: string
@@ -2291,6 +2293,8 @@ export type Database = {
           estabelecimento_id: string
           id?: string
           nome: string
+          pdf_generated_at?: string | null
+          pdf_url?: string | null
           products_page?: Json | null
           thumbnail?: string | null
           updated_at?: string
@@ -2306,6 +2310,8 @@ export type Database = {
           estabelecimento_id?: string
           id?: string
           nome?: string
+          pdf_generated_at?: string | null
+          pdf_url?: string | null
           products_page?: Json | null
           thumbnail?: string | null
           updated_at?: string
