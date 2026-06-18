@@ -154,7 +154,10 @@ export async function loadActiveCatalogs(): Promise<SavedCatalog[]> {
     });
 }
 
-/** Gera o PDF de um catálogo e retorna URL local + nome de arquivo. */
+/** Gera o PDF de um catálogo e retorna URL local + nome de arquivo.
+ *  Também faz upload do PDF para o Storage (bucket bot-media) e persiste
+ *  a URL pública em catalogos_salvos.pdf_url, para que o bot do WhatsApp
+ *  consiga enviar o arquivo sem precisar gerar PDF no servidor. */
 export async function generateCatalogPdf(
   catalog: SavedCatalog,
 ): Promise<{ url: string; fileName: string; blob: Blob } | null> {
@@ -184,6 +187,37 @@ export async function generateCatalogPdf(
       pages={pages}
     />
   ).toBlob();
-  const fileName = `catalogo_${catalog.nome.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
+  const safeName = catalog.nome.replace(/[^a-zA-Z0-9]/g, "_");
+  const fileName = `catalogo_${safeName}.pdf`;
+
+  // Cacheia o PDF no Storage para que o bot do WhatsApp consiga anexar.
+  // Falha aqui NÃO deve quebrar o download local.
+  try {
+    const storagePath = `catalogos/${catalog.id}/${Date.now()}_${fileName}`;
+    const { error: upErr } = await supabase.storage
+      .from("bot-media")
+      .upload(storagePath, blob, {
+        contentType: "application/pdf",
+        upsert: true,
+        cacheControl: "3600",
+      });
+    if (!upErr) {
+      const { data: pub } = supabase.storage.from("bot-media").getPublicUrl(storagePath);
+      if (pub?.publicUrl) {
+        await supabase
+          .from("catalogos_salvos")
+          .update({
+            pdf_url: pub.publicUrl,
+            pdf_generated_at: new Date().toISOString(),
+          })
+          .eq("id", catalog.id);
+      }
+    } else {
+      console.warn("[catalogPdfGenerator] Falha ao subir PDF para Storage:", upErr);
+    }
+  } catch (e) {
+    console.warn("[catalogPdfGenerator] Erro inesperado ao cachear PDF:", e);
+  }
+
   return { url: URL.createObjectURL(blob), fileName, blob };
 }

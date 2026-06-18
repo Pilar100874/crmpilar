@@ -3104,6 +3104,87 @@ async function executeNode(
         for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
         break;
       }
+      case "attach_catalog": {
+        console.log(`[FLOW] attach_catalog - config:`, JSON.stringify(cfg));
+        try {
+          const mode: "latest" | "specific" = cfg.mode === "specific" ? "specific" : "latest";
+          const caption = itp(cfg.caption || "");
+          const estabId = context.vars.estabelecimento_id;
+          if (!estabId) {
+            console.error("[FLOW][attach_catalog] estabelecimento_id ausente no contexto");
+            await onResponse("❌ Não foi possível identificar o estabelecimento para enviar o catálogo.");
+            break;
+          }
+
+          const supabase = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
+          let query = supabase
+            .from("catalogos_salvos")
+            .select("id, nome, pdf_url, pdf_generated_at, data_indeterminada, data_validade, updated_at")
+            .eq("estabelecimento_id", estabId)
+            .eq("ativo", true)
+            .order("updated_at", { ascending: false });
+
+          const { data: rows, error: qErr } = await query;
+          if (qErr) {
+            console.error("[FLOW][attach_catalog] erro ao carregar catálogos:", qErr);
+            await onResponse("❌ Erro ao carregar catálogos.");
+            break;
+          }
+
+          const now = new Date();
+          const validCatalogs = (rows || []).filter((c: any) => {
+            if (!c.data_indeterminada && c.data_validade) {
+              return new Date(c.data_validade) > now;
+            }
+            return true;
+          });
+
+          if (validCatalogs.length === 0) {
+            await onResponse("❌ Nenhum catálogo ativo disponível no momento.");
+            break;
+          }
+
+          let targets: any[] = [];
+          if (mode === "latest") {
+            targets = [validCatalogs[0]];
+          } else {
+            const ids: string[] = Array.isArray(cfg.catalogIds) ? cfg.catalogIds : [];
+            targets = validCatalogs.filter((c: any) => ids.includes(c.id));
+            if (targets.length === 0) {
+              await onResponse("❌ Nenhum catálogo selecionado foi encontrado entre os ativos.");
+              break;
+            }
+          }
+
+          let sucesso = 0;
+          for (const cat of targets) {
+            if (!cat.pdf_url) {
+              console.warn(`[FLOW][attach_catalog] catálogo ${cat.id} (${cat.nome}) sem PDF cacheado`);
+              await onResponse(
+                `⚠️ O catálogo "${cat.nome}" ainda não tem PDF gerado. Abra o catálogo no editor e clique em "Baixar PDF" uma vez para gerá-lo.`,
+              );
+              continue;
+            }
+            try {
+              const cap = caption || cat.nome;
+              await onResponse(cap, cat.pdf_url, "document");
+              sucesso++;
+              await new Promise((r) => setTimeout(r, 800));
+            } catch (sendErr: any) {
+              console.error(`[FLOW][attach_catalog] erro ao enviar "${cat.nome}":`, sendErr);
+            }
+          }
+
+          if (cfg.outputVariable) {
+            context.vars[cfg.outputVariable] = sucesso > 0 ? "Sucesso" : "Falha";
+          }
+        } catch (err) {
+          console.error(`[FLOW] Exception em attach_catalog:`, err);
+          await onResponse("❌ Erro ao anexar catálogo.");
+        }
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
       case "publish_social_post": {
         console.log(`[FLOW] publish_social_post - config:`, JSON.stringify(cfg));
         try {
