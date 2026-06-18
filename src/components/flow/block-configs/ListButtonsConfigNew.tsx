@@ -113,11 +113,11 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
           <div key={section.id} className="space-y-3 border rounded-lg p-3 bg-muted/50">
             {/* Section Header */}
             <div className="flex items-center gap-2">
-              <Input
+              <EmojiInput
                 value={section.title || ""}
-                onChange={(e) => updateSection(sIndex, "title", e.target.value)}
+                onChange={(v) => updateSection(sIndex, "title", v)}
                 placeholder={`Título da Seção ${sIndex + 1} (opcional)`}
-                className="flex-1"
+                containerClassName="flex-1"
               />
               <Button 
                 variant="ghost" 
@@ -136,15 +136,15 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
                   <div className="flex items-start gap-2">
                     <GripVertical className="h-4 w-4 text-muted-foreground mt-2" />
                     <div className="flex-1 space-y-2">
-                      <Input
+                      <EmojiInput
                         value={item.label || ""}
-                        onChange={(e) => updateItem(sIndex, iIndex, "label", e.target.value)}
+                        onChange={(v) => updateItem(sIndex, iIndex, "label", v)}
                         placeholder="Nome do item (máx 24 caracteres) *"
                         maxLength={24}
                       />
-                      <Input
+                      <EmojiInput
                         value={item.description || ""}
-                        onChange={(e) => updateItem(sIndex, iIndex, "description", e.target.value)}
+                        onChange={(v) => updateItem(sIndex, iIndex, "description", v)}
                         placeholder="Descrição (máx 72 caracteres, opcional)"
                         maxLength={72}
                       />
@@ -165,6 +165,7 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
                   </div>
                 </div>
               ))}
+
 
               {/* Add Item to Section */}
               <Button 
