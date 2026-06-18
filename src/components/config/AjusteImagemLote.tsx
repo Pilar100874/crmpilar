@@ -80,6 +80,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
   const [visualIdentityPrompt, setVisualIdentityPrompt] = useState<string>("");
   const [hasVisualIdentity, setHasVisualIdentity] = useState(false);
   const [showCostDialog, setShowCostDialog] = useState(false);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
 
   // execução
   const [processing, setProcessing] = useState(false);
@@ -292,6 +293,15 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
   };
 
   const executarLote = async () => {
+    if (selectedProdutos.length === 0) return;
+    if (removerSecundarias) {
+      setShowDeleteConfirmDialog(true);
+      return;
+    }
+    await doExecutarLote();
+  };
+
+  const doExecutarLote = async () => {
     if (selectedProdutos.length === 0) return;
     setProcessing(true);
     let ok = 0;
@@ -727,6 +737,30 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={startIaGeneration}>Confirmar e gerar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showDeleteConfirmDialog} onOpenChange={setShowDeleteConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apagar imagens secundárias?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A opção "Apagar imagens secundárias existentes ao aplicar" está ativada.
+              Todas as imagens secundárias dos produtos selecionados serão removidas antes de aplicar a nova imagem principal.
+              Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowDeleteConfirmDialog(false)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowDeleteConfirmDialog(false);
+                doExecutarLote();
+              }}
+            >
+              Confirmar e aplicar
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
