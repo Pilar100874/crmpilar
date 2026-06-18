@@ -8,6 +8,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Sparkles, Image as ImageIcon, Video, Cpu, AlertCircle, Music2, Images, Search, Check, X as XIcon, FolderOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PROMPT_PRESETS, ALL_REF_BLOCKS, type PromptPreset } from "@/components/marketing/ai-studio/PromptPresets";
+import { WaitingMessageField } from "./WaitingMessageField";
+
+const DEFAULT_WAITING_AI_MEDIA = "🎨 Gerando mídia, aguarde alguns instantes...";
 
 // Mapeia o bloco de referência exigido pelo preset → categoria da galeria do AI Studio
 const REF_BLOCK_TO_GALLERY: Record<string, { categoria: string; label: string }> = {
