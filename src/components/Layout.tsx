@@ -60,7 +60,7 @@ import { IncomingCallNotification } from "@/components/softphone/IncomingCallNot
 import { ChatAvisosFloatingButton } from "@/components/chat-interno/ChatAvisosFloatingButton";
 import { SupportTicketFloatingButton } from "@/components/support/SupportTicketFloatingButton";
 import { ChatInternoProvider } from "@/contexts/ChatInternoContext";
-import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { getEstabelecimentoId, isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
 import { MENUS_DISPONIVEIS } from "@/lib/menus";
 import { LayoutContext } from "@/contexts/LayoutContext";
 import { useAtalhos } from "@/hooks/useAtalhos";
@@ -245,6 +245,15 @@ export default function Layout({ children }: LayoutProps) {
   }, [isDarkMode]);
 
   const toggleTheme = () => setIsDarkMode(prev => !prev);
+
+  // Verifica se usuário é admin
+  useEffect(() => {
+    let cancelled = false;
+    isEstabelecimentoAdmin().then((result) => {
+      if (!cancelled) setIsAdmin(result);
+    });
+    return () => { cancelled = true; };
+  }, [user]);
   // Tracking de atividade do usuário em tempo real
   useActivityTracking();
   // Tracking de uso para Mapa de Calor do Sistema
