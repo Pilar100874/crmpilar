@@ -778,6 +778,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         categoria_google: formData.categoria_google || null,
       };
 
+      let produtoId: string | null = editingProduto?.id || null;
+
       if (editingProduto) {
         const { error } = await supabase
           .from('produtos')
@@ -797,9 +799,11 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         }
         toast.success("Produto atualizado!");
       } else {
-        const { error } = await supabase
+        const { data: inserted, error } = await supabase
           .from('produtos')
-          .insert(produtoData);
+          .insert(produtoData)
+          .select('id')
+          .single();
 
         if (error) {
           console.error('Erro ao inserir:', error);
@@ -812,15 +816,54 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
           }
           return;
         }
+        produtoId = inserted?.id || null;
         toast.success("Produto criado!");
+      }
+
+      // === Sincroniza galeria produto_imagens ===
+      if (produtoId) {
+        // 1. Remove os ids que não estão mais na galeria
+        const keepIds = uploadedImages.map((i) => i.id).filter(Boolean) as string[];
+        const { data: existing } = await supabase
+          .from('produto_imagens')
+          .select('id, storage_path')
+          .eq('produto_id', produtoId);
+        const toDelete = (existing || []).filter((e: any) => !keepIds.includes(e.id));
+        if (toDelete.length > 0) {
+          await supabase.from('produto_imagens').delete().in('id', toDelete.map((d: any) => d.id));
+          const paths = toDelete.map((d: any) => d.storage_path).filter(Boolean);
+          if (paths.length > 0) {
+            await supabase.storage.from('produtos').remove(paths);
+          }
+        }
+        // 2. Atualiza/insere registros
+        for (const img of uploadedImages) {
+          if (img.id) {
+            await supabase.from('produto_imagens').update({
+              is_principal: img.is_principal,
+              ordem: img.ordem,
+            }).eq('id', img.id);
+          } else {
+            await supabase.from('produto_imagens').insert({
+              produto_id: produtoId,
+              estabelecimento_id: estabelecimentoId,
+              url: img.url,
+              storage_path: img.storage_path || null,
+              is_principal: img.is_principal,
+              ordem: img.ordem,
+            });
+          }
+        }
       }
 
       setShowDialog(false);
       setEditingProduto(null);
       setSelectedFile(null);
+      setProductImages([]);
       setFormData(initialFormData);
       setActiveTab("basico");
       loadData();
+
     } catch (error: any) {
       console.error('Erro ao salvar produto:', error);
       toast.error("Erro ao salvar produto");
