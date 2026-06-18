@@ -36,6 +36,7 @@ export const MessageTemplateConfigNew = ({ config, handleConfigChange }: ConfigP
   const [error, setError] = useState<string | null>(null);
   const [numeros, setNumeros] = useState<NumeroRow[]>([]);
   const [templates, setTemplates] = useState<TemplateRow[]>([]);
+  const [showHelp, setShowHelp] = useState(false);
 
   const load = async (numeroId?: string) => {
     setLoading(true);
