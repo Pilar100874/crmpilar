@@ -1116,7 +1116,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
           <DialogHeader>
             <DialogTitle>Preview do prompt final</DialogTitle>
             <DialogDescription>
-              Combinação de nome do produto + texto extra{useVisualIdentity && hasVisualIdentity ? " + identidade visual" : ""}.
+              Texto extra do produto (use <code className="px-1 rounded bg-muted">{"{nome}"}</code> para inserir o nome){useVisualIdentity && hasVisualIdentity ? " + identidade visual" : ""}.
               {selectedProdutos.length > 50 && (
                 <span className="block mt-1 text-xs">
                   Exibindo os primeiros 50 de {selectedProdutos.length} produtos selecionados.
