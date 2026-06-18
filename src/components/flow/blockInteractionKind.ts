@@ -140,6 +140,7 @@ const MAP: Record<string, InteractionKind> = {
   jump_to: LOGIC,
   lead_scoring: LOGIC,
   goal: LOGIC,
+  global_redirect: SYSTEM,
 
   // IA
   ai_agent: AI,
