@@ -100,17 +100,24 @@ export const LiveBlockPreview = ({ type, config }: LiveBlockPreviewProps) => {
       case "goodbye": {
         const socials: { label: string; key: string }[] = [];
         if (c.showSocialButtons) {
-          if (c.socialWhatsApp) socials.push({ label: "📱 WhatsApp", key: "wa" });
-          if (c.socialInstagram) socials.push({ label: "📷 Instagram", key: "ig" });
-          if (c.socialFacebook) socials.push({ label: "👥 Facebook", key: "fb" });
+          if (c.socialWhatsApp) socials.push({ label: "🟢 WhatsApp", key: "wa" });
+          if (c.socialInstagram) socials.push({ label: "📸 Instagram", key: "ig" });
+          if (c.socialFacebook) socials.push({ label: "📘 Facebook", key: "fb" });
           if (c.socialWebsite) socials.push({ label: "🌐 Website", key: "ws" });
+          if (c.socialTiktok) socials.push({ label: "🎵 TikTok", key: "tt" });
+          if (c.socialYoutube) socials.push({ label: "▶️ YouTube", key: "yt" });
+          if (c.socialLinkedin) socials.push({ label: "💼 LinkedIn", key: "li" });
+          if (c.socialTelegram) socials.push({ label: "✈️ Telegram", key: "tg" });
+          if (c.socialTwitter) socials.push({ label: "🐦 X (Twitter)", key: "tw" });
+          if (c.socialThreads) socials.push({ label: "🧵 Threads", key: "th" });
+          if (c.socialPinterest) socials.push({ label: "📌 Pinterest", key: "pi" });
         }
         return (
           <>
             <Bubble>{c.message || "Até logo! 👋"}</Bubble>
             {socials.length > 0 && card(
               <>
-                <Body>Nos acompanhe em nossas redes sociais:</Body>
+                <Body>Nos acompanhe nas nossas redes:</Body>
                 <div className="bg-muted/30">
                   {socials.map((s) => (
                     <PreviewButton key={s.key} label={s.label} />
