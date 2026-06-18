@@ -11,6 +11,8 @@ import { RichTextEditor } from "../RichTextEditor";
 import { ConfigSection, ConfigInput, ConfigTextarea, ConfigSelect, ConfigSwitch, ConfigInfo } from "./ConfigField";
 import { FormattingToolbar } from "./FormattingToolbar";
 import { WaitingMessageField } from "./WaitingMessageField";
+import { DefaultableTextField } from "./DefaultableTextField";
+
 
 interface ConfigProps {
   config: any;
@@ -134,13 +136,15 @@ export const AskQuestionConfig = ({ config, handleConfigChange, nodes, edges, se
             info="Use expressões regulares para validar o formato da resposta"
           />
 
-          <ConfigTextarea
-            label="Mensagem de Erro Personalizada"
-            value={config.errorMessage || ""}
-            onChange={(v) => handleConfigChange("errorMessage", v)}
-            placeholder="Por favor, insira uma resposta válida"
+          <DefaultableTextField
+            label="Mensagem de Erro"
+            defaultValue="Por favor, insira uma resposta válida"
+            value={config.errorMessage}
+            onChange={(v) => handleConfigChange("errorMessage", v ?? "")}
+            multiline
             rows={2}
           />
+
         </ConfigSection>
       )}
 
@@ -202,13 +206,15 @@ export const AskEmailConfig = ({ config, handleConfigChange, nodes, edges, selec
         info="Verifica se o e-mail possui um formato válido"
       />
 
-      <ConfigTextarea
+      <DefaultableTextField
         label="Mensagem de Erro"
-        value={config.errorMessage || ""}
-        onChange={(v) => handleConfigChange("errorMessage", v)}
-        placeholder="Por favor, insira um e-mail válido"
+        defaultValue="Por favor, informe um email válido."
+        value={config.errorMessage}
+        onChange={(v) => handleConfigChange("errorMessage", v ?? "")}
+        multiline
         rows={2}
       />
+
     </ConfigSection>
 
     <div className="space-y-2">
@@ -284,13 +290,15 @@ export const AskNumberConfig = ({ config, handleConfigChange, nodes, edges, sele
         onChange={(checked) => handleConfigChange("allowDecimals", checked)}
       />
 
-      <ConfigTextarea
+      <DefaultableTextField
         label="Mensagem de Erro"
-        value={config.errorMessage || ""}
-        onChange={(v) => handleConfigChange("errorMessage", v)}
-        placeholder="Por favor, insira um número válido"
+        defaultValue="Por favor, informe um número válido."
+        value={config.errorMessage}
+        onChange={(v) => handleConfigChange("errorMessage", v ?? "")}
+        multiline
         rows={2}
       />
+
     </ConfigSection>
 
     <div className="space-y-2">
@@ -360,13 +368,15 @@ export const AskPhoneConfig = ({ config, handleConfigChange, nodes, edges, selec
         onChange={(checked) => handleConfigChange("validateFormat", checked)}
       />
 
-      <ConfigTextarea
+      <DefaultableTextField
         label="Mensagem de Erro"
-        value={config.errorMessage || ""}
-        onChange={(v) => handleConfigChange("errorMessage", v)}
-        placeholder="Por favor, insira um telefone válido"
+        defaultValue="Por favor, informe um telefone válido."
+        value={config.errorMessage}
+        onChange={(v) => handleConfigChange("errorMessage", v ?? "")}
+        multiline
         rows={2}
       />
+
     </ConfigSection>
 
     <div className="space-y-2">
@@ -623,13 +633,15 @@ export const AskUrlConfig = ({ config, handleConfigChange, nodes, edges, selecte
         info="Verifica se a URL possui um formato válido (http:// ou https://)"
       />
 
-      <ConfigTextarea
+      <DefaultableTextField
         label="Mensagem de Erro"
-        value={config.errorMessage || ""}
-        onChange={(v) => handleConfigChange("errorMessage", v)}
-        placeholder="Por favor, insira uma URL válida"
+        defaultValue="Por favor, insira uma URL válida"
+        value={config.errorMessage}
+        onChange={(v) => handleConfigChange("errorMessage", v ?? "")}
+        multiline
         rows={2}
       />
+
     </ConfigSection>
 
     <div className="space-y-2">
@@ -708,13 +720,15 @@ export const AskCNPJConfig = ({ config, handleConfigChange, nodes, edges, select
       </ConfigSection>
 
       <ConfigSection title="Validação">
-        <ConfigTextarea
+        <DefaultableTextField
           label="Mensagem de Erro"
-          value={config.errorMessage || ""}
-          onChange={(v) => handleConfigChange("errorMessage", v)}
-          placeholder="Por favor, insira um CNPJ válido"
+          defaultValue="Por favor, informe um CNPJ válido no formato XX.XXX.XXX/XXXX-XX."
+          value={config.errorMessage}
+          onChange={(v) => handleConfigChange("errorMessage", v ?? "")}
+          multiline
           rows={2}
         />
+
       </ConfigSection>
 
       <ConfigSection title="Campos de Dados">
@@ -794,13 +808,15 @@ export const AskCEPConfig = ({ config, handleConfigChange, nodes, edges, selecte
       </ConfigSection>
 
       <ConfigSection title="Validação">
-        <ConfigTextarea
+        <DefaultableTextField
           label="Mensagem de Erro"
-          value={config.errorMessage || ""}
-          onChange={(v) => handleConfigChange("errorMessage", v)}
-          placeholder="Por favor, insira um CEP válido"
+          defaultValue="Por favor, informe um CEP válido no formato XXXXX-XXX."
+          value={config.errorMessage}
+          onChange={(v) => handleConfigChange("errorMessage", v ?? "")}
+          multiline
           rows={2}
         />
+
       </ConfigSection>
 
       <ConfigSection title="Campos de Dados">
