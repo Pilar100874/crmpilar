@@ -1132,7 +1132,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   <img src={produto.foto_url} alt={produto.nome} className="w-14 h-14 object-cover rounded flex-shrink-0" />
                 ) : (
                   <div className="w-14 h-14 bg-muted rounded flex items-center justify-center flex-shrink-0">
-                    <Image className="w-5 h-5 text-muted-foreground" />
+                    <ImageIcon className="w-5 h-5 text-muted-foreground" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
@@ -1220,7 +1220,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                     <img src={produto.foto_url} alt={produto.nome} className="w-10 h-10 object-cover rounded" />
                   ) : (
                     <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
-                      <Image className="w-4 h-4 text-muted-foreground" />
+                      <ImageIcon className="w-4 h-4 text-muted-foreground" />
                     </div>
                   )}
                 </TableCell>
