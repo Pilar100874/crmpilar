@@ -2229,6 +2229,19 @@ function toWhatsappMarkdown(input: string): string {
   return out;
 }
 
+function normalizeUrl(raw: string, kind: "whatsapp" | "instagram" | "facebook" | "website"): string {
+  const value = String(raw || "").trim();
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+  if (kind === "whatsapp") {
+    const digits = value.replace(/\D/g, "");
+    return digits ? `https://wa.me/${digits}` : value;
+  }
+  if (kind === "instagram") return `https://instagram.com/${value.replace(/^@/, "")}`;
+  if (kind === "facebook") return value.includes("facebook.com") ? `https://${value}` : `https://facebook.com/${value}`;
+  return `https://${value}`;
+}
+
 async function sendWahaTextMessage(
   toNumberOnly: string,
   text: string,
