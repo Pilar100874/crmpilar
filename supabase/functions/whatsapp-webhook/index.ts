@@ -3036,9 +3036,14 @@ async function executeNode(
           console.log(`[FLOW] API Variables:`, apiVariables);
           console.log(`[FLOW] Report Variables:`, reportVariables);
 
-          // Aviso ao cliente antes de gerar o relatório
-          await onResponse("⏳ Aguarde... gerando relatório em tempo real.");
-          await new Promise((r) => setTimeout(r, 600));
+          // Aviso ao cliente antes de gerar o relatório (opcional, configurável)
+          if (cfg.waitingMessageEnabled !== false) {
+            const waitMsg = (typeof cfg.waitingMessage === "string" && cfg.waitingMessage.trim())
+              ? itp(cfg.waitingMessage)
+              : "⏳ Aguarde... gerando relatório em tempo real.";
+            await onResponse(waitMsg);
+            await new Promise((r) => setTimeout(r, 600));
+          }
           
           // Chamar edge function gerar-relatorio-pdf
           const supabase = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
