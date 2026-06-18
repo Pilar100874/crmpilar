@@ -5,6 +5,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Input } from "@/components/ui/input";
+import { WaitingMessageField } from "./WaitingMessageField";
+
+const DEFAULT_WAITING_REPORT = "⏳ Aguarde... gerando relatório em tempo real.";
 
 interface ConfigProps {
   config: any;
