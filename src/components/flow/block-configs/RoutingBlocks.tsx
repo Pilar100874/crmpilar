@@ -211,9 +211,11 @@ export const EnviarFilaConfig = ({ config, handleConfigChange }: RoutingConfigPr
           0 = normal, 10 = máxima prioridade
         </p>
       </div>
+      <HandoffMessageSection config={config} handleConfigChange={handleConfigChange} />
     </>
   );
 };
+
 
 export const AtribuirAtendenteConfig = ({ config, handleConfigChange }: RoutingConfigProps) => {
   const [atendentes, setAtendentes] = useState<any[]>([]);
@@ -278,9 +280,11 @@ export const AtribuirAtendenteConfig = ({ config, handleConfigChange }: RoutingC
       <p className="text-xs text-muted-foreground">
         Atribuir mesmo se atendente estiver ocupado
       </p>
+      <HandoffMessageSection config={config} handleConfigChange={handleConfigChange} />
     </>
   );
 };
+
 
 export const DefinirPrioridadeConfig = ({ config, handleConfigChange }: RoutingConfigProps) => {
   return (
@@ -315,6 +319,8 @@ export const DefinirPrioridadeConfig = ({ config, handleConfigChange }: RoutingC
           Ajuda a equipe a entender a urgência
         </p>
       </div>
+      <HandoffMessageSection config={config} handleConfigChange={handleConfigChange} />
     </>
   );
 };
+
