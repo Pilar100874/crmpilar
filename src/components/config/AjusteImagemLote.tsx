@@ -14,6 +14,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import {
   ArrowLeft, ArrowRight, Upload, Image as ImageIcon, Wand2, Loader2,
@@ -99,6 +100,8 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
   const [paused, setPaused] = useState(false);
   const pausedRef = useRef(false);
   const cancelGenRef = useRef(false);
+  const [genStartedAt, setGenStartedAt] = useState<number | null>(null);
+  const [nowTick, setNowTick] = useState(Date.now());
 
   // templates de textos extras (localStorage)
   const [templates, setTemplates] = useState<{ id: string; nome: string; texto: string }[]>([]);
@@ -157,6 +160,13 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
       if (raw) setTemplates(JSON.parse(raw));
     } catch {}
   }, []);
+
+  // tick para atualizar ETA enquanto gera
+  useEffect(() => {
+    if (genStartedAt === null) return;
+    const id = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [genStartedAt]);
 
   const persistTemplates = (next: { id: string; nome: string; texto: string }[]) => {
     setTemplates(next);
@@ -280,7 +290,10 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
     pausedRef.current = false;
     cancelGenRef.current = false;
     setPaused(false);
+    setGenStartedAt(Date.now());
+    setNowTick(Date.now());
     await runQueue(items);
+    setGenStartedAt(null);
   };
 
   const runQueue = async (items: IaItem[]) => {
@@ -300,7 +313,10 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
     pausedRef.current = false;
     cancelGenRef.current = false;
     setPaused(false);
+    setGenStartedAt(Date.now());
+    setNowTick(Date.now());
     await runQueue(pendentes);
+    setGenStartedAt(null);
   };
 
   const generateIaImage = async (produtoId: string, promptText: string) => {
@@ -969,6 +985,40 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                     </span>
                   </div>
                 </div>
+                {(() => {
+                  const total = iaItems.length;
+                  const done = iaItems.filter((i) => i.status === "ready" || i.status === "approved" || i.status === "error").length;
+                  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                  const isRunning = genStartedAt !== null && done < total;
+                  const elapsed = genStartedAt ? Math.max(1, (nowTick - genStartedAt) / 1000) : 0;
+                  const avg = done > 0 && genStartedAt ? elapsed / done : 0;
+                  const remaining = total - done;
+                  const etaSec = avg > 0 ? Math.round(avg * remaining) : 0;
+                  const fmt = (s: number) => {
+                    if (s <= 0) return "—";
+                    const m = Math.floor(s / 60);
+                    const r = s % 60;
+                    return m > 0 ? `${m}m ${r}s` : `${r}s`;
+                  };
+                  if (total === 0) return null;
+                  return (
+                    <div className="space-y-1">
+                      <Progress value={pct} className="h-2" />
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{done}/{total} concluídas ({pct}%)</span>
+                        <span>
+                          {isRunning
+                            ? `Tempo restante estimado: ${fmt(etaSec)} • decorrido ${fmt(Math.round(elapsed))}`
+                            : paused
+                              ? "Pausado"
+                              : done === total
+                                ? `Concluído em ${fmt(Math.round(elapsed))}`
+                                : "Aguardando..."}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
                 <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                   {iaItems.map((item) => (
                   <div key={item.produtoId} className={`border rounded-md p-3 space-y-2 ${item.status === "approved" ? "border-primary bg-primary/5" : ""}`}>
