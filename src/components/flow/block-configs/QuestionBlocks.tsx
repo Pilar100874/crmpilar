@@ -828,6 +828,16 @@ export const AskCEPConfig = ({ config, handleConfigChange, nodes, edges, selecte
         </div>
       </ConfigSection>
 
+      <WaitingMessageField
+        enabled={config.waitingMessageEnabled !== false}
+        message={config.waitingMessage || ""}
+        defaultMessage="Aguarde, consultando CEP..."
+        onChange={(patch) => {
+          if ("waitingMessageEnabled" in patch) handleConfigChange("waitingMessageEnabled", patch.waitingMessageEnabled);
+          if ("waitingMessage" in patch) handleConfigChange("waitingMessage", patch.waitingMessage);
+        }}
+      />
+
       <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
         <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
         <p className="text-sm text-foreground/80">
