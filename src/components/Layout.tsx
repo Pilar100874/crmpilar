@@ -245,6 +245,15 @@ export default function Layout({ children }: LayoutProps) {
   }, [isDarkMode]);
 
   const toggleTheme = () => setIsDarkMode(prev => !prev);
+
+  // Verifica se usuário é admin
+  useEffect(() => {
+    let cancelled = false;
+    isEstabelecimentoAdmin().then((result) => {
+      if (!cancelled) setIsAdmin(result);
+    });
+    return () => { cancelled = true; };
+  }, [user]);
   // Tracking de atividade do usuário em tempo real
   useActivityTracking();
   // Tracking de uso para Mapa de Calor do Sistema
