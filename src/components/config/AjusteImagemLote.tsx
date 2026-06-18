@@ -95,6 +95,8 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
   const [showCostDialog, setShowCostDialog] = useState(false);
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
   const [showPromptPreviewDialog, setShowPromptPreviewDialog] = useState(false);
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const [zoomLabel, setZoomLabel] = useState("");
 
   // pausa/retomar geração
   const [paused, setPaused] = useState(false);
