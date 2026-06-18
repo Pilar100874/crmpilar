@@ -2903,7 +2903,21 @@ async function executeNode(
     }
     case "goodbye": {
       let text = itp(cfg.message || cfg.text || "Até logo!");
-      const socialButtons: any[] = [];
+      const socialLines: string[] = [];
+
+      const SOCIAL_ICONS: Record<string, string> = {
+        whatsapp: "🟢",
+        instagram: "📸",
+        facebook: "📘",
+        website: "🌐",
+        tiktok: "🎵",
+        youtube: "▶️",
+        linkedin: "💼",
+        telegram: "✈️",
+        twitter: "🐦",
+        threads: "🧵",
+        pinterest: "📌",
+      };
 
       if (cfg.showSocialButtons) {
         try {
@@ -2931,7 +2945,10 @@ async function executeNode(
               ];
               for (const item of socials) {
                 const url = item.enabled ? normalizeUrl(item.url, item.kind) : "";
-                if (url) socialButtons.push({ type: "url", displayText: item.label, url });
+                if (url) {
+                  const icon = SOCIAL_ICONS[item.kind] || "🔗";
+                  socialLines.push(`${icon} *${item.label}*: ${url}`);
+                }
               }
             }
           }
@@ -2940,32 +2957,28 @@ async function executeNode(
         }
       }
 
+      // Monta uma única mensagem: despedida + lista de redes sociais
+      let fullText = text;
+      if (socialLines.length > 0) {
+        fullText += `\n\n*Nos acompanhe nas nossas redes:*\n${socialLines.join("\n")}`;
+      }
+
       const showRestart = cfg.showStartAgainButton !== false;
       if (showRestart) {
-        await onResponse(text, undefined, undefined, {
+        await onResponse(fullText, undefined, undefined, {
           type: "buttons",
           title: "",
-          description: text,
+          description: fullText,
           buttons: [{ type: "reply", displayText: "🔄 Recomeçar", id: "recomeçar" }],
         });
         context.pendingNodeId = node.id;
       } else {
-        await onResponse(text);
+        await onResponse(fullText);
+        context.pendingNodeId = null;
       }
-
-      for (let i = 0; i < socialButtons.length; i++) {
-        const button = socialButtons[i];
-        await onResponse("", undefined, undefined, {
-          type: "buttons",
-          title: "",
-          description: i === 0 ? "Nos acompanhe em nossas redes sociais:" : `Abrir ${button.displayText}`,
-          buttons: [button],
-        });
-      }
-      // limpa pendência — encerra fluxo
-      if (!showRestart) context.pendingNodeId = null;
       break;
     }
+
     case "ask_name":
     case "ask_question":
     case "ask_email":
