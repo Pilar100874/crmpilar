@@ -136,7 +136,15 @@ const menuItems: MenuItem[] = [
       { id: "Config Atendimento", title: "Configurações", url: "/atendimento-config", icon: Settings },
     ]
   },
-  { id: "Campanhas", title: "Calendário", url: "/calendario", icon: Megaphone },
+  {
+    id: "Campanhas",
+    title: "Calendário",
+    icon: Megaphone,
+    subItems: [
+      { id: "Calendario Painel", title: "Calendário", url: "/calendario", icon: Megaphone },
+      { id: "Config Calendario", title: "Configurações", url: "/calendario/configuracoes", icon: Settings },
+    ]
+  },
   { 
     id: "Vendas",
     title: "Vendas", 
