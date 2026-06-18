@@ -95,6 +95,8 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
   const [showCostDialog, setShowCostDialog] = useState(false);
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
   const [showPromptPreviewDialog, setShowPromptPreviewDialog] = useState(false);
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const [zoomLabel, setZoomLabel] = useState("");
 
   // pausa/retomar geração
   const [paused, setPaused] = useState(false);
@@ -1034,7 +1036,12 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <div className="text-[10px] uppercase text-muted-foreground text-center">Atual</div>
-                        <div className="aspect-square rounded bg-muted overflow-hidden flex items-center justify-center">
+                        <div
+                          className={`aspect-square rounded bg-muted overflow-hidden flex items-center justify-center ${item.currentPhotoUrl ? "cursor-pointer hover:ring-2 hover:ring-primary/60" : ""}`}
+                          onClick={() => {
+                            if (item.currentPhotoUrl) { setZoomImage(item.currentPhotoUrl); setZoomLabel("Imagem atual — " + item.nome); }
+                          }}
+                        >
                           {item.currentPhotoUrl ? (
                             <img src={item.currentPhotoUrl} className="w-full h-full object-cover" alt="atual" />
                           ) : (
@@ -1044,7 +1051,15 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                       </div>
                       <div className="space-y-1">
                         <div className="text-[10px] uppercase text-muted-foreground text-center">Nova</div>
-                        <div className="aspect-square rounded bg-muted overflow-hidden flex items-center justify-center">
+                        <div
+                          className={`aspect-square rounded bg-muted overflow-hidden flex items-center justify-center ${((item.status === "ready" || item.status === "approved") && item.imageDataUrl) ? "cursor-pointer hover:ring-2 hover:ring-primary/60" : ""}`}
+                          onClick={() => {
+                            if ((item.status === "ready" || item.status === "approved") && item.imageDataUrl) {
+                              setZoomImage(item.imageDataUrl);
+                              setZoomLabel("Imagem nova — " + item.nome);
+                            }
+                          }}
+                        >
                           {item.status === "generating" && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
                           {(item.status === "ready" || item.status === "approved") && item.imageDataUrl && (
                             <img src={item.imageDataUrl} className="w-full h-full object-cover" alt={item.nome} />
@@ -1254,6 +1269,26 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowTemplatesDialog(false)}>Fechar</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Zoom da imagem */}
+      <Dialog open={!!zoomImage} onOpenChange={(open) => { if (!open) { setZoomImage(null); setZoomLabel(""); } }}>
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[95vh] p-0 overflow-hidden flex flex-col items-center justify-center bg-black/90 border-none">
+          <div className="relative w-full h-full flex items-center justify-center p-4">
+            {zoomImage && (
+              <img
+                src={zoomImage}
+                alt={zoomLabel || "Zoom"}
+                className="max-w-full max-h-[85vh] object-contain rounded-md"
+              />
+            )}
+          </div>
+          {zoomLabel && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-background/80 text-foreground px-3 py-1 rounded-full text-xs">
+              {zoomLabel}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
