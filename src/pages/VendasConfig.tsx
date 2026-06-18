@@ -202,12 +202,19 @@ export default function VendasConfig() {
                         <Globe className="h-4 w-4" />
                         Importação
                       </TabsTrigger>
+                      <TabsTrigger value="ajuste-imagens" className="gap-2">
+                        <ImagePlus className="h-4 w-4" />
+                        Ajuste de Imagem em Lote
+                      </TabsTrigger>
                     </TabsList>
                     <TabsContent value="cadastro">
                       {estabelecimentoId && <ProdutosCRUD estabelecimentoId={estabelecimentoId} />}
                     </TabsContent>
                     <TabsContent value="importacao">
                       {estabelecimentoId && <ImportacaoApiTab estabelecimentoId={estabelecimentoId} />}
+                    </TabsContent>
+                    <TabsContent value="ajuste-imagens">
+                      {estabelecimentoId && <AjusteImagemLote estabelecimentoId={estabelecimentoId} />}
                     </TabsContent>
                   </Tabs>
                 </CardContent>
