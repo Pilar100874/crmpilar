@@ -97,15 +97,6 @@ export default function Config() {
       navigate("/config/visual");
       return;
     }
-    if (sectionId === "macros") {
-      setActiveSection(sectionId);
-      setSearchParams({ secao: sectionId });
-      return;
-    }
-    if (sectionId === "support-tickets") {
-      navigate("/admin/support-tickets");
-      return;
-    }
     setActiveSection(sectionId);
     setSearchParams({ secao: sectionId });
   };
@@ -141,12 +132,8 @@ export default function Config() {
         return <EstabelecimentosCRUD />;
       case "recuperar-senha":
         return <WhatsAppConfigCRUD />;
-      case "campanhas":
-        return <CampanhasContent />;
       case "conteudos":
         return <ConteudosContent />;
-      case "macros":
-        return <MacrosPage embedded />;
       default:
         return null;
     }
