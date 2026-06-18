@@ -769,8 +769,22 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                 <Input
                   value={bulkExtra}
                   onChange={(e) => setBulkExtra(e.target.value)}
-                  placeholder="Ex.: fundo branco, estilo fotográfico, vista frontal..."
+                  placeholder="Ex.: foto profissional de {nome}, fundo branco, vista frontal..."
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setBulkExtra((v) => `${v}{nome}`)}
+                  title="Inserir variável do nome do produto"
+                >
+                  + {"{nome}"}
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Use <code className="px-1 rounded bg-muted">{"{nome}"}</code> dentro do texto para inserir o nome do produto. Sem essa variável, o nome do produto NÃO será enviado para a IA — apenas o texto que você escrever.
+              </p>
+              <div className="flex gap-2">
                 <Button
                   variant="outline"
                   onClick={() => {
