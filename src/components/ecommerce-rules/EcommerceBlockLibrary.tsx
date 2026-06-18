@@ -1,3 +1,4 @@
+import { setBlockDragPreview } from "@/lib/blockDragPreview";
 import { ECOMMERCE_RULE_BLOCKS } from "@/types/ecommerceRules";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";

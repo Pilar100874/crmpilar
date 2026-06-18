@@ -1,3 +1,4 @@
+import { setBlockDragPreview } from "@/lib/blockDragPreview";
 import { X, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";

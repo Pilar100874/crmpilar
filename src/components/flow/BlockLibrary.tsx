@@ -1,3 +1,4 @@
+import { setBlockDragPreview } from "@/lib/blockDragPreview";
 import { BLOCK_DEFINITIONS, NodeType } from "@/types/flow";
 import { Card } from "@/components/ui/card";
 import * as Icons from "lucide-react";

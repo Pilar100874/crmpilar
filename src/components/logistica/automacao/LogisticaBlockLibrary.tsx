@@ -1,3 +1,4 @@
+import { setBlockDragPreview } from "@/lib/blockDragPreview";
 import { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';

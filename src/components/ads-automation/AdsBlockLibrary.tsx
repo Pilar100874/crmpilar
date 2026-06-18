@@ -1,3 +1,4 @@
+import { setBlockDragPreview } from "@/lib/blockDragPreview";
 import { ADS_BLOCK_DEFINITIONS, AdsBlockType } from "@/types/adsFlow";
 import { Card } from "@/components/ui/card";
 import * as Icons from "lucide-react";
