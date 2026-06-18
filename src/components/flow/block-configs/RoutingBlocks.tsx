@@ -7,11 +7,39 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Database } from "lucide-react";
+import { DefaultableTextField } from "./DefaultableTextField";
+import { ConfigSection, ConfigSwitch } from "./ConfigField";
+
+const DEFAULT_HANDOFF_MESSAGE = "Você foi transferido para um atendente. Aguarde, por favor.";
+
+const HandoffMessageSection = ({ config, handleConfigChange }: { config: any; handleConfigChange: (k: string, v: any) => void }) => (
+  <ConfigSection title="Mensagem enviada ao cliente">
+    <div className="space-y-3">
+      <ConfigSwitch
+        label="Enviar mensagem ao transferir"
+        checked={config.sendHandoffMessage !== false}
+        onChange={(checked) => handleConfigChange('sendHandoffMessage', checked)}
+        info="Quando desativado, o cliente não recebe nenhuma mensagem na transferência."
+      />
+      {config.sendHandoffMessage !== false && (
+        <DefaultableTextField
+          label="Texto da mensagem"
+          defaultValue={DEFAULT_HANDOFF_MESSAGE}
+          value={config.handoffMessage}
+          onChange={(v) => handleConfigChange('handoffMessage', v)}
+          multiline
+          rows={3}
+        />
+      )}
+    </div>
+  </ConfigSection>
+);
 
 interface RoutingConfigProps {
   config: any;
   handleConfigChange: (key: string, value: any) => void;
 }
+
 
 export const TransferirOmnichannelConfig = ({ config, handleConfigChange }: RoutingConfigProps) => {
   const [workflows, setWorkflows] = useState<any[]>([]);
@@ -110,9 +138,11 @@ export const TransferirOmnichannelConfig = ({ config, handleConfigChange }: Rout
       <p className="text-xs text-muted-foreground">
         Enviar histórico e dados do cliente para o workflow
       </p>
+      <HandoffMessageSection config={config} handleConfigChange={handleConfigChange} />
     </>
   );
 };
+
 
 export const EnviarFilaConfig = ({ config, handleConfigChange }: RoutingConfigProps) => {
   const [filas, setFilas] = useState<any[]>([]);
@@ -181,9 +211,11 @@ export const EnviarFilaConfig = ({ config, handleConfigChange }: RoutingConfigPr
           0 = normal, 10 = máxima prioridade
         </p>
       </div>
+      <HandoffMessageSection config={config} handleConfigChange={handleConfigChange} />
     </>
   );
 };
+
 
 export const AtribuirAtendenteConfig = ({ config, handleConfigChange }: RoutingConfigProps) => {
   const [atendentes, setAtendentes] = useState<any[]>([]);
@@ -248,9 +280,11 @@ export const AtribuirAtendenteConfig = ({ config, handleConfigChange }: RoutingC
       <p className="text-xs text-muted-foreground">
         Atribuir mesmo se atendente estiver ocupado
       </p>
+      <HandoffMessageSection config={config} handleConfigChange={handleConfigChange} />
     </>
   );
 };
+
 
 export const DefinirPrioridadeConfig = ({ config, handleConfigChange }: RoutingConfigProps) => {
   return (
@@ -285,6 +319,8 @@ export const DefinirPrioridadeConfig = ({ config, handleConfigChange }: RoutingC
           Ajuda a equipe a entender a urgência
         </p>
       </div>
+      <HandoffMessageSection config={config} handleConfigChange={handleConfigChange} />
     </>
   );
 };
+

@@ -4084,7 +4084,12 @@ async function executeNode(
             .from("conversations")
             .update(updates)
             .eq("phone_number", phone);
-          await onResponse("Você foi transferido para um atendente. Aguarde, por favor.");
+          if (cfg.sendHandoffMessage !== false) {
+            const handoff = (typeof cfg.handoffMessage === "string" && cfg.handoffMessage.trim().length > 0)
+              ? itp(cfg.handoffMessage)
+              : "Você foi transferido para um atendente. Aguarde, por favor.";
+            await onResponse(handoff);
+          }
         } catch (e) {
           console.error(`[FLOW] roteamento error:`, e);
         }
