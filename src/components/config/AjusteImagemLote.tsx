@@ -754,7 +754,12 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
             </div>
 
             <div className="border rounded-md p-3 space-y-2 bg-muted/30">
-              <Label className="text-xs">Aplicar texto extra em lote</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Aplicar texto extra em lote</Label>
+                <Button variant="outline" size="sm" onClick={() => setShowTemplatesDialog(true)}>
+                  <Save className="h-3 w-3 mr-1" /> Templates
+                </Button>
+              </div>
               <div className="flex gap-2">
                 <Input
                   value={bulkExtra}
@@ -788,10 +793,27 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                   Limpar
                 </Button>
               </div>
+              {templates.length > 0 && (
+                <div className="flex flex-wrap gap-1 pt-1">
+                  <span className="text-xs text-muted-foreground self-center mr-1">Rápido:</span>
+                  {templates.map((t) => (
+                    <Badge
+                      key={t.id}
+                      variant="secondary"
+                      className="cursor-pointer hover:bg-secondary/80"
+                      onClick={() => setBulkExtra(t.texto)}
+                      title={t.texto}
+                    >
+                      {t.nome}
+                    </Badge>
+                  ))}
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
                 O filtro afeta apenas a visualização e a aplicação em lote. Todos os {selectedProdutos.length} produto(s) selecionados terão imagem gerada.
               </p>
             </div>
+
 
             <div className="border rounded-md divide-y max-h-[28rem] overflow-auto">
               {promptsFilteredProdutos.map((p) => (
