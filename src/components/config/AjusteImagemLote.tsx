@@ -258,7 +258,12 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
 
   const buildPromptFor = (p: Produto) => {
     const extra = (iaExtras[p.id] || "").trim();
-    return extra ? `${p.nome} — ${extra}` : p.nome;
+    // Substitui as variáveis {nome} / {produto} pelo nome do produto.
+    // Se o texto extra existir, ele é usado como prompt completo (não anexamos mais o nome automaticamente).
+    if (extra) {
+      return extra.replace(/\{nome\}/gi, p.nome).replace(/\{produto\}/gi, p.nome);
+    }
+    return p.nome;
   };
 
   const startIaGeneration = async () => {
