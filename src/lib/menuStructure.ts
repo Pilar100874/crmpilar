@@ -103,7 +103,7 @@ export const menuStructure: MenuCategory[] = [
       { id: "Config Estab Cadastro Usuarios", title: "Estabelecimento → Cadastro de Usuários", url: "/config?secao=cadastro-estabelecimentos&subsecao=usuarios-acessos&subsubsecao=cadastro-usuarios", icon: LucideIcons.Users },
       { id: "Config Estab Segmentos", title: "Estabelecimento → Segmentos", url: "/config?secao=cadastro-estabelecimentos&subsecao=usuarios-acessos&subsubsecao=cadastro-segmentos", icon: LucideIcons.Tag },
       { id: "Config Estab Redes Sociais", title: "Estabelecimento → Redes Sociais", url: "/config?secao=cadastro-estabelecimentos&subsecao=redes-sociais", icon: LucideIcons.Share2 },
-      { id: "Config Estab Calendario", title: "Estabelecimento → Regras do Calendário", url: "/config?secao=cadastro-estabelecimentos&subsecao=regras-calendario", icon: LucideIcons.Calendar },
+      
       { id: "Config Estab UCM", title: "Estabelecimento → Configuração UCM/PABX", url: "/config?secao=cadastro-estabelecimentos&subsecao=configuracao-ucm", icon: LucideIcons.Phone },
       { id: "Config Estab Integracao", title: "Estabelecimento → Integração e APIs", url: "/config?secao=cadastro-estabelecimentos&subsecao=integracao-apis", icon: LucideIcons.Link },
       { id: "Config Estab Gerador API", title: "Estabelecimento → Gerador de API", url: "/config?secao=cadastro-estabelecimentos&subsecao=integracao-apis&subsubsecao=gerador-api", icon: LucideIcons.Zap },

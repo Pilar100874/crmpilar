@@ -217,13 +217,6 @@ const getConfigCategories = (): ConfigCategory[] => [
     bgColor: "bg-gray-500/10",
     items: [
       {
-        id: "calendario-regras",
-        title: "Regras do Calendário",
-        description: "Automação de tarefas",
-        icon: Calendar,
-        component: CalendarioRegrasCRUD,
-      },
-      {
         id: "seguranca",
         title: "Segurança e LGPD",
         description: "Políticas e conformidade",
