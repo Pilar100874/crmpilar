@@ -720,13 +720,15 @@ export const AskCNPJConfig = ({ config, handleConfigChange, nodes, edges, select
       </ConfigSection>
 
       <ConfigSection title="Validação">
-        <ConfigTextarea
+        <DefaultableTextField
           label="Mensagem de Erro"
-          value={config.errorMessage || ""}
-          onChange={(v) => handleConfigChange("errorMessage", v)}
-          placeholder="Por favor, insira um CNPJ válido"
+          defaultValue="Por favor, informe um CNPJ válido no formato XX.XXX.XXX/XXXX-XX."
+          value={config.errorMessage}
+          onChange={(v) => handleConfigChange("errorMessage", v ?? "")}
+          multiline
           rows={2}
         />
+
       </ConfigSection>
 
       <ConfigSection title="Campos de Dados">
