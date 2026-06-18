@@ -20,7 +20,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { prompt, productName, referenceImageUrl } = await req.json();
+    const { prompt, productName, referenceImageUrl, model, visualIdentityPrompt } = await req.json();
     if (!prompt && !productName) {
       return new Response(JSON.stringify({ error: "prompt ou productName é obrigatório" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -31,9 +31,12 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY não configurada");
 
     const basePrompt = prompt?.trim() || productName;
+    const viBlock = visualIdentityPrompt?.trim()
+      ? `\nIdentidade visual da marca a ser respeitada: ${visualIdentityPrompt.trim()}`
+      : "";
     const fullPrompt = `Foto de produto profissional para catálogo: ${basePrompt}.
 Fundo branco/neutro limpo, iluminação de estúdio, alta nitidez, composição centrada, estilo e-commerce.
-${referenceImageUrl ? "Use a imagem de referência fornecida como base visual do produto, mantendo formato, cores e proporções." : ""}
+${referenceImageUrl ? "Use a imagem de referência fornecida como base visual do produto, mantendo formato, cores e proporções." : ""}${viBlock}
 IMPORTANTE: Sem textos, sem marcas d'água, sem logotipos.`;
 
     const userContent: any[] = [{ type: "text", text: fullPrompt }];
@@ -42,11 +45,13 @@ IMPORTANTE: Sem textos, sem marcas d'água, sem logotipos.`;
       userContent.push({ type: "image_url", image_url: { url: dataUrl } });
     }
 
+    const selectedModel = model || "google/gemini-2.5-flash-image";
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image",
+        model: selectedModel,
         messages: [{ role: "user", content: userContent }],
         modalities: ["image", "text"],
       }),
