@@ -167,12 +167,13 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
           >
             <div className="flex items-center gap-2">
               <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
-              <Input
+              <EmojiInput
                 value={button.label || ""}
-                onChange={(e) => updateButton(index, "label", e.target.value)}
+                onChange={(v) => updateButton(index, "label", v)}
                 placeholder={`Texto do botão ${index + 1}`}
-                className="flex-1"
+                containerClassName="flex-1"
               />
+
               <Button
                 variant="ghost"
                 size="icon"
