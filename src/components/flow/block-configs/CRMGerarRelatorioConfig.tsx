@@ -319,7 +319,10 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
         <Label>Relatório</Label>
         <Select
           value={config.relatorioId || ""}
-          onValueChange={(value) => handleConfigChange({ relatorioId: value })}
+          onValueChange={(value) => {
+            const rel = relatorios.find((r) => r.id === value);
+            handleConfigChange({ relatorioId: value, relatorioNome: rel?.nome || "" });
+          }}
         >
           <SelectTrigger>
             <SelectValue placeholder="Selecione um relatório" />
