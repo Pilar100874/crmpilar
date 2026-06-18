@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Info, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EmojiPickerButton } from "./EmojiPickerButton";
+
 
 // Container para seções de configuração
 export const ConfigSection = ({ 
