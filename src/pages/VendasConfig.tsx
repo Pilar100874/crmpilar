@@ -20,7 +20,8 @@ import {
   MessageCircle,
   FileUp,
   FileText,
-  Bot
+  Bot,
+  ImagePlus
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,6 +43,7 @@ import PedagioAPIConfigCRUD from '@/components/config/PedagioAPIConfigCRUD';
 import { ImportacaoApiTab } from '@/components/config/ImportacaoApiTab';
 import FreteTerceirosConfig from '@/components/config/FreteTerceirosConfig';
 import { ImportacaoTerceirosTab } from '@/components/config/ImportacaoTerceirosTab';
+import { AjusteImagemLote } from '@/components/config/AjusteImagemLote';
 import { OrcamentoReportConfigContent } from '@/components/config/OrcamentoReportConfigContent';
 import LicitacoesBot from '@/components/vendas/LicitacoesBot';
 import { useQuery } from '@tanstack/react-query';
@@ -200,12 +202,19 @@ export default function VendasConfig() {
                         <Globe className="h-4 w-4" />
                         Importação
                       </TabsTrigger>
+                      <TabsTrigger value="ajuste-imagens" className="gap-2">
+                        <ImagePlus className="h-4 w-4" />
+                        Ajuste de Imagem em Lote
+                      </TabsTrigger>
                     </TabsList>
                     <TabsContent value="cadastro">
                       {estabelecimentoId && <ProdutosCRUD estabelecimentoId={estabelecimentoId} />}
                     </TabsContent>
                     <TabsContent value="importacao">
                       {estabelecimentoId && <ImportacaoApiTab estabelecimentoId={estabelecimentoId} />}
+                    </TabsContent>
+                    <TabsContent value="ajuste-imagens">
+                      {estabelecimentoId && <AjusteImagemLote estabelecimentoId={estabelecimentoId} />}
                     </TabsContent>
                   </Tabs>
                 </CardContent>
