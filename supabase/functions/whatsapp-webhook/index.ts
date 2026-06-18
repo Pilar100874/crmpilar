@@ -1290,7 +1290,10 @@ serve(async (req) => {
           } else if (method === "photo") {
             const incoming = context.vars.__incoming_image;
             if (incoming) {
-              await respond("⏳ Recebendo a foto, aguarde...");
+              if (cfg.waitingMessageEnabled !== false) {
+                const customWait = typeof cfg.waitingMessage === "string" ? cfg.waitingMessage.trim() : "";
+                await respond(customWait || "⏳ Recebendo a foto, aguarde...");
+              }
               const publicUrl = await downloadIncomingImageAsPublicUrl(incoming, {
                 wahaUrl: WAHA_URL,
                 wahaApiKey: WAHA_API_KEY,
