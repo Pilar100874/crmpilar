@@ -633,13 +633,15 @@ export const AskUrlConfig = ({ config, handleConfigChange, nodes, edges, selecte
         info="Verifica se a URL possui um formato válido (http:// ou https://)"
       />
 
-      <ConfigTextarea
+      <DefaultableTextField
         label="Mensagem de Erro"
-        value={config.errorMessage || ""}
-        onChange={(v) => handleConfigChange("errorMessage", v)}
-        placeholder="Por favor, insira uma URL válida"
+        defaultValue="Por favor, insira uma URL válida"
+        value={config.errorMessage}
+        onChange={(v) => handleConfigChange("errorMessage", v ?? "")}
+        multiline
         rows={2}
       />
+
     </ConfigSection>
 
     <div className="space-y-2">
