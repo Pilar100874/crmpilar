@@ -363,6 +363,14 @@ function BotBuilderContent() {
     const target = event.target as HTMLElement;
     const droppedOnPane = target?.classList?.contains('react-flow__pane');
     if (!droppedOnPane) return;
+    // Bloqueia abrir o smart-menu se o bloco-fonte é de saída única e já tem conexão
+    if (start.handleType === 'source') {
+      const srcNode = nodes.find((n) => n.id === start.nodeId);
+      if (srcNode && !isMultiOutputNode(srcNode) && edges.some((e) => e.source === start.nodeId)) {
+        toast.error("Este bloco tem apenas 1 saída. Remova a conexão existente antes de criar outra.");
+        return;
+      }
+    }
     const clientX = event.clientX ?? event.changedTouches?.[0]?.clientX;
     const clientY = event.clientY ?? event.changedTouches?.[0]?.clientY;
     if (clientX == null) return;
@@ -373,7 +381,7 @@ function BotBuilderContent() {
       fromNodeId: start.nodeId,
       handleType: start.handleType,
     });
-  }, [reactFlowInstance]);
+  }, [reactFlowInstance, nodes, edges, isMultiOutputNode]);
 
   const handleSmartPick = useCallback((type: string) => {
     if (!connectMenu) return;
