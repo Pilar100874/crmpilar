@@ -571,4 +571,7 @@ export const PREVIEW_SUPPORTED_TYPES = new Set<string>([
   "ask_cnpj",
   "ask_cep",
   "attach_catalog",
+  "crm_gerar_relatorio",
+  "crm_cadastro_empresa",
+  "crm_agenda_rapida",
 ]);
