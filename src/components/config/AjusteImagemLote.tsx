@@ -52,6 +52,8 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
   const [iaExtras, setIaExtras] = useState<Record<string, string>>({});
   const [bulkExtra, setBulkExtra] = useState("");
   const [promptsFilterNome, setPromptsFilterNome] = useState("");
+  const [promptsFilterCategoria, setPromptsFilterCategoria] = useState<string>("all");
+  const [promptsFilterGrupo, setPromptsFilterGrupo] = useState<string>("all");
 
   // ---- dados base
   const [produtos, setProdutos] = useState<Produto[]>([]);
@@ -147,6 +149,15 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
     () => produtos.filter((p) => selectedIds.has(p.id)),
     [produtos, selectedIds]
   );
+
+  const promptsFilteredProdutos = useMemo(() => {
+    return selectedProdutos.filter((p) => {
+      if (promptsFilterNome && !p.nome.toLowerCase().includes(promptsFilterNome.toLowerCase())) return false;
+      if (promptsFilterCategoria !== "all" && p.categoria_id !== promptsFilterCategoria) return false;
+      if (promptsFilterGrupo !== "all" && p.grupo_id !== promptsFilterGrupo) return false;
+      return true;
+    });
+  }, [selectedProdutos, promptsFilterNome, promptsFilterCategoria, promptsFilterGrupo]);
 
   const toggleSelect = (id: string) =>
     setSelectedIds((prev) => {
@@ -631,7 +642,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               <div>
                 <Label>Filtrar por nome</Label>
                 <Input
@@ -640,9 +651,42 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                   placeholder="Buscar nos selecionados..."
                 />
               </div>
-              <div className="text-xs text-muted-foreground self-end pb-2">
-                {selectedProdutos.length} produto(s) — todos serão gerados
+              <div>
+                <Label>Categoria</Label>
+                <Select value={promptsFilterCategoria} onValueChange={setPromptsFilterCategoria}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {categorias.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
+              <div>
+                <Label>Grupo</Label>
+                <Select value={promptsFilterGrupo} onValueChange={setPromptsFilterGrupo}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {grupos.map((g) => <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setPromptsFilterNome("");
+                    setPromptsFilterCategoria("all");
+                    setPromptsFilterGrupo("all");
+                  }}
+                >
+                  <X className="h-3 w-3 mr-1" /> Limpar filtros
+                </Button>
+              </div>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {selectedProdutos.length} produto(s) selecionado(s) — {promptsFilteredProdutos.length} visível(is) — todos serão gerados
             </div>
 
             <div className="border rounded-md p-3 space-y-2 bg-muted/30">
@@ -656,15 +700,12 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    const alvo = selectedProdutos.filter((p) =>
-                      !promptsFilterNome || p.nome.toLowerCase().includes(promptsFilterNome.toLowerCase())
-                    );
                     setIaExtras((prev) => {
                       const next = { ...prev };
-                      alvo.forEach((p) => { next[p.id] = bulkExtra; });
+                      promptsFilteredProdutos.forEach((p) => { next[p.id] = bulkExtra; });
                       return next;
                     });
-                    toast.success(`Texto aplicado em ${alvo.length} produto(s)`);
+                    toast.success(`Texto aplicado em ${promptsFilteredProdutos.length} produto(s)`);
                   }}
                   disabled={!bulkExtra.trim()}
                 >
@@ -673,12 +714,9 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                 <Button
                   variant="ghost"
                   onClick={() => {
-                    const alvo = selectedProdutos.filter((p) =>
-                      !promptsFilterNome || p.nome.toLowerCase().includes(promptsFilterNome.toLowerCase())
-                    );
                     setIaExtras((prev) => {
                       const next = { ...prev };
-                      alvo.forEach((p) => { delete next[p.id]; });
+                      promptsFilteredProdutos.forEach((p) => { delete next[p.id]; });
                       return next;
                     });
                   }}
@@ -692,31 +730,32 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
             </div>
 
             <div className="border rounded-md divide-y max-h-[28rem] overflow-auto">
-              {selectedProdutos
-                .filter((p) => !promptsFilterNome || p.nome.toLowerCase().includes(promptsFilterNome.toLowerCase()))
-                .map((p) => (
-                  <div key={p.id} className="flex items-start gap-3 p-2">
-                    <div className="w-10 h-10 rounded bg-muted overflow-hidden flex items-center justify-center shrink-0">
-                      {p.foto_url ? (
-                        <img src={p.foto_url} alt={p.nome} className="w-full h-full object-cover" />
-                      ) : (
-                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{p.nome}</div>
-                      <Input
-                        className="h-8 text-xs mt-1"
-                        placeholder="Texto extra para este produto (opcional)"
-                        value={iaExtras[p.id] || ""}
-                        onChange={(e) =>
-                          setIaExtras((prev) => ({ ...prev, [p.id]: e.target.value }))
-                        }
-                      />
-                    </div>
+              {promptsFilteredProdutos.map((p) => (
+                <div key={p.id} className="flex items-start gap-3 p-2">
+                  <div className="w-10 h-10 rounded bg-muted overflow-hidden flex items-center justify-center shrink-0">
+                    {p.foto_url ? (
+                      <img src={p.foto_url} alt={p.nome} className="w-full h-full object-cover" />
+                    ) : (
+                      <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                    )}
                   </div>
-                ))}
-              {selectedProdutos.filter((p) => !promptsFilterNome || p.nome.toLowerCase().includes(promptsFilterNome.toLowerCase())).length === 0 && (
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{p.nome}</div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {p.categoria?.nome || "Sem categoria"} • {p.grupo?.nome || "Sem grupo"}
+                    </div>
+                    <Input
+                      className="h-8 text-xs mt-1"
+                      placeholder="Texto extra para este produto (opcional)"
+                      value={iaExtras[p.id] || ""}
+                      onChange={(e) =>
+                        setIaExtras((prev) => ({ ...prev, [p.id]: e.target.value }))
+                      }
+                    />
+                  </div>
+                </div>
+              ))}
+              {promptsFilteredProdutos.length === 0 && (
                 <div className="p-4 text-sm text-muted-foreground">Nenhum produto corresponde ao filtro</div>
               )}
             </div>
