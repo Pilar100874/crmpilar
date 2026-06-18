@@ -258,7 +258,12 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
 
   const buildPromptFor = (p: Produto) => {
     const extra = (iaExtras[p.id] || "").trim();
-    return extra ? `${p.nome} — ${extra}` : p.nome;
+    // Substitui as variáveis {nome} / {produto} pelo nome do produto.
+    // Se o texto extra existir, ele é usado como prompt completo (não anexamos mais o nome automaticamente).
+    if (extra) {
+      return extra.replace(/\{nome\}/gi, p.nome).replace(/\{produto\}/gi, p.nome);
+    }
+    return p.nome;
   };
 
   const startIaGeneration = async () => {
@@ -764,8 +769,22 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                 <Input
                   value={bulkExtra}
                   onChange={(e) => setBulkExtra(e.target.value)}
-                  placeholder="Ex.: fundo branco, estilo fotográfico, vista frontal..."
+                  placeholder="Ex.: foto profissional de {nome}, fundo branco, vista frontal..."
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setBulkExtra((v) => `${v}{nome}`)}
+                  title="Inserir variável do nome do produto"
+                >
+                  + {"{nome}"}
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Use <code className="px-1 rounded bg-muted">{"{nome}"}</code> dentro do texto para inserir o nome do produto. Sem essa variável, o nome do produto NÃO será enviado para a IA — apenas o texto que você escrever.
+              </p>
+              <div className="flex gap-2">
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -1097,7 +1116,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
           <DialogHeader>
             <DialogTitle>Preview do prompt final</DialogTitle>
             <DialogDescription>
-              Combinação de nome do produto + texto extra{useVisualIdentity && hasVisualIdentity ? " + identidade visual" : ""}.
+              Texto extra do produto (use <code className="px-1 rounded bg-muted">{"{nome}"}</code> para inserir o nome){useVisualIdentity && hasVisualIdentity ? " + identidade visual" : ""}.
               {selectedProdutos.length > 50 && (
                 <span className="block mt-1 text-xs">
                   Exibindo os primeiros 50 de {selectedProdutos.length} produtos selecionados.
