@@ -16,6 +16,13 @@ async function urlToDataUrl(url: string): Promise<string> {
   return `data:${contentType};base64,${btoa(bin)}`;
 }
 
+function looksLikeImageData(value: string | undefined): value is string {
+  if (!value) return false;
+  if (value.startsWith("http")) return true;
+  const match = value.match(/^data:image\/[a-zA-Z0-9.+-]+;base64,(.+)$/);
+  return !!match?.[1] && match[1].length > 5000;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -56,15 +63,18 @@ IMPORTANTE: Sem textos, sem marcas d'água, sem logotipos.`;
         quality: "low",
       };
     } else {
-      // Gemini image models: messages + modalities
-      const userContent: any[] = [{ type: "text", text: fullPrompt }];
+      // Gemini image models: messages + modalities. Sem referência, use content string.
+      let content: string | any[] = fullPrompt;
       if (referenceImageUrl) {
         const dataUrl = await urlToDataUrl(referenceImageUrl);
-        userContent.push({ type: "image_url", image_url: { url: dataUrl } });
+        content = [
+          { type: "text", text: fullPrompt },
+          { type: "image_url", image_url: { url: dataUrl } },
+        ];
       }
       body = {
         model: selectedModel,
-        messages: [{ role: "user", content: userContent }],
+        messages: [{ role: "user", content }],
         modalities: ["image", "text"],
       };
     }
@@ -106,7 +116,7 @@ IMPORTANTE: Sem textos, sem marcas d'água, sem logotipos.`;
       }
     }
 
-    if (!imageData) {
+    if (!looksLikeImageData(imageData)) {
       console.error("Resposta sem imagem. Keys:", Object.keys(data || {}), "data sample:", JSON.stringify(data).slice(0, 400));
       return new Response(JSON.stringify({ error: "Não foi possível gerar a imagem (resposta sem dados)" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
