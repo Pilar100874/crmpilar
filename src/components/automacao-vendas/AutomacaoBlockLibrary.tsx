@@ -102,7 +102,7 @@ export const AutomacaoBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
                         <Card
                           key={block.type}
                           draggable
-                          onDragStart={(event) => onDragStart(event, block.type)}
+                          onDragStart={(event) => { setBlockDragPreview(event, block.label, (block as any).color); onDragStart(event, block.type); }}
                           onDoubleClick={() => window.dispatchEvent(new CustomEvent("workflow:add-block", { detail: { type: block.type } }))}
                           title="Arraste ou clique 2x para adicionar"
                           className="px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-colors duration-100 select-none"
