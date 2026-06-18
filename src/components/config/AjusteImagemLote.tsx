@@ -266,6 +266,15 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
     setShowCostDialog(true);
   };
 
+  const openPromptPreview = () => {
+    if (showCostDialog) {
+      setShowCostDialog(false);
+      window.setTimeout(() => setShowPromptPreviewDialog(true), 80);
+      return;
+    }
+    setShowPromptPreviewDialog(true);
+  };
+
   const buildPromptFor = (p: Produto) => {
     const extra = (iaExtras[p.id] || "").trim();
     // Substitui as variáveis {nome} / {produto} pelo nome do produto.
@@ -890,7 +899,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                 <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
               </Button>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setShowPromptPreviewDialog(true)}>
+                <Button variant="outline" onClick={openPromptPreview}>
                   <Eye className="h-4 w-4 mr-1" /> Preview do prompt
                 </Button>
                 <Button onClick={goToCostFromPrompts}>
