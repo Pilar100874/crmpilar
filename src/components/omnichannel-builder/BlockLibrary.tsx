@@ -1,3 +1,4 @@
+import { setBlockDragPreview } from "@/lib/blockDragPreview";
 import { X, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -53,9 +54,10 @@ export const BlockLibrary = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [openCategories, setOpenCategories] = useState<string[]>(["Distribuição", "Lógica"]);
 
-  const handleDragStart = (e: React.DragEvent, type: OmnichannelBlockType) => {
+  const handleDragStart = (e: React.DragEvent, type: OmnichannelBlockType, label: string) => {
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("application/reactflow", type);
+    setBlockDragPreview(e, label);
     onDragStart(type);
   };
 
@@ -171,7 +173,7 @@ export const BlockLibrary = ({
                         <Card
                           key={block.type}
                           draggable
-                          onDragStart={(e) => handleDragStart(e, block.type)}
+                          onDragStart={(e) => handleDragStart(e, block.type, block.label)}
                           onDoubleClick={() => window.dispatchEvent(new CustomEvent("workflow:add-block", { detail: { type: block.type } }))}
                           title="Arraste ou clique 2x para adicionar"
                           className="px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-colors duration-100 select-none"
