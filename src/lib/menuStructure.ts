@@ -86,6 +86,7 @@ export const menuStructure: MenuCategory[] = [
       { id: "Ecommerce Pagamentos", title: "Gateways de Pagamento", url: "/config/pagamentos", icon: LucideIcons.CreditCard },
       { id: "Ecommerce Rastreamento", title: "Rastreamento de Pedidos", url: "/pedido-tracking", icon: LucideIcons.Truck },
     ]
+  },
   {
     id: "Admin",
     title: "Admin",
