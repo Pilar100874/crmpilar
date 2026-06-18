@@ -136,13 +136,15 @@ export const AskQuestionConfig = ({ config, handleConfigChange, nodes, edges, se
             info="Use expressões regulares para validar o formato da resposta"
           />
 
-          <ConfigTextarea
-            label="Mensagem de Erro Personalizada"
-            value={config.errorMessage || ""}
-            onChange={(v) => handleConfigChange("errorMessage", v)}
-            placeholder="Por favor, insira uma resposta válida"
+          <DefaultableTextField
+            label="Mensagem de Erro"
+            defaultValue="Por favor, insira uma resposta válida"
+            value={config.errorMessage}
+            onChange={(v) => handleConfigChange("errorMessage", v ?? "")}
+            multiline
             rows={2}
           />
+
         </ConfigSection>
       )}
 
