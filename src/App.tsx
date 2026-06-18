@@ -14,6 +14,7 @@ import Email from "./pages/Email";
 import EmailPage from "./pages/EmailPage";
 import Campanhas from "./pages/Campanhas";
 import Calendario from "./pages/Calendario";
+import CalendarioConfig from "./pages/CalendarioConfig";
 import Funil from "./pages/Funil";
 import Conteudos from "./pages/Conteudos";
 import Contatos from "./pages/Contatos";
@@ -203,6 +204,7 @@ const App = () => (
               <Route path="/bot-create" element={<BotCreate />} />
               <Route path="/campanhas" element={<Campanhas />} />
               <Route path="/calendario" element={<Calendario />} />
+              <Route path="/calendario/configuracoes" element={<CalendarioConfig />} />
               <Route path="/funil" element={<Funil />} />
               <Route path="/orcamentos" element={<Orcamentos />} />
               <Route path="/conteudos" element={<Conteudos />} />
