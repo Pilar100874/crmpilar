@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Input } from "@/components/ui/input";
 import { WaitingMessageField } from "./WaitingMessageField";
+import { MediaCaptionFields } from "./MediaCaptionFields";
 
 const DEFAULT_WAITING_REPORT = "⏳ Aguarde... gerando relatório em tempo real.";
 
@@ -490,6 +491,14 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
         message={config.waitingMessage || ""}
         defaultMessage={DEFAULT_WAITING_REPORT}
         onChange={(patch) => handleConfigChange(patch)}
+      />
+
+      <MediaCaptionFields
+        title={config.mediaTitle || ""}
+        description={config.mediaDescription || config.successMessage || ""}
+        footer={config.mediaFooter || ""}
+        onChange={(patch) => handleConfigChange(patch)}
+        placeholders={{ title: "Ex.: 📊 Seu relatório está pronto", description: "Mensagem enviada junto com o arquivo" }}
       />
 
       <div className="space-y-2 border-t pt-4">
