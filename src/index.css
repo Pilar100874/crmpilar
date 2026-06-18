@@ -58,15 +58,16 @@ All colors MUST be HSL.
     --shadow-lg: 0 10px 15px -3px hsl(25 25% 15% / 0.1), 0 4px 6px -2px hsl(25 25% 15% / 0.05);
     --shadow-glow: 0 0 30px hsl(25 95% 53% / 0.2);
 
-    /* Sidebar - Dark theme like Kommo */
-    --sidebar-background: 220 18% 20%;
-    --sidebar-foreground: 0 0% 100%;
+    /* Sidebar - Warm dark gradient (burgundy/brown) */
+    --sidebar-background: 18 30% 14%;
+    --sidebar-foreground: 30 25% 96%;
     --sidebar-primary: 25 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 25%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 220 15% 18%;
+    --sidebar-accent: 18 35% 22%;
+    --sidebar-accent-foreground: 30 25% 96%;
+    --sidebar-border: 18 30% 10%;
     --sidebar-ring: 25 95% 53%;
+    --sidebar-gradient: linear-gradient(180deg, hsl(20 40% 18%) 0%, hsl(15 35% 12%) 60%, hsl(10 30% 9%) 100%);
 
     /* Chart colors */
     --chart-1: 25 95% 53%;
@@ -123,14 +124,15 @@ All colors MUST be HSL.
     --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.3), 0 4px 6px -2px hsl(0 0% 0% / 0.2);
     --shadow-glow: 0 0 40px hsl(25 95% 53% / 0.3);
 
-    --sidebar-background: 220 18% 20%;
-    --sidebar-foreground: 0 0% 100%;
+    --sidebar-background: 18 30% 12%;
+    --sidebar-foreground: 30 25% 96%;
     --sidebar-primary: 25 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 25%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 220 15% 18%;
+    --sidebar-accent: 18 35% 20%;
+    --sidebar-accent-foreground: 30 25% 96%;
+    --sidebar-border: 18 30% 8%;
     --sidebar-ring: 25 95% 53%;
+    --sidebar-gradient: linear-gradient(180deg, hsl(20 40% 16%) 0%, hsl(15 35% 10%) 60%, hsl(10 30% 7%) 100%);
   }
 
   /* Slide-out Menu Styles */
@@ -212,6 +214,44 @@ All colors MUST be HSL.
       line-height: 1.35rem;
     }
   }
+
+
+  /* ============================================
+     Sidebar — Warm gradient floating card look
+     ============================================ */
+  .bg-sidebar {
+    background-image: var(--sidebar-gradient);
+    background-color: hsl(var(--sidebar-background));
+  }
+
+  /* Locked (icon-only) sidebar — floating rounded card */
+  .fixed.left-0.top-0.bottom-0.w-16.z-\[500\],
+  .fixed.left-0.top-0.bottom-0.md\:w-20.lg\:w-16.z-\[500\] {
+    border-right: none !important;
+  }
+  aside.bg-sidebar,
+  div.bg-sidebar.flex-shrink-0 {
+    border-right: 1px solid hsl(var(--sidebar-border) / 0.6);
+    box-shadow: 4px 0 24px -8px hsl(15 40% 5% / 0.5);
+  }
+
+  /* Floating submenu popover (when sidebar is locked/collapsed) */
+  .fixed.left-16.bg-sidebar {
+    background-image: var(--sidebar-gradient);
+    border-radius: 0 18px 18px 0;
+    border-right: 1px solid hsl(var(--sidebar-border) / 0.6) !important;
+    box-shadow: 8px 0 32px -8px hsl(15 40% 5% / 0.65);
+    margin: 8px 0;
+  }
+
+  /* Pill-shape active items + smooth hover */
+  .bg-sidebar-primary {
+    box-shadow: 0 6px 16px -4px hsl(25 95% 45% / 0.55), inset 0 1px 0 hsl(35 100% 70% / 0.3);
+    border-radius: 10px;
+  }
+
+
+
 
 
 
