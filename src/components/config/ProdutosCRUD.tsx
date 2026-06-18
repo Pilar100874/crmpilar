@@ -44,9 +44,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Pencil, Plus, Image, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, Filter, X, Store } from "lucide-react";
+import { Trash2, Pencil, Plus, Image as ImageIcon, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, Filter, X, Store, Sparkles, Loader2, Camera } from "lucide-react";
 import { Produto, ProdutoCategoria, ProdutoGrupo } from "@/types/orcamento";
 import { EmbalagemTab } from "./EmbalagemTab";
+import { ProductPhotoTab } from "./ProductPhotoTab";
 import { DynamicProductFields } from "./DynamicProductFields";
 import { cn } from "@/lib/utils";
 
@@ -1132,7 +1133,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   <img src={produto.foto_url} alt={produto.nome} className="w-14 h-14 object-cover rounded flex-shrink-0" />
                 ) : (
                   <div className="w-14 h-14 bg-muted rounded flex items-center justify-center flex-shrink-0">
-                    <Image className="w-5 h-5 text-muted-foreground" />
+                    <ImageIcon className="w-5 h-5 text-muted-foreground" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
@@ -1220,7 +1221,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                     <img src={produto.foto_url} alt={produto.nome} className="w-10 h-10 object-cover rounded" />
                   ) : (
                     <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
-                      <Image className="w-4 h-4 text-muted-foreground" />
+                      <ImageIcon className="w-4 h-4 text-muted-foreground" />
                     </div>
                   )}
                 </TableCell>
@@ -1271,23 +1272,37 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
           {/* Header */}
           <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-3 sm:px-6 py-3 sm:py-4 border-b flex-shrink-0">
             <DialogHeader>
-              <DialogTitle className="text-base sm:text-lg font-semibold flex items-center gap-2">
-                <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
-                  <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <DialogTitle className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                    <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
+                      <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                    </div>
+                    {editingProduto ? "Editar Produto" : "Novo Produto"}
+                  </DialogTitle>
+                  {editingProduto && (
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                      SKU: <span className="font-mono">{(editingProduto as any).codigo}</span>
+                    </p>
+                  )}
                 </div>
-                {editingProduto ? "Editar Produto" : "Novo Produto"}
-              </DialogTitle>
-              {editingProduto && (
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                  SKU: <span className="font-mono">{(editingProduto as any).codigo}</span>
-                </p>
-              )}
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur shrink-0">
+                  <Switch
+                    checked={formData.ativo}
+                    onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
+                  />
+                  <Label className="text-xs sm:text-sm cursor-pointer">
+                    {formData.ativo ? "Ativo" : "Inativo"}
+                  </Label>
+                </div>
+              </div>
             </DialogHeader>
           </div>
 
+
           <div className="overflow-y-auto flex-1 min-h-0 px-3 sm:px-6 py-3 sm:py-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5 h-auto bg-muted/50 p-0.5 sm:p-1 rounded-lg gap-0.5 sm:gap-1">
+              <TabsList className="grid w-full grid-cols-6 h-auto bg-muted/50 p-0.5 sm:p-1 rounded-lg gap-0.5 sm:gap-1">
                 <TabsTrigger 
                   value="basico" 
                   className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
@@ -1297,12 +1312,20 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   <span className="md:hidden">Básicos</span>
                 </TabsTrigger>
                 <TabsTrigger 
+                  value="foto" 
+                  className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                >
+                  <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span>Foto</span>
+                </TabsTrigger>
+                <TabsTrigger 
                   value="preco" 
                   className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
                 >
                   <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   <span>Preço</span>
                 </TabsTrigger>
+
                 <TabsTrigger 
                   value="frete" 
                   className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
@@ -1489,51 +1512,35 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                     </div>
                   )}
 
-                  {/* Foto e Status */}
-                  <div className="space-y-3 sm:space-y-4">
-                    <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Foto e Status</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div className="space-y-1.5 sm:space-y-2">
-                        <Label className="text-xs sm:text-sm font-medium">Foto do Produto</Label>
-                        <div className="flex items-center gap-2 sm:gap-3">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => document.getElementById('file-upload')?.click()}
-                            disabled={uploading}
-                            className="text-xs sm:text-sm"
-                          >
-                            <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                            {selectedFile ? 'Trocar' : 'Selecionar'}
-                          </Button>
-                          {(formData.foto_url || selectedFile) && (
-                            <img 
-                              src={formData.foto_url} 
-                              alt="Preview" 
-                              className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded border"
-                            />
-                          )}
-                        </div>
-                        <input
-                          id="file-upload"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileSelect}
-                          className="hidden"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2 sm:gap-3 sm:mt-7">
-                        <Switch
-                          checked={formData.ativo}
-                          onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
-                        />
-                        <Label className="text-xs sm:text-sm">Produto ativo</Label>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </TabsContent>
+
+              <TabsContent value="foto" className="mt-4 sm:mt-6">
+                <ProductPhotoTab
+                  productName={formData.nome}
+                  currentPhotoUrl={formData.foto_url}
+                  selectedFile={selectedFile}
+                  onFileSelect={handleFileSelect}
+                  onPhotoChange={(url) => {
+                    if (url.startsWith("data:")) {
+                      // converte base64 em File para reaproveitar fluxo de upload
+                      const [meta, b64] = url.split(",");
+                      const mime = meta.match(/data:(.*?);base64/)?.[1] || "image/png";
+                      const bin = atob(b64);
+                      const bytes = new Uint8Array(bin.length);
+                      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+                      const file = new File([bytes], `ia-${Date.now()}.png`, { type: mime });
+                      setSelectedFile(file);
+                      setFormData((prev) => ({ ...prev, foto_url: URL.createObjectURL(file) }));
+                    } else {
+                      setSelectedFile(null);
+                      setFormData((prev) => ({ ...prev, foto_url: url }));
+                    }
+                  }}
+                />
+              </TabsContent>
+
+
 
             <TabsContent value="preco" className="mt-4">
               <div className="space-y-4">
