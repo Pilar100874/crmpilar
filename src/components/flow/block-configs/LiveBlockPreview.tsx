@@ -97,8 +97,37 @@ export const LiveBlockPreview = ({ type, config }: LiveBlockPreviewProps) => {
       case "send_message":
         return <Bubble>{c.message || c.text || "Mensagem do bot"}</Bubble>;
 
-      case "goodbye":
-        return <Bubble>{c.message || "Até logo! 👋"}</Bubble>;
+      case "goodbye": {
+        const socials: { label: string; key: string }[] = [];
+        if (c.showSocialButtons) {
+          if (c.socialWhatsApp) socials.push({ label: "📱 WhatsApp", key: "wa" });
+          if (c.socialInstagram) socials.push({ label: "📷 Instagram", key: "ig" });
+          if (c.socialFacebook) socials.push({ label: "👥 Facebook", key: "fb" });
+          if (c.socialWebsite) socials.push({ label: "🌐 Website", key: "ws" });
+        }
+        return (
+          <>
+            <Bubble>{c.message || "Até logo! 👋"}</Bubble>
+            {socials.length > 0 && card(
+              <>
+                <Body>Nos acompanhe em nossas redes sociais:</Body>
+                <div className="bg-muted/30">
+                  {socials.map((s) => (
+                    <PreviewButton key={s.key} label={s.label} />
+                  ))}
+                </div>
+              </>,
+              "mt-2"
+            )}
+            {c.showStartAgainButton !== false && card(
+              <div className="bg-muted/30">
+                <PreviewButton label="🔄 Recomeçar" />
+              </div>,
+              "mt-2"
+            )}
+          </>
+        );
+      }
 
       case "media": {
         const url = c.media?.url || c.url || "";
