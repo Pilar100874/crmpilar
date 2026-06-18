@@ -1711,7 +1711,10 @@ serve(async (req) => {
           // Para ask_cnpj, chama a API e aguarda os dados
           if (blockType === "ask_cnpj") {
             console.log("[FLOW] Calling CNPJ API...");
-            await respond("Aguarde, consultando CNPJ...");
+            if (cfg.waitingMessageEnabled !== false) {
+              const customWait = typeof cfg.waitingMessage === "string" ? cfg.waitingMessage.trim() : "";
+              await respond(customWait || "Aguarde, consultando CNPJ...");
+            }
             
             try {
               const supabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
