@@ -821,6 +821,29 @@ serve(async (req) => {
       });
     }
 
+    // ====== Palavra-chave universal: Recomeçar ======
+    // Permite ao usuário reiniciar o fluxo a qualquer momento.
+    try {
+      const raw = String(body || "").trim().toLowerCase();
+      if (raw === "recomeçar" || raw === "recomecar" || raw === "reiniciar" || raw === "restart") {
+        console.log("[RESTART] Palavra-chave de reinício detectada");
+        context = { vars: { userMessage: body, from, phoneNumber: from, session: wahaSession, estabelecimento_id: estabelecimentoId } };
+        const startNode = flowData.flow_data.nodes.find((n: any) => n.data.type === "start");
+        if (startNode) {
+          await executeFlow({ nodes: flowData.flow_data.nodes, edges: flowData.flow_data.edges }, context, startNode, onResponse);
+        }
+        await supabase.from("chat_sessions").upsert(
+          { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+          { onConflict: "session_id" },
+        );
+        return new Response(JSON.stringify({ success: true, restarted: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } catch (e) {
+      console.error("[RESTART] erro:", e);
+    }
+
     // ====== Roteador: Redirecionamento Global ======
     // Em qualquer momento, se o cliente digitar a palavra-chave configurada num
     // bloco "global_redirect", interrompe o fluxo e encaminha ao destino.
@@ -2817,7 +2840,39 @@ async function executeNode(
       break;
     }
     case "goodbye": {
-      await onResponse(itp(cfg.text || "Até logo!"));
+      let text = itp(cfg.message || cfg.text || "Até logo!");
+
+      if (cfg.showSocialButtons) {
+        try {
+          const supa = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          const estId = context.vars.estabelecimento_id;
+          if (estId) {
+            const { data: rs } = await supa
+              .from("redes_sociais")
+              .select("whatsapp,instagram,facebook,website")
+              .eq("estabelecimento_id", estId)
+              .maybeSingle();
+            if (rs) {
+              const links: string[] = [];
+              if (cfg.socialWhatsApp && rs.whatsapp) links.push(`📱 WhatsApp: ${rs.whatsapp}`);
+              if (cfg.socialInstagram && rs.instagram) links.push(`📷 Instagram: ${rs.instagram}`);
+              if (cfg.socialFacebook && rs.facebook) links.push(`👥 Facebook: ${rs.facebook}`);
+              if (cfg.socialWebsite && rs.website) links.push(`🌐 Site: ${rs.website}`);
+              if (links.length) text += `\n\n*Nos acompanhe em nossas redes sociais:*\n${links.join("\n")}`;
+            }
+          }
+        } catch (e) {
+          console.error("[goodbye] erro buscando redes_sociais:", e);
+        }
+      }
+
+      if (cfg.showStartAgainButton !== false) {
+        text += `\n\n_Digite *recomeçar* a qualquer momento para iniciar uma nova conversa._`;
+      }
+
+      await onResponse(text);
+      // limpa pendência — encerra fluxo
+      context.pendingNodeId = null;
       break;
     }
     case "ask_name":
