@@ -1131,6 +1131,19 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
         />
       </div>
 
+      {/* Mensagem de "aguarde..." */}
+      <WaitingMessageField
+        enabled={config.waitingMessageEnabled !== false}
+        message={config.waitingMessage || ""}
+        defaultMessage={DEFAULT_WAITING_AI_MEDIA}
+        onChange={(patch) => {
+          if ("waitingMessageEnabled" in patch)
+            handleConfigChange("waitingMessageEnabled", patch.waitingMessageEnabled);
+          if ("waitingMessage" in patch)
+            handleConfigChange("waitingMessage", patch.waitingMessage);
+        }}
+      />
+
       {/* Variável de saída */}
       <div className="space-y-2">
         <Label>Variável de saída</Label>
