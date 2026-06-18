@@ -8,6 +8,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
   ArrowLeft, ArrowRight, Upload, Image as ImageIcon, Wand2, Loader2,
@@ -54,6 +58,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
   const [filterNome, setFilterNome] = useState("");
   const [filterCategoria, setFilterCategoria] = useState<string>("all");
   const [filterGrupo, setFilterGrupo] = useState<string>("all");
+  const [filterFoto, setFilterFoto] = useState<"all" | "com" | "sem">("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // ---- método
@@ -74,9 +79,18 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
   const [useVisualIdentity, setUseVisualIdentity] = useState(false);
   const [visualIdentityPrompt, setVisualIdentityPrompt] = useState<string>("");
   const [hasVisualIdentity, setHasVisualIdentity] = useState(false);
+  const [showCostDialog, setShowCostDialog] = useState(false);
 
   // execução
   const [processing, setProcessing] = useState(false);
+
+  // estimativa aproximada de créditos por imagem por modelo
+  const COST_PER_IMAGE: Record<string, number> = {
+    "google/gemini-2.5-flash-image": 0.04,
+    "google/gemini-3.1-flash-image-preview": 0.06,
+    "google/gemini-3-pro-image-preview": 0.20,
+  };
+  const estimatedCost = (COST_PER_IMAGE[iaModel] ?? 0.05) * selectedIds.size;
 
   useEffect(() => {
     (async () => {
@@ -114,9 +128,11 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
       if (filterNome && !p.nome.toLowerCase().includes(filterNome.toLowerCase())) return false;
       if (filterCategoria !== "all" && p.categoria_id !== filterCategoria) return false;
       if (filterGrupo !== "all" && p.grupo_id !== filterGrupo) return false;
+      if (filterFoto === "com" && !p.foto_url) return false;
+      if (filterFoto === "sem" && p.foto_url) return false;
       return true;
     });
-  }, [produtos, filterNome, filterCategoria, filterGrupo]);
+  }, [produtos, filterNome, filterCategoria, filterGrupo, filterFoto]);
 
   const selectedProdutos = useMemo(
     () => produtos.filter((p) => selectedIds.has(p.id)),
@@ -168,22 +184,25 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
       return;
     }
     if (metodo === "ia") {
-      // inicializa lista de revisão e dispara geração paralela controlada
-      const items: IaItem[] = selectedProdutos.map((p) => ({
-        produtoId: p.id,
-        nome: p.nome,
-        status: "pending",
-        prompt: p.nome,
-      }));
-      setIaItems(items);
-      setStep(3);
-      // dispara geração inicial sequencial para evitar rate limit
-      for (const it of items) {
-        await generateIaImage(it.produtoId, it.prompt);
-      }
+      setShowCostDialog(true);
       return;
     }
     setStep(3);
+  };
+
+  const startIaGeneration = async () => {
+    setShowCostDialog(false);
+    const items: IaItem[] = selectedProdutos.map((p) => ({
+      produtoId: p.id,
+      nome: p.nome,
+      status: "pending",
+      prompt: p.nome,
+    }));
+    setIaItems(items);
+    setStep(3);
+    for (const it of items) {
+      await generateIaImage(it.produtoId, it.prompt);
+    }
   };
 
   const generateIaImage = async (produtoId: string, promptText: string) => {
@@ -360,7 +379,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
             <CardDescription>Refine por nome, categoria e grupo, e marque os produtos que deseja ajustar</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               <div>
                 <Label>Nome do produto</Label>
                 <Input value={filterNome} onChange={(e) => setFilterNome(e.target.value)} placeholder="Buscar por nome..." />
@@ -382,6 +401,17 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                   <SelectContent>
                     <SelectItem value="all">Todos</SelectItem>
                     {grupos.map((g) => <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Foto</Label>
+                <Select value={filterFoto} onValueChange={(v) => setFilterFoto(v as any)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="com">Com foto</SelectItem>
+                    <SelectItem value="sem">Sem foto</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -668,6 +698,35 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
           </CardContent>
         </Card>
       )}
+
+      <AlertDialog open={showCostDialog} onOpenChange={setShowCostDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar geração por IA</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  Serão geradas <strong>{selectedIds.size}</strong> imagens com o modelo{" "}
+                  <strong>{iaModel.split("/").pop()}</strong>.
+                </p>
+                <p>
+                  Custo estimado: <strong>~{estimatedCost.toFixed(2)} créditos</strong>{" "}
+                  <span className="text-muted-foreground">
+                    (aprox. {(COST_PER_IMAGE[iaModel] ?? 0.05).toFixed(2)} por imagem)
+                  </span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Valor aproximado — o custo real pode variar conforme o provedor. Regerar imagens consome créditos adicionais.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={startIaGeneration}>Confirmar e gerar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
