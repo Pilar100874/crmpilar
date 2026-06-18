@@ -216,6 +216,44 @@ All colors MUST be HSL.
   }
 
 
+  /* ============================================
+     Sidebar — Warm gradient floating card look
+     ============================================ */
+  .bg-sidebar {
+    background-image: var(--sidebar-gradient);
+    background-color: hsl(var(--sidebar-background));
+  }
+
+  /* Locked (icon-only) sidebar — floating rounded card */
+  .fixed.left-0.top-0.bottom-0.w-16.z-\[500\],
+  .fixed.left-0.top-0.bottom-0.md\:w-20.lg\:w-16.z-\[500\] {
+    border-right: none !important;
+  }
+  aside.bg-sidebar,
+  div.bg-sidebar.flex-shrink-0 {
+    border-right: 1px solid hsl(var(--sidebar-border) / 0.6);
+    box-shadow: 4px 0 24px -8px hsl(15 40% 5% / 0.5);
+  }
+
+  /* Floating submenu popover (when sidebar is locked/collapsed) */
+  .fixed.left-16.bg-sidebar {
+    background-image: var(--sidebar-gradient);
+    border-radius: 0 18px 18px 0;
+    border-right: 1px solid hsl(var(--sidebar-border) / 0.6) !important;
+    box-shadow: 8px 0 32px -8px hsl(15 40% 5% / 0.65);
+    margin: 8px 0;
+  }
+
+  /* Pill-shape active items + smooth hover */
+  .bg-sidebar-primary {
+    box-shadow: 0 6px 16px -4px hsl(25 95% 45% / 0.55), inset 0 1px 0 hsl(35 100% 70% / 0.3);
+    border-radius: 10px;
+  }
+
+
+
+
+
 
 
   /* Chat Tab - estilo igual ao menu mas laranja, lado direito */
