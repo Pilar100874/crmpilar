@@ -3156,6 +3156,11 @@ async function executeNode(
             }
           }
 
+          // Aviso ao cliente antes de enviar o(s) PDF(s)
+          await onResponse("⏳ Aguarde... gerando catálogo em tempo real.");
+          await new Promise((r) => setTimeout(r, 600));
+
+
           let sucesso = 0;
           for (const cat of targets) {
             if (!cat.pdf_url) {
