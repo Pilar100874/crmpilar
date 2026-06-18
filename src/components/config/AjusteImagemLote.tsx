@@ -256,23 +256,46 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
     setShowCostDialog(true);
   };
 
+  const buildPromptFor = (p: Produto) => {
+    const extra = (iaExtras[p.id] || "").trim();
+    return extra ? `${p.nome} — ${extra}` : p.nome;
+  };
+
   const startIaGeneration = async () => {
     setShowCostDialog(false);
-    const items: IaItem[] = selectedProdutos.map((p) => {
-      const extra = (iaExtras[p.id] || "").trim();
-      const prompt = extra ? `${p.nome} — ${extra}` : p.nome;
-      return {
-        produtoId: p.id,
-        nome: p.nome,
-        status: "pending",
-        prompt,
-      };
-    });
+    const items: IaItem[] = selectedProdutos.map((p) => ({
+      produtoId: p.id,
+      nome: p.nome,
+      status: "pending",
+      prompt: buildPromptFor(p),
+      currentPhotoUrl: p.foto_url,
+    }));
     setIaItems(items);
     setStep(3);
+    pausedRef.current = false;
+    cancelGenRef.current = false;
+    setPaused(false);
+    await runQueue(items);
+  };
+
+  const runQueue = async (items: IaItem[]) => {
     for (const it of items) {
+      // espera enquanto pausado
+      while (pausedRef.current && !cancelGenRef.current) {
+        await new Promise((r) => setTimeout(r, 300));
+      }
+      if (cancelGenRef.current) break;
       await generateIaImage(it.produtoId, it.prompt);
     }
+  };
+
+  const resumeQueue = async () => {
+    const pendentes = iaItems.filter((i) => i.status === "pending" || i.status === "error");
+    if (pendentes.length === 0) { toast.info("Nada a retomar"); return; }
+    pausedRef.current = false;
+    cancelGenRef.current = false;
+    setPaused(false);
+    await runQueue(pendentes);
   };
 
   const generateIaImage = async (produtoId: string, promptText: string) => {
