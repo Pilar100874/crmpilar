@@ -1271,6 +1271,26 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Zoom da imagem */}
+      <Dialog open={!!zoomImage} onOpenChange={(open) => { if (!open) { setZoomImage(null); setZoomLabel(""); } }}>
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[95vh] p-0 overflow-hidden flex flex-col items-center justify-center bg-black/90 border-none">
+          <div className="relative w-full h-full flex items-center justify-center p-4">
+            {zoomImage && (
+              <img
+                src={zoomImage}
+                alt={zoomLabel || "Zoom"}
+                className="max-w-full max-h-[85vh] object-contain rounded-md"
+              />
+            )}
+          </div>
+          {zoomLabel && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-background/80 text-foreground px-3 py-1 rounded-full text-xs">
+              {zoomLabel}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
