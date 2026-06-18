@@ -80,6 +80,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
   const [visualIdentityPrompt, setVisualIdentityPrompt] = useState<string>("");
   const [hasVisualIdentity, setHasVisualIdentity] = useState(false);
   const [showCostDialog, setShowCostDialog] = useState(false);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
 
   // execução
   const [processing, setProcessing] = useState(false);
