@@ -138,9 +138,11 @@ export const TransferirOmnichannelConfig = ({ config, handleConfigChange }: Rout
       <p className="text-xs text-muted-foreground">
         Enviar histórico e dados do cliente para o workflow
       </p>
+      <HandoffMessageSection config={config} handleConfigChange={handleConfigChange} />
     </>
   );
 };
+
 
 export const EnviarFilaConfig = ({ config, handleConfigChange }: RoutingConfigProps) => {
   const [filas, setFilas] = useState<any[]>([]);
