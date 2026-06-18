@@ -740,6 +740,30 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={showDeleteConfirmDialog} onOpenChange={setShowDeleteConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apagar imagens secundárias?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A opção "Apagar imagens secundárias existentes ao aplicar" está ativada.
+              Todas as imagens secundárias dos produtos selecionados serão removidas antes de aplicar a nova imagem principal.
+              Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowDeleteConfirmDialog(false)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowDeleteConfirmDialog(false);
+                doExecutarLote();
+              }}
+            >
+              Confirmar e aplicar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
