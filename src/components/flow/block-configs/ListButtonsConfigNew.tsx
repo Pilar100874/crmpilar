@@ -4,6 +4,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Info, Plus, GripVertical, Trash2 } from "lucide-react";
 import { Bold, Italic } from "lucide-react";
+import { EmojiInput, EmojiTextarea } from "./EmojiFields";
+
 
 interface ConfigProps {
   config: any;
