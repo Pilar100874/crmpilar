@@ -98,26 +98,29 @@ export const GoodbyeConfigNew = ({ config, handleConfigChange, inputRefs, openVa
           
           {config.showSocialButtons && (
             <div className="ml-4 mt-3 space-y-3 border-l-2 border-primary/30 pl-4">
-              <ConfigSwitch
-                label="WhatsApp"
-                checked={config.socialWhatsApp === true}
-                onChange={(checked) => handleConfigChange("socialWhatsApp", checked)}
-              />
-              <ConfigSwitch
-                label="Instagram"
-                checked={config.socialInstagram === true}
-                onChange={(checked) => handleConfigChange("socialInstagram", checked)}
-              />
-              <ConfigSwitch
-                label="Facebook"
-                checked={config.socialFacebook === true}
-                onChange={(checked) => handleConfigChange("socialFacebook", checked)}
-              />
-              <ConfigSwitch
-                label="Website"
-                checked={config.socialWebsite === true}
-                onChange={(checked) => handleConfigChange("socialWebsite", checked)}
-              />
+              {[
+                { key: "socialWhatsApp", label: "WhatsApp" },
+                { key: "socialInstagram", label: "Instagram" },
+                { key: "socialFacebook", label: "Facebook" },
+                { key: "socialWebsite", label: "Website" },
+                { key: "socialTiktok", label: "TikTok" },
+                { key: "socialYoutube", label: "YouTube" },
+                { key: "socialLinkedin", label: "LinkedIn" },
+                { key: "socialTelegram", label: "Telegram" },
+                { key: "socialTwitter", label: "X (Twitter)" },
+                { key: "socialThreads", label: "Threads" },
+                { key: "socialPinterest", label: "Pinterest" },
+              ].map((s) => (
+                <ConfigSwitch
+                  key={s.key}
+                  label={s.label}
+                  checked={config[s.key] === true}
+                  onChange={(checked) => handleConfigChange(s.key, checked)}
+                />
+              ))}
+              <p className="text-xs text-muted-foreground pt-2">
+                💡 Os links são configurados em <strong>Marketing → Links das Redes Sociais</strong>. Apenas botões com link cadastrado serão exibidos.
+              </p>
             </div>
           )}
         </div>
