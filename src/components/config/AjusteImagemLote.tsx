@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,14 +8,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   ArrowLeft, ArrowRight, Upload, Image as ImageIcon, Wand2, Loader2,
-  Check, RefreshCw, X, Trash2, Filter, Sparkles,
+  Check, RefreshCw, X, Trash2, Filter, Sparkles, Pause, Play, Eye, Save,
 } from "lucide-react";
 import { normalizeImageToSquare, dataUrlToFile } from "@/lib/imageNormalize";
 
@@ -39,7 +41,10 @@ interface IaItem {
   imageDataUrl?: string;
   prompt: string;
   error?: string;
+  currentPhotoUrl?: string | null;
 }
+
+const TEMPLATES_STORAGE_KEY = "ajuste-img-lote:templates";
 
 interface Props {
   estabelecimentoId: string;
@@ -88,6 +93,17 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
   const [hasVisualIdentity, setHasVisualIdentity] = useState(false);
   const [showCostDialog, setShowCostDialog] = useState(false);
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const [showPromptPreviewDialog, setShowPromptPreviewDialog] = useState(false);
+
+  // pausa/retomar geração
+  const [paused, setPaused] = useState(false);
+  const pausedRef = useRef(false);
+  const cancelGenRef = useRef(false);
+
+  // templates de textos extras (localStorage)
+  const [templates, setTemplates] = useState<{ id: string; nome: string; texto: string }[]>([]);
+  const [showTemplatesDialog, setShowTemplatesDialog] = useState(false);
+  const [newTemplateNome, setNewTemplateNome] = useState("");
 
   // execução
   const [processing, setProcessing] = useState(false);
@@ -133,6 +149,31 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
       }
     })();
   }, [estabelecimentoId]);
+
+  // carrega templates do localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(TEMPLATES_STORAGE_KEY);
+      if (raw) setTemplates(JSON.parse(raw));
+    } catch {}
+  }, []);
+
+  const persistTemplates = (next: { id: string; nome: string; texto: string }[]) => {
+    setTemplates(next);
+    try { localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(next)); } catch {}
+  };
+
+  const saveBulkAsTemplate = () => {
+    const txt = bulkExtra.trim();
+    const nome = newTemplateNome.trim();
+    if (!txt || !nome) { toast.error("Informe nome e texto do template"); return; }
+    const next = [...templates, { id: crypto.randomUUID(), nome, texto: txt }];
+    persistTemplates(next);
+    setNewTemplateNome("");
+    toast.success("Template salvo");
+  };
+
+  const removeTemplate = (id: string) => persistTemplates(templates.filter((t) => t.id !== id));
 
   const produtosFiltrados = useMemo(() => {
     return produtos.filter((p) => {
@@ -215,23 +256,46 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
     setShowCostDialog(true);
   };
 
+  const buildPromptFor = (p: Produto) => {
+    const extra = (iaExtras[p.id] || "").trim();
+    return extra ? `${p.nome} — ${extra}` : p.nome;
+  };
+
   const startIaGeneration = async () => {
     setShowCostDialog(false);
-    const items: IaItem[] = selectedProdutos.map((p) => {
-      const extra = (iaExtras[p.id] || "").trim();
-      const prompt = extra ? `${p.nome} — ${extra}` : p.nome;
-      return {
-        produtoId: p.id,
-        nome: p.nome,
-        status: "pending",
-        prompt,
-      };
-    });
+    const items: IaItem[] = selectedProdutos.map((p) => ({
+      produtoId: p.id,
+      nome: p.nome,
+      status: "pending",
+      prompt: buildPromptFor(p),
+      currentPhotoUrl: p.foto_url,
+    }));
     setIaItems(items);
     setStep(3);
+    pausedRef.current = false;
+    cancelGenRef.current = false;
+    setPaused(false);
+    await runQueue(items);
+  };
+
+  const runQueue = async (items: IaItem[]) => {
     for (const it of items) {
+      // espera enquanto pausado
+      while (pausedRef.current && !cancelGenRef.current) {
+        await new Promise((r) => setTimeout(r, 300));
+      }
+      if (cancelGenRef.current) break;
       await generateIaImage(it.produtoId, it.prompt);
     }
+  };
+
+  const resumeQueue = async () => {
+    const pendentes = iaItems.filter((i) => i.status === "pending" || i.status === "error");
+    if (pendentes.length === 0) { toast.info("Nada a retomar"); return; }
+    pausedRef.current = false;
+    cancelGenRef.current = false;
+    setPaused(false);
+    await runQueue(pendentes);
   };
 
   const generateIaImage = async (produtoId: string, promptText: string) => {
@@ -690,7 +754,12 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
             </div>
 
             <div className="border rounded-md p-3 space-y-2 bg-muted/30">
-              <Label className="text-xs">Aplicar texto extra em lote</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Aplicar texto extra em lote</Label>
+                <Button variant="outline" size="sm" onClick={() => setShowTemplatesDialog(true)}>
+                  <Save className="h-3 w-3 mr-1" /> Templates
+                </Button>
+              </div>
               <div className="flex gap-2">
                 <Input
                   value={bulkExtra}
@@ -724,10 +793,27 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                   Limpar
                 </Button>
               </div>
+              {templates.length > 0 && (
+                <div className="flex flex-wrap gap-1 pt-1">
+                  <span className="text-xs text-muted-foreground self-center mr-1">Rápido:</span>
+                  {templates.map((t) => (
+                    <Badge
+                      key={t.id}
+                      variant="secondary"
+                      className="cursor-pointer hover:bg-secondary/80"
+                      onClick={() => setBulkExtra(t.texto)}
+                      title={t.texto}
+                    >
+                      {t.nome}
+                    </Badge>
+                  ))}
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
                 O filtro afeta apenas a visualização e a aplicação em lote. Todos os {selectedProdutos.length} produto(s) selecionados terão imagem gerada.
               </p>
             </div>
+
 
             <div className="border rounded-md divide-y max-h-[28rem] overflow-auto">
               {promptsFilteredProdutos.map((p) => (
@@ -764,9 +850,14 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
               <Button variant="outline" onClick={() => setStep(2)}>
                 <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
               </Button>
-              <Button onClick={goToCostFromPrompts}>
-                <Sparkles className="h-4 w-4 mr-1" /> Gerar imagens
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowPromptPreviewDialog(true)}>
+                  <Eye className="h-4 w-4 mr-1" /> Preview do prompt
+                </Button>
+                <Button onClick={goToCostFromPrompts}>
+                  <Sparkles className="h-4 w-4 mr-1" /> Gerar imagens
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -812,7 +903,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
 
             {metodo === "ia" && (
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Button
                     size="sm"
                     variant="outline"
@@ -835,16 +926,51 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                   >
                     <X className="h-3 w-3 mr-1" /> Desaprovar todas
                   </Button>
+                  <div className="ml-auto flex items-center gap-2">
+                    {!paused ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => { pausedRef.current = true; setPaused(true); toast.info("Fila pausada após a geração atual"); }}
+                        disabled={iaItems.every((i) => i.status !== "pending" && i.status !== "generating")}
+                      >
+                        <Pause className="h-3 w-3 mr-1" /> Pausar fila
+                      </Button>
+                    ) : (
+                      <Button size="sm" variant="default" onClick={resumeQueue}>
+                        <Play className="h-3 w-3 mr-1" /> Retomar
+                      </Button>
+                    )}
+                    <span className="text-xs text-muted-foreground">
+                      {iaItems.filter((i) => i.status === "ready" || i.status === "approved").length}/{iaItems.length} prontas
+                    </span>
+                  </div>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                   {iaItems.map((item) => (
                   <div key={item.produtoId} className={`border rounded-md p-3 space-y-2 ${item.status === "approved" ? "border-primary bg-primary/5" : ""}`}>
-                    <div className="aspect-square rounded bg-muted overflow-hidden flex items-center justify-center">
-                      {item.status === "generating" && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
-                      {item.status === "ready" && item.imageDataUrl && <img src={item.imageDataUrl} className="w-full h-full object-cover" alt={item.nome} />}
-                      {item.status === "approved" && item.imageDataUrl && <img src={item.imageDataUrl} className="w-full h-full object-cover" alt={item.nome} />}
-                      {item.status === "error" && <div className="text-xs text-destructive p-2 text-center">{item.error}</div>}
-                      {item.status === "pending" && <ImageIcon className="h-6 w-6 text-muted-foreground" />}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <div className="text-[10px] uppercase text-muted-foreground text-center">Atual</div>
+                        <div className="aspect-square rounded bg-muted overflow-hidden flex items-center justify-center">
+                          {item.currentPhotoUrl ? (
+                            <img src={item.currentPhotoUrl} className="w-full h-full object-cover" alt="atual" />
+                          ) : (
+                            <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-[10px] uppercase text-muted-foreground text-center">Nova</div>
+                        <div className="aspect-square rounded bg-muted overflow-hidden flex items-center justify-center">
+                          {item.status === "generating" && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
+                          {(item.status === "ready" || item.status === "approved") && item.imageDataUrl && (
+                            <img src={item.imageDataUrl} className="w-full h-full object-cover" alt={item.nome} />
+                          )}
+                          {item.status === "error" && <div className="text-[10px] text-destructive p-1 text-center">{item.error}</div>}
+                          {item.status === "pending" && <ImageIcon className="h-6 w-6 text-muted-foreground/40" />}
+                        </div>
+                      </div>
                     </div>
                     <div className="text-sm font-medium truncate">{item.nome}</div>
                     <Input
@@ -855,6 +981,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                       className="h-8 text-xs"
                       placeholder="Ajustar prompt..."
                     />
+
                     <div className="flex gap-1">
                       <Button
                         size="sm"
@@ -931,6 +1058,9 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
+            <Button variant="outline" onClick={() => { setShowCostDialog(false); setShowPromptPreviewDialog(true); }}>
+              <Eye className="h-4 w-4 mr-1" /> Ver prompts
+            </Button>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={startIaGeneration}>Confirmar e gerar</AlertDialogAction>
           </AlertDialogFooter>
@@ -960,6 +1090,85 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Preview do prompt final */}
+      <Dialog open={showPromptPreviewDialog} onOpenChange={setShowPromptPreviewDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Preview do prompt final</DialogTitle>
+            <DialogDescription>
+              Combinação de nome do produto + texto extra{useVisualIdentity && hasVisualIdentity ? " + identidade visual" : ""}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-auto space-y-2 text-sm">
+            {selectedProdutos.map((p) => {
+              const base = buildPromptFor(p);
+              const final = useVisualIdentity && hasVisualIdentity
+                ? `${base}\n\n[Identidade Visual]: ${visualIdentityPrompt}`
+                : base;
+              return (
+                <div key={p.id} className="border rounded-md p-2">
+                  <div className="text-xs font-medium text-muted-foreground">{p.nome}</div>
+                  <pre className="text-xs whitespace-pre-wrap mt-1 font-mono">{final}</pre>
+                </div>
+              );
+            })}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPromptPreviewDialog(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Templates de textos extras */}
+      <Dialog open={showTemplatesDialog} onOpenChange={setShowTemplatesDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Templates de textos extras</DialogTitle>
+            <DialogDescription>
+              Salve frases reutilizáveis e aplique rapidamente na geração em lote.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-2 border rounded-md p-3 bg-muted/30">
+              <Label className="text-xs">Salvar texto atual como template</Label>
+              <Input
+                value={newTemplateNome}
+                onChange={(e) => setNewTemplateNome(e.target.value)}
+                placeholder="Nome do template (ex.: Fundo branco)"
+              />
+              <div className="text-xs text-muted-foreground line-clamp-2">
+                Texto: <em>{bulkExtra || "(vazio — preencha o campo de texto extra antes)"}</em>
+              </div>
+              <Button size="sm" onClick={saveBulkAsTemplate} disabled={!bulkExtra.trim() || !newTemplateNome.trim()}>
+                <Save className="h-3 w-3 mr-1" /> Salvar template
+              </Button>
+            </div>
+            <div className="space-y-1 max-h-60 overflow-auto">
+              {templates.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-4">Nenhum template salvo ainda.</p>
+              )}
+              {templates.map((t) => (
+                <div key={t.id} className="flex items-center gap-2 border rounded-md p-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{t.nome}</div>
+                    <div className="text-xs text-muted-foreground truncate">{t.texto}</div>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => { setBulkExtra(t.texto); toast.success("Carregado"); }}>
+                    Usar
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => removeTemplate(t.id)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTemplatesDialog(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
