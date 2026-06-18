@@ -1755,7 +1755,10 @@ serve(async (req) => {
           // Para ask_cep, chama a API ViaCEP e aguarda os dados
           if (blockType === "ask_cep") {
             console.log("[FLOW] Calling CEP API...");
-            await respond("Aguarde, consultando CEP...");
+            if (cfg.waitingMessageEnabled !== false) {
+              const customWait = typeof cfg.waitingMessage === "string" ? cfg.waitingMessage.trim() : "";
+              await respond(customWait || "Aguarde, consultando CEP...");
+            }
             
             try {
               const cleanCEP = userResponse.replace(/\D/g, '');
