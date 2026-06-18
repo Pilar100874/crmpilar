@@ -985,6 +985,40 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                     </span>
                   </div>
                 </div>
+                {(() => {
+                  const total = iaItems.length;
+                  const done = iaItems.filter((i) => i.status === "ready" || i.status === "approved" || i.status === "error").length;
+                  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                  const isRunning = genStartedAt !== null && done < total;
+                  const elapsed = genStartedAt ? Math.max(1, (nowTick - genStartedAt) / 1000) : 0;
+                  const avg = done > 0 && genStartedAt ? elapsed / done : 0;
+                  const remaining = total - done;
+                  const etaSec = avg > 0 ? Math.round(avg * remaining) : 0;
+                  const fmt = (s: number) => {
+                    if (s <= 0) return "—";
+                    const m = Math.floor(s / 60);
+                    const r = s % 60;
+                    return m > 0 ? `${m}m ${r}s` : `${r}s`;
+                  };
+                  if (total === 0) return null;
+                  return (
+                    <div className="space-y-1">
+                      <Progress value={pct} className="h-2" />
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{done}/{total} concluídas ({pct}%)</span>
+                        <span>
+                          {isRunning
+                            ? `Tempo restante estimado: ${fmt(etaSec)} • decorrido ${fmt(Math.round(elapsed))}`
+                            : paused
+                              ? "Pausado"
+                              : done === total
+                                ? `Concluído em ${fmt(Math.round(elapsed))}`
+                                : "Aguardando..."}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
                 <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                   {iaItems.map((item) => (
                   <div key={item.produtoId} className={`border rounded-md p-3 space-y-2 ${item.status === "approved" ? "border-primary bg-primary/5" : ""}`}>
