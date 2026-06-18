@@ -3163,16 +3163,36 @@ async function executeNode(
 
           let sucesso = 0;
           for (const cat of targets) {
-            if (!cat.pdf_url) {
-              console.warn(`[FLOW][attach_catalog] catálogo ${cat.id} (${cat.nome}) sem PDF cacheado`);
+            let pdfUrl: string | null = cat.pdf_url || null;
+
+            // Se não há PDF cacheado, aguarda alguns segundos e tenta refazer o fetch
+            // (a geração roda em background no app sempre que a lista de catálogos é carregada).
+            if (!pdfUrl) {
+              console.log(`[FLOW][attach_catalog] PDF ausente para "${cat.nome}", aguardando geração em background...`);
+              for (let attempt = 0; attempt < 6 && !pdfUrl; attempt++) {
+                await new Promise((r) => setTimeout(r, 2500));
+                const { data: refreshed } = await supabase
+                  .from("catalogos_salvos")
+                  .select("pdf_url")
+                  .eq("id", cat.id)
+                  .maybeSingle();
+                if (refreshed?.pdf_url) {
+                  pdfUrl = refreshed.pdf_url;
+                  break;
+                }
+              }
+            }
+
+            if (!pdfUrl) {
+              console.warn(`[FLOW][attach_catalog] catálogo ${cat.id} (${cat.nome}) sem PDF após espera`);
               await onResponse(
-                `⚠️ O catálogo "${cat.nome}" ainda não tem PDF gerado. Abra o catálogo no editor e clique em "Baixar PDF" uma vez para gerá-lo.`,
+                `📄 Estamos preparando o catálogo "${cat.nome}". Por favor, solicite novamente em alguns instantes.`,
               );
               continue;
             }
             try {
               const cap = caption || cat.nome;
-              await onResponse(cap, cat.pdf_url, "document");
+              await onResponse(cap, pdfUrl, "document");
               sucesso++;
               await new Promise((r) => setTimeout(r, 800));
             } catch (sendErr: any) {
