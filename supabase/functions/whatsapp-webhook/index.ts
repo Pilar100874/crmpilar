@@ -1151,7 +1151,10 @@ serve(async (req) => {
           const count = Math.max(1, Math.min(6, Number(cfg.sampleCount) || 3));
           context.vars.__pim_description = description;
           context.vars.__pim_sample_count = count;
-          await respond(`🎨 Gerando ${count} opção${count > 1 ? "s" : ""} de imagem do produto, aguarde...`);
+          if (cfg.waitingMessageEnabled !== false) {
+            const customWait = typeof cfg.waitingMessage === "string" ? cfg.waitingMessage.trim() : "";
+            await respond(customWait || `🎨 Gerando ${count} opção${count > 1 ? "s" : ""} de imagem do produto, aguarde...`);
+          }
 
           try {
             const sbCli = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -1287,7 +1290,10 @@ serve(async (req) => {
           } else if (method === "photo") {
             const incoming = context.vars.__incoming_image;
             if (incoming) {
-              await respond("⏳ Recebendo a foto, aguarde...");
+              if (cfg.waitingMessageEnabled !== false) {
+                const customWait = typeof cfg.waitingMessage === "string" ? cfg.waitingMessage.trim() : "";
+                await respond(customWait || "⏳ Recebendo a foto, aguarde...");
+              }
               const publicUrl = await downloadIncomingImageAsPublicUrl(incoming, {
                 wahaUrl: WAHA_URL,
                 wahaApiKey: WAHA_API_KEY,
@@ -1374,7 +1380,10 @@ serve(async (req) => {
         const generateTextSamples = async (theme: string) => {
           const count = Math.max(1, Math.min(6, Number(cfg.sampleCount) || 3));
           context.vars.__tc_theme = theme;
-          await respond(`✍️ Gerando ${count} opç${count > 1 ? "ões" : "ão"} de texto, aguarde...`);
+          if (cfg.waitingMessageEnabled !== false) {
+            const customWait = typeof cfg.waitingMessage === "string" ? cfg.waitingMessage.trim() : "";
+            await respond(customWait || `✍️ Gerando ${count} opç${count > 1 ? "ões" : "ão"} de texto, aguarde...`);
+          }
           try {
             const sbCli = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
             const { data, error } = await sbCli.functions.invoke("bot-generate-text-samples", {
@@ -1702,7 +1711,10 @@ serve(async (req) => {
           // Para ask_cnpj, chama a API e aguarda os dados
           if (blockType === "ask_cnpj") {
             console.log("[FLOW] Calling CNPJ API...");
-            await respond("Aguarde, consultando CNPJ...");
+            if (cfg.waitingMessageEnabled !== false) {
+              const customWait = typeof cfg.waitingMessage === "string" ? cfg.waitingMessage.trim() : "";
+              await respond(customWait || "Aguarde, consultando CNPJ...");
+            }
             
             try {
               const supabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -1743,7 +1755,10 @@ serve(async (req) => {
           // Para ask_cep, chama a API ViaCEP e aguarda os dados
           if (blockType === "ask_cep") {
             console.log("[FLOW] Calling CEP API...");
-            await respond("Aguarde, consultando CEP...");
+            if (cfg.waitingMessageEnabled !== false) {
+              const customWait = typeof cfg.waitingMessage === "string" ? cfg.waitingMessage.trim() : "";
+              await respond(customWait || "Aguarde, consultando CEP...");
+            }
             
             try {
               const cleanCEP = userResponse.replace(/\D/g, '');
@@ -3693,7 +3708,10 @@ async function executeNode(
             const tempoLabel = estSecs >= 60
               ? `cerca de ${Math.ceil(estSecs / 60)} minuto(s)`
               : `cerca de ${estSecs} segundos`;
-            await onResponse(`⏳ Estou gerando sua ${tipoLabel} agora. Isso pode levar ${tempoLabel}. Já te envio assim que ficar pronta!`);
+            if (cfg.waitingMessageEnabled !== false) {
+              const customWait = typeof cfg.waitingMessage === "string" ? cfg.waitingMessage.trim() : "";
+              await onResponse(customWait || `⏳ Estou gerando sua ${tipoLabel} agora. Isso pode levar ${tempoLabel}. Já te envio assim que ficar pronta!`);
+            }
 
             // 2) Geração real (pode demorar — fetch sem timeout)
             const genResp = await fetch(`${SUPABASE_URL}/functions/v1/bot-run-ai-studio-workflow`, {

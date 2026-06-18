@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Type, Info, Sparkles, MessageCircleQuestion, Lock, ListChecks, Plus, Trash2, Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WaitingMessageField } from "./WaitingMessageField";
 
 interface TextContentConfigProps {
   config: any;
@@ -373,6 +374,16 @@ export const TextContentConfig = ({ config, handleConfigChange }: TextContentCon
           />
         </>
       )}
+
+      <WaitingMessageField
+        enabled={config.waitingMessageEnabled !== false}
+        message={config.waitingMessage || ""}
+        defaultMessage="✍️ Gerando opções de texto, aguarde..."
+        onChange={(patch) => {
+          if ("waitingMessageEnabled" in patch) handleConfigChange("waitingMessageEnabled", patch.waitingMessageEnabled);
+          if ("waitingMessage" in patch) handleConfigChange("waitingMessage", patch.waitingMessage);
+        }}
+      />
 
       <p className="text-[11px] text-muted-foreground">
         Dica: para textos fixos, use poucas palavras — modelos de imagem renderizam melhor frases

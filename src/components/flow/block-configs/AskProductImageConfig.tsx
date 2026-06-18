@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Package, Info, Image } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WaitingMessageField } from "./WaitingMessageField";
 
 interface Props {
   config: any;
@@ -135,6 +136,16 @@ export const AskProductImageConfig = ({ config, handleConfigChange }: Props) => 
         </div>
         <p className="text-[10px] text-muted-foreground">Mínimo 1, máximo 6. Padrão: 3.</p>
       </div>
+
+      <WaitingMessageField
+        enabled={config.waitingMessageEnabled !== false}
+        message={config.waitingMessage || ""}
+        defaultMessage="🎨 Gerando opções de imagem do produto, aguarde..."
+        onChange={(patch) => {
+          if ("waitingMessageEnabled" in patch) handleConfigChange("waitingMessageEnabled", patch.waitingMessageEnabled);
+          if ("waitingMessage" in patch) handleConfigChange("waitingMessage", patch.waitingMessage);
+        }}
+      />
     </div>
   );
 };
