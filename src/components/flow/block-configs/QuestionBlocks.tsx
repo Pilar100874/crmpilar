@@ -11,6 +11,8 @@ import { RichTextEditor } from "../RichTextEditor";
 import { ConfigSection, ConfigInput, ConfigTextarea, ConfigSelect, ConfigSwitch, ConfigInfo } from "./ConfigField";
 import { FormattingToolbar } from "./FormattingToolbar";
 import { WaitingMessageField } from "./WaitingMessageField";
+import { DefaultableTextField } from "./DefaultableTextField";
+
 
 interface ConfigProps {
   config: any;
