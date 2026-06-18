@@ -2076,8 +2076,8 @@ async function sendCloudButtonsMessage(
     const buttons = (interactive.buttons || []).slice(0, 3).map((b: any) => ({
       type: "reply",
       reply: {
-        id: String(b.id || b.title || b.text || "").slice(0, 256),
-        title: toWhatsappMarkdown(String(b.title || b.text || "OK")).slice(0, 20),
+        id: String(b.id || b.value || b.displayText || b.title || b.text || "").slice(0, 256),
+        title: toWhatsappMarkdown(String(b.displayText || b.title || b.text || "OK")).slice(0, 20),
       },
     }));
     if (!buttons.length) return false;
