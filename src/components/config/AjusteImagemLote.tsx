@@ -495,6 +495,43 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                 <p className="text-sm text-muted-foreground">
                   Será gerada uma imagem para cada produto selecionado, usando o nome como base. Você poderá revisar, regerar ou aprovar antes de aplicar.
                 </p>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div>
+                    <Label>Modelo de geração de imagem</Label>
+                    <Select value={iaModel} onValueChange={setIaModel}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="google/gemini-2.5-flash-image">Gemini 2.5 Flash Image (Nano Banana) — rápido</SelectItem>
+                        <SelectItem value="google/gemini-3.1-flash-image-preview">Gemini 3.1 Flash Image (Nano Banana 2) — rápido + alta qualidade</SelectItem>
+                        <SelectItem value="google/gemini-3-pro-image-preview">Gemini 3 Pro Image — máxima qualidade</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">Modelos Pro consomem mais créditos.</p>
+                  </div>
+
+                  <div className="rounded-md border p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="cursor-pointer" htmlFor="vi-toggle">Aplicar Identidade Visual</Label>
+                      <Switch
+                        id="vi-toggle"
+                        checked={useVisualIdentity}
+                        onCheckedChange={setUseVisualIdentity}
+                        disabled={!hasVisualIdentity}
+                      />
+                    </div>
+                    {hasVisualIdentity ? (
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {useVisualIdentity ? "Ativa — o prompt da identidade visual será incluído nas gerações." : "Desativada — as imagens serão geradas sem regras de marca."}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Nenhuma identidade visual cadastrada. Configure em Marketing → AI Studio para ativar.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 <div className="border rounded-md p-3 bg-muted/30 text-sm">
                   {selectedProdutos.length} imagens serão geradas ao avançar.
                 </div>
