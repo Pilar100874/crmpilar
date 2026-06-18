@@ -206,13 +206,15 @@ export const AskEmailConfig = ({ config, handleConfigChange, nodes, edges, selec
         info="Verifica se o e-mail possui um formato válido"
       />
 
-      <ConfigTextarea
+      <DefaultableTextField
         label="Mensagem de Erro"
-        value={config.errorMessage || ""}
-        onChange={(v) => handleConfigChange("errorMessage", v)}
-        placeholder="Por favor, insira um e-mail válido"
+        defaultValue="Por favor, informe um email válido."
+        value={config.errorMessage}
+        onChange={(v) => handleConfigChange("errorMessage", v ?? "")}
+        multiline
         rows={2}
       />
+
     </ConfigSection>
 
     <div className="space-y-2">
