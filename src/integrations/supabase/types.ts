@@ -10248,6 +10248,57 @@ export type Database = {
           },
         ]
       }
+      produto_imagens: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          is_principal: boolean
+          ordem: number
+          produto_id: string
+          storage_path: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          is_principal?: boolean
+          ordem?: number
+          produto_id: string
+          storage_path?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          is_principal?: boolean
+          ordem?: number
+          produto_id?: string
+          storage_path?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produto_imagens_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produto_imagens_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       produtos: {
         Row: {
           altura: number | null
