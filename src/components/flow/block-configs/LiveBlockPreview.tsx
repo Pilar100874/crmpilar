@@ -610,4 +610,5 @@ export const PREVIEW_SUPPORTED_TYPES = new Set<string>([
   "crm_gerar_relatorio",
   "crm_cadastro_empresa",
   "crm_agenda_rapida",
+  "generate_ai_media",
 ]);
