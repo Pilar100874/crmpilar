@@ -12,6 +12,7 @@ import {
   FolderOpen, FileJson, Copy, Check
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { isSingleEdgePerHandleAllowed, SINGLE_OUTPUT_TOAST } from "@/lib/flow-edge-utils";
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import NodeLibrary from './NodeLibrary';
 import EditorCanvas from './EditorCanvas';
@@ -43,8 +44,18 @@ const N8nWorkflowEditor: React.FC<N8nWorkflowEditorProps> = ({ estabelecimentoId
   const deleteWorkflow = useDeleteWorkflow();
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: true, type: 'smoothstep' }, eds)),
-    [setEdges]
+    (params: Connection) => {
+      if (!isSingleEdgePerHandleAllowed(params, edges)) {
+        toast.error(SINGLE_OUTPUT_TOAST);
+        return;
+      }
+      setEdges((eds) => addEdge({ ...params, animated: true, type: 'smoothstep' }, eds));
+    },
+    [setEdges, edges]
+  );
+  const isValidConnection = useCallback(
+    (conn: Connection) => isSingleEdgePerHandleAllowed(conn, edges),
+    [edges],
   );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
