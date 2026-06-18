@@ -41,7 +41,10 @@ interface IaItem {
   imageDataUrl?: string;
   prompt: string;
   error?: string;
+  currentPhotoUrl?: string | null;
 }
+
+const TEMPLATES_STORAGE_KEY = "ajuste-img-lote:templates";
 
 interface Props {
   estabelecimentoId: string;
