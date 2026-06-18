@@ -1271,19 +1271,33 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
           {/* Header */}
           <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-3 sm:px-6 py-3 sm:py-4 border-b flex-shrink-0">
             <DialogHeader>
-              <DialogTitle className="text-base sm:text-lg font-semibold flex items-center gap-2">
-                <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
-                  <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <DialogTitle className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                    <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
+                      <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                    </div>
+                    {editingProduto ? "Editar Produto" : "Novo Produto"}
+                  </DialogTitle>
+                  {editingProduto && (
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                      SKU: <span className="font-mono">{(editingProduto as any).codigo}</span>
+                    </p>
+                  )}
                 </div>
-                {editingProduto ? "Editar Produto" : "Novo Produto"}
-              </DialogTitle>
-              {editingProduto && (
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                  SKU: <span className="font-mono">{(editingProduto as any).codigo}</span>
-                </p>
-              )}
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur shrink-0">
+                  <Switch
+                    checked={formData.ativo}
+                    onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
+                  />
+                  <Label className="text-xs sm:text-sm cursor-pointer">
+                    {formData.ativo ? "Ativo" : "Inativo"}
+                  </Label>
+                </div>
+              </div>
             </DialogHeader>
           </div>
+
 
           <div className="overflow-y-auto flex-1 min-h-0 px-3 sm:px-6 py-3 sm:py-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
