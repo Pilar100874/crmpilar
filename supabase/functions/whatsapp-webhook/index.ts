@@ -821,6 +821,80 @@ serve(async (req) => {
       });
     }
 
+    // ====== Roteador: Redirecionamento Global ======
+    // Em qualquer momento, se o cliente digitar a palavra-chave configurada num
+    // bloco "global_redirect", interrompe o fluxo e encaminha ao destino.
+    try {
+      const incomingText = String(body || "").trim();
+      const globalRedirects = (flowData.flow_data.nodes || []).filter(
+        (n: any) => n?.data?.type === "global_redirect"
+      );
+      let matchedRedirect: any = null;
+      for (const node of globalRedirects) {
+        const c = node.data?.config || {};
+        const trigger = String(c.triggerText || "").trim();
+        if (!trigger) continue;
+        const mode = c.matchMode || "exact";
+        const cs = c.caseSensitive === true;
+        const a = cs ? incomingText : incomingText.toLowerCase();
+        const b = cs ? trigger : trigger.toLowerCase();
+        const hit =
+          mode === "contains" ? a.includes(b)
+          : mode === "startsWith" ? a.startsWith(b)
+          : a === b;
+        if (hit) { matchedRedirect = node; break; }
+      }
+
+      if (matchedRedirect) {
+        const c = matchedRedirect.data?.config || {};
+        const dest = c.destinationType || "omnichannel";
+        const handoff = String(c.handoffMessage || "Encaminhando seu atendimento...").trim();
+        console.log("[GLOBAL_REDIRECT] Match:", { trigger: c.triggerText, dest });
+
+        if (handoff) await onResponse(handoff);
+
+        const updates: Record<string, any> = {
+          bot_paused: true,
+          updated_at: new Date().toISOString(),
+        };
+        if (dest === "omnichannel") {
+          updates.workflow_id = c.omnichannelFlowId || null;
+        } else if (dest === "atendente") {
+          updates.atendente_id = c.atendenteId || null;
+          updates.atendente_nome = c.atendenteNome || null;
+        } else if (dest === "bot") {
+          updates.bot_flow_id = c.botFlowId || null;
+          updates.bot_paused = false; // outro bot continua respondendo
+        } else if (dest === "whatsapp_number") {
+          const num = String(c.whatsappNumber || "").replace(/\D/g, "");
+          if (num) {
+            await onResponse(`Fale com nosso atendimento neste número: https://wa.me/${num}`);
+          }
+        }
+
+        if (conversationId) {
+          try {
+            await supabase.from("conversations").update(updates).eq("id", conversationId);
+          } catch (e) {
+            console.error("[GLOBAL_REDIRECT] update conversation error:", e);
+          }
+        }
+
+        // limpa contexto do fluxo atual
+        context = { vars: { ...(context.vars || {}), __redirected_at: new Date().toISOString() } };
+        await supabase.from("chat_sessions").upsert(
+          { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+          { onConflict: "session_id" },
+        );
+
+        return new Response(JSON.stringify({ success: true, global_redirect: dest }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } catch (e) {
+      console.error("[GLOBAL_REDIRECT] erro no roteador:", e);
+    }
+
     // ====== Execução do fluxo ======
     let shouldSaveContext = true;
     let shouldReturn = false;
