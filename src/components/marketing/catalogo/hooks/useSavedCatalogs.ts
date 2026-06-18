@@ -66,6 +66,19 @@ export const useSavedCatalogs = (estabelecimentoId: string | null) => {
       }));
       
       setCatalogs(parsedData);
+
+      // Auto-gera PDFs ausentes ou desatualizados em background (para o bot do WhatsApp)
+      parsedData.forEach((c) => {
+        const stale =
+          !c.pdf_url ||
+          (c.pdf_generated_at &&
+            new Date(c.pdf_generated_at).getTime() < new Date(c.updated_at).getTime());
+        if (stale && c.cover_page && c.products_page && c.backcover_page) {
+          generateCatalogPdf(c as unknown as PdfSavedCatalog).catch((e) =>
+            console.warn('[useSavedCatalogs] auto-gen PDF falhou:', e)
+          );
+        }
+      });
     } catch (error) {
       console.error('Erro ao buscar catálogos:', error);
       toast.error('Erro ao carregar catálogos salvos');
