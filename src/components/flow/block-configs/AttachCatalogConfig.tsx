@@ -11,6 +11,9 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { loadActiveCatalogs, generateCatalogPdf, SavedCatalog } from "@/lib/catalogPdfGenerator";
 import { toast } from "@/lib/toast-config";
+import { WaitingMessageField } from "./WaitingMessageField";
+
+const DEFAULT_WAITING_CATALOG = "⏳ Aguarde... gerando catálogo em tempo real.";
 
 interface Props {
   selectedNode: any;
