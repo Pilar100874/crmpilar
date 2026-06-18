@@ -12,6 +12,8 @@ import { useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { MediaUrlUploadField } from "./MediaUrlUploadField";
+import { EmojiInput, EmojiTextarea } from "./EmojiFields";
+
 
 interface ConfigProps {
   config: any;
