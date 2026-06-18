@@ -2656,6 +2656,23 @@ async function executeNode(
       return context.vars[key] !== undefined ? String(context.vars[key]) : "";
     });
 
+  // Monta a legenda da mídia a partir dos campos Título / Descrição / Rodapé
+  // (com fallback para o campo legado `caption`). Título em negrito *...*,
+  // rodapé em itálico _..._ — formato WhatsApp.
+  const buildMediaCaption = (src: any, fallback = "") => {
+    const t = itp(String(src?.mediaTitle || "")).trim();
+    const d = itp(String(src?.mediaDescription || "")).trim();
+    const f = itp(String(src?.mediaFooter || "")).trim();
+    const legacy = itp(String(src?.caption || "")).trim();
+    if (!t && !d && !f) return legacy || fallback;
+    const parts: string[] = [];
+    if (t) parts.push(`*${t}*`);
+    if (d) parts.push(d);
+    else if (legacy) parts.push(legacy);
+    if (f) parts.push(`_${f}_`);
+    return parts.join("\n\n");
+  };
+
   const nexts = (id: string) =>
     edges
       .filter((e: any) => e.source === id)
@@ -2696,9 +2713,10 @@ async function executeNode(
         break;
       }
     case "media": {
-      const url = itp(cfg.url || "");
-      const cap = itp(cfg.caption || "");
-      const t = cfg.mediaType || "image";
+      const mediaSrc = cfg.media || cfg;
+      const url = itp(mediaSrc.url || cfg.url || "");
+      const t = (mediaSrc.type || cfg.mediaType || "image");
+      const cap = buildMediaCaption(mediaSrc);
       if (url) {
         await onResponse(cap, url, t);
         await new Promise((r) => setTimeout(r, 800));
