@@ -1,7 +1,9 @@
 import { ConfigSection, ConfigSwitch } from "./ConfigField";
 import { FormattingToolbar } from "./FormattingToolbar";
 import { Textarea } from "@/components/ui/textarea";
+import { EmojiPickerButton } from "./EmojiPickerButton";
 import { useRef } from "react";
+
 
 interface ConfigProps {
   config: any;
