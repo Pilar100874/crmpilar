@@ -76,18 +76,18 @@ const TextBaseFields = ({ config, handleConfigChange }: ConfigProps) => (
   <>
     <div className="space-y-2">
       <Label>Cabeçalho (opcional)</Label>
-      <Input
+      <EmojiInput
         value={config.title || ""}
-        onChange={(e) => handleConfigChange("title", e.target.value)}
+        onChange={(v) => handleConfigChange("title", v)}
         placeholder="Cabeçalho da mensagem"
         maxLength={60}
       />
     </div>
     <div className="space-y-2">
       <Label>Descrição</Label>
-      <Textarea
+      <EmojiTextarea
         value={config.description || ""}
-        onChange={(e) => handleConfigChange("description", e.target.value)}
+        onChange={(v) => handleConfigChange("description", v)}
         placeholder="Texto que aparece acima do botão"
         rows={3}
         maxLength={1024}
@@ -95,15 +95,16 @@ const TextBaseFields = ({ config, handleConfigChange }: ConfigProps) => (
     </div>
     <div className="space-y-2">
       <Label>Rodapé (opcional)</Label>
-      <Input
+      <EmojiInput
         value={config.footer || ""}
-        onChange={(e) => handleConfigChange("footer", e.target.value)}
+        onChange={(v) => handleConfigChange("footer", v)}
         placeholder="Texto pequeno no rodapé"
         maxLength={60}
       />
     </div>
   </>
 );
+
 
 // ============= Botão URL =============
 export const ButtonUrlConfig = (props: ConfigProps) => {
