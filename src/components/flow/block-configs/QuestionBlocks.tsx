@@ -290,13 +290,15 @@ export const AskNumberConfig = ({ config, handleConfigChange, nodes, edges, sele
         onChange={(checked) => handleConfigChange("allowDecimals", checked)}
       />
 
-      <ConfigTextarea
+      <DefaultableTextField
         label="Mensagem de Erro"
-        value={config.errorMessage || ""}
-        onChange={(v) => handleConfigChange("errorMessage", v)}
-        placeholder="Por favor, insira um número válido"
+        defaultValue="Por favor, informe um número válido."
+        value={config.errorMessage}
+        onChange={(v) => handleConfigChange("errorMessage", v ?? "")}
+        multiline
         rows={2}
       />
+
     </ConfigSection>
 
     <div className="space-y-2">
