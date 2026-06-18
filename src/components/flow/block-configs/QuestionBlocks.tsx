@@ -10,6 +10,7 @@ import { Bold, Italic, Smile, Code, Heading, List, ListOrdered, Link, Quote, Inf
 import { RichTextEditor } from "../RichTextEditor";
 import { ConfigSection, ConfigInput, ConfigTextarea, ConfigSelect, ConfigSwitch, ConfigInfo } from "./ConfigField";
 import { FormattingToolbar } from "./FormattingToolbar";
+import { WaitingMessageField } from "./WaitingMessageField";
 
 interface ConfigProps {
   config: any;
