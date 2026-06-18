@@ -48,6 +48,7 @@ import AISettingsPage from '@/components/marketing/ai-studio/AISettingsPage';
 import { StrategyEngine } from '@/components/marketing/strategy-engine';
 import PageBuilder from '@/components/marketing/page-builder/PageBuilder';
 import { ConectoresRedesSociaisCRUD } from '@/components/config/ConectoresRedesSociaisCRUD';
+import { RedesSociaisCRUD } from '@/components/config/RedesSociaisCRUD';
 import AutoVideoWizardDialog from '@/components/marketing/ai-studio/AutoVideoWizardDialog';
 
 interface TabItem {
@@ -72,7 +73,7 @@ const tabItems: TabItem[] = [
   { id: 'canvas', label: 'Canvas', icon: Palette, description: 'Editor visual de conteúdo' },
   { id: 'integrations', label: 'Integrações', icon: Link2, description: 'Google, MS SQL e outros' },
   { id: 'conectores-sociais', label: 'Conectores de Redes Sociais', icon: Share2, description: 'Conecte Instagram, Facebook, TikTok, LinkedIn, X e YouTube' },
-
+  { id: 'links-sociais', label: 'Links das Redes Sociais', icon: Link2, description: 'Links públicos usados no bot e em mensagens (WhatsApp, Instagram, TikTok, YouTube, etc.)' },
 ];
 
 const MarketingHub: React.FC = () => {
@@ -126,6 +127,21 @@ const MarketingHub: React.FC = () => {
         return <IntegrationCredentialsManager />;
       case 'conectores-sociais':
         return <ConectoresRedesSociaisCRUD />;
+      case 'links-sociais':
+        return (
+          <div className="max-w-4xl mx-auto p-6">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Link2 className="h-5 w-5 text-primary" />
+                Links das Redes Sociais
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Estes links são usados nos botões sociais do bot (bloco de Despedida) e em mensagens automáticas.
+              </p>
+            </div>
+            <RedesSociaisCRUD />
+          </div>
+        );
       case 'n8n-editor':
         return <N8nWorkflowEditor />;
       default:
