@@ -1036,7 +1036,12 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <div className="text-[10px] uppercase text-muted-foreground text-center">Atual</div>
-                        <div className="aspect-square rounded bg-muted overflow-hidden flex items-center justify-center">
+                        <div
+                          className={`aspect-square rounded bg-muted overflow-hidden flex items-center justify-center ${item.currentPhotoUrl ? "cursor-pointer hover:ring-2 hover:ring-primary/60" : ""}`}
+                          onClick={() => {
+                            if (item.currentPhotoUrl) { setZoomImage(item.currentPhotoUrl); setZoomLabel("Imagem atual — " + item.nome); }
+                          }}
+                        >
                           {item.currentPhotoUrl ? (
                             <img src={item.currentPhotoUrl} className="w-full h-full object-cover" alt="atual" />
                           ) : (
@@ -1046,7 +1051,15 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                       </div>
                       <div className="space-y-1">
                         <div className="text-[10px] uppercase text-muted-foreground text-center">Nova</div>
-                        <div className="aspect-square rounded bg-muted overflow-hidden flex items-center justify-center">
+                        <div
+                          className={`aspect-square rounded bg-muted overflow-hidden flex items-center justify-center ${((item.status === "ready" || item.status === "approved") && item.imageDataUrl) ? "cursor-pointer hover:ring-2 hover:ring-primary/60" : ""}`}
+                          onClick={() => {
+                            if ((item.status === "ready" || item.status === "approved") && item.imageDataUrl) {
+                              setZoomImage(item.imageDataUrl);
+                              setZoomLabel("Imagem nova — " + item.nome);
+                            }
+                          }}
+                        >
                           {item.status === "generating" && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
                           {(item.status === "ready" || item.status === "approved") && item.imageDataUrl && (
                             <img src={item.imageDataUrl} className="w-full h-full object-cover" alt={item.nome} />
