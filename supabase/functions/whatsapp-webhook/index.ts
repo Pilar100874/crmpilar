@@ -3035,6 +3035,10 @@ async function executeNode(
           console.log(`[FLOW] Gerando relatório ${cfg.relatorioId}, formato: ${outputType}`);
           console.log(`[FLOW] API Variables:`, apiVariables);
           console.log(`[FLOW] Report Variables:`, reportVariables);
+
+          // Aviso ao cliente antes de gerar o relatório
+          await onResponse("⏳ Aguarde... gerando relatório em tempo real.");
+          await new Promise((r) => setTimeout(r, 600));
           
           // Chamar edge function gerar-relatorio-pdf
           const supabase = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
