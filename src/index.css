@@ -58,16 +58,15 @@ All colors MUST be HSL.
     --shadow-lg: 0 10px 15px -3px hsl(25 25% 15% / 0.1), 0 4px 6px -2px hsl(25 25% 15% / 0.05);
     --shadow-glow: 0 0 30px hsl(25 95% 53% / 0.2);
 
-    /* Sidebar - Gray to black gradient */
-    --sidebar-background: 220 15% 14%;
-    --sidebar-foreground: 210 20% 96%;
+    /* Sidebar - Dark theme like Kommo */
+    --sidebar-background: 220 18% 20%;
+    --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 25 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 22%;
-    --sidebar-accent-foreground: 210 20% 96%;
-    --sidebar-border: 220 15% 10%;
+    --sidebar-accent: 220 15% 25%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 15% 18%;
     --sidebar-ring: 25 95% 53%;
-    --sidebar-gradient: linear-gradient(180deg, hsl(220 15% 22%) 0%, hsl(220 15% 14%) 60%, hsl(220 15% 8%) 100%);
 
     /* Chart colors */
     --chart-1: 25 95% 53%;
@@ -124,15 +123,14 @@ All colors MUST be HSL.
     --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.3), 0 4px 6px -2px hsl(0 0% 0% / 0.2);
     --shadow-glow: 0 0 40px hsl(25 95% 53% / 0.3);
 
-    --sidebar-background: 220 15% 12%;
-    --sidebar-foreground: 210 20% 96%;
+    --sidebar-background: 220 18% 20%;
+    --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 25 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 20%;
-    --sidebar-accent-foreground: 210 20% 96%;
-    --sidebar-border: 220 15% 8%;
+    --sidebar-accent: 220 15% 25%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 15% 18%;
     --sidebar-ring: 25 95% 53%;
-    --sidebar-gradient: linear-gradient(180deg, hsl(220 15% 20%) 0%, hsl(220 15% 12%) 60%, hsl(220 15% 6%) 100%);
   }
 
   /* Slide-out Menu Styles */
@@ -214,67 +212,6 @@ All colors MUST be HSL.
       line-height: 1.35rem;
     }
   }
-
-
-  /* ============================================
-     Sidebar — Warm gradient floating card look
-     ============================================ */
-  .bg-sidebar {
-    background-image: var(--sidebar-gradient);
-    background-color: hsl(var(--sidebar-background));
-  }
-
-  /* Locked (icon-only) sidebar — floating rounded card (block style) */
-  .fixed.left-0.top-0.bottom-0.w-16.z-\[500\],
-  .fixed.left-0.top-0.bottom-0.md\:w-20.lg\:w-16.z-\[500\] {
-    border-right: none !important;
-    top: 12px !important;
-    bottom: 12px !important;
-    left: 12px !important;
-    height: auto !important;
-    border-radius: 18px !important;
-    overflow: hidden;
-    box-shadow:
-      0 12px 32px -8px hsl(220 20% 5% / 0.55),
-      0 4px 12px -4px hsl(220 20% 5% / 0.45),
-      inset 0 1px 0 hsl(220 20% 50% / 0.08);
-    border: 1px solid hsl(var(--sidebar-border) / 0.6);
-  }
-  aside.bg-sidebar,
-  div.bg-sidebar.flex-shrink-0 {
-    border-right: 1px solid hsl(var(--sidebar-border) / 0.6);
-    box-shadow: 4px 0 24px -8px hsl(220 20% 5% / 0.5);
-  }
-
-  /* Floating submenu popover — detached rounded card matching block style */
-  .fixed.left-16.bg-sidebar {
-    left: 84px !important;
-    top: 12px !important;
-    bottom: 12px !important;
-    border-radius: 18px !important;
-    border: 1px solid hsl(var(--sidebar-border) / 0.6) !important;
-    box-shadow:
-      0 16px 40px -8px hsl(220 20% 5% / 0.7),
-      0 6px 16px -4px hsl(220 20% 5% / 0.5),
-      inset 0 1px 0 hsl(220 20% 50% / 0.08);
-    overflow: hidden;
-    background-image: var(--sidebar-gradient);
-    margin: 0;
-  }
-  .fixed.left-16.bg-sidebar > * {
-    height: 100%;
-    overflow-y: auto;
-  }
-
-  /* Pill-shape active items + smooth hover */
-  .bg-sidebar-primary {
-    box-shadow: 0 6px 16px -4px hsl(220 20% 10% / 0.55), inset 0 1px 0 hsl(220 20% 50% / 0.3);
-    border-radius: 10px;
-  }
-
-
-
-
 
 
 
