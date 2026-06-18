@@ -682,15 +682,37 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
     try {
       setUploading(true);
-      let fotoUrl = formData.foto_url;
 
-      // Upload new file if selected
-      if (selectedFile) {
-        const uploadedUrl = await uploadFile(selectedFile);
-        if (uploadedUrl) {
-          fotoUrl = uploadedUrl;
+      // === Galeria: faz upload das imagens novas, mantém as existentes,
+      //     calcula a principal e deduz a foto_url a salvar no produto.
+      const uploadedImages: ProductImage[] = [];
+      for (let i = 0; i < productImages.length; i++) {
+        const img = productImages[i];
+        if (img.file) {
+          // garante quadrado 1024x1024
+          const normalized = await normalizeImageToSquare(img.file, 1024);
+          const fileName = `${estabelecimentoId}/${Date.now()}-${i}.jpg`;
+          const { error: upErr } = await supabase.storage
+            .from('produtos')
+            .upload(fileName, normalized, { contentType: 'image/jpeg' });
+          if (upErr) {
+            console.error('Erro upload galeria:', upErr);
+            toast.error("Erro ao enviar uma das fotos");
+            return;
+          }
+          const { data: { publicUrl } } = supabase.storage.from('produtos').getPublicUrl(fileName);
+          uploadedImages.push({ url: publicUrl, storage_path: fileName, is_principal: img.is_principal, ordem: i, id: undefined });
+        } else {
+          uploadedImages.push({ ...img, ordem: i });
         }
       }
+      // garante que exista uma principal
+      if (uploadedImages.length > 0 && !uploadedImages.some((i) => i.is_principal)) {
+        uploadedImages[0].is_principal = true;
+      }
+      const principal = uploadedImages.find((i) => i.is_principal);
+      const fotoUrl = principal?.url || null;
+
 
       // Buscar o código NCM selecionado para preencher o campo ncm (texto)
       const selectedNcm = ncmCodigos.find(n => n.id === formData.ncm_id);
