@@ -161,6 +161,13 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
     } catch {}
   }, []);
 
+  // tick para atualizar ETA enquanto gera
+  useEffect(() => {
+    if (genStartedAt === null) return;
+    const id = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [genStartedAt]);
+
   const persistTemplates = (next: { id: string; nome: string; texto: string }[]) => {
     setTemplates(next);
     try { localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(next)); } catch {}
