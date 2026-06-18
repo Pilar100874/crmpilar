@@ -65,9 +65,9 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
     <div className="space-y-6">
       <div className="space-y-2">
         <Label>Cabeçalho (opcional)</Label>
-        <Textarea
+        <EmojiTextarea
           value={config.header || ""}
-          onChange={(e) => handleConfigChange("header", e.target.value)}
+          onChange={(v) => handleConfigChange("header", v)}
           placeholder="Cabeçalho"
           rows={2}
         />
@@ -75,9 +75,9 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
 
       <div className="space-y-2">
         <Label>Descrição (máx. 1024 caracteres) *</Label>
-        <Textarea
+        <EmojiTextarea
           value={config.text || ""}
-          onChange={(e) => handleConfigChange("text", e.target.value)}
+          onChange={(v) => handleConfigChange("text", v)}
           placeholder="Texto do corpo"
           rows={3}
         />
@@ -85,9 +85,9 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
 
       <div className="space-y-2">
         <Label>Rodapé (opcional)</Label>
-        <Textarea
+        <EmojiTextarea
           value={config.footer || ""}
-          onChange={(e) => handleConfigChange("footer", e.target.value)}
+          onChange={(v) => handleConfigChange("footer", v)}
           placeholder="Rodapé"
           rows={2}
         />
@@ -95,12 +95,13 @@ export const ListButtonsConfigNew = ({ config, handleConfigChange }: ConfigProps
 
       <div className="space-y-2">
         <Label>Título da Lista / CTA *</Label>
-        <Input
+        <EmojiInput
           value={config.listHeader || ""}
-          onChange={(e) => handleConfigChange("listHeader", e.target.value)}
+          onChange={(v) => handleConfigChange("listHeader", v)}
           placeholder="Menu"
         />
       </div>
+
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
