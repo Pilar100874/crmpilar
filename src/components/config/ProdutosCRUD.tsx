@@ -807,9 +807,34 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     }
   };
 
-  const handleEdit = (produto: Produto) => {
+  const handleEdit = async (produto: Produto) => {
     setEditingProduto(produto);
     setSelectedFile(null);
+    // carrega galeria do produto
+    try {
+      const { data: imgs } = await supabase
+        .from('produto_imagens')
+        .select('*')
+        .eq('produto_id', produto.id)
+        .order('ordem', { ascending: true });
+      if (imgs && imgs.length > 0) {
+        setProductImages(imgs.map((i: any) => ({
+          id: i.id,
+          url: i.url,
+          storage_path: i.storage_path,
+          is_principal: i.is_principal,
+          ordem: i.ordem,
+        })));
+      } else if (produto.foto_url) {
+        // fallback: produto antigo sem registros em produto_imagens
+        setProductImages([{ url: produto.foto_url, is_principal: true, ordem: 0 }]);
+      } else {
+        setProductImages([]);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar imagens:', err);
+      setProductImages([]);
+    }
     const p = produto as any;
     setFormData({
       nome: produto.nome,
