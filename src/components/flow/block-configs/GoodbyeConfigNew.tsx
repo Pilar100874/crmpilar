@@ -1,7 +1,9 @@
 import { ConfigSection, ConfigSwitch } from "./ConfigField";
 import { FormattingToolbar } from "./FormattingToolbar";
 import { Textarea } from "@/components/ui/textarea";
+import { EmojiPickerButton } from "./EmojiPickerButton";
 import { useRef } from "react";
+
 
 interface ConfigProps {
   config: any;
@@ -55,20 +57,28 @@ export const GoodbyeConfigNew = ({ config, handleConfigChange, inputRefs, openVa
     <div className="space-y-6">
       <ConfigSection title="Mensagem de Despedida">
         <div className="space-y-3">
-          <Textarea
-            ref={textareaRef}
-            value={config.message || "Mensagem de despedida"}
-            onChange={(e) => handleConfigChange("message", e.target.value)}
-            placeholder="Digite sua mensagem de despedida"
-            rows={4}
-            className="resize-none bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-          />
+          <div className="flex items-start gap-2">
+            <Textarea
+              ref={textareaRef}
+              value={config.message || "Mensagem de despedida"}
+              onChange={(e) => handleConfigChange("message", e.target.value)}
+              placeholder="Digite sua mensagem de despedida"
+              rows={4}
+              className="flex-1 resize-none bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            />
+            <EmojiPickerButton
+              targetRef={textareaRef as any}
+              value={config.message || ""}
+              onChange={(v) => handleConfigChange("message", v)}
+            />
+          </div>
           <FormattingToolbar 
             onFormat={insertFormatting}
             onVariableClick={() => openVariablePicker(textareaRef.current)}
           />
         </div>
       </ConfigSection>
+
 
       <ConfigSection title="Opções">
         <div className="space-y-4">

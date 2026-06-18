@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Info, Plus, GripVertical, Trash2 } from "lucide-react";
 import { Bold, Italic, Smile, Code, Heading, List, ListOrdered, Link, Quote } from "lucide-react";
+import { EmojiInput, EmojiTextarea } from "./EmojiFields";
+
 
 interface ConfigProps {
   config: any;
@@ -111,9 +113,9 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
     <div className="space-y-6">
       <div className="space-y-2">
         <Label>Título (opcional)</Label>
-        <Input
+        <EmojiInput
           value={config.title || ""}
-          onChange={(e) => handleConfigChange("title", e.target.value)}
+          onChange={(v) => handleConfigChange("title", v)}
           placeholder="Ex: Atendimento"
         />
         <p className="text-xs text-muted-foreground">
@@ -123,10 +125,9 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
 
       <div className="space-y-2">
         <Label>Texto da pergunta</Label>
-        <Textarea
-          ref={(el) => (inputRefs.current['question'] = el)}
+        <EmojiTextarea
           value={config.question || ""}
-          onChange={(e) => handleConfigChange("question", e.target.value)}
+          onChange={(v) => handleConfigChange("question", v)}
           placeholder="Escolhas por número e palavra"
           rows={2}
           className="resize-none"
@@ -144,12 +145,13 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
 
       <div className="space-y-2">
         <Label>Rodapé (opcional)</Label>
-        <Input
+        <EmojiInput
           value={config.footer || ""}
-          onChange={(e) => handleConfigChange("footer", e.target.value)}
+          onChange={(v) => handleConfigChange("footer", v)}
           placeholder="Ex: Pilar Papéis"
         />
       </div>
+
 
       <div className="space-y-3">
         <Label>Botões</Label>
@@ -165,12 +167,13 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
           >
             <div className="flex items-center gap-2">
               <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
-              <Input
+              <EmojiInput
                 value={button.label || ""}
-                onChange={(e) => updateButton(index, "label", e.target.value)}
+                onChange={(v) => updateButton(index, "label", v)}
                 placeholder={`Texto do botão ${index + 1}`}
-                className="flex-1"
+                containerClassName="flex-1"
               />
+
               <Button
                 variant="ghost"
                 size="icon"

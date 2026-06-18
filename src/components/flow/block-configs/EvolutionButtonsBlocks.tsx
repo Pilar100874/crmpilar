@@ -12,6 +12,8 @@ import { useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { MediaUrlUploadField } from "./MediaUrlUploadField";
+import { EmojiInput, EmojiTextarea } from "./EmojiFields";
+
 
 interface ConfigProps {
   config: any;
@@ -74,18 +76,18 @@ const TextBaseFields = ({ config, handleConfigChange }: ConfigProps) => (
   <>
     <div className="space-y-2">
       <Label>Cabeçalho (opcional)</Label>
-      <Input
+      <EmojiInput
         value={config.title || ""}
-        onChange={(e) => handleConfigChange("title", e.target.value)}
+        onChange={(v) => handleConfigChange("title", v)}
         placeholder="Cabeçalho da mensagem"
         maxLength={60}
       />
     </div>
     <div className="space-y-2">
       <Label>Descrição</Label>
-      <Textarea
+      <EmojiTextarea
         value={config.description || ""}
-        onChange={(e) => handleConfigChange("description", e.target.value)}
+        onChange={(v) => handleConfigChange("description", v)}
         placeholder="Texto que aparece acima do botão"
         rows={3}
         maxLength={1024}
@@ -93,15 +95,16 @@ const TextBaseFields = ({ config, handleConfigChange }: ConfigProps) => (
     </div>
     <div className="space-y-2">
       <Label>Rodapé (opcional)</Label>
-      <Input
+      <EmojiInput
         value={config.footer || ""}
-        onChange={(e) => handleConfigChange("footer", e.target.value)}
+        onChange={(v) => handleConfigChange("footer", v)}
         placeholder="Texto pequeno no rodapé"
         maxLength={60}
       />
     </div>
   </>
 );
+
 
 // ============= Botão URL =============
 export const ButtonUrlConfig = (props: ConfigProps) => {
@@ -112,13 +115,14 @@ export const ButtonUrlConfig = (props: ConfigProps) => {
       <TextBaseFields {...props} />
       <div className="space-y-2">
         <Label>Texto do botão</Label>
-        <Input
+        <EmojiInput
           value={config.displayText || ""}
-          onChange={(e) => handleConfigChange("displayText", e.target.value)}
+          onChange={(v) => handleConfigChange("displayText", v)}
           placeholder="Visitar Site"
           maxLength={20}
         />
       </div>
+
       <div className="space-y-2">
         <Label>URL de destino *</Label>
         <Input
@@ -141,13 +145,14 @@ export const ButtonCopyConfig = (props: ConfigProps) => {
       <TextBaseFields {...props} />
       <div className="space-y-2">
         <Label>Texto do botão</Label>
-        <Input
+        <EmojiInput
           value={config.displayText || ""}
-          onChange={(e) => handleConfigChange("displayText", e.target.value)}
+          onChange={(v) => handleConfigChange("displayText", v)}
           placeholder="Copiar Cupom"
           maxLength={20}
         />
       </div>
+
       <div className="space-y-2">
         <Label>Código a copiar *</Label>
         <Input
@@ -170,13 +175,14 @@ export const ButtonCallConfig = (props: ConfigProps) => {
       <TextBaseFields {...props} />
       <div className="space-y-2">
         <Label>Texto do botão</Label>
-        <Input
+        <EmojiInput
           value={config.displayText || ""}
-          onChange={(e) => handleConfigChange("displayText", e.target.value)}
+          onChange={(v) => handleConfigChange("displayText", v)}
           placeholder="Ligar Agora"
           maxLength={20}
         />
       </div>
+
       <div className="space-y-2">
         <Label>Número de telefone *</Label>
         <Input
@@ -303,12 +309,13 @@ export const ButtonsMixedConfig = (props: ConfigProps) => {
                 ))}
               </SelectContent>
             </Select>
-            <Input
+            <EmojiInput
               value={btn.displayText || ""}
-              onChange={(e) => updateButton(i, { displayText: e.target.value })}
+              onChange={(v) => updateButton(i, { displayText: v })}
               placeholder="Texto do botão"
               maxLength={20}
             />
+
             {btn.type === "url" && (
               <Input
                 value={btn.url || ""}
@@ -487,13 +494,14 @@ export const ButtonsMediaConfig = (props: ConfigProps) => {
         </div>
         {buttons.map((btn: any, i: number) => (
           <div key={btn.id || i} className="flex gap-2">
-            <Input
-              className="flex-1"
+            <EmojiInput
+              containerClassName="flex-1"
               value={btn.displayText || ""}
-              onChange={(e) => updateButton(i, { displayText: e.target.value })}
+              onChange={(v) => updateButton(i, { displayText: v })}
               placeholder={`Botão ${i + 1}`}
               maxLength={20}
             />
+
             <Button variant="ghost" size="icon" onClick={() => removeButton(i)}>
               <Trash2 className="w-4 h-4 text-destructive" />
             </Button>

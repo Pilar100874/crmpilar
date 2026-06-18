@@ -4,6 +4,9 @@ import { Info, Plus, GripVertical, Trash2 } from "lucide-react";
 import { Bold, Italic } from "lucide-react";
 import { VariableInput, VariableTextarea } from "@/components/flow/VariableInput";
 import { MediaUrlUploadField } from "./MediaUrlUploadField";
+import { EmojiPickerButton } from "./EmojiPickerButton";
+import { useRef } from "react";
+
 
 
 interface ConfigProps {
@@ -15,6 +18,8 @@ interface ConfigProps {
 
 export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
   const buttons = config.buttons || [];
+  const buttonRefs = useRef<(HTMLInputElement | null)[]>([]);
+
 
   const addButton = () => {
     handleConfigChange("buttons", [
@@ -50,28 +55,44 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
 
       <div className="space-y-2">
         <Label>Cabeçalho (opcional)</Label>
-        <VariableTextarea
-          ref={(el) => inputRefs && (inputRefs.current['header'] = el)}
-          value={config.header || ""}
-          onChange={(e) => handleConfigChange("header", e.target.value)}
-          onVariableRequest={() => inputRefs?.current['header'] && openVariablePicker?.(inputRefs.current['header'])}
-          placeholder="Máx. 20 caracteres"
-          rows={3}
-          maxLength={20}
-        />
+        <div className="flex items-start gap-2">
+          <VariableTextarea
+            ref={(el) => inputRefs && (inputRefs.current['header'] = el)}
+            value={config.header || ""}
+            onChange={(e) => handleConfigChange("header", e.target.value)}
+            onVariableRequest={() => inputRefs?.current['header'] && openVariablePicker?.(inputRefs.current['header'])}
+            placeholder="Máx. 20 caracteres"
+            rows={3}
+            maxLength={20}
+            className="flex-1"
+          />
+          <EmojiPickerButton
+            targetRef={{ current: inputRefs?.current['header'] || null } as any}
+            value={config.header || ""}
+            onChange={(v) => handleConfigChange("header", v)}
+          />
+        </div>
       </div>
 
       <div className="space-y-2">
         <Label>Descrição (máx. 1024 caracteres)</Label>
-        <VariableTextarea
-          ref={(el) => inputRefs && (inputRefs.current['text'] = el)}
-          value={config.text || ""}
-          onChange={(e) => handleConfigChange("text", e.target.value)}
-          onVariableRequest={() => inputRefs?.current['text'] && openVariablePicker?.(inputRefs.current['text'])}
-          placeholder="Texto do corpo"
-          rows={3}
-          maxLength={1024}
-        />
+        <div className="flex items-start gap-2">
+          <VariableTextarea
+            ref={(el) => inputRefs && (inputRefs.current['text'] = el)}
+            value={config.text || ""}
+            onChange={(e) => handleConfigChange("text", e.target.value)}
+            onVariableRequest={() => inputRefs?.current['text'] && openVariablePicker?.(inputRefs.current['text'])}
+            placeholder="Texto do corpo"
+            rows={3}
+            maxLength={1024}
+            className="flex-1"
+          />
+          <EmojiPickerButton
+            targetRef={{ current: inputRefs?.current['text'] || null } as any}
+            value={config.text || ""}
+            onChange={(v) => handleConfigChange("text", v)}
+          />
+        </div>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
             <Bold className="h-4 w-4" />
@@ -92,16 +113,25 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
 
       <div className="space-y-2">
         <Label>Rodapé (opcional)</Label>
-        <VariableTextarea
-          ref={(el) => inputRefs && (inputRefs.current['footer'] = el)}
-          value={config.footer || ""}
-          onChange={(e) => handleConfigChange("footer", e.target.value)}
-          onVariableRequest={() => inputRefs?.current['footer'] && openVariablePicker?.(inputRefs.current['footer'])}
-          placeholder="Máx. 60 caracteres"
-          rows={3}
-          maxLength={60}
-        />
+        <div className="flex items-start gap-2">
+          <VariableTextarea
+            ref={(el) => inputRefs && (inputRefs.current['footer'] = el)}
+            value={config.footer || ""}
+            onChange={(e) => handleConfigChange("footer", e.target.value)}
+            onVariableRequest={() => inputRefs?.current['footer'] && openVariablePicker?.(inputRefs.current['footer'])}
+            placeholder="Máx. 60 caracteres"
+            rows={3}
+            maxLength={60}
+            className="flex-1"
+          />
+          <EmojiPickerButton
+            targetRef={{ current: inputRefs?.current['footer'] || null } as any}
+            value={config.footer || ""}
+            onChange={(v) => handleConfigChange("footer", v)}
+          />
+        </div>
       </div>
+
 
       <div className="space-y-3">
         <Label>Botões (até 3)</Label>
@@ -110,12 +140,18 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
           <div key={button.id || index} className="space-y-2">
             <div className="flex items-center gap-2">
               <VariableInput
+                ref={(el) => (buttonRefs.current[index] = el)}
                 value={button.label || button.text || ""}
                 onChange={(e) => updateButtonText(index, e.target.value)}
                 onVariableRequest={() => {}}
                 placeholder={`Botão ${index + 1}`}
                 maxLength={20}
                 className="flex-1"
+              />
+              <EmojiPickerButton
+                targetRef={{ current: buttonRefs.current[index] || null } as any}
+                value={button.label || button.text || ""}
+                onChange={(v) => updateButtonText(index, v)}
               />
               <Button 
                 variant="ghost" 
@@ -128,6 +164,7 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
             </div>
           </div>
         ))}
+
 
         <Button 
           variant="default" 

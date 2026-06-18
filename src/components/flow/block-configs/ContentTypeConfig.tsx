@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Megaphone, Info, MessageCircleQuestion, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EmojiInput } from "./EmojiFields";
+
 import divulgacaoRef from "@/assets/content-type/divulgacao.jpg";
 import promocaoRef from "@/assets/content-type/promocao.jpg";
 import institucionalRef from "@/assets/content-type/institucional.jpg";
@@ -208,11 +210,12 @@ export const ContentTypeConfig = ({ config, handleConfigChange }: ContentTypeCon
       ) : (
         <div className="space-y-2">
           <Label className="text-xs">Pergunta enviada ao usuário</Label>
-          <Input
+          <EmojiInput
             value={config.askPrompt || ""}
-            onChange={(e) => handleConfigChange("askPrompt", e.target.value)}
+            onChange={(v) => handleConfigChange("askPrompt", v)}
             placeholder="Ex: Qual o objetivo da peça? (divulgacao, promocao, institucional...)"
           />
+
           <p className="text-[10px] text-muted-foreground">
             O usuário deve responder com uma das opções:{" "}
             {CONTENT_TYPE_OPTIONS.filter((o) => o.value !== "custom").map((o) => o.value).join(", ")}.
