@@ -3106,7 +3106,7 @@ async function executeNode(
             }
             
             // Enviar arquivo via WhatsApp (apenas o arquivo com caption)
-            const caption = itp(cfg.successMessage || "📄 Seu relatório está pronto!");
+            const caption = buildMediaCaption(cfg, itp(cfg.successMessage || "📄 Seu relatório está pronto!"));
             const mediaType = 'document';
             
             console.log(`[FLOW] Enviando relatório: ${result.fileUrl}`);
@@ -3135,7 +3135,7 @@ async function executeNode(
         console.log(`[FLOW] attach_catalog - config:`, JSON.stringify(cfg));
         try {
           const mode: "latest" | "specific" = cfg.mode === "specific" ? "specific" : "latest";
-          const caption = itp(cfg.caption || "");
+          const caption = buildMediaCaption(cfg);
           const estabId = context.vars.estabelecimento_id;
           if (!estabId) {
             console.error("[FLOW][attach_catalog] estabelecimento_id ausente no contexto");
