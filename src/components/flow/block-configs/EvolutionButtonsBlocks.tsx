@@ -494,13 +494,14 @@ export const ButtonsMediaConfig = (props: ConfigProps) => {
         </div>
         {buttons.map((btn: any, i: number) => (
           <div key={btn.id || i} className="flex gap-2">
-            <Input
-              className="flex-1"
+            <EmojiInput
+              containerClassName="flex-1"
               value={btn.displayText || ""}
-              onChange={(e) => updateButton(i, { displayText: e.target.value })}
+              onChange={(v) => updateButton(i, { displayText: v })}
               placeholder={`Botão ${i + 1}`}
               maxLength={20}
             />
+
             <Button variant="ghost" size="icon" onClick={() => removeButton(i)}>
               <Trash2 className="w-4 h-4 text-destructive" />
             </Button>
