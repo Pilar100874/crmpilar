@@ -3953,7 +3953,12 @@ async function executeNode(
           const estimatedText = estimatedSeconds < 60
             ? `${estimatedSeconds} segundos`
             : `${Math.ceil(estimatedSeconds / 60)} minuto(s)`;
-          await onResponse(`🎨 Gerando mídia, tempo estimado ${estimatedText}...`);
+          if (cfg.waitingMessageEnabled !== false) {
+            const waitMsg = (typeof cfg.waitingMessage === "string" && cfg.waitingMessage.trim())
+              ? itp(cfg.waitingMessage)
+              : `🎨 Gerando mídia, tempo estimado ${estimatedText}...`;
+            await onResponse(waitMsg);
+          }
 
           // Coleta referências (produto, influencer, extras) das variáveis do contexto
           const refUrls: string[] = [];
