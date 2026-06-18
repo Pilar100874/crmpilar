@@ -294,6 +294,15 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
 
   const executarLote = async () => {
     if (selectedProdutos.length === 0) return;
+    if (removerSecundarias) {
+      setShowDeleteConfirmDialog(true);
+      return;
+    }
+    await doExecutarLote();
+  };
+
+  const doExecutarLote = async () => {
+    if (selectedProdutos.length === 0) return;
     setProcessing(true);
     let ok = 0;
     let fail = 0;
