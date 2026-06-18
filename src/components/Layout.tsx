@@ -627,7 +627,7 @@ export default function Layout({ children }: LayoutProps) {
               </button>
             </div>
 
-            <ScrollArea className="flex-1 bg-sidebar">
+            <ScrollArea className="flex-1 bg-sidebar sidebar-scrollarea">
               <div className={`py-2 flex flex-col gap-1 ${menuLocked ? 'items-center' : 'px-4'}`}>
                 {/* Menu Atalhos com submenu */}
                 <>

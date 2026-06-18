@@ -2233,7 +2233,12 @@ function toWhatsappMarkdown(input: string): string {
   return out;
 }
 
-function normalizeUrl(raw: string, kind: "whatsapp" | "instagram" | "facebook" | "website"): string {
+type SocialKind =
+  | "whatsapp" | "instagram" | "facebook" | "website"
+  | "tiktok" | "youtube" | "linkedin" | "telegram"
+  | "twitter" | "threads" | "pinterest";
+
+function normalizeUrl(raw: string, kind: SocialKind): string {
   const value = String(raw || "").trim();
   if (!value) return "";
   if (/^https?:\/\//i.test(value)) return value;
@@ -2241,9 +2246,19 @@ function normalizeUrl(raw: string, kind: "whatsapp" | "instagram" | "facebook" |
     const digits = value.replace(/\D/g, "");
     return digits ? `https://wa.me/${digits}` : value;
   }
-  if (kind === "instagram") return `https://instagram.com/${value.replace(/^@/, "")}`;
-  if (kind === "facebook") return value.includes("facebook.com") ? `https://${value}` : `https://facebook.com/${value}`;
-  return `https://${value}`;
+  const handle = value.replace(/^@/, "");
+  switch (kind) {
+    case "instagram": return `https://instagram.com/${handle}`;
+    case "facebook":  return value.includes("facebook.com") ? `https://${value}` : `https://facebook.com/${handle}`;
+    case "tiktok":    return `https://tiktok.com/@${handle}`;
+    case "youtube":   return `https://youtube.com/@${handle}`;
+    case "linkedin":  return `https://linkedin.com/in/${handle}`;
+    case "telegram":  return `https://t.me/${handle}`;
+    case "twitter":   return `https://x.com/${handle}`;
+    case "threads":   return `https://threads.net/@${handle}`;
+    case "pinterest": return `https://pinterest.com/${handle}`;
+    default:          return `https://${value}`;
+  }
 }
 
 async function sendWahaTextMessage(
@@ -2867,18 +2882,25 @@ async function executeNode(
           if (estId) {
             const { data: rs } = await supa
               .from("redes_sociais")
-              .select("whatsapp,instagram,facebook,website")
+              .select("whatsapp,instagram,facebook,website,tiktok,youtube,linkedin,telegram,twitter,threads,pinterest")
               .eq("estabelecimento_id", estId)
               .maybeSingle();
             if (rs) {
-              const socials = [
-                { enabled: cfg.socialWhatsApp, label: "WhatsApp", kind: "whatsapp", url: rs.whatsapp },
-                { enabled: cfg.socialInstagram, label: "Instagram", kind: "instagram", url: rs.instagram },
-                { enabled: cfg.socialFacebook, label: "Facebook", kind: "facebook", url: rs.facebook },
-                { enabled: cfg.socialWebsite, label: "Website", kind: "website", url: rs.website },
+              const socials: { enabled: boolean; label: string; kind: SocialKind; url: string }[] = [
+                { enabled: cfg.socialWhatsApp,  label: "WhatsApp",    kind: "whatsapp",  url: (rs as any).whatsapp },
+                { enabled: cfg.socialInstagram, label: "Instagram",   kind: "instagram", url: (rs as any).instagram },
+                { enabled: cfg.socialFacebook,  label: "Facebook",    kind: "facebook",  url: (rs as any).facebook },
+                { enabled: cfg.socialWebsite,   label: "Website",     kind: "website",   url: (rs as any).website },
+                { enabled: cfg.socialTiktok,    label: "TikTok",      kind: "tiktok",    url: (rs as any).tiktok },
+                { enabled: cfg.socialYoutube,   label: "YouTube",     kind: "youtube",   url: (rs as any).youtube },
+                { enabled: cfg.socialLinkedin,  label: "LinkedIn",    kind: "linkedin",  url: (rs as any).linkedin },
+                { enabled: cfg.socialTelegram,  label: "Telegram",    kind: "telegram",  url: (rs as any).telegram },
+                { enabled: cfg.socialTwitter,   label: "X (Twitter)", kind: "twitter",   url: (rs as any).twitter },
+                { enabled: cfg.socialThreads,   label: "Threads",     kind: "threads",   url: (rs as any).threads },
+                { enabled: cfg.socialPinterest, label: "Pinterest",   kind: "pinterest", url: (rs as any).pinterest },
               ];
               for (const item of socials) {
-                const url = item.enabled ? normalizeUrl(item.url, item.kind as any) : "";
+                const url = item.enabled ? normalizeUrl(item.url, item.kind) : "";
                 if (url) socialButtons.push({ type: "url", displayText: item.label, url });
               }
             }

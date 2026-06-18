@@ -11402,9 +11402,16 @@ export type Database = {
           facebook: string | null
           id: string
           instagram: string | null
+          linkedin: string | null
+          pinterest: string | null
+          telegram: string | null
+          threads: string | null
+          tiktok: string | null
+          twitter: string | null
           updated_at: string | null
           website: string | null
           whatsapp: string | null
+          youtube: string | null
         }
         Insert: {
           created_at?: string | null
@@ -11412,9 +11419,16 @@ export type Database = {
           facebook?: string | null
           id?: string
           instagram?: string | null
+          linkedin?: string | null
+          pinterest?: string | null
+          telegram?: string | null
+          threads?: string | null
+          tiktok?: string | null
+          twitter?: string | null
           updated_at?: string | null
           website?: string | null
           whatsapp?: string | null
+          youtube?: string | null
         }
         Update: {
           created_at?: string | null
@@ -11422,9 +11436,16 @@ export type Database = {
           facebook?: string | null
           id?: string
           instagram?: string | null
+          linkedin?: string | null
+          pinterest?: string | null
+          telegram?: string | null
+          threads?: string | null
+          tiktok?: string | null
+          twitter?: string | null
           updated_at?: string | null
           website?: string | null
           whatsapp?: string | null
+          youtube?: string | null
         }
         Relationships: [
           {

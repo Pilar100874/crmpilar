@@ -416,6 +416,27 @@ All colors MUST be HSL.
   display: none;
 }
 
+/* Modern rounded scrollbar for the main sidebar (Radix ScrollArea) */
+.sidebar-scrollarea [data-radix-scroll-area-scrollbar] {
+  width: 6px !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  transition: opacity 0.2s ease;
+}
+.sidebar-scrollarea [data-radix-scroll-area-scrollbar][data-orientation="horizontal"] {
+  height: 6px !important;
+  width: auto !important;
+}
+.sidebar-scrollarea [data-radix-scroll-area-thumb] {
+  background: hsl(var(--primary) / 0.45) !important;
+  border-radius: 9999px !important;
+  transition: background 0.2s ease;
+}
+.sidebar-scrollarea:hover [data-radix-scroll-area-thumb] {
+  background: hsl(var(--primary) / 0.7) !important;
+}
+
 /* Animations for menus */
 @keyframes fadeInUp {
   from {
