@@ -1766,6 +1766,7 @@ function BotBuilderContent() {
               onNodesDelete={handleNodesDelete}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
+              isValidConnection={isValidConnection}
               onConnectStart={onConnectStart}
               onConnectEnd={onConnectEnd}
               onReconnect={onReconnect}
