@@ -60,7 +60,8 @@ export type NodeType =
   | "buttons_mixed"
   | "buttons_media"
   | "carousel"
-  | "attach_catalog";
+  | "attach_catalog"
+  | "global_redirect";
 
 
 export interface BlockDefinition {
