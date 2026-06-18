@@ -850,9 +850,14 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
               <Button variant="outline" onClick={() => setStep(2)}>
                 <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
               </Button>
-              <Button onClick={goToCostFromPrompts}>
-                <Sparkles className="h-4 w-4 mr-1" /> Gerar imagens
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowPromptPreviewDialog(true)}>
+                  <Eye className="h-4 w-4 mr-1" /> Preview do prompt
+                </Button>
+                <Button onClick={goToCostFromPrompts}>
+                  <Sparkles className="h-4 w-4 mr-1" /> Gerar imagens
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
