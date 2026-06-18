@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, RefreshCw, Info, AlertCircle } from "lucide-react";
+import { Loader2, RefreshCw, Info, AlertCircle, HelpCircle, ExternalLink, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ConfigProps {
@@ -36,6 +36,7 @@ export const MessageTemplateConfigNew = ({ config, handleConfigChange }: ConfigP
   const [error, setError] = useState<string | null>(null);
   const [numeros, setNumeros] = useState<NumeroRow[]>([]);
   const [templates, setTemplates] = useState<TemplateRow[]>([]);
+  const [showHelp, setShowHelp] = useState(false);
 
   const load = async (numeroId?: string) => {
     setLoading(true);
@@ -98,8 +99,57 @@ export const MessageTemplateConfigNew = ({ config, handleConfigChange }: ConfigP
     handleConfigChange("bodyVariables", arr);
   };
 
+  const steps = [
+    "Acesse o WhatsApp Business Manager em business.facebook.com e faça login.",
+    "Clique no ícone de engrenagem (Configurações) → Mais opções de negócio → Gestão de modelos de mensagem.",
+    "Clique em 'Criar modelo'. Escolha a categoria (Marketing, Utilidade ou Autenticação).",
+    "Dê um nome ao modelo (somente letras minúsculas, números e underscores). Escolha o idioma.",
+    "Preencha o conteúdo: Header (opcional), Body (use {{1}}, {{2}}… para variáveis), Footer e Botões (se necessário).",
+    "Revise e envie para aprovação. O tempo de análise da Meta pode variar de minutos a 24 horas.",
+    "Após a aprovação, o modelo aparecerá automaticamente nesta lista ao selecionar o número Cloud API.",
+  ];
+
   return (
     <div className="space-y-6">
+      {/* Ajuda / Passo a passo */}
+      <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
+        <button
+          type="button"
+          onClick={() => setShowHelp(!showHelp)}
+          className="flex items-center gap-2 w-full text-left"
+        >
+          <HelpCircle className="h-4 w-4 text-primary shrink-0" />
+          <span className="text-sm font-semibold text-foreground flex-1">Como criar um Template no Facebook</span>
+          {showHelp ? (
+            <span className="text-xs text-muted-foreground">Ocultar</span>
+          ) : (
+            <span className="text-xs text-muted-foreground">Mostrar passo a passo</span>
+          )}
+        </button>
+
+        {showHelp && (
+          <div className="space-y-3 pt-1">
+            <ol className="space-y-2">
+              {steps.map((step, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs text-foreground/80">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
+            <a
+              href="https://business.facebook.com/wa/manage/message-templates/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline mt-1"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Abrir WhatsApp Business Manager — Modelos de Mensagem
+            </a>
+          </div>
+        )}
+      </div>
+
       {/* 1. Número WhatsApp */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
