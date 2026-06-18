@@ -196,6 +196,15 @@ const menuItems: MenuItem[] = [
     ]
   },
   { id: "Mapa de Calor", title: "Mapa de Calor", url: "/mapa-calor-sistema", icon: LucideIcons.Flame },
+  {
+    id: "Admin",
+    title: "Admin",
+    icon: LucideIcons.ShieldCheck,
+    subItems: [
+      { id: "Admin Macros", title: "Macros", url: "/macros", icon: LucideIcons.Zap },
+      { id: "Admin Support Tickets", title: "Tickets de Suporte", url: "/admin/support-tickets", icon: LucideIcons.LifeBuoy },
+    ]
+  },
   { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
 ];
 
