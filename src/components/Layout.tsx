@@ -606,7 +606,7 @@ export default function Layout({ children }: LayoutProps) {
               menuLocked 
                 ? 'fixed left-0 top-0 bottom-0 w-16 md:w-20 lg:w-16 z-[500]' 
                 : `slide-out-menu ${menuOpen ? 'open' : ''}`
-            } border-r border-sidebar-border/30 bg-sidebar flex-shrink-0 flex flex-col`}
+            } border-r-[0.5px] border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col`}
             onMouseEnter={handleMenuMouseEnter}
             onMouseLeave={handleMenuMouseLeave}
           >
