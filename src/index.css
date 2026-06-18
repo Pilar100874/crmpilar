@@ -124,14 +124,15 @@ All colors MUST be HSL.
     --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.3), 0 4px 6px -2px hsl(0 0% 0% / 0.2);
     --shadow-glow: 0 0 40px hsl(25 95% 53% / 0.3);
 
-    --sidebar-background: 220 18% 20%;
-    --sidebar-foreground: 0 0% 100%;
+    --sidebar-background: 18 30% 12%;
+    --sidebar-foreground: 30 25% 96%;
     --sidebar-primary: 25 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 25%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 220 15% 18%;
+    --sidebar-accent: 18 35% 20%;
+    --sidebar-accent-foreground: 30 25% 96%;
+    --sidebar-border: 18 30% 8%;
     --sidebar-ring: 25 95% 53%;
+    --sidebar-gradient: linear-gradient(180deg, hsl(20 40% 16%) 0%, hsl(15 35% 10%) 60%, hsl(10 30% 7%) 100%);
   }
 
   /* Slide-out Menu Styles */
