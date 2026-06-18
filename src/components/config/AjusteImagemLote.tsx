@@ -184,22 +184,25 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
       return;
     }
     if (metodo === "ia") {
-      // inicializa lista de revisão e dispara geração paralela controlada
-      const items: IaItem[] = selectedProdutos.map((p) => ({
-        produtoId: p.id,
-        nome: p.nome,
-        status: "pending",
-        prompt: p.nome,
-      }));
-      setIaItems(items);
-      setStep(3);
-      // dispara geração inicial sequencial para evitar rate limit
-      for (const it of items) {
-        await generateIaImage(it.produtoId, it.prompt);
-      }
+      setShowCostDialog(true);
       return;
     }
     setStep(3);
+  };
+
+  const startIaGeneration = async () => {
+    setShowCostDialog(false);
+    const items: IaItem[] = selectedProdutos.map((p) => ({
+      produtoId: p.id,
+      nome: p.nome,
+      status: "pending",
+      prompt: p.nome,
+    }));
+    setIaItems(items);
+    setStep(3);
+    for (const it of items) {
+      await generateIaImage(it.produtoId, it.prompt);
+    }
   };
 
   const generateIaImage = async (produtoId: string, promptText: string) => {
