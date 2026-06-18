@@ -46,7 +46,12 @@ interface Props {
 }
 
 export function AjusteImagemLote({ estabelecimentoId }: Props) {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | "prompts" | 3>(1);
+
+  // ---- textos extras para IA (por produto + filtro local + aplicação em lote)
+  const [iaExtras, setIaExtras] = useState<Record<string, string>>({});
+  const [bulkExtra, setBulkExtra] = useState("");
+  const [promptsFilterNome, setPromptsFilterNome] = useState("");
 
   // ---- dados base
   const [produtos, setProdutos] = useState<Produto[]>([]);
