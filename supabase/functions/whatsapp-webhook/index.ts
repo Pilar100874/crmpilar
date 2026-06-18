@@ -2024,6 +2024,59 @@ async function sendCloudText(phoneNumberId: string, accessToken: string, to: str
   return r.ok;
 }
 
+async function sendCloudTemplate(
+  phoneNumberId: string,
+  accessToken: string,
+  to: string,
+  templateName: string,
+  language: string,
+  bodyParams: string[] = [],
+  headerParam?: { type: "text" | "image" | "video" | "document"; value: string },
+) {
+  if (!phoneNumberId || !accessToken || !templateName) {
+    console.error("[CLOUD] template: phoneNumberId/accessToken/templateName ausentes");
+    return false;
+  }
+  const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+  const components: any[] = [];
+  if (headerParam) {
+    if (headerParam.type === "text") {
+      components.push({ type: "header", parameters: [{ type: "text", text: headerParam.value }] });
+    } else {
+      components.push({
+        type: "header",
+        parameters: [{ type: headerParam.type, [headerParam.type]: { link: headerParam.value } }],
+      });
+    }
+  }
+  if (bodyParams.length > 0) {
+    components.push({
+      type: "body",
+      parameters: bodyParams.map((p) => ({ type: "text", text: String(p ?? "") })),
+    });
+  }
+  const payload: any = {
+    messaging_product: "whatsapp",
+    to,
+    type: "template",
+    template: {
+      name: templateName,
+      language: { code: language || "pt_BR" },
+      ...(components.length > 0 ? { components } : {}),
+    },
+  };
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify(payload),
+  });
+  const res = await r.json().catch(() => ({}));
+  if (!r.ok) console.error("[CLOUD] sendTemplate error:", res);
+  return r.ok;
+}
+
+
+
 async function sendCloudMedia(
   phoneNumberId: string,
   accessToken: string,
