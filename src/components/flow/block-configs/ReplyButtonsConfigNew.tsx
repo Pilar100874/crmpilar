@@ -18,6 +18,8 @@ interface ConfigProps {
 
 export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, openVariablePicker }: ConfigProps) => {
   const buttons = config.buttons || [];
+  const buttonRefs = useRef<(HTMLInputElement | null)[]>([]);
+
 
   const addButton = () => {
     handleConfigChange("buttons", [
