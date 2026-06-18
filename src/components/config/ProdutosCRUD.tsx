@@ -1311,12 +1311,20 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   <span className="md:hidden">Básicos</span>
                 </TabsTrigger>
                 <TabsTrigger 
+                  value="foto" 
+                  className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                >
+                  <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span>Foto</span>
+                </TabsTrigger>
+                <TabsTrigger 
                   value="preco" 
                   className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
                 >
                   <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   <span>Preço</span>
                 </TabsTrigger>
+
                 <TabsTrigger 
                   value="frete" 
                   className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
