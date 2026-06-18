@@ -641,8 +641,33 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
             )}
 
             {metodo === "ia" && (
-              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {iaItems.map((item) => (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setIaItems((prev) =>
+                        prev.map((i) => (i.status === "ready" && i.imageDataUrl ? { ...i, status: "approved" } : i))
+                      )
+                    }
+                  >
+                    <Check className="h-3 w-3 mr-1" /> Aprovar todas
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setIaItems((prev) =>
+                        prev.map((i) => (i.status === "approved" ? { ...i, status: "ready" } : i))
+                      )
+                    }
+                  >
+                    <X className="h-3 w-3 mr-1" /> Desaprovar todas
+                  </Button>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                  {iaItems.map((item) => (
                   <div key={item.produtoId} className={`border rounded-md p-3 space-y-2 ${item.status === "approved" ? "border-primary bg-primary/5" : ""}`}>
                     <div className="aspect-square rounded bg-muted overflow-hidden flex items-center justify-center">
                       {item.status === "generating" && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
