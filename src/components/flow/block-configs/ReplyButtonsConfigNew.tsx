@@ -140,12 +140,18 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
           <div key={button.id || index} className="space-y-2">
             <div className="flex items-center gap-2">
               <VariableInput
+                ref={(el) => (buttonRefs.current[index] = el)}
                 value={button.label || button.text || ""}
                 onChange={(e) => updateButtonText(index, e.target.value)}
                 onVariableRequest={() => {}}
                 placeholder={`Botão ${index + 1}`}
                 maxLength={20}
                 className="flex-1"
+              />
+              <EmojiPickerButton
+                targetRef={{ current: buttonRefs.current[index] || null } as any}
+                value={button.label || button.text || ""}
+                onChange={(v) => updateButtonText(index, v)}
               />
               <Button 
                 variant="ghost" 
@@ -158,6 +164,7 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
             </div>
           </div>
         ))}
+
 
         <Button 
           variant="default" 
