@@ -115,13 +115,14 @@ export const ButtonUrlConfig = (props: ConfigProps) => {
       <TextBaseFields {...props} />
       <div className="space-y-2">
         <Label>Texto do botão</Label>
-        <Input
+        <EmojiInput
           value={config.displayText || ""}
-          onChange={(e) => handleConfigChange("displayText", e.target.value)}
+          onChange={(v) => handleConfigChange("displayText", v)}
           placeholder="Visitar Site"
           maxLength={20}
         />
       </div>
+
       <div className="space-y-2">
         <Label>URL de destino *</Label>
         <Input
