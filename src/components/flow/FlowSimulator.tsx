@@ -1862,7 +1862,18 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         try {
           const mode: "latest" | "specific" = config.mode === "specific" ? "specific" : "latest";
           const caption = interpolateVariables(config.caption || "", context);
-          addSystemMessage("📚 Preparando catálogo(s)...");
+          const mediaTitle = interpolateVariables(config.mediaTitle || "", context);
+          const mediaDescription = interpolateVariables(config.mediaDescription || caption || "", context);
+          const mediaFooter = interpolateVariables(config.mediaFooter || "", context);
+
+          // Mensagem "aguarde..." configurável
+          if (config.waitingMessageEnabled !== false) {
+            const waitMsg = interpolateVariables(
+              config.waitingMessage || "⏳ Aguarde... gerando catálogo em tempo real.",
+              context
+            );
+            addBotMessage(waitMsg, node.id);
+          }
 
           const allCatalogs = await loadActiveCatalogs();
           if (allCatalogs.length === 0) {
@@ -1890,7 +1901,15 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 addSystemMessage(`⚠️ Catálogo "${cat.nome}" está incompleto e foi ignorado.`);
                 continue;
               }
-              addBotMediaMessage(result.url, "file", caption || cat.nome, node.id);
+              // Título antes do PDF (em negrito, como no WhatsApp)
+              if (mediaTitle) {
+                addBotMessage(`*${mediaTitle}*`, node.id);
+              }
+              addBotMediaMessage(result.url, "file", mediaDescription || cat.nome, node.id);
+              // Rodapé depois
+              if (mediaFooter) {
+                addBotMessage(`_${mediaFooter}_`, node.id);
+              }
               sucesso++;
             } catch (err: any) {
               addSystemMessage(`❌ Erro ao gerar "${cat.nome}": ${err?.message || err}`);
