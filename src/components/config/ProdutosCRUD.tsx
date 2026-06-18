@@ -920,6 +920,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     setEditingProduto(null);
     setSelectedFile(null);
     setFormData(initialFormData);
+    setProductImages([]);
     setActiveTab("basico");
     setShowDialog(true);
   };
