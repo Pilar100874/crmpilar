@@ -235,15 +235,15 @@ All colors MUST be HSL.
     border-radius: 18px !important;
     overflow: hidden;
     box-shadow:
-      0 12px 32px -8px hsl(15 40% 5% / 0.55),
-      0 4px 12px -4px hsl(15 40% 5% / 0.45),
-      inset 0 1px 0 hsl(35 100% 70% / 0.08);
+      0 12px 32px -8px hsl(220 20% 5% / 0.55),
+      0 4px 12px -4px hsl(220 20% 5% / 0.45),
+      inset 0 1px 0 hsl(220 20% 50% / 0.08);
     border: 1px solid hsl(var(--sidebar-border) / 0.6);
   }
   aside.bg-sidebar,
   div.bg-sidebar.flex-shrink-0 {
     border-right: 1px solid hsl(var(--sidebar-border) / 0.6);
-    box-shadow: 4px 0 24px -8px hsl(15 40% 5% / 0.5);
+    box-shadow: 4px 0 24px -8px hsl(220 20% 5% / 0.5);
   }
 
   /* Floating submenu popover — detached rounded card matching block style */
