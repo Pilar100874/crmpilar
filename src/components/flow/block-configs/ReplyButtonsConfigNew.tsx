@@ -4,6 +4,9 @@ import { Info, Plus, GripVertical, Trash2 } from "lucide-react";
 import { Bold, Italic } from "lucide-react";
 import { VariableInput, VariableTextarea } from "@/components/flow/VariableInput";
 import { MediaUrlUploadField } from "./MediaUrlUploadField";
+import { EmojiPickerButton } from "./EmojiPickerButton";
+import { useRef } from "react";
+
 
 
 interface ConfigProps {
