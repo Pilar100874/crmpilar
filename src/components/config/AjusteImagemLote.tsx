@@ -266,6 +266,15 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
     setShowCostDialog(true);
   };
 
+  const openPromptPreview = () => {
+    if (showCostDialog) {
+      setShowCostDialog(false);
+      window.setTimeout(() => setShowPromptPreviewDialog(true), 80);
+      return;
+    }
+    setShowPromptPreviewDialog(true);
+  };
+
   const buildPromptFor = (p: Produto) => {
     const extra = (iaExtras[p.id] || "").trim();
     // Substitui as variáveis {nome} / {produto} pelo nome do produto.
@@ -890,7 +899,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                 <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
               </Button>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setShowPromptPreviewDialog(true)}>
+                <Button variant="outline" onClick={openPromptPreview}>
                   <Eye className="h-4 w-4 mr-1" /> Preview do prompt
                 </Button>
                 <Button onClick={goToCostFromPrompts}>
@@ -1131,7 +1140,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <Button variant="outline" onClick={() => { setShowCostDialog(false); setShowPromptPreviewDialog(true); }}>
+            <Button variant="outline" onClick={openPromptPreview}>
               <Eye className="h-4 w-4 mr-1" /> Ver prompts
             </Button>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
@@ -1171,15 +1180,15 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
             <DialogTitle>Preview do prompt final</DialogTitle>
             <DialogDescription>
               Texto extra do produto (use <code className="px-1 rounded bg-muted">{"{nome}"}</code> para inserir o nome){useVisualIdentity && hasVisualIdentity ? " + identidade visual" : ""}.
-              {selectedProdutos.length > 50 && (
+              {selectedProdutos.length > 12 && (
                 <span className="block mt-1 text-xs">
-                  Exibindo os primeiros 50 de {selectedProdutos.length} produtos selecionados.
+                  Exibindo os primeiros 12 de {selectedProdutos.length} produtos selecionados para evitar travamento.
                 </span>
               )}
             </DialogDescription>
           </DialogHeader>
           <div className="flex-1 min-h-0 overflow-auto space-y-2 text-sm pr-1">
-            {selectedProdutos.slice(0, 50).map((p) => {
+            {selectedProdutos.slice(0, 12).map((p) => {
               const base = buildPromptFor(p);
               const final = useVisualIdentity && hasVisualIdentity
                 ? `${base}\n\n[Identidade Visual]: ${visualIdentityPrompt}`
