@@ -222,6 +222,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   const [activeTab, setActiveTab] = useState("basico");
   const [ncmOpen, setNcmOpen] = useState(false);
   const [ncmSearch, setNcmSearch] = useState("");
+  const [productImages, setProductImages] = useState<ProductImage[]>([]);
   const [camposCustomizados, setCamposCustomizados] = useState<CampoCustomizado[]>([]);
   
   // Filter states
