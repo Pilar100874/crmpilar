@@ -482,6 +482,13 @@ export const CRMGerarRelatorioConfig = ({ config, handleConfigChange, nodes, edg
         </>
       )}
 
+      <WaitingMessageField
+        enabled={config.waitingMessageEnabled !== false}
+        message={config.waitingMessage || ""}
+        defaultMessage={DEFAULT_WAITING_REPORT}
+        onChange={(patch) => handleConfigChange(patch)}
+      />
+
       <div className="space-y-2 border-t pt-4">
         <Label>Variável de saída</Label>
         <RichTextEditor
