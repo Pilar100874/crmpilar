@@ -114,7 +114,8 @@ export const ConfigTextarea = ({
   required = false,
   info,
   className,
-  monospace = false
+  monospace = false,
+  emoji = true,
 }: { 
   label: string; 
   value: string; 
@@ -125,24 +126,38 @@ export const ConfigTextarea = ({
   info?: string;
   className?: string;
   monospace?: boolean;
-}) => (
+  emoji?: boolean;
+}) => {
+  const taRef = useRef<HTMLTextAreaElement>(null);
+  const showEmoji = emoji && !monospace;
+  return (
   <div className="space-y-2">
     <Label className="text-foreground text-sm font-medium flex items-center gap-2">
       <span className="w-1 h-4 bg-primary rounded-full"></span>
       {label}
       {required && <Badge variant="outline" className="ml-1 text-[10px] h-4 border-primary/20 text-primary">obrigatório</Badge>}
     </Label>
-    <Textarea
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      rows={rows}
-      className={cn(
-        "bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none",
-        monospace && "font-mono text-xs",
-        className
+    <div className="flex items-start gap-2">
+      <Textarea
+        ref={taRef}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        rows={rows}
+        className={cn(
+          "flex-1 bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none",
+          monospace && "font-mono text-xs",
+          className
+        )}
+      />
+      {showEmoji && (
+        <EmojiPickerButton
+          targetRef={taRef as any}
+          value={value || ""}
+          onChange={onChange}
+        />
       )}
-    />
+    </div>
     {info && (
       <p className="text-xs text-foreground/70 flex items-start gap-1.5 bg-primary/5 p-2 rounded border border-primary/20">
         <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-primary" />
@@ -150,7 +165,9 @@ export const ConfigTextarea = ({
       </p>
     )}
   </div>
-);
+  );
+};
+
 
 // Campo de seleção
 export const ConfigSelect = ({ 
