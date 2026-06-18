@@ -396,6 +396,10 @@ serve(async (req) => {
       flowData = data;
     }
 
+    if (!estabelecimentoId && flowData?.estabelecimento_id) {
+      estabelecimentoId = flowData.estabelecimento_id;
+    }
+
     // ====== Resolve número vinculado ao bot (multi-provider) ======
     // Prioridade: bot_flows.whatsapp_numero_id -> whatsapp_numeros
     // Fallback Meta: busca número por cloud_phone_number_id == phoneNumberId
@@ -2076,8 +2080,8 @@ async function sendCloudButtonsMessage(
     const buttons = (interactive.buttons || []).slice(0, 3).map((b: any) => ({
       type: "reply",
       reply: {
-        id: String(b.id || b.title || b.text || "").slice(0, 256),
-        title: toWhatsappMarkdown(String(b.title || b.text || "OK")).slice(0, 20),
+        id: String(b.id || b.value || b.displayText || b.title || b.text || "").slice(0, 256),
+        title: toWhatsappMarkdown(String(b.displayText || b.title || b.text || "OK")).slice(0, 20),
       },
     }));
     if (!buttons.length) return false;
@@ -2227,6 +2231,19 @@ function toWhatsappMarkdown(input: string): string {
   // Links markdown [texto](url) → texto (url)
   out = out.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, "$1 ($2)");
   return out;
+}
+
+function normalizeUrl(raw: string, kind: "whatsapp" | "instagram" | "facebook" | "website"): string {
+  const value = String(raw || "").trim();
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+  if (kind === "whatsapp") {
+    const digits = value.replace(/\D/g, "");
+    return digits ? `https://wa.me/${digits}` : value;
+  }
+  if (kind === "instagram") return `https://instagram.com/${value.replace(/^@/, "")}`;
+  if (kind === "facebook") return value.includes("facebook.com") ? `https://${value}` : `https://facebook.com/${value}`;
+  return `https://${value}`;
 }
 
 async function sendWahaTextMessage(
@@ -2841,6 +2858,7 @@ async function executeNode(
     }
     case "goodbye": {
       let text = itp(cfg.message || cfg.text || "Até logo!");
+      const socialButtons: any[] = [];
 
       if (cfg.showSocialButtons) {
         try {
@@ -2853,12 +2871,16 @@ async function executeNode(
               .eq("estabelecimento_id", estId)
               .maybeSingle();
             if (rs) {
-              const links: string[] = [];
-              if (cfg.socialWhatsApp && rs.whatsapp) links.push(`📱 WhatsApp: ${rs.whatsapp}`);
-              if (cfg.socialInstagram && rs.instagram) links.push(`📷 Instagram: ${rs.instagram}`);
-              if (cfg.socialFacebook && rs.facebook) links.push(`👥 Facebook: ${rs.facebook}`);
-              if (cfg.socialWebsite && rs.website) links.push(`🌐 Site: ${rs.website}`);
-              if (links.length) text += `\n\n*Nos acompanhe em nossas redes sociais:*\n${links.join("\n")}`;
+              const socials = [
+                { enabled: cfg.socialWhatsApp, label: "WhatsApp", kind: "whatsapp", url: rs.whatsapp },
+                { enabled: cfg.socialInstagram, label: "Instagram", kind: "instagram", url: rs.instagram },
+                { enabled: cfg.socialFacebook, label: "Facebook", kind: "facebook", url: rs.facebook },
+                { enabled: cfg.socialWebsite, label: "Website", kind: "website", url: rs.website },
+              ];
+              for (const item of socials) {
+                const url = item.enabled ? normalizeUrl(item.url, item.kind as any) : "";
+                if (url) socialButtons.push({ type: "url", displayText: item.label, url });
+              }
             }
           }
         } catch (e) {
@@ -2866,13 +2888,30 @@ async function executeNode(
         }
       }
 
-      if (cfg.showStartAgainButton !== false) {
-        text += `\n\n_Digite *recomeçar* a qualquer momento para iniciar uma nova conversa._`;
+      const showRestart = cfg.showStartAgainButton !== false;
+      if (showRestart) {
+        await onResponse(text, undefined, undefined, {
+          type: "buttons",
+          title: "",
+          description: text,
+          buttons: [{ type: "reply", displayText: "🔄 Recomeçar", id: "recomeçar" }],
+        });
+        context.pendingNodeId = node.id;
+      } else {
+        await onResponse(text);
       }
 
-      await onResponse(text);
+      for (let i = 0; i < socialButtons.length; i++) {
+        const button = socialButtons[i];
+        await onResponse("", undefined, undefined, {
+          type: "buttons",
+          title: "",
+          description: i === 0 ? "Nos acompanhe em nossas redes sociais:" : `Abrir ${button.displayText}`,
+          buttons: [button],
+        });
+      }
       // limpa pendência — encerra fluxo
-      context.pendingNodeId = null;
+      if (!showRestart) context.pendingNodeId = null;
       break;
     }
     case "ask_name":
