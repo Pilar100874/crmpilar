@@ -732,11 +732,6 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
           </CardContent>
         </Card>
       )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* STEP 3 */}
       {step === 3 && (
