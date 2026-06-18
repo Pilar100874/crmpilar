@@ -79,9 +79,18 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
   const [useVisualIdentity, setUseVisualIdentity] = useState(false);
   const [visualIdentityPrompt, setVisualIdentityPrompt] = useState<string>("");
   const [hasVisualIdentity, setHasVisualIdentity] = useState(false);
+  const [showCostDialog, setShowCostDialog] = useState(false);
 
   // execução
   const [processing, setProcessing] = useState(false);
+
+  // estimativa aproximada de créditos por imagem por modelo
+  const COST_PER_IMAGE: Record<string, number> = {
+    "google/gemini-2.5-flash-image": 0.04,
+    "google/gemini-3.1-flash-image-preview": 0.06,
+    "google/gemini-3-pro-image-preview": 0.20,
+  };
+  const estimatedCost = (COST_PER_IMAGE[iaModel] ?? 0.05) * selectedIds.size;
 
   useEffect(() => {
     (async () => {
