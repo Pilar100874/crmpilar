@@ -54,6 +54,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
   const [filterNome, setFilterNome] = useState("");
   const [filterCategoria, setFilterCategoria] = useState<string>("all");
   const [filterGrupo, setFilterGrupo] = useState<string>("all");
+  const [filterFoto, setFilterFoto] = useState<"all" | "com" | "sem">("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // ---- método
