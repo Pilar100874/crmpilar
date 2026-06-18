@@ -3708,7 +3708,10 @@ async function executeNode(
             const tempoLabel = estSecs >= 60
               ? `cerca de ${Math.ceil(estSecs / 60)} minuto(s)`
               : `cerca de ${estSecs} segundos`;
-            await onResponse(`⏳ Estou gerando sua ${tipoLabel} agora. Isso pode levar ${tempoLabel}. Já te envio assim que ficar pronta!`);
+            if (cfg.waitingMessageEnabled !== false) {
+              const customWait = typeof cfg.waitingMessage === "string" ? cfg.waitingMessage.trim() : "";
+              await onResponse(customWait || `⏳ Estou gerando sua ${tipoLabel} agora. Isso pode levar ${tempoLabel}. Já te envio assim que ficar pronta!`);
+            }
 
             // 2) Geração real (pode demorar — fetch sem timeout)
             const genResp = await fetch(`${SUPABASE_URL}/functions/v1/bot-run-ai-studio-workflow`, {
