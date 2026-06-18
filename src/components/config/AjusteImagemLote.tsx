@@ -115,9 +115,11 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
       if (filterNome && !p.nome.toLowerCase().includes(filterNome.toLowerCase())) return false;
       if (filterCategoria !== "all" && p.categoria_id !== filterCategoria) return false;
       if (filterGrupo !== "all" && p.grupo_id !== filterGrupo) return false;
+      if (filterFoto === "com" && !p.foto_url) return false;
+      if (filterFoto === "sem" && p.foto_url) return false;
       return true;
     });
-  }, [produtos, filterNome, filterCategoria, filterGrupo]);
+  }, [produtos, filterNome, filterCategoria, filterGrupo, filterFoto]);
 
   const selectedProdutos = useMemo(
     () => produtos.filter((p) => selectedIds.has(p.id)),
