@@ -17,10 +17,9 @@ export function setBlockDragPreview(
     ghost.textContent = label || "Bloco";
     const accent = color || "hsl(var(--primary))";
     Object.assign(ghost.style, {
-      position: "absolute",
-      top: "0px",
-      left: "0px",
-      transform: "translate(-9999px, -9999px)",
+      position: "fixed",
+      top: "-1000px",
+      left: "-1000px",
       width: "220px",
       minHeight: "56px",
       padding: "12px 14px",
