@@ -52,6 +52,8 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
   const [iaExtras, setIaExtras] = useState<Record<string, string>>({});
   const [bulkExtra, setBulkExtra] = useState("");
   const [promptsFilterNome, setPromptsFilterNome] = useState("");
+  const [promptsFilterCategoria, setPromptsFilterCategoria] = useState<string>("all");
+  const [promptsFilterGrupo, setPromptsFilterGrupo] = useState<string>("all");
 
   // ---- dados base
   const [produtos, setProdutos] = useState<Produto[]>([]);
