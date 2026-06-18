@@ -35,8 +35,9 @@ export const GoodbyeConfigNew = ({ config, handleConfigChange, inputRefs, openVa
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    const text = config.message || "";
+    const text = displayMessage;
     const selectedText = text.substring(start, end);
+
 
     let newText = text;
     let newCursorPos = start;
