@@ -54,7 +54,22 @@ export const AttachCatalogConfig = ({ selectedNode, handleConfigChange }: Props)
     (async () => {
       setLoading(true);
       try {
-        setCatalogs(await loadActiveCatalogs());
+        const list = await loadActiveCatalogs();
+        setCatalogs(list);
+        // Garante PDF cacheado para o bot do WhatsApp (gera em background
+        // qualquer catálogo sem pdf_url ou cujo PDF esteja desatualizado).
+        list.forEach((c) => {
+          const stale =
+            !c.pdf_url ||
+            (c.pdf_generated_at &&
+              new Date(c.pdf_generated_at).getTime() <
+                new Date(c.updated_at).getTime());
+          if (stale) {
+            generateCatalogPdf(c).catch((e) =>
+              console.warn("[AttachCatalogConfig] auto-gen PDF falhou:", e)
+            );
+          }
+        });
       } catch (e) {
         console.error(e);
       } finally {

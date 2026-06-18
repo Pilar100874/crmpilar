@@ -24,6 +24,8 @@ export interface SavedCatalog {
   ativo: boolean;
   data_validade: string | null;
   data_indeterminada: boolean;
+  pdf_url?: string | null;
+  pdf_generated_at?: string | null;
 }
 
 interface PageInfo {

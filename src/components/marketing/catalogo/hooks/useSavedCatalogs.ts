@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { CatalogConfig, CatalogPage } from '../types';
 import { toast } from 'sonner';
 import { Json } from '@/integrations/supabase/types';
+import { generateCatalogPdf, SavedCatalog as PdfSavedCatalog } from '@/lib/catalogPdfGenerator';
 
 export interface SavedCatalog {
   id: string;
@@ -123,7 +124,7 @@ export const useSavedCatalogs = (estabelecimentoId: string | null) => {
         toast.success('Catálogo atualizado com sucesso!');
         await fetchCatalogs();
         
-        return {
+        const result = {
           ...data,
           config: parseJsonField<CatalogConfig>(data.config) || config,
           cover_page: parseJsonField<CatalogPage>(data.cover_page),
@@ -133,6 +134,11 @@ export const useSavedCatalogs = (estabelecimentoId: string | null) => {
           data_validade: data.data_validade,
           data_indeterminada: data.data_indeterminada ?? true,
         };
+        // Gera e cacheia o PDF em background para o bot do WhatsApp
+        generateCatalogPdf(result as unknown as PdfSavedCatalog).catch((e) =>
+          console.warn('[useSavedCatalogs] Falha ao gerar PDF em background:', e)
+        );
+        return result;
       } else {
         // Create new catalog
         const { data, error } = await supabase
@@ -146,7 +152,7 @@ export const useSavedCatalogs = (estabelecimentoId: string | null) => {
         toast.success('Catálogo salvo com sucesso!');
         await fetchCatalogs();
         
-        return {
+        const result = {
           ...data,
           config: parseJsonField<CatalogConfig>(data.config) || config,
           cover_page: parseJsonField<CatalogPage>(data.cover_page),
@@ -156,6 +162,10 @@ export const useSavedCatalogs = (estabelecimentoId: string | null) => {
           data_validade: data.data_validade,
           data_indeterminada: data.data_indeterminada ?? true,
         };
+        generateCatalogPdf(result as unknown as PdfSavedCatalog).catch((e) =>
+          console.warn('[useSavedCatalogs] Falha ao gerar PDF em background:', e)
+        );
+        return result;
       }
     } catch (error) {
       console.error('Erro ao salvar catálogo:', error);
