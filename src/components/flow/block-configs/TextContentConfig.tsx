@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Type, Info, Sparkles, MessageCircleQuestion, Lock, ListChecks, Plus, Trash2, Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WaitingMessageField } from "./WaitingMessageField";
 
 interface TextContentConfigProps {
   config: any;
