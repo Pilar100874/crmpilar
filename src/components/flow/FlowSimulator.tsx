@@ -3220,6 +3220,19 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       currentContext: context 
     });
 
+    // === Palavra-chave universal: Recomeçar (espelha o webhook do WhatsApp) ===
+    const _restartKw = input.trim().toLowerCase();
+    if (/^(recome[çc]ar|reiniciar|restart|começar de novo|comecar de novo)$/i.test(_restartKw)) {
+      const curNode = nodes.find((n) => n.id === currentNodeId);
+      const isAfterGoodbye = curNode && (curNode.data as any)?.type === "goodbye";
+      if (isAfterGoodbye || !isWaitingInput) {
+        addUserMessage(input);
+        setInput("");
+        setTimeout(() => handleReset(), 300);
+        return;
+      }
+    }
+
     addUserMessage(input);
 
     // === text_content: coleta multi-campo (title / subtitle / body) do usuário ===
