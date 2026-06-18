@@ -273,9 +273,9 @@ export const FlowNode = memo((props: any) => {
                   />
                 </div>
               )}
-              <span className="font-semibold text-sm text-foreground truncate">{blockDef.label}</span>
+              <span className="font-semibold text-sm text-foreground truncate">{data.config?.customTitle || blockDef.label}</span>
             </div>
-            <p className="text-xs text-muted-foreground line-clamp-2">{data.label || blockDef.description}</p>
+            <p className="text-xs text-muted-foreground line-clamp-2">{data.config?.customSubtitle || data.label || blockDef.description}</p>
           </div>
           <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger asChild>
@@ -629,16 +629,25 @@ export const FlowNode = memo((props: any) => {
       onOpenChange={setIconCustomizerOpen}
       currentIcon={customIcon}
       currentColor={customIconColor}
+      currentTitle={data.config?.customTitle}
+      currentSubtitle={data.config?.customSubtitle}
       defaultIcon={blockDef.icon}
-      onSave={(newIcon, newColor) => {
+      defaultTitle={blockDef.label}
+      defaultSubtitle={blockDef.description}
+      onSave={({ icon: newIcon, color: newColor, title: newTitle, subtitle: newSubtitle }) => {
         const nextConfig = { ...(data.config || {}) };
         if (newIcon) nextConfig.customIcon = newIcon;
         else delete nextConfig.customIcon;
         if (newColor) nextConfig.customIconColor = newColor;
         else delete nextConfig.customIconColor;
+        if (newTitle) nextConfig.customTitle = newTitle;
+        else delete nextConfig.customTitle;
+        if (newSubtitle) nextConfig.customSubtitle = newSubtitle;
+        else delete nextConfig.customSubtitle;
         data.onUpdateNodeData?.(id, { config: nextConfig });
       }}
     />
+
   </>
   );
 });
