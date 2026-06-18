@@ -87,6 +87,15 @@ export const menuStructure: MenuCategory[] = [
       { id: "Ecommerce Rastreamento", title: "Rastreamento de Pedidos", url: "/pedido-tracking", icon: LucideIcons.Truck },
     ]
   },
+  {
+    id: "Admin",
+    title: "Admin",
+    icon: LucideIcons.ShieldCheck,
+    subItems: [
+      { id: "Admin Macros", title: "Macros", url: "/macros", icon: LucideIcons.Zap },
+      { id: "Admin Support Tickets", title: "Tickets de Suporte", url: "/admin/support-tickets", icon: LucideIcons.LifeBuoy },
+    ]
+  },
   { 
     id: "Configurações",
     title: "Configurações", 
@@ -119,9 +128,7 @@ export const menuStructure: MenuCategory[] = [
       { id: "Config Estab Categorias Produtos", title: "Estabelecimento → Categorias de Produtos", url: "/config?secao=cadastro-estabelecimentos&subsecao=vendas&subsubsecao=categorias-produtos", icon: LucideIcons.Layers },
       { id: "Config Estab Regras Orcamento", title: "Estabelecimento → Regras para o Orçamento", url: "/config?secao=cadastro-estabelecimentos&subsecao=automacao-vendas", icon: LucideIcons.Zap },
       { id: "Config Administradores", title: "Cadastro de Administradores", url: "/config?secao=cadastro-administradores", icon: LucideIcons.ShieldCheck },
-      { id: "Admin Support Tickets", title: "Tickets de Suporte (Admin)", url: "/admin/support-tickets", icon: LucideIcons.LifeBuoy },
       { id: "Config Recuperar Senha", title: "Recuperar Senha", url: "/config?secao=recuperar-senha", icon: LucideIcons.ShieldCheck },
-      { id: "Config Campanhas", title: "Campanhas", url: "/config?secao=campanhas", icon: LucideIcons.Megaphone },
       { id: "Config Conteudos", title: "Conteúdos", url: "/config?secao=conteudos", icon: LucideIcons.FileText },
       { id: "Config Variaveis Globais Menu", title: "Variáveis Globais", url: "/config/variaveis", icon: LucideIcons.FileText },
       { id: "Config Skills", title: "Skills de Atendimento", url: "/config/skills", icon: LucideIcons.Users },
