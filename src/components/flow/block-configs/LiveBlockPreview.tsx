@@ -478,7 +478,7 @@ export const LiveBlockPreview = ({ type, config }: LiveBlockPreviewProps) => {
                   <div className="text-4xl">📎</div>
                   <div className="text-xs mt-1">Catálogo PDF</div>
                 </div>
-                {c.caption && <Body>{c.caption}</Body>}
+                <MediaCaption c={c} />
                 <div className="px-3 pb-2 text-[11px] text-muted-foreground italic">
                   {c.mode === "specific"
                     ? `${(c.catalogIds?.length || 0)} catálogo(s) selecionado(s)`
@@ -505,6 +505,7 @@ export const LiveBlockPreview = ({ type, config }: LiveBlockPreviewProps) => {
                   <div className="text-4xl">📊</div>
                   <div className="text-xs mt-1 font-semibold">Relatório {out}</div>
                 </div>
+                <MediaCaption c={c} />
                 <div className="px-3 pb-2 text-[11px] text-muted-foreground italic">
                   {c.relatorioId
                     ? `📄 ${c.relatorioNome || "Relatório selecionado"}${
@@ -536,6 +537,7 @@ export const LiveBlockPreview = ({ type, config }: LiveBlockPreviewProps) => {
                     {mediaType === "video" ? "Vídeo IA" : "Imagem IA"} · {variations}x
                   </div>
                 </div>
+                <MediaCaption c={c} />
                 <div className="px-3 pb-2 text-[11px] text-muted-foreground italic">
                   {c.aspectRatio ? `Proporção ${c.aspectRatio}` : "Mídia gerada por IA"}
                 </div>
