@@ -826,8 +826,11 @@ serve(async (req) => {
     // bloco "global_redirect", interrompe o fluxo e encaminha ao destino.
     try {
       const incomingText = String(body || "").trim();
+      const activeIds: string[] = Array.isArray(context.vars?.__active_global_redirects)
+        ? context.vars.__active_global_redirects
+        : [];
       const globalRedirects = (flowData.flow_data.nodes || []).filter(
-        (n: any) => n?.data?.type === "global_redirect"
+        (n: any) => n?.data?.type === "global_redirect" && activeIds.includes(n.id)
       );
       let matchedRedirect: any = null;
       for (const node of globalRedirects) {
@@ -3551,9 +3554,19 @@ async function executeNode(
         break;
       }
       case "global_keywords":
-      case "keyword_jump":
+      case "keyword_jump": {
+        // Pass-through (gatilho avaliado no roteador de entrada).
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
       case "global_redirect": {
-        // Pass-through na execução normal — o gatilho é avaliado no roteador de entrada.
+        // Ativa este bloco para o restante da sessão — só a partir daqui o gatilho passa a valer.
+        const list: string[] = Array.isArray(context.vars.__active_global_redirects)
+          ? context.vars.__active_global_redirects
+          : [];
+        if (!list.includes(node.id)) list.push(node.id);
+        context.vars.__active_global_redirects = list;
+        console.log(`[GLOBAL_REDIRECT] Ativado para sessão: ${node.id}`);
         for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
         break;
       }
