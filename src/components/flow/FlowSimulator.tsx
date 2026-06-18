@@ -1220,73 +1220,100 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         }, caption ? 1500 : 1000);
         break;
 
-      case "goodbye":
+      case "goodbye": {
         const goodbyeText = interpolateVariables(config.message || config.text || "Até logo!", context);
-        addBotMessage(goodbyeText, node.id);
-        
-        console.log("Goodbye config:", config);
-        console.log("showSocialButtons:", config.showSocialButtons);
-        
-        let finalDelay = 500;
-        
-        // Exibir botões sociais se configurado
-        if (config.showSocialButtons) {
-          console.log("Social buttons enabled");
-          safeSetTimeout(() => {
-            const socialLinks = JSON.parse(localStorage.getItem("socialLinks") || "{}");
-            console.log("Social links from localStorage:", socialLinks);
-            const buttons = [];
-            
-            if (config.socialWhatsApp && socialLinks.whatsapp) {
-              console.log("Adding WhatsApp button");
-              buttons.push({ text: "📱 WhatsApp", value: socialLinks.whatsapp });
+
+        const SOCIAL_ICONS: Record<string, string> = {
+          whatsapp: "🟢",
+          instagram: "📸",
+          facebook: "📘",
+          website: "🌐",
+          tiktok: "🎵",
+          youtube: "▶️",
+          linkedin: "💼",
+          telegram: "✈️",
+          twitter: "🐦",
+          threads: "🧵",
+          pinterest: "📌",
+        };
+        const SOCIAL_LABELS: Record<string, string> = {
+          whatsapp: "WhatsApp",
+          instagram: "Instagram",
+          facebook: "Facebook",
+          website: "Website",
+          tiktok: "TikTok",
+          youtube: "YouTube",
+          linkedin: "LinkedIn",
+          telegram: "Telegram",
+          twitter: "X (Twitter)",
+          threads: "Threads",
+          pinterest: "Pinterest",
+        };
+        const SOCIAL_KEYS = ["whatsapp","instagram","facebook","website","tiktok","youtube","linkedin","telegram","twitter","threads","pinterest"];
+        const enabledMap: Record<string, boolean> = {
+          whatsapp: !!config.socialWhatsApp,
+          instagram: !!config.socialInstagram,
+          facebook: !!config.socialFacebook,
+          website: !!config.socialWebsite,
+          tiktok: !!config.socialTiktok,
+          youtube: !!config.socialYoutube,
+          linkedin: !!config.socialLinkedin,
+          telegram: !!config.socialTelegram,
+          twitter: !!config.socialTwitter,
+          threads: !!config.socialThreads,
+          pinterest: !!config.socialPinterest,
+        };
+
+        (async () => {
+          let fullText = goodbyeText;
+          if (config.showSocialButtons) {
+            try {
+              const estId = await getEstabelecimentoId();
+              if (estId) {
+                const { data: rs } = await supabase
+                  .from("redes_sociais")
+                  .select("whatsapp,instagram,facebook,website,tiktok,youtube,linkedin,telegram,twitter,threads,pinterest")
+                  .eq("estabelecimento_id", estId)
+                  .maybeSingle();
+                if (rs) {
+                  const lines: string[] = [];
+                  for (const k of SOCIAL_KEYS) {
+                    if (!enabledMap[k]) continue;
+                    const url = ((rs as any)[k] || "").toString().trim();
+                    if (!url) continue;
+                    lines.push(`${SOCIAL_ICONS[k]} *${SOCIAL_LABELS[k]}*: ${url}`);
+                  }
+                  if (lines.length > 0) {
+                    fullText += `\n\n*Nos acompanhe nas nossas redes:*\n${lines.join("\n")}`;
+                  }
+                }
+              }
+            } catch (e) {
+              console.error("[goodbye] erro buscando redes_sociais:", e);
             }
-            if (config.socialInstagram && socialLinks.instagram) {
-              console.log("Adding Instagram button");
-              buttons.push({ text: "📷 Instagram", value: socialLinks.instagram });
-            }
-            if (config.socialFacebook && socialLinks.facebook) {
-              console.log("Adding Facebook button");
-              buttons.push({ text: "👥 Facebook", value: socialLinks.facebook });
-            }
-            if (config.socialWebsite && socialLinks.website) {
-              console.log("Adding Website button");
-              buttons.push({ text: "🌐 Website", value: socialLinks.website });
-            }
-            
-            console.log("Total buttons:", buttons.length);
-            
-            if (buttons.length > 0) {
-              const messageId = `msg-${Date.now()}-social`;
-              setMessages((prev) => [
-                ...prev,
-                {
-                  id: messageId,
-                  sender: "bot",
-                  text: "Nos acompanhe em nossas redes sociais:",
-                  timestamp: new Date(),
-                  nodeId: node.id,
-                  buttons,
-                },
-              ]);
-              console.log("Social buttons message added");
-            } else {
-              console.log("No buttons to show - check if links are configured in Config page");
-            }
-          }, 500);
-          finalDelay = 1500; // Aumentar o delay final se mostrou botões sociais
-        } else {
-          console.log("Social buttons NOT enabled");
-        }
-        
-        if (config.showStartAgainButton !== false) {
-          safeSetTimeout(() => {
-            addSystemMessage("💬 Conversa finalizada. Clique em 'Reiniciar' para começar novamente.");
-          }, finalDelay);
-        }
-        
-        setIsWaitingInput(false);
+          }
+
+          const showRestart = config.showStartAgainButton !== false;
+          const messageId = `msg-${Date.now()}-goodbye`;
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: messageId,
+              sender: "bot",
+              text: fullText,
+              timestamp: new Date(),
+              nodeId: node.id,
+              buttons: showRestart
+                ? [{ text: "🔄 Recomeçar", value: "__restart__", buttonId: "recomeçar" }]
+                : undefined,
+            },
+          ]);
+          setIsWaitingInput(showRestart);
+        })();
+
+        setCurrentNodeId(node.id);
         break;
+      }
 
       case "ask_name":
       case "ask_question":
@@ -3193,6 +3220,19 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       currentContext: context 
     });
 
+    // === Palavra-chave universal: Recomeçar (espelha o webhook do WhatsApp) ===
+    const _restartKw = input.trim().toLowerCase();
+    if (/^(recome[çc]ar|reiniciar|restart|começar de novo|comecar de novo)$/i.test(_restartKw)) {
+      const curNode = nodes.find((n) => n.id === currentNodeId);
+      const isAfterGoodbye = curNode && (curNode.data as any)?.type === "goodbye";
+      if (isAfterGoodbye || !isWaitingInput) {
+        addUserMessage(input);
+        setInput("");
+        setTimeout(() => handleReset(), 300);
+        return;
+      }
+    }
+
     addUserMessage(input);
 
     // === text_content: coleta multi-campo (title / subtitle / body) do usuário ===
@@ -3995,6 +4035,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       }
       // Não interrompe o fluxo — apenas executa a ação e segue para o handler normal abaixo (se aplicável)
       // Para botões de ação puros (sem pendingVariable e sem block aguardando) o fluxo já auto-avançou
+      return;
+    }
+
+    // === Reiniciar conversa (botão Recomeçar do bloco Despedida) ===
+    if (button.value === "__restart__") {
+      addUserMessage(button.text || "Recomeçar");
+      setTimeout(() => handleReset(), 300);
       return;
     }
 
