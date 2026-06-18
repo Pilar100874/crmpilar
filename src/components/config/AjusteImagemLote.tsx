@@ -290,7 +290,10 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
     pausedRef.current = false;
     cancelGenRef.current = false;
     setPaused(false);
+    setGenStartedAt(Date.now());
+    setNowTick(Date.now());
     await runQueue(items);
+    setGenStartedAt(null);
   };
 
   const runQueue = async (items: IaItem[]) => {
@@ -310,7 +313,10 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
     pausedRef.current = false;
     cancelGenRef.current = false;
     setPaused(false);
+    setGenStartedAt(Date.now());
+    setNowTick(Date.now());
     await runQueue(pendentes);
+    setGenStartedAt(null);
   };
 
   const generateIaImage = async (produtoId: string, promptText: string) => {
