@@ -289,16 +289,60 @@ function BotBuilderContent() {
     }
   }, [highlightedNodeId, setNodes]);
 
+  // Tipos de bloco que possuem MÚLTIPLAS saídas (handles dinâmicos no FlowNode).
+  // Blocos não listados aqui são considerados de saída única e não podem ter
+  // mais de uma conexão de saída — espelho de getDynamicHandles() em FlowNode.tsx.
+  const isMultiOutputNode = useCallback((node: Node | undefined | null): boolean => {
+    if (!node) return false;
+    const t = (node.data as any)?.type;
+    const cfg = (node.data as any)?.config || {};
+    if (t === "condition") return true;
+    if (t === "keyword_jump") return true;
+    if (t === "opt_in_check") return true;
+    if (["reply_buttons", "buttons_mixed", "buttons_media"].includes(t)) return true;
+    if (t === "carousel" && cfg.mode !== "dynamic" && Array.isArray(cfg.cards)) return true;
+    if (t === "list_buttons" && Array.isArray(cfg.sections) && cfg.sections.length > 0) return true;
+    if (t === "keyword_options" && (cfg.buttons || cfg.cards)) return true;
+    if (t === "ask_question" && cfg.questionType === "multiple" && cfg.options) return true;
+    if (t === "content_type" && cfg.mode === "ask" && cfg.splitOutputs) return true;
+    return false;
+  }, []);
+
+  // Valida em tempo real (linha pontilhada some) — bloqueia uma 2ª saída de
+  // qualquer bloco de saída única.
+  const isValidConnection = useCallback(
+    (conn: Connection) => {
+      if (!conn.source) return true;
+      const sourceNode = nodes.find((n) => n.id === conn.source);
+      if (!sourceNode || isMultiOutputNode(sourceNode)) return true;
+      const already = edges.some((e) => e.source === conn.source);
+      return !already;
+    },
+    [nodes, edges, isMultiOutputNode],
+  );
+
   const onConnect = useCallback(
     (params: Connection) => {
       // Prevenir conexões automáticas durante o drop de um novo bloco
       if (isDroppingNode) {
         return;
       }
+      // Bloco de saída única só pode ter uma conexão de saída.
+      const sourceNode = nodes.find((n) => n.id === params.source);
+      if (sourceNode && !isMultiOutputNode(sourceNode)) {
+        const already = edges.some((e) => e.source === params.source);
+        if (already) {
+          toast.error(
+            "Este bloco tem apenas 1 saída. Remova a conexão existente antes de criar outra.",
+          );
+          return;
+        }
+      }
       setEdges((eds) => addEdge(params, eds));
     },
-    [setEdges, isDroppingNode]
+    [setEdges, isDroppingNode, nodes, edges, isMultiOutputNode],
   );
+
 
   // ===== Smart connect (make.com style) =====
   const connectStartRef = useRef<{ nodeId: string | null; handleId: string | null; handleType: 'source' | 'target' } | null>(null);
@@ -319,6 +363,14 @@ function BotBuilderContent() {
     const target = event.target as HTMLElement;
     const droppedOnPane = target?.classList?.contains('react-flow__pane');
     if (!droppedOnPane) return;
+    // Bloqueia abrir o smart-menu se o bloco-fonte é de saída única e já tem conexão
+    if (start.handleType === 'source') {
+      const srcNode = nodes.find((n) => n.id === start.nodeId);
+      if (srcNode && !isMultiOutputNode(srcNode) && edges.some((e) => e.source === start.nodeId)) {
+        toast.error("Este bloco tem apenas 1 saída. Remova a conexão existente antes de criar outra.");
+        return;
+      }
+    }
     const clientX = event.clientX ?? event.changedTouches?.[0]?.clientX;
     const clientY = event.clientY ?? event.changedTouches?.[0]?.clientY;
     if (clientX == null) return;
@@ -329,7 +381,7 @@ function BotBuilderContent() {
       fromNodeId: start.nodeId,
       handleType: start.handleType,
     });
-  }, [reactFlowInstance]);
+  }, [reactFlowInstance, nodes, edges, isMultiOutputNode]);
 
   const handleSmartPick = useCallback((type: string) => {
     if (!connectMenu) return;
@@ -1714,6 +1766,7 @@ function BotBuilderContent() {
               onNodesDelete={handleNodesDelete}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
+              isValidConnection={isValidConnection}
               onConnectStart={onConnectStart}
               onConnectEnd={onConnectEnd}
               onReconnect={onReconnect}
