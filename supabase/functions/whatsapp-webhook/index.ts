@@ -2854,6 +2854,7 @@ async function executeNode(
     }
     case "goodbye": {
       let text = itp(cfg.message || cfg.text || "Até logo!");
+      const actionButtons: any[] = [];
 
       if (cfg.showSocialButtons) {
         try {
@@ -2866,12 +2867,16 @@ async function executeNode(
               .eq("estabelecimento_id", estId)
               .maybeSingle();
             if (rs) {
-              const links: string[] = [];
-              if (cfg.socialWhatsApp && rs.whatsapp) links.push(`📱 WhatsApp: ${rs.whatsapp}`);
-              if (cfg.socialInstagram && rs.instagram) links.push(`📷 Instagram: ${rs.instagram}`);
-              if (cfg.socialFacebook && rs.facebook) links.push(`👥 Facebook: ${rs.facebook}`);
-              if (cfg.socialWebsite && rs.website) links.push(`🌐 Site: ${rs.website}`);
-              if (links.length) text += `\n\n*Nos acompanhe em nossas redes sociais:*\n${links.join("\n")}`;
+              const socials = [
+                { enabled: cfg.socialWhatsApp, label: "WhatsApp", kind: "whatsapp", url: rs.whatsapp },
+                { enabled: cfg.socialInstagram, label: "Instagram", kind: "instagram", url: rs.instagram },
+                { enabled: cfg.socialFacebook, label: "Facebook", kind: "facebook", url: rs.facebook },
+                { enabled: cfg.socialWebsite, label: "Website", kind: "website", url: rs.website },
+              ];
+              for (const item of socials) {
+                const url = item.enabled ? normalizeUrl(item.url, item.kind as any) : "";
+                if (url) actionButtons.push({ type: "url", displayText: item.label, url });
+              }
             }
           }
         } catch (e) {
@@ -2879,13 +2884,24 @@ async function executeNode(
         }
       }
 
-      if (cfg.showStartAgainButton !== false) {
-        text += `\n\n_Digite *recomeçar* a qualquer momento para iniciar uma nova conversa._`;
+      const showRestart = cfg.showStartAgainButton !== false;
+      if (showRestart) {
+        actionButtons.unshift({ type: "reply", displayText: "🔄 Recomeçar", id: "recomeçar" });
       }
 
-      await onResponse(text);
+      if (actionButtons.length) {
+        await onResponse(text, undefined, undefined, {
+          type: "buttons",
+          title: "",
+          description: text,
+          buttons: actionButtons,
+        });
+        if (showRestart) context.pendingNodeId = node.id;
+      } else {
+        await onResponse(text);
+      }
       // limpa pendência — encerra fluxo
-      context.pendingNodeId = null;
+      if (!showRestart) context.pendingNodeId = null;
       break;
     }
     case "ask_name":
