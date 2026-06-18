@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { toast } from "sonner";
+import { isSingleEdgePerHandleAllowed, SINGLE_OUTPUT_TOAST } from "@/lib/flow-edge-utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -250,12 +251,21 @@ function AdsAutomationContent() {
     },
   });
 
+  const isValidConnection = useCallback(
+    (conn: Connection) => isSingleEdgePerHandleAllowed(conn, edges),
+    [edges],
+  );
+
   const onConnect = useCallback(
     (params: Connection) => {
+      if (!isSingleEdgePerHandleAllowed(params, edges)) {
+        toast.error(SINGLE_OUTPUT_TOAST);
+        return;
+      }
       setEdges((eds) => addEdge(params, eds));
       setHasUnsavedChanges(true);
     },
-    [setEdges]
+    [setEdges, edges]
   );
 
   // ===== Smart connect =====
@@ -272,12 +282,16 @@ function AdsAutomationContent() {
     if (!start || !start.nodeId || !reactFlowInstance) return;
     const target = event.target as HTMLElement;
     if (!target?.classList?.contains('react-flow__pane')) return;
+    if (start.handleType === 'source' && !isSingleEdgePerHandleAllowed({ source: start.nodeId, sourceHandle: null } as any, edges)) {
+      toast.error(SINGLE_OUTPUT_TOAST);
+      return;
+    }
     const clientX = event.clientX ?? event.changedTouches?.[0]?.clientX;
     const clientY = event.clientY ?? event.changedTouches?.[0]?.clientY;
     if (clientX == null) return;
     const flowPos = reactFlowInstance.screenToFlowPosition({ x: clientX, y: clientY });
     setConnectMenu({ x: clientX, y: clientY, flowX: flowPos.x, flowY: flowPos.y, fromNodeId: start.nodeId, handleType: start.handleType });
-  }, [reactFlowInstance]);
+  }, [reactFlowInstance, edges]);
 
   const onEdgesDelete = useCallback(() => {
     setHasUnsavedChanges(true);
@@ -870,6 +884,7 @@ function AdsAutomationContent() {
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
+                isValidConnection={isValidConnection}
                 onConnectStart={onConnectStart}
                 onConnectEnd={onConnectEnd}
                 onEdgesDelete={onEdgesDelete}
