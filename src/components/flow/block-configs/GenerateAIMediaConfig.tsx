@@ -9,6 +9,7 @@ import { Sparkles, Image as ImageIcon, Video, Cpu, AlertCircle, Music2, Images, 
 import { supabase } from "@/integrations/supabase/client";
 import { PROMPT_PRESETS, ALL_REF_BLOCKS, type PromptPreset } from "@/components/marketing/ai-studio/PromptPresets";
 import { WaitingMessageField } from "./WaitingMessageField";
+import { MediaCaptionFields } from "./MediaCaptionFields";
 
 const DEFAULT_WAITING_AI_MEDIA = "🎨 Gerando mídia, aguarde alguns instantes...";
 
@@ -1142,6 +1143,19 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
           if ("waitingMessage" in patch)
             handleConfigChange("waitingMessage", patch.waitingMessage);
         }}
+      />
+
+      {/* Título / Descrição / Rodapé enviados como legenda da mídia gerada */}
+      <MediaCaptionFields
+        title={config.mediaTitle || ""}
+        description={config.mediaDescription || ""}
+        footer={config.mediaFooter || ""}
+        onChange={(patch) => {
+          if ("mediaTitle" in patch) handleConfigChange("mediaTitle", patch.mediaTitle);
+          if ("mediaDescription" in patch) handleConfigChange("mediaDescription", patch.mediaDescription);
+          if ("mediaFooter" in patch) handleConfigChange("mediaFooter", patch.mediaFooter);
+        }}
+        placeholders={{ title: "Ex.: ✨ Sua arte criada por IA", description: "Texto enviado junto com a mídia" }}
       />
 
       {/* Variável de saída */}

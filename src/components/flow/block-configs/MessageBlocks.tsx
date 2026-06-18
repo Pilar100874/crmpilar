@@ -13,6 +13,7 @@ import { toast } from "@/lib/toast-config";
 import { ConfigSection, ConfigInput, ConfigTextarea, ConfigSelect, ConfigSwitch, ConfigInfo } from "./ConfigField";
 import { FormattingToolbar } from "./FormattingToolbar";
 import { MediaUrlUploadField } from "./MediaUrlUploadField";
+import { MediaCaptionFields } from "./MediaCaptionFields";
 
 // Normaliza placeholders legados para o formato {{...}}
 const normalizeLegacyTokens = (value?: string) => {
@@ -226,11 +227,11 @@ export const SendMessageConfig = ({ config, handleConfigChange, nodes = [], edge
               />
             )}
             
-            <ConfigInput
-              label="Legenda"
-              value={config.media.caption || ""}
-              onChange={(caption) => handleConfigChange("media", { ...config.media, caption })}
-              placeholder="Adicione uma legenda (opcional)"
+            <MediaCaptionFields
+              title={config.media.mediaTitle || ""}
+              description={config.media.mediaDescription || config.media.caption || ""}
+              footer={config.media.mediaFooter || ""}
+              onChange={(patch) => handleConfigChange("media", { ...config.media, ...patch })}
             />
           </div>
         </ConfigSection>
@@ -341,12 +342,15 @@ export const MediaConfig = ({ config, handleConfigChange }: ConfigProps) => {
           />
         )}
 
-        <ConfigTextarea
-          label="Legenda"
-          value={config.caption || ""}
-          onChange={(v) => handleConfigChange("caption", v)}
-          placeholder="Descrição da mídia..."
-          rows={3}
+        <MediaCaptionFields
+          title={config.mediaTitle || ""}
+          description={config.mediaDescription || config.caption || ""}
+          footer={config.mediaFooter || ""}
+          onChange={(patch) => {
+            if ("mediaTitle" in patch) handleConfigChange("mediaTitle", patch.mediaTitle);
+            if ("mediaDescription" in patch) handleConfigChange("mediaDescription", patch.mediaDescription);
+            if ("mediaFooter" in patch) handleConfigChange("mediaFooter", patch.mediaFooter);
+          }}
         />
       </ConfigSection>
     </div>

@@ -2656,6 +2656,23 @@ async function executeNode(
       return context.vars[key] !== undefined ? String(context.vars[key]) : "";
     });
 
+  // Monta a legenda da mídia a partir dos campos Título / Descrição / Rodapé
+  // (com fallback para o campo legado `caption`). Título em negrito *...*,
+  // rodapé em itálico _..._ — formato WhatsApp.
+  const buildMediaCaption = (src: any, fallback = "") => {
+    const t = itp(String(src?.mediaTitle || "")).trim();
+    const d = itp(String(src?.mediaDescription || "")).trim();
+    const f = itp(String(src?.mediaFooter || "")).trim();
+    const legacy = itp(String(src?.caption || "")).trim();
+    if (!t && !d && !f) return legacy || fallback;
+    const parts: string[] = [];
+    if (t) parts.push(`*${t}*`);
+    if (d) parts.push(d);
+    else if (legacy) parts.push(legacy);
+    if (f) parts.push(`_${f}_`);
+    return parts.join("\n\n");
+  };
+
   const nexts = (id: string) =>
     edges
       .filter((e: any) => e.source === id)
@@ -2696,9 +2713,10 @@ async function executeNode(
         break;
       }
     case "media": {
-      const url = itp(cfg.url || "");
-      const cap = itp(cfg.caption || "");
-      const t = cfg.mediaType || "image";
+      const mediaSrc = cfg.media || cfg;
+      const url = itp(mediaSrc.url || cfg.url || "");
+      const t = (mediaSrc.type || cfg.mediaType || "image");
+      const cap = buildMediaCaption(mediaSrc);
       if (url) {
         await onResponse(cap, url, t);
         await new Promise((r) => setTimeout(r, 800));
@@ -3088,7 +3106,7 @@ async function executeNode(
             }
             
             // Enviar arquivo via WhatsApp (apenas o arquivo com caption)
-            const caption = itp(cfg.successMessage || "📄 Seu relatório está pronto!");
+            const caption = buildMediaCaption(cfg, itp(cfg.successMessage || "📄 Seu relatório está pronto!"));
             const mediaType = 'document';
             
             console.log(`[FLOW] Enviando relatório: ${result.fileUrl}`);
@@ -3117,7 +3135,7 @@ async function executeNode(
         console.log(`[FLOW] attach_catalog - config:`, JSON.stringify(cfg));
         try {
           const mode: "latest" | "specific" = cfg.mode === "specific" ? "specific" : "latest";
-          const caption = itp(cfg.caption || "");
+          const caption = buildMediaCaption(cfg);
           const estabId = context.vars.estabelecimento_id;
           if (!estabId) {
             console.error("[FLOW][attach_catalog] estabelecimento_id ausente no contexto");
@@ -4020,8 +4038,11 @@ async function executeNode(
             console.error(`[FLOW] generate_ai_media: nenhuma imagem retornada`, data?.errors);
             await onResponse("⚠️ Não foi possível gerar a mídia.");
           } else {
+            const mediaCap = buildMediaCaption(cfg);
+            let first = true;
             for (const url of urls.slice(0, 4)) {
-              await onResponse("", url, "image");
+              await onResponse(first ? mediaCap : "", url, "image");
+              first = false;
               // pequeno respiro entre mídias para não saturar o Evolution/WhatsApp
               await new Promise((r) => setTimeout(r, 600));
             }

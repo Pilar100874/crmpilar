@@ -12,6 +12,7 @@ import { ptBR } from "date-fns/locale";
 import { loadActiveCatalogs, generateCatalogPdf, SavedCatalog } from "@/lib/catalogPdfGenerator";
 import { toast } from "@/lib/toast-config";
 import { WaitingMessageField } from "./WaitingMessageField";
+import { MediaCaptionFields } from "./MediaCaptionFields";
 
 const DEFAULT_WAITING_CATALOG = "⏳ Aguarde... gerando catálogo em tempo real.";
 
@@ -233,14 +234,17 @@ export const AttachCatalogConfig = ({ selectedNode, handleConfigChange }: Props)
         }}
       />
 
-      <div className="space-y-2">
-        <Label className="text-xs">Legenda (opcional)</Label>
-        <Input
-          value={caption}
-          onChange={(e) => handleConfigChange("caption", e.target.value)}
-          placeholder="Mensagem enviada junto com o PDF"
-        />
-      </div>
+      <MediaCaptionFields
+        title={config.mediaTitle || ""}
+        description={config.mediaDescription || caption}
+        footer={config.mediaFooter || ""}
+        onChange={(patch) => {
+          if ("mediaTitle" in patch) handleConfigChange("mediaTitle", patch.mediaTitle);
+          if ("mediaDescription" in patch) handleConfigChange("mediaDescription", patch.mediaDescription);
+          if ("mediaFooter" in patch) handleConfigChange("mediaFooter", patch.mediaFooter);
+        }}
+        placeholders={{ title: "Ex.: 📄 Catálogo atualizado", description: "Texto enviado junto com o PDF" }}
+      />
     </div>
   );
 };
