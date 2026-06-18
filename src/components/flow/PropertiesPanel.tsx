@@ -352,6 +352,8 @@ export const PropertiesPanel = ({
         return <BlockConfigs.KeywordJumpConfigNew {...configProps} />;
       case "global_keywords":
         return <BlockConfigs.GlobalKeywordsConfigNew {...configProps} />;
+      case "global_redirect":
+        return <BlockConfigs.GlobalRedirectConfig {...configProps} />;
       case "formulas":
         return <BlockConfigs.FormulasConfigNew {...configProps} />;
       case "jump_to":
