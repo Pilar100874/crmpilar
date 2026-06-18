@@ -45,7 +45,7 @@ const blockCategories = [
   {
     name: "Lógica & Fluxo",
     icon: "GitBranch",
-    blocks: ["condition", "jump_to", "keyword_jump", "global_keywords", "set_field", "formulas", "lead_scoring", "goal"] as NodeType[],
+    blocks: ["condition", "jump_to", "keyword_jump", "global_keywords", "global_redirect", "set_field", "formulas", "lead_scoring", "goal"] as NodeType[],
   },
   {
     name: "Audiência & Opt-in",
