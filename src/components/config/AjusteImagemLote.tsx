@@ -638,7 +638,7 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
                 <Input value={searchSource} onChange={(e) => setSearchSource(e.target.value)} placeholder="Buscar produto..." />
                 <div className="max-h-72 overflow-auto border rounded-md divide-y">
                   {produtos
-                    .filter((p) => p.foto_url && (!searchSource || p.nome.toLowerCase().includes(searchSource.toLowerCase())))
+                    .filter((p) => p.foto_url && !selectedIds.has(p.id) && (!searchSource || p.nome.toLowerCase().includes(searchSource.toLowerCase())))
                     .slice(0, 200)
                     .map((p) => (
                       <label key={p.id} className={`flex items-center gap-3 p-2 cursor-pointer hover:bg-muted/30 ${sourceProdutoId === p.id ? "bg-primary/10" : ""}`}>
