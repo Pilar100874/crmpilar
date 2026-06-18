@@ -1087,6 +1087,85 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Preview do prompt final */}
+      <Dialog open={showPromptPreviewDialog} onOpenChange={setShowPromptPreviewDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Preview do prompt final</DialogTitle>
+            <DialogDescription>
+              Combinação de nome do produto + texto extra{useVisualIdentity && hasVisualIdentity ? " + identidade visual" : ""}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-auto space-y-2 text-sm">
+            {selectedProdutos.map((p) => {
+              const base = buildPromptFor(p);
+              const final = useVisualIdentity && hasVisualIdentity
+                ? `${base}\n\n[Identidade Visual]: ${visualIdentityPrompt}`
+                : base;
+              return (
+                <div key={p.id} className="border rounded-md p-2">
+                  <div className="text-xs font-medium text-muted-foreground">{p.nome}</div>
+                  <pre className="text-xs whitespace-pre-wrap mt-1 font-mono">{final}</pre>
+                </div>
+              );
+            })}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPromptPreviewDialog(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Templates de textos extras */}
+      <Dialog open={showTemplatesDialog} onOpenChange={setShowTemplatesDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Templates de textos extras</DialogTitle>
+            <DialogDescription>
+              Salve frases reutilizáveis e aplique rapidamente na geração em lote.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-2 border rounded-md p-3 bg-muted/30">
+              <Label className="text-xs">Salvar texto atual como template</Label>
+              <Input
+                value={newTemplateNome}
+                onChange={(e) => setNewTemplateNome(e.target.value)}
+                placeholder="Nome do template (ex.: Fundo branco)"
+              />
+              <div className="text-xs text-muted-foreground line-clamp-2">
+                Texto: <em>{bulkExtra || "(vazio — preencha o campo de texto extra antes)"}</em>
+              </div>
+              <Button size="sm" onClick={saveBulkAsTemplate} disabled={!bulkExtra.trim() || !newTemplateNome.trim()}>
+                <Save className="h-3 w-3 mr-1" /> Salvar template
+              </Button>
+            </div>
+            <div className="space-y-1 max-h-60 overflow-auto">
+              {templates.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-4">Nenhum template salvo ainda.</p>
+              )}
+              {templates.map((t) => (
+                <div key={t.id} className="flex items-center gap-2 border rounded-md p-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{t.nome}</div>
+                    <div className="text-xs text-muted-foreground truncate">{t.texto}</div>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => { setBulkExtra(t.texto); toast.success("Carregado"); }}>
+                    Usar
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => removeTemplate(t.id)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTemplatesDialog(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
