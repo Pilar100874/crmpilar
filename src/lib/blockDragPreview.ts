@@ -14,12 +14,11 @@ export function setBlockDragPreview(
     if (!dt || typeof dt.setDragImage !== "function") return;
 
     const ghost = document.createElement("div");
-    ghost.textContent = label || "Bloco";
     const accent = color || "hsl(var(--primary))";
     Object.assign(ghost.style, {
-      position: "fixed",
-      top: "-1000px",
-      left: "-1000px",
+      position: "absolute",
+      top: "0px",
+      left: "-9999px",
       width: "220px",
       minHeight: "56px",
       padding: "12px 14px",
@@ -39,6 +38,7 @@ export function setBlockDragPreview(
       whiteSpace: "nowrap",
       overflow: "hidden",
       textOverflow: "ellipsis",
+      boxSizing: "border-box",
     } as CSSStyleDeclaration);
 
     const dot = document.createElement("span");
@@ -48,16 +48,24 @@ export function setBlockDragPreview(
       borderRadius: "9999px",
       background: accent,
       flexShrink: "0",
+      display: "inline-block",
     } as CSSStyleDeclaration);
-    ghost.prepend(dot);
+
+    const text = document.createElement("span");
+    text.textContent = label || "Bloco";
+    text.style.overflow = "hidden";
+    text.style.textOverflow = "ellipsis";
+
+    ghost.appendChild(dot);
+    ghost.appendChild(text);
 
     document.body.appendChild(ghost);
     dt.setDragImage(ghost, 20, 20);
 
-    // Remove o elemento após o navegador capturar a imagem
+    // Remove o elemento após o navegador capturar a imagem (precisa permanecer no DOM brevemente)
     setTimeout(() => {
       if (ghost.parentNode) ghost.parentNode.removeChild(ghost);
-    }, 0);
+    }, 50);
   } catch {
     // silencioso — fallback para a imagem padrão do navegador
   }
