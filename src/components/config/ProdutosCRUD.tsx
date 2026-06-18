@@ -47,7 +47,8 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2, Pencil, Plus, Image as ImageIcon, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, Filter, X, Store, Sparkles, Loader2, Camera } from "lucide-react";
 import { Produto, ProdutoCategoria, ProdutoGrupo } from "@/types/orcamento";
 import { EmbalagemTab } from "./EmbalagemTab";
-import { ProductPhotoTab } from "./ProductPhotoTab";
+import { ProductPhotoTab, type ProductImage } from "./ProductPhotoTab";
+import { normalizeImageToSquare } from "@/lib/imageNormalize";
 import { DynamicProductFields } from "./DynamicProductFields";
 import { cn } from "@/lib/utils";
 
@@ -221,6 +222,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   const [activeTab, setActiveTab] = useState("basico");
   const [ncmOpen, setNcmOpen] = useState(false);
   const [ncmSearch, setNcmSearch] = useState("");
+  const [productImages, setProductImages] = useState<ProductImage[]>([]);
   const [camposCustomizados, setCamposCustomizados] = useState<CampoCustomizado[]>([]);
   
   // Filter states
@@ -680,15 +682,37 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
     try {
       setUploading(true);
-      let fotoUrl = formData.foto_url;
 
-      // Upload new file if selected
-      if (selectedFile) {
-        const uploadedUrl = await uploadFile(selectedFile);
-        if (uploadedUrl) {
-          fotoUrl = uploadedUrl;
+      // === Galeria: faz upload das imagens novas, mantém as existentes,
+      //     calcula a principal e deduz a foto_url a salvar no produto.
+      const uploadedImages: ProductImage[] = [];
+      for (let i = 0; i < productImages.length; i++) {
+        const img = productImages[i];
+        if (img.file) {
+          // garante quadrado 1024x1024
+          const normalized = await normalizeImageToSquare(img.file, 1024);
+          const fileName = `${estabelecimentoId}/${Date.now()}-${i}.jpg`;
+          const { error: upErr } = await supabase.storage
+            .from('produtos')
+            .upload(fileName, normalized, { contentType: 'image/jpeg' });
+          if (upErr) {
+            console.error('Erro upload galeria:', upErr);
+            toast.error("Erro ao enviar uma das fotos");
+            return;
+          }
+          const { data: { publicUrl } } = supabase.storage.from('produtos').getPublicUrl(fileName);
+          uploadedImages.push({ url: publicUrl, storage_path: fileName, is_principal: img.is_principal, ordem: i, id: undefined });
+        } else {
+          uploadedImages.push({ ...img, ordem: i });
         }
       }
+      // garante que exista uma principal
+      if (uploadedImages.length > 0 && !uploadedImages.some((i) => i.is_principal)) {
+        uploadedImages[0].is_principal = true;
+      }
+      const principal = uploadedImages.find((i) => i.is_principal);
+      const fotoUrl = principal?.url || null;
+
 
       // Buscar o código NCM selecionado para preencher o campo ncm (texto)
       const selectedNcm = ncmCodigos.find(n => n.id === formData.ncm_id);
@@ -754,6 +778,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         categoria_google: formData.categoria_google || null,
       };
 
+      let produtoId: string | null = editingProduto?.id || null;
+
       if (editingProduto) {
         const { error } = await supabase
           .from('produtos')
@@ -773,9 +799,11 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         }
         toast.success("Produto atualizado!");
       } else {
-        const { error } = await supabase
+        const { data: inserted, error } = await supabase
           .from('produtos')
-          .insert(produtoData);
+          .insert(produtoData)
+          .select('id')
+          .single();
 
         if (error) {
           console.error('Erro ao inserir:', error);
@@ -788,15 +816,60 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
           }
           return;
         }
+        produtoId = inserted?.id || null;
         toast.success("Produto criado!");
+      }
+
+      // === Sincroniza galeria produto_imagens ===
+      if (produtoId) {
+        // 1. Remove os ids que não estão mais na galeria
+        const keepIds = uploadedImages.map((i) => i.id).filter(Boolean) as string[];
+        const { data: existing } = await supabase
+          .from('produto_imagens')
+          .select('id, storage_path')
+          .eq('produto_id', produtoId);
+        const toDelete = (existing || []).filter((e: any) => !keepIds.includes(e.id));
+        if (toDelete.length > 0) {
+          await supabase.from('produto_imagens').delete().in('id', toDelete.map((d: any) => d.id));
+          const paths = toDelete.map((d: any) => d.storage_path).filter(Boolean);
+          if (paths.length > 0) {
+            await supabase.storage.from('produtos').remove(paths);
+          }
+        }
+        // 2. Limpa is_principal para evitar conflito de índice único, depois atualiza/insere
+        await supabase
+          .from('produto_imagens')
+          .update({ is_principal: false })
+          .eq('produto_id', produtoId);
+
+        for (const img of uploadedImages) {
+          if (img.id) {
+            await supabase.from('produto_imagens').update({
+              is_principal: img.is_principal,
+              ordem: img.ordem,
+            }).eq('id', img.id);
+          } else {
+            await supabase.from('produto_imagens').insert({
+              produto_id: produtoId,
+              estabelecimento_id: estabelecimentoId,
+              url: img.url,
+              storage_path: img.storage_path || null,
+              is_principal: img.is_principal,
+              ordem: img.ordem,
+            });
+          }
+        }
+
       }
 
       setShowDialog(false);
       setEditingProduto(null);
       setSelectedFile(null);
+      setProductImages([]);
       setFormData(initialFormData);
       setActiveTab("basico");
       loadData();
+
     } catch (error: any) {
       console.error('Erro ao salvar produto:', error);
       toast.error("Erro ao salvar produto");
@@ -805,9 +878,34 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     }
   };
 
-  const handleEdit = (produto: Produto) => {
+  const handleEdit = async (produto: Produto) => {
     setEditingProduto(produto);
     setSelectedFile(null);
+    // carrega galeria do produto
+    try {
+      const { data: imgs } = await supabase
+        .from('produto_imagens')
+        .select('*')
+        .eq('produto_id', produto.id)
+        .order('ordem', { ascending: true });
+      if (imgs && imgs.length > 0) {
+        setProductImages(imgs.map((i: any) => ({
+          id: i.id,
+          url: i.url,
+          storage_path: i.storage_path,
+          is_principal: i.is_principal,
+          ordem: i.ordem,
+        })));
+      } else if (produto.foto_url) {
+        // fallback: produto antigo sem registros em produto_imagens
+        setProductImages([{ url: produto.foto_url, is_principal: true, ordem: 0 }]);
+      } else {
+        setProductImages([]);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar imagens:', err);
+      setProductImages([]);
+    }
     const p = produto as any;
     setFormData({
       nome: produto.nome,
@@ -893,6 +991,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     setEditingProduto(null);
     setSelectedFile(null);
     setFormData(initialFormData);
+    setProductImages([]);
     setActiveTab("basico");
     setShowDialog(true);
   };
@@ -1518,27 +1617,11 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
               <TabsContent value="foto" className="mt-4 sm:mt-6">
                 <ProductPhotoTab
                   productName={formData.nome}
-                  currentPhotoUrl={formData.foto_url}
-                  selectedFile={selectedFile}
-                  onFileSelect={handleFileSelect}
-                  onPhotoChange={(url) => {
-                    if (url.startsWith("data:")) {
-                      // converte base64 em File para reaproveitar fluxo de upload
-                      const [meta, b64] = url.split(",");
-                      const mime = meta.match(/data:(.*?);base64/)?.[1] || "image/png";
-                      const bin = atob(b64);
-                      const bytes = new Uint8Array(bin.length);
-                      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-                      const file = new File([bytes], `ia-${Date.now()}.png`, { type: mime });
-                      setSelectedFile(file);
-                      setFormData((prev) => ({ ...prev, foto_url: URL.createObjectURL(file) }));
-                    } else {
-                      setSelectedFile(null);
-                      setFormData((prev) => ({ ...prev, foto_url: url }));
-                    }
-                  }}
+                  images={productImages}
+                  onChange={setProductImages}
                 />
               </TabsContent>
+
 
 
 
