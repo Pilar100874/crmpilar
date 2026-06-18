@@ -54,14 +54,6 @@ const CONFIG_SECTIONS: ConfigSection[] = [
     iconColor: "text-purple-500",
   },
   {
-    id: "campanhas",
-    title: "Campanhas",
-    description: "Gerencie campanhas de mensagens em massa",
-    icon: Megaphone,
-    bgColor: "bg-orange-500/10",
-    iconColor: "text-orange-500",
-  },
-  {
     id: "email-config",
     title: "Email Config",
     description: "Configure servidor externo e OAuth",
@@ -76,22 +68,6 @@ const CONFIG_SECTIONS: ConfigSection[] = [
     icon: Paintbrush,
     bgColor: "bg-pink-500/10",
     iconColor: "text-pink-500",
-  },
-  {
-    id: "macros",
-    title: "Macros",
-    description: "Automatize ações repetitivas",
-    icon: Zap,
-    bgColor: "bg-yellow-500/10",
-    iconColor: "text-yellow-500",
-  },
-  {
-    id: "support-tickets",
-    title: "Tickets de Suporte",
-    description: "Gerencie chamados de suporte enviados pelos usuários",
-    icon: LifeBuoy,
-    bgColor: "bg-red-500/10",
-    iconColor: "text-red-500",
   },
 ];
 
