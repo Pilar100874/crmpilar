@@ -1520,27 +1520,11 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
               <TabsContent value="foto" className="mt-4 sm:mt-6">
                 <ProductPhotoTab
                   productName={formData.nome}
-                  currentPhotoUrl={formData.foto_url}
-                  selectedFile={selectedFile}
-                  onFileSelect={handleFileSelect}
-                  onPhotoChange={(url) => {
-                    if (url.startsWith("data:")) {
-                      // converte base64 em File para reaproveitar fluxo de upload
-                      const [meta, b64] = url.split(",");
-                      const mime = meta.match(/data:(.*?);base64/)?.[1] || "image/png";
-                      const bin = atob(b64);
-                      const bytes = new Uint8Array(bin.length);
-                      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-                      const file = new File([bytes], `ia-${Date.now()}.png`, { type: mime });
-                      setSelectedFile(file);
-                      setFormData((prev) => ({ ...prev, foto_url: URL.createObjectURL(file) }));
-                    } else {
-                      setSelectedFile(null);
-                      setFormData((prev) => ({ ...prev, foto_url: url }));
-                    }
-                  }}
+                  images={productImages}
+                  onChange={setProductImages}
                 />
               </TabsContent>
+
 
 
 
