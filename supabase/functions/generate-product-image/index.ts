@@ -41,15 +41,13 @@ IMPORTANTE: Sem textos, sem marcas d'água, sem logotipos.`;
 
     const selectedModel = model || "google/gemini-2.5-flash-image";
 
-    // Route por família de modelo
+    // TODOS os modelos de imagem (OpenAI gpt-image-* e Google gemini-*-image*)
+    // devem ir para /v1/images/generations. O body muda por família.
+    const endpoint = "https://ai.gateway.lovable.dev/v1/images/generations";
     const isOpenAIImages = selectedModel.startsWith("openai/gpt-image");
-    const endpoint = isOpenAIImages
-      ? "https://ai.gateway.lovable.dev/v1/images/generations"
-      : "https://ai.gateway.lovable.dev/v1/chat/completions";
 
     let body: any;
     if (isOpenAIImages) {
-      // OpenAI images-generations não aceita referência multimodal nesta rota
       body = {
         model: selectedModel,
         prompt: fullPrompt,
@@ -58,6 +56,7 @@ IMPORTANTE: Sem textos, sem marcas d'água, sem logotipos.`;
         quality: "low",
       };
     } else {
+      // Gemini image models: messages + modalities
       const userContent: any[] = [{ type: "text", text: fullPrompt }];
       if (referenceImageUrl) {
         const dataUrl = await urlToDataUrl(referenceImageUrl);
@@ -92,16 +91,24 @@ IMPORTANTE: Sem textos, sem marcas d'água, sem logotipos.`;
 
     const data = await response.json();
 
+    // O Gateway normaliza Gemini para o shape OpenAI Images: data.data[0].b64_json
     let imageData: string | undefined;
-    if (isOpenAIImages) {
-      const b64 = data?.data?.[0]?.b64_json;
-      if (b64) imageData = `data:image/png;base64,${b64}`;
+    const b64 = data?.data?.[0]?.b64_json;
+    if (b64) {
+      imageData = `data:image/png;base64,${b64}`;
     } else {
-      imageData = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      // Fallbacks defensivos (caso o gateway mude o shape)
+      const urlInData = data?.data?.[0]?.url;
+      if (urlInData) imageData = urlInData;
+      else {
+        const chatUrl = data?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+        if (chatUrl) imageData = chatUrl;
+      }
     }
 
     if (!imageData) {
-      return new Response(JSON.stringify({ error: "Não foi possível gerar a imagem" }),
+      console.error("Resposta sem imagem. Keys:", Object.keys(data || {}), "data sample:", JSON.stringify(data).slice(0, 400));
+      return new Response(JSON.stringify({ error: "Não foi possível gerar a imagem (resposta sem dados)" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
