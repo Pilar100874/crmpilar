@@ -150,6 +150,31 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
     })();
   }, [estabelecimentoId]);
 
+  // carrega templates do localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(TEMPLATES_STORAGE_KEY);
+      if (raw) setTemplates(JSON.parse(raw));
+    } catch {}
+  }, []);
+
+  const persistTemplates = (next: { id: string; nome: string; texto: string }[]) => {
+    setTemplates(next);
+    try { localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(next)); } catch {}
+  };
+
+  const saveBulkAsTemplate = () => {
+    const txt = bulkExtra.trim();
+    const nome = newTemplateNome.trim();
+    if (!txt || !nome) { toast.error("Informe nome e texto do template"); return; }
+    const next = [...templates, { id: crypto.randomUUID(), nome, texto: txt }];
+    persistTemplates(next);
+    setNewTemplateNome("");
+    toast.success("Template salvo");
+  };
+
+  const removeTemplate = (id: string) => persistTemplates(templates.filter((t) => t.id !== id));
+
   const produtosFiltrados = useMemo(() => {
     return produtos.filter((p) => {
       if (filterNome && !p.nome.toLowerCase().includes(filterNome.toLowerCase())) return false;
