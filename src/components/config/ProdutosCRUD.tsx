@@ -1369,23 +1369,23 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="w-[98vw] sm:w-[95vw] max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden p-0 flex flex-col">
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-3 sm:px-6 py-3 sm:py-4 border-b flex-shrink-0">
+          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-3 sm:px-6 py-3 sm:py-4 pr-12 sm:pr-14 border-b flex-shrink-0">
             <DialogHeader>
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3">
                 <div className="flex-1 min-w-0">
-                  <DialogTitle className="text-base sm:text-lg font-semibold flex items-center gap-2">
-                    <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
+                  <DialogTitle className="text-base sm:text-lg font-semibold flex items-center gap-2 pr-2">
+                    <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 shrink-0">
                       <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                     </div>
-                    {editingProduto ? "Editar Produto" : "Novo Produto"}
+                    <span className="truncate">{editingProduto ? "Editar Produto" : "Novo Produto"}</span>
                   </DialogTitle>
                   {editingProduto && (
-                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">
                       SKU: <span className="font-mono">{(editingProduto as any).codigo}</span>
                     </p>
                   )}
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur shrink-0">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background/80 backdrop-blur shrink-0 self-start">
                   <Switch
                     checked={formData.ativo}
                     onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
