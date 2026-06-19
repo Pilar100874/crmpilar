@@ -495,20 +495,21 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
 
   // ---------------- UI ----------------
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <div className={`px-3 py-1 rounded-full text-xs ${step === 1 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>1. Filtrar</div>
-          <div className={`px-3 py-1 rounded-full text-xs ${step === 2 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>2. Escolher método</div>
+    <div className="space-y-4 min-w-0 overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <div className={`px-2.5 py-1 rounded-full text-[11px] sm:text-xs whitespace-nowrap ${step === 1 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>1. Filtrar</div>
+          <div className={`px-2.5 py-1 rounded-full text-[11px] sm:text-xs whitespace-nowrap ${step === 2 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>2. Método</div>
           {metodo === "ia" && (
-            <div className={`px-3 py-1 rounded-full text-xs ${step === "prompts" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>3. Textos extras</div>
+            <div className={`px-2.5 py-1 rounded-full text-[11px] sm:text-xs whitespace-nowrap ${step === "prompts" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>3. Textos</div>
           )}
-          <div className={`px-3 py-1 rounded-full text-xs ${step === 3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{metodo === "ia" ? "4" : "3"}. Revisar e aplicar</div>
+          <div className={`px-2.5 py-1 rounded-full text-[11px] sm:text-xs whitespace-nowrap ${step === 3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{metodo === "ia" ? "4" : "3"}. Revisar</div>
         </div>
-        <div className="text-sm text-muted-foreground">
+        <div className="text-xs sm:text-sm text-muted-foreground">
           {selectedIds.size} produto(s) selecionado(s)
         </div>
       </div>
+
 
       {/* STEP 1 */}
       {step === 1 && (
