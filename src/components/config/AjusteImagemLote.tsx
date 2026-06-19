@@ -614,11 +614,12 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
           </CardHeader>
           <CardContent className="space-y-4">
             <Tabs value={metodo} onValueChange={(v) => setMetodo(v as Metodo)}>
-              <TabsList className="grid grid-cols-3 w-full">
-                <TabsTrigger value="upload" className="gap-2"><Upload className="h-4 w-4" /> Enviar imagem</TabsTrigger>
-                <TabsTrigger value="existente" className="gap-2"><ImageIcon className="h-4 w-4" /> De outro produto</TabsTrigger>
-                <TabsTrigger value="ia" className="gap-2"><Sparkles className="h-4 w-4" /> Gerar por IA</TabsTrigger>
+              <TabsList className="grid grid-cols-3 w-full h-auto gap-1 p-1">
+                <TabsTrigger value="upload" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-1 sm:px-3 py-1.5 text-[10px] sm:text-sm"><Upload className="h-4 w-4 shrink-0" /> <span className="leading-tight text-center">Enviar<span className="hidden sm:inline"> imagem</span></span></TabsTrigger>
+                <TabsTrigger value="existente" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-1 sm:px-3 py-1.5 text-[10px] sm:text-sm"><ImageIcon className="h-4 w-4 shrink-0" /> <span className="leading-tight text-center"><span className="sm:hidden">Outro produto</span><span className="hidden sm:inline">De outro produto</span></span></TabsTrigger>
+                <TabsTrigger value="ia" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-1 sm:px-3 py-1.5 text-[10px] sm:text-sm"><Sparkles className="h-4 w-4 shrink-0" /> <span className="leading-tight text-center"><span className="sm:hidden">Por IA</span><span className="hidden sm:inline">Gerar por IA</span></span></TabsTrigger>
               </TabsList>
+
 
               <TabsContent value="upload" className="space-y-3 pt-4">
                 <div className="flex items-center gap-4">
