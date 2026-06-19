@@ -495,20 +495,21 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
 
   // ---------------- UI ----------------
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <div className={`px-3 py-1 rounded-full text-xs ${step === 1 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>1. Filtrar</div>
-          <div className={`px-3 py-1 rounded-full text-xs ${step === 2 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>2. Escolher método</div>
+    <div className="space-y-4 min-w-0 overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <div className={`px-2.5 py-1 rounded-full text-[11px] sm:text-xs whitespace-nowrap ${step === 1 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>1. Filtrar</div>
+          <div className={`px-2.5 py-1 rounded-full text-[11px] sm:text-xs whitespace-nowrap ${step === 2 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>2. Método</div>
           {metodo === "ia" && (
-            <div className={`px-3 py-1 rounded-full text-xs ${step === "prompts" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>3. Textos extras</div>
+            <div className={`px-2.5 py-1 rounded-full text-[11px] sm:text-xs whitespace-nowrap ${step === "prompts" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>3. Textos</div>
           )}
-          <div className={`px-3 py-1 rounded-full text-xs ${step === 3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{metodo === "ia" ? "4" : "3"}. Revisar e aplicar</div>
+          <div className={`px-2.5 py-1 rounded-full text-[11px] sm:text-xs whitespace-nowrap ${step === 3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{metodo === "ia" ? "4" : "3"}. Revisar</div>
         </div>
-        <div className="text-sm text-muted-foreground">
+        <div className="text-xs sm:text-sm text-muted-foreground">
           {selectedIds.size} produto(s) selecionado(s)
         </div>
       </div>
+
 
       {/* STEP 1 */}
       {step === 1 && (
@@ -613,11 +614,12 @@ export function AjusteImagemLote({ estabelecimentoId }: Props) {
           </CardHeader>
           <CardContent className="space-y-4">
             <Tabs value={metodo} onValueChange={(v) => setMetodo(v as Metodo)}>
-              <TabsList className="grid grid-cols-3 w-full">
-                <TabsTrigger value="upload" className="gap-2"><Upload className="h-4 w-4" /> Enviar imagem</TabsTrigger>
-                <TabsTrigger value="existente" className="gap-2"><ImageIcon className="h-4 w-4" /> De outro produto</TabsTrigger>
-                <TabsTrigger value="ia" className="gap-2"><Sparkles className="h-4 w-4" /> Gerar por IA</TabsTrigger>
+              <TabsList className="grid grid-cols-3 w-full h-auto gap-1 p-1">
+                <TabsTrigger value="upload" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-1 sm:px-3 py-1.5 text-[10px] sm:text-sm"><Upload className="h-4 w-4 shrink-0" /> <span className="leading-tight text-center">Enviar<span className="hidden sm:inline"> imagem</span></span></TabsTrigger>
+                <TabsTrigger value="existente" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-1 sm:px-3 py-1.5 text-[10px] sm:text-sm"><ImageIcon className="h-4 w-4 shrink-0" /> <span className="leading-tight text-center"><span className="sm:hidden">Outro produto</span><span className="hidden sm:inline">De outro produto</span></span></TabsTrigger>
+                <TabsTrigger value="ia" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-1 sm:px-3 py-1.5 text-[10px] sm:text-sm"><Sparkles className="h-4 w-4 shrink-0" /> <span className="leading-tight text-center"><span className="sm:hidden">Por IA</span><span className="hidden sm:inline">Gerar por IA</span></span></TabsTrigger>
               </TabsList>
+
 
               <TabsContent value="upload" className="space-y-3 pt-4">
                 <div className="flex items-center gap-4">
