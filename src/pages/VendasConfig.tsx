@@ -179,7 +179,7 @@ export default function VendasConfig() {
             </TooltipProvider>
           </div>
 
-          <div className="flex-1 overflow-auto p-3 sm:p-6">
+          <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-3 sm:p-6">
             <TabsContent value="produtos" className="mt-0 h-full">
               <Card className="h-full">
                 <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
@@ -191,35 +191,36 @@ export default function VendasConfig() {
                     Gerencie seu catálogo de produtos e importações
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="px-3 sm:px-6">
+                <CardContent className="px-3 sm:px-6 min-w-0">
                   <Tabs defaultValue="cadastro" className="w-full">
-                    <TabsList className="mb-4">
-                      <TabsTrigger value="cadastro" className="gap-2">
-                        <Package className="h-4 w-4" />
-                        Cadastro
+                    <TabsList className="mb-4 grid w-full grid-cols-3 h-auto gap-1 p-1">
+                      <TabsTrigger value="cadastro" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-1 sm:px-3 py-1.5 text-[10px] sm:text-sm">
+                        <Package className="h-4 w-4 shrink-0" />
+                        <span className="leading-tight text-center">Cadastro</span>
                       </TabsTrigger>
-                      <TabsTrigger value="importacao" className="gap-2">
-                        <Globe className="h-4 w-4" />
-                        Importação
+                      <TabsTrigger value="importacao" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-1 sm:px-3 py-1.5 text-[10px] sm:text-sm">
+                        <Globe className="h-4 w-4 shrink-0" />
+                        <span className="leading-tight text-center">Importação</span>
                       </TabsTrigger>
-                      <TabsTrigger value="ajuste-imagens" className="gap-2">
-                        <ImagePlus className="h-4 w-4" />
-                        Ajuste de Imagem em Lote
+                      <TabsTrigger value="ajuste-imagens" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-1 sm:px-3 py-1.5 text-[10px] sm:text-sm">
+                        <ImagePlus className="h-4 w-4 shrink-0" />
+                        <span className="leading-tight text-center">Ajuste de Imagem<span className="hidden md:inline"> em Lote</span></span>
                       </TabsTrigger>
                     </TabsList>
-                    <TabsContent value="cadastro">
+                    <TabsContent value="cadastro" className="min-w-0">
                       {estabelecimentoId && <ProdutosCRUD estabelecimentoId={estabelecimentoId} />}
                     </TabsContent>
-                    <TabsContent value="importacao">
+                    <TabsContent value="importacao" className="min-w-0">
                       {estabelecimentoId && <ImportacaoApiTab estabelecimentoId={estabelecimentoId} />}
                     </TabsContent>
-                    <TabsContent value="ajuste-imagens">
+                    <TabsContent value="ajuste-imagens" className="min-w-0">
                       {estabelecimentoId && <AjusteImagemLote estabelecimentoId={estabelecimentoId} />}
                     </TabsContent>
                   </Tabs>
                 </CardContent>
               </Card>
             </TabsContent>
+
 
             <TabsContent value="categorias" className="mt-0 h-full">
               <Card className="h-full">
