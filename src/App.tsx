@@ -48,6 +48,18 @@ import VideoCall from "./pages/VideoCall";
 import StimulsoftViewer from "./pages/StimulsoftViewer";
 import ReportBroViewerPage from "./pages/ReportBroViewerPage";
 import WebChat from "./pages/WebChat";
+import PontoLayout from "./pages/ponto/PontoLayout";
+import PontoDashboard from "./pages/ponto/PontoDashboard";
+import PontoEmpresas from "./pages/ponto/PontoEmpresas";
+import PontoFuncionarios from "./pages/ponto/PontoFuncionarios";
+import PontoRegistro from "./pages/ponto/PontoRegistro";
+import PontoTratamento from "./pages/ponto/PontoTratamento";
+import PontoAjustes from "./pages/ponto/PontoAjustes";
+import PontoEspelho from "./pages/ponto/PontoEspelho";
+import PontoEquipamentos from "./pages/ponto/PontoEquipamentos";
+import PontoExportacao from "./pages/ponto/PontoExportacao";
+import PontoAlertas from "./pages/ponto/PontoAlertas";
+import PontoAuditoria from "./pages/ponto/PontoAuditoria";
 import ChatInterno from "./pages/ChatInterno";
 import ConfigSkills from "./pages/ConfigSkills";
 import MonitorarFilas from "./pages/MonitorarFilas";
@@ -316,6 +328,19 @@ const App = () => (
               <Route path="/railway-env" element={<RailwayEnvVariables />} />
               <Route path="/admin/support-tickets" element={<SupportTickets />} />
               <Route path="/meus-tickets" element={<MeusTickets />} />
+            </Route>
+            <Route path="/ponto" element={<PontoLayout />}>
+              <Route index element={<PontoDashboard />} />
+              <Route path="empresas" element={<PontoEmpresas />} />
+              <Route path="funcionarios" element={<PontoFuncionarios />} />
+              <Route path="registro" element={<PontoRegistro />} />
+              <Route path="tratamento" element={<PontoTratamento />} />
+              <Route path="ajustes" element={<PontoAjustes />} />
+              <Route path="espelho" element={<PontoEspelho />} />
+              <Route path="equipamentos" element={<PontoEquipamentos />} />
+              <Route path="exportacao" element={<PontoExportacao />} />
+              <Route path="alertas" element={<PontoAlertas />} />
+              <Route path="auditoria" element={<PontoAuditoria />} />
             </Route>
             {/* Public routes (no layout) */}
             <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
