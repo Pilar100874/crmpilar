@@ -317,6 +317,19 @@ const App = () => (
               <Route path="/admin/support-tickets" element={<SupportTickets />} />
               <Route path="/meus-tickets" element={<MeusTickets />} />
             </Route>
+            <Route path="/ponto" element={<PontoLayout />}>
+              <Route index element={<PontoDashboard />} />
+              <Route path="empresas" element={<PontoEmpresas />} />
+              <Route path="funcionarios" element={<PontoFuncionarios />} />
+              <Route path="registro" element={<PontoRegistro />} />
+              <Route path="tratamento" element={<PontoTratamento />} />
+              <Route path="ajustes" element={<PontoAjustes />} />
+              <Route path="espelho" element={<PontoEspelho />} />
+              <Route path="equipamentos" element={<PontoEquipamentos />} />
+              <Route path="exportacao" element={<PontoExportacao />} />
+              <Route path="alertas" element={<PontoAlertas />} />
+              <Route path="auditoria" element={<PontoAuditoria />} />
+            </Route>
             {/* Public routes (no layout) */}
             <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
             <Route path="/rastreio" element={<RastreioPedido />} />
