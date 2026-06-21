@@ -51,6 +51,21 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   { id: "TV", label: "TV (Categoria)", category: "TV" },
   { id: "TV Vendas", label: "TV Vendas", category: "TV" },
   { id: "TV Veículos", label: "TV Veículos", category: "TV" },
+
+  // Controle de Ponto
+  { id: "Controle de Ponto", label: "Controle de Ponto (Categoria)", category: "Ponto" },
+  { id: "Ponto Dashboard", label: "Dashboard RH", category: "Ponto" },
+  { id: "Ponto Empresas", label: "Empresas / Filiais", category: "Ponto" },
+  { id: "Ponto Funcionários", label: "Funcionários", category: "Ponto" },
+  { id: "Ponto Registro", label: "Registro via App", category: "Ponto" },
+  { id: "Ponto Tratamento", label: "Tratamento", category: "Ponto" },
+  { id: "Ponto Ajustes", label: "Ajustes", category: "Ponto" },
+  { id: "Ponto Espelho", label: "Espelho de Ponto", category: "Ponto" },
+  { id: "Ponto Equipamentos", label: "Equipamentos Control iD", category: "Ponto" },
+  { id: "Ponto Exportação", label: "Exportação Domínio", category: "Ponto" },
+  { id: "Ponto Alertas", label: "Antifraude", category: "Ponto" },
+  { id: "Ponto Auditoria", label: "Auditoria", category: "Ponto" },
+
   
   { id: "Configurações", label: "Configurações", category: "Sistema" },
   { id: "Macros", label: "Macros", category: "Sistema" },
@@ -76,4 +91,4 @@ export const getMenusByCategory = () => {
 };
 
 // Ordem das categorias para exibição
-export const CATEGORY_ORDER = ['Dashboards', 'Chats', 'Vendas', 'Assistente', 'Principal', 'TV', 'Sistema'];
+export const CATEGORY_ORDER = ['Dashboards', 'Chats', 'Vendas', 'Assistente', 'Principal', 'TV', 'Ponto', 'Sistema'];
