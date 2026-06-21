@@ -169,6 +169,24 @@ const menuItems: MenuItem[] = [
   { id: "Desenho", title: "Marketing", url: "/marketing", icon: Target },
   { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: FileText },
   {
+    id: "Controle de Ponto",
+    title: "Controle de Ponto",
+    icon: Clock,
+    subItems: [
+      { id: "Ponto Dashboard", title: "Dashboard RH", url: "/ponto", icon: LayoutDashboard },
+      { id: "Ponto Empresas", title: "Empresas / Filiais", url: "/ponto/empresas", icon: Building2 },
+      { id: "Ponto Funcionários", title: "Funcionários", url: "/ponto/funcionarios", icon: Users },
+      { id: "Ponto Registro", title: "Registro via App", url: "/ponto/registro", icon: LucideIcons.Smartphone },
+      { id: "Ponto Tratamento", title: "Tratamento", url: "/ponto/tratamento", icon: LucideIcons.Wrench },
+      { id: "Ponto Ajustes", title: "Ajustes", url: "/ponto/ajustes", icon: LucideIcons.FileEdit },
+      { id: "Ponto Espelho", title: "Espelho de Ponto", url: "/ponto/espelho", icon: LucideIcons.FileSignature },
+      { id: "Ponto Equipamentos", title: "Equipamentos Control iD", url: "/ponto/equipamentos", icon: LucideIcons.Cpu },
+      { id: "Ponto Exportação", title: "Exportação Domínio", url: "/ponto/exportacao", icon: LucideIcons.FileDown },
+      { id: "Ponto Alertas", title: "Antifraude", url: "/ponto/alertas", icon: LucideIcons.ShieldAlert },
+      { id: "Ponto Auditoria", title: "Auditoria", url: "/ponto/auditoria", icon: LucideIcons.ShieldCheck },
+    ],
+  },
+  {
     id: "Logística",
     title: "Logística",
     icon: LucideIcons.Truck,
@@ -579,7 +597,7 @@ export default function Layout({ children }: LayoutProps) {
   const visibleMenus = menuItems
     .filter((item) => {
       // Menus que sempre devem aparecer para usuários autenticados
-      const alwaysVisibleMenus = ["Configurações", "Avisos", "TV", "E-commerce", "Suporte Tickets", "Mapa de Calor"];
+      const alwaysVisibleMenus = ["Configurações", "Avisos", "TV", "E-commerce", "Suporte Tickets", "Mapa de Calor", "Controle de Ponto"];
       if (alwaysVisibleMenus.includes(item.id)) {
         return true;
       }
