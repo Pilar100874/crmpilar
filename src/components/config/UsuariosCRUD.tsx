@@ -11,6 +11,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award, TestTube, Loader2, Mail } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { AtendenteSkillsManager } from "./AtendenteSkillsManager";
+import { MaskedInput } from "@/components/ui/masked-input";
+import { maskPhone } from "@/lib/masks";
+import { validateEmail, validatePhone } from "@/lib/validators";
 import {
   Dialog,
   DialogContent,
