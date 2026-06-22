@@ -32,7 +32,242 @@ import {
   ShieldAlert,
   Printer,
   Download,
+  Cpu,
+  ShieldAlert as AlertIcon,
+  FileSearch,
+  ClipboardList,
+  Settings,
+  Briefcase,
+  LayoutDashboard,
 } from "lucide-react";
+
+// Referência detalhada de cada menu do módulo Ponto
+const menuReference = [
+  {
+    url: "/ponto",
+    label: "Dashboard RH",
+    icon: LayoutDashboard,
+    what: "Painel principal com KPIs em tempo real: presença do dia, atrasos, horas extras, banco de horas, absenteísmo e alertas pendentes.",
+    use: "Acesse logo ao entrar. Use os filtros (empresa, filial, período) no topo. Clique em qualquer KPI para abrir o detalhamento.",
+    who: "RH e Gestores",
+  },
+  {
+    url: "/ponto/funcionarios",
+    label: "Funcionários",
+    icon: Users,
+    what: "Cadastro de colaboradores: dados pessoais, PIS, CPF, jornada, escala, foto biométrica, vínculos com empresas/filiais.",
+    use: "Botão 'Novo' para cadastrar. Edite clicando na linha. Use 'Importar CSV' para cargas em lote.",
+    who: "RH/Admin",
+  },
+  {
+    url: "/ponto/registro",
+    label: "Registro via App",
+    icon: Smartphone,
+    what: "Tela de marcação de ponto com selfie + GPS + validação antifraude. Funciona em PWA mobile.",
+    use: "Funcionário abre, tira selfie, sistema valida face/local e grava marcação com hash SHA-256.",
+    who: "Funcionários",
+  },
+  {
+    url: "/ponto/qrcode",
+    label: "QR Code Totem",
+    icon: QrCode,
+    what: "Tela cheia para tablet/totem na recepção. Gera QR Code rotativo a cada 30s para batida.",
+    use: "Deixe um tablet aberto nesta tela. Funcionário escaneia com o app do celular.",
+    who: "Empresa (totem)",
+  },
+  {
+    url: "/ponto/tratamento",
+    label: "Tratamento",
+    icon: Wrench,
+    what: "Revisão diária/semanal das marcações: faltas, atrasos, marcações ímpares, divergências.",
+    use: "Selecione período (até 7 dias), revise marcadas em vermelho, justifique ou aprove em lote.",
+    who: "RH e Gestores",
+  },
+  {
+    url: "/ponto/ajustes",
+    label: "Ajustes",
+    icon: FileSignature,
+    what: "Solicitações de correção de ponto feitas pelo funcionário (esquecimento, atestado, abono).",
+    use: "Gestor aprova/rejeita. Aprovação grava a marcação retroativa com trilha de auditoria.",
+    who: "Gestores",
+  },
+  {
+    url: "/ponto/espelho",
+    label: "Espelho de Ponto",
+    icon: FileText,
+    what: "Cartão-ponto mensal por funcionário com totais de horas trabalhadas, HE, faltas e DSR. Permite assinatura digital ICP-Brasil.",
+    use: "Filtre funcionário + mês. Botão 'Gerar PDF' e 'Solicitar assinatura'.",
+    who: "RH, Gestores e Funcionário (próprio)",
+  },
+  {
+    url: "/ponto/fechamento",
+    label: "Fechamento",
+    icon: Lock,
+    what: "Trava do período após conferência. Bloqueia novos ajustes e libera exportação para folha.",
+    use: "Sempre após Tratamento. Selecione mês, valide pendências zeradas, clique 'Fechar período'.",
+    who: "RH/Admin",
+  },
+  {
+    url: "/ponto/exportacao",
+    label: "Exportação Domínio",
+    icon: FileDown,
+    what: "Geração de arquivos para folha: Domínio, Sage, Senior, Folhamatic, CSV genérico.",
+    use: "Período fechado → escolha sistema → mapeie rubricas → 'Exportar'. Baixa .txt/.csv.",
+    who: "RH/Admin",
+  },
+  {
+    url: "/ponto/afd",
+    label: "AFD / AFDT / AEJ",
+    icon: FileText,
+    what: "Arquivos legais da Portaria 671/2021 (AFD, AFDT, AEJ) com layout oficial validado.",
+    use: "Selecione período + empresa → 'Gerar'. Arquivos ficam disponíveis para download e fiscalização.",
+    who: "RH/Admin",
+  },
+  {
+    url: "/ponto/esocial",
+    label: "eSocial",
+    icon: FileCode,
+    what: "Geração e envio dos eventos S-2230 (afastamentos) e S-2240 (condições ambientais).",
+    use: "Selecione evento, funcionário e período → 'Gerar XML' → 'Enviar ao eSocial' (assina com certificado).",
+    who: "RH/Admin",
+  },
+  {
+    url: "/ponto/banco-horas",
+    label: "Banco de Horas",
+    icon: Clock,
+    what: "Saldo de crédito/débito por funcionário, compensações e expirações conforme CCT.",
+    use: "Visualize extrato, lance compensações manuais e configure prazo de expiração.",
+    who: "RH e Gestores",
+  },
+  {
+    url: "/ponto/ferias",
+    label: "Férias",
+    icon: Plane,
+    what: "Programação e gozo de férias, controle de período aquisitivo, abono pecuniário.",
+    use: "Novo programado → seleciona dias → sistema bloqueia marcação no período e gera aviso 30 dias antes.",
+    who: "RH",
+  },
+  {
+    url: "/ponto/atestados",
+    label: "Atestados",
+    icon: ClipboardList,
+    what: "Painel de atestados médicos enviados pelos funcionários (upload de foto/PDF + CID).",
+    use: "RH valida CID, dias e anexo → aprovado vira afastamento automático e abate dias úteis.",
+    who: "RH",
+  },
+  {
+    url: "/ponto/alertas",
+    label: "Antifraude (Alertas)",
+    icon: AlertIcon,
+    what: "Lista de eventos suspeitos: deslocamento impossível, face match falho, fora do geofence, dispositivo novo.",
+    use: "Investigue cada alerta → marque como falso-positivo ou abra ocorrência disciplinar.",
+    who: "RH",
+  },
+  {
+    url: "/ponto/antifraude",
+    label: "Antifraude (Config)",
+    icon: ShieldCheck,
+    what: "Configura geofences por filial, redes Wi-Fi autorizadas, dispositivos confiáveis e regras de face match.",
+    use: "Adicione filial → desenhe raio no mapa → adicione SSIDs/MACs de confiança.",
+    who: "RH/Admin",
+  },
+  {
+    url: "/ponto/auditoria",
+    label: "Auditoria",
+    icon: FileSearch,
+    what: "Trilha imutável de TODAS as ações: marcação, ajuste, fechamento, exportação. Hash SHA-256 encadeado.",
+    use: "Use filtros (usuário, ação, período) para investigação. Exporta CSV para perícia.",
+    who: "RH/Admin/Auditores",
+  },
+  {
+    url: "/ponto/importacao",
+    label: "Importação em Lote",
+    icon: Upload,
+    what: "Importa funcionários, marcações históricas ou AFD de relógio via CSV/TXT.",
+    use: "Baixe template → preencha → faça upload → revise prévia → confirme.",
+    who: "RH/Admin",
+  },
+  {
+    url: "/ponto/notificacoes",
+    label: "Notificações",
+    icon: Bell,
+    what: "Centraliza regras de notificação (e-mail, push, WhatsApp) para atrasos, ausências, banco a expirar.",
+    use: "Crie regra → escolha evento → defina canais e destinatários → ative.",
+    who: "RH/Admin",
+  },
+  {
+    url: "/ponto/mapa",
+    label: "Mapa de Equipes",
+    icon: MapPin,
+    what: "Mapa em tempo real com localização das últimas batidas de cada funcionário (campo, obra, rota).",
+    use: "Use para gestão de campo. Clique no pino para histórico do dia.",
+    who: "Gestores",
+  },
+  {
+    url: "/ponto/assistente",
+    label: "Assistente IA",
+    icon: Sparkles,
+    what: "Chat em linguagem natural sobre dados do ponto: 'quem teve mais HE em maio?', 'gere espelho do João'.",
+    use: "Digite a pergunta. IA consulta o banco e responde com tabelas/gráficos.",
+    who: "RH e Gestores",
+  },
+  {
+    url: "/ponto/predicoes",
+    label: "Predições",
+    icon: TrendingUp,
+    what: "Modelos de IA preveem absenteísmo, rotatividade e necessidade de contratação.",
+    use: "Visualize ranking de risco por funcionário e ações sugeridas.",
+    who: "RH",
+  },
+  {
+    url: "/ponto/simulador",
+    label: "Simulador de Jornada",
+    icon: Calculator,
+    what: "Testa cenários hipotéticos de jornada/escala antes de aplicar em produção.",
+    use: "Monte uma jornada fictícia → veja cálculo de HE, DSR, adicional noturno e custo.",
+    who: "RH",
+  },
+  {
+    url: "/ponto/portal",
+    label: "Portal do Funcionário",
+    icon: Briefcase,
+    what: "Área do colaborador: bater ponto, ver espelho, solicitar ajuste, enviar atestado, consultar férias e banco.",
+    use: "Funcionário acessa com login próprio. Mobile-first.",
+    who: "Funcionários",
+  },
+  {
+    url: "/ponto/config",
+    label: "Configurações (Hub)",
+    icon: Settings,
+    what: "Hub central com links para Empresas, Filiais, Equipamentos, Antifraude, Coletor e Exportação.",
+    use: "Use como ponto de partida das configurações iniciais do módulo.",
+    who: "RH/Admin",
+  },
+  {
+    url: "/ponto/empresas",
+    label: "Empresas / Filiais",
+    icon: Building2,
+    what: "Cadastro de empresas (CNPJ, CNAE, CCT) e filiais (endereço, geofence).",
+    use: "Cadastre antes de funcionários. Geofence usado na validação antifraude.",
+    who: "RH/Admin",
+  },
+  {
+    url: "/ponto/equipamentos",
+    label: "Equipamentos Control iD",
+    icon: Cpu,
+    what: "Cadastro de relógios físicos: IP, modelo, filial, status online.",
+    use: "Configure cada relógio → conecte o Coletor Desktop → marcações sincronizam a cada 5min.",
+    who: "RH/TI",
+  },
+  {
+    url: "/ponto/coletor",
+    label: "Coletor Desktop",
+    icon: Download,
+    what: "Aplicativo Electron que roda no PC da empresa e sincroniza relógios Control iD com a nuvem.",
+    use: "Baixe o instalador, rode, faça login → ele puxa marcações automaticamente.",
+    who: "RH/TI",
+  },
+];
 
 const sections = [
   {
@@ -390,6 +625,66 @@ export default function PontoManual() {
                     </AccordionTrigger>
                     <AccordionContent className="pl-11">
                       {s.body}
+                    </AccordionContent>
+                  </AccordionItem>
+                );
+              })}
+            </Accordion>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            Referência de cada menu ({menuReference.length})
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            O que é, como usar e quem deve usar — para todos os menus do módulo.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[65vh] sm:h-[70vh] pr-3">
+            <Accordion type="multiple">
+              {menuReference.map((m) => {
+                const Icon = m.icon;
+                return (
+                  <AccordionItem key={m.url} value={m.url}>
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex items-center gap-3 text-left">
+                        <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{m.label}</span>
+                          <span className="text-[11px] text-muted-foreground">
+                            {m.url}
+                          </span>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pl-11">
+                      <div className="space-y-2 text-sm leading-relaxed">
+                        <div>
+                          <span className="font-medium">O que é: </span>
+                          <span className="text-muted-foreground">{m.what}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Como usar: </span>
+                          <span className="text-muted-foreground">{m.use}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-[10px]">
+                            {m.who}
+                          </Badge>
+                          <a
+                            href={m.url}
+                            className="text-xs text-primary hover:underline"
+                          >
+                            Abrir tela →
+                          </a>
+                        </div>
+                      </div>
                     </AccordionContent>
                   </AccordionItem>
                 );
