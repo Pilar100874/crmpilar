@@ -828,17 +828,26 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
                 value={email}
                 onChange={(e) => handleEmailChange(e.target.value)}
                 placeholder="usuario@gmail.com"
+                className={email && !validateEmail(email) ? "border-destructive focus-visible:ring-destructive" : ""}
               />
+              {email && !validateEmail(email) && (
+                <p className="text-xs text-destructive mt-1">E-mail inválido</p>
+              )}
             </div>
 
             <div>
               <Label htmlFor="usuario-telefone">Telefone</Label>
-              <Input
+              <MaskedInput
                 id="usuario-telefone"
+                mask={maskPhone}
                 value={telefone}
-                onChange={(e) => setTelefone(e.target.value)}
+                onValueChange={setTelefone}
                 placeholder="(00) 00000-0000"
+                invalid={!!telefone && !validatePhone(telefone)}
               />
+              {telefone && !validatePhone(telefone) && (
+                <p className="text-xs text-destructive mt-1">Telefone inválido</p>
+              )}
             </div>
 
             <div>
