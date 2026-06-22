@@ -179,24 +179,31 @@ Deno.serve(async (req) => {
         .from("ponto_dispositivos_autorizados")
         .select("id")
         .eq("funcionario_id", func.id)
-        .eq("hash_device", body.device_hash)
+        .eq("device_id", body.device_hash)
         .maybeSingle();
       if (dev) {
         device_ok = true;
         fatores.device = { ok: true, peso: 10, detalhe: "Dispositivo conhecido" };
         scoreObtido += 10;
+        await supabase
+          .from("ponto_dispositivos_autorizados")
+          .update({ ultimo_uso: new Date().toISOString() })
+          .eq("id", dev.id);
       } else {
-        fatores.device = { ok: false, peso: 10, detalhe: "Dispositivo novo (será cadastrado)" };
-        // auto-registra
+        fatores.device = { ok: false, peso: 10, detalhe: "Dispositivo novo (cadastrado)" };
         await supabase.from("ponto_dispositivos_autorizados").insert({
           funcionario_id: func.id,
-          hash_device: body.device_hash,
-          user_agent: body.user_agent,
+          device_id: body.device_hash,
+          plataforma: body.user_agent?.includes("Mobile") ? "mobile" : "web",
+          modelo: body.user_agent?.slice(0, 60),
+          ativo: true,
+          ultimo_uso: new Date().toISOString(),
         });
       }
     } else {
       fatores.device = { ok: false, peso: 10, detalhe: "Sem fingerprint" };
     }
+
 
     // 6) Horário compatível com escala (peso 5) — simplificado
     scoreMax += 5;
