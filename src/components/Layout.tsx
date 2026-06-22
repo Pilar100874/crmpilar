@@ -174,19 +174,18 @@ const menuItems: MenuItem[] = [
     icon: Clock,
     subItems: [
       { id: "Ponto Dashboard", title: "Dashboard RH", url: "/ponto", icon: LayoutDashboard },
-      { id: "Ponto Empresas", title: "Empresas / Filiais", url: "/ponto/empresas", icon: Building2 },
       { id: "Ponto Funcionários", title: "Funcionários", url: "/ponto/funcionarios", icon: Users },
       { id: "Ponto Registro", title: "Registro via App", url: "/ponto/registro", icon: LucideIcons.Smartphone },
       { id: "Ponto Tratamento", title: "Tratamento", url: "/ponto/tratamento", icon: LucideIcons.Wrench },
       { id: "Ponto Ajustes", title: "Ajustes", url: "/ponto/ajustes", icon: LucideIcons.FileEdit },
       { id: "Ponto Espelho", title: "Espelho de Ponto", url: "/ponto/espelho", icon: LucideIcons.FileSignature },
-      { id: "Ponto Equipamentos", title: "Equipamentos Control iD", url: "/ponto/equipamentos", icon: LucideIcons.Cpu },
       { id: "Ponto Exportação", title: "Exportação Domínio", url: "/ponto/exportacao", icon: LucideIcons.FileDown },
       { id: "Ponto Alertas", title: "Antifraude", url: "/ponto/alertas", icon: LucideIcons.ShieldAlert },
       { id: "Ponto Auditoria", title: "Auditoria", url: "/ponto/auditoria", icon: LucideIcons.ShieldCheck },
-      { id: "Ponto Coletor", title: "Coletor Desktop", url: "/ponto/coletor", icon: LucideIcons.Download },
+      { id: "Ponto Config", title: "Configurações", url: "/ponto/config", icon: Settings },
     ],
   },
+
   {
     id: "Logística",
     title: "Logística",
