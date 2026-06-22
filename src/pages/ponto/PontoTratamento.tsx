@@ -66,10 +66,17 @@ export default function PontoTratamento() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-xl font-semibold sm:text-2xl">Tratamento Diário</h2>
-        <p className="text-sm text-muted-foreground">Cálculo de atraso, falta, hora extra, noturno e banco de horas</p>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-xl font-semibold sm:text-2xl">Tratamento Diário</h2>
+          <p className="text-sm text-muted-foreground">Cálculo de atraso, falta, hora extra, noturno e banco de horas</p>
+        </div>
+        <Button onClick={recalcularHoje} disabled={loading} size="sm">
+          <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          Recalcular hoje
+        </Button>
       </div>
+
       {items.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
