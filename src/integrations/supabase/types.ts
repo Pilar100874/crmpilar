@@ -10140,6 +10140,8 @@ export type Database = {
           empresa_id: string | null
           entidade: string
           entidade_id: string | null
+          hash_anterior: string | null
+          hash_atual: string | null
           id: string
           ip: string | null
           user_agent: string | null
@@ -10154,6 +10156,8 @@ export type Database = {
           empresa_id?: string | null
           entidade: string
           entidade_id?: string | null
+          hash_anterior?: string | null
+          hash_atual?: string | null
           id?: string
           ip?: string | null
           user_agent?: string | null
@@ -10168,6 +10172,8 @@ export type Database = {
           empresa_id?: string | null
           entidade?: string
           entidade_id?: string | null
+          hash_anterior?: string | null
+          hash_atual?: string | null
           id?: string
           ip?: string | null
           user_agent?: string | null
@@ -10439,6 +10445,7 @@ export type Database = {
           calculado_em: string | null
           created_at: string
           data: string
+          dsr_min: number | null
           entrada: string | null
           extra_min: number | null
           falta: boolean | null
@@ -10446,6 +10453,7 @@ export type Database = {
           id: string
           minutos_trabalhados: number | null
           noturno_min: number | null
+          noturno_min_reduzido: number | null
           retorno_intervalo: string | null
           saida: string | null
           saida_antec_min: number | null
@@ -10458,6 +10466,7 @@ export type Database = {
           calculado_em?: string | null
           created_at?: string
           data: string
+          dsr_min?: number | null
           entrada?: string | null
           extra_min?: number | null
           falta?: boolean | null
@@ -10465,6 +10474,7 @@ export type Database = {
           id?: string
           minutos_trabalhados?: number | null
           noturno_min?: number | null
+          noturno_min_reduzido?: number | null
           retorno_intervalo?: string | null
           saida?: string | null
           saida_antec_min?: number | null
@@ -10477,6 +10487,7 @@ export type Database = {
           calculado_em?: string | null
           created_at?: string
           data?: string
+          dsr_min?: number | null
           entrada?: string | null
           extra_min?: number | null
           falta?: boolean | null
@@ -10484,6 +10495,7 @@ export type Database = {
           id?: string
           minutos_trabalhados?: number | null
           noturno_min?: number | null
+          noturno_min_reduzido?: number | null
           retorno_intervalo?: string | null
           saida?: string | null
           saida_antec_min?: number | null
@@ -10507,9 +10519,11 @@ export type Database = {
           arquivo_url: string | null
           created_at: string
           empresa_id: string
+          erros_json: Json | null
           formato: string
           gerado_por: string | null
           id: string
+          layout: string | null
           observacao: string | null
           periodo_fim: string
           periodo_inicio: string
@@ -10522,9 +10536,11 @@ export type Database = {
           arquivo_url?: string | null
           created_at?: string
           empresa_id: string
+          erros_json?: Json | null
           formato?: string
           gerado_por?: string | null
           id?: string
+          layout?: string | null
           observacao?: string | null
           periodo_fim: string
           periodo_inicio: string
@@ -10537,9 +10553,11 @@ export type Database = {
           arquivo_url?: string | null
           created_at?: string
           empresa_id?: string
+          erros_json?: Json | null
           formato?: string
           gerado_por?: string | null
           id?: string
+          layout?: string | null
           observacao?: string | null
           periodo_fim?: string
           periodo_inicio?: string
@@ -10799,6 +10817,53 @@ export type Database = {
             columns: ["filial_id"]
             isOneToOne: false
             referencedRelation: "ponto_filiais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_periodos_fechamento: {
+        Row: {
+          created_at: string
+          empresa_id: string
+          fechado_em: string
+          fechado_por: string | null
+          id: string
+          mes_referencia: string
+          observacao: string | null
+          total_faltas: number | null
+          total_funcionarios: number | null
+          total_he_min: number | null
+        }
+        Insert: {
+          created_at?: string
+          empresa_id: string
+          fechado_em?: string
+          fechado_por?: string | null
+          id?: string
+          mes_referencia: string
+          observacao?: string | null
+          total_faltas?: number | null
+          total_funcionarios?: number | null
+          total_he_min?: number | null
+        }
+        Update: {
+          created_at?: string
+          empresa_id?: string
+          fechado_em?: string
+          fechado_por?: string | null
+          id?: string
+          mes_referencia?: string
+          observacao?: string | null
+          total_faltas?: number | null
+          total_funcionarios?: number | null
+          total_he_min?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_periodos_fechamento_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_empresas"
             referencedColumns: ["id"]
           },
         ]

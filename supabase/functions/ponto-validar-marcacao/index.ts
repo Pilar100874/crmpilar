@@ -145,7 +145,7 @@ Deno.serve(async (req) => {
       fatores.qr_token = { ok: false, peso: 0, detalhe: "QR não usado" };
     }
 
-    // 4) Foto/Selfie (peso 25) — face match real fica como TODO (face-api.js no client ou provider externo)
+    // 4) Foto/Selfie + face match via Lovable AI (peso 25)
     scoreMax += 25;
     let foto_url: string | null = null;
     let face_match_score: number | null = null;
@@ -163,13 +163,74 @@ Deno.serve(async (req) => {
           .getPublicUrl(`ponto-marcacoes/${fileName}`);
         foto_url = pub.publicUrl;
       }
-      // Placeholder: aceita como liveness=true se enviou foto (cliente já passou pelo check de piscar)
-      face_match_score = func.foto_referencia_url ? 0.85 : 0.5;
-      fatores.foto = { ok: true, peso: 25, detalhe: "Selfie capturada" };
-      scoreObtido += 25;
+
+      // Face match real via Lovable AI Vision se houver foto de referência
+      if (func.foto_referencia_url && Deno.env.get("LOVABLE_API_KEY")) {
+        try {
+          const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Lovable-API-Key": Deno.env.get("LOVABLE_API_KEY")! },
+            body: JSON.stringify({
+              model: "google/gemini-3-flash-preview",
+              messages: [{
+                role: "user",
+                content: [
+                  { type: "text", text: "Compare these two faces. Reply ONLY with JSON {\"match\":0-100,\"liveness\":0-100}. match=0 if different people." },
+                  { type: "image_url", image_url: { url: func.foto_referencia_url } },
+                  { type: "image_url", image_url: { url: `data:image/jpeg;base64,${body.foto_base64.replace(/^data:image\/\w+;base64,/, "")}` } },
+                ],
+              }],
+            }),
+          });
+          const j = await aiResp.json();
+          const txt = (j.choices?.[0]?.message?.content || "").replace(/```json|```/g, "").trim();
+          const parsed = JSON.parse(txt);
+          face_match_score = Number(parsed.match) / 100;
+          if (face_match_score >= 0.7) {
+            fatores.foto = { ok: true, peso: 25, detalhe: `Face match ${Math.round(face_match_score*100)}%` };
+            scoreObtido += 25;
+          } else {
+            fatores.foto = { ok: false, peso: 25, detalhe: `Face match baixo (${Math.round(face_match_score*100)}%)` };
+            scoreObtido += Math.round(face_match_score * 25);
+          }
+        } catch {
+          fatores.foto = { ok: true, peso: 15, detalhe: "Selfie capturada (face match indisponível)" };
+          scoreObtido += 15;
+          face_match_score = 0.5;
+        }
+      } else {
+        face_match_score = 0.5;
+        fatores.foto = { ok: true, peso: 20, detalhe: "Selfie capturada (sem referência)" };
+        scoreObtido += 20;
+      }
     } else {
       fatores.foto = { ok: false, peso: 25, detalhe: "Sem selfie" };
     }
+
+    // 6b) Deslocamento impossível (peso 5)
+    scoreMax += 5;
+    if (body.gps) {
+      const { data: ult } = await supabase.from("ponto_registros")
+        .select("gps_lat, gps_lon, data_hora")
+        .eq("funcionario_id", func.id)
+        .not("gps_lat", "is", null)
+        .order("data_hora", { ascending: false }).limit(1).maybeSingle();
+      if (ult?.gps_lat && ult?.gps_lon) {
+        const distM = haversine(body.gps.lat, body.gps.lng, Number(ult.gps_lat), Number(ult.gps_lon));
+        const dtMin = (Date.now() - new Date(ult.data_hora).getTime()) / 60000;
+        const kmH = (distM / 1000) / Math.max(1/60, dtMin / 60);
+        if (kmH > 200) {
+          fatores.deslocamento = { ok: false, peso: 5, detalhe: `Deslocamento impossível ${Math.round(kmH)} km/h` };
+        } else {
+          fatores.deslocamento = { ok: true, peso: 5, detalhe: `${Math.round(kmH)} km/h` };
+          scoreObtido += 5;
+        }
+      } else {
+        fatores.deslocamento = { ok: true, peso: 5, detalhe: "Sem referência anterior" };
+        scoreObtido += 5;
+      }
+    }
+
 
     // 5) Device fingerprint (peso 10)
     scoreMax += 10;
