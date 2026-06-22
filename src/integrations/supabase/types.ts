@@ -10036,34 +10036,49 @@ export type Database = {
       }
       ponto_assinaturas_espelho: {
         Row: {
+          algoritmo: string | null
           assinado_em: string
+          assinatura_digital_base64: string | null
+          certificado_serial: string | null
+          certificado_titular: string | null
           created_at: string
           funcionario_id: string
           geo_lat: number | null
           geo_lon: number | null
           hash: string
+          hash_documento: string | null
           id: string
           ip: string | null
           mes_referencia: string
         }
         Insert: {
+          algoritmo?: string | null
           assinado_em?: string
+          assinatura_digital_base64?: string | null
+          certificado_serial?: string | null
+          certificado_titular?: string | null
           created_at?: string
           funcionario_id: string
           geo_lat?: number | null
           geo_lon?: number | null
           hash: string
+          hash_documento?: string | null
           id?: string
           ip?: string | null
           mes_referencia: string
         }
         Update: {
+          algoritmo?: string | null
           assinado_em?: string
+          assinatura_digital_base64?: string | null
+          certificado_serial?: string | null
+          certificado_titular?: string | null
           created_at?: string
           funcionario_id?: string
           geo_lat?: number | null
           geo_lon?: number | null
           hash?: string
+          hash_documento?: string | null
           id?: string
           ip?: string | null
           mes_referencia?: string
@@ -10186,6 +10201,106 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_banco_horas_lancamentos: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data: string
+          espelho_id: string | null
+          estabelecimento_id: string
+          funcionario_id: string
+          id: string
+          minutos: number
+          observacao: string | null
+          origem: string | null
+          saldo_id: string
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data: string
+          espelho_id?: string | null
+          estabelecimento_id: string
+          funcionario_id: string
+          id?: string
+          minutos: number
+          observacao?: string | null
+          origem?: string | null
+          saldo_id: string
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data?: string
+          espelho_id?: string | null
+          estabelecimento_id?: string
+          funcionario_id?: string
+          id?: string
+          minutos?: number
+          observacao?: string | null
+          origem?: string | null
+          saldo_id?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_banco_horas_lancamentos_saldo_id_fkey"
+            columns: ["saldo_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_banco_horas_saldos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_banco_horas_saldos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          data_expiracao: string | null
+          data_inicio: string
+          estabelecimento_id: string
+          funcionario_id: string
+          id: string
+          prazo_compensacao_dias: number
+          saldo_minutos: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          data_expiracao?: string | null
+          data_inicio?: string
+          estabelecimento_id: string
+          funcionario_id: string
+          id?: string
+          prazo_compensacao_dias?: number
+          saldo_minutos?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          data_expiracao?: string | null
+          data_inicio?: string
+          estabelecimento_id?: string
+          funcionario_id?: string
+          id?: string
+          prazo_compensacao_dias?: number
+          saldo_minutos?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_banco_horas_saldos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
             referencedColumns: ["id"]
           },
         ]
@@ -10439,6 +10554,65 @@ export type Database = {
           },
         ]
       }
+      ponto_esocial_eventos: {
+        Row: {
+          created_at: string
+          enviado_em: string | null
+          estabelecimento_id: string
+          evento: string
+          funcionario_id: string | null
+          id: string
+          payload: Json
+          protocolo: string | null
+          recibo: string | null
+          referencia_id: string | null
+          resposta: Json | null
+          status: string
+          updated_at: string
+          xml: string | null
+        }
+        Insert: {
+          created_at?: string
+          enviado_em?: string | null
+          estabelecimento_id: string
+          evento: string
+          funcionario_id?: string | null
+          id?: string
+          payload?: Json
+          protocolo?: string | null
+          recibo?: string | null
+          referencia_id?: string | null
+          resposta?: Json | null
+          status?: string
+          updated_at?: string
+          xml?: string | null
+        }
+        Update: {
+          created_at?: string
+          enviado_em?: string | null
+          estabelecimento_id?: string
+          evento?: string
+          funcionario_id?: string | null
+          id?: string
+          payload?: Json
+          protocolo?: string | null
+          recibo?: string | null
+          referencia_id?: string | null
+          resposta?: Json | null
+          status?: string
+          updated_at?: string
+          xml?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_esocial_eventos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_espelho_diario: {
         Row: {
           atraso_min: number | null
@@ -10610,6 +10784,71 @@ export type Database = {
           },
         ]
       }
+      ponto_ferias_afastamentos: {
+        Row: {
+          bloqueia_marcacao: boolean
+          created_at: string
+          created_by: string | null
+          data_fim: string
+          data_inicio: string
+          dias: number | null
+          documento_url: string | null
+          esocial_enviado_em: string | null
+          esocial_evento: string | null
+          estabelecimento_id: string
+          funcionario_id: string
+          id: string
+          motivo: string | null
+          status: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          bloqueia_marcacao?: boolean
+          created_at?: string
+          created_by?: string | null
+          data_fim: string
+          data_inicio: string
+          dias?: number | null
+          documento_url?: string | null
+          esocial_enviado_em?: string | null
+          esocial_evento?: string | null
+          estabelecimento_id: string
+          funcionario_id: string
+          id?: string
+          motivo?: string | null
+          status?: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          bloqueia_marcacao?: boolean
+          created_at?: string
+          created_by?: string | null
+          data_fim?: string
+          data_inicio?: string
+          dias?: number | null
+          documento_url?: string | null
+          esocial_enviado_em?: string | null
+          esocial_evento?: string | null
+          estabelecimento_id?: string
+          funcionario_id?: string
+          id?: string
+          motivo?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_ferias_afastamentos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_filiais: {
         Row: {
           ativo: boolean
@@ -10663,6 +10902,76 @@ export type Database = {
           {
             foreignKeyName: "ponto_filiais_empresa_id_fkey"
             columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_funcionario_vinculos: {
+        Row: {
+          ativo: boolean
+          cargo: string | null
+          created_at: string
+          data_admissao: string | null
+          data_demissao: string | null
+          estabelecimento_id: string
+          filial_id: string | null
+          funcionario_id: string
+          id: string
+          matricula: string | null
+          ponto_empresa_id: string
+          principal: boolean
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cargo?: string | null
+          created_at?: string
+          data_admissao?: string | null
+          data_demissao?: string | null
+          estabelecimento_id: string
+          filial_id?: string | null
+          funcionario_id: string
+          id?: string
+          matricula?: string | null
+          ponto_empresa_id: string
+          principal?: boolean
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cargo?: string | null
+          created_at?: string
+          data_admissao?: string | null
+          data_demissao?: string | null
+          estabelecimento_id?: string
+          filial_id?: string | null
+          funcionario_id?: string
+          id?: string
+          matricula?: string | null
+          ponto_empresa_id?: string
+          principal?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_funcionario_vinculos_filial_id_fkey"
+            columns: ["filial_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_filiais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_funcionario_vinculos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_funcionario_vinculos_ponto_empresa_id_fkey"
+            columns: ["ponto_empresa_id"]
             isOneToOne: false
             referencedRelation: "ponto_empresas"
             referencedColumns: ["id"]
@@ -10820,6 +11129,99 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ponto_importacoes: {
+        Row: {
+          arquivo_nome: string | null
+          created_at: string
+          created_by: string | null
+          erros: Json | null
+          estabelecimento_id: string
+          id: string
+          status: string
+          tipo: string
+          total_erro: number | null
+          total_linhas: number | null
+          total_sucesso: number | null
+          updated_at: string
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          created_at?: string
+          created_by?: string | null
+          erros?: Json | null
+          estabelecimento_id: string
+          id?: string
+          status?: string
+          tipo: string
+          total_erro?: number | null
+          total_linhas?: number | null
+          total_sucesso?: number | null
+          updated_at?: string
+        }
+        Update: {
+          arquivo_nome?: string | null
+          created_at?: string
+          created_by?: string | null
+          erros?: Json | null
+          estabelecimento_id?: string
+          id?: string
+          status?: string
+          tipo?: string
+          total_erro?: number | null
+          total_linhas?: number | null
+          total_sucesso?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ponto_notificacoes_config: {
+        Row: {
+          canais: Json
+          created_at: string
+          destinatarios_emails: Json
+          dias_aviso_expiracao: number
+          estabelecimento_id: string
+          id: string
+          notif_atestado_pendente: boolean
+          notif_atraso: boolean
+          notif_banco_horas_expirar: boolean
+          notif_falta: boolean
+          notif_he_pendente: boolean
+          updated_at: string
+          webhook_url: string | null
+        }
+        Insert: {
+          canais?: Json
+          created_at?: string
+          destinatarios_emails?: Json
+          dias_aviso_expiracao?: number
+          estabelecimento_id: string
+          id?: string
+          notif_atestado_pendente?: boolean
+          notif_atraso?: boolean
+          notif_banco_horas_expirar?: boolean
+          notif_falta?: boolean
+          notif_he_pendente?: boolean
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Update: {
+          canais?: Json
+          created_at?: string
+          destinatarios_emails?: Json
+          dias_aviso_expiracao?: number
+          estabelecimento_id?: string
+          id?: string
+          notif_atestado_pendente?: boolean
+          notif_atraso?: boolean
+          notif_banco_horas_expirar?: boolean
+          notif_falta?: boolean
+          notif_he_pendente?: boolean
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Relationships: []
       }
       ponto_periodos_fechamento: {
         Row: {
