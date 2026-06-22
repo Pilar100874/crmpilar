@@ -343,6 +343,7 @@ const App = () => (
                 <Route path="alertas" element={<PontoAlertas />} />
                 <Route path="auditoria" element={<PontoAuditoria />} />
                 <Route path="coletor" element={<PontoColetorDownload />} />
+                <Route path="config" element={<PontoConfig />} />
               </Route>
             </Route>
             {/* Public routes (no layout) */}
