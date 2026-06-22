@@ -278,6 +278,13 @@ export default function Layout({ children }: LayoutProps) {
   useUsageTracker();
   useInteractionTracker("sistema");
 
+  // Toggle sidebar via evento customizado (ex: botão hamburger em sub-layouts)
+  useEffect(() => {
+    const handleToggle = () => setMenuOpen((prev) => !prev);
+    window.addEventListener("toggle-sidebar", handleToggle);
+    return () => window.removeEventListener("toggle-sidebar", handleToggle);
+  }, []);
+
   
   // Auto screen share removido - agora usamos extensão do Chrome
 
