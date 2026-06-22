@@ -63,6 +63,7 @@ import PontoAuditoria from "./pages/ponto/PontoAuditoria";
 import PontoColetorDownload from "./pages/ponto/PontoColetorDownload";
 import PontoConfig from "./pages/ponto/PontoConfig";
 import PontoAntifraudeConfig from "./pages/ponto/PontoAntifraudeConfig";
+import PontoAssistente from "./pages/ponto/PontoAssistente";
 import ChatInterno from "./pages/ChatInterno";
 import ConfigSkills from "./pages/ConfigSkills";
 import MonitorarFilas from "./pages/MonitorarFilas";
@@ -346,6 +347,7 @@ const App = () => (
                 <Route path="coletor" element={<PontoColetorDownload />} />
                 <Route path="config" element={<PontoConfig />} />
                 <Route path="antifraude" element={<PontoAntifraudeConfig />} />
+                <Route path="assistente" element={<PontoAssistente />} />
               </Route>
             </Route>
             {/* Public routes (no layout) */}
