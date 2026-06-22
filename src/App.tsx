@@ -342,6 +342,7 @@ const App = () => (
               <Route path="exportacao" element={<PontoExportacao />} />
               <Route path="alertas" element={<PontoAlertas />} />
               <Route path="auditoria" element={<PontoAuditoria />} />
+              <Route path="coletor" element={<PontoColetorDownload />} />
             </Route>
             {/* Public routes (no layout) */}
             <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
