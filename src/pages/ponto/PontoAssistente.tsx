@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Sparkles, ShieldAlert, Loader2 } from "lucide-react";
+import { Send, Sparkles, ShieldAlert, Loader2, Mic, MicOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePontoEmpresa } from "./usePontoEmpresa";
 import { toast } from "sonner";
@@ -18,7 +18,25 @@ export default function PontoAssistente() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [auditando, setAuditando] = useState(false);
+  const [ouvindo, setOuvindo] = useState(false);
+  const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const toggleVoz = () => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return toast.error("Reconhecimento de voz indisponível neste navegador");
+    if (ouvindo) { recognitionRef.current?.stop(); setOuvindo(false); return; }
+    const rec = new SR();
+    rec.lang = "pt-BR"; rec.continuous = false; rec.interimResults = false;
+    rec.onresult = (e: any) => {
+      const txt = e.results[0]?.[0]?.transcript || "";
+      setInput((curr) => (curr ? curr + " " : "") + txt);
+    };
+    rec.onend = () => setOuvindo(false);
+    rec.onerror = () => setOuvindo(false);
+    rec.start(); recognitionRef.current = rec; setOuvindo(true);
+  };
+
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -143,6 +161,9 @@ export default function PontoAssistente() {
             className="min-h-[44px] max-h-32 resize-none"
             disabled={loading}
           />
+          <Button onClick={toggleVoz} variant={ouvindo ? "default" : "outline"} size="icon" className="h-11 w-11 shrink-0">
+            {ouvindo ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          </Button>
           <Button onClick={enviar} disabled={loading || !input.trim()} size="icon" className="h-11 w-11 shrink-0">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>

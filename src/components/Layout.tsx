@@ -188,6 +188,8 @@ const menuItems: MenuItem[] = [
       { id: "Ponto Simulador", title: "Simulador de Cenários", url: "/ponto/simulador", icon: LucideIcons.Calculator },
       { id: "Ponto Mapa", title: "Mapa de Equipes", url: "/ponto/mapa", icon: LucideIcons.MapPin },
       { id: "Ponto QrCode", title: "QR Code Totem", url: "/ponto/qrcode", icon: LucideIcons.QrCode },
+      { id: "Ponto Atestados Admin", title: "Atestados (RH)", url: "/ponto/atestados-admin", icon: LucideIcons.FileCheck },
+      { id: "Ponto Fechamento", title: "Fechamento de Folha", url: "/ponto/fechamento", icon: LucideIcons.Lock },
       { id: "Ponto Config", title: "Configurações", url: "/ponto/config", icon: Settings },
     ],
   },

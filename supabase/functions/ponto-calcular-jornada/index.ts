@@ -137,6 +137,10 @@ Deno.serve(async (req) => {
     }
 
     const saldo_banco_min = r.banco_horas_ativo ? extra_min : 0;
+    // Hora reduzida noturna (CLT art. 73 §1º): 52min30s = 1 hora noturna
+    const noturno_min_reduzido = Math.round(noturno_min * (60 / 52.5));
+    // DSR sobre HE — aproximação diária: HE / 6 (dias úteis)
+    const dsr_min = Math.round(extra_min / 6);
 
     const payload = {
       funcionario_id,
@@ -151,6 +155,8 @@ Deno.serve(async (req) => {
       saida_antec_min,
       extra_min,
       noturno_min,
+      noturno_min_reduzido,
+      dsr_min,
       saldo_banco_min,
       calculado_em: new Date().toISOString(),
     };

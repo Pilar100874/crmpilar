@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { usePontoEmpresa } from "./usePontoEmpresa";
 import { toast } from "sonner";
-import { TrendingUp, AlertTriangle, DollarSign, Activity, Loader2 } from "lucide-react";
+import { TrendingUp, AlertTriangle, DollarSign, Activity, Loader2, Lightbulb, Scale } from "lucide-react";
 
 type Previsao = {
   funcionario_id: string;
@@ -23,6 +23,39 @@ export default function PontoPredicoes() {
   const [loading, setLoading] = useState(false);
   const [totais, setTotais] = useState<any>(null);
   const [previsoes, setPrevisoes] = useState<Previsao[]>([]);
+  const [recomendacao, setRecomendacao] = useState<any>(null);
+  const [riscos, setRiscos] = useState<any[]>([]);
+  const [loadingRec, setLoadingRec] = useState(false);
+  const [loadingRisco, setLoadingRisco] = useState(false);
+
+  const rodarRecomendacao = async () => {
+    if (!empresaId) return;
+    setLoadingRec(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ponto-recomendacao-contratacao", {
+        body: { empresa_id: empresaId },
+      });
+      if (error) throw error;
+      setRecomendacao(data.recomendacao);
+      toast.success("Recomendação gerada");
+    } catch (e: any) { toast.error(e.message); }
+    finally { setLoadingRec(false); }
+  };
+
+  const rodarRisco = async () => {
+    if (!empresaId) return;
+    setLoadingRisco(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ponto-risco-trabalhista", {
+        body: { empresa_id: empresaId },
+      });
+      if (error) throw error;
+      setRiscos(data.riscos || []);
+      toast.success("Riscos calculados");
+    } catch (e: any) { toast.error(e.message); }
+    finally { setLoadingRisco(false); }
+  };
+
 
   const rodar = async () => {
     if (!empresaId) return toast.error("Selecione uma empresa");
@@ -128,6 +161,53 @@ export default function PontoPredicoes() {
           ))}
         </div>
       </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold flex items-center gap-2"><Lightbulb className="h-4 w-4" /> Recomendação de contratação (IA)</h3>
+            <Button size="sm" variant="outline" onClick={rodarRecomendacao} disabled={loadingRec}>
+              {loadingRec ? <Loader2 className="h-3 w-3 animate-spin" /> : "Gerar"}
+            </Button>
+          </div>
+          {!recomendacao && <p className="text-sm text-muted-foreground">Clique em "Gerar" para a IA analisar HE e absenteísmo e indicar quantas contratações compensam.</p>}
+          {recomendacao && (
+            <div className="space-y-2 text-sm">
+              {recomendacao.contratar_n !== undefined && (
+                <div><Badge>Contratar {recomendacao.contratar_n}</Badge></div>
+              )}
+              {recomendacao.economia_mensal_estimada !== undefined && (
+                <div className="text-emerald-600 font-medium">
+                  Economia estimada: R$ {Number(recomendacao.economia_mensal_estimada).toLocaleString("pt-BR")}/mês
+                </div>
+              )}
+              {recomendacao.justificativa && <p className="text-muted-foreground">{recomendacao.justificativa}</p>}
+              {recomendacao.risco && <p className="text-xs"><strong>Risco:</strong> {recomendacao.risco}</p>}
+            </div>
+          )}
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold flex items-center gap-2"><Scale className="h-4 w-4" /> Risco trabalhista por funcionário</h3>
+            <Button size="sm" variant="outline" onClick={rodarRisco} disabled={loadingRisco}>
+              {loadingRisco ? <Loader2 className="h-3 w-3 animate-spin" /> : "Calcular"}
+            </Button>
+          </div>
+          {riscos.length === 0 && <p className="text-sm text-muted-foreground">Clique em "Calcular" para gerar score e justificativa IA.</p>}
+          <div className="space-y-2 max-h-80 overflow-y-auto">
+            {riscos.slice(0, 10).map((r) => (
+              <div key={r.funcionario_id} className="border-b pb-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">{r.nome}</span>
+                  <Badge variant={r.score_risco >= 60 ? "destructive" : "secondary"}>{r.score_risco}%</Badge>
+                </div>
+                {r.ia?.justificativa && <p className="text-xs text-muted-foreground mt-1">{r.ia.justificativa}</p>}
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

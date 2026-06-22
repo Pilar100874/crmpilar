@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calculator, RefreshCw } from "lucide-react";
+import { Calculator, RefreshCw, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,6 +56,27 @@ export default function PontoTratamento() {
     }
   };
 
+  const aprovarHELote = async () => {
+    if (!empresaId) return;
+    const inicio = new Date(); inicio.setDate(inicio.getDate() - 7);
+    if (!confirm("Aprovar TODOS os ajustes de hora extra pendentes dos últimos 7 dias?")) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("ponto-aprovar-he-lote", {
+        body: {
+          empresa_id: empresaId,
+          inicio: inicio.toISOString().slice(0, 10),
+          fim: new Date().toISOString().slice(0, 10),
+          decisao: "aprovar",
+        },
+      });
+      if (error) throw error;
+      toast.success(`${data.total} ajuste(s) de HE aprovado(s)`);
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+
 
   const fmt = (m: number | null) => {
     if (!m) return "—";
@@ -71,10 +92,15 @@ export default function PontoTratamento() {
           <h2 className="text-xl font-semibold sm:text-2xl">Tratamento Diário</h2>
           <p className="text-sm text-muted-foreground">Cálculo de atraso, falta, hora extra, noturno e banco de horas</p>
         </div>
-        <Button onClick={recalcularHoje} disabled={loading} size="sm">
-          <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          Recalcular hoje
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={aprovarHELote} disabled={loading} size="sm" variant="outline">
+            <CheckSquare className="mr-2 h-4 w-4" /> Aprovar HE em lote (7d)
+          </Button>
+          <Button onClick={recalcularHoje} disabled={loading} size="sm">
+            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Recalcular hoje
+          </Button>
+        </div>
       </div>
 
       {items.length === 0 ? (
