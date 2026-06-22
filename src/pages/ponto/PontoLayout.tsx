@@ -1,29 +1,66 @@
 import { Outlet } from "react-router-dom";
-import { Clock, Menu } from "lucide-react";
+import { Menu, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { usePontoEmpresa } from "./usePontoEmpresa";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function PontoLayout() {
+  const { empresas, empresaId, setEmpresaId } = usePontoEmpresa();
+
   return (
-    <div className="flex flex-col h-full min-h-screen bg-background">
-      <header className="border-b bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
-        <div className="px-4 sm:px-6 py-4 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent("toggle-sidebar"))}
-            className="lg:hidden h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0 hover:bg-primary/25 transition-colors"
-            aria-label="Abrir menu"
-          >
-            <Menu className="h-5 w-5 text-primary" />
-          </button>
-          <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
-            <Clock className="h-5 w-5 text-primary" />
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur">
+        <div className="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden shrink-0"
+              onClick={() => window.dispatchEvent(new CustomEvent("toggle-sidebar"))}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <Clock className="h-5 w-5 text-primary shrink-0" />
+            <div className="min-w-0">
+              <h1 className="text-base font-semibold truncate sm:text-lg">
+                Controle de Ponto
+              </h1>
+              <p className="hidden text-xs text-muted-foreground sm:block">
+                RH · Gestor · Funcionário
+              </p>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-base sm:text-lg font-semibold leading-none truncate">Controle de Ponto</h1>
-            <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 truncate">RH · Gestor · Funcionário</p>
+          <div className="flex items-center gap-2">
+            <Select
+              value={empresaId ?? undefined}
+              onValueChange={(v) => setEmpresaId(v)}
+            >
+              <SelectTrigger className="h-9 w-full sm:w-[260px]">
+                <SelectValue placeholder="Selecione a empresa" />
+              </SelectTrigger>
+              <SelectContent>
+                {empresas.length === 0 && (
+                  <div className="px-2 py-3 text-xs text-muted-foreground">
+                    Nenhuma empresa cadastrada
+                  </div>
+                )}
+                {empresas.map((e) => (
+                  <SelectItem key={e.id} value={e.id}>
+                    {e.razao_social}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </header>
-      <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden">
+      <main className="overflow-x-hidden p-3 sm:p-5">
         <Outlet />
       </main>
     </div>

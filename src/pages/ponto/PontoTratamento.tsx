@@ -1,54 +1,89 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { tratamento } from "./mock";
+import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Calculator } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { usePontoEmpresa } from "./usePontoEmpresa";
 
 export default function PontoTratamento() {
-  return (
-    <div className="space-y-4 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div>
-          <h2 className="text-2xl font-bold">Tratamento de Ponto</h2>
-          <p className="text-sm text-muted-foreground">Cálculo diário: atraso, falta, saída antecipada, intervalo, hora extra, adicional noturno e banco de horas</p>
-        </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline">Recalcular</Button>
-          <Button size="sm">Fechar período</Button>
-        </div>
-      </div>
+  const { empresaId } = usePontoEmpresa();
+  const [items, setItems] = useState<any[]>([]);
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">Apuração diária</CardTitle></CardHeader>
-        <CardContent className="overflow-x-auto">
+  useEffect(() => {
+    if (!empresaId) return;
+    (async () => {
+      const { data: funcs } = await supabase
+        .from("ponto_funcionarios")
+        .select("id, nome")
+        .eq("empresa_id", empresaId);
+      const ids = (funcs || []).map((f) => f.id);
+      if (!ids.length) return setItems([]);
+      const { data } = await supabase
+        .from("ponto_espelho_diario")
+        .select("*")
+        .in("funcionario_id", ids)
+        .order("data", { ascending: false })
+        .limit(100);
+      const map = Object.fromEntries((funcs || []).map((f) => [f.id, f.nome]));
+      setItems((data || []).map((r: any) => ({ ...r, nome: map[r.funcionario_id] })));
+    })();
+  }, [empresaId]);
+
+  const fmt = (m: number | null) => {
+    if (!m) return "—";
+    const h = Math.floor(Math.abs(m) / 60);
+    const mm = Math.abs(m) % 60;
+    return `${m < 0 ? "-" : ""}${h}h${String(mm).padStart(2, "0")}`;
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-xl font-semibold sm:text-2xl">Tratamento Diário</h2>
+        <p className="text-sm text-muted-foreground">Cálculo de atraso, falta, hora extra, noturno e banco de horas</p>
+      </div>
+      {items.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+            <Calculator className="h-10 w-10 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Nenhum espelho calculado. Os cálculos são gerados após registros.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border">
           <table className="w-full text-sm">
-            <thead className="text-muted-foreground border-b">
-              <tr>
-                <th className="text-left p-2">Funcionário</th>
-                <th className="text-left p-2">Data</th>
-                <th className="text-left p-2">Atraso</th>
-                <th className="text-left p-2">Falta</th>
-                <th className="text-left p-2">Saída antec.</th>
-                <th className="text-left p-2">Extra</th>
-                <th className="text-left p-2">Adic. noturno</th>
-                <th className="text-left p-2">Banco</th>
+            <thead className="bg-muted/50">
+              <tr className="text-left">
+                <th className="p-3">Funcionário</th>
+                <th className="p-3">Data</th>
+                <th className="p-3">Atraso</th>
+                <th className="p-3 hidden sm:table-cell">Falta</th>
+                <th className="p-3 hidden md:table-cell">Saída antec.</th>
+                <th className="p-3">Extra</th>
+                <th className="p-3 hidden lg:table-cell">Noturno</th>
+                <th className="p-3">Banco</th>
               </tr>
             </thead>
             <tbody>
-              {tratamento.map((t) => (
-                <tr key={t.id} className="border-b last:border-0">
-                  <td className="p-2 font-medium">{t.funcionario}</td>
-                  <td className="p-2">{t.data}</td>
-                  <td className="p-2">{t.atraso}</td>
-                  <td className="p-2">{t.falta}</td>
-                  <td className="p-2">{t.saidaAntec}</td>
-                  <td className="p-2">{t.extra}</td>
-                  <td className="p-2">{t.noturno}</td>
-                  <td className="p-2 font-semibold">{t.saldoBanco}</td>
+              {items.map((r) => (
+                <tr key={r.id} className="border-t">
+                  <td className="p-3 font-medium">{r.nome}</td>
+                  <td className="p-3">{r.data}</td>
+                  <td className="p-3">{fmt(r.atraso_min)}</td>
+                  <td className="p-3 hidden sm:table-cell">{r.falta ? "Sim" : "—"}</td>
+                  <td className="p-3 hidden md:table-cell">{fmt(r.saida_antec_min)}</td>
+                  <td className="p-3">{fmt(r.extra_min)}</td>
+                  <td className="p-3 hidden lg:table-cell">{fmt(r.noturno_min)}</td>
+                  <td className={`p-3 ${r.saldo_banco_min < 0 ? "text-destructive" : ""}`}>
+                    {fmt(r.saldo_banco_min)}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </div>
   );
 }

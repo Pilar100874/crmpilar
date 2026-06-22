@@ -1,48 +1,63 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { FileSignature, Download } from "lucide-react";
-import { tratamento } from "./mock";
+import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { FileSignature } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { usePontoEmpresa } from "./usePontoEmpresa";
 
 export default function PontoEspelho() {
-  return (
-    <div className="space-y-4 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div>
-          <h2 className="text-2xl font-bold">Espelho de Ponto</h2>
-          <p className="text-sm text-muted-foreground">Visualização mensal · assinatura digital pelo funcionário</p>
-        </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline"><Download className="h-4 w-4 mr-1" /> PDF</Button>
-          <Button size="sm"><FileSignature className="h-4 w-4 mr-1" /> Assinar digitalmente</Button>
-        </div>
-      </div>
+  const { empresaId } = usePontoEmpresa();
+  const [items, setItems] = useState<any[]>([]);
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center justify-between flex-wrap gap-2">
-            <span>Ana Souza · Junho/2026</span>
-            <Badge variant="secondary">Aguardando assinatura</Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-muted-foreground border-b">
-              <tr><th className="text-left p-2">Dia</th><th className="text-left p-2">Entrada</th><th className="text-left p-2">Saída Int.</th><th className="text-left p-2">Retorno</th><th className="text-left p-2">Saída</th><th className="text-left p-2">Saldo</th></tr>
-            </thead>
-            <tbody>
-              {tratamento.map((t) => (
-                <tr key={t.id} className="border-b last:border-0">
-                  <td className="p-2">{t.data}</td><td className="p-2">08:02</td><td className="p-2">12:00</td><td className="p-2">13:01</td><td className="p-2">18:05</td><td className="p-2 font-semibold">{t.saldoBanco}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="mt-6 p-4 rounded-md border-2 border-dashed bg-muted/30 text-center text-sm text-muted-foreground">
-            Ao clicar em <b>Assinar digitalmente</b>, o funcionário concorda com o espelho via certificado/OTP (mock).
-          </div>
-        </CardContent>
-      </Card>
+  useEffect(() => {
+    if (!empresaId) return;
+    (async () => {
+      const { data: funcs } = await supabase
+        .from("ponto_funcionarios")
+        .select("id, nome, cpf")
+        .eq("empresa_id", empresaId);
+      const ids = (funcs || []).map((f) => f.id);
+      if (!ids.length) return setItems([]);
+      const { data } = await supabase
+        .from("ponto_assinaturas_espelho")
+        .select("*")
+        .in("funcionario_id", ids)
+        .order("mes_referencia", { ascending: false });
+      const map = Object.fromEntries((funcs || []).map((f) => [f.id, f]));
+      setItems((data || []).map((r: any) => ({ ...r, func: map[r.funcionario_id] })));
+    })();
+  }, [empresaId]);
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-xl font-semibold sm:text-2xl">Espelho de Ponto</h2>
+        <p className="text-sm text-muted-foreground">Assinaturas digitais mensais</p>
+      </div>
+      {items.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+            <FileSignature className="h-10 w-10 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Nenhum espelho assinado. Funcionários assinam pelo app.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((a) => (
+            <Card key={a.id}>
+              <CardContent className="space-y-2 p-4">
+                <h3 className="font-semibold">{a.func?.nome}</h3>
+                <p className="text-xs text-muted-foreground">
+                  Mês: {new Date(a.mes_referencia).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+                </p>
+                <p className="text-xs">Assinado em: {new Date(a.assinado_em).toLocaleString("pt-BR")}</p>
+                <p className="break-all text-[10px] text-muted-foreground">Hash: {a.hash}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

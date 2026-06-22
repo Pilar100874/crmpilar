@@ -1,0 +1,17 @@
+{
+  "name": "ponto-coletor",
+  "version": "1.0.0",
+  "description": "Coletor de batidas de relógios de ponto - CRM Pilar",
+  "main": "main.js",
+  "author": "Pilar",
+  "license": "Proprietary",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0"
+  }
+}

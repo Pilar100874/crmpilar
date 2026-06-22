@@ -1,89 +1,93 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Clock, TrendingUp, Users, Calendar, ShieldAlert } from "lucide-react";
-import { alertas, pendencias, tratamento } from "./mock";
+import { AlertTriangle, Clock, UserX, Calendar, Wallet, Shield } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { usePontoEmpresa } from "./usePontoEmpresa";
 
-const kpis = [
-  { label: "Horas extras (mês)", value: "284h 15min", icon: TrendingUp, color: "text-blue-600" },
-  { label: "Faltas (mês)", value: "23", icon: Calendar, color: "text-red-600" },
-  { label: "Atrasos (mês)", value: "61", icon: Clock, color: "text-amber-600" },
-  { label: "Banco de horas", value: "+412h / -89h", icon: Users, color: "text-emerald-600" },
-];
+type Stat = { label: string; value: string | number; icon: any; tone?: string };
 
 export default function PontoDashboard() {
+  const { empresaId } = usePontoEmpresa();
+  const [stats, setStats] = useState({
+    pendencias: 0,
+    extras: 0,
+    faltas: 0,
+    atrasos: 0,
+    banco: 0,
+    alertas: 0,
+  });
+
+  useEffect(() => {
+    if (!empresaId) return;
+    (async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const [funcsRes, ajustesRes, alertasRes, espelhoRes] = await Promise.all([
+        supabase.from("ponto_funcionarios").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId).eq("status", "ativo"),
+        supabase.from("ponto_ajustes").select("id", { count: "exact", head: true }).eq("status", "pendente"),
+        supabase.from("ponto_alertas").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId).eq("resolvido", false),
+        supabase.from("ponto_espelho_diario").select("atraso_min, extra_min, falta, saldo_banco_min").eq("data", today),
+      ]);
+      const espelho = (espelhoRes.data || []) as any[];
+      setStats({
+        pendencias: ajustesRes.count || 0,
+        extras: espelho.reduce((s, r) => s + (r.extra_min || 0), 0),
+        faltas: espelho.filter((r) => r.falta).length,
+        atrasos: espelho.filter((r) => (r.atraso_min || 0) > 0).length,
+        banco: espelho.reduce((s, r) => s + (r.saldo_banco_min || 0), 0),
+        alertas: alertasRes.count || 0,
+      });
+    })();
+  }, [empresaId]);
+
+  const fmt = (m: number) => {
+    const h = Math.floor(Math.abs(m) / 60);
+    const mm = Math.abs(m) % 60;
+    return `${m < 0 ? "-" : ""}${h}h${String(mm).padStart(2, "0")}`;
+  };
+
+  const cards: Stat[] = [
+    { label: "Pendências de ajuste", value: stats.pendencias, icon: Clock },
+    { label: "Horas extras hoje", value: fmt(stats.extras), icon: Wallet },
+    { label: "Faltas hoje", value: stats.faltas, icon: UserX, tone: "text-destructive" },
+    { label: "Atrasos hoje", value: stats.atrasos, icon: Calendar },
+    { label: "Saldo banco (dia)", value: fmt(stats.banco), icon: Wallet },
+    { label: "Alertas antifraude abertos", value: stats.alertas, icon: Shield, tone: "text-destructive" },
+  ];
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-4">
       <div>
-        <h2 className="text-2xl font-bold">Dashboard RH</h2>
-        <p className="text-sm text-muted-foreground">Visão geral do controle de ponto · dados de exemplo</p>
+        <h2 className="text-xl font-semibold sm:text-2xl">Dashboard RH</h2>
+        <p className="text-sm text-muted-foreground">Visão geral do dia</p>
       </div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {kpis.map((k) => (
-          <Card key={k.label}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-muted-foreground">{k.label}</p>
-                <k.icon className={`h-4 w-4 ${k.color}`} />
-              </div>
-              <p className="text-xl font-bold mt-2">{k.value}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-4">
+      {!empresaId ? (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> Pendências</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {pendencias.map((p) => (
-              <div key={p.tipo} className="flex items-center justify-between p-2 rounded-md bg-muted/40">
-                <span className="text-sm">{p.tipo}</span>
-                <Badge variant="secondary">{p.qtd}</Badge>
-              </div>
-            ))}
+          <CardContent className="flex items-center gap-3 py-8">
+            <AlertTriangle className="h-5 w-5 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Cadastre uma empresa em <strong>Empresas</strong> para começar.
+            </p>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2"><ShieldAlert className="h-4 w-4" /> Alertas antifraude</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {alertas.map((a) => (
-              <div key={a.id} className="flex items-start justify-between gap-3 p-2 rounded-md border">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{a.funcionario}</p>
-                  <p className="text-xs text-muted-foreground">{a.motivo}</p>
+      ) : (
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+          {cards.map((c, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-xs font-medium text-muted-foreground">
+                  {c.label}
+                </CardTitle>
+                <c.icon className={`h-4 w-4 ${c.tone ?? "text-muted-foreground"}`} />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-xl font-bold sm:text-2xl ${c.tone ?? ""}`}>
+                  {c.value}
                 </div>
-                <Badge variant={a.nivel === "alto" ? "destructive" : a.nivel === "medio" ? "default" : "secondary"} className="capitalize shrink-0">{a.nivel}</Badge>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Tratamento de ponto · hoje</CardTitle>
-        </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-muted-foreground">
-              <tr className="border-b"><th className="text-left p-2">Funcionário</th><th className="text-left p-2">Atraso</th><th className="text-left p-2">Falta</th><th className="text-left p-2">Extra</th><th className="text-left p-2">Noturno</th><th className="text-left p-2">Banco</th></tr>
-            </thead>
-            <tbody>
-              {tratamento.map((t) => (
-                <tr key={t.id} className="border-b last:border-0">
-                  <td className="p-2">{t.funcionario}</td><td className="p-2">{t.atraso}</td><td className="p-2">{t.falta}</td><td className="p-2">{t.extra}</td><td className="p-2">{t.noturno}</td><td className="p-2 font-medium">{t.saldoBanco}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

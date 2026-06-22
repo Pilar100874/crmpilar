@@ -60,6 +60,7 @@ import PontoEquipamentos from "./pages/ponto/PontoEquipamentos";
 import PontoExportacao from "./pages/ponto/PontoExportacao";
 import PontoAlertas from "./pages/ponto/PontoAlertas";
 import PontoAuditoria from "./pages/ponto/PontoAuditoria";
+import PontoColetorDownload from "./pages/ponto/PontoColetorDownload";
 import ChatInterno from "./pages/ChatInterno";
 import ConfigSkills from "./pages/ConfigSkills";
 import MonitorarFilas from "./pages/MonitorarFilas";
@@ -341,6 +342,7 @@ const App = () => (
               <Route path="exportacao" element={<PontoExportacao />} />
               <Route path="alertas" element={<PontoAlertas />} />
               <Route path="auditoria" element={<PontoAuditoria />} />
+              <Route path="coletor" element={<PontoColetorDownload />} />
             </Route>
             {/* Public routes (no layout) */}
             <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
