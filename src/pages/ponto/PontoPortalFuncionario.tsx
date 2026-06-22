@@ -172,7 +172,7 @@ export default function PontoPortalFuncionario() {
           <DialogTrigger asChild>
             <Button variant="outline"><FileEdit className="mr-2 h-4 w-4" /> Solicitar ajuste</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Solicitar ajuste de ponto</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div><Label>Data</Label><Input type="date" value={novoAjuste.data} onChange={e => setNovoAjuste({ ...novoAjuste, data: e.target.value })} /></div>
@@ -202,7 +202,7 @@ export default function PontoPortalFuncionario() {
           <DialogTrigger asChild>
             <Button variant="outline"><FileUp className="mr-2 h-4 w-4" /> Enviar atestado</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Enviar atestado médico</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -236,7 +236,7 @@ export default function PontoPortalFuncionario() {
           <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><Clock className="h-4 w-4" /> Espelho do mês</CardTitle></CardHeader>
           <CardContent className="overflow-x-auto">
             {espelho.length === 0 ? <p className="text-sm text-muted-foreground">Sem registros este mês.</p> : (
-              <table className="w-full text-xs">
+              <div className="overflow-x-auto -mx-1 sm:mx-0"><table className="w-full min-w-[480px] text-xs">
                 <thead><tr className="text-left text-muted-foreground"><th className="p-1">Data</th><th>Ent</th><th>Sai</th><th>Atraso</th><th>Extra</th></tr></thead>
                 <tbody>
                   {espelho.slice(0, 15).map(r => (
@@ -249,7 +249,7 @@ export default function PontoPortalFuncionario() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             )}
           </CardContent>
         </Card>

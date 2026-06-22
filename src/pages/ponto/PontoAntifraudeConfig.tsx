@@ -107,7 +107,7 @@ export default function PontoAntifraudeConfig() {
         <TabsContent value="geo" className="space-y-4">
           <Card>
             <CardHeader className="pb-3"><CardTitle className="text-base">Nova geofence</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-5">
+            <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               <div className="sm:col-span-2"><Label>Nome</Label>
                 <Input value={novoGeo.nome} onChange={(e) => setNovoGeo({ ...novoGeo, nome: e.target.value })} placeholder="Matriz" /></div>
               <div><Label>Latitude</Label>
@@ -152,7 +152,7 @@ export default function PontoAntifraudeConfig() {
         <TabsContent value="redes" className="space-y-4">
           <Card>
             <CardHeader className="pb-3"><CardTitle className="text-base">Nova rede autorizada</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+            <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div><Label>Tipo</Label>
                 <Select value={novaRede.tipo} onValueChange={(v: any) => setNovaRede({ ...novaRede, tipo: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>

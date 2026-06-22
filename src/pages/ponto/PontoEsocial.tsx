@@ -53,7 +53,7 @@ export default function PontoEsocial() {
       </Card>
 
       <Dialog open={!!xml} onOpenChange={() => setXml(null)}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>XML do Evento</DialogTitle></DialogHeader>
           <ScrollArea className="h-[60vh]"><pre className="text-xs">{xml}</pre></ScrollArea>
         </DialogContent>

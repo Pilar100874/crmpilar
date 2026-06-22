@@ -87,7 +87,7 @@ export default function PontoAtestadosAdmin() {
       </Card>
 
       <Dialog open={!!sel} onOpenChange={(o) => !o && setSel(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Atestado de {sel?.ponto_funcionarios?.nome}</DialogTitle></DialogHeader>
           {sel && (
             <div className="space-y-3">

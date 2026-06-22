@@ -217,11 +217,11 @@ export default function PontoFiliais() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? "Editar filial" : "Nova filial"}</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-3 sm:grid-cols-6">
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
             <div className="sm:col-span-4">
               <Label>Nome *</Label>
               <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
