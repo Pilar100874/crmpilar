@@ -349,6 +349,7 @@ const App = () => (
                 <Route path="config" element={<PontoConfig />} />
                 <Route path="antifraude" element={<PontoAntifraudeConfig />} />
                 <Route path="assistente" element={<PontoAssistente />} />
+                <Route path="portal" element={<PontoPortalFuncionario />} />
               </Route>
             </Route>
             {/* Public routes (no layout) */}
