@@ -109,7 +109,7 @@ export default function PontoEquipamentos() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Novo equipamento</DialogTitle></DialogHeader>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">

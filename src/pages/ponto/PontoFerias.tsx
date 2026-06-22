@@ -109,7 +109,7 @@ export default function PontoFerias() {
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Novo Registro</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div><Label>Funcionário *</Label>

@@ -217,7 +217,7 @@ export default function PontoFiliais() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? "Editar filial" : "Nova filial"}</DialogTitle>
           </DialogHeader>

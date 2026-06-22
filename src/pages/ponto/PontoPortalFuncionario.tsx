@@ -172,7 +172,7 @@ export default function PontoPortalFuncionario() {
           <DialogTrigger asChild>
             <Button variant="outline"><FileEdit className="mr-2 h-4 w-4" /> Solicitar ajuste</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Solicitar ajuste de ponto</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div><Label>Data</Label><Input type="date" value={novoAjuste.data} onChange={e => setNovoAjuste({ ...novoAjuste, data: e.target.value })} /></div>
@@ -202,7 +202,7 @@ export default function PontoPortalFuncionario() {
           <DialogTrigger asChild>
             <Button variant="outline"><FileUp className="mr-2 h-4 w-4" /> Enviar atestado</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Enviar atestado médico</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
