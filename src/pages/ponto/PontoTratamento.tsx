@@ -13,25 +13,49 @@ export default function PontoTratamento() {
 
 
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     if (!empresaId) return;
-    (async () => {
-      const { data: funcs } = await supabase
-        .from("ponto_funcionarios")
-        .select("id, nome")
-        .eq("empresa_id", empresaId);
-      const ids = (funcs || []).map((f) => f.id);
-      if (!ids.length) return setItems([]);
-      const { data } = await supabase
-        .from("ponto_espelho_diario")
-        .select("*")
-        .in("funcionario_id", ids)
-        .order("data", { ascending: false })
-        .limit(100);
-      const map = Object.fromEntries((funcs || []).map((f) => [f.id, f.nome]));
-      setItems((data || []).map((r: any) => ({ ...r, nome: map[r.funcionario_id] })));
-    })();
+    const { data: funcs } = await supabase
+      .from("ponto_funcionarios")
+      .select("id, nome")
+      .eq("empresa_id", empresaId);
+    const ids = (funcs || []).map((f) => f.id);
+    if (!ids.length) return setItems([]);
+    const { data } = await supabase
+      .from("ponto_espelho_diario")
+      .select("*")
+      .in("funcionario_id", ids)
+      .order("data", { ascending: false })
+      .limit(100);
+    const map = Object.fromEntries((funcs || []).map((f) => [f.id, f.nome]));
+    setItems((data || []).map((r: any) => ({ ...r, nome: map[r.funcionario_id] })));
   }, [empresaId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const recalcularHoje = async () => {
+    if (!empresaId) return;
+    setLoading(true);
+    try {
+      const { data: funcs } = await supabase
+        .from("ponto_funcionarios").select("id").eq("empresa_id", empresaId).eq("status", "ativo");
+      const hoje = new Date().toISOString().slice(0, 10);
+      let ok = 0;
+      for (const f of funcs || []) {
+        const { error } = await supabase.functions.invoke("ponto-calcular-jornada", {
+          body: { funcionario_id: f.id, data: hoje, empresa_id: empresaId },
+        });
+        if (!error) ok++;
+      }
+      toast.success(`${ok} funcionário(s) recalculado(s)`);
+      await load();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const fmt = (m: number | null) => {
     if (!m) return "—";
