@@ -10612,6 +10612,7 @@ export type Database = {
           empresa_id: string
           escala_id: string | null
           filial_id: string | null
+          foto_referencia_url: string | null
           id: string
           matricula: string | null
           nome: string
@@ -10633,6 +10634,7 @@ export type Database = {
           empresa_id: string
           escala_id?: string | null
           filial_id?: string | null
+          foto_referencia_url?: string | null
           id?: string
           matricula?: string | null
           nome: string
@@ -10654,6 +10656,7 @@ export type Database = {
           empresa_id?: string
           escala_id?: string | null
           filial_id?: string | null
+          foto_referencia_url?: string | null
           id?: string
           matricula?: string | null
           nome?: string
@@ -10686,6 +10689,60 @@ export type Database = {
           },
           {
             foreignKeyName: "ponto_funcionarios_filial_id_fkey"
+            columns: ["filial_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_filiais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_geofences: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          empresa_id: string
+          filial_id: string | null
+          id: string
+          lat: number
+          lng: number
+          nome: string
+          raio_metros: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          empresa_id: string
+          filial_id?: string | null
+          id?: string
+          lat: number
+          lng: number
+          nome: string
+          raio_metros?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          empresa_id?: string
+          filial_id?: string | null
+          id?: string
+          lat?: number
+          lng?: number
+          nome?: string
+          raio_metros?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_geofences_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_geofences_filial_id_fkey"
             columns: ["filial_id"]
             isOneToOne: false
             referencedRelation: "ponto_filiais"
@@ -10741,63 +10798,141 @@ export type Database = {
           },
         ]
       }
+      ponto_redes_autorizadas: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          empresa_id: string
+          filial_id: string | null
+          id: string
+          tipo: string
+          updated_at: string
+          valor: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          empresa_id: string
+          filial_id?: string | null
+          id?: string
+          tipo: string
+          updated_at?: string
+          valor: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          empresa_id?: string
+          filial_id?: string | null
+          id?: string
+          tipo?: string
+          updated_at?: string
+          valor?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_redes_autorizadas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_redes_autorizadas_filial_id_fkey"
+            columns: ["filial_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_filiais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_registros: {
         Row: {
           created_at: string
           data_hora: string
+          device_hash: string | null
           dispositivo_info: Json | null
           equipamento_id: string | null
+          face_match_score: number | null
+          fatores_validacao: Json | null
           foto_url: string | null
           funcionario_id: string
+          geofence_ok: boolean | null
           gps_lat: number | null
           gps_lon: number | null
           gps_precisao: number | null
           hash_assinatura: string | null
           id: string
           ip: string | null
+          liveness_ok: boolean | null
           nsr: number | null
           observacao: string | null
           origem: string
+          qr_token: string | null
+          rede_ok: boolean | null
+          score_confianca: number | null
           score_fraude: number | null
           tipo: string
+          user_agent: string | null
         }
         Insert: {
           created_at?: string
           data_hora: string
+          device_hash?: string | null
           dispositivo_info?: Json | null
           equipamento_id?: string | null
+          face_match_score?: number | null
+          fatores_validacao?: Json | null
           foto_url?: string | null
           funcionario_id: string
+          geofence_ok?: boolean | null
           gps_lat?: number | null
           gps_lon?: number | null
           gps_precisao?: number | null
           hash_assinatura?: string | null
           id?: string
           ip?: string | null
+          liveness_ok?: boolean | null
           nsr?: number | null
           observacao?: string | null
           origem?: string
+          qr_token?: string | null
+          rede_ok?: boolean | null
+          score_confianca?: number | null
           score_fraude?: number | null
           tipo?: string
+          user_agent?: string | null
         }
         Update: {
           created_at?: string
           data_hora?: string
+          device_hash?: string | null
           dispositivo_info?: Json | null
           equipamento_id?: string | null
+          face_match_score?: number | null
+          fatores_validacao?: Json | null
           foto_url?: string | null
           funcionario_id?: string
+          geofence_ok?: boolean | null
           gps_lat?: number | null
           gps_lon?: number | null
           gps_precisao?: number | null
           hash_assinatura?: string | null
           id?: string
           ip?: string | null
+          liveness_ok?: boolean | null
           nsr?: number | null
           observacao?: string | null
           origem?: string
+          qr_token?: string | null
+          rede_ok?: boolean | null
+          score_confianca?: number | null
           score_fraude?: number | null
           tipo?: string
+          user_agent?: string | null
         }
         Relationships: [
           {
