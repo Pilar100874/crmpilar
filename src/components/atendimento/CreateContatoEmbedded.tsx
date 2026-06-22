@@ -46,6 +46,9 @@ export function CreateContatoEmbedded({ onClose, onSuccess, initialData }: Creat
       toast.error("Telefone inválido");
       return;
     }
+
+    setSaving(true);
+    try {
       const estabelecimentoId = await getEstabelecimentoId();
       if (!estabelecimentoId) {
         toast.error("Estabelecimento não encontrado");
