@@ -91,3 +91,16 @@ export const applyCustomMask = (value: string, mask: string): string => {
 export const removeMask = (value: string): string => {
   return value.replace(/\D/g, '');
 };
+
+// Aplicar máscara de PIS/PASEP/NIT (XXX.XXXXX.XX-X)
+export const maskPIS = (value: string): string => {
+  const cleanValue = value.replace(/\D/g, '').substring(0, 11);
+  if (cleanValue.length <= 3) return cleanValue;
+  if (cleanValue.length <= 8) return cleanValue.replace(/^(\d{3})(\d{0,5})/, '$1.$2');
+  if (cleanValue.length <= 10) return cleanValue.replace(/^(\d{3})(\d{5})(\d{0,2})/, '$1.$2.$3');
+  return cleanValue.replace(/^(\d{3})(\d{5})(\d{2})(\d{0,1})/, '$1.$2.$3-$4');
+};
+
+// Inscrição estadual (genérica) – apenas dígitos com até 14
+export const maskIE = (value: string): string => value.replace(/\D/g, '').substring(0, 14);
+
