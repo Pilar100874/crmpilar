@@ -77,7 +77,8 @@ export const menuStructure: MenuCategory[] = [
     icon: LucideIcons.Clock,
     subItems: [
       { id: "Ponto Dashboard", title: "Dashboard RH", url: "/ponto", icon: LucideIcons.LayoutDashboard },
-      { id: "Ponto Empresas", title: "Empresas / Filiais", url: "/ponto/empresas", icon: LucideIcons.Building2 },
+      { id: "Ponto Empresas", title: "Empresas", url: "/ponto/empresas", icon: LucideIcons.Building2 },
+      { id: "Ponto Filiais", title: "Filiais", url: "/ponto/filiais", icon: LucideIcons.Building },
       { id: "Ponto Funcionários", title: "Funcionários", url: "/ponto/funcionarios", icon: LucideIcons.Users },
       { id: "Ponto Registro", title: "Registro via App", url: "/ponto/registro", icon: LucideIcons.Smartphone },
       { id: "Ponto Tratamento", title: "Tratamento", url: "/ponto/tratamento", icon: LucideIcons.Wrench },

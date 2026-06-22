@@ -12,6 +12,9 @@ import { toast } from "sonner";
 import { usePontoEmpresa } from "./usePontoEmpresa";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Badge } from "@/components/ui/badge";
+import { MaskedInput } from "@/components/ui/masked-input";
+import { maskIP } from "@/lib/masks";
+import { validateIP } from "@/lib/validators";
 
 export default function PontoEquipamentos() {
   const { empresaId } = usePontoEmpresa();
@@ -34,10 +37,14 @@ export default function PontoEquipamentos() {
   const save = async () => {
     if (!empresaId) return;
     if (!f.nome) return toast.error("Nome obrigatório");
+    if (f.ip && !validateIP(f.ip)) return toast.error("IP inválido");
+    const porta = parseInt(f.porta);
+    if (f.porta && (isNaN(porta) || porta < 1 || porta > 65535))
+      return toast.error("Porta inválida (1-65535)");
     const { error } = await supabase.from("ponto_equipamentos").insert({
       empresa_id: empresaId,
       nome: f.nome, marca: f.marca, modelo: f.modelo,
-      ip: f.ip, porta: parseInt(f.porta) || null, serial: f.serial,
+      ip: f.ip || null, porta: porta || null, serial: f.serial || null,
     });
     if (error) return toast.error(error.message);
     toast.success("Equipamento criado");
@@ -111,8 +118,26 @@ export default function PontoEquipamentos() {
             </div>
             <div><Label>Marca</Label><Input value={f.marca} onChange={(e) => setF({ ...f, marca: e.target.value })} placeholder="Control iD, Henry…" /></div>
             <div><Label>Modelo</Label><Input value={f.modelo} onChange={(e) => setF({ ...f, modelo: e.target.value })} /></div>
-            <div><Label>IP</Label><Input value={f.ip} onChange={(e) => setF({ ...f, ip: e.target.value })} /></div>
-            <div><Label>Porta</Label><Input value={f.porta} onChange={(e) => setF({ ...f, porta: e.target.value })} /></div>
+            <div>
+              <Label>IP</Label>
+              <MaskedInput
+                mask={maskIP}
+                value={f.ip}
+                onValueChange={(v) => setF({ ...f, ip: v })}
+                invalid={!!f.ip && !validateIP(f.ip)}
+                placeholder="192.168.0.10"
+              />
+            </div>
+            <div>
+              <Label>Porta</Label>
+              <Input
+                type="number"
+                min={1}
+                max={65535}
+                value={f.porta}
+                onChange={(e) => setF({ ...f, porta: e.target.value })}
+              />
+            </div>
             <div className="sm:col-span-2"><Label>Serial</Label><Input value={f.serial} onChange={(e) => setF({ ...f, serial: e.target.value })} /></div>
           </div>
           <DialogFooter>

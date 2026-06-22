@@ -179,3 +179,11 @@ export const validatePIS = (pis: string): boolean => {
   const dv = rest < 2 ? 0 : 11 - rest;
   return dv === parseInt(c[10], 10);
 };
+
+// IPv4 simples
+export const validateIP = (ip: string): boolean => {
+  if (!ip) return false;
+  const parts = ip.split(".");
+  if (parts.length !== 4) return false;
+  return parts.every((p) => /^\d{1,3}$/.test(p) && parseInt(p, 10) <= 255);
+};
