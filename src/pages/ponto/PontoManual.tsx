@@ -367,7 +367,7 @@ export default function PontoManual() {
           <CardTitle className="text-base">Conteúdo do manual</CardTitle>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="max-h-[70vh] pr-3">
+          <ScrollArea className="h-[65vh] sm:h-[70vh] pr-3">
             <Accordion type="multiple" defaultValue={["primeiros-passos"]}>
               {sections.map((s) => {
                 const Icon = s.icon;
