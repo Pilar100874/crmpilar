@@ -55,16 +55,15 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   // Controle de Ponto
   { id: "Controle de Ponto", label: "Controle de Ponto (Categoria)", category: "Ponto" },
   { id: "Ponto Dashboard", label: "Dashboard RH", category: "Ponto" },
-  { id: "Ponto Empresas", label: "Empresas / Filiais", category: "Ponto" },
   { id: "Ponto Funcionários", label: "Funcionários", category: "Ponto" },
   { id: "Ponto Registro", label: "Registro via App", category: "Ponto" },
   { id: "Ponto Tratamento", label: "Tratamento", category: "Ponto" },
   { id: "Ponto Ajustes", label: "Ajustes", category: "Ponto" },
   { id: "Ponto Espelho", label: "Espelho de Ponto", category: "Ponto" },
-  { id: "Ponto Equipamentos", label: "Equipamentos Control iD", category: "Ponto" },
   { id: "Ponto Exportação", label: "Exportação Domínio", category: "Ponto" },
   { id: "Ponto Alertas", label: "Antifraude", category: "Ponto" },
   { id: "Ponto Auditoria", label: "Auditoria", category: "Ponto" },
+  { id: "Ponto Config", label: "Configurações (Empresas, Equipamentos, Coletor, Exportação)", category: "Ponto" },
 
   
   { id: "Configurações", label: "Configurações", category: "Sistema" },
