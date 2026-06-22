@@ -182,6 +182,7 @@ const menuItems: MenuItem[] = [
       { id: "Ponto Exportação", title: "Exportação Domínio", url: "/ponto/exportacao", icon: LucideIcons.FileDown },
       { id: "Ponto Alertas", title: "Antifraude", url: "/ponto/alertas", icon: LucideIcons.ShieldAlert },
       { id: "Ponto Auditoria", title: "Auditoria", url: "/ponto/auditoria", icon: LucideIcons.ShieldCheck },
+      { id: "Ponto Assistente", title: "Assistente RH (IA)", url: "/ponto/assistente", icon: LucideIcons.Sparkles },
       { id: "Ponto Config", title: "Configurações", url: "/ponto/config", icon: Settings },
     ],
   },
