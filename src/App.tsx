@@ -345,6 +345,7 @@ const App = () => (
                 <Route path="auditoria" element={<PontoAuditoria />} />
                 <Route path="coletor" element={<PontoColetorDownload />} />
                 <Route path="config" element={<PontoConfig />} />
+                <Route path="antifraude" element={<PontoAntifraudeConfig />} />
               </Route>
             </Route>
             {/* Public routes (no layout) */}
