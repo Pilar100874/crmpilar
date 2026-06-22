@@ -65,6 +65,8 @@ import PontoConfig from "./pages/ponto/PontoConfig";
 import PontoAntifraudeConfig from "./pages/ponto/PontoAntifraudeConfig";
 import PontoAssistente from "./pages/ponto/PontoAssistente";
 import PontoPortalFuncionario from "./pages/ponto/PontoPortalFuncionario";
+import PontoPredicoes from "./pages/ponto/PontoPredicoes";
+import PontoSimulador from "./pages/ponto/PontoSimulador";
 import ChatInterno from "./pages/ChatInterno";
 import ConfigSkills from "./pages/ConfigSkills";
 import MonitorarFilas from "./pages/MonitorarFilas";
@@ -350,6 +352,8 @@ const App = () => (
                 <Route path="antifraude" element={<PontoAntifraudeConfig />} />
                 <Route path="assistente" element={<PontoAssistente />} />
                 <Route path="portal" element={<PontoPortalFuncionario />} />
+                <Route path="predicoes" element={<PontoPredicoes />} />
+                <Route path="simulador" element={<PontoSimulador />} />
               </Route>
             </Route>
             {/* Public routes (no layout) */}
