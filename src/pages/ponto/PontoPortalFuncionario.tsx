@@ -271,6 +271,23 @@ export default function PontoPortalFuncionario() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4" /> Meus atestados</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {atestados.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum atestado enviado.</p> :
+            atestados.map((a: any) => (
+              <div key={a.id} className="flex items-center justify-between border-b pb-1.5 text-sm">
+                <div>
+                  <p className="font-medium">{a.data_inicio} → {a.data_fim} {a.cid && <span className="text-muted-foreground">· CID {a.cid}</span>}</p>
+                  {a.observacao && <p className="text-xs text-muted-foreground truncate max-w-[400px]">{a.observacao}</p>}
+                </div>
+                <Badge variant={tone(a.status) as any}>{a.status}</Badge>
+              </div>
+            ))
+          }
+        </CardContent>
+      </Card>
     </div>
   );
 }
