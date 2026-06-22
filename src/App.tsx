@@ -60,6 +60,7 @@ import PontoEquipamentos from "./pages/ponto/PontoEquipamentos";
 import PontoExportacao from "./pages/ponto/PontoExportacao";
 import PontoAlertas from "./pages/ponto/PontoAlertas";
 import PontoAuditoria from "./pages/ponto/PontoAuditoria";
+import PontoColetorDownload from "./pages/ponto/PontoColetorDownload";
 import ChatInterno from "./pages/ChatInterno";
 import ConfigSkills from "./pages/ConfigSkills";
 import MonitorarFilas from "./pages/MonitorarFilas";
