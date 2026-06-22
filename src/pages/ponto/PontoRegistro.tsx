@@ -56,7 +56,7 @@ export default function PontoRegistro() {
   useEffect(() => {
     if (!empresaId) return;
     (async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("ponto_funcionarios")
         .select("id, nome")
         .eq("empresa_id", empresaId)
