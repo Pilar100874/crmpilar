@@ -196,6 +196,7 @@ const menuItems: MenuItem[] = [
       { id: "Ponto eSocial", title: "eSocial", url: "/ponto/esocial", icon: LucideIcons.FileCode },
       { id: "Ponto Importação", title: "Importação em Lote", url: "/ponto/importacao", icon: LucideIcons.Upload },
       { id: "Ponto Notificações", title: "Notificações", url: "/ponto/notificacoes", icon: LucideIcons.Bell },
+      { id: "Ponto Manual", title: "Manual de Uso", url: "/ponto/manual", icon: LucideIcons.BookOpen },
       { id: "Ponto Config", title: "Configurações", url: "/ponto/config", icon: Settings },
     ],
   },

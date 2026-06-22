@@ -78,6 +78,7 @@ import PontoAFD from "./pages/ponto/PontoAFD";
 import PontoEsocial from "./pages/ponto/PontoEsocial";
 import PontoImportacao from "./pages/ponto/PontoImportacao";
 import PontoNotificacoes from "./pages/ponto/PontoNotificacoes";
+import PontoManual from "./pages/ponto/PontoManual";
 import ChatInterno from "./pages/ChatInterno";
 import ConfigSkills from "./pages/ConfigSkills";
 import MonitorarFilas from "./pages/MonitorarFilas";
@@ -376,6 +377,7 @@ const App = () => (
                 <Route path="esocial" element={<PontoEsocial />} />
                 <Route path="importacao" element={<PontoImportacao />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
+                <Route path="manual" element={<PontoManual />} />
               </Route>
             </Route>
             {/* Public routes (no layout) */}
