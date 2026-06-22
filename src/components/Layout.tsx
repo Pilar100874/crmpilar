@@ -176,6 +176,7 @@ const menuItems: MenuItem[] = [
       { id: "Ponto Dashboard", title: "Dashboard RH", url: "/ponto", icon: LayoutDashboard },
       { id: "Ponto Funcionários", title: "Funcionários", url: "/ponto/funcionarios", icon: Users },
       { id: "Ponto Registro", title: "Registro via App", url: "/ponto/registro", icon: LucideIcons.Smartphone },
+      { id: "Ponto Portal", title: "Portal do Funcionário", url: "/ponto/portal", icon: LucideIcons.User },
       { id: "Ponto Tratamento", title: "Tratamento", url: "/ponto/tratamento", icon: LucideIcons.Wrench },
       { id: "Ponto Ajustes", title: "Ajustes", url: "/ponto/ajustes", icon: LucideIcons.FileEdit },
       { id: "Ponto Espelho", title: "Espelho de Ponto", url: "/ponto/espelho", icon: LucideIcons.FileSignature },
