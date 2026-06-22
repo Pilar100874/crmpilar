@@ -227,6 +227,9 @@ export default function PontoPortalFuncionario() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      </div>
+
+
 
       <div className="grid gap-3 lg:grid-cols-2">
         <Card>
