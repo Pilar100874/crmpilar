@@ -7,6 +7,7 @@ import { Loader2, Save, X, User, Phone, Mail, UserPlus } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { maskPhone, maskWhatsApp } from "@/lib/masks";
+import { validateEmail, validatePhone, validateWhatsApp } from "@/lib/validators";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface CreateContatoEmbeddedProps {
@@ -31,6 +32,18 @@ export function CreateContatoEmbedded({ onClose, onSuccess, initialData }: Creat
   const handleSave = async () => {
     if (!formData.nome.trim()) {
       toast.error("Nome é obrigatório");
+      return;
+    }
+    if (formData.email && !validateEmail(formData.email)) {
+      toast.error("E-mail inválido");
+      return;
+    }
+    if (formData.telefone && !validateWhatsApp(formData.telefone)) {
+      toast.error("WhatsApp inválido");
+      return;
+    }
+    if (formData.tel && !validatePhone(formData.tel)) {
+      toast.error("Telefone inválido");
       return;
     }
 

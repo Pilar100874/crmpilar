@@ -11,6 +11,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award, TestTube, Loader2, Mail } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { AtendenteSkillsManager } from "./AtendenteSkillsManager";
+import { MaskedInput } from "@/components/ui/masked-input";
+import { maskPhone } from "@/lib/masks";
+import { validateEmail, validatePhone } from "@/lib/validators";
 import {
   Dialog,
   DialogContent,
@@ -825,17 +828,26 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
                 value={email}
                 onChange={(e) => handleEmailChange(e.target.value)}
                 placeholder="usuario@gmail.com"
+                className={email && !validateEmail(email) ? "border-destructive focus-visible:ring-destructive" : ""}
               />
+              {email && !validateEmail(email) && (
+                <p className="text-xs text-destructive mt-1">E-mail inválido</p>
+              )}
             </div>
 
             <div>
               <Label htmlFor="usuario-telefone">Telefone</Label>
-              <Input
+              <MaskedInput
                 id="usuario-telefone"
+                mask={maskPhone}
                 value={telefone}
-                onChange={(e) => setTelefone(e.target.value)}
+                onValueChange={setTelefone}
                 placeholder="(00) 00000-0000"
+                invalid={!!telefone && !validatePhone(telefone)}
               />
+              {telefone && !validatePhone(telefone) && (
+                <p className="text-xs text-destructive mt-1">Telefone inválido</p>
+              )}
             </div>
 
             <div>
