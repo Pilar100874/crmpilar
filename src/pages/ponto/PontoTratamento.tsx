@@ -1,12 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calculator } from "lucide-react";
+import { Calculator, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePontoEmpresa } from "./usePontoEmpresa";
 
 export default function PontoTratamento() {
   const { empresaId } = usePontoEmpresa();
   const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+
 
   useEffect(() => {
     if (!empresaId) return;
