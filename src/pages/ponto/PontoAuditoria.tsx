@@ -1,41 +1,65 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
-import { auditoria } from "./mock";
+import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { History } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { usePontoEmpresa } from "./usePontoEmpresa";
 
 export default function PontoAuditoria() {
+  const { empresaId } = usePontoEmpresa();
+  const [items, setItems] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!empresaId) return;
+    (async () => {
+      const { data } = await supabase
+        .from("ponto_auditoria")
+        .select("*")
+        .eq("empresa_id", empresaId)
+        .order("created_at", { ascending: false })
+        .limit(200);
+      setItems(data || []);
+    })();
+  }, [empresaId]);
+
   return (
-    <div className="space-y-4 max-w-7xl mx-auto">
+    <div className="space-y-4">
       <div>
-        <h2 className="text-2xl font-bold">Auditoria</h2>
-        <p className="text-sm text-muted-foreground">Histórico completo de alterações · imutável</p>
+        <h2 className="text-xl font-semibold sm:text-2xl">Auditoria</h2>
+        <p className="text-sm text-muted-foreground">Histórico completo de alterações</p>
       </div>
-      <div className="relative max-w-md">
-        <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="Buscar por usuário, ação ou entidade..." className="pl-9" />
-      </div>
-      <Card>
-        <CardHeader><CardTitle className="text-base">Eventos</CardTitle></CardHeader>
-        <CardContent className="overflow-x-auto">
+      {items.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+            <History className="h-10 w-10 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Sem eventos auditados.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border">
           <table className="w-full text-sm">
-            <thead className="text-muted-foreground border-b">
-              <tr><th className="text-left p-2">Quando</th><th className="text-left p-2">Usuário</th><th className="text-left p-2">Ação</th><th className="text-left p-2">Entidade</th><th className="text-left p-2">Antes</th><th className="text-left p-2">Depois</th></tr>
+            <thead className="bg-muted/50">
+              <tr className="text-left">
+                <th className="p-3">Quando</th>
+                <th className="p-3 hidden sm:table-cell">Usuário</th>
+                <th className="p-3">Ação</th>
+                <th className="p-3 hidden md:table-cell">Entidade</th>
+                <th className="p-3 hidden lg:table-cell">IP</th>
+              </tr>
             </thead>
             <tbody>
-              {auditoria.map((a) => (
-                <tr key={a.id} className="border-b last:border-0">
-                  <td className="p-2 font-mono text-xs">{a.quando}</td>
-                  <td className="p-2">{a.usuario}</td>
-                  <td className="p-2 font-medium">{a.acao}</td>
-                  <td className="p-2">{a.entidade}</td>
-                  <td className="p-2 text-muted-foreground">{a.antes}</td>
-                  <td className="p-2 text-emerald-600">{a.depois}</td>
+              {items.map((a) => (
+                <tr key={a.id} className="border-t">
+                  <td className="p-3">{new Date(a.created_at).toLocaleString("pt-BR")}</td>
+                  <td className="p-3 hidden sm:table-cell">{a.usuario_nome || "—"}</td>
+                  <td className="p-3 font-medium">{a.acao}</td>
+                  <td className="p-3 hidden md:table-cell">{a.entidade}</td>
+                  <td className="p-3 hidden lg:table-cell">{a.ip || "—"}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </div>
   );
 }
