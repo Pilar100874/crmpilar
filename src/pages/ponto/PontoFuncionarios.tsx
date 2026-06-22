@@ -22,6 +22,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { usePontoEmpresa } from "./usePontoEmpresa";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { MaskedInput } from "@/components/ui/masked-input";
+import { maskCPF, maskPIS, maskPhone } from "@/lib/masks";
+import { validateCPF, validatePIS, validateEmail, validatePhone } from "@/lib/validators";
 
 type Func = {
   id: string;
@@ -33,6 +36,24 @@ type Func = {
   status: string;
   escala_id: string | null;
   filial_id: string | null;
+  email?: string | null;
+  telefone?: string | null;
+  admissao?: string | null;
+  codigo_dominio?: string | null;
+};
+
+const emptyForm = {
+  nome: "",
+  cpf: "",
+  pis: "",
+  matricula: "",
+  cargo: "",
+  email: "",
+  telefone: "",
+  admissao: "",
+  filial_id: "",
+  escala_id: "",
+  codigo_dominio: "",
 };
 
 export default function PontoFuncionarios() {
@@ -43,16 +64,7 @@ export default function PontoFuncionarios() {
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState<Func | null>(null);
   const [editing, setEditing] = useState<Func | null>(null);
-  const [f, setF] = useState({
-    nome: "",
-    cpf: "",
-    matricula: "",
-    cargo: "",
-    pis: "",
-    filial_id: "",
-    escala_id: "",
-    codigo_dominio: "",
-  });
+  const [f, setF] = useState(emptyForm);
 
   const load = async () => {
     if (!empresaId) return;
@@ -71,17 +83,20 @@ export default function PontoFuncionarios() {
 
   const openCreate = () => {
     setEditing(null);
-    setF({ nome: "", cpf: "", matricula: "", cargo: "", pis: "", filial_id: "", escala_id: "", codigo_dominio: "" });
+    setF(emptyForm);
     setOpen(true);
   };
   const openEdit = (x: any) => {
     setEditing(x);
     setF({
-      nome: x.nome,
-      cpf: x.cpf,
+      nome: x.nome ?? "",
+      cpf: maskCPF(x.cpf ?? ""),
+      pis: maskPIS(x.pis ?? ""),
       matricula: x.matricula ?? "",
       cargo: x.cargo ?? "",
-      pis: x.pis ?? "",
+      email: x.email ?? "",
+      telefone: maskPhone(x.telefone ?? ""),
+      admissao: x.admissao ?? "",
       filial_id: x.filial_id ?? "",
       escala_id: x.escala_id ?? "",
       codigo_dominio: x.codigo_dominio ?? "",
@@ -89,19 +104,32 @@ export default function PontoFuncionarios() {
     setOpen(true);
   };
 
+  const cpfInvalid = !!f.cpf && !validateCPF(f.cpf);
+  const pisInvalid = !!f.pis && !validatePIS(f.pis);
+  const emailInvalid = !!f.email && !validateEmail(f.email);
+  const phoneInvalid = !!f.telefone && !validatePhone(f.telefone);
+
   const save = async () => {
     if (!empresaId) return toast.error("Selecione uma empresa");
-    if (!f.nome || !f.cpf) return toast.error("Nome e CPF obrigatórios");
+    if (!f.nome.trim() || !f.cpf) return toast.error("Nome e CPF obrigatórios");
+    if (!validateCPF(f.cpf)) return toast.error("CPF inválido");
+    if (f.pis && !validatePIS(f.pis)) return toast.error("PIS inválido");
+    if (f.email && !validateEmail(f.email)) return toast.error("E-mail inválido");
+    if (f.telefone && !validatePhone(f.telefone)) return toast.error("Telefone inválido");
+
     const payload: any = {
       empresa_id: empresaId,
-      nome: f.nome,
-      cpf: f.cpf,
-      matricula: f.matricula || null,
-      cargo: f.cargo || null,
-      pis: f.pis || null,
+      nome: f.nome.trim(),
+      cpf: f.cpf.replace(/\D/g, ""),
+      pis: f.pis.replace(/\D/g, "") || null,
+      matricula: f.matricula.trim() || null,
+      cargo: f.cargo.trim() || null,
+      email: f.email.trim() || null,
+      telefone: f.telefone.replace(/\D/g, "") || null,
+      admissao: f.admissao || null,
       filial_id: f.filial_id || null,
       escala_id: f.escala_id || null,
-      codigo_dominio: f.codigo_dominio || null,
+      codigo_dominio: f.codigo_dominio.trim() || null,
     };
     const { error } = editing
       ? await supabase.from("ponto_funcionarios").update(payload).eq("id", editing.id)
@@ -159,7 +187,7 @@ export default function PontoFuncionarios() {
               {items.map((x) => (
                 <tr key={x.id} className="border-t">
                   <td className="p-3 font-medium">{x.nome}</td>
-                  <td className="p-3 hidden sm:table-cell">{x.cpf}</td>
+                  <td className="p-3 hidden sm:table-cell">{maskCPF(x.cpf)}</td>
                   <td className="p-3 hidden md:table-cell">{x.matricula}</td>
                   <td className="p-3 hidden lg:table-cell">{x.cargo}</td>
                   <td className="p-3">
@@ -185,47 +213,91 @@ export default function PontoFuncionarios() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editing ? "Editar funcionário" : "Novo funcionário"}</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="sm:col-span-2">
+          <div className="grid gap-3 sm:grid-cols-6">
+            <div className="sm:col-span-6">
               <Label>Nome *</Label>
               <Input value={f.nome} onChange={(e) => setF({ ...f, nome: e.target.value })} />
             </div>
-            <div>
+            <div className="sm:col-span-3">
               <Label>CPF *</Label>
-              <Input value={f.cpf} onChange={(e) => setF({ ...f, cpf: e.target.value })} />
+              <MaskedInput
+                mask={maskCPF}
+                value={f.cpf}
+                onValueChange={(v) => setF({ ...f, cpf: v })}
+                invalid={cpfInvalid}
+                placeholder="000.000.000-00"
+              />
+              {cpfInvalid && <p className="mt-1 text-xs text-destructive">CPF inválido</p>}
             </div>
-            <div>
-              <Label>PIS</Label>
-              <Input value={f.pis} onChange={(e) => setF({ ...f, pis: e.target.value })} />
+            <div className="sm:col-span-3">
+              <Label>PIS / PASEP</Label>
+              <MaskedInput
+                mask={maskPIS}
+                value={f.pis}
+                onValueChange={(v) => setF({ ...f, pis: v })}
+                invalid={pisInvalid}
+                placeholder="000.00000.00-0"
+              />
+              {pisInvalid && <p className="mt-1 text-xs text-destructive">PIS inválido</p>}
             </div>
-            <div>
+            <div className="sm:col-span-2">
               <Label>Matrícula</Label>
               <Input value={f.matricula} onChange={(e) => setF({ ...f, matricula: e.target.value })} />
             </div>
-            <div>
+            <div className="sm:col-span-2">
               <Label>Cód. Domínio</Label>
               <Input value={f.codigo_dominio} onChange={(e) => setF({ ...f, codigo_dominio: e.target.value })} />
             </div>
             <div className="sm:col-span-2">
+              <Label>Admissão</Label>
+              <Input
+                type="date"
+                value={f.admissao}
+                onChange={(e) => setF({ ...f, admissao: e.target.value })}
+              />
+            </div>
+            <div className="sm:col-span-6">
               <Label>Cargo</Label>
               <Input value={f.cargo} onChange={(e) => setF({ ...f, cargo: e.target.value })} />
             </div>
-            <div>
+            <div className="sm:col-span-3">
+              <Label>E-mail</Label>
+              <Input
+                type="email"
+                value={f.email}
+                onChange={(e) => setF({ ...f, email: e.target.value })}
+                className={emailInvalid ? "border-destructive focus-visible:ring-destructive" : ""}
+                placeholder="colaborador@empresa.com"
+              />
+              {emailInvalid && <p className="mt-1 text-xs text-destructive">E-mail inválido</p>}
+            </div>
+            <div className="sm:col-span-3">
+              <Label>Telefone</Label>
+              <MaskedInput
+                mask={maskPhone}
+                value={f.telefone}
+                onValueChange={(v) => setF({ ...f, telefone: v })}
+                invalid={phoneInvalid}
+                placeholder="(00) 00000-0000"
+              />
+              {phoneInvalid && <p className="mt-1 text-xs text-destructive">Telefone inválido</p>}
+            </div>
+            <div className="sm:col-span-3">
               <Label>Filial</Label>
-              <Select value={f.filial_id} onValueChange={(v) => setF({ ...f, filial_id: v })}>
+              <Select value={f.filial_id || undefined} onValueChange={(v) => setF({ ...f, filial_id: v })}>
                 <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
                 <SelectContent>
                   {filiais.map((x) => <SelectItem key={x.id} value={x.id}>{x.nome}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-            <div>
+            <div className="sm:col-span-3">
               <Label>Escala</Label>
-              <Select value={f.escala_id} onValueChange={(v) => setF({ ...f, escala_id: v })}>
+              <Select value={f.escala_id || undefined} onValueChange={(v) => setF({ ...f, escala_id: v })}>
                 <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
                 <SelectContent>
                   {escalas.map((x) => <SelectItem key={x.id} value={x.id}>{x.nome}</SelectItem>)}

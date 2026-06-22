@@ -166,3 +166,16 @@ export const validateInscricaoEstadual = (ie: string): boolean => {
   const cleanIE = ie.replace(/\D/g, '');
   return cleanIE.length >= 9 && cleanIE.length <= 14;
 };
+
+// Validação de PIS/PASEP/NIT (algoritmo módulo 11)
+export const validatePIS = (pis: string): boolean => {
+  const c = pis.replace(/\D/g, '');
+  if (c.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(c)) return false;
+  const weights = [3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  let sum = 0;
+  for (let i = 0; i < 10; i++) sum += parseInt(c[i], 10) * weights[i];
+  const rest = sum % 11;
+  const dv = rest < 2 ? 0 : 11 - rest;
+  return dv === parseInt(c[10], 10);
+};
