@@ -33,12 +33,28 @@ export default function PontoAlertas() {
 
   const tone = (n: string) => n === "alto" ? "destructive" : n === "medio" ? "default" : "secondary";
 
+  const verificar = async () => {
+    if (!empresaId) return;
+    const { data, error } = await supabase.functions.invoke("ponto-compliance-check", {
+      body: { empresa_id: empresaId },
+    });
+    if (error) return toast.error(error.message);
+    toast.success(`${data?.novos_alertas ?? 0} novo(s) alerta(s) detectado(s)`);
+    load();
+  };
+
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-xl font-semibold sm:text-2xl">Alertas Antifraude</h2>
-        <p className="text-sm text-muted-foreground">Detecções automáticas de padrões suspeitos</p>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-xl font-semibold sm:text-2xl">Alertas Antifraude</h2>
+          <p className="text-sm text-muted-foreground">Detecções automáticas de padrões suspeitos e compliance CLT</p>
+        </div>
+        <Button size="sm" onClick={verificar}>
+          <Shield className="mr-2 h-4 w-4" /> Verificar agora
+        </Button>
       </div>
+
       {items.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
