@@ -7,6 +7,7 @@ import { Loader2, Save, X, User, Phone, Mail, UserPlus } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { maskPhone, maskWhatsApp } from "@/lib/masks";
+import { validateEmail, validatePhone, validateWhatsApp } from "@/lib/validators";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface CreateContatoEmbeddedProps {
