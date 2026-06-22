@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Clock, Wallet, FileEdit, FileSignature, AlertCircle, Smartphone } from "lucide-react";
+import { Clock, Wallet, FileEdit, FileSignature, AlertCircle, Smartphone, FileUp, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,8 +18,12 @@ export default function PontoPortalFuncionario() {
   const [espelho, setEspelho] = useState<any[]>([]);
   const [ajustes, setAjustes] = useState<any[]>([]);
   const [assinaturas, setAssinaturas] = useState<any[]>([]);
+  const [atestados, setAtestados] = useState<any[]>([]);
   const [openAjuste, setOpenAjuste] = useState(false);
+  const [openAtestado, setOpenAtestado] = useState(false);
   const [novoAjuste, setNovoAjuste] = useState({ data: "", tipo: "entrada", valor_proposto: "", motivo: "" });
+  const [novoAtestado, setNovoAtestado] = useState({ data_inicio: "", data_fim: "", cid: "", observacao: "", file: null as File | null });
+  const [uploading, setUploading] = useState(false);
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -30,17 +34,20 @@ export default function PontoPortalFuncionario() {
     setFunc(f);
 
     const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);
-    const [esp, aj, ass] = await Promise.all([
+    const [esp, aj, ass, at] = await Promise.all([
       supabase.from("ponto_espelho_diario").select("*")
         .eq("funcionario_id", f.id).gte("data", inicioMes).order("data", { ascending: false }),
       supabase.from("ponto_ajustes").select("*")
         .eq("funcionario_id", f.id).order("created_at", { ascending: false }).limit(20),
       supabase.from("ponto_assinaturas_espelho").select("*")
         .eq("funcionario_id", f.id).order("mes_referencia", { ascending: false }).limit(12),
+      (supabase.from as any)("ponto_atestados").select("*")
+        .eq("funcionario_id", f.id).order("created_at", { ascending: false }).limit(20),
     ]);
     setEspelho(esp.data || []);
     setAjustes(aj.data || []);
     setAssinaturas(ass.data || []);
+    setAtestados(at.data || []);
     setLoading(false);
   }, []);
 
@@ -90,6 +97,38 @@ export default function PontoPortalFuncionario() {
     if (error) return toast.error(error.message);
     toast.success("Espelho assinado");
     load();
+  };
+
+  const enviarAtestado = async () => {
+    if (!func || !novoAtestado.file || !novoAtestado.data_inicio || !novoAtestado.data_fim) {
+      return toast.error("Preencha datas e selecione o arquivo");
+    }
+    setUploading(true);
+    try {
+      const ext = novoAtestado.file.name.split(".").pop() || "pdf";
+      const path = `${func.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("ponto-atestados")
+        .upload(path, novoAtestado.file);
+      if (upErr) throw upErr;
+      const { error: insErr } = await (supabase.from as any)("ponto_atestados").insert({
+        funcionario_id: func.id,
+        data_inicio: novoAtestado.data_inicio,
+        data_fim: novoAtestado.data_fim,
+        cid: novoAtestado.cid || null,
+        observacao: novoAtestado.observacao || null,
+        arquivo_url: path,
+        status: "pendente",
+      });
+      if (insErr) throw insErr;
+      toast.success("Atestado enviado para análise");
+      setOpenAtestado(false);
+      setNovoAtestado({ data_inicio: "", data_fim: "", cid: "", observacao: "", file: null });
+      load();
+    } catch (e: any) {
+      toast.error(e.message || "Falha ao enviar atestado");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const mesAtual = new Date().toISOString().slice(0, 7);
@@ -159,7 +198,38 @@ export default function PontoPortalFuncionario() {
             <FileSignature className="mr-2 h-4 w-4" /> Assinar espelho de {mesAtual}
           </Button>
         )}
+        <Dialog open={openAtestado} onOpenChange={setOpenAtestado}>
+          <DialogTrigger asChild>
+            <Button variant="outline"><FileUp className="mr-2 h-4 w-4" /> Enviar atestado</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Enviar atestado médico</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Início</Label><Input type="date" value={novoAtestado.data_inicio}
+                  onChange={e => setNovoAtestado({ ...novoAtestado, data_inicio: e.target.value })} /></div>
+                <div><Label>Fim</Label><Input type="date" value={novoAtestado.data_fim}
+                  onChange={e => setNovoAtestado({ ...novoAtestado, data_fim: e.target.value })} /></div>
+              </div>
+              <div><Label>CID (opcional)</Label><Input value={novoAtestado.cid}
+                onChange={e => setNovoAtestado({ ...novoAtestado, cid: e.target.value })} placeholder="Ex: J11" /></div>
+              <div><Label>Observação</Label><Textarea value={novoAtestado.observacao}
+                onChange={e => setNovoAtestado({ ...novoAtestado, observacao: e.target.value })} /></div>
+              <div><Label>Arquivo (PDF/imagem)</Label>
+                <Input type="file" accept="application/pdf,image/*"
+                  onChange={e => setNovoAtestado({ ...novoAtestado, file: e.target.files?.[0] || null })} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={enviarAtestado} disabled={uploading}>
+                {uploading ? "Enviando…" : "Enviar"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
+
+
 
       <div className="grid gap-3 lg:grid-cols-2">
         <Card>
@@ -201,6 +271,23 @@ export default function PontoPortalFuncionario() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4" /> Meus atestados</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {atestados.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum atestado enviado.</p> :
+            atestados.map((a: any) => (
+              <div key={a.id} className="flex items-center justify-between border-b pb-1.5 text-sm">
+                <div>
+                  <p className="font-medium">{a.data_inicio} → {a.data_fim} {a.cid && <span className="text-muted-foreground">· CID {a.cid}</span>}</p>
+                  {a.observacao && <p className="text-xs text-muted-foreground truncate max-w-[400px]">{a.observacao}</p>}
+                </div>
+                <Badge variant={tone(a.status) as any}>{a.status}</Badge>
+              </div>
+            ))
+          }
+        </CardContent>
+      </Card>
     </div>
   );
 }

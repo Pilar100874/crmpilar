@@ -186,6 +186,8 @@ const menuItems: MenuItem[] = [
       { id: "Ponto Assistente", title: "Assistente RH (IA)", url: "/ponto/assistente", icon: LucideIcons.Sparkles },
       { id: "Ponto Predições", title: "Inteligência Preditiva", url: "/ponto/predicoes", icon: LucideIcons.TrendingUp },
       { id: "Ponto Simulador", title: "Simulador de Cenários", url: "/ponto/simulador", icon: LucideIcons.Calculator },
+      { id: "Ponto Mapa", title: "Mapa de Equipes", url: "/ponto/mapa", icon: LucideIcons.MapPin },
+      { id: "Ponto QrCode", title: "QR Code Totem", url: "/ponto/qrcode", icon: LucideIcons.QrCode },
       { id: "Ponto Config", title: "Configurações", url: "/ponto/config", icon: Settings },
     ],
   },

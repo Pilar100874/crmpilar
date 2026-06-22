@@ -10078,6 +10078,59 @@ export type Database = {
           },
         ]
       }
+      ponto_atestados: {
+        Row: {
+          arquivo_url: string
+          cid: string | null
+          created_at: string
+          data_fim: string
+          data_inicio: string
+          funcionario_id: string
+          id: string
+          observacao: string | null
+          revisado_em: string | null
+          revisado_por: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          arquivo_url: string
+          cid?: string | null
+          created_at?: string
+          data_fim: string
+          data_inicio: string
+          funcionario_id: string
+          id?: string
+          observacao?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          arquivo_url?: string
+          cid?: string | null
+          created_at?: string
+          data_fim?: string
+          data_inicio?: string
+          funcionario_id?: string
+          id?: string
+          observacao?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_atestados_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_auditoria: {
         Row: {
           acao: string
