@@ -377,6 +377,7 @@ const App = () => (
                 <Route path="esocial" element={<PontoEsocial />} />
                 <Route path="importacao" element={<PontoImportacao />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
+                <Route path="manual" element={<PontoManual />} />
               </Route>
             </Route>
             {/* Public routes (no layout) */}
