@@ -78,6 +78,7 @@ import PontoAFD from "./pages/ponto/PontoAFD";
 import PontoEsocial from "./pages/ponto/PontoEsocial";
 import PontoImportacao from "./pages/ponto/PontoImportacao";
 import PontoNotificacoes from "./pages/ponto/PontoNotificacoes";
+import PontoManual from "./pages/ponto/PontoManual";
 import ChatInterno from "./pages/ChatInterno";
 import ConfigSkills from "./pages/ConfigSkills";
 import MonitorarFilas from "./pages/MonitorarFilas";
