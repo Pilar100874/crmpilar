@@ -634,6 +634,66 @@ export default function PontoManual() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            Referência de cada menu ({menuReference.length})
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            O que é, como usar e quem deve usar — para todos os menus do módulo.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[65vh] sm:h-[70vh] pr-3">
+            <Accordion type="multiple">
+              {menuReference.map((m) => {
+                const Icon = m.icon;
+                return (
+                  <AccordionItem key={m.url} value={m.url}>
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex items-center gap-3 text-left">
+                        <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{m.label}</span>
+                          <span className="text-[11px] text-muted-foreground">
+                            {m.url}
+                          </span>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pl-11">
+                      <div className="space-y-2 text-sm leading-relaxed">
+                        <div>
+                          <span className="font-medium">O que é: </span>
+                          <span className="text-muted-foreground">{m.what}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Como usar: </span>
+                          <span className="text-muted-foreground">{m.use}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-[10px]">
+                            {m.who}
+                          </Badge>
+                          <a
+                            href={m.url}
+                            className="text-xs text-primary hover:underline"
+                          >
+                            Abrir tela →
+                          </a>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                );
+              })}
+            </Accordion>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+
       <p className="text-center text-xs text-muted-foreground">
         Dúvidas? Use o <b>Assistente RH (IA)</b> no menu Ponto · respostas em
         linguagem natural sobre qualquer recurso do módulo.
