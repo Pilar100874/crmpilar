@@ -104,3 +104,10 @@ export const maskPIS = (value: string): string => {
 // Inscrição estadual (genérica) – apenas dígitos com até 14
 export const maskIE = (value: string): string => value.replace(/\D/g, '').substring(0, 14);
 
+
+// IPv4 mask (xxx.xxx.xxx.xxx)
+export const maskIP = (value: string): string => {
+  const clean = value.replace(/[^\d.]/g, "");
+  const parts = clean.split(".").slice(0, 4).map((p) => p.replace(/\D/g, "").slice(0, 3));
+  return parts.join(".");
+};
