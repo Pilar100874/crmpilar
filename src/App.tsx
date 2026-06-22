@@ -64,6 +64,7 @@ import PontoColetorDownload from "./pages/ponto/PontoColetorDownload";
 import PontoConfig from "./pages/ponto/PontoConfig";
 import PontoAntifraudeConfig from "./pages/ponto/PontoAntifraudeConfig";
 import PontoAssistente from "./pages/ponto/PontoAssistente";
+import PontoPortalFuncionario from "./pages/ponto/PontoPortalFuncionario";
 import ChatInterno from "./pages/ChatInterno";
 import ConfigSkills from "./pages/ConfigSkills";
 import MonitorarFilas from "./pages/MonitorarFilas";
