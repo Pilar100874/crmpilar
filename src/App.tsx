@@ -72,6 +72,12 @@ import PontoMapaEquipes from "./pages/ponto/PontoMapaEquipes";
 import PontoQrCodeTotem from "./pages/ponto/PontoQrCodeTotem";
 import PontoAtestadosAdmin from "./pages/ponto/PontoAtestadosAdmin";
 import PontoFechamento from "./pages/ponto/PontoFechamento";
+import PontoBancoHoras from "./pages/ponto/PontoBancoHoras";
+import PontoFerias from "./pages/ponto/PontoFerias";
+import PontoAFD from "./pages/ponto/PontoAFD";
+import PontoEsocial from "./pages/ponto/PontoEsocial";
+import PontoImportacao from "./pages/ponto/PontoImportacao";
+import PontoNotificacoes from "./pages/ponto/PontoNotificacoes";
 import ChatInterno from "./pages/ChatInterno";
 import ConfigSkills from "./pages/ConfigSkills";
 import MonitorarFilas from "./pages/MonitorarFilas";
@@ -364,6 +370,12 @@ const App = () => (
                 <Route path="qrcode" element={<PontoQrCodeTotem />} />
                 <Route path="atestados-admin" element={<PontoAtestadosAdmin />} />
                 <Route path="fechamento" element={<PontoFechamento />} />
+                <Route path="banco-horas" element={<PontoBancoHoras />} />
+                <Route path="ferias" element={<PontoFerias />} />
+                <Route path="afd" element={<PontoAFD />} />
+                <Route path="esocial" element={<PontoEsocial />} />
+                <Route path="importacao" element={<PontoImportacao />} />
+                <Route path="notificacoes" element={<PontoNotificacoes />} />
               </Route>
             </Route>
             {/* Public routes (no layout) */}
