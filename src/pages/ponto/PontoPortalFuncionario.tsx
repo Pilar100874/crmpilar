@@ -1,0 +1,206 @@
+import { useEffect, useState, useCallback } from "react";
+import { Link } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Clock, Wallet, FileEdit, FileSignature, AlertCircle, Smartphone } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+export default function PontoPortalFuncionario() {
+  const [func, setFunc] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [espelho, setEspelho] = useState<any[]>([]);
+  const [ajustes, setAjustes] = useState<any[]>([]);
+  const [assinaturas, setAssinaturas] = useState<any[]>([]);
+  const [openAjuste, setOpenAjuste] = useState(false);
+  const [novoAjuste, setNovoAjuste] = useState({ data: "", tipo: "entrada", valor_proposto: "", motivo: "" });
+
+  const load = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
+    const { data: f } = await supabase
+      .from("ponto_funcionarios").select("*").eq("auth_user_id", user.id).maybeSingle();
+    if (!f) { setLoading(false); return; }
+    setFunc(f);
+
+    const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);
+    const [esp, aj, ass] = await Promise.all([
+      supabase.from("ponto_espelho_diario").select("*")
+        .eq("funcionario_id", f.id).gte("data", inicioMes).order("data", { ascending: false }),
+      supabase.from("ponto_ajustes").select("*")
+        .eq("funcionario_id", f.id).order("created_at", { ascending: false }).limit(20),
+      supabase.from("ponto_assinaturas_espelho").select("*")
+        .eq("funcionario_id", f.id).order("mes_referencia", { ascending: false }).limit(12),
+    ]);
+    setEspelho(esp.data || []);
+    setAjustes(aj.data || []);
+    setAssinaturas(ass.data || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const fmt = (m: number | null) => {
+    if (!m) return "0h00";
+    const h = Math.floor(Math.abs(m) / 60);
+    const mm = Math.abs(m) % 60;
+    return `${m < 0 ? "-" : ""}${h}h${String(mm).padStart(2, "0")}`;
+  };
+
+  const saldoBH = espelho.reduce((s, r) => s + (r.saldo_banco_min || 0), 0);
+  const totalExtras = espelho.reduce((s, r) => s + (r.extra_min || 0), 0);
+  const totalFaltas = espelho.filter(r => r.falta).length;
+  const totalAtrasos = espelho.reduce((s, r) => s + (r.atraso_min || 0), 0);
+
+  const enviarAjuste = async () => {
+    if (!func || !novoAjuste.data || !novoAjuste.motivo) {
+      return toast.error("Preencha data e motivo");
+    }
+    const { error } = await supabase.from("ponto_ajustes").insert({
+      funcionario_id: func.id,
+      data: novoAjuste.data,
+      tipo: novoAjuste.tipo,
+      valor_proposto: novoAjuste.valor_proposto || null,
+      motivo: novoAjuste.motivo,
+      status: "pendente",
+      solicitado_por: func.id,
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Ajuste solicitado");
+    setOpenAjuste(false);
+    setNovoAjuste({ data: "", tipo: "entrada", valor_proposto: "", motivo: "" });
+    load();
+  };
+
+  const assinarMes = async (mes: string) => {
+    if (!func) return;
+    const raw = `${func.id}|${mes}|${new Date().toISOString()}|${navigator.userAgent}`;
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+    const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+    const { error } = await supabase.from("ponto_assinaturas_espelho").insert({
+      funcionario_id: func.id, mes_referencia: `${mes}-01`, hash,
+      assinado_em: new Date().toISOString(),
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Espelho assinado");
+    load();
+  };
+
+  const mesAtual = new Date().toISOString().slice(0, 7);
+  const jaAssinou = assinaturas.some(a => (a.mes_referencia || "").startsWith(mesAtual));
+
+  if (loading) return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
+  if (!func) return (
+    <Card>
+      <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+        <AlertCircle className="h-10 w-10 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">
+          Seu usuário não está vinculado a um funcionário. Solicite ao RH o vínculo do seu e-mail.
+        </p>
+      </CardContent>
+    </Card>
+  );
+
+  const tone = (s: string) => s === "aprovado" ? "default" : s === "rejeitado" ? "destructive" : "secondary";
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-xl font-semibold sm:text-2xl">Olá, {func.nome.split(" ")[0]}</h2>
+        <p className="text-sm text-muted-foreground">{func.cargo || "Funcionário"} · Matrícula {func.matricula || "—"}</p>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <Card><CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Banco de horas (mês)</CardTitle></CardHeader>
+          <CardContent><div className={`text-xl font-bold ${saldoBH < 0 ? "text-destructive" : ""}`}>{fmt(saldoBH)}</div></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Horas extras</CardTitle></CardHeader>
+          <CardContent><div className="text-xl font-bold">{fmt(totalExtras)}</div></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Atrasos</CardTitle></CardHeader>
+          <CardContent><div className="text-xl font-bold">{fmt(totalAtrasos)}</div></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Faltas</CardTitle></CardHeader>
+          <CardContent><div className="text-xl font-bold">{totalFaltas}</div></CardContent></Card>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button asChild><Link to="/ponto/registro"><Smartphone className="mr-2 h-4 w-4" /> Bater ponto</Link></Button>
+        <Dialog open={openAjuste} onOpenChange={setOpenAjuste}>
+          <DialogTrigger asChild>
+            <Button variant="outline"><FileEdit className="mr-2 h-4 w-4" /> Solicitar ajuste</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Solicitar ajuste de ponto</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div><Label>Data</Label><Input type="date" value={novoAjuste.data} onChange={e => setNovoAjuste({ ...novoAjuste, data: e.target.value })} /></div>
+              <div><Label>Tipo de marcação</Label>
+                <Select value={novoAjuste.tipo} onValueChange={v => setNovoAjuste({ ...novoAjuste, tipo: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="entrada">Entrada</SelectItem>
+                    <SelectItem value="saida_intervalo">Saída intervalo</SelectItem>
+                    <SelectItem value="retorno_intervalo">Retorno intervalo</SelectItem>
+                    <SelectItem value="saida">Saída</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Horário proposto</Label><Input type="time" value={novoAjuste.valor_proposto} onChange={e => setNovoAjuste({ ...novoAjuste, valor_proposto: e.target.value })} /></div>
+              <div><Label>Motivo</Label><Textarea value={novoAjuste.motivo} onChange={e => setNovoAjuste({ ...novoAjuste, motivo: e.target.value })} placeholder="Ex: Esqueci de bater na entrada" /></div>
+            </div>
+            <DialogFooter><Button onClick={enviarAjuste}>Enviar</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {!jaAssinou && (
+          <Button variant="outline" onClick={() => assinarMes(mesAtual)}>
+            <FileSignature className="mr-2 h-4 w-4" /> Assinar espelho de {mesAtual}
+          </Button>
+        )}
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><Clock className="h-4 w-4" /> Espelho do mês</CardTitle></CardHeader>
+          <CardContent className="overflow-x-auto">
+            {espelho.length === 0 ? <p className="text-sm text-muted-foreground">Sem registros este mês.</p> : (
+              <table className="w-full text-xs">
+                <thead><tr className="text-left text-muted-foreground"><th className="p-1">Data</th><th>Ent</th><th>Sai</th><th>Atraso</th><th>Extra</th></tr></thead>
+                <tbody>
+                  {espelho.slice(0, 15).map(r => (
+                    <tr key={r.id} className="border-t">
+                      <td className="p-1">{r.data}</td>
+                      <td>{r.entrada?.slice(0, 5) || "—"}</td>
+                      <td>{r.saida?.slice(0, 5) || "—"}</td>
+                      <td>{fmt(r.atraso_min)}</td>
+                      <td>{fmt(r.extra_min)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><Wallet className="h-4 w-4" /> Meus ajustes</CardTitle></CardHeader>
+          <CardContent className="space-y-2 max-h-80 overflow-y-auto">
+            {ajustes.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum ajuste solicitado.</p> :
+              ajustes.map(a => (
+                <div key={a.id} className="flex items-center justify-between border-b pb-1.5 text-sm">
+                  <div>
+                    <p className="font-medium">{a.data} · {a.tipo.replace("_", " ")}</p>
+                    <p className="text-xs text-muted-foreground truncate max-w-[200px]">{a.motivo}</p>
+                  </div>
+                  <Badge variant={tone(a.status) as any}>{a.status}</Badge>
+                </div>
+              ))
+            }
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
