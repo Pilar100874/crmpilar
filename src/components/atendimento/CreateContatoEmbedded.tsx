@@ -34,9 +34,18 @@ export function CreateContatoEmbedded({ onClose, onSuccess, initialData }: Creat
       toast.error("Nome é obrigatório");
       return;
     }
-
-    setSaving(true);
-    try {
+    if (formData.email && !validateEmail(formData.email)) {
+      toast.error("E-mail inválido");
+      return;
+    }
+    if (formData.telefone && !validateWhatsApp(formData.telefone)) {
+      toast.error("WhatsApp inválido");
+      return;
+    }
+    if (formData.tel && !validatePhone(formData.tel)) {
+      toast.error("Telefone inválido");
+      return;
+    }
       const estabelecimentoId = await getEstabelecimentoId();
       if (!estabelecimentoId) {
         toast.error("Estabelecimento não encontrado");
