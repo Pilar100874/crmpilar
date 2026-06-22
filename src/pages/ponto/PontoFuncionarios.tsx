@@ -172,7 +172,7 @@ export default function PontoFuncionarios() {
         </Card>
       ) : (
         <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto -mx-1 sm:mx-0"><table className="w-full min-w-[640px] text-sm">
             <thead className="bg-muted/50">
               <tr className="text-left">
                 <th className="p-3">Nome</th>
@@ -208,7 +208,7 @@ export default function PontoFuncionarios() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
       )}
 
