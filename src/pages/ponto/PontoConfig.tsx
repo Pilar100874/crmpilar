@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Building2, Cpu, Download, FileDown, FileText } from "lucide-react";
+import { Building2, Cpu, Download, FileDown, ShieldCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const items = [
@@ -14,6 +14,12 @@ const items = [
     description: "Relógios de ponto e dispositivos conectados",
     url: "/ponto/equipamentos",
     icon: Cpu,
+  },
+  {
+    title: "Antifraude",
+    description: "Geofences e redes autorizadas para validação multi-fator",
+    url: "/ponto/antifraude",
+    icon: ShieldCheck,
   },
   {
     title: "Coletor Desktop",
