@@ -217,7 +217,7 @@ export default function PontoFuncionarios() {
           <DialogHeader>
             <DialogTitle>{editing ? "Editar funcionário" : "Novo funcionário"}</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-3 sm:grid-cols-6">
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
             <div className="sm:col-span-6">
               <Label>Nome *</Label>
               <Input value={f.nome} onChange={(e) => setF({ ...f, nome: e.target.value })} />

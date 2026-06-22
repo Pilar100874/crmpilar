@@ -91,7 +91,7 @@ export default function PontoExportacao() {
 
       <Card>
         <CardContent className="space-y-3 p-4">
-          <div className="grid gap-3 sm:grid-cols-4">
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
             <div>
               <Label>Layout</Label>
               <Select value={layout} onValueChange={setLayout}>
