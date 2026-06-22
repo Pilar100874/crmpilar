@@ -257,10 +257,11 @@ Deno.serve(async (req) => {
       await supabase.from("ponto_alertas").insert({
         funcionario_id: func.id,
         empresa_id: func.empresa_id,
-        tipo: "marcacao_suspeita",
-        severidade: score_confianca < 40 ? "alta" : "media",
+        registro_id: registro.id,
+        nivel: score_confianca < 40 ? "alto" : "medio",
+        categoria: "marcacao_suspeita",
         descricao: `Marcação com score de confiança ${score_confianca}%`,
-        dados: { registro_id: registro.id, fatores },
+        detalhes: { fatores },
       });
     }
 
