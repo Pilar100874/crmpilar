@@ -100,16 +100,31 @@ Deno.serve(async (req) => {
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     const { data: funcs } = await supabase.from("ponto_funcionarios")
-      .select("id, cpf, matricula, codigo_dominio, codigo_relogio, nome").eq("empresa_id", empresa_id);
+      .select("id, cpf, matricula, codigo_dominio, codigo_relogio, nome, filial_id").eq("empresa_id", empresa_id);
+
+    const { data: empresa } = await supabase.from("ponto_empresas")
+      .select("codigo_dominio, razao_social").eq("id", empresa_id).maybeSingle();
+    const codEmpresa = (empresa?.codigo_dominio || "").trim();
+
+    const { data: filiais } = await supabase.from("ponto_filiais")
+      .select("id, codigo_dominio, nome").eq("empresa_id", empresa_id);
+    const filMap = new Map<string, string>(
+      (filiais || []).map((fl: any) => [fl.id, (fl.codigo_dominio || codEmpresa || "").trim()])
+    );
 
     // Validação prévia
     const erros: any[] = [];
+    if (layout === "dominio" && !codEmpresa) {
+      erros.push({ funcionario: "—", campo: "codigo_dominio_empresa", motivo: "Código Domínio da empresa não definido" });
+    }
     for (const f of funcs || []) {
       const cpfDigits = (f.cpf || "").replace(/\D/g, "");
       if (cpfDigits.length !== 11) erros.push({ funcionario: f.nome, campo: "cpf", valor: f.cpf, motivo: "CPF inválido" });
       if (!f.matricula) erros.push({ funcionario: f.nome, campo: "matricula", motivo: "matrícula vazia" });
       if (layout === "dominio" && !f.codigo_dominio && !f.matricula)
         erros.push({ funcionario: f.nome, campo: "codigo_dominio", motivo: "código domínio vazio" });
+      if (layout === "dominio" && f.filial_id && !filMap.get(f.filial_id))
+        erros.push({ funcionario: f.nome, campo: "codigo_dominio_filial", motivo: "filial sem código Domínio" });
     }
 
     if (validar_apenas) {
@@ -131,7 +146,7 @@ Deno.serve(async (req) => {
     if (layout === "sage") conteudo = gerarSage(esp || [], fmap);
     else if (layout === "senior") conteudo = gerarSenior(esp || [], fmap);
     else if (layout === "folhamatic") conteudo = gerarFolhamatic(esp || [], fmap);
-    else conteudo = gerarDominio(esp || [], fmap, rmap);
+    else conteudo = gerarDominio(esp || [], fmap, rmap, codEmpresa, filMap);
 
     const fileName = `${empresa_id}/${layout}_${inicio}_${fim}_${Date.now()}.txt`;
     await supabase.storage.from("ponto-exports").upload(fileName, new TextEncoder().encode(conteudo),
