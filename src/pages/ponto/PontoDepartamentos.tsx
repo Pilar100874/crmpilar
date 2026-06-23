@@ -19,10 +19,12 @@ type Item = {
   centro_custo: string | null;
   descricao: string | null;
   filial_id: string | null;
+  empresa_id: string | null;
+  global: boolean;
   ativo: boolean;
 };
 
-const empty = { nome: "", centro_custo: "", descricao: "", filial_id: "", ativo: true, compartilhado: true };
+const empty = { nome: "", centro_custo: "", descricao: "", filial_id: "", ativo: true, compartilhado: true, global: false };
 
 export default function PontoDepartamentos() {
   const { empresaId } = usePontoEmpresa();
