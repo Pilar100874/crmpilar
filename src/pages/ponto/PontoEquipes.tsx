@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { Plus, Pencil, Trash2, Users, UserPlus, X, Share2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, UserPlus, X, Share2, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { usePontoEmpresa } from "./usePontoEmpresa";
 
@@ -21,12 +21,14 @@ type Equipe = {
   filial_id: string | null;
   departamento_id: string | null;
   lider_funcionario_id: string | null;
+  empresa_id: string | null;
+  global: boolean;
   ativo: boolean;
 };
 
 type Func = { id: string; nome: string };
 
-const empty = { nome: "", descricao: "", cor: "#3b82f6", filial_id: "", departamento_id: "", lider_funcionario_id: "", ativo: true, compartilhado: true };
+const empty = { nome: "", descricao: "", cor: "#3b82f6", filial_id: "", departamento_id: "", lider_funcionario_id: "", ativo: true, compartilhado: true, global: false };
 
 export default function PontoEquipes() {
   const { empresaId } = usePontoEmpresa();
@@ -45,11 +47,11 @@ export default function PontoEquipes() {
   const load = async () => {
     if (!empresaId) return;
     const { data } = await supabase
-      .from("ponto_equipes").select("*").eq("empresa_id", empresaId).order("nome");
+      .from("ponto_equipes").select("*").or(`empresa_id.eq.${empresaId},global.eq.true`).order("nome");
     setItems((data as any) || []);
     const [f, d, fu] = await Promise.all([
       supabase.from("ponto_filiais").select("id, nome").eq("empresa_id", empresaId).order("nome"),
-      supabase.from("ponto_departamentos").select("id, nome").eq("empresa_id", empresaId).order("nome"),
+      supabase.from("ponto_departamentos").select("id, nome").or(`empresa_id.eq.${empresaId},global.eq.true`).order("nome"),
       supabase.from("ponto_funcionarios").select("id, nome").eq("empresa_id", empresaId).order("nome"),
     ]);
     setFiliais((f.data as any) || []);
@@ -70,6 +72,7 @@ export default function PontoEquipes() {
       lider_funcionario_id: x.lider_funcionario_id ?? "",
       ativo: x.ativo,
       compartilhado: !x.filial_id,
+      global: !!x.global,
     });
     setOpen(true);
   };
@@ -77,13 +80,14 @@ export default function PontoEquipes() {
   const save = async () => {
     if (!empresaId) return toast.error("Selecione uma empresa");
     if (!form.nome.trim()) return toast.error("Nome obrigatório");
-    if (!form.compartilhado && !form.filial_id) return toast.error("Selecione uma filial ou ative o compartilhamento");
-    const payload = {
-      empresa_id: empresaId,
+    if (!form.global && !form.compartilhado && !form.filial_id) return toast.error("Selecione uma filial ou ative o compartilhamento");
+    const payload: any = {
+      empresa_id: form.global ? null : empresaId,
+      global: form.global,
       nome: form.nome.trim(),
       descricao: form.descricao.trim() || null,
       cor: form.cor || null,
-      filial_id: form.compartilhado ? null : (form.filial_id || null),
+      filial_id: (form.global || form.compartilhado) ? null : (form.filial_id || null),
       departamento_id: form.departamento_id || null,
       lider_funcionario_id: form.lider_funcionario_id || null,
       ativo: form.ativo,
@@ -158,9 +162,11 @@ export default function PontoEquipes() {
                   <Badge variant={x.ativo ? "default" : "secondary"}>{x.ativo ? "Ativo" : "Inativo"}</Badge>
                 </div>
                 {x.descricao && <p className="text-xs text-muted-foreground line-clamp-2">{x.descricao}</p>}
-                {x.filial_id
-                  ? <p className="text-xs text-muted-foreground truncate">{filiais.find(f => f.id === x.filial_id)?.nome ?? "—"}</p>
-                  : <p className="text-xs text-primary flex items-center gap-1"><Share2 className="h-3 w-3" />Compartilhada</p>}
+                {x.global
+                  ? <p className="text-xs text-primary flex items-center gap-1"><Globe className="h-3 w-3" />Global (todas as empresas)</p>
+                  : x.filial_id
+                    ? <p className="text-xs text-muted-foreground truncate">{filiais.find(f => f.id === x.filial_id)?.nome ?? "—"}</p>
+                    : <p className="text-xs text-primary flex items-center gap-1"><Share2 className="h-3 w-3" />Compartilhada na empresa</p>}
                 {x.lider_funcionario_id && (
                   <p className="text-xs text-muted-foreground">
                     Líder: {funcionarios.find(f => f.id === x.lider_funcionario_id)?.nome ?? "—"}
@@ -192,9 +198,9 @@ export default function PontoEquipes() {
                 <Select
                   value={form.filial_id || "_none"}
                   onValueChange={(v) => setForm({ ...form, filial_id: v === "_none" ? "" : v })}
-                  disabled={form.compartilhado}
+                  disabled={form.compartilhado || form.global}
                 >
-                  <SelectTrigger><SelectValue placeholder={form.compartilhado ? "Todas as filiais" : "Selecione..."} /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={form.global ? "Todas as empresas" : form.compartilhado ? "Todas as filiais" : "Selecione..."} /></SelectTrigger>
                   <SelectContent>
                     {filiais.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
                   </SelectContent>
@@ -213,6 +219,18 @@ export default function PontoEquipes() {
             </div>
             <div className="flex items-center justify-between rounded-md border p-3">
               <div className="space-y-0.5">
+                <Label className="flex items-center gap-2"><Globe className="h-4 w-4" />Compartilhar entre todas as empresas</Label>
+                <p className="text-xs text-muted-foreground">
+                  {form.global ? "Visível em qualquer empresa do sistema." : "Restrita à empresa atual."}
+                </p>
+              </div>
+              <Switch
+                checked={form.global}
+                onCheckedChange={(v) => setForm({ ...form, global: v, filial_id: v ? "" : form.filial_id, compartilhado: v ? true : form.compartilhado })}
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-md border p-3" style={{ opacity: form.global ? 0.5 : 1 }}>
+              <div className="space-y-0.5">
                 <Label className="flex items-center gap-2"><Share2 className="h-4 w-4" />Compartilhar entre matriz e filiais</Label>
                 <p className="text-xs text-muted-foreground">
                   {form.compartilhado ? "Disponível para todas as filiais." : "Restrita à filial selecionada."}
@@ -220,6 +238,7 @@ export default function PontoEquipes() {
               </div>
               <Switch
                 checked={form.compartilhado}
+                disabled={form.global}
                 onCheckedChange={(v) => setForm({ ...form, compartilhado: v, filial_id: v ? "" : form.filial_id })}
               />
             </div>

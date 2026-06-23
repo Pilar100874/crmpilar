@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { Plus, Pencil, Trash2, Building2, Share2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Building2, Share2, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { usePontoEmpresa } from "./usePontoEmpresa";
 
@@ -19,10 +19,12 @@ type Item = {
   centro_custo: string | null;
   descricao: string | null;
   filial_id: string | null;
+  empresa_id: string | null;
+  global: boolean;
   ativo: boolean;
 };
 
-const empty = { nome: "", centro_custo: "", descricao: "", filial_id: "", ativo: true, compartilhado: true };
+const empty = { nome: "", centro_custo: "", descricao: "", filial_id: "", ativo: true, compartilhado: true, global: false };
 
 export default function PontoDepartamentos() {
   const { empresaId } = usePontoEmpresa();
@@ -37,8 +39,8 @@ export default function PontoDepartamentos() {
     if (!empresaId) return;
     const { data } = await supabase
       .from("ponto_departamentos")
-      .select("id, nome, centro_custo, descricao, filial_id, ativo")
-      .eq("empresa_id", empresaId)
+      .select("id, nome, centro_custo, descricao, filial_id, empresa_id, global, ativo")
+      .or(`empresa_id.eq.${empresaId},global.eq.true`)
       .order("nome");
     setItems((data as any) || []);
     const { data: f } = await supabase
@@ -57,6 +59,7 @@ export default function PontoDepartamentos() {
       filial_id: x.filial_id ?? "",
       ativo: x.ativo,
       compartilhado: !x.filial_id,
+      global: !!x.global,
     });
     setOpen(true);
   };
@@ -64,13 +67,14 @@ export default function PontoDepartamentos() {
   const save = async () => {
     if (!empresaId) return toast.error("Selecione uma empresa");
     if (!form.nome.trim()) return toast.error("Nome obrigatório");
-    if (!form.compartilhado && !form.filial_id) return toast.error("Selecione uma filial ou ative o compartilhamento");
-    const payload = {
-      empresa_id: empresaId,
+    if (!form.global && !form.compartilhado && !form.filial_id) return toast.error("Selecione uma filial ou ative o compartilhamento");
+    const payload: any = {
+      empresa_id: form.global ? null : empresaId,
+      global: form.global,
       nome: form.nome.trim(),
       centro_custo: form.centro_custo.trim() || null,
       descricao: form.descricao.trim() || null,
-      filial_id: form.compartilhado ? null : (form.filial_id || null),
+      filial_id: (form.global || form.compartilhado) ? null : (form.filial_id || null),
       ativo: form.ativo,
     };
     const { error } = editing
@@ -115,9 +119,11 @@ export default function PontoDepartamentos() {
                   <div className="min-w-0">
                     <h3 className="truncate font-semibold">{x.nome}</h3>
                     {x.centro_custo && <p className="text-xs text-muted-foreground">CC: {x.centro_custo}</p>}
-                    {x.filial_id
-                      ? <p className="text-xs text-muted-foreground truncate">{filiais.find(f => f.id === x.filial_id)?.nome ?? "—"}</p>
-                      : <p className="text-xs text-primary flex items-center gap-1"><Share2 className="h-3 w-3" />Compartilhado</p>}
+                    {x.global
+                      ? <p className="text-xs text-primary flex items-center gap-1"><Globe className="h-3 w-3" />Global (todas as empresas)</p>
+                      : x.filial_id
+                        ? <p className="text-xs text-muted-foreground truncate">{filiais.find(f => f.id === x.filial_id)?.nome ?? "—"}</p>
+                        : <p className="text-xs text-primary flex items-center gap-1"><Share2 className="h-3 w-3" />Compartilhado na empresa</p>}
                   </div>
                   <Badge variant={x.ativo ? "default" : "secondary"}>{x.ativo ? "Ativo" : "Inativo"}</Badge>
                 </div>
@@ -144,9 +150,9 @@ export default function PontoDepartamentos() {
                 <Select
                   value={form.filial_id || "_none"}
                   onValueChange={(v) => setForm({ ...form, filial_id: v === "_none" ? "" : v })}
-                  disabled={form.compartilhado}
+                  disabled={form.compartilhado || form.global}
                 >
-                  <SelectTrigger><SelectValue placeholder={form.compartilhado ? "Todas as filiais" : "Selecione..."} /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={form.global ? "Todas as empresas" : form.compartilhado ? "Todas as filiais" : "Selecione..."} /></SelectTrigger>
                   <SelectContent>
                     {filiais.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
                   </SelectContent>
@@ -155,6 +161,18 @@ export default function PontoDepartamentos() {
             </div>
             <div className="flex items-center justify-between rounded-md border p-3">
               <div className="space-y-0.5">
+                <Label className="flex items-center gap-2"><Globe className="h-4 w-4" />Compartilhar entre todas as empresas</Label>
+                <p className="text-xs text-muted-foreground">
+                  {form.global ? "Visível em qualquer empresa do sistema." : "Restrito à empresa atual."}
+                </p>
+              </div>
+              <Switch
+                checked={form.global}
+                onCheckedChange={(v) => setForm({ ...form, global: v, filial_id: v ? "" : form.filial_id, compartilhado: v ? true : form.compartilhado })}
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-md border p-3" style={{ opacity: form.global ? 0.5 : 1 }}>
+              <div className="space-y-0.5">
                 <Label className="flex items-center gap-2"><Share2 className="h-4 w-4" />Compartilhar entre matriz e filiais</Label>
                 <p className="text-xs text-muted-foreground">
                   {form.compartilhado ? "Disponível para todas as filiais." : "Restrito à filial selecionada."}
@@ -162,6 +180,7 @@ export default function PontoDepartamentos() {
               </div>
               <Switch
                 checked={form.compartilhado}
+                disabled={form.global}
                 onCheckedChange={(v) => setForm({ ...form, compartilhado: v, filial_id: v ? "" : form.filial_id })}
               />
             </div>

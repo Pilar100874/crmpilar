@@ -10311,8 +10311,9 @@ export type Database = {
           cbo: string | null
           created_at: string
           descricao: string | null
-          empresa_id: string
+          empresa_id: string | null
           filial_id: string | null
+          global: boolean
           id: string
           nome: string
           salario_base: number | null
@@ -10323,8 +10324,9 @@ export type Database = {
           cbo?: string | null
           created_at?: string
           descricao?: string | null
-          empresa_id: string
+          empresa_id?: string | null
           filial_id?: string | null
+          global?: boolean
           id?: string
           nome: string
           salario_base?: number | null
@@ -10335,8 +10337,9 @@ export type Database = {
           cbo?: string | null
           created_at?: string
           descricao?: string | null
-          empresa_id?: string
+          empresa_id?: string | null
           filial_id?: string | null
+          global?: boolean
           id?: string
           nome?: string
           salario_base?: number | null
@@ -10365,8 +10368,9 @@ export type Database = {
           centro_custo: string | null
           created_at: string
           descricao: string | null
-          empresa_id: string
+          empresa_id: string | null
           filial_id: string | null
+          global: boolean
           id: string
           nome: string
           updated_at: string
@@ -10376,8 +10380,9 @@ export type Database = {
           centro_custo?: string | null
           created_at?: string
           descricao?: string | null
-          empresa_id: string
+          empresa_id?: string | null
           filial_id?: string | null
+          global?: boolean
           id?: string
           nome: string
           updated_at?: string
@@ -10387,8 +10392,9 @@ export type Database = {
           centro_custo?: string | null
           created_at?: string
           descricao?: string | null
-          empresa_id?: string
+          empresa_id?: string | null
           filial_id?: string | null
+          global?: boolean
           id?: string
           nome?: string
           updated_at?: string
@@ -10617,8 +10623,9 @@ export type Database = {
           created_at: string
           departamento_id: string | null
           descricao: string | null
-          empresa_id: string
+          empresa_id: string | null
           filial_id: string | null
+          global: boolean
           id: string
           lider_funcionario_id: string | null
           nome: string
@@ -10630,8 +10637,9 @@ export type Database = {
           created_at?: string
           departamento_id?: string | null
           descricao?: string | null
-          empresa_id: string
+          empresa_id?: string | null
           filial_id?: string | null
+          global?: boolean
           id?: string
           lider_funcionario_id?: string | null
           nome: string
@@ -10643,8 +10651,9 @@ export type Database = {
           created_at?: string
           departamento_id?: string | null
           descricao?: string | null
-          empresa_id?: string
+          empresa_id?: string | null
           filial_id?: string | null
+          global?: boolean
           id?: string
           lider_funcionario_id?: string | null
           nome?: string
