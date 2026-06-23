@@ -39,8 +39,8 @@ export default function PontoDepartamentos() {
     if (!empresaId) return;
     const { data } = await supabase
       .from("ponto_departamentos")
-      .select("id, nome, centro_custo, descricao, filial_id, ativo")
-      .eq("empresa_id", empresaId)
+      .select("id, nome, centro_custo, descricao, filial_id, empresa_id, global, ativo")
+      .or(`empresa_id.eq.${empresaId},global.eq.true`)
       .order("nome");
     setItems((data as any) || []);
     const { data: f } = await supabase
@@ -59,6 +59,7 @@ export default function PontoDepartamentos() {
       filial_id: x.filial_id ?? "",
       ativo: x.ativo,
       compartilhado: !x.filial_id,
+      global: !!x.global,
     });
     setOpen(true);
   };
@@ -66,13 +67,14 @@ export default function PontoDepartamentos() {
   const save = async () => {
     if (!empresaId) return toast.error("Selecione uma empresa");
     if (!form.nome.trim()) return toast.error("Nome obrigatório");
-    if (!form.compartilhado && !form.filial_id) return toast.error("Selecione uma filial ou ative o compartilhamento");
-    const payload = {
-      empresa_id: empresaId,
+    if (!form.global && !form.compartilhado && !form.filial_id) return toast.error("Selecione uma filial ou ative o compartilhamento");
+    const payload: any = {
+      empresa_id: form.global ? null : empresaId,
+      global: form.global,
       nome: form.nome.trim(),
       centro_custo: form.centro_custo.trim() || null,
       descricao: form.descricao.trim() || null,
-      filial_id: form.compartilhado ? null : (form.filial_id || null),
+      filial_id: (form.global || form.compartilhado) ? null : (form.filial_id || null),
       ativo: form.ativo,
     };
     const { error } = editing
