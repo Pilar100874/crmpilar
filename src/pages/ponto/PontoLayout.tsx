@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import { Menu, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePontoEmpresa } from "./usePontoEmpresa";
+import WizardBackBar from "./WizardBackBar";
 import {
   Select,
   SelectContent,
@@ -61,6 +62,7 @@ export default function PontoLayout() {
         </div>
       </header>
       <main className="overflow-x-hidden p-3 sm:p-5">
+        <WizardBackBar />
         <Outlet />
       </main>
     </div>
