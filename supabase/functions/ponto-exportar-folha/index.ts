@@ -8,17 +8,20 @@ const cors = {
 
 const pad = (s: any, n: number, c = "0") => String(s ?? "").padStart(n, c).slice(0, n);
 
-function gerarDominio(rows: any[], fmap: Map<string, any>, rmap: Record<string, string>) {
+function gerarDominio(rows: any[], fmap: Map<string, any>, rmap: Record<string, string>, codEmpresa: string, filMap: Map<string, string>) {
   const lines: string[] = [];
+  const codEmp = pad(codEmpresa || "", 4);
   for (const e of rows) {
     const f = fmap.get(e.funcionario_id); if (!f) continue;
+    const codFilial = (f.filial_id && filMap.get(f.filial_id)) || codEmpresa || "";
+    const codEmp4 = pad(codFilial, 4);
     const cpf = pad((f.cpf || "").replace(/\D/g, ""), 11);
     const mat = pad(f.codigo_dominio || f.matricula || "", 10);
     const dt = (e.data as string).replace(/-/g, "");
     const push = (rub: string, min: number) => {
       if (!min) return;
       const qtd = pad(Math.round((min / 60) * 100), 5);
-      lines.push(`${cpf}${mat}${dt}${pad(rub, 4)}${qtd}`);
+      lines.push(`${codEmp4}${cpf}${mat}${dt}${pad(rub, 4)}${qtd}`);
     };
     push(rmap.hora_extra || "0050", e.extra_min || 0);
     push(rmap.adicional_noturno || "0060", e.noturno_min_reduzido || e.noturno_min || 0);
