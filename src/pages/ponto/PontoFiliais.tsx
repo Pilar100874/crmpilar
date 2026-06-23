@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Building, Trash2, Pencil, Loader2, MapPin } from "lucide-react";
+import { Plus, Building, Trash2, Pencil, Loader2, MapPin, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import { UfSelect } from "@/components/ui/uf-select";
 import { CidadeSelect } from "@/components/ui/cidade-select";
 import { maskCNPJ, maskCEP } from "@/lib/masks";
 import { validateCNPJ, validateCEP } from "@/lib/validators";
-import { fetchCep } from "@/lib/brAddress";
+import { fetchCep, fetchCnpj } from "@/lib/brAddress";
 
 type Filial = {
   id: string;
@@ -52,6 +52,7 @@ export default function PontoFiliais() {
   const [deleting, setDeleting] = useState<Filial | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [loadingCep, setLoadingCep] = useState(false);
+  const [loadingCnpj, setLoadingCnpj] = useState(false);
   const [locating, setLocating] = useState(false);
 
   const load = async () => {
@@ -92,6 +93,31 @@ export default function PontoFiliais() {
       uf: data.uf || f.uf,
       cidade: data.localidade || f.cidade,
     }));
+  };
+
+  const onCnpjLookup = async () => {
+    if (!validateCNPJ(form.cnpj)) {
+      toast.error("CNPJ inválido");
+      return;
+    }
+    setLoadingCnpj(true);
+    const data = await fetchCnpj(form.cnpj);
+    setLoadingCnpj(false);
+    if (!data) {
+      toast.error("CNPJ não encontrado na Receita");
+      return;
+    }
+    setForm((f) => ({
+      ...f,
+      nome: data.nome_fantasia || data.razao_social || f.nome,
+      cep: maskCEP(data.cep || f.cep),
+      endereco:
+        [data.logradouro, data.numero, data.bairro].filter(Boolean).join(", ") ||
+        f.endereco,
+      cidade: data.municipio || f.cidade,
+      uf: data.uf || f.uf,
+    }));
+    toast.success("Dados preenchidos da Receita");
   };
 
   const locateMe = () => {
@@ -228,13 +254,29 @@ export default function PontoFiliais() {
             </div>
             <div className="sm:col-span-2">
               <Label>CNPJ</Label>
-              <MaskedInput
-                mask={maskCNPJ}
-                value={form.cnpj}
-                onValueChange={(v) => setForm({ ...form, cnpj: v })}
-                invalid={cnpjInvalid}
-                placeholder="00.000.000/0000-00"
-              />
+              <div className="flex gap-2">
+                <MaskedInput
+                  mask={maskCNPJ}
+                  value={form.cnpj}
+                  onValueChange={(v) => setForm({ ...form, cnpj: v })}
+                  invalid={cnpjInvalid}
+                  placeholder="00.000.000/0000-00"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={onCnpjLookup}
+                  disabled={loadingCnpj || !form.cnpj}
+                  title="Buscar dados na Receita"
+                >
+                  {loadingCnpj ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Search className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
               {cnpjInvalid && <p className="mt-1 text-xs text-destructive">CNPJ inválido</p>}
             </div>
             <div className="sm:col-span-2">
