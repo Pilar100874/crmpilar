@@ -30,6 +30,7 @@ type Filial = {
   gps_lon: number | null;
   raio_metros: number | null;
   ativo: boolean;
+  codigo_dominio: string | null;
 };
 
 const emptyForm = {
@@ -42,6 +43,7 @@ const emptyForm = {
   gps_lat: "",
   gps_lon: "",
   raio_metros: "150",
+  codigo_dominio: "",
 };
 
 export default function PontoFiliais() {
@@ -76,6 +78,7 @@ export default function PontoFiliais() {
       gps_lat: x.gps_lat?.toString() ?? "",
       gps_lon: x.gps_lon?.toString() ?? "",
       raio_metros: x.raio_metros?.toString() ?? "150",
+      codigo_dominio: x.codigo_dominio ?? "",
     });
     setOpen(true);
   };
@@ -161,6 +164,7 @@ export default function PontoFiliais() {
       gps_lat: lat,
       gps_lon: lon,
       raio_metros: raio,
+      codigo_dominio: form.codigo_dominio.trim() || null,
     };
 
     const { error } = editing
