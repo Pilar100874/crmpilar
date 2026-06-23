@@ -81,6 +81,7 @@ export default function PontoFiliais() {
       gps_lon: x.gps_lon?.toString() ?? "",
       raio_metros: x.raio_metros?.toString() ?? "150",
       codigo_dominio: x.codigo_dominio ?? "",
+      inscricao_estadual: x.inscricao_estadual ?? "",
     });
     setOpen(true);
   };
