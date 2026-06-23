@@ -8,17 +8,20 @@ const cors = {
 
 const pad = (s: any, n: number, c = "0") => String(s ?? "").padStart(n, c).slice(0, n);
 
-function gerarDominio(rows: any[], fmap: Map<string, any>, rmap: Record<string, string>) {
+function gerarDominio(rows: any[], fmap: Map<string, any>, rmap: Record<string, string>, codEmpresa: string, filMap: Map<string, string>) {
   const lines: string[] = [];
+  const codEmp = pad(codEmpresa || "", 4);
   for (const e of rows) {
     const f = fmap.get(e.funcionario_id); if (!f) continue;
+    const codFilial = (f.filial_id && filMap.get(f.filial_id)) || codEmpresa || "";
+    const codEmp4 = pad(codFilial, 4);
     const cpf = pad((f.cpf || "").replace(/\D/g, ""), 11);
     const mat = pad(f.codigo_dominio || f.matricula || "", 10);
     const dt = (e.data as string).replace(/-/g, "");
     const push = (rub: string, min: number) => {
       if (!min) return;
       const qtd = pad(Math.round((min / 60) * 100), 5);
-      lines.push(`${cpf}${mat}${dt}${pad(rub, 4)}${qtd}`);
+      lines.push(`${codEmp4}${cpf}${mat}${dt}${pad(rub, 4)}${qtd}`);
     };
     push(rmap.hora_extra || "0050", e.extra_min || 0);
     push(rmap.adicional_noturno || "0060", e.noturno_min_reduzido || e.noturno_min || 0);
@@ -97,16 +100,31 @@ Deno.serve(async (req) => {
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     const { data: funcs } = await supabase.from("ponto_funcionarios")
-      .select("id, cpf, matricula, codigo_dominio, codigo_relogio, nome").eq("empresa_id", empresa_id);
+      .select("id, cpf, matricula, codigo_dominio, codigo_relogio, nome, filial_id").eq("empresa_id", empresa_id);
+
+    const { data: empresa } = await supabase.from("ponto_empresas")
+      .select("codigo_dominio, razao_social").eq("id", empresa_id).maybeSingle();
+    const codEmpresa = (empresa?.codigo_dominio || "").trim();
+
+    const { data: filiais } = await supabase.from("ponto_filiais")
+      .select("id, codigo_dominio, nome").eq("empresa_id", empresa_id);
+    const filMap = new Map<string, string>(
+      (filiais || []).map((fl: any) => [fl.id, (fl.codigo_dominio || codEmpresa || "").trim()])
+    );
 
     // Validação prévia
     const erros: any[] = [];
+    if (layout === "dominio" && !codEmpresa) {
+      erros.push({ funcionario: "—", campo: "codigo_dominio_empresa", motivo: "Código Domínio da empresa não definido" });
+    }
     for (const f of funcs || []) {
       const cpfDigits = (f.cpf || "").replace(/\D/g, "");
       if (cpfDigits.length !== 11) erros.push({ funcionario: f.nome, campo: "cpf", valor: f.cpf, motivo: "CPF inválido" });
       if (!f.matricula) erros.push({ funcionario: f.nome, campo: "matricula", motivo: "matrícula vazia" });
       if (layout === "dominio" && !f.codigo_dominio && !f.matricula)
         erros.push({ funcionario: f.nome, campo: "codigo_dominio", motivo: "código domínio vazio" });
+      if (layout === "dominio" && f.filial_id && !filMap.get(f.filial_id))
+        erros.push({ funcionario: f.nome, campo: "codigo_dominio_filial", motivo: "filial sem código Domínio" });
     }
 
     if (validar_apenas) {
@@ -128,7 +146,7 @@ Deno.serve(async (req) => {
     if (layout === "sage") conteudo = gerarSage(esp || [], fmap);
     else if (layout === "senior") conteudo = gerarSenior(esp || [], fmap);
     else if (layout === "folhamatic") conteudo = gerarFolhamatic(esp || [], fmap);
-    else conteudo = gerarDominio(esp || [], fmap, rmap);
+    else conteudo = gerarDominio(esp || [], fmap, rmap, codEmpresa, filMap);
 
     const fileName = `${empresa_id}/${layout}_${inicio}_${fim}_${Date.now()}.txt`;
     await supabase.storage.from("ponto-exports").upload(fileName, new TextEncoder().encode(conteudo),

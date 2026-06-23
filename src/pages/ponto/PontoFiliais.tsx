@@ -30,6 +30,7 @@ type Filial = {
   gps_lon: number | null;
   raio_metros: number | null;
   ativo: boolean;
+  codigo_dominio: string | null;
 };
 
 const emptyForm = {
@@ -42,6 +43,7 @@ const emptyForm = {
   gps_lat: "",
   gps_lon: "",
   raio_metros: "150",
+  codigo_dominio: "",
 };
 
 export default function PontoFiliais() {
@@ -76,6 +78,7 @@ export default function PontoFiliais() {
       gps_lat: x.gps_lat?.toString() ?? "",
       gps_lon: x.gps_lon?.toString() ?? "",
       raio_metros: x.raio_metros?.toString() ?? "150",
+      codigo_dominio: x.codigo_dominio ?? "",
     });
     setOpen(true);
   };
@@ -161,6 +164,7 @@ export default function PontoFiliais() {
       gps_lat: lat,
       gps_lon: lon,
       raio_metros: raio,
+      codigo_dominio: form.codigo_dominio.trim() || null,
     };
 
     const { error } = editing
@@ -345,6 +349,18 @@ export default function PontoFiliais() {
                 value={form.raio_metros}
                 onChange={(e) => setForm({ ...form, raio_metros: e.target.value })}
               />
+            </div>
+            <div className="sm:col-span-6">
+              <Label>Código Domínio (filial)</Label>
+              <Input
+                value={form.codigo_dominio}
+                onChange={(e) => setForm({ ...form, codigo_dominio: e.target.value })}
+                placeholder="Ex: 0002"
+                maxLength={10}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Código desta filial no Domínio Sistemas (usado na exportação para folha). Se vazio, será usado o código da matriz.
+              </p>
             </div>
           </div>
           <DialogFooter>
