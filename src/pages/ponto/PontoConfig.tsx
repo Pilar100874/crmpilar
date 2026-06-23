@@ -9,6 +9,8 @@ import {
   Upload,
   Bell,
   Wand2,
+  Briefcase,
+  Network,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -37,6 +39,24 @@ const items = [
     title: "Funcionários",
     description: "Cadastro de funcionários, jornadas e vínculos",
     url: "/ponto/funcionarios",
+    icon: Users,
+  },
+  {
+    title: "Departamentos",
+    description: "Setores e centros de custo por empresa ou filial",
+    url: "/ponto/departamentos",
+    icon: Network,
+  },
+  {
+    title: "Cargos",
+    description: "Posições funcionais com CBO e salário base",
+    url: "/ponto/cargos",
+    icon: Briefcase,
+  },
+  {
+    title: "Equipes",
+    description: "Agrupe funcionários em equipes com líder e membros",
+    url: "/ponto/equipes",
     icon: Users,
   },
   {
