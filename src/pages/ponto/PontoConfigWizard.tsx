@@ -71,17 +71,18 @@ const STEPS: Step[] = [
   {
     id: "filiais",
     title: "Filiais da Empresa",
-    description: "Cadastre as filiais (unidades) vinculadas à empresa selecionada.",
+    description: "Cadastre as filiais (unidades) vinculadas à empresa. Pule este passo se a empresa não possui filiais.",
     icon: Building2,
     url: "/ponto/filiais",
     ctaLabel: "Abrir cadastro de filiais",
     whyItMatters:
-      "Cada funcionário, equipamento e geofence é vinculado a uma filial. Mesmo que você só tenha uma unidade, cadastre-a como filial principal.",
+      "Se a empresa tem mais de uma unidade, cadastre cada uma como filial. Empresas com apenas um endereço podem pular este passo — os funcionários e equipamentos ficam vinculados diretamente à empresa.",
     checklist: [
       "Selecionar a empresa no topo da tela",
-      "Criar ao menos uma filial (matriz)",
+      "Criar filiais adicionais (se houver)",
       "Informar endereço, GPS e raio para geofence",
     ],
+    optional: true,
     check: async ({ empresaId }) => {
       if (!empresaId) return false;
       const { count } = await supabase
@@ -94,16 +95,16 @@ const STEPS: Step[] = [
   {
     id: "departamentos",
     title: "Departamentos",
-    description: "Cadastre setores e centros de custo da empresa.",
+    description: "Cadastre setores e centros de custo. Compartilhados entre matriz e filiais.",
     icon: Network,
     url: "/ponto/departamentos",
     ctaLabel: "Abrir departamentos",
     whyItMatters:
-      "Organiza funcionários por setor e permite relatórios por centro de custo.",
+      "Departamentos são compartilhados entre a empresa e todas as filiais. Organize por setor (RH, Financeiro, Operacional) e use para relatórios por centro de custo.",
     checklist: [
       "Criar departamentos (RH, Financeiro, Operacional, etc.)",
       "Informar centro de custo (opcional)",
-      "Vincular à filial quando específico de uma unidade",
+      "Vincular a uma filial apenas se for específico dela",
     ],
     optional: true,
     check: async ({ empresaId }) => {
@@ -115,20 +116,22 @@ const STEPS: Step[] = [
       return (count ?? 0) > 0;
     },
   },
+
   {
     id: "cargos",
     title: "Cargos",
-    description: "Cadastre as posições funcionais com CBO e salário base.",
+    description: "Cadastre as posições funcionais. Compartilhados entre matriz e filiais.",
     icon: Briefcase,
     url: "/ponto/cargos",
     ctaLabel: "Abrir cargos",
     whyItMatters:
-      "Cargos padronizam vínculos dos funcionários e alimentam eSocial e folha.",
+      "Cargos são compartilhados entre a empresa e todas as filiais. Padronizam vínculos dos funcionários e alimentam eSocial e folha.",
     checklist: [
       "Criar cargos com nome e CBO",
       "Informar salário base (opcional)",
       "Manter inativos os que não estão em uso",
     ],
+
     optional: true,
     check: async ({ empresaId }) => {
       if (!empresaId) return false;
@@ -142,17 +145,18 @@ const STEPS: Step[] = [
   {
     id: "equipes",
     title: "Equipes",
-    description: "Agrupe funcionários em equipes com líder e membros.",
+    description: "Agrupe funcionários em equipes. Podem misturar pessoas da matriz e filiais.",
     icon: Users,
     url: "/ponto/equipes",
     ctaLabel: "Abrir equipes",
     whyItMatters:
-      "Equipes facilitam gestão de escalas, mapa de equipes e visões por líder.",
+      "Equipes são compartilhadas entre a empresa e todas as filiais — uma equipe pode ter membros de unidades diferentes. Facilitam escalas, mapa de equipes e visões por líder.",
     checklist: [
       "Criar equipes (com cor para identificação)",
       "Definir líder responsável",
-      "Adicionar membros à equipe",
+      "Adicionar membros à equipe (de qualquer filial)",
     ],
+
     optional: true,
     check: async ({ empresaId }) => {
       if (!empresaId) return false;
