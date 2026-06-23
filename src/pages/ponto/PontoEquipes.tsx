@@ -189,9 +189,6 @@ export default function PontoEquipes() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Filial</Label>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Filial</Label>
                 <Select
                   value={form.filial_id || "_none"}
                   onValueChange={(v) => setForm({ ...form, filial_id: v === "_none" ? "" : v })}
