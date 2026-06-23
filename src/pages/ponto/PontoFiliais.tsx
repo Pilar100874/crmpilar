@@ -15,7 +15,7 @@ import { MaskedInput } from "@/components/ui/masked-input";
 import { UfSelect } from "@/components/ui/uf-select";
 import { CidadeSelect } from "@/components/ui/cidade-select";
 import { maskCNPJ, maskCEP } from "@/lib/masks";
-import { validateCNPJ, validateCEP } from "@/lib/validators";
+import { validateCNPJ, validateCEP, validateInscricaoEstadual } from "@/lib/validators";
 import { fetchCep, fetchCnpj } from "@/lib/brAddress";
 
 type Filial = {
