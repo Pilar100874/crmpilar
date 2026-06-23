@@ -149,6 +149,8 @@ export default function PontoFiliais() {
     if (!form.nome.trim()) return toast.error("Nome obrigatório");
     if (form.cnpj && !validateCNPJ(form.cnpj)) return toast.error("CNPJ inválido");
     if (form.cep && !validateCEP(form.cep)) return toast.error("CEP inválido");
+    if (form.inscricao_estadual && !validateInscricaoEstadual(form.inscricao_estadual))
+      return toast.error("Inscrição Estadual inválida");
     const lat = form.gps_lat ? parseFloat(form.gps_lat) : null;
     const lon = form.gps_lon ? parseFloat(form.gps_lon) : null;
     if (lat !== null && (isNaN(lat) || lat < -90 || lat > 90)) return toast.error("Latitude inválida");
