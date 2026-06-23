@@ -157,8 +157,6 @@ export default function PontoCargos() {
             <div><Label>Descrição</Label><Input value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} /></div>
             <div>
               <Label>Filial</Label>
-            <div>
-              <Label>Filial</Label>
               <Select
                 value={form.filial_id || "_none"}
                 onValueChange={(v) => setForm({ ...form, filial_id: v === "_none" ? "" : v })}
