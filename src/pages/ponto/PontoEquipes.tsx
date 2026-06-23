@@ -69,6 +69,7 @@ export default function PontoEquipes() {
       departamento_id: x.departamento_id ?? "",
       lider_funcionario_id: x.lider_funcionario_id ?? "",
       ativo: x.ativo,
+      compartilhado: !x.filial_id,
     });
     setOpen(true);
   };
