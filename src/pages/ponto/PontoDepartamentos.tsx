@@ -64,12 +64,13 @@ export default function PontoDepartamentos() {
   const save = async () => {
     if (!empresaId) return toast.error("Selecione uma empresa");
     if (!form.nome.trim()) return toast.error("Nome obrigatório");
+    if (!form.compartilhado && !form.filial_id) return toast.error("Selecione uma filial ou ative o compartilhamento");
     const payload = {
       empresa_id: empresaId,
       nome: form.nome.trim(),
       centro_custo: form.centro_custo.trim() || null,
       descricao: form.descricao.trim() || null,
-      filial_id: form.filial_id || null,
+      filial_id: form.compartilhado ? null : (form.filial_id || null),
       ativo: form.ativo,
     };
     const { error } = editing
