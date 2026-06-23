@@ -350,6 +350,18 @@ export default function PontoFiliais() {
                 onChange={(e) => setForm({ ...form, raio_metros: e.target.value })}
               />
             </div>
+            <div className="sm:col-span-6">
+              <Label>Código Domínio (filial)</Label>
+              <Input
+                value={form.codigo_dominio}
+                onChange={(e) => setForm({ ...form, codigo_dominio: e.target.value })}
+                placeholder="Ex: 0002"
+                maxLength={10}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Código desta filial no Domínio Sistemas (usado na exportação para folha). Se vazio, será usado o código da matriz.
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
