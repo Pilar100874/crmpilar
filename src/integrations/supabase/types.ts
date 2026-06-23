@@ -10855,6 +10855,7 @@ export type Database = {
           cep: string | null
           cidade: string | null
           cnpj: string | null
+          codigo_dominio: string | null
           created_at: string
           empresa_id: string
           endereco: string | null
@@ -10871,6 +10872,7 @@ export type Database = {
           cep?: string | null
           cidade?: string | null
           cnpj?: string | null
+          codigo_dominio?: string | null
           created_at?: string
           empresa_id: string
           endereco?: string | null
@@ -10887,6 +10889,7 @@ export type Database = {
           cep?: string | null
           cidade?: string | null
           cnpj?: string | null
+          codigo_dominio?: string | null
           created_at?: string
           empresa_id?: string
           endereco?: string | null
