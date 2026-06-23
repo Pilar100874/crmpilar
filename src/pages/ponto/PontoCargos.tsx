@@ -149,6 +149,31 @@ export default function PontoCargos() {
               <div><Label>Salário base (R$)</Label><Input value={form.salario_base} onChange={(e) => setForm({ ...form, salario_base: e.target.value })} placeholder="0,00" /></div>
             </div>
             <div><Label>Descrição</Label><Input value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} /></div>
+            <div>
+              <Label>Filial</Label>
+              <Select
+                value={form.filial_id || "_none"}
+                onValueChange={(v) => setForm({ ...form, filial_id: v === "_none" ? "" : v })}
+                disabled={form.compartilhado}
+              >
+                <SelectTrigger><SelectValue placeholder={form.compartilhado ? "Todas as filiais" : "Selecione..."} /></SelectTrigger>
+                <SelectContent>
+                  {filiais.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div className="space-y-0.5">
+                <Label className="flex items-center gap-2"><Share2 className="h-4 w-4" />Compartilhar entre matriz e filiais</Label>
+                <p className="text-xs text-muted-foreground">
+                  {form.compartilhado ? "Disponível para todas as filiais." : "Restrito à filial selecionada."}
+                </p>
+              </div>
+              <Switch
+                checked={form.compartilhado}
+                onCheckedChange={(v) => setForm({ ...form, compartilhado: v, filial_id: v ? "" : form.filial_id })}
+              />
+            </div>
             <div className="flex items-center gap-2">
               <input id="ativo" type="checkbox" checked={form.ativo} onChange={(e) => setForm({ ...form, ativo: e.target.checked })} />
               <Label htmlFor="ativo">Ativo</Label>
