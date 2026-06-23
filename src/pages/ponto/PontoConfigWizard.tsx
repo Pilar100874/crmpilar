@@ -120,17 +120,18 @@ const STEPS: Step[] = [
   {
     id: "cargos",
     title: "Cargos",
-    description: "Cadastre as posições funcionais com CBO e salário base.",
+    description: "Cadastre as posições funcionais. Compartilhados entre matriz e filiais.",
     icon: Briefcase,
     url: "/ponto/cargos",
     ctaLabel: "Abrir cargos",
     whyItMatters:
-      "Cargos padronizam vínculos dos funcionários e alimentam eSocial e folha.",
+      "Cargos são compartilhados entre a empresa e todas as filiais. Padronizam vínculos dos funcionários e alimentam eSocial e folha.",
     checklist: [
       "Criar cargos com nome e CBO",
       "Informar salário base (opcional)",
       "Manter inativos os que não estão em uso",
     ],
+
     optional: true,
     check: async ({ empresaId }) => {
       if (!empresaId) return false;
