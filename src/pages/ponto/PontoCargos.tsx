@@ -19,14 +19,16 @@ type Item = {
   cbo: string | null;
   descricao: string | null;
   salario_base: number | null;
+  filial_id: string | null;
   ativo: boolean;
 };
 
-const empty = { nome: "", cbo: "", descricao: "", salario_base: "", ativo: true };
+const empty = { nome: "", cbo: "", descricao: "", salario_base: "", filial_id: "", ativo: true, compartilhado: true };
 
 export default function PontoCargos() {
   const { empresaId } = usePontoEmpresa();
   const [items, setItems] = useState<Item[]>([]);
+  const [filiais, setFiliais] = useState<{ id: string; nome: string }[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Item | null>(null);
   const [form, setForm] = useState(empty);
