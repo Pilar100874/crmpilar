@@ -16,6 +16,8 @@ import {
   Upload,
   PartyPopper,
   ExternalLink,
+  Briefcase,
+  Network,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -84,6 +86,78 @@ const STEPS: Step[] = [
       if (!empresaId) return false;
       const { count } = await supabase
         .from("ponto_filiais")
+        .select("id", { count: "exact", head: true })
+        .eq("empresa_id", empresaId);
+      return (count ?? 0) > 0;
+    },
+  },
+  {
+    id: "departamentos",
+    title: "Departamentos",
+    description: "Cadastre setores e centros de custo da empresa.",
+    icon: Network,
+    url: "/ponto/departamentos",
+    ctaLabel: "Abrir departamentos",
+    whyItMatters:
+      "Organiza funcionários por setor e permite relatórios por centro de custo.",
+    checklist: [
+      "Criar departamentos (RH, Financeiro, Operacional, etc.)",
+      "Informar centro de custo (opcional)",
+      "Vincular à filial quando específico de uma unidade",
+    ],
+    optional: true,
+    check: async ({ empresaId }) => {
+      if (!empresaId) return false;
+      const { count } = await supabase
+        .from("ponto_departamentos")
+        .select("id", { count: "exact", head: true })
+        .eq("empresa_id", empresaId);
+      return (count ?? 0) > 0;
+    },
+  },
+  {
+    id: "cargos",
+    title: "Cargos",
+    description: "Cadastre as posições funcionais com CBO e salário base.",
+    icon: Briefcase,
+    url: "/ponto/cargos",
+    ctaLabel: "Abrir cargos",
+    whyItMatters:
+      "Cargos padronizam vínculos dos funcionários e alimentam eSocial e folha.",
+    checklist: [
+      "Criar cargos com nome e CBO",
+      "Informar salário base (opcional)",
+      "Manter inativos os que não estão em uso",
+    ],
+    optional: true,
+    check: async ({ empresaId }) => {
+      if (!empresaId) return false;
+      const { count } = await supabase
+        .from("ponto_cargos")
+        .select("id", { count: "exact", head: true })
+        .eq("empresa_id", empresaId);
+      return (count ?? 0) > 0;
+    },
+  },
+  {
+    id: "equipes",
+    title: "Equipes",
+    description: "Agrupe funcionários em equipes com líder e membros.",
+    icon: Users,
+    url: "/ponto/equipes",
+    ctaLabel: "Abrir equipes",
+    whyItMatters:
+      "Equipes facilitam gestão de escalas, mapa de equipes e visões por líder.",
+    checklist: [
+      "Criar equipes (com cor para identificação)",
+      "Definir líder responsável",
+      "Adicionar membros à equipe",
+    ],
+    optional: true,
+    check: async ({ empresaId }) => {
+      if (!empresaId) return false;
+      const { count } = await supabase
+        .from("ponto_equipes")
         .select("id", { count: "exact", head: true })
         .eq("empresa_id", empresaId);
       return (count ?? 0) > 0;
