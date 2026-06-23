@@ -22,9 +22,15 @@ const wizard = {
 
 const items = [
   {
-    title: "Empresas / Filiais",
-    description: "Cadastro de empresas, filiais e departamentos",
+    title: "Empresas",
+    description: "Cadastro das empresas (matrizes) do controle de ponto",
     url: "/ponto/empresas",
+    icon: Building2,
+  },
+  {
+    title: "Filiais",
+    description: "Unidades vinculadas à empresa selecionada (endereço, GPS, raio)",
+    url: "/ponto/filiais",
     icon: Building2,
   },
   {

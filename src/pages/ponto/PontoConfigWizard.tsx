@@ -45,8 +45,8 @@ type CheckCtx = {
 const STEPS: Step[] = [
   {
     id: "empresas",
-    title: "Empresa e Filiais",
-    description: "Cadastre a empresa principal, filiais e departamentos.",
+    title: "Empresa (Matriz)",
+    description: "Cadastre o CNPJ, razão social e endereço da empresa principal.",
     icon: Building2,
     url: "/ponto/empresas",
     ctaLabel: "Abrir cadastro de empresas",
@@ -54,14 +54,37 @@ const STEPS: Step[] = [
       "Toda jornada de ponto começa pela empresa. Os funcionários, equipamentos e exportações são vinculados a ela.",
     checklist: [
       "Cadastrar CNPJ, razão social e endereço",
-      "Criar pelo menos uma filial",
-      "Definir departamentos (opcional)",
+      "Informar Inscrição Estadual (se aplicável)",
+      "Definir código Domínio para exportação de folha",
     ],
     check: async ({ empresaId }) => {
       if (!empresaId) return false;
       const { count } = await supabase
         .from("ponto_empresas")
         .select("id", { count: "exact", head: true });
+      return (count ?? 0) > 0;
+    },
+  },
+  {
+    id: "filiais",
+    title: "Filiais da Empresa",
+    description: "Cadastre as filiais (unidades) vinculadas à empresa selecionada.",
+    icon: Building2,
+    url: "/ponto/filiais",
+    ctaLabel: "Abrir cadastro de filiais",
+    whyItMatters:
+      "Cada funcionário, equipamento e geofence é vinculado a uma filial. Mesmo que você só tenha uma unidade, cadastre-a como filial principal.",
+    checklist: [
+      "Selecionar a empresa no topo da tela",
+      "Criar ao menos uma filial (matriz)",
+      "Informar endereço, GPS e raio para geofence",
+    ],
+    check: async ({ empresaId }) => {
+      if (!empresaId) return false;
+      const { count } = await supabase
+        .from("ponto_filiais")
+        .select("id", { count: "exact", head: true })
+        .eq("empresa_id", empresaId);
       return (count ?? 0) > 0;
     },
   },
@@ -359,7 +382,7 @@ export default function PontoConfigWizard() {
             <div className="flex flex-wrap gap-2 pt-2">
               {step.url && (
                 <Button asChild>
-                  <Link to={step.url}>
+                  <Link to={`${step.url}?from=wizard`}>
                     <ExternalLink className="h-4 w-4" /> {step.ctaLabel}
                   </Link>
                 </Button>
