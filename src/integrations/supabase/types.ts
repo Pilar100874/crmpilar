@@ -10312,6 +10312,7 @@ export type Database = {
           created_at: string
           descricao: string | null
           empresa_id: string
+          filial_id: string | null
           id: string
           nome: string
           salario_base: number | null
@@ -10323,6 +10324,7 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           empresa_id: string
+          filial_id?: string | null
           id?: string
           nome: string
           salario_base?: number | null
@@ -10334,6 +10336,7 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           empresa_id?: string
+          filial_id?: string | null
           id?: string
           nome?: string
           salario_base?: number | null
@@ -10345,6 +10348,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_cargos_filial_id_fkey"
+            columns: ["filial_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_filiais"
             referencedColumns: ["id"]
           },
         ]

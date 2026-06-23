@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { Plus, Pencil, Trash2, Building2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Building2, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { usePontoEmpresa } from "./usePontoEmpresa";
 
@@ -21,7 +22,7 @@ type Item = {
   ativo: boolean;
 };
 
-const empty = { nome: "", centro_custo: "", descricao: "", filial_id: "", ativo: true };
+const empty = { nome: "", centro_custo: "", descricao: "", filial_id: "", ativo: true, compartilhado: true };
 
 export default function PontoDepartamentos() {
   const { empresaId } = usePontoEmpresa();
@@ -55,6 +56,7 @@ export default function PontoDepartamentos() {
       descricao: x.descricao ?? "",
       filial_id: x.filial_id ?? "",
       ativo: x.ativo,
+      compartilhado: !x.filial_id,
     });
     setOpen(true);
   };
@@ -62,12 +64,13 @@ export default function PontoDepartamentos() {
   const save = async () => {
     if (!empresaId) return toast.error("Selecione uma empresa");
     if (!form.nome.trim()) return toast.error("Nome obrigatório");
+    if (!form.compartilhado && !form.filial_id) return toast.error("Selecione uma filial ou ative o compartilhamento");
     const payload = {
       empresa_id: empresaId,
       nome: form.nome.trim(),
       centro_custo: form.centro_custo.trim() || null,
       descricao: form.descricao.trim() || null,
-      filial_id: form.filial_id || null,
+      filial_id: form.compartilhado ? null : (form.filial_id || null),
       ativo: form.ativo,
     };
     const { error } = editing
@@ -112,7 +115,9 @@ export default function PontoDepartamentos() {
                   <div className="min-w-0">
                     <h3 className="truncate font-semibold">{x.nome}</h3>
                     {x.centro_custo && <p className="text-xs text-muted-foreground">CC: {x.centro_custo}</p>}
-                    {x.filial_id && <p className="text-xs text-muted-foreground truncate">{filiais.find(f => f.id === x.filial_id)?.nome ?? "—"}</p>}
+                    {x.filial_id
+                      ? <p className="text-xs text-muted-foreground truncate">{filiais.find(f => f.id === x.filial_id)?.nome ?? "—"}</p>
+                      : <p className="text-xs text-primary flex items-center gap-1"><Share2 className="h-3 w-3" />Compartilhado</p>}
                   </div>
                   <Badge variant={x.ativo ? "default" : "secondary"}>{x.ativo ? "Ativo" : "Inativo"}</Badge>
                 </div>
@@ -135,15 +140,30 @@ export default function PontoDepartamentos() {
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Centro de custo</Label><Input value={form.centro_custo} onChange={(e) => setForm({ ...form, centro_custo: e.target.value })} /></div>
               <div>
-                <Label>Filial (opcional)</Label>
-                <Select value={form.filial_id || "_none"} onValueChange={(v) => setForm({ ...form, filial_id: v === "_none" ? "" : v })}>
-                  <SelectTrigger><SelectValue placeholder="Toda a empresa" /></SelectTrigger>
+                <Label>Filial</Label>
+                <Select
+                  value={form.filial_id || "_none"}
+                  onValueChange={(v) => setForm({ ...form, filial_id: v === "_none" ? "" : v })}
+                  disabled={form.compartilhado}
+                >
+                  <SelectTrigger><SelectValue placeholder={form.compartilhado ? "Todas as filiais" : "Selecione..."} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="_none">Toda a empresa</SelectItem>
                     {filiais.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div className="space-y-0.5">
+                <Label className="flex items-center gap-2"><Share2 className="h-4 w-4" />Compartilhar entre matriz e filiais</Label>
+                <p className="text-xs text-muted-foreground">
+                  {form.compartilhado ? "Disponível para todas as filiais." : "Restrito à filial selecionada."}
+                </p>
+              </div>
+              <Switch
+                checked={form.compartilhado}
+                onCheckedChange={(v) => setForm({ ...form, compartilhado: v, filial_id: v ? "" : form.filial_id })}
+              />
             </div>
             <div><Label>Descrição</Label><Input value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} /></div>
             <div className="flex items-center gap-2">
