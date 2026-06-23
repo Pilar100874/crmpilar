@@ -174,14 +174,12 @@ const menuItems: MenuItem[] = [
     icon: Clock,
     subItems: [
       { id: "Ponto Dashboard", title: "Dashboard RH", url: "/ponto", icon: LayoutDashboard },
-      { id: "Ponto Funcionários", title: "Funcionários", url: "/ponto/funcionarios", icon: Users },
       { id: "Ponto Registro", title: "Registro via App", url: "/ponto/registro", icon: LucideIcons.Smartphone },
       { id: "Ponto Portal", title: "Portal do Funcionário", url: "/ponto/portal", icon: LucideIcons.User },
       { id: "Ponto Tratamento", title: "Tratamento", url: "/ponto/tratamento", icon: LucideIcons.Wrench },
       { id: "Ponto Ajustes", title: "Ajustes", url: "/ponto/ajustes", icon: LucideIcons.FileEdit },
       { id: "Ponto Espelho", title: "Espelho de Ponto", url: "/ponto/espelho", icon: LucideIcons.FileSignature },
-      { id: "Ponto Exportação", title: "Exportação Domínio", url: "/ponto/exportacao", icon: LucideIcons.FileDown },
-      { id: "Ponto Alertas", title: "Antifraude", url: "/ponto/alertas", icon: LucideIcons.ShieldAlert },
+      { id: "Ponto Alertas", title: "Antifraude (Alertas)", url: "/ponto/alertas", icon: LucideIcons.ShieldAlert },
       { id: "Ponto Auditoria", title: "Auditoria", url: "/ponto/auditoria", icon: LucideIcons.ShieldCheck },
       { id: "Ponto Assistente", title: "Assistente RH (IA)", url: "/ponto/assistente", icon: LucideIcons.Sparkles },
       { id: "Ponto Predições", title: "Inteligência Preditiva", url: "/ponto/predicoes", icon: LucideIcons.TrendingUp },
@@ -194,11 +192,10 @@ const menuItems: MenuItem[] = [
       { id: "Ponto Férias", title: "Férias e Afastamentos", url: "/ponto/ferias", icon: LucideIcons.Plane },
       { id: "Ponto AFD", title: "Arquivos Legais (AFD/AEJ)", url: "/ponto/afd", icon: LucideIcons.FileText },
       { id: "Ponto eSocial", title: "eSocial", url: "/ponto/esocial", icon: LucideIcons.FileCode },
-      { id: "Ponto Importação", title: "Importação em Lote", url: "/ponto/importacao", icon: LucideIcons.Upload },
-      { id: "Ponto Notificações", title: "Notificações", url: "/ponto/notificacoes", icon: LucideIcons.Bell },
       { id: "Ponto Manual", title: "Manual de Uso", url: "/ponto/manual", icon: LucideIcons.BookOpen },
       { id: "Ponto Config", title: "Configurações", url: "/ponto/config", icon: Settings },
     ],
+
   },
 
   {
