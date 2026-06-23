@@ -26,7 +26,7 @@ type Equipe = {
 
 type Func = { id: string; nome: string };
 
-const empty = { nome: "", descricao: "", cor: "#3b82f6", filial_id: "", departamento_id: "", lider_funcionario_id: "", ativo: true };
+const empty = { nome: "", descricao: "", cor: "#3b82f6", filial_id: "", departamento_id: "", lider_funcionario_id: "", ativo: true, compartilhado: true };
 
 export default function PontoEquipes() {
   const { empresaId } = usePontoEmpresa();
