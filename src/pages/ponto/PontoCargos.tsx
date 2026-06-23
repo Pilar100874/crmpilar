@@ -39,7 +39,7 @@ export default function PontoCargos() {
   const load = async () => {
     if (!empresaId) return;
     const { data } = await supabase
-      .from("ponto_cargos").select("*").eq("empresa_id", empresaId).order("nome");
+      .from("ponto_cargos").select("*").or(`empresa_id.eq.${empresaId},global.eq.true`).order("nome");
     setItems((data as any) || []);
     const { data: f } = await supabase
       .from("ponto_filiais").select("id, nome").eq("empresa_id", empresaId).order("nome");
@@ -58,6 +58,7 @@ export default function PontoCargos() {
       filial_id: x.filial_id ?? "",
       ativo: x.ativo,
       compartilhado: !x.filial_id,
+      global: !!x.global,
     });
     setOpen(true);
   };
@@ -65,21 +66,22 @@ export default function PontoCargos() {
   const save = async () => {
     if (!empresaId) return toast.error("Selecione uma empresa");
     if (!form.nome.trim()) return toast.error("Nome obrigatório");
-    if (!form.compartilhado && !form.filial_id) return toast.error("Selecione uma filial ou ative o compartilhamento");
+    if (!form.global && !form.compartilhado && !form.filial_id) return toast.error("Selecione uma filial ou ative o compartilhamento");
     const sal = form.salario_base ? parseFloat(form.salario_base.replace(",", ".")) : null;
     if (sal !== null && isNaN(sal)) return toast.error("Salário inválido");
-    const payload = {
-      empresa_id: empresaId,
+    const payload: any = {
+      empresa_id: form.global ? null : empresaId,
+      global: form.global,
       nome: form.nome.trim(),
       cbo: form.cbo.trim() || null,
       descricao: form.descricao.trim() || null,
       salario_base: sal,
-      filial_id: form.compartilhado ? null : (form.filial_id || null),
+      filial_id: (form.global || form.compartilhado) ? null : (form.filial_id || null),
       ativo: form.ativo,
     };
     const { error } = editing
-      ? await supabase.from("ponto_cargos").update(payload as any).eq("id", editing.id)
-      : await supabase.from("ponto_cargos").insert(payload as any);
+      ? await supabase.from("ponto_cargos").update(payload).eq("id", editing.id)
+      : await supabase.from("ponto_cargos").insert(payload);
     if (error) return toast.error(error.message);
     toast.success("Salvo");
     setOpen(false);
