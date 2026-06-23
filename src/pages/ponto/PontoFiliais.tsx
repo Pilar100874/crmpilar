@@ -31,6 +31,7 @@ type Filial = {
   raio_metros: number | null;
   ativo: boolean;
   codigo_dominio: string | null;
+  inscricao_estadual: string | null;
 };
 
 const emptyForm = {
@@ -44,6 +45,7 @@ const emptyForm = {
   gps_lon: "",
   raio_metros: "150",
   codigo_dominio: "",
+  inscricao_estadual: "",
 };
 
 export default function PontoFiliais() {
