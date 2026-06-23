@@ -11029,6 +11029,7 @@ export type Database = {
           gps_lat: number | null
           gps_lon: number | null
           id: string
+          inscricao_estadual: string | null
           nome: string
           raio_metros: number | null
           uf: string | null
@@ -11046,6 +11047,7 @@ export type Database = {
           gps_lat?: number | null
           gps_lon?: number | null
           id?: string
+          inscricao_estadual?: string | null
           nome: string
           raio_metros?: number | null
           uf?: string | null
@@ -11063,6 +11065,7 @@ export type Database = {
           gps_lat?: number | null
           gps_lon?: number | null
           id?: string
+          inscricao_estadual?: string | null
           nome?: string
           raio_metros?: number | null
           uf?: string | null

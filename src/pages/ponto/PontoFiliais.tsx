@@ -15,7 +15,7 @@ import { MaskedInput } from "@/components/ui/masked-input";
 import { UfSelect } from "@/components/ui/uf-select";
 import { CidadeSelect } from "@/components/ui/cidade-select";
 import { maskCNPJ, maskCEP } from "@/lib/masks";
-import { validateCNPJ, validateCEP } from "@/lib/validators";
+import { validateCNPJ, validateCEP, validateInscricaoEstadual } from "@/lib/validators";
 import { fetchCep, fetchCnpj } from "@/lib/brAddress";
 
 type Filial = {
@@ -31,6 +31,7 @@ type Filial = {
   raio_metros: number | null;
   ativo: boolean;
   codigo_dominio: string | null;
+  inscricao_estadual: string | null;
 };
 
 const emptyForm = {
@@ -44,6 +45,7 @@ const emptyForm = {
   gps_lon: "",
   raio_metros: "150",
   codigo_dominio: "",
+  inscricao_estadual: "",
 };
 
 export default function PontoFiliais() {
@@ -79,6 +81,7 @@ export default function PontoFiliais() {
       gps_lon: x.gps_lon?.toString() ?? "",
       raio_metros: x.raio_metros?.toString() ?? "150",
       codigo_dominio: x.codigo_dominio ?? "",
+      inscricao_estadual: x.inscricao_estadual ?? "",
     });
     setOpen(true);
   };
@@ -146,6 +149,8 @@ export default function PontoFiliais() {
     if (!form.nome.trim()) return toast.error("Nome obrigatório");
     if (form.cnpj && !validateCNPJ(form.cnpj)) return toast.error("CNPJ inválido");
     if (form.cep && !validateCEP(form.cep)) return toast.error("CEP inválido");
+    if (form.inscricao_estadual && !validateInscricaoEstadual(form.inscricao_estadual))
+      return toast.error("Inscrição Estadual inválida");
     const lat = form.gps_lat ? parseFloat(form.gps_lat) : null;
     const lon = form.gps_lon ? parseFloat(form.gps_lon) : null;
     if (lat !== null && (isNaN(lat) || lat < -90 || lat > 90)) return toast.error("Latitude inválida");
@@ -165,6 +170,7 @@ export default function PontoFiliais() {
       gps_lon: lon,
       raio_metros: raio,
       codigo_dominio: form.codigo_dominio.trim() || null,
+      inscricao_estadual: form.inscricao_estadual.replace(/\D/g, "") || null,
     };
 
     const { error } = editing
@@ -311,6 +317,18 @@ export default function PontoFiliais() {
             <div className="sm:col-span-4">
               <Label>Cidade</Label>
               <CidadeSelect uf={form.uf} value={form.cidade} onChange={(v) => setForm({ ...form, cidade: v })} />
+            </div>
+
+            <div className="sm:col-span-3">
+              <Label>Inscrição Estadual</Label>
+              <Input
+                value={form.inscricao_estadual}
+                onChange={(e) => setForm({ ...form, inscricao_estadual: e.target.value })}
+                placeholder="Somente números (ou ISENTO)"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                IE específica desta filial (cada estabelecimento tem a sua).
+              </p>
             </div>
 
             <div className="sm:col-span-6 mt-2 flex items-center justify-between">
