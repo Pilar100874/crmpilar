@@ -162,9 +162,11 @@ export default function PontoEquipes() {
                   <Badge variant={x.ativo ? "default" : "secondary"}>{x.ativo ? "Ativo" : "Inativo"}</Badge>
                 </div>
                 {x.descricao && <p className="text-xs text-muted-foreground line-clamp-2">{x.descricao}</p>}
-                {x.filial_id
-                  ? <p className="text-xs text-muted-foreground truncate">{filiais.find(f => f.id === x.filial_id)?.nome ?? "—"}</p>
-                  : <p className="text-xs text-primary flex items-center gap-1"><Share2 className="h-3 w-3" />Compartilhada</p>}
+                {x.global
+                  ? <p className="text-xs text-primary flex items-center gap-1"><Globe className="h-3 w-3" />Global (todas as empresas)</p>
+                  : x.filial_id
+                    ? <p className="text-xs text-muted-foreground truncate">{filiais.find(f => f.id === x.filial_id)?.nome ?? "—"}</p>
+                    : <p className="text-xs text-primary flex items-center gap-1"><Share2 className="h-3 w-3" />Compartilhada na empresa</p>}
                 {x.lider_funcionario_id && (
                   <p className="text-xs text-muted-foreground">
                     Líder: {funcionarios.find(f => f.id === x.lider_funcionario_id)?.nome ?? "—"}
