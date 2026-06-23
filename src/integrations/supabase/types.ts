@@ -10305,32 +10305,92 @@ export type Database = {
           },
         ]
       }
+      ponto_cargos: {
+        Row: {
+          ativo: boolean
+          cbo: string | null
+          created_at: string
+          descricao: string | null
+          empresa_id: string
+          id: string
+          nome: string
+          salario_base: number | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cbo?: string | null
+          created_at?: string
+          descricao?: string | null
+          empresa_id: string
+          id?: string
+          nome: string
+          salario_base?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cbo?: string | null
+          created_at?: string
+          descricao?: string | null
+          empresa_id?: string
+          id?: string
+          nome?: string
+          salario_base?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_cargos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_departamentos: {
         Row: {
+          ativo: boolean
           centro_custo: string | null
           created_at: string
-          filial_id: string
+          descricao: string | null
+          empresa_id: string
+          filial_id: string | null
           id: string
           nome: string
           updated_at: string
         }
         Insert: {
+          ativo?: boolean
           centro_custo?: string | null
           created_at?: string
-          filial_id: string
+          descricao?: string | null
+          empresa_id: string
+          filial_id?: string | null
           id?: string
           nome: string
           updated_at?: string
         }
         Update: {
+          ativo?: boolean
           centro_custo?: string | null
           created_at?: string
-          filial_id?: string
+          descricao?: string | null
+          empresa_id?: string
+          filial_id?: string | null
           id?: string
           nome?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ponto_departamentos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ponto_departamentos_filial_id_fkey"
             columns: ["filial_id"]
@@ -10500,6 +10560,113 @@ export type Database = {
             columns: ["filial_id"]
             isOneToOne: false
             referencedRelation: "ponto_filiais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_equipe_membros: {
+        Row: {
+          created_at: string
+          equipe_id: string
+          funcionario_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          equipe_id: string
+          funcionario_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          equipe_id?: string
+          funcionario_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_equipe_membros_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_equipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_equipe_membros_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_equipes: {
+        Row: {
+          ativo: boolean
+          cor: string | null
+          created_at: string
+          departamento_id: string | null
+          descricao: string | null
+          empresa_id: string
+          filial_id: string | null
+          id: string
+          lider_funcionario_id: string | null
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cor?: string | null
+          created_at?: string
+          departamento_id?: string | null
+          descricao?: string | null
+          empresa_id: string
+          filial_id?: string | null
+          id?: string
+          lider_funcionario_id?: string | null
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cor?: string | null
+          created_at?: string
+          departamento_id?: string | null
+          descricao?: string | null
+          empresa_id?: string
+          filial_id?: string | null
+          id?: string
+          lider_funcionario_id?: string | null
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_equipes_departamento_id_fkey"
+            columns: ["departamento_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_departamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_equipes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_equipes_filial_id_fkey"
+            columns: ["filial_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_filiais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_equipes_lider_funcionario_id_fkey"
+            columns: ["lider_funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
             referencedColumns: ["id"]
           },
         ]
