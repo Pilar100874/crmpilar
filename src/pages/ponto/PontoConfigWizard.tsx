@@ -145,17 +145,18 @@ const STEPS: Step[] = [
   {
     id: "equipes",
     title: "Equipes",
-    description: "Agrupe funcionários em equipes com líder e membros.",
+    description: "Agrupe funcionários em equipes. Podem misturar pessoas da matriz e filiais.",
     icon: Users,
     url: "/ponto/equipes",
     ctaLabel: "Abrir equipes",
     whyItMatters:
-      "Equipes facilitam gestão de escalas, mapa de equipes e visões por líder.",
+      "Equipes são compartilhadas entre a empresa e todas as filiais — uma equipe pode ter membros de unidades diferentes. Facilitam escalas, mapa de equipes e visões por líder.",
     checklist: [
       "Criar equipes (com cor para identificação)",
       "Definir líder responsável",
-      "Adicionar membros à equipe",
+      "Adicionar membros à equipe (de qualquer filial)",
     ],
+
     optional: true,
     check: async ({ empresaId }) => {
       if (!empresaId) return false;
