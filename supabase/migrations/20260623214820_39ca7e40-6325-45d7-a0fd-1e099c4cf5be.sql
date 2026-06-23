@@ -1,0 +1,1 @@
+ALTER TABLE public.ponto_filiais ADD COLUMN IF NOT EXISTS inscricao_estadual text;
