@@ -319,6 +319,18 @@ export default function PontoFiliais() {
               <CidadeSelect uf={form.uf} value={form.cidade} onChange={(v) => setForm({ ...form, cidade: v })} />
             </div>
 
+            <div className="sm:col-span-3">
+              <Label>Inscrição Estadual</Label>
+              <Input
+                value={form.inscricao_estadual}
+                onChange={(e) => setForm({ ...form, inscricao_estadual: e.target.value })}
+                placeholder="Somente números (ou ISENTO)"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                IE específica desta filial (cada estabelecimento tem a sua).
+              </p>
+            </div>
+
             <div className="sm:col-span-6 mt-2 flex items-center justify-between">
               <Label className="text-sm font-medium">Cerca virtual (geofence)</Label>
               <Button type="button" size="sm" variant="outline" onClick={locateMe} disabled={locating}>
