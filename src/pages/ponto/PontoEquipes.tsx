@@ -198,9 +198,9 @@ export default function PontoEquipes() {
                 <Select
                   value={form.filial_id || "_none"}
                   onValueChange={(v) => setForm({ ...form, filial_id: v === "_none" ? "" : v })}
-                  disabled={form.compartilhado}
+                  disabled={form.compartilhado || form.global}
                 >
-                  <SelectTrigger><SelectValue placeholder={form.compartilhado ? "Todas as filiais" : "Selecione..."} /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={form.global ? "Todas as empresas" : form.compartilhado ? "Todas as filiais" : "Selecione..."} /></SelectTrigger>
                   <SelectContent>
                     {filiais.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
                   </SelectContent>
@@ -219,6 +219,18 @@ export default function PontoEquipes() {
             </div>
             <div className="flex items-center justify-between rounded-md border p-3">
               <div className="space-y-0.5">
+                <Label className="flex items-center gap-2"><Globe className="h-4 w-4" />Compartilhar entre todas as empresas</Label>
+                <p className="text-xs text-muted-foreground">
+                  {form.global ? "Visível em qualquer empresa do sistema." : "Restrita à empresa atual."}
+                </p>
+              </div>
+              <Switch
+                checked={form.global}
+                onCheckedChange={(v) => setForm({ ...form, global: v, filial_id: v ? "" : form.filial_id, compartilhado: v ? true : form.compartilhado })}
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-md border p-3" style={{ opacity: form.global ? 0.5 : 1 }}>
+              <div className="space-y-0.5">
                 <Label className="flex items-center gap-2"><Share2 className="h-4 w-4" />Compartilhar entre matriz e filiais</Label>
                 <p className="text-xs text-muted-foreground">
                   {form.compartilhado ? "Disponível para todas as filiais." : "Restrita à filial selecionada."}
@@ -226,6 +238,7 @@ export default function PontoEquipes() {
               </div>
               <Switch
                 checked={form.compartilhado}
+                disabled={form.global}
                 onCheckedChange={(v) => setForm({ ...form, compartilhado: v, filial_id: v ? "" : form.filial_id })}
               />
             </div>
