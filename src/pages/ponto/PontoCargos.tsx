@@ -129,9 +129,11 @@ export default function PontoCargos() {
                   </div>
                   <Badge variant={x.ativo ? "default" : "secondary"}>{x.ativo ? "Ativo" : "Inativo"}</Badge>
                 </div>
-                {x.filial_id
-                  ? <p className="text-xs text-muted-foreground truncate">{filiais.find(f => f.id === x.filial_id)?.nome ?? "—"}</p>
-                  : <p className="text-xs text-primary flex items-center gap-1"><Share2 className="h-3 w-3" />Compartilhado</p>}
+                {x.global
+                  ? <p className="text-xs text-primary flex items-center gap-1"><Globe className="h-3 w-3" />Global (todas as empresas)</p>
+                  : x.filial_id
+                    ? <p className="text-xs text-muted-foreground truncate">{filiais.find(f => f.id === x.filial_id)?.nome ?? "—"}</p>
+                    : <p className="text-xs text-primary flex items-center gap-1"><Share2 className="h-3 w-3" />Compartilhado na empresa</p>}
                 {x.descricao && <p className="text-xs text-muted-foreground line-clamp-2">{x.descricao}</p>}
                 <div className="flex gap-2 pt-1">
                   <Button size="sm" variant="outline" onClick={() => openEdit(x)}><Pencil className="h-3.5 w-3.5" /></Button>
