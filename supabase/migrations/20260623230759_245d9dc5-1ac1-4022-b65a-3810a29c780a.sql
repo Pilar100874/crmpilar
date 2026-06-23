@@ -1,0 +1,2 @@
+ALTER TABLE public.ponto_cargos ADD COLUMN IF NOT EXISTS filial_id uuid REFERENCES public.ponto_filiais(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_ponto_cargos_filial ON public.ponto_cargos(filial_id);
