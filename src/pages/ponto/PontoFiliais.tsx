@@ -170,6 +170,7 @@ export default function PontoFiliais() {
       gps_lon: lon,
       raio_metros: raio,
       codigo_dominio: form.codigo_dominio.trim() || null,
+      inscricao_estadual: form.inscricao_estadual.replace(/\D/g, "") || null,
     };
 
     const { error } = editing
