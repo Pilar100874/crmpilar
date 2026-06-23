@@ -22,7 +22,7 @@ type Item = {
   ativo: boolean;
 };
 
-const empty = { nome: "", centro_custo: "", descricao: "", filial_id: "", ativo: true };
+const empty = { nome: "", centro_custo: "", descricao: "", filial_id: "", ativo: true, compartilhado: true };
 
 export default function PontoDepartamentos() {
   const { empresaId } = usePontoEmpresa();
