@@ -63,6 +63,8 @@ import PontoAlertas from "./pages/ponto/PontoAlertas";
 import PontoAuditoria from "./pages/ponto/PontoAuditoria";
 import PontoColetorDownload from "./pages/ponto/PontoColetorDownload";
 import PontoConfig from "./pages/ponto/PontoConfig";
+import PontoConfigWizard from "./pages/ponto/PontoConfigWizard";
+
 import PontoAntifraudeConfig from "./pages/ponto/PontoAntifraudeConfig";
 import PontoAssistente from "./pages/ponto/PontoAssistente";
 import PontoPortalFuncionario from "./pages/ponto/PontoPortalFuncionario";
@@ -362,6 +364,8 @@ const App = () => (
                 <Route path="auditoria" element={<PontoAuditoria />} />
                 <Route path="coletor" element={<PontoColetorDownload />} />
                 <Route path="config" element={<PontoConfig />} />
+                <Route path="config/wizard" element={<PontoConfigWizard />} />
+
                 <Route path="antifraude" element={<PontoAntifraudeConfig />} />
                 <Route path="assistente" element={<PontoAssistente />} />
                 <Route path="portal" element={<PontoPortalFuncionario />} />

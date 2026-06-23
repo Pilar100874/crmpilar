@@ -1,6 +1,24 @@
 import { Link } from "react-router-dom";
-import { Building2, Cpu, Download, FileDown, ShieldCheck } from "lucide-react";
+import {
+  Building2,
+  Cpu,
+  Download,
+  FileDown,
+  ShieldCheck,
+  Users,
+  Upload,
+  Bell,
+  Wand2,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+
+const wizard = {
+  title: "Assistente de Configuração",
+  description: "Configure todo o sistema de ponto passo a passo, do início ao fim",
+  url: "/ponto/config/wizard",
+  icon: Wand2,
+  highlight: true,
+};
 
 const items = [
   {
@@ -8,6 +26,12 @@ const items = [
     description: "Cadastro de empresas, filiais e departamentos",
     url: "/ponto/empresas",
     icon: Building2,
+  },
+  {
+    title: "Funcionários",
+    description: "Cadastro de funcionários, jornadas e vínculos",
+    url: "/ponto/funcionarios",
+    icon: Users,
   },
   {
     title: "Equipamentos Control iD",
@@ -33,17 +57,48 @@ const items = [
     url: "/ponto/exportacao",
     icon: FileDown,
   },
+  {
+    title: "Notificações",
+    description: "Regras de avisos automáticos para RH e funcionários",
+    url: "/ponto/notificacoes",
+    icon: Bell,
+  },
+  {
+    title: "Importação em Lote",
+    description: "Importar funcionários, jornadas e históricos via planilha",
+    url: "/ponto/importacao",
+    icon: Upload,
+  },
 ];
 
 export default function PontoConfig() {
+  const WizardIcon = wizard.icon;
   return (
     <div className="space-y-4">
       <div>
         <h1 className="text-xl font-semibold sm:text-2xl">Configurações</h1>
         <p className="text-sm text-muted-foreground">
-          Ajustes do módulo de Controle de Ponto
+          Ajustes e cadastros do módulo de Controle de Ponto
         </p>
       </div>
+
+      <Link to={wizard.url} className="group block">
+        <Card className="border-primary/40 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary hover:shadow-lg">
+          <CardContent className="flex items-start gap-4 p-5">
+            <div className="rounded-xl bg-primary p-3 text-primary-foreground shadow-md">
+              <WizardIcon className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-base sm:text-lg">{wizard.title}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{wizard.description}</p>
+              <span className="mt-2 inline-block text-xs font-medium text-primary">
+                Iniciar configuração →
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((it) => {
           const Icon = it.icon;
