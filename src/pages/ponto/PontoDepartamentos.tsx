@@ -119,9 +119,11 @@ export default function PontoDepartamentos() {
                   <div className="min-w-0">
                     <h3 className="truncate font-semibold">{x.nome}</h3>
                     {x.centro_custo && <p className="text-xs text-muted-foreground">CC: {x.centro_custo}</p>}
-                    {x.filial_id
-                      ? <p className="text-xs text-muted-foreground truncate">{filiais.find(f => f.id === x.filial_id)?.nome ?? "—"}</p>
-                      : <p className="text-xs text-primary flex items-center gap-1"><Share2 className="h-3 w-3" />Compartilhado</p>}
+                    {x.global
+                      ? <p className="text-xs text-primary flex items-center gap-1"><Globe className="h-3 w-3" />Global (todas as empresas)</p>
+                      : x.filial_id
+                        ? <p className="text-xs text-muted-foreground truncate">{filiais.find(f => f.id === x.filial_id)?.nome ?? "—"}</p>
+                        : <p className="text-xs text-primary flex items-center gap-1"><Share2 className="h-3 w-3" />Compartilhado na empresa</p>}
                   </div>
                   <Badge variant={x.ativo ? "default" : "secondary"}>{x.ativo ? "Ativo" : "Inativo"}</Badge>
                 </div>
