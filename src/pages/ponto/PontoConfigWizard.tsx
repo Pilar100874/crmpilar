@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { usePontoEmpresa } from "./usePontoEmpresa";
+import { setWizardActive } from "./WizardBackBar";
 
 type Step = {
   id: string;
@@ -381,7 +382,7 @@ export default function PontoConfigWizard() {
 
             <div className="flex flex-wrap gap-2 pt-2">
               {step.url && (
-                <Button asChild>
+                <Button asChild onClick={() => setWizardActive()}>
                   <Link to={`${step.url}?from=wizard`}>
                     <ExternalLink className="h-4 w-4" /> {step.ctaLabel}
                   </Link>
