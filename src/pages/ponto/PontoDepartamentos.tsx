@@ -56,6 +56,7 @@ export default function PontoDepartamentos() {
       descricao: x.descricao ?? "",
       filial_id: x.filial_id ?? "",
       ativo: x.ativo,
+      compartilhado: !x.filial_id,
     });
     setOpen(true);
   };
