@@ -20,10 +20,12 @@ type Item = {
   descricao: string | null;
   salario_base: number | null;
   filial_id: string | null;
+  empresa_id: string | null;
+  global: boolean;
   ativo: boolean;
 };
 
-const empty = { nome: "", cbo: "", descricao: "", salario_base: "", filial_id: "", ativo: true, compartilhado: true };
+const empty = { nome: "", cbo: "", descricao: "", salario_base: "", filial_id: "", ativo: true, compartilhado: true, global: false };
 
 export default function PontoCargos() {
   const { empresaId } = usePontoEmpresa();
