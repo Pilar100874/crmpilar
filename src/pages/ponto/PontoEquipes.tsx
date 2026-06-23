@@ -21,12 +21,14 @@ type Equipe = {
   filial_id: string | null;
   departamento_id: string | null;
   lider_funcionario_id: string | null;
+  empresa_id: string | null;
+  global: boolean;
   ativo: boolean;
 };
 
 type Func = { id: string; nome: string };
 
-const empty = { nome: "", descricao: "", cor: "#3b82f6", filial_id: "", departamento_id: "", lider_funcionario_id: "", ativo: true, compartilhado: true };
+const empty = { nome: "", descricao: "", cor: "#3b82f6", filial_id: "", departamento_id: "", lider_funcionario_id: "", ativo: true, compartilhado: true, global: false };
 
 export default function PontoEquipes() {
   const { empresaId } = usePontoEmpresa();
