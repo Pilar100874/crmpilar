@@ -55,27 +55,46 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Carrega funcionário + escala + regras
+    // Carrega funcionário
     const { data: func } = await supabase
       .from("ponto_funcionarios")
-      .select("id, empresa_id, escala_id, registra_ponto, jornada_contratada_horas, tipo_contrato, status, data_inicio_ponto, ponto_escalas(jornada,intervalo_minutos)")
+      .select("id, empresa_id, registra_ponto, tipo_contrato, status, data_inicio_ponto")
       .eq("id", funcionario_id).single();
 
-    // Funcionário não registra ponto (ex.: isento, comissionista puro) → não calcula
     if (func && func.registra_ponto === false) {
       return new Response(JSON.stringify({ ok: true, skipped: "funcionario_nao_registra_ponto" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    // Antes da data de início do ponto → não calcula
     if (func?.data_inicio_ponto && data < func.data_inicio_ponto) {
       return new Response(JSON.stringify({ ok: true, skipped: "antes_inicio_ponto" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    // Funcionário inativo/demitido → não calcula
-    if (func?.status && !["ativo", "ferias", "afastado"].includes(func.status)) {
-      return new Response(JSON.stringify({ ok: true, skipped: `status_${func.status}` }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    // 🔑 HISTÓRICO: busca a escala/jornada VIGENTE na data — não a atual do cadastro
+    const { data: vigencia } = await supabase.rpc("ponto_get_vigencia", { _func_id: funcionario_id, _data: data });
+    const vig: any = Array.isArray(vigencia) ? vigencia[0] : vigencia;
+
+    // Carrega a escala referenciada pela vigência
+    let escala: any = null;
+    if (vig?.escala_id) {
+      const { data: esc } = await supabase.from("ponto_escalas")
+        .select("jornada, intervalo_minutos").eq("id", vig.escala_id).maybeSingle();
+      escala = esc;
     }
+
+    // 🔑 ATESTADO aprovado no dia → abona, não considera falta
+    const { data: atestado } = await supabase.from("ponto_atestados")
+      .select("id, data_inicio, data_fim, status, cid")
+      .eq("funcionario_id", funcionario_id)
+      .lte("data_inicio", data).gte("data_fim", data)
+      .eq("status", "aprovado").maybeSingle();
+
+    // 🔑 FÉRIAS / AFASTAMENTO no dia → marca tipo e zera falta
+    const { data: ferias } = await supabase.from("ponto_ferias_afastamentos")
+      .select("id, tipo, data_inicio, data_fim, status, bloqueia_marcacao")
+      .eq("funcionario_id", funcionario_id)
+      .lte("data_inicio", data).gte("data_fim", data)
+      .in("status", ["aprovado", "ativo"]).maybeSingle();
 
     const empId = empresa_id || func?.empresa_id;
     const { data: regra } = await supabase
@@ -91,9 +110,8 @@ Deno.serve(async (req) => {
       banco_horas_ativo: regra?.banco_horas_ativo ?? false,
     };
 
-    // Carga diária derivada da jornada contratada do funcionário (sobrescreve escala se definida)
-    const cargaContratadaDiariaMin = (func as any)?.jornada_contratada_horas
-      ? Math.round(Number((func as any).jornada_contratada_horas) * 60 / 5) // semanal → diária (5 dias)
+    const cargaContratadaDiariaMin = vig?.jornada_contratada_horas
+      ? Math.round(Number(vig.jornada_contratada_horas) * 60 / 5)
       : null;
 
     // Registros do dia
