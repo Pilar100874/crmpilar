@@ -38,6 +38,7 @@ export default function PontoRegistro() {
   const [funcionarios, setFuncionarios] = useState<Func[]>([]);
   const [funcId, setFuncId] = useState<string>("");
   const [tipo, setTipo] = useState<Tipo>("entrada");
+  const [antifraudeAtivo, setAntifraudeAtivo] = useState<boolean>(true);
   const [gps, setGps] = useState<{ lat: number; lng: number; precisao: number } | null>(null);
   const [gpsErr, setGpsErr] = useState<string>("");
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -52,7 +53,7 @@ export default function PontoRegistro() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Carrega funcionários
+  // Carrega funcionários + flag antifraude
   useEffect(() => {
     if (!empresaId) return;
     (async () => {
@@ -63,6 +64,12 @@ export default function PontoRegistro() {
         .eq("ativo", true)
         .order("nome");
       setFuncionarios((data || []) as Func[]);
+      const { data: emp } = await (supabase as any)
+        .from("ponto_empresas")
+        .select("antifraude_ativo")
+        .eq("id", empresaId)
+        .maybeSingle();
+      setAntifraudeAtivo(emp?.antifraude_ativo ?? true);
     })();
   }, [empresaId]);
 
@@ -140,8 +147,8 @@ export default function PontoRegistro() {
 
   const enviar = async () => {
     if (!funcId) return toast.error("Selecione o funcionário");
-    if (!gps) return toast.error("Aguardando GPS");
-    if (!fotoB64) return toast.error("Capture sua selfie");
+    if (antifraudeAtivo && !gps) return toast.error("Aguardando GPS");
+    if (antifraudeAtivo && !fotoB64) return toast.error("Capture sua selfie");
     setEnviando(true);
     setResultado(null);
     try {
@@ -270,7 +277,7 @@ export default function PontoRegistro() {
         </CardContent>
       </Card>
 
-      <Button onClick={enviar} disabled={enviando || !funcId || !gps || !fotoB64} size="lg" className="w-full">
+      <Button onClick={enviar} disabled={enviando || !funcId || (antifraudeAtivo && (!gps || !fotoB64))} size="lg" className="w-full">
         {enviando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
         Registrar Ponto
       </Button>

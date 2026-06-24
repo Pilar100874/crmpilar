@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, MapPin, Wifi } from "lucide-react";
+import { Plus, Trash2, MapPin, Wifi, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -30,6 +31,7 @@ interface Rede {
 
 export default function PontoAntifraudeConfig() {
   const { empresaId } = usePontoEmpresa();
+  const [ativo, setAtivo] = useState<boolean>(true);
   const [geos, setGeos] = useState<Geofence[]>([]);
   const [redes, setRedes] = useState<Rede[]>([]);
   const [novoGeo, setNovoGeo] = useState({ nome: "", lat: "", lng: "", raio: "150" });
@@ -40,12 +42,14 @@ export default function PontoAntifraudeConfig() {
   const loadAll = async () => {
     if (!empresaId) return;
     const sb = supabase as any;
-    const [{ data: g }, { data: r }] = await Promise.all([
+    const [{ data: g }, { data: r }, { data: emp }] = await Promise.all([
       sb.from("ponto_geofences").select("*").eq("empresa_id", empresaId).order("nome"),
       sb.from("ponto_redes_autorizadas").select("*").eq("empresa_id", empresaId).order("tipo"),
+      sb.from("ponto_empresas").select("antifraude_ativo").eq("id", empresaId).maybeSingle(),
     ]);
     setGeos((g || []) as Geofence[]);
     setRedes((r || []) as Rede[]);
+    setAtivo(emp?.antifraude_ativo ?? true);
   };
 
   useEffect(() => { loadAll(); }, [empresaId]);
@@ -98,11 +102,47 @@ export default function PontoAntifraudeConfig() {
         </p>
       </div>
 
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4" /> Validação antifraude
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <Label className="text-sm font-medium">
+              {ativo ? "Ativada" : "Desativada"}
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Quando desativada, as marcações de ponto são aceitas sem exigir selfie, GPS, QR Code ou rede autorizada.
+            </p>
+          </div>
+          <Switch
+            checked={ativo}
+            onCheckedChange={async (v) => {
+              if (!empresaId) return;
+              setAtivo(v);
+              const { error } = await (supabase as any)
+                .from("ponto_empresas")
+                .update({ antifraude_ativo: v })
+                .eq("id", empresaId);
+              if (error) {
+                toast.error(error.message);
+                setAtivo(!v);
+              } else {
+                toast.success(v ? "Antifraude ativada" : "Antifraude desativada");
+              }
+            }}
+          />
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue="geo">
         <TabsList>
           <TabsTrigger value="geo"><MapPin className="mr-2 h-4 w-4" />Geofences</TabsTrigger>
           <TabsTrigger value="redes"><Wifi className="mr-2 h-4 w-4" />Redes</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="geo" className="space-y-4">
           <Card>

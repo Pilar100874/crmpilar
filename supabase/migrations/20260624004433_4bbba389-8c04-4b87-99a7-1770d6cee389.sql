@@ -1,0 +1,1 @@
+ALTER TABLE public.ponto_empresas ADD COLUMN IF NOT EXISTS antifraude_ativo boolean NOT NULL DEFAULT true;
