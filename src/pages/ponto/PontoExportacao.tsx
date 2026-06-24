@@ -271,8 +271,8 @@ export default function PontoExportacao() {
         onConfirm={() => reabrirTarget && reabrirPeriodo(reabrirTarget)}
         title="Reabrir período exportado?"
         description={reabrirTarget ? `O período ${reabrirTarget.periodo_inicio} → ${reabrirTarget.periodo_fim} ficará disponível para nova edição e geração. Fechamentos mensais sobrepostos serão removidos.` : ""}
-        confirmText="Reabrir"
       />
+
     </div>
   );
 }
