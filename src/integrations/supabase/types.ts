@@ -10695,39 +10695,78 @@ export type Database = {
       }
       ponto_escalas: {
         Row: {
+          aplicar_tolerancia_flexivel: boolean
           ativo: boolean
           carga_semanal_minutos: number | null
+          codigo: string | null
+          controlar_nr17: boolean
           created_at: string
+          descricao: string | null
           empresa_id: string
+          hora_desconto_dsr: string | null
           id: string
+          ignorar_afastamento_ciclico: boolean
+          ignorar_feriados: boolean
+          intervalo_flexivel: boolean
           intervalo_minutos: number | null
+          intervalo_preassinalado: Json
+          intrajornada_config: Json
           jornada: Json
+          jornada_feriados: Json
+          jornada_flexivel: boolean
+          marcacao_excecao: boolean
           nome: string
           noturna: boolean | null
           tipo: string
           updated_at: string
         }
         Insert: {
+          aplicar_tolerancia_flexivel?: boolean
           ativo?: boolean
           carga_semanal_minutos?: number | null
+          codigo?: string | null
+          controlar_nr17?: boolean
           created_at?: string
+          descricao?: string | null
           empresa_id: string
+          hora_desconto_dsr?: string | null
           id?: string
+          ignorar_afastamento_ciclico?: boolean
+          ignorar_feriados?: boolean
+          intervalo_flexivel?: boolean
           intervalo_minutos?: number | null
+          intervalo_preassinalado?: Json
+          intrajornada_config?: Json
           jornada?: Json
+          jornada_feriados?: Json
+          jornada_flexivel?: boolean
+          marcacao_excecao?: boolean
           nome: string
           noturna?: boolean | null
           tipo?: string
           updated_at?: string
         }
         Update: {
+          aplicar_tolerancia_flexivel?: boolean
           ativo?: boolean
           carga_semanal_minutos?: number | null
+          codigo?: string | null
+          controlar_nr17?: boolean
           created_at?: string
+          descricao?: string | null
           empresa_id?: string
+          hora_desconto_dsr?: string | null
           id?: string
+          ignorar_afastamento_ciclico?: boolean
+          ignorar_feriados?: boolean
+          intervalo_flexivel?: boolean
           intervalo_minutos?: number | null
+          intervalo_preassinalado?: Json
+          intrajornada_config?: Json
           jornada?: Json
+          jornada_feriados?: Json
+          jornada_flexivel?: boolean
+          marcacao_excecao?: boolean
           nome?: string
           noturna?: boolean | null
           tipo?: string
