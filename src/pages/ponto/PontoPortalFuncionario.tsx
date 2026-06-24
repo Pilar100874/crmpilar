@@ -351,6 +351,25 @@ export default function PontoPortalFuncionario() {
           }
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><Palmtree className="h-4 w-4" /> Minhas férias e afastamentos</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {ferias.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma solicitação.</p> :
+            ferias.map((a: any) => (
+              <div key={a.id} className="flex items-center justify-between border-b pb-1.5 text-sm">
+                <div>
+                  <p className="font-medium">{a.tipo} · {a.data_inicio} → {a.data_fim} <span className="text-muted-foreground">({a.dias}d)</span></p>
+                  {a.motivo && <p className="text-xs text-muted-foreground truncate max-w-[400px]">{a.motivo}</p>}
+                </div>
+                <Badge variant={tone(a.status) as any}>
+                  {a.status}{a.nivel_aprovacao_max > 1 ? ` ${a.nivel_aprovacao_atual}/${a.nivel_aprovacao_max}` : ""}
+                </Badge>
+              </div>
+            ))
+          }
+        </CardContent>
+      </Card>
     </div>
   );
 }
