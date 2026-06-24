@@ -369,12 +369,11 @@ export default function PontoConfigWizard() {
   };
 
   const verifyStep = async () => {
-    if (!step.check) {
-      toggleDone();
-      return;
-    }
+    if (!step.check) return;
     const ok = await step.check({ empresaId });
-    setCompleted((c) => ({ ...c, [step.id]: ok }));
+    if (ok) {
+      setCompleted((c) => ({ ...c, [step.id]: true }));
+    }
   };
 
   return (
