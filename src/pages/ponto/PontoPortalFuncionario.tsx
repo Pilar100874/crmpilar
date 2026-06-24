@@ -137,6 +137,33 @@ export default function PontoPortalFuncionario() {
     }
   };
 
+  const enviarFerias = async () => {
+    if (!func || !novaFerias.data_inicio || !novaFerias.data_fim) {
+      return toast.error("Preencha as datas");
+    }
+    const ini = new Date(novaFerias.data_inicio);
+    const fim = new Date(novaFerias.data_fim);
+    const dias = Math.max(1, Math.round((fim.getTime() - ini.getTime()) / 86400000) + 1);
+    // Resolver estabelecimento_id via empresa
+    const { data: emp } = await supabase.from("ponto_empresas")
+      .select("estabelecimento_id").eq("id", func.empresa_id).maybeSingle();
+    const { error } = await supabase.from("ponto_ferias_afastamentos").insert({
+      funcionario_id: func.id,
+      estabelecimento_id: emp?.estabelecimento_id,
+      tipo: novaFerias.tipo,
+      data_inicio: novaFerias.data_inicio,
+      data_fim: novaFerias.data_fim,
+      dias,
+      motivo: novaFerias.motivo || null,
+      status: "pendente",
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Solicitação enviada para o RH");
+    setOpenFerias(false);
+    setNovaFerias({ tipo: "ferias", data_inicio: "", data_fim: "", motivo: "" });
+    load();
+  };
+
   const mesAtual = new Date().toISOString().slice(0, 7);
   const jaAssinou = assinaturas.some(a => (a.mes_referencia || "").startsWith(mesAtual));
 
