@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { FileText, Plus } from "lucide-react";
-import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+
 
 export default function PontoAcordosColetivos() {
   const [lista, setLista] = useState<any[]>([]);
@@ -99,7 +99,7 @@ export default function PontoAcordosColetivos() {
                       {a.sindicato_nome} · {new Date(a.vigencia_inicio).toLocaleDateString("pt-BR")} → {new Date(a.vigencia_fim).toLocaleDateString("pt-BR")}
                     </p>
                   </div>
-                  <DeleteConfirmDialog title="Excluir acordo?" onConfirm={() => remover(a.id)} />
+                  <Button variant="ghost" size="sm" onClick={() => { if (confirm("Excluir acordo?")) remover(a.id); }}>Excluir</Button>
                 </div>
               </CardHeader>
               <CardContent className="text-xs grid grid-cols-2 md:grid-cols-4 gap-2">
