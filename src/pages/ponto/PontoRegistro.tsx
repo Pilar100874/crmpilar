@@ -147,24 +147,36 @@ export default function PontoRegistro() {
     setStream(null);
   };
 
+  const offline = usePontoOfflineQueue();
+
   const enviar = async () => {
     if (!funcId) return toast.error("Selecione o funcionário");
     if (antifraudeAtivo && !gps) return toast.error("Aguardando GPS");
     if (antifraudeAtivo && !fotoB64) return toast.error("Capture sua selfie");
+    const payload = {
+      funcionario_id: funcId,
+      tipo,
+      gps,
+      foto_base64: fotoB64.split(",")[1],
+      device_hash: deviceHash,
+      user_agent: navigator.userAgent,
+      qr_token: qrToken,
+      origem: "app_web",
+    };
+
+    // Sem rede: enfileira local e libera o usuário imediatamente
+    if (!navigator.onLine) {
+      offline.enqueue(payload);
+      toast.success("Sem internet — marcação salva e será enviada quando voltar à rede");
+      setFotoB64("");
+      return;
+    }
+
     setEnviando(true);
     setResultado(null);
     try {
       const { data, error } = await supabase.functions.invoke("ponto-validar-marcacao", {
-        body: {
-          funcionario_id: funcId,
-          tipo,
-          gps,
-          foto_base64: fotoB64.split(",")[1],
-          device_hash: deviceHash,
-          user_agent: navigator.userAgent,
-          qr_token: qrToken,
-          origem: "app_web",
-        },
+        body: payload,
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -172,7 +184,10 @@ export default function PontoRegistro() {
       toast.success(`Ponto registrado · confiança ${data.score_confianca}%`);
       setFotoB64("");
     } catch (e: any) {
-      toast.error(e.message || "Erro ao registrar");
+      // Falha de rede inesperada: enfileira para retry automático
+      offline.enqueue(payload);
+      toast.warning("Falha de envio — marcação salva offline para sincronização");
+      setFotoB64("");
     } finally {
       setEnviando(false);
     }
