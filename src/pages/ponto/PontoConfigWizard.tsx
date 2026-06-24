@@ -108,11 +108,13 @@ const STEPS: Step[] = [
     ],
     optional: true,
     check: async ({ empresaId }) => {
-      if (!empresaId) return false;
+      const filtro = empresaId
+        ? `empresa_id.eq.${empresaId},global.eq.true`
+        : "global.eq.true";
       const { count } = await supabase
         .from("ponto_departamentos")
         .select("id", { count: "exact", head: true })
-        .or(`empresa_id.eq.${empresaId},global.eq.true`);
+        .or(filtro);
       return (count ?? 0) > 0;
     },
 
@@ -135,11 +137,13 @@ const STEPS: Step[] = [
 
     optional: true,
     check: async ({ empresaId }) => {
-      if (!empresaId) return false;
+      const filtro = empresaId
+        ? `empresa_id.eq.${empresaId},global.eq.true`
+        : "global.eq.true";
       const { count } = await supabase
         .from("ponto_cargos")
         .select("id", { count: "exact", head: true })
-        .or(`empresa_id.eq.${empresaId},global.eq.true`);
+        .or(filtro);
       return (count ?? 0) > 0;
     },
 
@@ -161,11 +165,13 @@ const STEPS: Step[] = [
 
     optional: true,
     check: async ({ empresaId }) => {
-      if (!empresaId) return false;
+      const filtro = empresaId
+        ? `empresa_id.eq.${empresaId},global.eq.true`
+        : "global.eq.true";
       const { count } = await supabase
         .from("ponto_equipes")
         .select("id", { count: "exact", head: true })
-        .or(`empresa_id.eq.${empresaId},global.eq.true`);
+        .or(filtro);
       return (count ?? 0) > 0;
     },
 
