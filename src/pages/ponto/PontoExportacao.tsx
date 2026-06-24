@@ -26,6 +26,8 @@ export default function PontoExportacao() {
   const [generating, setGenerating] = useState(false);
   const [validando, setValidando] = useState(false);
   const [erros, setErros] = useState<any[]>([]);
+  const [delTarget, setDelTarget] = useState<any | null>(null);
+  const [reabrirTarget, setReabrirTarget] = useState<any | null>(null);
 
   const loadLayouts = async () => {
     if (!empresaId) return;
