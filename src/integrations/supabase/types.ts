@@ -11712,6 +11712,9 @@ export type Database = {
           escolaridade: string | null
           estado_civil: string | null
           etnia: string | null
+          face_enrolled_at: string | null
+          face_match_threshold: number
+          face_url: string | null
           filial_id: string | null
           foto_referencia_url: string | null
           foto_url: string | null
@@ -11779,6 +11782,9 @@ export type Database = {
           escolaridade?: string | null
           estado_civil?: string | null
           etnia?: string | null
+          face_enrolled_at?: string | null
+          face_match_threshold?: number
+          face_url?: string | null
           filial_id?: string | null
           foto_referencia_url?: string | null
           foto_url?: string | null
@@ -11846,6 +11852,9 @@ export type Database = {
           escolaridade?: string | null
           estado_civil?: string | null
           etnia?: string | null
+          face_enrolled_at?: string | null
+          face_match_threshold?: number
+          face_url?: string | null
           filial_id?: string | null
           foto_referencia_url?: string | null
           foto_url?: string | null
