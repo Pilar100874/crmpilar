@@ -9908,6 +9908,63 @@ export type Database = {
           },
         ]
       }
+      ponto_afd_arquivos: {
+        Row: {
+          created_at: string
+          data_fim: string
+          data_inicio: string
+          empresa_id: string
+          gerado_por: string | null
+          hash_arquivo: string | null
+          id: string
+          nsr_final: number | null
+          nsr_inicial: number | null
+          storage_path: string | null
+          total_registros: number | null
+        }
+        Insert: {
+          created_at?: string
+          data_fim: string
+          data_inicio: string
+          empresa_id: string
+          gerado_por?: string | null
+          hash_arquivo?: string | null
+          id?: string
+          nsr_final?: number | null
+          nsr_inicial?: number | null
+          storage_path?: string | null
+          total_registros?: number | null
+        }
+        Update: {
+          created_at?: string
+          data_fim?: string
+          data_inicio?: string
+          empresa_id?: string
+          gerado_por?: string | null
+          hash_arquivo?: string | null
+          id?: string
+          nsr_final?: number | null
+          nsr_inicial?: number | null
+          storage_path?: string | null
+          total_registros?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_afd_arquivos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_afd_arquivos_gerado_por_fkey"
+            columns: ["gerado_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_ajustes: {
         Row: {
           anexo_url: string | null
@@ -10960,6 +11017,59 @@ export type Database = {
           },
         ]
       }
+      ponto_espelho_envios: {
+        Row: {
+          created_at: string
+          enviado_em: string | null
+          funcionario_id: string
+          hash_espelho: string | null
+          id: string
+          mes_referencia: string
+          motivo_rejeicao: string | null
+          respondido_em: string | null
+          status: string
+          token: string
+          updated_at: string
+          visualizado_em: string | null
+        }
+        Insert: {
+          created_at?: string
+          enviado_em?: string | null
+          funcionario_id: string
+          hash_espelho?: string | null
+          id?: string
+          mes_referencia: string
+          motivo_rejeicao?: string | null
+          respondido_em?: string | null
+          status?: string
+          token?: string
+          updated_at?: string
+          visualizado_em?: string | null
+        }
+        Update: {
+          created_at?: string
+          enviado_em?: string | null
+          funcionario_id?: string
+          hash_espelho?: string | null
+          id?: string
+          mes_referencia?: string
+          motivo_rejeicao?: string | null
+          respondido_em?: string | null
+          status?: string
+          token?: string
+          updated_at?: string
+          visualizado_em?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_espelho_envios_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_export_layouts: {
         Row: {
           ativo: boolean
@@ -11868,6 +11978,32 @@ export type Database = {
           webhook_url?: string | null
         }
         Relationships: []
+      }
+      ponto_nsr_seq: {
+        Row: {
+          empresa_id: string
+          ultimo_nsr: number
+          updated_at: string
+        }
+        Insert: {
+          empresa_id: string
+          ultimo_nsr?: number
+          updated_at?: string
+        }
+        Update: {
+          empresa_id?: string
+          ultimo_nsr?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_nsr_seq_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: true
+            referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ponto_periodos_fechamento: {
         Row: {
@@ -17282,6 +17418,10 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      ponto_calcular_dsr_mensal: {
+        Args: { _func_id: string; _mes: string }
+        Returns: number
       }
       ponto_get_vigencia: {
         Args: { _data: string; _func_id: string }
