@@ -79,6 +79,7 @@ import PontoMapaEquipes from "./pages/ponto/PontoMapaEquipes";
 import PontoQrCodeTotem from "./pages/ponto/PontoQrCodeTotem";
 import PontoAtestadosAdmin from "./pages/ponto/PontoAtestadosAdmin";
 import PontoFechamento from "./pages/ponto/PontoFechamento";
+import PontoPreFechamento from "./pages/ponto/PontoPreFechamento";
 import PontoBancoHoras from "./pages/ponto/PontoBancoHoras";
 import PontoFerias from "./pages/ponto/PontoFerias";
 import PontoAFD from "./pages/ponto/PontoAFD";
@@ -387,6 +388,7 @@ const App = () => (
                 <Route path="qrcode" element={<PontoQrCodeTotem />} />
                 <Route path="atestados-admin" element={<PontoAtestadosAdmin />} />
                 <Route path="fechamento" element={<PontoFechamento />} />
+                <Route path="pre-fechamento" element={<PontoPreFechamento />} />
                 <Route path="banco-horas" element={<PontoBancoHoras />} />
                 <Route path="ferias" element={<PontoFerias />} />
                 <Route path="afd" element={<PontoAFD />} />

@@ -187,6 +187,7 @@ const menuItems: MenuItem[] = [
       { id: "Ponto Mapa", title: "Mapa de Equipes", url: "/ponto/mapa", icon: LucideIcons.MapPin },
       { id: "Ponto QrCode", title: "QR Code Totem", url: "/ponto/qrcode", icon: LucideIcons.QrCode },
       { id: "Ponto Atestados Admin", title: "Atestados (RH)", url: "/ponto/atestados-admin", icon: LucideIcons.FileCheck },
+      { id: "Ponto Pre Fechamento", title: "Pré-Fechamento (Checklist)", url: "/ponto/pre-fechamento", icon: LucideIcons.ClipboardCheck },
       { id: "Ponto Fechamento", title: "Fechamento de Folha", url: "/ponto/fechamento", icon: LucideIcons.Lock },
       { id: "Ponto Banco Horas", title: "Banco de Horas", url: "/ponto/banco-horas", icon: LucideIcons.Clock },
       { id: "Ponto Férias", title: "Férias e Afastamentos", url: "/ponto/ferias", icon: LucideIcons.Plane },
