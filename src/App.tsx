@@ -97,7 +97,6 @@ import PontoCltConfig from "./pages/ponto/PontoCltConfig";
 import PontoAnomalias from "./pages/ponto/PontoAnomalias";
 import PontoCompliance from "./pages/ponto/PontoCompliance";
 import PontoBancoHorasExpirar from "./pages/ponto/PontoBancoHorasExpirar";
-import PontoEsocial from "./pages/ponto/PontoEsocial";
 import PontoNotificacoes from "./pages/ponto/PontoNotificacoes";
 import PontoManual from "./pages/ponto/PontoManual";
 import ChatInterno from "./pages/ChatInterno";
