@@ -157,8 +157,6 @@ export function PontoBloqueiosBanner({ empresaId, dataInicio, dataFim, className
           </Button>
         </div>
       </AlertDescription>
-        </div>
-      </AlertDescription>
     </Alert>
   );
 }
