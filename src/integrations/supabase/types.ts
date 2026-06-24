@@ -9917,6 +9917,7 @@ export type Database = {
           banco_horas_prazo_meses: number | null
           created_at: string
           dsr_percentual: number | null
+          he_faixas_customizadas: Json
           he_multiplicador_100: number | null
           he_multiplicador_50: number | null
           hora_noturna_minutos: number | null
@@ -9944,6 +9945,7 @@ export type Database = {
           banco_horas_prazo_meses?: number | null
           created_at?: string
           dsr_percentual?: number | null
+          he_faixas_customizadas?: Json
           he_multiplicador_100?: number | null
           he_multiplicador_50?: number | null
           hora_noturna_minutos?: number | null
@@ -9971,6 +9973,7 @@ export type Database = {
           banco_horas_prazo_meses?: number | null
           created_at?: string
           dsr_percentual?: number | null
+          he_faixas_customizadas?: Json
           he_multiplicador_100?: number | null
           he_multiplicador_50?: number | null
           hora_noturna_minutos?: number | null
