@@ -105,13 +105,6 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
     }
 
-    if (!empresa_id || !estabelecimento_id || !conteudo_base64) {
-      return new Response(JSON.stringify({ error: "empresa_id, estabelecimento_id e conteudo_base64 obrigatórios" }),
-        { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
-    }
-
-    const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-
     // Decodifica
     const conteudo = new TextDecoder("latin1").decode(
       Uint8Array.from(atob(conteudo_base64), (c) => c.charCodeAt(0))
