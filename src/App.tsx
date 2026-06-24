@@ -90,6 +90,9 @@ import PontoImportacao from "./pages/ponto/PontoImportacao";
 import PontoImportarAFD from "./pages/ponto/PontoImportarAFD";
 import PontoFaceEnroll from "./pages/ponto/PontoFaceEnroll";
 import PontoSugerirEscala from "./pages/ponto/PontoSugerirEscala";
+import PontoDashboardExecutivo from "./pages/ponto/PontoDashboardExecutivo";
+import PontoAprovacoes from "./pages/ponto/PontoAprovacoes";
+import PontoWebhookCatracas from "./pages/ponto/PontoWebhookCatracas";
 import PontoNotificacoes from "./pages/ponto/PontoNotificacoes";
 import PontoManual from "./pages/ponto/PontoManual";
 import ChatInterno from "./pages/ChatInterno";
@@ -402,6 +405,9 @@ const App = () => (
                 <Route path="importar-afd" element={<PontoImportarAFD />} />
                 <Route path="face-enroll" element={<PontoFaceEnroll />} />
                 <Route path="sugerir-escala" element={<PontoSugerirEscala />} />
+                <Route path="dashboard-executivo" element={<PontoDashboardExecutivo />} />
+                <Route path="aprovacoes" element={<PontoAprovacoes />} />
+                <Route path="webhook-catracas" element={<PontoWebhookCatracas />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
                 <Route path="manual" element={<PontoManual />} />
               </Route>

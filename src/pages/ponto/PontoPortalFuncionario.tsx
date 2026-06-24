@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Clock, Wallet, FileEdit, FileSignature, AlertCircle, Smartphone, FileUp, FileText } from "lucide-react";
+import { Clock, Wallet, FileEdit, FileSignature, AlertCircle, Smartphone, FileUp, FileText, Palmtree } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,8 +21,11 @@ export default function PontoPortalFuncionario() {
   const [atestados, setAtestados] = useState<any[]>([]);
   const [openAjuste, setOpenAjuste] = useState(false);
   const [openAtestado, setOpenAtestado] = useState(false);
+  const [openFerias, setOpenFerias] = useState(false);
   const [novoAjuste, setNovoAjuste] = useState({ data: "", tipo: "entrada", valor_proposto: "", motivo: "" });
   const [novoAtestado, setNovoAtestado] = useState({ data_inicio: "", data_fim: "", cid: "", observacao: "", file: null as File | null });
+  const [novaFerias, setNovaFerias] = useState({ tipo: "ferias", data_inicio: "", data_fim: "", motivo: "" });
+  const [ferias, setFerias] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
 
   const load = useCallback(async () => {
@@ -34,7 +37,7 @@ export default function PontoPortalFuncionario() {
     setFunc(f);
 
     const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);
-    const [esp, aj, ass, at] = await Promise.all([
+    const [esp, aj, ass, at, fer] = await Promise.all([
       supabase.from("ponto_espelho_diario").select("*")
         .eq("funcionario_id", f.id).gte("data", inicioMes).order("data", { ascending: false }),
       supabase.from("ponto_ajustes").select("*")
@@ -43,11 +46,14 @@ export default function PontoPortalFuncionario() {
         .eq("funcionario_id", f.id).order("mes_referencia", { ascending: false }).limit(12),
       (supabase.from as any)("ponto_atestados").select("*")
         .eq("funcionario_id", f.id).order("created_at", { ascending: false }).limit(20),
+      supabase.from("ponto_ferias_afastamentos").select("*")
+        .eq("funcionario_id", f.id).order("created_at", { ascending: false }).limit(20),
     ]);
     setEspelho(esp.data || []);
     setAjustes(aj.data || []);
     setAssinaturas(ass.data || []);
     setAtestados(at.data || []);
+    setFerias(fer.data || []);
     setLoading(false);
   }, []);
 
@@ -129,6 +135,33 @@ export default function PontoPortalFuncionario() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const enviarFerias = async () => {
+    if (!func || !novaFerias.data_inicio || !novaFerias.data_fim) {
+      return toast.error("Preencha as datas");
+    }
+    const ini = new Date(novaFerias.data_inicio);
+    const fim = new Date(novaFerias.data_fim);
+    const dias = Math.max(1, Math.round((fim.getTime() - ini.getTime()) / 86400000) + 1);
+    // Resolver estabelecimento_id via empresa
+    const { data: emp } = await supabase.from("ponto_empresas")
+      .select("estabelecimento_id").eq("id", func.empresa_id).maybeSingle();
+    const { error } = await supabase.from("ponto_ferias_afastamentos").insert({
+      funcionario_id: func.id,
+      estabelecimento_id: emp?.estabelecimento_id,
+      tipo: novaFerias.tipo,
+      data_inicio: novaFerias.data_inicio,
+      data_fim: novaFerias.data_fim,
+      dias,
+      motivo: novaFerias.motivo || null,
+      status: "pendente",
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Solicitação enviada para o RH");
+    setOpenFerias(false);
+    setNovaFerias({ tipo: "ferias", data_inicio: "", data_fim: "", motivo: "" });
+    load();
   };
 
   const mesAtual = new Date().toISOString().slice(0, 7);
@@ -227,6 +260,36 @@ export default function PontoPortalFuncionario() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <Dialog open={openFerias} onOpenChange={setOpenFerias}>
+          <DialogTrigger asChild>
+            <Button variant="outline"><Palmtree className="mr-2 h-4 w-4" /> Solicitar férias/afastamento</Button>
+          </DialogTrigger>
+          <DialogContent className="w-[95vw] max-h-[90vh] overflow-y-auto">
+            <DialogHeader><DialogTitle>Solicitar férias ou afastamento</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div><Label>Tipo</Label>
+                <Select value={novaFerias.tipo} onValueChange={v => setNovaFerias({ ...novaFerias, tipo: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ferias">Férias</SelectItem>
+                    <SelectItem value="abono">Abono</SelectItem>
+                    <SelectItem value="licenca">Licença</SelectItem>
+                    <SelectItem value="afastamento">Afastamento</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Início</Label><Input type="date" value={novaFerias.data_inicio}
+                  onChange={e => setNovaFerias({ ...novaFerias, data_inicio: e.target.value })} /></div>
+                <div><Label>Fim</Label><Input type="date" value={novaFerias.data_fim}
+                  onChange={e => setNovaFerias({ ...novaFerias, data_fim: e.target.value })} /></div>
+              </div>
+              <div><Label>Motivo</Label><Textarea value={novaFerias.motivo}
+                onChange={e => setNovaFerias({ ...novaFerias, motivo: e.target.value })} placeholder="Ex: férias programadas" /></div>
+            </div>
+            <DialogFooter><Button onClick={enviarFerias}>Enviar</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
 
@@ -283,6 +346,25 @@ export default function PontoPortalFuncionario() {
                   {a.observacao && <p className="text-xs text-muted-foreground truncate max-w-[400px]">{a.observacao}</p>}
                 </div>
                 <Badge variant={tone(a.status) as any}>{a.status}</Badge>
+              </div>
+            ))
+          }
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><Palmtree className="h-4 w-4" /> Minhas férias e afastamentos</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {ferias.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma solicitação.</p> :
+            ferias.map((a: any) => (
+              <div key={a.id} className="flex items-center justify-between border-b pb-1.5 text-sm">
+                <div>
+                  <p className="font-medium">{a.tipo} · {a.data_inicio} → {a.data_fim} <span className="text-muted-foreground">({a.dias}d)</span></p>
+                  {a.motivo && <p className="text-xs text-muted-foreground truncate max-w-[400px]">{a.motivo}</p>}
+                </div>
+                <Badge variant={tone(a.status) as any}>
+                  {a.status}{a.nivel_aprovacao_max > 1 ? ` ${a.nivel_aprovacao_atual}/${a.nivel_aprovacao_max}` : ""}
+                </Badge>
               </div>
             ))
           }
