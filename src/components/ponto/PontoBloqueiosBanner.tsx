@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { Lock, Info } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Lock, Info, ExternalLink, Unlock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   empresaId?: string | null;
