@@ -58,8 +58,24 @@ Deno.serve(async (req) => {
     // Carrega funcionário + escala + regras
     const { data: func } = await supabase
       .from("ponto_funcionarios")
-      .select("id, empresa_id, escala_id, ponto_escalas(jornada,intervalo_minutos)")
+      .select("id, empresa_id, escala_id, registra_ponto, jornada_contratada_horas, tipo_contrato, status, data_inicio_ponto, ponto_escalas(jornada,intervalo_minutos)")
       .eq("id", funcionario_id).single();
+
+    // Funcionário não registra ponto (ex.: isento, comissionista puro) → não calcula
+    if (func && func.registra_ponto === false) {
+      return new Response(JSON.stringify({ ok: true, skipped: "funcionario_nao_registra_ponto" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    // Antes da data de início do ponto → não calcula
+    if (func?.data_inicio_ponto && data < func.data_inicio_ponto) {
+      return new Response(JSON.stringify({ ok: true, skipped: "antes_inicio_ponto" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    // Funcionário inativo/demitido → não calcula
+    if (func?.status && !["ativo", "ferias", "afastado"].includes(func.status)) {
+      return new Response(JSON.stringify({ ok: true, skipped: `status_${func.status}` }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const empId = empresa_id || func?.empresa_id;
     const { data: regra } = await supabase
@@ -74,6 +90,11 @@ Deno.serve(async (req) => {
       noturno_fim: regra?.noturno_fim ?? "05:00",
       banco_horas_ativo: regra?.banco_horas_ativo ?? false,
     };
+
+    // Carga diária derivada da jornada contratada do funcionário (sobrescreve escala se definida)
+    const cargaContratadaDiariaMin = (func as any)?.jornada_contratada_horas
+      ? Math.round(Number((func as any).jornada_contratada_horas) * 60 / 5) // semanal → diária (5 dias)
+      : null;
 
     // Registros do dia
     const ini = `${data}T00:00:00Z`;
