@@ -10471,6 +10471,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ponto_aprovador_2fa: {
+        Row: {
+          canal: string
+          codigo: string
+          contexto: string | null
+          created_at: string
+          expira_em: string
+          id: string
+          ip: unknown
+          tentativas: number
+          user_agent: string | null
+          usuario_id: string
+          validado_em: string | null
+        }
+        Insert: {
+          canal?: string
+          codigo: string
+          contexto?: string | null
+          created_at?: string
+          expira_em: string
+          id?: string
+          ip?: unknown
+          tentativas?: number
+          user_agent?: string | null
+          usuario_id: string
+          validado_em?: string | null
+        }
+        Update: {
+          canal?: string
+          codigo?: string
+          contexto?: string | null
+          created_at?: string
+          expira_em?: string
+          id?: string
+          ip?: unknown
+          tentativas?: number
+          user_agent?: string | null
+          usuario_id?: string
+          validado_em?: string | null
+        }
+        Relationships: []
+      }
       ponto_assinatura_tokens: {
         Row: {
           canal_2fa: string
@@ -10718,6 +10760,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ponto_backups: {
+        Row: {
+          arquivo_url: string
+          competencia: string | null
+          created_at: string
+          created_by: string | null
+          destino: string
+          empresa_id: string | null
+          hash_sha256: string
+          id: string
+          retencao_ate: string
+          tamanho_bytes: number | null
+          tipo: string
+        }
+        Insert: {
+          arquivo_url: string
+          competencia?: string | null
+          created_at?: string
+          created_by?: string | null
+          destino?: string
+          empresa_id?: string | null
+          hash_sha256: string
+          id?: string
+          retencao_ate: string
+          tamanho_bytes?: number | null
+          tipo: string
+        }
+        Update: {
+          arquivo_url?: string
+          competencia?: string | null
+          created_at?: string
+          created_by?: string | null
+          destino?: string
+          empresa_id?: string | null
+          hash_sha256?: string
+          id?: string
+          retencao_ate?: string
+          tamanho_bytes?: number | null
+          tipo?: string
+        }
+        Relationships: []
       }
       ponto_banco_horas_lancamentos: {
         Row: {
@@ -11619,6 +11703,65 @@ export type Database = {
             columns: ["funcionario_id"]
             isOneToOne: false
             referencedRelation: "ponto_funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_esocial_fila: {
+        Row: {
+          created_at: string
+          evento_id: string | null
+          id: string
+          max_tentativas: number
+          movido_dlq_em: string | null
+          payload: Json
+          processado_em: string | null
+          proxima_tentativa: string
+          status: string
+          tentativas: number
+          tipo_evento: string
+          ultimo_codigo: string | null
+          ultimo_erro: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          evento_id?: string | null
+          id?: string
+          max_tentativas?: number
+          movido_dlq_em?: string | null
+          payload: Json
+          processado_em?: string | null
+          proxima_tentativa?: string
+          status?: string
+          tentativas?: number
+          tipo_evento: string
+          ultimo_codigo?: string | null
+          ultimo_erro?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          evento_id?: string | null
+          id?: string
+          max_tentativas?: number
+          movido_dlq_em?: string | null
+          payload?: Json
+          processado_em?: string | null
+          proxima_tentativa?: string
+          status?: string
+          tentativas?: number
+          tipo_evento?: string
+          ultimo_codigo?: string | null
+          ultimo_erro?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_esocial_fila_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_esocial_eventos"
             referencedColumns: ["id"]
           },
         ]
@@ -12685,6 +12828,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      ponto_kiosk_sessoes: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          device_fingerprint: string
+          equipamento_id: string | null
+          geofence_id: string | null
+          id: string
+          ip_permitido: unknown[] | null
+          modo: string
+          pin_hash: string
+          ultimo_heartbeat: string | null
+          updated_at: string
+          versao_app: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          device_fingerprint: string
+          equipamento_id?: string | null
+          geofence_id?: string | null
+          id?: string
+          ip_permitido?: unknown[] | null
+          modo?: string
+          pin_hash: string
+          ultimo_heartbeat?: string | null
+          updated_at?: string
+          versao_app?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          device_fingerprint?: string
+          equipamento_id?: string | null
+          geofence_id?: string | null
+          id?: string
+          ip_permitido?: unknown[] | null
+          modo?: string
+          pin_hash?: string
+          ultimo_heartbeat?: string | null
+          updated_at?: string
+          versao_app?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_kiosk_sessoes_equipamento_id_fkey"
+            columns: ["equipamento_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_equipamentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ponto_lgpd_solicitacoes: {
         Row: {
@@ -18494,6 +18690,10 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      ponto_aprovador_2fa_valido: {
+        Args: { _user_id: string }
+        Returns: boolean
       }
       ponto_calcular_dsr_mensal: {
         Args: { _func_id: string; _mes: string }
