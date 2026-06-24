@@ -9965,6 +9965,91 @@ export type Database = {
           },
         ]
       }
+      ponto_afd_importacoes: {
+        Row: {
+          cnpj_cabecalho: string | null
+          created_at: string
+          empresa_id: string
+          equipamento_id: string | null
+          erros: Json
+          estabelecimento_id: string
+          filial_id: string | null
+          formato: string
+          id: string
+          importado_por: string | null
+          marcacoes_duplicadas: number
+          marcacoes_erro: number
+          marcacoes_importadas: number
+          nome_arquivo: string
+          status: string
+          total_linhas: number
+          total_marcacoes: number
+          updated_at: string
+        }
+        Insert: {
+          cnpj_cabecalho?: string | null
+          created_at?: string
+          empresa_id: string
+          equipamento_id?: string | null
+          erros?: Json
+          estabelecimento_id: string
+          filial_id?: string | null
+          formato?: string
+          id?: string
+          importado_por?: string | null
+          marcacoes_duplicadas?: number
+          marcacoes_erro?: number
+          marcacoes_importadas?: number
+          nome_arquivo: string
+          status?: string
+          total_linhas?: number
+          total_marcacoes?: number
+          updated_at?: string
+        }
+        Update: {
+          cnpj_cabecalho?: string | null
+          created_at?: string
+          empresa_id?: string
+          equipamento_id?: string | null
+          erros?: Json
+          estabelecimento_id?: string
+          filial_id?: string | null
+          formato?: string
+          id?: string
+          importado_por?: string | null
+          marcacoes_duplicadas?: number
+          marcacoes_erro?: number
+          marcacoes_importadas?: number
+          nome_arquivo?: string
+          status?: string
+          total_linhas?: number
+          total_marcacoes?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_afd_importacoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_afd_importacoes_equipamento_id_fkey"
+            columns: ["equipamento_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_equipamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_afd_importacoes_filial_id_fkey"
+            columns: ["filial_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_filiais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_ajustes: {
         Row: {
           anexo_url: string | null
