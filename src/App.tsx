@@ -82,6 +82,7 @@ import PontoFechamento from "./pages/ponto/PontoFechamento";
 import PontoBancoHoras from "./pages/ponto/PontoBancoHoras";
 import PontoFerias from "./pages/ponto/PontoFerias";
 import PontoAFD from "./pages/ponto/PontoAFD";
+import EspelhoFuncionario from "./pages/ponto/EspelhoFuncionario";
 import PontoEsocial from "./pages/ponto/PontoEsocial";
 import PontoImportacao from "./pages/ponto/PontoImportacao";
 import PontoNotificacoes from "./pages/ponto/PontoNotificacoes";
@@ -231,6 +232,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Splash />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/espelho-funcionario/:token" element={<EspelhoFuncionario />} />
             <Route element={<LayoutWrapper />}>
             <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/atendimento" element={<Atendimento />} />
