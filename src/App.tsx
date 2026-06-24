@@ -416,7 +416,6 @@ const App = () => (
                 <Route path="anomalias" element={<PontoAnomalias />} />
                 <Route path="compliance" element={<PontoCompliance />} />
                 <Route path="banco-horas-expirar" element={<PontoBancoHorasExpirar />} />
-                <Route path="esocial" element={<PontoEsocial />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
                 <Route path="manual" element={<PontoManual />} />
               </Route>
