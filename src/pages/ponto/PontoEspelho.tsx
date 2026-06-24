@@ -18,7 +18,7 @@ export default function PontoEspelho() {
 
   const load = async () => {
     if (!empresaId) return;
-    const { data: f } = await supabase.from("ponto_funcionarios")
+    const { data: f } = await (supabase as any).from("ponto_funcionarios")
       .select("id, nome, cpf").eq("empresa_id", empresaId).eq("ativo", true).order("nome");
     setFuncs(f || []);
     const ids = (f || []).map((x) => x.id);
