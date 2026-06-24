@@ -17649,6 +17649,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      ponto_periodo_bloqueado: {
+        Args: { _data: string; _empresa: string }
+        Returns: boolean
+      }
       roles_present: { Args: never; Returns: boolean }
       user_in_estabelecimento: { Args: { estab_id: string }; Returns: boolean }
     }
