@@ -38,6 +38,7 @@ export default function PontoRegistro() {
   const [funcionarios, setFuncionarios] = useState<Func[]>([]);
   const [funcId, setFuncId] = useState<string>("");
   const [tipo, setTipo] = useState<Tipo>("entrada");
+  const [antifraudeAtivo, setAntifraudeAtivo] = useState<boolean>(true);
   const [gps, setGps] = useState<{ lat: number; lng: number; precisao: number } | null>(null);
   const [gpsErr, setGpsErr] = useState<string>("");
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -52,7 +53,7 @@ export default function PontoRegistro() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Carrega funcionários
+  // Carrega funcionários + flag antifraude
   useEffect(() => {
     if (!empresaId) return;
     (async () => {
@@ -63,6 +64,12 @@ export default function PontoRegistro() {
         .eq("ativo", true)
         .order("nome");
       setFuncionarios((data || []) as Func[]);
+      const { data: emp } = await (supabase as any)
+        .from("ponto_empresas")
+        .select("antifraude_ativo")
+        .eq("id", empresaId)
+        .maybeSingle();
+      setAntifraudeAtivo(emp?.antifraude_ativo ?? true);
     })();
   }, [empresaId]);
 
