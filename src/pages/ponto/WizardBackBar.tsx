@@ -42,7 +42,7 @@ export default function WizardBackBar() {
   }
 
   return (
-    <div className="sticky top-[60px] z-30 mb-3 flex flex-col gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 shadow-sm backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+    <div className="relative z-10 mb-3 flex flex-col gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 shadow-sm sm:flex-row sm:items-center sm:justify-between">
 
       <div className="flex items-center gap-2 text-sm">
         <Wand2 className="h-4 w-4 text-primary shrink-0" />
