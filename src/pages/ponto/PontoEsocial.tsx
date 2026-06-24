@@ -91,7 +91,7 @@ export default function PontoEsocial() {
             <p className="text-muted-foreground">Nenhum evento enfileirado</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm resp-table">
                 <thead className="border-b">
                   <tr className="text-left">
                     <th className="p-2">Evento</th>

@@ -105,8 +105,8 @@ export default function PontoWebhookCatracas() {
         </CardContent>
       </Card>
 
-      <div className="overflow-x-auto rounded-lg border">
-        <table className="w-full min-w-[640px] text-sm">
+      <div className="overflow-x-auto rounded-lg border resp-table-wrap">
+        <table className="w-full min-w-[640px] text-sm resp-table">
           <thead className="bg-muted/50"><tr className="text-left">
             <th className="p-3">Descrição</th><th className="p-3">Token</th>
             <th className="p-3">Última chamada</th><th className="p-3">Chamadas</th>

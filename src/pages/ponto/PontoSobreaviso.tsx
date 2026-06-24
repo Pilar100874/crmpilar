@@ -129,7 +129,7 @@ export default function PontoSobreaviso() {
         <CardContent>
           {loading ? <p>Carregando...</p> : registros.length === 0 ? <p className="text-muted-foreground">Nenhum registro</p> : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm resp-table">
                 <thead className="border-b">
                   <tr className="text-left">
                     <th className="p-2">Funcionário</th><th className="p-2">Tipo</th><th className="p-2">Período</th>

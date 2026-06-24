@@ -75,7 +75,7 @@ export default function PontoDSR() {
         <CardContent>
           {loading ? <p>Carregando...</p> : dados.length === 0 ? <p className="text-muted-foreground">Sem dados no mês</p> : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm resp-table">
                 <thead className="border-b">
                   <tr className="text-left">
                     <th className="p-2">Funcionário</th><th className="p-2">Dias úteis</th><th className="p-2">Domingos</th>

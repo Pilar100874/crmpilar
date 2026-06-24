@@ -760,3 +760,64 @@ All colors MUST be HSL.
   box-shadow: 0 1px 2px hsl(var(--primary) / 0.3);
 }
 
+/* ======== Responsive table → cards (mobile/tablet pequeno) ======== */
+/* Aplique className="resp-table" em tabelas pesadas para que vire cards
+   empilhados em <640px sem precisar de scroll horizontal. Use o atributo
+   data-label nas <td> para mostrar o rótulo da coluna ao lado do valor. */
+@media (max-width: 639.98px) {
+  .resp-table-wrap { overflow: visible !important; border: none !important; }
+  .resp-table { display: block; width: 100%; min-width: 0 !important; border-collapse: separate; }
+  .resp-table thead { display: none; }
+  .resp-table tbody { display: block; width: 100%; }
+  .resp-table tr {
+    display: block;
+    width: 100%;
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.625rem;
+    margin-bottom: 0.5rem;
+    padding: 0.625rem 0.75rem;
+    background: hsl(var(--card));
+  }
+  .resp-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.25rem 0 !important;
+    border: none !important;
+    text-align: right;
+    font-size: 0.8125rem;
+  }
+  .resp-table td:first-child {
+    font-weight: 600;
+    font-size: 0.95rem;
+    border-bottom: 1px solid hsl(var(--border)) !important;
+    padding-bottom: 0.4rem !important;
+    margin-bottom: 0.25rem;
+    text-align: left;
+    display: block;
+  }
+  .resp-table td:first-child::before { display: none; }
+  .resp-table td[data-label]::before {
+    content: attr(data-label);
+    color: hsl(var(--muted-foreground));
+    font-weight: 500;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    flex: 0 0 auto;
+    text-align: left;
+  }
+  .resp-table td.hidden { display: none !important; }
+  /* libera larguras min-w-* dentro de wrappers comuns */
+  .resp-table-wrap > div,
+  .resp-table-wrap > table { min-width: 0 !important; }
+}
+
+/* Forms padrão do módulo de Ponto: força grids 2/3/4 col a uma coluna no mobile */
+@media (max-width: 639.98px) {
+  .ponto-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+

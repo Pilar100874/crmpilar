@@ -61,7 +61,7 @@ export default function PontoCompliance() {
             <p className="text-muted-foreground">Sem anomalias registradas ✓</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm resp-table">
                 <thead className="border-b">
                   <tr className="text-left">
                     <th className="p-2">Mês</th>

@@ -396,7 +396,7 @@ export default function PontoEscalas() {
                 </Button>
               </div>
               <div className="overflow-x-auto rounded-md border">
-                <table className="w-full min-w-[900px] text-sm">
+                <table className="w-full min-w-[900px] text-sm resp-table">
                   <thead className="bg-muted/50">
                     <tr className="text-left">
                       <th className="p-2">Dia</th>
