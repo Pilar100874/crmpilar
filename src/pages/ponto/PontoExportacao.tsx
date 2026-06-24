@@ -217,6 +217,8 @@ export default function PontoExportacao() {
               >
                 <Download className="mr-2 h-4 w-4" /> Exportar consolidado
               </Button>
+            </div>
+
 
             {layoutSelecionado && (
               <div className="rounded border bg-muted/30 p-3 text-xs space-y-1">
