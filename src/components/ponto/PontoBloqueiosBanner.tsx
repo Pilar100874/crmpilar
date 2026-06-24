@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { Lock, Info } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Lock, Info, ExternalLink, Unlock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   empresaId?: string | null;
@@ -114,23 +116,45 @@ export function PontoBloqueiosBanner({ empresaId, dataInicio, dataFim, className
           <Info className="h-3 w-3 mt-0.5 shrink-0" />
           <span>
             Batidas, ajustes, atestados, férias, escalas, feriados e banco de horas
-            ficam protegidos nesses períodos. Para alterar, vá em{" "}
-            <strong>Ponto › Exportação</strong> e reabra o período correspondente.
+            ficam protegidos nesses períodos. Clique em um item para abrir a tela
+            de gestão e reabrir o período.
           </span>
         </p>
         <div className="flex flex-wrap gap-1.5 pt-1">
-          {bloqueios.slice(0, 8).map((b, i) => (
-            <Badge
-              key={i}
-              variant={b.tipo === "exportacao" ? "default" : "outline"}
-              className="font-normal"
-            >
-              {b.rotulo}
-            </Badge>
-          ))}
+          {bloqueios.slice(0, 8).map((b, i) => {
+            const to =
+              b.tipo === "exportacao"
+                ? `/ponto/exportacao?inicio=${b.inicio}&fim=${b.fim}&reabrir=1`
+                : `/ponto/fechamento?mes=${b.inicio}`;
+            return (
+              <Link key={i} to={to}>
+                <Badge
+                  variant={b.tipo === "exportacao" ? "default" : "outline"}
+                  className="font-normal cursor-pointer hover:opacity-80 gap-1"
+                >
+                  {b.rotulo}
+                  <ExternalLink className="h-3 w-3" />
+                </Badge>
+              </Link>
+            );
+          })}
           {bloqueios.length > 8 && (
             <Badge variant="outline">+{bloqueios.length - 8} outros</Badge>
           )}
+        </div>
+        <div className="flex flex-wrap gap-2 pt-2">
+          <Button asChild size="sm" variant="outline" className="gap-1">
+            <Link to="/ponto/exportacao">
+              <Unlock className="h-3.5 w-3.5" />
+              Gerenciar exportações
+            </Link>
+          </Button>
+          <Button asChild size="sm" variant="outline" className="gap-1">
+            <Link to="/ponto/fechamento">
+              <Unlock className="h-3.5 w-3.5" />
+              Gerenciar fechamentos
+            </Link>
+          </Button>
         </div>
       </AlertDescription>
     </Alert>
