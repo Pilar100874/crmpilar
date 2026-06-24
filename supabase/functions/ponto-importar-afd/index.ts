@@ -86,13 +86,24 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const {
       empresa_id,
-      estabelecimento_id,
       conteudo_base64,
       nome_arquivo = "afd.txt",
       formato = "rep-c",
       filial_id = null,
       equipamento_id = null,
     } = body || {};
+
+    if (!empresa_id || !conteudo_base64) {
+      return new Response(JSON.stringify({ error: "empresa_id e conteudo_base64 obrigatórios" }),
+        { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+    }
+    const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: emp } = await sb.from("ponto_empresas").select("estabelecimento_id").eq("id", empresa_id).maybeSingle();
+    const estabelecimento_id = (emp as any)?.estabelecimento_id;
+    if (!estabelecimento_id) {
+      return new Response(JSON.stringify({ error: "estabelecimento da empresa não encontrado" }),
+        { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+    }
 
     if (!empresa_id || !estabelecimento_id || !conteudo_base64) {
       return new Response(JSON.stringify({ error: "empresa_id, estabelecimento_id e conteudo_base64 obrigatórios" }),
