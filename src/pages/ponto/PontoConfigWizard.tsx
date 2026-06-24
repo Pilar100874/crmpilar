@@ -522,9 +522,14 @@ export default function PontoConfigWizard() {
                   </Link>
                 </Button>
               )}
-              <Button variant="outline" onClick={verifyStep}>
+              <Button variant="outline" onClick={toggleDone}>
                 {completed[step.id] ? "Desmarcar" : "Marcar como concluído"}
               </Button>
+              {step.check && (
+                <Button variant="ghost" onClick={verifyStep}>
+                  <Check className="h-4 w-4" /> Verificar automaticamente
+                </Button>
+              )}
             </div>
 
             <div className="flex items-center justify-between border-t pt-4">
