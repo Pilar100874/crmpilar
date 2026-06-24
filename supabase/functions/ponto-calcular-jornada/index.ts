@@ -151,7 +151,8 @@ Deno.serve(async (req) => {
         if (diff > r.tolerancia_saida_antec_min) saida_antec_min = diff;
       }
 
-      const cargaPrevista = jornadaDia?.carga_min ?? 480;
+      // Carga prevista: prioriza jornada do dia da escala, depois jornada contratada do funcionário, default 480
+      const cargaPrevista = jornadaDia?.carga_min ?? cargaContratadaDiariaMin ?? 480;
       if (minutos_trabalhados > cargaPrevista) extra_min = minutos_trabalhados - cargaPrevista;
 
       noturno_min = calcNoturno(e, s, r.noturno_inicio, r.noturno_fim);
