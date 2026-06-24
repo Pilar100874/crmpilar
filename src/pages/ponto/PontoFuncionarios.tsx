@@ -115,6 +115,7 @@ export default function PontoFuncionarios() {
   const [departamentos, setDepartamentos] = useState<any[]>([]);
   const [cargos, setCargos] = useState<any[]>([]);
   const [equipes, setEquipes] = useState<any[]>([]);
+  const [exportLayouts, setExportLayouts] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState<Func | null>(null);
   const [editing, setEditing] = useState<Func | null>(null);
@@ -131,13 +132,14 @@ export default function PontoFuncionarios() {
     if (!empresaId) return;
     const sb = supabase as any;
     const filtro = `empresa_id.eq.${empresaId},global.eq.true`;
-    const [r1, r2, r3, rDep, rCar, rEqu] = await Promise.all([
+    const [r1, r2, r3, rDep, rCar, rEqu, rLay] = await Promise.all([
       sb.from("ponto_funcionarios").select("*").eq("empresa_id", empresaId).order("nome"),
       sb.from("ponto_filiais").select("id, nome").eq("empresa_id", empresaId),
       sb.from("ponto_escalas").select("id, nome").eq("empresa_id", empresaId),
       sb.from("ponto_departamentos").select("id, nome").or(filtro).order("nome"),
       sb.from("ponto_cargos").select("id, nome, cbo").or(filtro).order("nome"),
       sb.from("ponto_equipes").select("id, nome").or(filtro).order("nome"),
+      sb.from("ponto_export_layouts").select("id, descricao, software").eq("empresa_id", empresaId).eq("ativo", true).order("descricao"),
     ]);
     setItems((r1.data as any) || []);
     setFiliais(r2.data || []);
@@ -145,6 +147,7 @@ export default function PontoFuncionarios() {
     setDepartamentos(rDep.data || []);
     setCargos(rCar.data || []);
     setEquipes(rEqu.data || []);
+    setExportLayouts(rLay.data || []);
   };
   useEffect(() => { load(); }, [empresaId]);
 
@@ -224,6 +227,7 @@ export default function PontoFuncionarios() {
       filial_id: f.filial_id || null,
       escala_id: f.escala_id || null,
       codigo_dominio: f.codigo_dominio?.trim() || null,
+      layout_exportacao_id: f.layout_exportacao_id || null,
       data_nascimento: f.data_nascimento || null,
       eh_aposentado: !!f.eh_aposentado,
       pais_nascimento: f.pais_nascimento || null,
@@ -441,6 +445,19 @@ export default function PontoFuncionarios() {
               </div>
               <div><Label>PIN</Label><Input value={f.pin} onChange={(e) => setF({ ...f, pin: e.target.value })} placeholder="PIN para registro de ponto" /></div>
               <div><Label>Código Domínio</Label><Input value={f.codigo_dominio} onChange={(e) => setF({ ...f, codigo_dominio: e.target.value })} /></div>
+              <div>
+                <Label>Layout de exportação</Label>
+                <Select value={f.layout_exportacao_id || "_none"} onValueChange={(v) => setF({ ...f, layout_exportacao_id: v === "_none" ? null : v })}>
+                  <SelectTrigger><SelectValue placeholder="Usa padrão da exportação" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">— Usar layout padrão —</SelectItem>
+                    {exportLayouts.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>{l.descricao || l.software}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-muted-foreground mt-1">Define o layout de folha usado na exportação consolidada (ex.: funcionários com HE 60% em layout próprio).</p>
+              </div>
               <div><Label>Admissão</Label><Input type="date" value={f.admissao} onChange={(e) => setF({ ...f, admissao: e.target.value })} /></div>
               <div className="sm:col-span-2"><Label>URL da foto</Label><Input value={f.foto_url} onChange={(e) => setF({ ...f, foto_url: e.target.value })} placeholder="https://..." /></div>
             </TabsContent>

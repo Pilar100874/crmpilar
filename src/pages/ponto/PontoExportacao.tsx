@@ -177,6 +177,49 @@ export default function PontoExportacao() {
               </div>
             </div>
 
+            <div className="rounded border border-primary/30 bg-primary/5 p-3 flex flex-wrap items-center gap-3 justify-between">
+              <div className="text-xs">
+                <p className="font-semibold">Exportação consolidada (multi-layout)</p>
+                <p className="text-muted-foreground">
+                  Gera um arquivo por layout numa única operação, respeitando o layout vinculado a cada funcionário
+                  (cadastro → campo "Layout de exportação"). Funcionários sem layout caem no layout selecionado acima.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                onClick={async () => {
+                  if (!empresaId) return;
+                  setGenerating(true);
+                  try {
+                    const { data, error } = await supabase.functions.invoke("ponto-exportar-folha", {
+                      body: { empresa_id: empresaId, inicio, fim, consolidado: true, layout_padrao_id: layoutId || null },
+                    });
+                    if (error) throw error;
+                    if (!data.arquivos?.length) {
+                      toast.warning("Nenhum arquivo gerado — verifique vínculos de layout");
+                    } else {
+                      for (const a of data.arquivos) {
+                        const blob = new Blob([a.conteudo], { type: "text/plain" });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement("a");
+                        link.href = url; link.download = a.arquivo_nome; link.click();
+                        URL.revokeObjectURL(url);
+                        await new Promise((r) => setTimeout(r, 300));
+                      }
+                      toast.success(`${data.arquivos.length} arquivo(s) gerado(s)`);
+                    }
+                    if (data.erros?.length) setErros(data.erros);
+                    loadLogs();
+                  } catch (e: any) { toast.error(e.message); }
+                  finally { setGenerating(false); }
+                }}
+                disabled={generating || !empresaId}
+              >
+                <Download className="mr-2 h-4 w-4" /> Exportar consolidado
+              </Button>
+            </div>
+
+
             {layoutSelecionado && (
               <div className="rounded border bg-muted/30 p-3 text-xs space-y-1">
                 <div className="flex flex-wrap gap-2">
