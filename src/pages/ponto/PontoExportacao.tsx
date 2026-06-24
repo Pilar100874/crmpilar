@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, FileText, AlertTriangle, ShieldCheck, Settings } from "lucide-react";
+import { Download, FileText, AlertTriangle, ShieldCheck, Settings, Trash2, Unlock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePontoEmpresa } from "./usePontoEmpresa";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 export default function PontoExportacao() {
   const { empresaId } = usePontoEmpresa();
