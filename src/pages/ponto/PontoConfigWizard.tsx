@@ -139,9 +139,10 @@ const STEPS: Step[] = [
       const { count } = await supabase
         .from("ponto_cargos")
         .select("id", { count: "exact", head: true })
-        .eq("empresa_id", empresaId);
+        .or(`empresa_id.eq.${empresaId},global.eq.true`);
       return (count ?? 0) > 0;
     },
+
   },
   {
     id: "equipes",
