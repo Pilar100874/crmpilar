@@ -16,6 +16,8 @@ import { usePontoEmpresa } from "./usePontoEmpresa";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Badge } from "@/components/ui/badge";
 import { MaskedInput } from "@/components/ui/masked-input";
+import { Switch } from "@/components/ui/switch";
+import { Wifi, AlertCircle } from "lucide-react";
 import { maskIP, maskCNPJ } from "@/lib/masks";
 import { validateIP } from "@/lib/validators";
 
