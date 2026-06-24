@@ -37,7 +37,7 @@ export default function PontoPortalFuncionario() {
     setFunc(f);
 
     const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);
-    const [esp, aj, ass, at] = await Promise.all([
+    const [esp, aj, ass, at, fer] = await Promise.all([
       supabase.from("ponto_espelho_diario").select("*")
         .eq("funcionario_id", f.id).gte("data", inicioMes).order("data", { ascending: false }),
       supabase.from("ponto_ajustes").select("*")
@@ -46,11 +46,14 @@ export default function PontoPortalFuncionario() {
         .eq("funcionario_id", f.id).order("mes_referencia", { ascending: false }).limit(12),
       (supabase.from as any)("ponto_atestados").select("*")
         .eq("funcionario_id", f.id).order("created_at", { ascending: false }).limit(20),
+      supabase.from("ponto_ferias_afastamentos").select("*")
+        .eq("funcionario_id", f.id).order("created_at", { ascending: false }).limit(20),
     ]);
     setEspelho(esp.data || []);
     setAjustes(aj.data || []);
     setAssinaturas(ass.data || []);
     setAtestados(at.data || []);
+    setFerias(fer.data || []);
     setLoading(false);
   }, []);
 
