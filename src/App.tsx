@@ -63,6 +63,7 @@ import PontoAjustes from "./pages/ponto/PontoAjustes";
 import PontoEspelho from "./pages/ponto/PontoEspelho";
 import PontoEquipamentos from "./pages/ponto/PontoEquipamentos";
 import PontoExportacao from "./pages/ponto/PontoExportacao";
+import PontoLayoutsExportacao from "./pages/ponto/PontoLayoutsExportacao";
 import PontoAlertas from "./pages/ponto/PontoAlertas";
 import PontoAuditoria from "./pages/ponto/PontoAuditoria";
 import PontoColetorDownload from "./pages/ponto/PontoColetorDownload";
@@ -368,6 +369,7 @@ const App = () => (
                 <Route path="espelho" element={<PontoEspelho />} />
                 <Route path="equipamentos" element={<PontoEquipamentos />} />
                 <Route path="exportacao" element={<PontoExportacao />} />
+                <Route path="layouts-exportacao" element={<PontoLayoutsExportacao />} />
                 <Route path="alertas" element={<PontoAlertas />} />
                 <Route path="auditoria" element={<PontoAuditoria />} />
                 <Route path="coletor" element={<PontoColetorDownload />} />
