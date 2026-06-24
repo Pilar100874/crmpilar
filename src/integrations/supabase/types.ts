@@ -10456,11 +10456,15 @@ export type Database = {
       }
       ponto_banco_horas_lancamentos: {
         Row: {
+          compensado: boolean
+          compensado_em: string | null
           created_at: string
           created_by: string | null
           data: string
           espelho_id: string | null
           estabelecimento_id: string
+          expirado: boolean
+          expirado_em: string | null
           funcionario_id: string
           id: string
           minutos: number
@@ -10470,11 +10474,15 @@ export type Database = {
           tipo: string
         }
         Insert: {
+          compensado?: boolean
+          compensado_em?: string | null
           created_at?: string
           created_by?: string | null
           data: string
           espelho_id?: string | null
           estabelecimento_id: string
+          expirado?: boolean
+          expirado_em?: string | null
           funcionario_id: string
           id?: string
           minutos: number
@@ -10484,11 +10492,15 @@ export type Database = {
           tipo: string
         }
         Update: {
+          compensado?: boolean
+          compensado_em?: string | null
           created_at?: string
           created_by?: string | null
           data?: string
           espelho_id?: string | null
           estabelecimento_id?: string
+          expirado?: boolean
+          expirado_em?: string | null
           funcionario_id?: string
           id?: string
           minutos?: number
@@ -10622,8 +10634,11 @@ export type Database = {
           adic_noturno_hora_ficta_min: number
           adic_noturno_inicio: string
           adic_noturno_percentual: number
+          banco_horas_acao_expirado: string
+          banco_horas_alerta_dias_antes: number
           banco_horas_auto_expirar: boolean
           banco_horas_prazo_dias: number
+          banco_horas_prazo_meses: number
           created_at: string
           detectar_batida_simultanea: boolean
           detectar_padrao_suspeito: boolean
@@ -10670,8 +10685,11 @@ export type Database = {
           adic_noturno_hora_ficta_min?: number
           adic_noturno_inicio?: string
           adic_noturno_percentual?: number
+          banco_horas_acao_expirado?: string
+          banco_horas_alerta_dias_antes?: number
           banco_horas_auto_expirar?: boolean
           banco_horas_prazo_dias?: number
+          banco_horas_prazo_meses?: number
           created_at?: string
           detectar_batida_simultanea?: boolean
           detectar_padrao_suspeito?: boolean
@@ -10718,8 +10736,11 @@ export type Database = {
           adic_noturno_hora_ficta_min?: number
           adic_noturno_inicio?: string
           adic_noturno_percentual?: number
+          banco_horas_acao_expirado?: string
+          banco_horas_alerta_dias_antes?: number
           banco_horas_auto_expirar?: boolean
           banco_horas_prazo_dias?: number
+          banco_horas_prazo_meses?: number
           created_at?: string
           detectar_batida_simultanea?: boolean
           detectar_padrao_suspeito?: boolean
@@ -17775,7 +17796,55 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      ponto_banco_horas_a_expirar: {
+        Row: {
+          banco_horas_prazo_meses: number | null
+          created_at: string | null
+          data: string | null
+          dias_para_expirar: number | null
+          empresa_id: string | null
+          expira_em: string | null
+          funcionario_id: string | null
+          funcionario_nome: string | null
+          id: string | null
+          minutos: number | null
+          tipo: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_funcionarios_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_compliance_dashboard: {
+        Row: {
+          altas: number | null
+          criticas: number | null
+          empresa_id: string | null
+          funcionarios_afetados: number | null
+          he_acima_limite: number | null
+          interjornada_violada: number | null
+          intrajornada_violada: number | null
+          jornada_acima_limite: number | null
+          mes: string | null
+          pendentes: number | null
+          resolvidas: number | null
+          total_anomalias: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_funcionarios_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_login: {
@@ -17888,8 +17957,11 @@ export type Database = {
           adic_noturno_hora_ficta_min: number
           adic_noturno_inicio: string
           adic_noturno_percentual: number
+          banco_horas_acao_expirado: string
+          banco_horas_alerta_dias_antes: number
           banco_horas_auto_expirar: boolean
           banco_horas_prazo_dias: number
+          banco_horas_prazo_meses: number
           created_at: string
           detectar_batida_simultanea: boolean
           detectar_padrao_suspeito: boolean
