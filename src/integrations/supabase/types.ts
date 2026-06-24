@@ -10513,8 +10513,14 @@ export type Database = {
       }
       ponto_equipamentos: {
         Row: {
+          acesso_dados: string | null
           ativo: boolean
+          chave_comunicacao: string | null
+          cnpj_fornecedor: string | null
+          codigo: string | null
           created_at: string
+          data_inicio_coleta: string | null
+          emails_notificacao: string | null
           empresa_id: string
           filial_id: string | null
           firmware: string | null
@@ -10523,16 +10529,27 @@ export type Database = {
           marca: string | null
           modelo: string | null
           nome: string
+          nome_local: string | null
+          numero_fabricacao: string | null
           porta: number | null
           protocolo: string | null
+          senha: string | null
           serial: string | null
           status: string | null
+          tipo_relogio: string | null
           ultima_sync: string | null
           updated_at: string
+          usuario: string | null
         }
         Insert: {
+          acesso_dados?: string | null
           ativo?: boolean
+          chave_comunicacao?: string | null
+          cnpj_fornecedor?: string | null
+          codigo?: string | null
           created_at?: string
+          data_inicio_coleta?: string | null
+          emails_notificacao?: string | null
           empresa_id: string
           filial_id?: string | null
           firmware?: string | null
@@ -10541,16 +10558,27 @@ export type Database = {
           marca?: string | null
           modelo?: string | null
           nome: string
+          nome_local?: string | null
+          numero_fabricacao?: string | null
           porta?: number | null
           protocolo?: string | null
+          senha?: string | null
           serial?: string | null
           status?: string | null
+          tipo_relogio?: string | null
           ultima_sync?: string | null
           updated_at?: string
+          usuario?: string | null
         }
         Update: {
+          acesso_dados?: string | null
           ativo?: boolean
+          chave_comunicacao?: string | null
+          cnpj_fornecedor?: string | null
+          codigo?: string | null
           created_at?: string
+          data_inicio_coleta?: string | null
+          emails_notificacao?: string | null
           empresa_id?: string
           filial_id?: string | null
           firmware?: string | null
@@ -10559,12 +10587,17 @@ export type Database = {
           marca?: string | null
           modelo?: string | null
           nome?: string
+          nome_local?: string | null
+          numero_fabricacao?: string | null
           porta?: number | null
           protocolo?: string | null
+          senha?: string | null
           serial?: string | null
           status?: string | null
+          tipo_relogio?: string | null
           ultima_sync?: string | null
           updated_at?: string
+          usuario?: string | null
         }
         Relationships: [
           {
