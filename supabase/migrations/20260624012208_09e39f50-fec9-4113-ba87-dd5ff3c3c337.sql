@@ -1,0 +1,13 @@
+ALTER TABLE public.ponto_equipamentos
+  ADD COLUMN IF NOT EXISTS tipo_relogio TEXT,
+  ADD COLUMN IF NOT EXISTS codigo TEXT,
+  ADD COLUMN IF NOT EXISTS cnpj_fornecedor TEXT,
+  ADD COLUMN IF NOT EXISTS filial_id UUID,
+  ADD COLUMN IF NOT EXISTS acesso_dados TEXT DEFAULT 'online',
+  ADD COLUMN IF NOT EXISTS nome_local TEXT,
+  ADD COLUMN IF NOT EXISTS data_inicio_coleta DATE,
+  ADD COLUMN IF NOT EXISTS numero_fabricacao TEXT,
+  ADD COLUMN IF NOT EXISTS usuario TEXT,
+  ADD COLUMN IF NOT EXISTS senha TEXT,
+  ADD COLUMN IF NOT EXISTS chave_comunicacao TEXT,
+  ADD COLUMN IF NOT EXISTS emails_notificacao TEXT;
