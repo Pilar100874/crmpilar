@@ -11178,6 +11178,7 @@ export type Database = {
           admissao: string | null
           auth_user_id: string | null
           cargo: string | null
+          cargo_id: string | null
           codigo_dominio: string | null
           cpf: string
           created_at: string
@@ -11200,6 +11201,7 @@ export type Database = {
           admissao?: string | null
           auth_user_id?: string | null
           cargo?: string | null
+          cargo_id?: string | null
           codigo_dominio?: string | null
           cpf: string
           created_at?: string
@@ -11222,6 +11224,7 @@ export type Database = {
           admissao?: string | null
           auth_user_id?: string | null
           cargo?: string | null
+          cargo_id?: string | null
           codigo_dominio?: string | null
           cpf?: string
           created_at?: string
@@ -11241,6 +11244,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ponto_funcionarios_cargo_id_fkey"
+            columns: ["cargo_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_cargos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ponto_funcionarios_departamento_id_fkey"
             columns: ["departamento_id"]
