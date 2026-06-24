@@ -32,6 +32,8 @@ type Func = {
   cpf: string;
   matricula: string | null;
   cargo: string | null;
+  cargo_id: string | null;
+  departamento_id: string | null;
   pis: string | null;
   status: string;
   escala_id: string | null;
@@ -47,7 +49,9 @@ const emptyForm = {
   cpf: "",
   pis: "",
   matricula: "",
-  cargo: "",
+  cargo_id: "",
+  departamento_id: "",
+  equipe_id: "",
   email: "",
   telefone: "",
   admissao: "",
@@ -61,6 +65,9 @@ export default function PontoFuncionarios() {
   const [items, setItems] = useState<Func[]>([]);
   const [filiais, setFiliais] = useState<any[]>([]);
   const [escalas, setEscalas] = useState<any[]>([]);
+  const [departamentos, setDepartamentos] = useState<any[]>([]);
+  const [cargos, setCargos] = useState<any[]>([]);
+  const [equipes, setEquipes] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState<Func | null>(null);
   const [editing, setEditing] = useState<Func | null>(null);
@@ -68,14 +75,22 @@ export default function PontoFuncionarios() {
 
   const load = async () => {
     if (!empresaId) return;
-    const [r1, r2, r3] = await Promise.all([
-      supabase.from("ponto_funcionarios").select("*").eq("empresa_id", empresaId).order("nome"),
-      supabase.from("ponto_filiais").select("id, nome").eq("empresa_id", empresaId),
-      supabase.from("ponto_escalas").select("id, nome").eq("empresa_id", empresaId),
+    const sb = supabase as any;
+    const filtro = `empresa_id.eq.${empresaId},global.eq.true`;
+    const [r1, r2, r3, rDep, rCar, rEqu] = await Promise.all([
+      sb.from("ponto_funcionarios").select("*").eq("empresa_id", empresaId).order("nome"),
+      sb.from("ponto_filiais").select("id, nome").eq("empresa_id", empresaId),
+      sb.from("ponto_escalas").select("id, nome").eq("empresa_id", empresaId),
+      sb.from("ponto_departamentos").select("id, nome").or(filtro).order("nome"),
+      sb.from("ponto_cargos").select("id, nome, cbo").or(filtro).order("nome"),
+      sb.from("ponto_equipes").select("id, nome").or(filtro).order("nome"),
     ]);
     setItems((r1.data as any) || []);
     setFiliais(r2.data || []);
     setEscalas(r3.data || []);
+    setDepartamentos(rDep.data || []);
+    setCargos(rCar.data || []);
+    setEquipes(rEqu.data || []);
   };
   useEffect(() => {
     load();
@@ -86,14 +101,23 @@ export default function PontoFuncionarios() {
     setF(emptyForm);
     setOpen(true);
   };
-  const openEdit = (x: any) => {
+  const openEdit = async (x: any) => {
     setEditing(x);
+    // Busca equipe atual (primeira) do funcionário
+    const { data: mem } = await (supabase as any)
+      .from("ponto_equipe_membros")
+      .select("equipe_id")
+      .eq("funcionario_id", x.id)
+      .limit(1)
+      .maybeSingle();
     setF({
       nome: x.nome ?? "",
       cpf: maskCPF(x.cpf ?? ""),
       pis: maskPIS(x.pis ?? ""),
       matricula: x.matricula ?? "",
-      cargo: x.cargo ?? "",
+      cargo_id: x.cargo_id ?? "",
+      departamento_id: x.departamento_id ?? "",
+      equipe_id: mem?.equipe_id ?? "",
       email: x.email ?? "",
       telefone: maskPhone(x.telefone ?? ""),
       admissao: x.admissao ?? "",
@@ -113,9 +137,14 @@ export default function PontoFuncionarios() {
     if (!empresaId) return toast.error("Selecione uma empresa");
     if (!f.nome.trim() || !f.cpf) return toast.error("Nome e CPF obrigatórios");
     if (!validateCPF(f.cpf)) return toast.error("CPF inválido");
+    if (!f.departamento_id) return toast.error("Departamento obrigatório");
+    if (!f.cargo_id) return toast.error("Cargo obrigatório");
+    if (!f.equipe_id) return toast.error("Equipe obrigatória");
     if (f.pis && !validatePIS(f.pis)) return toast.error("PIS inválido");
     if (f.email && !validateEmail(f.email)) return toast.error("E-mail inválido");
     if (f.telefone && !validatePhone(f.telefone)) return toast.error("Telefone inválido");
+
+    const cargoNome = cargos.find((c) => c.id === f.cargo_id)?.nome ?? null;
 
     const payload: any = {
       empresa_id: empresaId,
@@ -123,7 +152,9 @@ export default function PontoFuncionarios() {
       cpf: f.cpf.replace(/\D/g, ""),
       pis: f.pis.replace(/\D/g, "") || null,
       matricula: f.matricula.trim() || null,
-      cargo: f.cargo.trim() || null,
+      cargo_id: f.cargo_id,
+      cargo: cargoNome,
+      departamento_id: f.departamento_id,
       email: f.email.trim() || null,
       telefone: f.telefone.replace(/\D/g, "") || null,
       admissao: f.admissao || null,
@@ -131,10 +162,31 @@ export default function PontoFuncionarios() {
       escala_id: f.escala_id || null,
       codigo_dominio: f.codigo_dominio.trim() || null,
     };
-    const { error } = editing
-      ? await supabase.from("ponto_funcionarios").update(payload).eq("id", editing.id)
-      : await supabase.from("ponto_funcionarios").insert(payload);
-    if (error) return toast.error(error.message);
+
+    let funcionarioId = editing?.id;
+    if (editing) {
+      const { error } = await supabase.from("ponto_funcionarios").update(payload).eq("id", editing.id);
+      if (error) return toast.error(error.message);
+    } else {
+      const { data, error } = await supabase
+        .from("ponto_funcionarios")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (error) return toast.error(error.message);
+      funcionarioId = (data as any)?.id;
+    }
+
+    // Sincroniza equipe (substitui vínculos existentes pela escolhida)
+    if (funcionarioId) {
+      await (supabase as any).from("ponto_equipe_membros").delete().eq("funcionario_id", funcionarioId);
+      const { error: eqErr } = await (supabase as any).from("ponto_equipe_membros").insert({
+        funcionario_id: funcionarioId,
+        equipe_id: f.equipe_id,
+      });
+      if (eqErr) return toast.error(eqErr.message);
+    }
+
     toast.success("Salvo");
     setOpen(false);
     load();
@@ -260,9 +312,60 @@ export default function PontoFuncionarios() {
                 onChange={(e) => setF({ ...f, admissao: e.target.value })}
               />
             </div>
-            <div className="sm:col-span-6">
-              <Label>Cargo</Label>
-              <Input value={f.cargo} onChange={(e) => setF({ ...f, cargo: e.target.value })} />
+            <div className="sm:col-span-2">
+              <Label>Departamento *</Label>
+              <Select
+                value={f.departamento_id || undefined}
+                onValueChange={(v) => setF({ ...f, departamento_id: v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  {departamentos.length === 0 && (
+                    <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                      Nenhum departamento cadastrado
+                    </div>
+                  )}
+                  {departamentos.map((x) => <SelectItem key={x.id} value={x.id}>{x.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="sm:col-span-2">
+              <Label>Cargo *</Label>
+              <Select
+                value={f.cargo_id || undefined}
+                onValueChange={(v) => setF({ ...f, cargo_id: v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  {cargos.length === 0 && (
+                    <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                      Nenhum cargo cadastrado
+                    </div>
+                  )}
+                  {cargos.map((x) => (
+                    <SelectItem key={x.id} value={x.id}>
+                      {x.nome}{x.cbo ? ` (${x.cbo})` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="sm:col-span-2">
+              <Label>Equipe *</Label>
+              <Select
+                value={f.equipe_id || undefined}
+                onValueChange={(v) => setF({ ...f, equipe_id: v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  {equipes.length === 0 && (
+                    <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                      Nenhuma equipe cadastrada
+                    </div>
+                  )}
+                  {equipes.map((x) => <SelectItem key={x.id} value={x.id}>{x.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div className="sm:col-span-3">
               <Label>E-mail</Label>
