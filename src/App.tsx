@@ -359,6 +359,7 @@ const App = () => (
                 <Route path="departamentos" element={<PontoDepartamentos />} />
                 <Route path="cargos" element={<PontoCargos />} />
                 <Route path="equipes" element={<PontoEquipes />} />
+                <Route path="escalas" element={<PontoEscalas />} />
                 <Route path="funcionarios" element={<PontoFuncionarios />} />
                 <Route path="registro" element={<PontoRegistro />} />
                 <Route path="tratamento" element={<PontoTratamento />} />
