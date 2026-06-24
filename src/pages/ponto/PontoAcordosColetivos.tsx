@@ -161,15 +161,29 @@ export default function PontoAcordosColetivos() {
                   <Button variant="ghost" size="sm" onClick={() => { if (confirm("Excluir acordo?")) remover(a.id); }}>Excluir</Button>
                 </div>
               </CardHeader>
-              <CardContent className="text-xs grid grid-cols-2 md:grid-cols-4 gap-2">
-                <div>HE 50%: <b>{a.he_multiplicador_50}x</b></div>
-                <div>HE 100%: <b>{a.he_multiplicador_100}x</b></div>
-                <div>Ad. noturno: <b>{a.adicional_noturno_percentual}%</b></div>
-                <div>Banco horas: <b>{a.banco_horas_prazo_meses}m</b></div>
-                <div>Sobreaviso: <b>{a.sobreaviso_percentual}%</b></div>
-                <div>Intervalo: <b>{a.intervalo_minimo_min}-{a.intervalo_maximo_min}min</b></div>
-                <div>DSR: <b>{a.dsr_percentual}%</b></div>
-                <div>Hora noturna: <b>{a.hora_noturna_minutos}min</b></div>
+              <CardContent className="text-xs space-y-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div>HE 50%: <b>{a.he_multiplicador_50}x</b></div>
+                  <div>HE 100%: <b>{a.he_multiplicador_100}x</b></div>
+                  <div>Ad. noturno: <b>{a.adicional_noturno_percentual}%</b></div>
+                  <div>Banco horas: <b>{a.banco_horas_prazo_meses}m</b></div>
+                  <div>Sobreaviso: <b>{a.sobreaviso_percentual}%</b></div>
+                  <div>Intervalo: <b>{a.intervalo_minimo_min}-{a.intervalo_maximo_min}min</b></div>
+                  <div>DSR: <b>{a.dsr_percentual}%</b></div>
+                  <div>Hora noturna: <b>{a.hora_noturna_minutos}min</b></div>
+                </div>
+                {Array.isArray(a.he_faixas_customizadas) && a.he_faixas_customizadas.length > 0 && (
+                  <div className="border-t pt-2">
+                    <p className="font-semibold mb-1">Faixas customizadas:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {a.he_faixas_customizadas.map((f: any, i: number) => (
+                        <Badge key={i} variant="secondary" className="text-xs">
+                          {f.nome} · {f.percentual}% · {f.condicao}{f.rubrica_dominio ? ` · ${f.rubrica_dominio}` : ""}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           );
