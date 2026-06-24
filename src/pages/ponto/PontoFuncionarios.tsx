@@ -227,6 +227,7 @@ export default function PontoFuncionarios() {
       filial_id: f.filial_id || null,
       escala_id: f.escala_id || null,
       codigo_dominio: f.codigo_dominio?.trim() || null,
+      layout_exportacao_id: f.layout_exportacao_id || null,
       data_nascimento: f.data_nascimento || null,
       eh_aposentado: !!f.eh_aposentado,
       pais_nascimento: f.pais_nascimento || null,
