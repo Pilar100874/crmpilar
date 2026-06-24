@@ -96,6 +96,9 @@ import PontoWebhookCatracas from "./pages/ponto/PontoWebhookCatracas";
 import PontoCltConfig from "./pages/ponto/PontoCltConfig";
 import PontoAnomalias from "./pages/ponto/PontoAnomalias";
 import PontoCompliance from "./pages/ponto/PontoCompliance";
+import PontoAprovacaoRegras from "./pages/ponto/PontoAprovacaoRegras";
+import PontoSobreaviso from "./pages/ponto/PontoSobreaviso";
+import PontoDSR from "./pages/ponto/PontoDSR";
 import PontoBancoHorasExpirar from "./pages/ponto/PontoBancoHorasExpirar";
 import PontoNotificacoes from "./pages/ponto/PontoNotificacoes";
 import PontoManual from "./pages/ponto/PontoManual";
@@ -416,6 +419,9 @@ const App = () => (
                 <Route path="anomalias" element={<PontoAnomalias />} />
                 <Route path="compliance" element={<PontoCompliance />} />
                 <Route path="banco-horas-expirar" element={<PontoBancoHorasExpirar />} />
+                <Route path="aprovacao-regras" element={<PontoAprovacaoRegras />} />
+                <Route path="sobreaviso" element={<PontoSobreaviso />} />
+                <Route path="dsr" element={<PontoDSR />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
                 <Route path="manual" element={<PontoManual />} />
               </Route>
