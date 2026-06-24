@@ -21,8 +21,11 @@ export default function PontoPortalFuncionario() {
   const [atestados, setAtestados] = useState<any[]>([]);
   const [openAjuste, setOpenAjuste] = useState(false);
   const [openAtestado, setOpenAtestado] = useState(false);
+  const [openFerias, setOpenFerias] = useState(false);
   const [novoAjuste, setNovoAjuste] = useState({ data: "", tipo: "entrada", valor_proposto: "", motivo: "" });
   const [novoAtestado, setNovoAtestado] = useState({ data_inicio: "", data_fim: "", cid: "", observacao: "", file: null as File | null });
+  const [novaFerias, setNovaFerias] = useState({ tipo: "ferias", data_inicio: "", data_fim: "", motivo: "" });
+  const [ferias, setFerias] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
 
   const load = useCallback(async () => {
