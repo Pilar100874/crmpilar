@@ -405,6 +405,9 @@ const App = () => (
                 <Route path="importar-afd" element={<PontoImportarAFD />} />
                 <Route path="face-enroll" element={<PontoFaceEnroll />} />
                 <Route path="sugerir-escala" element={<PontoSugerirEscala />} />
+                <Route path="dashboard-executivo" element={<PontoDashboardExecutivo />} />
+                <Route path="aprovacoes" element={<PontoAprovacoes />} />
+                <Route path="webhook-catracas" element={<PontoWebhookCatracas />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
                 <Route path="manual" element={<PontoManual />} />
               </Route>
