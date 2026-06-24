@@ -208,13 +208,19 @@ export default function PontoEquipamentos() {
                   </Badge>
                 </div>
                 {e.nome_local && <p className="text-xs">📍 {e.nome_local}</p>}
-                {e.ip && <p className="text-xs">IP: {e.ip}:{e.porta}</p>}
+                {e.ip && <p className="text-xs">{e.usa_https ? "https" : "http"}://{e.ip}:{e.porta}</p>}
                 {e.numero_fabricacao && (
                   <p className="text-xs text-muted-foreground">Nº fabricação: {e.numero_fabricacao}</p>
                 )}
                 {e.ultima_sync && (
                   <p className="text-xs text-muted-foreground">
                     Última sync: {new Date(e.ultima_sync).toLocaleString("pt-BR")}
+                  </p>
+                )}
+                {e.ultimo_erro && (
+                  <p className="flex items-start gap-1 text-xs text-destructive">
+                    <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />
+                    <span className="break-all">{e.ultimo_erro}</span>
                   </p>
                 )}
                 <div className="flex gap-2 pt-1">
