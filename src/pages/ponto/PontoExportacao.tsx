@@ -256,6 +256,23 @@ export default function PontoExportacao() {
           </div>
         )}
       </div>
+
+      <DeleteConfirmDialog
+        open={!!delTarget}
+        onOpenChange={(o) => !o && setDelTarget(null)}
+        onConfirm={() => delTarget && excluirExport(delTarget)}
+        title="Excluir exportação?"
+        description={delTarget ? `O arquivo gerado em ${new Date(delTarget.created_at).toLocaleString("pt-BR")} para o período ${delTarget.periodo_inicio} → ${delTarget.periodo_fim} será removido permanentemente.` : ""}
+      />
+
+      <DeleteConfirmDialog
+        open={!!reabrirTarget}
+        onOpenChange={(o) => !o && setReabrirTarget(null)}
+        onConfirm={() => reabrirTarget && reabrirPeriodo(reabrirTarget)}
+        title="Reabrir período exportado?"
+        description={reabrirTarget ? `O período ${reabrirTarget.periodo_inicio} → ${reabrirTarget.periodo_fim} ficará disponível para nova edição e geração. Fechamentos mensais sobrepostos serão removidos.` : ""}
+        confirmText="Reabrir"
+      />
     </div>
   );
 }
