@@ -279,17 +279,41 @@ const STEPS: Step[] = [
     optional: true,
   },
   {
+    id: "layouts-exportacao",
+    title: "Layouts de Exportação",
+    description: "Crie os layouts e rubricas usados pela folha (Domínio, Sage, Senior, etc.).",
+    icon: FileDown,
+    url: "/ponto/layouts-exportacao",
+    ctaLabel: "Abrir layouts de exportação",
+    whyItMatters:
+      "Os layouts definem como cada evento (HE 50%, HE 100%, DSR, faltas) é entregue ao sistema de folha. Use o botão 'Criar 2 layouts padrão' para começar com modelos prontos (50/100% e 60/100%).",
+    checklist: [
+      "Criar o(s) layout(s) usados pela empresa",
+      "Mapear rubricas (150, 200, 8069, 8794, etc.)",
+      "Definir tamanho da matrícula e formato de horas",
+    ],
+    optional: true,
+    check: async ({ empresaId }) => {
+      if (!empresaId) return false;
+      const { count } = await supabase
+        .from("ponto_export_layouts")
+        .select("id", { count: "exact", head: true })
+        .eq("empresa_id", empresaId);
+      return (count ?? 0) > 0;
+    },
+  },
+  {
     id: "exportacao",
     title: "Exportação para Folha",
-    description: "Configure rubricas Domínio e formatos de exportação.",
+    description: "Gere o arquivo final para envio à folha de pagamento.",
     icon: FileDown,
     url: "/ponto/exportacao",
     ctaLabel: "Configurar exportação",
     whyItMatters:
       "Conecta o ponto ao sistema de folha. Sem isso, o RH refaz tudo manualmente.",
     checklist: [
-      "Mapear rubricas (HE 50%, HE 100%, DSR, faltas)",
-      "Escolher formato (Domínio, AFD, CSV)",
+      "Escolher o layout cadastrado",
+      "Selecionar o período de competência",
       "Fazer uma exportação teste",
     ],
     optional: true,
