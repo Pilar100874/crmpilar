@@ -88,6 +88,8 @@ import PontoTotem from "./pages/ponto/PontoTotem";
 import PontoEsocial from "./pages/ponto/PontoEsocial";
 import PontoImportacao from "./pages/ponto/PontoImportacao";
 import PontoImportarAFD from "./pages/ponto/PontoImportarAFD";
+import PontoFaceEnroll from "./pages/ponto/PontoFaceEnroll";
+import PontoSugerirEscala from "./pages/ponto/PontoSugerirEscala";
 import PontoNotificacoes from "./pages/ponto/PontoNotificacoes";
 import PontoManual from "./pages/ponto/PontoManual";
 import ChatInterno from "./pages/ChatInterno";
@@ -398,6 +400,8 @@ const App = () => (
                 <Route path="esocial" element={<PontoEsocial />} />
                 <Route path="importacao" element={<PontoImportacao />} />
                 <Route path="importar-afd" element={<PontoImportarAFD />} />
+                <Route path="face-enroll" element={<PontoFaceEnroll />} />
+                <Route path="sugerir-escala" element={<PontoSugerirEscala />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
                 <Route path="manual" element={<PontoManual />} />
               </Route>
