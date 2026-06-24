@@ -60,13 +60,26 @@ Deno.serve(async (req) => {
       if (f.status && !["ativo", "ferias", "afastado"].includes(f.status)) {
         ignorados.push({ ...r, motivo: `funcionario_status_${f.status}` }); continue;
       }
-      // Validações do equipamento por data
       if (equipamento?.data_inicio_coleta && r.data_hora < equipamento.data_inicio_coleta) {
         ignorados.push({ ...r, motivo: "anterior_data_inicio_coleta" }); continue;
       }
       if (f.data_inicio_ponto && r.data_hora.slice(0, 10) < f.data_inicio_ponto) {
         ignorados.push({ ...r, motivo: "anterior_inicio_ponto_funcionario" }); continue;
       }
+
+      // 🔑 Bloqueia se houver férias/afastamento ativo com bloqueia_marcacao=true no dia
+      const dataReg = r.data_hora.slice(0, 10);
+      const { data: afast } = await supabase.from("ponto_ferias_afastamentos")
+        .select("id, tipo, bloqueia_marcacao")
+        .eq("funcionario_id", f.id)
+        .lte("data_inicio", dataReg).gte("data_fim", dataReg)
+        .in("status", ["aprovado", "ativo"])
+        .eq("bloqueia_marcacao", true).maybeSingle();
+      if (afast) {
+        ignorados.push({ ...r, motivo: `bloqueado_${afast.tipo}` });
+        continue;
+      }
+
       const { error } = await supabase.from("ponto_registros").insert({
         funcionario_id: f.id,
         tipo: r.tipo, origem: "coletor_controlid",
