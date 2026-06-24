@@ -10113,6 +10113,13 @@ export type Database = {
             foreignKeyName: "ponto_ajustes_funcionario_id_fkey"
             columns: ["funcionario_id"]
             isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "ponto_ajustes_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
             referencedRelation: "ponto_funcionarios"
             referencedColumns: ["id"]
           },
@@ -10168,6 +10175,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "ponto_empresas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_alertas_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
           },
           {
             foreignKeyName: "ponto_alertas_funcionario_id_fkey"
@@ -10243,6 +10257,13 @@ export type Database = {
             foreignKeyName: "ponto_anomalias_funcionario_id_fkey"
             columns: ["funcionario_id"]
             isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "ponto_anomalias_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
             referencedRelation: "ponto_funcionarios"
             referencedColumns: ["id"]
           },
@@ -10282,6 +10303,116 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ponto_aprovacao_fluxo: {
+        Row: {
+          aprovador_atual_id: string | null
+          created_at: string
+          empresa_id: string
+          escalado_em: string | null
+          id: string
+          niveis_executados: Json
+          nivel_atual: number
+          nivel_total: number
+          observacao: string | null
+          origem: string
+          origem_id: string
+          papel_atual: string | null
+          prazo_em: string | null
+          regra_id: string | null
+          sla_horas: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          aprovador_atual_id?: string | null
+          created_at?: string
+          empresa_id: string
+          escalado_em?: string | null
+          id?: string
+          niveis_executados?: Json
+          nivel_atual?: number
+          nivel_total?: number
+          observacao?: string | null
+          origem: string
+          origem_id: string
+          papel_atual?: string | null
+          prazo_em?: string | null
+          regra_id?: string | null
+          sla_horas?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          aprovador_atual_id?: string | null
+          created_at?: string
+          empresa_id?: string
+          escalado_em?: string | null
+          id?: string
+          niveis_executados?: Json
+          nivel_atual?: number
+          nivel_total?: number
+          observacao?: string | null
+          origem?: string
+          origem_id?: string
+          papel_atual?: string | null
+          prazo_em?: string | null
+          regra_id?: string | null
+          sla_horas?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_aprovacao_fluxo_regra_id_fkey"
+            columns: ["regra_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_aprovacao_regras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_aprovacao_regras: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          empresa_id: string
+          id: string
+          niveis: Json
+          nome: string
+          prioridade: number
+          tipo_anomalia: string
+          updated_at: string
+          valor_max_min: number | null
+          valor_min_min: number
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          empresa_id: string
+          id?: string
+          niveis?: Json
+          nome: string
+          prioridade?: number
+          tipo_anomalia: string
+          updated_at?: string
+          valor_max_min?: number | null
+          valor_min_min?: number
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          empresa_id?: string
+          id?: string
+          niveis?: Json
+          nome?: string
+          prioridade?: number
+          tipo_anomalia?: string
+          updated_at?: string
+          valor_max_min?: number | null
+          valor_min_min?: number
+        }
+        Relationships: []
       }
       ponto_assinaturas_espelho: {
         Row: {
@@ -10337,6 +10468,13 @@ export type Database = {
             foreignKeyName: "ponto_assinaturas_espelho_funcionario_id_fkey"
             columns: ["funcionario_id"]
             isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "ponto_assinaturas_espelho_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
             referencedRelation: "ponto_funcionarios"
             referencedColumns: ["id"]
           },
@@ -10386,6 +10524,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ponto_atestados_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
           {
             foreignKeyName: "ponto_atestados_funcionario_id_fkey"
             columns: ["funcionario_id"]
@@ -10561,6 +10706,13 @@ export type Database = {
             foreignKeyName: "ponto_banco_horas_saldos_funcionario_id_fkey"
             columns: ["funcionario_id"]
             isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "ponto_banco_horas_saldos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
             referencedRelation: "ponto_funcionarios"
             referencedColumns: ["id"]
           },
@@ -10644,6 +10796,8 @@ export type Database = {
           detectar_padrao_suspeito: boolean
           dsr_max_dias_seguidos: number
           empresa_id: string
+          escalonamento_max_niveis: number
+          escalonamento_sla_horas: number
           exigir_anexo_he_acima_min: number
           exigir_dupla_aprovacao_acima_min: number
           exigir_motivo_he_acima_min: number
@@ -10672,6 +10826,10 @@ export type Database = {
           notificar_funcionario_alteracao: boolean
           notificar_push: boolean
           proibir_auto_aprovacao: boolean
+          prontidao_percentual: number
+          reflexo_dsr_he: boolean
+          reflexo_dsr_noturno: boolean
+          sobreaviso_percentual: number
           time_lock_ajuste_horas: number
           updated_at: string
         }
@@ -10695,6 +10853,8 @@ export type Database = {
           detectar_padrao_suspeito?: boolean
           dsr_max_dias_seguidos?: number
           empresa_id: string
+          escalonamento_max_niveis?: number
+          escalonamento_sla_horas?: number
           exigir_anexo_he_acima_min?: number
           exigir_dupla_aprovacao_acima_min?: number
           exigir_motivo_he_acima_min?: number
@@ -10723,6 +10883,10 @@ export type Database = {
           notificar_funcionario_alteracao?: boolean
           notificar_push?: boolean
           proibir_auto_aprovacao?: boolean
+          prontidao_percentual?: number
+          reflexo_dsr_he?: boolean
+          reflexo_dsr_noturno?: boolean
+          sobreaviso_percentual?: number
           time_lock_ajuste_horas?: number
           updated_at?: string
         }
@@ -10746,6 +10910,8 @@ export type Database = {
           detectar_padrao_suspeito?: boolean
           dsr_max_dias_seguidos?: number
           empresa_id?: string
+          escalonamento_max_niveis?: number
+          escalonamento_sla_horas?: number
           exigir_anexo_he_acima_min?: number
           exigir_dupla_aprovacao_acima_min?: number
           exigir_motivo_he_acima_min?: number
@@ -10774,6 +10940,10 @@ export type Database = {
           notificar_funcionario_alteracao?: boolean
           notificar_push?: boolean
           proibir_auto_aprovacao?: boolean
+          prontidao_percentual?: number
+          reflexo_dsr_he?: boolean
+          reflexo_dsr_noturno?: boolean
+          sobreaviso_percentual?: number
           time_lock_ajuste_horas?: number
           updated_at?: string
         }
@@ -10873,6 +11043,13 @@ export type Database = {
           ultimo_uso?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ponto_dispositivos_autorizados_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
           {
             foreignKeyName: "ponto_dispositivos_autorizados_funcionario_id_fkey"
             columns: ["funcionario_id"]
@@ -11078,6 +11255,13 @@ export type Database = {
             foreignKeyName: "ponto_equipe_membros_funcionario_id_fkey"
             columns: ["funcionario_id"]
             isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "ponto_equipe_membros_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
             referencedRelation: "ponto_funcionarios"
             referencedColumns: ["id"]
           },
@@ -11147,6 +11331,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "ponto_filiais"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_equipes_lider_funcionario_id_fkey"
+            columns: ["lider_funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
           },
           {
             foreignKeyName: "ponto_equipes_lider_funcionario_id_fkey"
@@ -11300,6 +11491,13 @@ export type Database = {
             foreignKeyName: "ponto_esocial_eventos_funcionario_id_fkey"
             columns: ["funcionario_id"]
             isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "ponto_esocial_eventos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
             referencedRelation: "ponto_funcionarios"
             referencedColumns: ["id"]
           },
@@ -11386,6 +11584,13 @@ export type Database = {
             foreignKeyName: "ponto_espelho_diario_funcionario_id_fkey"
             columns: ["funcionario_id"]
             isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "ponto_espelho_diario_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
             referencedRelation: "ponto_funcionarios"
             referencedColumns: ["id"]
           },
@@ -11435,6 +11640,13 @@ export type Database = {
           visualizado_em?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ponto_espelho_envios_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
           {
             foreignKeyName: "ponto_espelho_envios_funcionario_id_fkey"
             columns: ["funcionario_id"]
@@ -11693,6 +11905,13 @@ export type Database = {
             foreignKeyName: "ponto_ferias_afastamentos_funcionario_id_fkey"
             columns: ["funcionario_id"]
             isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "ponto_ferias_afastamentos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
             referencedRelation: "ponto_funcionarios"
             referencedColumns: ["id"]
           },
@@ -11808,6 +12027,13 @@ export type Database = {
             foreignKeyName: "ponto_funcionario_dependentes_funcionario_id_fkey"
             columns: ["funcionario_id"]
             isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "ponto_funcionario_dependentes_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
             referencedRelation: "ponto_funcionarios"
             referencedColumns: ["id"]
           },
@@ -11848,6 +12074,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ponto_funcionario_documentos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
           {
             foreignKeyName: "ponto_funcionario_documentos_funcionario_id_fkey"
             columns: ["funcionario_id"]
@@ -11961,6 +12194,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "ponto_filiais"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_funcionario_vinculos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
           },
           {
             foreignKeyName: "ponto_funcionario_vinculos_funcionario_id_fkey"
@@ -12649,6 +12889,13 @@ export type Database = {
             foreignKeyName: "ponto_registros_funcionario_id_fkey"
             columns: ["funcionario_id"]
             isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "ponto_registros_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
             referencedRelation: "ponto_funcionarios"
             referencedColumns: ["id"]
           },
@@ -12750,6 +12997,75 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_sobreaviso: {
+        Row: {
+          acionado: boolean
+          acionado_fim: string | null
+          acionado_inicio: string | null
+          created_at: string
+          created_by: string | null
+          data_fim: string
+          data_inicio: string
+          empresa_id: string
+          funcionario_id: string
+          horas_totais: number | null
+          id: string
+          observacao: string | null
+          status: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          acionado?: boolean
+          acionado_fim?: string | null
+          acionado_inicio?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_fim: string
+          data_inicio: string
+          empresa_id: string
+          funcionario_id: string
+          horas_totais?: number | null
+          id?: string
+          observacao?: string | null
+          status?: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          acionado?: boolean
+          acionado_fim?: string | null
+          acionado_inicio?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_fim?: string
+          data_inicio?: string
+          empresa_id?: string
+          funcionario_id?: string
+          horas_totais?: number | null
+          id?: string
+          observacao?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_sobreaviso_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "ponto_sobreaviso_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
             referencedColumns: ["id"]
           },
         ]
@@ -17845,6 +18161,29 @@ export type Database = {
           },
         ]
       }
+      ponto_dsr_detalhado: {
+        Row: {
+          dias_uteis: number | null
+          domingos: number | null
+          dsr_calculado_min: number | null
+          empresa_id: string | null
+          funcionario_id: string | null
+          he_total_min: number | null
+          mes: string | null
+          nome: string | null
+          noturno_reduzido_min: number | null
+          noturno_total_min: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_funcionarios_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_login: {
@@ -17967,6 +18306,8 @@ export type Database = {
           detectar_padrao_suspeito: boolean
           dsr_max_dias_seguidos: number
           empresa_id: string
+          escalonamento_max_niveis: number
+          escalonamento_sla_horas: number
           exigir_anexo_he_acima_min: number
           exigir_dupla_aprovacao_acima_min: number
           exigir_motivo_he_acima_min: number
@@ -17995,6 +18336,10 @@ export type Database = {
           notificar_funcionario_alteracao: boolean
           notificar_push: boolean
           proibir_auto_aprovacao: boolean
+          prontidao_percentual: number
+          reflexo_dsr_he: boolean
+          reflexo_dsr_noturno: boolean
+          sobreaviso_percentual: number
           time_lock_ajuste_horas: number
           updated_at: string
         }
