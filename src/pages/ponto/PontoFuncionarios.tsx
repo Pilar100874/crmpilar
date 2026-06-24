@@ -445,6 +445,19 @@ export default function PontoFuncionarios() {
               </div>
               <div><Label>PIN</Label><Input value={f.pin} onChange={(e) => setF({ ...f, pin: e.target.value })} placeholder="PIN para registro de ponto" /></div>
               <div><Label>Código Domínio</Label><Input value={f.codigo_dominio} onChange={(e) => setF({ ...f, codigo_dominio: e.target.value })} /></div>
+              <div>
+                <Label>Layout de exportação</Label>
+                <Select value={f.layout_exportacao_id || "_none"} onValueChange={(v) => setF({ ...f, layout_exportacao_id: v === "_none" ? null : v })}>
+                  <SelectTrigger><SelectValue placeholder="Usa padrão da exportação" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">— Usar layout padrão —</SelectItem>
+                    {exportLayouts.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>{l.descricao || l.software}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-muted-foreground mt-1">Define o layout de folha usado na exportação consolidada (ex.: funcionários com HE 60% em layout próprio).</p>
+              </div>
               <div><Label>Admissão</Label><Input type="date" value={f.admissao} onChange={(e) => setF({ ...f, admissao: e.target.value })} /></div>
               <div className="sm:col-span-2"><Label>URL da foto</Label><Input value={f.foto_url} onChange={(e) => setF({ ...f, foto_url: e.target.value })} placeholder="https://..." /></div>
             </TabsContent>
