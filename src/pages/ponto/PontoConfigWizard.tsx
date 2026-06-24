@@ -210,6 +210,29 @@ const STEPS: Step[] = [
     optional: true,
   },
   {
+    id: "escalas",
+    title: "Escalas / Jornadas",
+    description: "Defina as jornadas de trabalho (5x2, 6x1, 12x36) antes de cadastrar funcionários.",
+    icon: CalendarClock,
+    url: "/ponto/escalas",
+    ctaLabel: "Abrir escalas",
+    whyItMatters:
+      "Toda funcionário precisa estar vinculado a uma escala. Sem ela não é possível calcular horas trabalhadas, banco de horas ou extras.",
+    checklist: [
+      "Cadastrar a(s) escala(s) padrão da empresa",
+      "Configurar horários por dia da semana",
+      "Definir intervalo e carga semanal",
+    ],
+    check: async ({ empresaId }) => {
+      if (!empresaId) return false;
+      const { count } = await supabase
+        .from("ponto_escalas")
+        .select("id", { count: "exact", head: true })
+        .eq("empresa_id", empresaId);
+      return (count ?? 0) > 0;
+    },
+  },
+  {
     id: "funcionarios",
     title: "Funcionários e Jornadas",
     description: "Cadastre funcionários, escalas e PIN/biometria.",
