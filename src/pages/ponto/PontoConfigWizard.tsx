@@ -112,9 +112,10 @@ const STEPS: Step[] = [
       const { count } = await supabase
         .from("ponto_departamentos")
         .select("id", { count: "exact", head: true })
-        .eq("empresa_id", empresaId);
+        .or(`empresa_id.eq.${empresaId},global.eq.true`);
       return (count ?? 0) > 0;
     },
+
   },
 
   {
@@ -138,9 +139,10 @@ const STEPS: Step[] = [
       const { count } = await supabase
         .from("ponto_cargos")
         .select("id", { count: "exact", head: true })
-        .eq("empresa_id", empresaId);
+        .or(`empresa_id.eq.${empresaId},global.eq.true`);
       return (count ?? 0) > 0;
     },
+
   },
   {
     id: "equipes",
@@ -163,9 +165,10 @@ const STEPS: Step[] = [
       const { count } = await supabase
         .from("ponto_equipes")
         .select("id", { count: "exact", head: true })
-        .eq("empresa_id", empresaId);
+        .or(`empresa_id.eq.${empresaId},global.eq.true`);
       return (count ?? 0) > 0;
     },
+
   },
   {
     id: "equipamentos",
