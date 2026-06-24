@@ -10053,6 +10053,7 @@ export type Database = {
       ponto_ajustes: {
         Row: {
           anexo_url: string | null
+          aprovacoes: Json
           aprovado_em: string | null
           aprovador_id: string | null
           comentario: string | null
@@ -10061,6 +10062,8 @@ export type Database = {
           funcionario_id: string
           id: string
           motivo: string
+          nivel_aprovacao_atual: number
+          nivel_aprovacao_max: number
           solicitado_por: string | null
           status: string
           tipo: string
@@ -10069,6 +10072,7 @@ export type Database = {
         }
         Insert: {
           anexo_url?: string | null
+          aprovacoes?: Json
           aprovado_em?: string | null
           aprovador_id?: string | null
           comentario?: string | null
@@ -10077,6 +10081,8 @@ export type Database = {
           funcionario_id: string
           id?: string
           motivo: string
+          nivel_aprovacao_atual?: number
+          nivel_aprovacao_max?: number
           solicitado_por?: string | null
           status?: string
           tipo?: string
@@ -10085,6 +10091,7 @@ export type Database = {
         }
         Update: {
           anexo_url?: string | null
+          aprovacoes?: Json
           aprovado_em?: string | null
           aprovador_id?: string | null
           comentario?: string | null
@@ -10093,6 +10100,8 @@ export type Database = {
           funcionario_id?: string
           id?: string
           motivo?: string
+          nivel_aprovacao_atual?: number
+          nivel_aprovacao_max?: number
           solicitado_por?: string | null
           status?: string
           tipo?: string
@@ -10172,6 +10181,41 @@ export type Database = {
             columns: ["registro_id"]
             isOneToOne: false
             referencedRelation: "ponto_registros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_aprovacao_config: {
+        Row: {
+          created_at: string
+          empresa_id: string
+          entidade: string
+          id: string
+          niveis: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          empresa_id: string
+          entidade: string
+          id?: string
+          niveis?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          empresa_id?: string
+          entidade?: string
+          id?: string
+          niveis?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_aprovacao_config_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_empresas"
             referencedColumns: ["id"]
           },
         ]
@@ -11334,6 +11378,7 @@ export type Database = {
       }
       ponto_ferias_afastamentos: {
         Row: {
+          aprovacoes: Json
           bloqueia_marcacao: boolean
           created_at: string
           created_by: string | null
@@ -11347,11 +11392,14 @@ export type Database = {
           funcionario_id: string
           id: string
           motivo: string | null
+          nivel_aprovacao_atual: number
+          nivel_aprovacao_max: number
           status: string
           tipo: string
           updated_at: string
         }
         Insert: {
+          aprovacoes?: Json
           bloqueia_marcacao?: boolean
           created_at?: string
           created_by?: string | null
@@ -11365,11 +11413,14 @@ export type Database = {
           funcionario_id: string
           id?: string
           motivo?: string | null
+          nivel_aprovacao_atual?: number
+          nivel_aprovacao_max?: number
           status?: string
           tipo: string
           updated_at?: string
         }
         Update: {
+          aprovacoes?: Json
           bloqueia_marcacao?: boolean
           created_at?: string
           created_by?: string | null
@@ -11383,6 +11434,8 @@ export type Database = {
           funcionario_id?: string
           id?: string
           motivo?: string | null
+          nivel_aprovacao_atual?: number
+          nivel_aprovacao_max?: number
           status?: string
           tipo?: string
           updated_at?: string
@@ -12443,6 +12496,60 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_webhook_tokens: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          empresa_id: string
+          equipamento_id: string | null
+          id: string
+          token: string
+          total_chamadas: number
+          ultima_chamada: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          empresa_id: string
+          equipamento_id?: string | null
+          id?: string
+          token: string
+          total_chamadas?: number
+          ultima_chamada?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          empresa_id?: string
+          equipamento_id?: string | null
+          id?: string
+          token?: string
+          total_chamadas?: number
+          ultima_chamada?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_webhook_tokens_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_webhook_tokens_equipamento_id_fkey"
+            columns: ["equipamento_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_equipamentos"
             referencedColumns: ["id"]
           },
         ]
