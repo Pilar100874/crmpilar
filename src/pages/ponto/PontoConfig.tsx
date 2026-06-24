@@ -78,6 +78,12 @@ const items = [
     icon: Download,
   },
   {
+    title: "Layouts de Exportação",
+    description: "Mapeamento de rubricas por software de folha (Domínio, Sage, Senior...)",
+    url: "/ponto/layouts-exportacao",
+    icon: FileDown,
+  },
+  {
     title: "Exportação Domínio",
     description: "Configuração de rubricas e exportação para folha",
     url: "/ponto/exportacao",
