@@ -425,6 +425,7 @@ const App = () => (
                 <Route path="sobreaviso" element={<PontoSobreaviso />} />
                 <Route path="dsr" element={<PontoDSR />} />
                 <Route path="lgpd" element={<PontoLGPDPortal />} />
+                <Route path="esocial-fila" element={<PontoEsocialFila />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
                 <Route path="manual" element={<PontoManual />} />
               </Route>

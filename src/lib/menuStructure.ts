@@ -95,6 +95,7 @@ export const menuStructure: MenuCategory[] = [
      { id: "Ponto Sobreaviso", title: "Sobreaviso/Prontidão", url: "/ponto/sobreaviso", icon: LucideIcons.Bell },
     { id: "Ponto DSR", title: "DSR e Adicional Noturno", url: "/ponto/dsr", icon: LucideIcons.CalendarDays },
     { id: "Ponto LGPD", title: "Portal LGPD", url: "/ponto/lgpd", icon: LucideIcons.Shield },
+    { id: "Ponto eSocial Fila", title: "Fila eSocial (Retry/DLQ)", url: "/ponto/esocial-fila", icon: LucideIcons.RefreshCw },
      { id: "Ponto CLT Config", title: "Configuração CLT/671", url: "/ponto/clt-config", icon: LucideIcons.Scale },
      { id: "Ponto Auditoria", title: "Auditoria", url: "/ponto/auditoria", icon: LucideIcons.ShieldCheck },
     ],
