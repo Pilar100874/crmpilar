@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePontoEmpresa } from "./usePontoEmpresa";
+import { usePontoOfflineQueue } from "./usePontoOfflineQueue";
+import { OfflineQueueIndicator } from "./OfflineQueueIndicator";
 
 type Tipo = "entrada" | "saida" | "inicio_intervalo" | "fim_intervalo";
 
