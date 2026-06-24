@@ -78,7 +78,7 @@ export default function EspelhoFuncionario() {
         <CardHeader><CardTitle className="text-base">Resumo do mês</CardTitle></CardHeader>
         <CardContent>
           <div className="overflow-auto">
-            <table className="w-full text-xs">
+            <table className="w-full text-xs resp-table">
               <thead className="bg-muted">
                 <tr>
                   <th className="p-2 text-left">Data</th>

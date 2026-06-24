@@ -108,7 +108,7 @@ export default function PontoDashboardExecutivo() {
         <Card><CardContent className="p-4">
           <h3 className="font-semibold mb-2 flex items-center gap-2"><TrendingDown className="h-4 w-4 text-destructive" /> Top ausências</h3>
           {topAusencia.length === 0 ? <p className="text-sm text-muted-foreground">Sem ausências no período.</p> : (
-            <table className="w-full text-sm">
+            <table className="w-full text-sm resp-table">
               <tbody>{topAusencia.map((x,i)=>(
                 <tr key={i} className="border-t"><td className="p-2">{x.nome}</td><td className="p-2 text-right"><Badge variant="destructive">{fmtH(x.falta)}</Badge></td></tr>
               ))}</tbody>
@@ -118,7 +118,7 @@ export default function PontoDashboardExecutivo() {
         <Card><CardContent className="p-4">
           <h3 className="font-semibold mb-2 flex items-center gap-2"><TrendingUp className="h-4 w-4 text-emerald-600" /> Top horas extras</h3>
           {topHoraExtra.length === 0 ? <p className="text-sm text-muted-foreground">Sem horas extras no período.</p> : (
-            <table className="w-full text-sm">
+            <table className="w-full text-sm resp-table">
               <tbody>{topHoraExtra.map((x,i)=>(
                 <tr key={i} className="border-t"><td className="p-2">{x.nome}</td><td className="p-2 text-right"><Badge>{fmtH(x.extra)}</Badge></td></tr>
               ))}</tbody>

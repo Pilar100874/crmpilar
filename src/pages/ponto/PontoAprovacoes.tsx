@@ -488,7 +488,7 @@ export default function PontoAprovacoes() {
               <p className="text-xs text-muted-foreground">Nenhuma decisão com motivo fixo registrada ainda.</p>
             ) : (
               <div className="overflow-x-auto rounded border">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm resp-table">
                   <thead className="bg-muted/50"><tr className="text-left">
                     <th className="p-2">Código</th><th className="p-2">Motivo</th>
                     <th className="p-2 text-right">Total</th>
@@ -542,7 +542,7 @@ export default function PontoAprovacoes() {
             </div>
 
             <div className="overflow-x-auto rounded border">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm resp-table">
                 <thead className="bg-muted/50"><tr className="text-left">
                   <th className="p-2">Data</th><th className="p-2">Funcionário</th>
                   <th className="p-2">Tipo</th><th className="p-2">Decisão</th>

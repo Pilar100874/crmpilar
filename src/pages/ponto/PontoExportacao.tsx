@@ -260,8 +260,8 @@ export default function PontoExportacao() {
             <p className="text-sm text-muted-foreground">Nenhuma exportação ainda.</p>
           </CardContent></Card>
         ) : (
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full min-w-[640px] text-sm">
+          <div className="overflow-x-auto rounded-lg border resp-table-wrap">
+            <table className="w-full min-w-[640px] text-sm resp-table">
               <thead className="bg-muted/50"><tr className="text-left">
                 <th className="p-3">Quando</th><th className="p-3">Layout</th>
                 <th className="p-3">Período</th><th className="p-3">Lançamentos</th>

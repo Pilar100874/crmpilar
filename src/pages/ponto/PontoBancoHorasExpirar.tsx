@@ -61,7 +61,7 @@ export default function PontoBancoHorasExpirar() {
             <p className="text-muted-foreground">Nenhum lançamento próximo de expirar ✓</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm resp-table">
                 <thead className="border-b">
                   <tr className="text-left">
                     <th className="p-2">Funcionário</th>
