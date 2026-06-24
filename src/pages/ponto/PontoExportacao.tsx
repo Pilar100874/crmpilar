@@ -87,6 +87,52 @@ export default function PontoExportacao() {
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   };
 
+  const excluirExport = async (log: any) => {
+    try {
+      if (log.arquivo_url) {
+        await supabase.storage.from("ponto-exports").remove([log.arquivo_url]);
+      }
+      const { error } = await supabase.from("ponto_export_logs").delete().eq("id", log.id);
+      if (error) throw error;
+      toast.success("Exportação excluída");
+      setDelTarget(null);
+      loadLogs();
+    } catch (e: any) { toast.error(e.message); }
+  };
+
+  const reabrirPeriodo = async (log: any) => {
+    if (!empresaId) return;
+    try {
+      // Remove fechamentos que se sobrepõem ao período do export
+      const { data: fechs, error: fErr } = await supabase
+        .from("ponto_periodos_fechamento")
+        .select("id, mes_referencia")
+        .eq("empresa_id", empresaId)
+        .gte("mes_referencia", log.periodo_inicio)
+        .lte("mes_referencia", log.periodo_fim);
+      if (fErr) throw fErr;
+      let removidos = 0;
+      if (fechs?.length) {
+        const { error: dErr } = await supabase
+          .from("ponto_periodos_fechamento")
+          .delete()
+          .in("id", fechs.map((f) => f.id));
+        if (dErr) throw dErr;
+        removidos = fechs.length;
+      }
+      // Marca o log como reaberto
+      await supabase.from("ponto_export_logs")
+        .update({ status: "reaberto", observacao: `Reaberto em ${new Date().toLocaleString("pt-BR")}` })
+        .eq("id", log.id);
+      toast.success(`Período reaberto${removidos ? ` (${removidos} fechamento(s) removido(s))` : ""}`);
+      setReabrirTarget(null);
+      // Pré-popula faixa para nova geração
+      setInicio(log.periodo_inicio);
+      setFim(log.periodo_fim);
+      loadLogs();
+    } catch (e: any) { toast.error(e.message); }
+  };
+
   return (
     <div className="space-y-4 p-6">
       <div>
