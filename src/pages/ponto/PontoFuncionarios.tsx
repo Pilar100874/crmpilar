@@ -140,6 +140,7 @@ export default function PontoFuncionarios() {
     if (!f.departamento_id) return toast.error("Departamento obrigatório");
     if (!f.cargo_id) return toast.error("Cargo obrigatório");
     if (!f.equipe_id) return toast.error("Equipe obrigatória");
+    if (!f.escala_id) return toast.error("Escala obrigatória");
     if (f.pis && !validatePIS(f.pis)) return toast.error("PIS inválido");
     if (f.email && !validateEmail(f.email)) return toast.error("E-mail inválido");
     if (f.telefone && !validatePhone(f.telefone)) return toast.error("Telefone inválido");
