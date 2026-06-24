@@ -16,6 +16,8 @@ import { usePontoEmpresa } from "./usePontoEmpresa";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Badge } from "@/components/ui/badge";
 import { MaskedInput } from "@/components/ui/masked-input";
+import { Switch } from "@/components/ui/switch";
+import { Wifi, AlertCircle } from "lucide-react";
 import { maskIP, maskCNPJ } from "@/lib/masks";
 import { validateIP } from "@/lib/validators";
 
@@ -48,7 +50,8 @@ const FORM_INICIAL = {
   nome_local: "",
   data_inicio_coleta: new Date().toISOString().slice(0, 10),
   ip: "",
-  porta: "4370",
+  porta: "80",
+  usa_https: false,
   numero_fabricacao: "",
   serial: "",
   usuario: "admin",
@@ -103,7 +106,8 @@ export default function PontoEquipamentos() {
       nome_local: e.nome_local || "",
       data_inicio_coleta: e.data_inicio_coleta || new Date().toISOString().slice(0, 10),
       ip: e.ip || "",
-      porta: e.porta?.toString() || "4370",
+      porta: e.porta?.toString() || "80",
+      usa_https: !!e.usa_https,
       numero_fabricacao: e.numero_fabricacao || "",
       serial: e.serial || "",
       usuario: e.usuario || "",
@@ -139,6 +143,7 @@ export default function PontoEquipamentos() {
       data_inicio_coleta: f.data_inicio_coleta || null,
       ip: f.ip || null,
       porta: porta || null,
+      usa_https: f.usa_https,
       numero_fabricacao: f.numero_fabricacao || null,
       serial: f.serial || null,
       usuario: f.usuario || null,
@@ -203,13 +208,19 @@ export default function PontoEquipamentos() {
                   </Badge>
                 </div>
                 {e.nome_local && <p className="text-xs">📍 {e.nome_local}</p>}
-                {e.ip && <p className="text-xs">IP: {e.ip}:{e.porta}</p>}
+                {e.ip && <p className="text-xs">{e.usa_https ? "https" : "http"}://{e.ip}:{e.porta}</p>}
                 {e.numero_fabricacao && (
                   <p className="text-xs text-muted-foreground">Nº fabricação: {e.numero_fabricacao}</p>
                 )}
                 {e.ultima_sync && (
                   <p className="text-xs text-muted-foreground">
                     Última sync: {new Date(e.ultima_sync).toLocaleString("pt-BR")}
+                  </p>
+                )}
+                {e.ultimo_erro && (
+                  <p className="flex items-start gap-1 text-xs text-destructive">
+                    <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />
+                    <span className="break-all">{e.ultimo_erro}</span>
                   </p>
                 )}
                 <div className="flex gap-2 pt-1">
@@ -324,6 +335,51 @@ export default function PontoEquipamentos() {
                 onChange={(e) => setF({ ...f, porta: e.target.value })}
               />
             </div>
+
+            <div className="sm:col-span-2 flex flex-wrap items-center gap-3 rounded-md border bg-muted/30 p-3">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="usa_https"
+                  checked={f.usa_https}
+                  onCheckedChange={(v) => setF({ ...f, usa_https: v, porta: v && f.porta === "80" ? "443" : !v && f.porta === "443" ? "80" : f.porta })}
+                />
+                <Label htmlFor="usa_https" className="cursor-pointer">Usar HTTPS na comunicação</Label>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  if (!f.ip) return toast.error("Informe o IP primeiro");
+                  const proto = f.usa_https ? "https" : "http";
+                  const url = `${proto}://${f.ip}:${f.porta || (f.usa_https ? 443 : 80)}/login.fcgi`;
+                  const t = toast.loading(`Testando ${url}...`);
+                  try {
+                    const ctrl = new AbortController();
+                    const to = setTimeout(() => ctrl.abort(), 6000);
+                    const resp = await fetch(url, {
+                      method: "POST",
+                      mode: "no-cors",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ login: f.usuario, password: f.senha }),
+                      signal: ctrl.signal,
+                    });
+                    clearTimeout(to);
+                    toast.dismiss(t);
+                    toast.success(`Equipamento respondeu (HTTP ${resp.status || "opaque"}). Login real só pode ser validado pelo Coletor Desktop devido a CORS.`);
+                  } catch (e: any) {
+                    toast.dismiss(t);
+                    toast.error(`Falha: ${e.message}. Verifique se está na mesma rede do relógio. O Coletor Desktop não tem essa limitação.`);
+                  }
+                }}
+              >
+                <Wifi className="mr-2 h-4 w-4" /> Testar conexão
+              </Button>
+              <p className="w-full text-xs text-muted-foreground">
+                O teste pelo navegador apenas confirma se o IP responde. A autenticação real (login + leitura de batidas) é feita pelo Coletor Desktop instalado na rede local.
+              </p>
+            </div>
+
 
             <div className="sm:col-span-2">
               <Label>Número de fabricação</Label>
