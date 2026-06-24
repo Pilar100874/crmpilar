@@ -98,6 +98,44 @@ export default function PontoAcordosColetivos() {
               <div><Label>Banco horas (meses)</Label><Input type="number" value={form.banco_horas_prazo_meses} onChange={e => setForm({ ...form, banco_horas_prazo_meses: +e.target.value })} /></div>
               <div><Label>Sobreaviso %</Label><Input type="number" step="0.01" value={form.sobreaviso_percentual} onChange={e => setForm({ ...form, sobreaviso_percentual: +e.target.value })} /></div>
             </div>
+
+            <div className="border-t pt-3 mt-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-semibold">Faixas customizadas de HE</Label>
+                  <p className="text-xs text-muted-foreground">Adicione percentuais diferentes de 50% e 100% (ex.: 60%, 70%, 75%, 80%) conforme a CCT/ACT.</p>
+                </div>
+                <Button type="button" size="sm" variant="outline" onClick={addFaixa}><Plus className="h-3 w-3 mr-1" />Faixa</Button>
+              </div>
+              {(form.he_faixas_customizadas || []).map((f: any, i: number) => (
+                <div key={i} className="grid grid-cols-2 md:grid-cols-7 gap-2 items-end border rounded p-2 bg-muted/30">
+                  <div className="col-span-2"><Label className="text-xs">Nome</Label><Input value={f.nome} onChange={e => updFaixa(i, { nome: e.target.value })} placeholder="HE 60% sábado" /></div>
+                  <div><Label className="text-xs">% adicional</Label><Input type="number" step="0.01" value={f.percentual} onChange={e => updFaixa(i, { percentual: +e.target.value, multiplicador: +(1 + (+e.target.value) / 100).toFixed(4) })} /></div>
+                  <div><Label className="text-xs">Multiplicador</Label><Input type="number" step="0.0001" value={f.multiplicador} onChange={e => updFaixa(i, { multiplicador: +e.target.value })} /></div>
+                  <div>
+                    <Label className="text-xs">Condição</Label>
+                    <Select value={f.condicao} onValueChange={v => updFaixa(i, { condicao: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="padrao">Dia útil padrão</SelectItem>
+                        <SelectItem value="sabado">Sábado</SelectItem>
+                        <SelectItem value="domingo">Domingo</SelectItem>
+                        <SelectItem value="feriado">Feriado</SelectItem>
+                        <SelectItem value="noturno">Período noturno</SelectItem>
+                        <SelectItem value="apos_2h">Após 2h diárias</SelectItem>
+                        <SelectItem value="apos_limite">Após limite semanal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label className="text-xs">Rubrica folha</Label><Input value={f.rubrica_dominio || ""} onChange={e => updFaixa(i, { rubrica_dominio: e.target.value })} placeholder="H60" /></div>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => rmFaixa(i)}>Remover</Button>
+                </div>
+              ))}
+              {!(form.he_faixas_customizadas || []).length && (
+                <p className="text-xs text-muted-foreground italic">Nenhuma faixa adicional. As HEs usarão apenas 50% e 100% padrão.</p>
+              )}
+            </div>
+
             <Button onClick={salvar} className="w-full">Salvar</Button>
           </DialogContent>
         </Dialog>
