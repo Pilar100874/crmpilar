@@ -195,11 +195,14 @@ export default function PontoRegistro() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <div>
-        <h1 className="text-xl font-semibold sm:text-2xl">Registro de Ponto</h1>
-        <p className="text-sm text-muted-foreground">
-          Marcação multi-fator com validação antifraude
-        </p>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h1 className="text-xl font-semibold sm:text-2xl">Registro de Ponto</h1>
+          <p className="text-sm text-muted-foreground">
+            Marcação multi-fator com validação antifraude
+          </p>
+        </div>
+        <OfflineQueueIndicator />
       </div>
 
       <Card>
