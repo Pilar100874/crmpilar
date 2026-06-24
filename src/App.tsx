@@ -88,6 +88,8 @@ import PontoTotem from "./pages/ponto/PontoTotem";
 import PontoEsocial from "./pages/ponto/PontoEsocial";
 import PontoImportacao from "./pages/ponto/PontoImportacao";
 import PontoImportarAFD from "./pages/ponto/PontoImportarAFD";
+import PontoFaceEnroll from "./pages/ponto/PontoFaceEnroll";
+import PontoSugerirEscala from "./pages/ponto/PontoSugerirEscala";
 import PontoNotificacoes from "./pages/ponto/PontoNotificacoes";
 import PontoManual from "./pages/ponto/PontoManual";
 import ChatInterno from "./pages/ChatInterno";
