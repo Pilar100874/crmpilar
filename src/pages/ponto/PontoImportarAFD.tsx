@@ -38,11 +38,10 @@ export default function PontoImportarAFD() {
 
   const importar = async () => {
     if (!arquivo) return toast.error("Selecione um arquivo AFD");
-    if (!empresaId || !estabelecimentoId) return toast.error("Empresa não identificada");
+    if (!empresaId) return toast.error("Empresa não identificada");
     setEnviando(true);
     try {
       const buf = await arquivo.arrayBuffer();
-      // base64 encode (latin1 safe)
       let bin = "";
       const bytes = new Uint8Array(buf);
       for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
@@ -51,7 +50,6 @@ export default function PontoImportarAFD() {
       const { data, error } = await supabase.functions.invoke("ponto-importar-afd", {
         body: {
           empresa_id: empresaId,
-          estabelecimento_id: estabelecimentoId,
           conteudo_base64,
           nome_arquivo: arquivo.name,
           formato,
