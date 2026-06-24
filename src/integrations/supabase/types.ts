@@ -10185,6 +10185,69 @@ export type Database = {
           },
         ]
       }
+      ponto_anomalias: {
+        Row: {
+          acao_aprovacao: string | null
+          created_at: string
+          data: string
+          descricao: string
+          detalhes: Json | null
+          empresa_id: string
+          funcionario_id: string | null
+          id: string
+          resolvida: boolean
+          resolvida_em: string | null
+          resolvida_por: string | null
+          severidade: string
+          tipo: string
+        }
+        Insert: {
+          acao_aprovacao?: string | null
+          created_at?: string
+          data: string
+          descricao: string
+          detalhes?: Json | null
+          empresa_id: string
+          funcionario_id?: string | null
+          id?: string
+          resolvida?: boolean
+          resolvida_em?: string | null
+          resolvida_por?: string | null
+          severidade?: string
+          tipo: string
+        }
+        Update: {
+          acao_aprovacao?: string | null
+          created_at?: string
+          data?: string
+          descricao?: string
+          detalhes?: Json | null
+          empresa_id?: string
+          funcionario_id?: string | null
+          id?: string
+          resolvida?: boolean
+          resolvida_em?: string | null
+          resolvida_por?: string | null
+          severidade?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_anomalias_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_anomalias_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_aprovacao_config: {
         Row: {
           created_at: string
@@ -10544,6 +10607,152 @@ export type Database = {
             columns: ["filial_id"]
             isOneToOne: false
             referencedRelation: "ponto_filiais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_clt_config: {
+        Row: {
+          acao_dsr_violado: string
+          acao_he_acima_limite: string
+          acao_interjornada_violada: string
+          acao_intervalo_violado: string
+          acao_jornada_acima_limite: string
+          adic_noturno_fim: string
+          adic_noturno_hora_ficta_min: number
+          adic_noturno_inicio: string
+          adic_noturno_percentual: number
+          banco_horas_auto_expirar: boolean
+          banco_horas_prazo_dias: number
+          created_at: string
+          detectar_batida_simultanea: boolean
+          detectar_padrao_suspeito: boolean
+          dsr_max_dias_seguidos: number
+          empresa_id: string
+          exigir_anexo_he_acima_min: number
+          exigir_dupla_aprovacao_acima_min: number
+          exigir_motivo_he_acima_min: number
+          ferias_abono_max_dias: number
+          ferias_aviso_dias_minimo: number
+          ferias_fracionamento_max: number
+          ferias_periodo_minimo_dias: number
+          ferias_periodo_secundario_min_dias: number
+          geofence_violado_marca_revisao: boolean
+          horas_trabalho_para_intra_curto: number
+          horas_trabalho_para_intra_longo: number
+          id: string
+          interjornada_min_horas: number
+          intervalo_intra_min_curto: number
+          intervalo_intra_min_obrigatorio: number
+          intervalo_min_entre_batidas_min: number
+          max_aprovacoes_em_lote: number
+          max_horas_extras_dia_min: number
+          max_jornada_total_dia_min: number
+          menor_jornada_max_dia_min: number
+          menor_proibir_extras: boolean
+          notificar_email: boolean
+          notificar_funcionario_alteracao: boolean
+          notificar_push: boolean
+          proibir_auto_aprovacao: boolean
+          time_lock_ajuste_horas: number
+          updated_at: string
+        }
+        Insert: {
+          acao_dsr_violado?: string
+          acao_he_acima_limite?: string
+          acao_interjornada_violada?: string
+          acao_intervalo_violado?: string
+          acao_jornada_acima_limite?: string
+          adic_noturno_fim?: string
+          adic_noturno_hora_ficta_min?: number
+          adic_noturno_inicio?: string
+          adic_noturno_percentual?: number
+          banco_horas_auto_expirar?: boolean
+          banco_horas_prazo_dias?: number
+          created_at?: string
+          detectar_batida_simultanea?: boolean
+          detectar_padrao_suspeito?: boolean
+          dsr_max_dias_seguidos?: number
+          empresa_id: string
+          exigir_anexo_he_acima_min?: number
+          exigir_dupla_aprovacao_acima_min?: number
+          exigir_motivo_he_acima_min?: number
+          ferias_abono_max_dias?: number
+          ferias_aviso_dias_minimo?: number
+          ferias_fracionamento_max?: number
+          ferias_periodo_minimo_dias?: number
+          ferias_periodo_secundario_min_dias?: number
+          geofence_violado_marca_revisao?: boolean
+          horas_trabalho_para_intra_curto?: number
+          horas_trabalho_para_intra_longo?: number
+          id?: string
+          interjornada_min_horas?: number
+          intervalo_intra_min_curto?: number
+          intervalo_intra_min_obrigatorio?: number
+          intervalo_min_entre_batidas_min?: number
+          max_aprovacoes_em_lote?: number
+          max_horas_extras_dia_min?: number
+          max_jornada_total_dia_min?: number
+          menor_jornada_max_dia_min?: number
+          menor_proibir_extras?: boolean
+          notificar_email?: boolean
+          notificar_funcionario_alteracao?: boolean
+          notificar_push?: boolean
+          proibir_auto_aprovacao?: boolean
+          time_lock_ajuste_horas?: number
+          updated_at?: string
+        }
+        Update: {
+          acao_dsr_violado?: string
+          acao_he_acima_limite?: string
+          acao_interjornada_violada?: string
+          acao_intervalo_violado?: string
+          acao_jornada_acima_limite?: string
+          adic_noturno_fim?: string
+          adic_noturno_hora_ficta_min?: number
+          adic_noturno_inicio?: string
+          adic_noturno_percentual?: number
+          banco_horas_auto_expirar?: boolean
+          banco_horas_prazo_dias?: number
+          created_at?: string
+          detectar_batida_simultanea?: boolean
+          detectar_padrao_suspeito?: boolean
+          dsr_max_dias_seguidos?: number
+          empresa_id?: string
+          exigir_anexo_he_acima_min?: number
+          exigir_dupla_aprovacao_acima_min?: number
+          exigir_motivo_he_acima_min?: number
+          ferias_abono_max_dias?: number
+          ferias_aviso_dias_minimo?: number
+          ferias_fracionamento_max?: number
+          ferias_periodo_minimo_dias?: number
+          ferias_periodo_secundario_min_dias?: number
+          geofence_violado_marca_revisao?: boolean
+          horas_trabalho_para_intra_curto?: number
+          horas_trabalho_para_intra_longo?: number
+          id?: string
+          interjornada_min_horas?: number
+          intervalo_intra_min_curto?: number
+          intervalo_intra_min_obrigatorio?: number
+          intervalo_min_entre_batidas_min?: number
+          max_aprovacoes_em_lote?: number
+          max_horas_extras_dia_min?: number
+          max_jornada_total_dia_min?: number
+          menor_jornada_max_dia_min?: number
+          menor_proibir_extras?: boolean
+          notificar_email?: boolean
+          notificar_funcionario_alteracao?: boolean
+          notificar_push?: boolean
+          proibir_auto_aprovacao?: boolean
+          time_lock_ajuste_horas?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_clt_config_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: true
+            referencedRelation: "ponto_empresas"
             referencedColumns: ["id"]
           },
         ]
@@ -17629,6 +17838,70 @@ export type Database = {
       ponto_calcular_dsr_mensal: {
         Args: { _func_id: string; _mes: string }
         Returns: number
+      }
+      ponto_calcular_periodo_aquisitivo: {
+        Args: { _func_id: string }
+        Returns: {
+          aquisitivo_fim: string
+          aquisitivo_inicio: string
+          concessivo_fim: string
+          dias_direito: number
+          vencido: boolean
+        }[]
+      }
+      ponto_get_clt_config: {
+        Args: { _empresa: string }
+        Returns: {
+          acao_dsr_violado: string
+          acao_he_acima_limite: string
+          acao_interjornada_violada: string
+          acao_intervalo_violado: string
+          acao_jornada_acima_limite: string
+          adic_noturno_fim: string
+          adic_noturno_hora_ficta_min: number
+          adic_noturno_inicio: string
+          adic_noturno_percentual: number
+          banco_horas_auto_expirar: boolean
+          banco_horas_prazo_dias: number
+          created_at: string
+          detectar_batida_simultanea: boolean
+          detectar_padrao_suspeito: boolean
+          dsr_max_dias_seguidos: number
+          empresa_id: string
+          exigir_anexo_he_acima_min: number
+          exigir_dupla_aprovacao_acima_min: number
+          exigir_motivo_he_acima_min: number
+          ferias_abono_max_dias: number
+          ferias_aviso_dias_minimo: number
+          ferias_fracionamento_max: number
+          ferias_periodo_minimo_dias: number
+          ferias_periodo_secundario_min_dias: number
+          geofence_violado_marca_revisao: boolean
+          horas_trabalho_para_intra_curto: number
+          horas_trabalho_para_intra_longo: number
+          id: string
+          interjornada_min_horas: number
+          intervalo_intra_min_curto: number
+          intervalo_intra_min_obrigatorio: number
+          intervalo_min_entre_batidas_min: number
+          max_aprovacoes_em_lote: number
+          max_horas_extras_dia_min: number
+          max_jornada_total_dia_min: number
+          menor_jornada_max_dia_min: number
+          menor_proibir_extras: boolean
+          notificar_email: boolean
+          notificar_funcionario_alteracao: boolean
+          notificar_push: boolean
+          proibir_auto_aprovacao: boolean
+          time_lock_ajuste_horas: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ponto_clt_config"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       ponto_get_vigencia: {
         Args: { _data: string; _func_id: string }

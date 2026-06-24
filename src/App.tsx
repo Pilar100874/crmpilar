@@ -93,6 +93,8 @@ import PontoSugerirEscala from "./pages/ponto/PontoSugerirEscala";
 import PontoDashboardExecutivo from "./pages/ponto/PontoDashboardExecutivo";
 import PontoAprovacoes from "./pages/ponto/PontoAprovacoes";
 import PontoWebhookCatracas from "./pages/ponto/PontoWebhookCatracas";
+import PontoCltConfig from "./pages/ponto/PontoCltConfig";
+import PontoAnomalias from "./pages/ponto/PontoAnomalias";
 import PontoNotificacoes from "./pages/ponto/PontoNotificacoes";
 import PontoManual from "./pages/ponto/PontoManual";
 import ChatInterno from "./pages/ChatInterno";
@@ -408,6 +410,8 @@ const App = () => (
                 <Route path="dashboard-executivo" element={<PontoDashboardExecutivo />} />
                 <Route path="aprovacoes" element={<PontoAprovacoes />} />
                 <Route path="webhook-catracas" element={<PontoWebhookCatracas />} />
+                <Route path="clt-config" element={<PontoCltConfig />} />
+                <Route path="anomalias" element={<PontoAnomalias />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
                 <Route path="manual" element={<PontoManual />} />
               </Route>

@@ -87,6 +87,8 @@ export const menuStructure: MenuCategory[] = [
       { id: "Ponto Equipamentos", title: "Equipamentos Control iD", url: "/ponto/equipamentos", icon: LucideIcons.Cpu },
       { id: "Ponto Exportação", title: "Exportação Domínio", url: "/ponto/exportacao", icon: LucideIcons.FileDown },
       { id: "Ponto Alertas", title: "Antifraude", url: "/ponto/alertas", icon: LucideIcons.ShieldAlert },
+      { id: "Ponto Anomalias", title: "Anomalias CLT", url: "/ponto/anomalias", icon: LucideIcons.AlertTriangle },
+      { id: "Ponto CLT Config", title: "Configuração CLT/671", url: "/ponto/clt-config", icon: LucideIcons.Scale },
       { id: "Ponto Auditoria", title: "Auditoria", url: "/ponto/auditoria", icon: LucideIcons.ShieldCheck },
     ],
   },
