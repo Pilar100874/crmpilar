@@ -132,13 +132,14 @@ export default function PontoFuncionarios() {
     if (!empresaId) return;
     const sb = supabase as any;
     const filtro = `empresa_id.eq.${empresaId},global.eq.true`;
-    const [r1, r2, r3, rDep, rCar, rEqu] = await Promise.all([
+    const [r1, r2, r3, rDep, rCar, rEqu, rLay] = await Promise.all([
       sb.from("ponto_funcionarios").select("*").eq("empresa_id", empresaId).order("nome"),
       sb.from("ponto_filiais").select("id, nome").eq("empresa_id", empresaId),
       sb.from("ponto_escalas").select("id, nome").eq("empresa_id", empresaId),
       sb.from("ponto_departamentos").select("id, nome").or(filtro).order("nome"),
       sb.from("ponto_cargos").select("id, nome, cbo").or(filtro).order("nome"),
       sb.from("ponto_equipes").select("id, nome").or(filtro).order("nome"),
+      sb.from("ponto_export_layouts").select("id, descricao, software").eq("empresa_id", empresaId).eq("ativo", true).order("descricao"),
     ]);
     setItems((r1.data as any) || []);
     setFiliais(r2.data || []);
@@ -146,6 +147,7 @@ export default function PontoFuncionarios() {
     setDepartamentos(rDep.data || []);
     setCargos(rCar.data || []);
     setEquipes(rEqu.data || []);
+    setExportLayouts(rLay.data || []);
   };
   useEffect(() => { load(); }, [empresaId]);
 
