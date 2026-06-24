@@ -10459,6 +10459,7 @@ export type Database = {
       }
       ponto_empresas: {
         Row: {
+          antifraude_ativo: boolean
           ativo: boolean
           cep: string | null
           cidade: string | null
@@ -10475,6 +10476,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          antifraude_ativo?: boolean
           ativo?: boolean
           cep?: string | null
           cidade?: string | null
@@ -10491,6 +10493,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          antifraude_ativo?: boolean
           ativo?: boolean
           cep?: string | null
           cidade?: string | null
