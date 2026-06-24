@@ -336,6 +336,51 @@ export default function PontoEquipamentos() {
               />
             </div>
 
+            <div className="sm:col-span-2 flex flex-wrap items-center gap-3 rounded-md border bg-muted/30 p-3">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="usa_https"
+                  checked={f.usa_https}
+                  onCheckedChange={(v) => setF({ ...f, usa_https: v, porta: v && f.porta === "80" ? "443" : !v && f.porta === "443" ? "80" : f.porta })}
+                />
+                <Label htmlFor="usa_https" className="cursor-pointer">Usar HTTPS na comunicação</Label>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  if (!f.ip) return toast.error("Informe o IP primeiro");
+                  const proto = f.usa_https ? "https" : "http";
+                  const url = `${proto}://${f.ip}:${f.porta || (f.usa_https ? 443 : 80)}/login.fcgi`;
+                  const t = toast.loading(`Testando ${url}...`);
+                  try {
+                    const ctrl = new AbortController();
+                    const to = setTimeout(() => ctrl.abort(), 6000);
+                    const resp = await fetch(url, {
+                      method: "POST",
+                      mode: "no-cors",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ login: f.usuario, password: f.senha }),
+                      signal: ctrl.signal,
+                    });
+                    clearTimeout(to);
+                    toast.dismiss(t);
+                    toast.success(`Equipamento respondeu (HTTP ${resp.status || "opaque"}). Login real só pode ser validado pelo Coletor Desktop devido a CORS.`);
+                  } catch (e: any) {
+                    toast.dismiss(t);
+                    toast.error(`Falha: ${e.message}. Verifique se está na mesma rede do relógio. O Coletor Desktop não tem essa limitação.`);
+                  }
+                }}
+              >
+                <Wifi className="mr-2 h-4 w-4" /> Testar conexão
+              </Button>
+              <p className="w-full text-xs text-muted-foreground">
+                O teste pelo navegador apenas confirma se o IP responde. A autenticação real (login + leitura de batidas) é feita pelo Coletor Desktop instalado na rede local.
+              </p>
+            </div>
+
+
             <div className="sm:col-span-2">
               <Label>Número de fabricação</Label>
               <Input
