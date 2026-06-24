@@ -10915,6 +10915,86 @@ export type Database = {
           },
         ]
       }
+      ponto_export_layouts: {
+        Row: {
+          ativo: boolean
+          considerar_abono_parcial: boolean
+          considerar_banco_horas: boolean
+          considerar_comissionistas: boolean
+          considerar_suspensao: boolean
+          created_at: string
+          desconsiderar_ignoradas_bh: boolean
+          descricao: string
+          empresa_id: string
+          eventos: Json
+          filtrar_por: string
+          filtro_fechamento: string | null
+          formato_horas: string
+          id: string
+          incluir_dias_falta: boolean
+          periodo_fim: string | null
+          periodo_inicio: string | null
+          software: string
+          tamanho_matricula: number
+          token_integracao: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          considerar_abono_parcial?: boolean
+          considerar_banco_horas?: boolean
+          considerar_comissionistas?: boolean
+          considerar_suspensao?: boolean
+          created_at?: string
+          desconsiderar_ignoradas_bh?: boolean
+          descricao: string
+          empresa_id: string
+          eventos?: Json
+          filtrar_por?: string
+          filtro_fechamento?: string | null
+          formato_horas?: string
+          id?: string
+          incluir_dias_falta?: boolean
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          software?: string
+          tamanho_matricula?: number
+          token_integracao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          considerar_abono_parcial?: boolean
+          considerar_banco_horas?: boolean
+          considerar_comissionistas?: boolean
+          considerar_suspensao?: boolean
+          created_at?: string
+          desconsiderar_ignoradas_bh?: boolean
+          descricao?: string
+          empresa_id?: string
+          eventos?: Json
+          filtrar_por?: string
+          filtro_fechamento?: string | null
+          formato_horas?: string
+          id?: string
+          incluir_dias_falta?: boolean
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          software?: string
+          tamanho_matricula?: number
+          token_integracao?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_export_layouts_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_export_logs: {
         Row: {
           arquivo_conteudo: string | null
