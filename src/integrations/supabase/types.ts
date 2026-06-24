@@ -10634,7 +10634,10 @@ export type Database = {
           exigir_motivo_he_acima_min: number
           ferias_abono_max_dias: number
           ferias_aviso_dias_minimo: number
+          ferias_aviso_minimo_dias: number
           ferias_fracionamento_max: number
+          ferias_max_fracionamentos: number
+          ferias_minimo_periodo_dias: number
           ferias_periodo_minimo_dias: number
           ferias_periodo_secundario_min_dias: number
           geofence_violado_marca_revisao: boolean
@@ -10679,7 +10682,10 @@ export type Database = {
           exigir_motivo_he_acima_min?: number
           ferias_abono_max_dias?: number
           ferias_aviso_dias_minimo?: number
+          ferias_aviso_minimo_dias?: number
           ferias_fracionamento_max?: number
+          ferias_max_fracionamentos?: number
+          ferias_minimo_periodo_dias?: number
           ferias_periodo_minimo_dias?: number
           ferias_periodo_secundario_min_dias?: number
           geofence_violado_marca_revisao?: boolean
@@ -10724,7 +10730,10 @@ export type Database = {
           exigir_motivo_he_acima_min?: number
           ferias_abono_max_dias?: number
           ferias_aviso_dias_minimo?: number
+          ferias_aviso_minimo_dias?: number
           ferias_fracionamento_max?: number
+          ferias_max_fracionamentos?: number
+          ferias_minimo_periodo_dias?: number
           ferias_periodo_minimo_dias?: number
           ferias_periodo_secundario_min_dias?: number
           geofence_violado_marca_revisao?: boolean
@@ -17839,6 +17848,15 @@ export type Database = {
         Args: { _func_id: string; _mes: string }
         Returns: number
       }
+      ponto_calcular_noturno_minutos: {
+        Args: {
+          _entrada: string
+          _fim?: string
+          _inicio?: string
+          _saida: string
+        }
+        Returns: number
+      }
       ponto_calcular_periodo_aquisitivo: {
         Args: { _func_id: string }
         Returns: {
@@ -17873,7 +17891,10 @@ export type Database = {
           exigir_motivo_he_acima_min: number
           ferias_abono_max_dias: number
           ferias_aviso_dias_minimo: number
+          ferias_aviso_minimo_dias: number
           ferias_fracionamento_max: number
+          ferias_max_fracionamentos: number
+          ferias_minimo_periodo_dias: number
           ferias_periodo_minimo_dias: number
           ferias_periodo_secundario_min_dias: number
           geofence_violado_marca_revisao: boolean
