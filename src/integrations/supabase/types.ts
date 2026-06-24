@@ -9908,6 +9908,122 @@ export type Database = {
           },
         ]
       }
+      ponto_acordos_coletivos: {
+        Row: {
+          adicional_noturno_percentual: number | null
+          arquivo_url: string | null
+          ativo: boolean
+          banco_horas_limite_diario_min: number | null
+          banco_horas_prazo_meses: number | null
+          created_at: string
+          dsr_percentual: number | null
+          he_multiplicador_100: number | null
+          he_multiplicador_50: number | null
+          hora_noturna_minutos: number | null
+          id: string
+          intervalo_maximo_min: number | null
+          intervalo_minimo_min: number | null
+          nome: string
+          noturno_hora_fim: string | null
+          noturno_hora_inicio: string | null
+          numero_registro_mte: string | null
+          observacoes: string | null
+          sindicato_cnpj: string | null
+          sindicato_nome: string | null
+          sobreaviso_percentual: number | null
+          tipo: string
+          updated_at: string
+          vigencia_fim: string
+          vigencia_inicio: string
+        }
+        Insert: {
+          adicional_noturno_percentual?: number | null
+          arquivo_url?: string | null
+          ativo?: boolean
+          banco_horas_limite_diario_min?: number | null
+          banco_horas_prazo_meses?: number | null
+          created_at?: string
+          dsr_percentual?: number | null
+          he_multiplicador_100?: number | null
+          he_multiplicador_50?: number | null
+          hora_noturna_minutos?: number | null
+          id?: string
+          intervalo_maximo_min?: number | null
+          intervalo_minimo_min?: number | null
+          nome: string
+          noturno_hora_fim?: string | null
+          noturno_hora_inicio?: string | null
+          numero_registro_mte?: string | null
+          observacoes?: string | null
+          sindicato_cnpj?: string | null
+          sindicato_nome?: string | null
+          sobreaviso_percentual?: number | null
+          tipo?: string
+          updated_at?: string
+          vigencia_fim: string
+          vigencia_inicio: string
+        }
+        Update: {
+          adicional_noturno_percentual?: number | null
+          arquivo_url?: string | null
+          ativo?: boolean
+          banco_horas_limite_diario_min?: number | null
+          banco_horas_prazo_meses?: number | null
+          created_at?: string
+          dsr_percentual?: number | null
+          he_multiplicador_100?: number | null
+          he_multiplicador_50?: number | null
+          hora_noturna_minutos?: number | null
+          id?: string
+          intervalo_maximo_min?: number | null
+          intervalo_minimo_min?: number | null
+          nome?: string
+          noturno_hora_fim?: string | null
+          noturno_hora_inicio?: string | null
+          numero_registro_mte?: string | null
+          observacoes?: string | null
+          sindicato_cnpj?: string | null
+          sindicato_nome?: string | null
+          sobreaviso_percentual?: number | null
+          tipo?: string
+          updated_at?: string
+          vigencia_fim?: string
+          vigencia_inicio?: string
+        }
+        Relationships: []
+      }
+      ponto_acordos_vinculos: {
+        Row: {
+          acordo_id: string
+          created_at: string
+          escopo: string
+          escopo_id: string
+          id: string
+        }
+        Insert: {
+          acordo_id: string
+          created_at?: string
+          escopo: string
+          escopo_id: string
+          id?: string
+        }
+        Update: {
+          acordo_id?: string
+          created_at?: string
+          escopo?: string
+          escopo_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_acordos_vinculos_acordo_id_fkey"
+            columns: ["acordo_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_acordos_coletivos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_afd_arquivos: {
         Row: {
           created_at: string
@@ -11552,6 +11668,54 @@ export type Database = {
           },
         ]
       }
+      ponto_escala_sugestoes: {
+        Row: {
+          aplicada: boolean
+          aplicada_em: string | null
+          carga_estimada: number | null
+          created_at: string
+          created_by: string | null
+          data: string
+          departamento_id: string | null
+          empresa_id: string | null
+          filial_id: string | null
+          funcionarios_sugeridos: string[] | null
+          fundamentacao: string | null
+          id: string
+          turno: string | null
+        }
+        Insert: {
+          aplicada?: boolean
+          aplicada_em?: string | null
+          carga_estimada?: number | null
+          created_at?: string
+          created_by?: string | null
+          data: string
+          departamento_id?: string | null
+          empresa_id?: string | null
+          filial_id?: string | null
+          funcionarios_sugeridos?: string[] | null
+          fundamentacao?: string | null
+          id?: string
+          turno?: string | null
+        }
+        Update: {
+          aplicada?: boolean
+          aplicada_em?: string | null
+          carga_estimada?: number | null
+          created_at?: string
+          created_by?: string | null
+          data?: string
+          departamento_id?: string | null
+          empresa_id?: string | null
+          filial_id?: string | null
+          funcionarios_sugeridos?: string[] | null
+          fundamentacao?: string | null
+          id?: string
+          turno?: string | null
+        }
+        Relationships: []
+      }
       ponto_escalas: {
         Row: {
           aplicar_tolerancia_flexivel: boolean
@@ -13107,6 +13271,60 @@ export type Database = {
             columns: ["filial_id"]
             isOneToOne: false
             referencedRelation: "ponto_filiais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_predicoes_ia: {
+        Row: {
+          created_at: string
+          fatores: Json | null
+          funcionario_id: string
+          id: string
+          modelo: string | null
+          nivel: string
+          periodo_analisado: unknown
+          recomendacoes: string[] | null
+          score: number
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          fatores?: Json | null
+          funcionario_id: string
+          id?: string
+          modelo?: string | null
+          nivel: string
+          periodo_analisado?: unknown
+          recomendacoes?: string[] | null
+          score: number
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          fatores?: Json | null
+          funcionario_id?: string
+          id?: string
+          modelo?: string | null
+          nivel?: string
+          periodo_analisado?: unknown
+          recomendacoes?: string[] | null
+          score?: number
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_predicoes_ia_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "ponto_predicoes_ia_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
             referencedColumns: ["id"]
           },
         ]
@@ -18695,6 +18913,19 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      ponto_banco_horas_consumir_fifo: {
+        Args: {
+          _funcionario_id: string
+          _minutos_a_consumir: number
+          _motivo?: string
+        }
+        Returns: {
+          lote_id: string
+          minutos_consumidos: number
+          saldo_restante: number
+        }[]
+      }
+      ponto_banco_horas_expirar_vencidos: { Args: never; Returns: number }
       ponto_calcular_dsr_mensal: {
         Args: { _func_id: string; _mes: string }
         Returns: number
