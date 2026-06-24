@@ -32,8 +32,9 @@ export default function PontoLGPDPortal() {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { toast.error("Faça login"); setLoading(false); return; }
-    const { data: u } = await supabase.from("usuarios").select("id").eq("auth_id", user.id).maybeSingle();
-    const { data: func } = await supabase.from("ponto_funcionarios").select("id").eq("usuario_id", u?.id).maybeSingle();
+    const sb = supabase as any;
+    const { data: u } = await sb.from("usuarios").select("id").eq("auth_id", user.id).maybeSingle();
+    const { data: func } = await sb.from("ponto_funcionarios").select("id").eq("usuario_id", u?.id).maybeSingle();
     if (!func) { toast.error("Funcionário não vinculado"); setLoading(false); return; }
     const { error } = await supabase.from("ponto_lgpd_solicitacoes").insert({
       funcionario_id: func.id, tipo, motivo, status: "pendente",
