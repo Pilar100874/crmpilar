@@ -102,11 +102,47 @@ export default function PontoAntifraudeConfig() {
         </p>
       </div>
 
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4" /> Validação antifraude
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <Label className="text-sm font-medium">
+              {ativo ? "Ativada" : "Desativada"}
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Quando desativada, as marcações de ponto são aceitas sem exigir selfie, GPS, QR Code ou rede autorizada.
+            </p>
+          </div>
+          <Switch
+            checked={ativo}
+            onCheckedChange={async (v) => {
+              if (!empresaId) return;
+              setAtivo(v);
+              const { error } = await (supabase as any)
+                .from("ponto_empresas")
+                .update({ antifraude_ativo: v })
+                .eq("id", empresaId);
+              if (error) {
+                toast.error(error.message);
+                setAtivo(!v);
+              } else {
+                toast.success(v ? "Antifraude ativada" : "Antifraude desativada");
+              }
+            }}
+          />
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue="geo">
         <TabsList>
           <TabsTrigger value="geo"><MapPin className="mr-2 h-4 w-4" />Geofences</TabsTrigger>
           <TabsTrigger value="redes"><Wifi className="mr-2 h-4 w-4" />Redes</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="geo" className="space-y-4">
           <Card>
