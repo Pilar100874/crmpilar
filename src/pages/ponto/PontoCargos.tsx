@@ -12,6 +12,8 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Plus, Pencil, Trash2, Briefcase, Share2, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { usePontoEmpresa } from "./usePontoEmpresa";
+import { CBOPicker } from "@/components/ponto/CBOPicker";
+
 
 type Item = {
   id: string;
