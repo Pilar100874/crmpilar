@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Clock, Wallet, FileEdit, FileSignature, AlertCircle, Smartphone, FileUp, FileText } from "lucide-react";
+import { Clock, Wallet, FileEdit, FileSignature, AlertCircle, Smartphone, FileUp, FileText, Palmtree } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
