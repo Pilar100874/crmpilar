@@ -397,6 +397,7 @@ const App = () => (
                 <Route path="afd" element={<PontoAFD />} />
                 <Route path="esocial" element={<PontoEsocial />} />
                 <Route path="importacao" element={<PontoImportacao />} />
+                <Route path="importar-afd" element={<PontoImportarAFD />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
                 <Route path="manual" element={<PontoManual />} />
               </Route>
