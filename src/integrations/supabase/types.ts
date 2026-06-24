@@ -11602,6 +11602,7 @@ export type Database = {
       }
       ponto_ferias_afastamentos: {
         Row: {
+          abono_pecuniario_dias: number
           aprovacoes: Json
           bloqueia_marcacao: boolean
           created_at: string
@@ -11623,6 +11624,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          abono_pecuniario_dias?: number
           aprovacoes?: Json
           bloqueia_marcacao?: boolean
           created_at?: string
@@ -11644,6 +11646,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          abono_pecuniario_dias?: number
           aprovacoes?: Json
           bloqueia_marcacao?: boolean
           created_at?: string
@@ -12524,6 +12527,8 @@ export type Database = {
       }
       ponto_registros: {
         Row: {
+          comprovante_gerado_em: string | null
+          comprovante_hash: string | null
           created_at: string
           data_hora: string
           device_hash: string | null
@@ -12552,6 +12557,8 @@ export type Database = {
           user_agent: string | null
         }
         Insert: {
+          comprovante_gerado_em?: string | null
+          comprovante_hash?: string | null
           created_at?: string
           data_hora: string
           device_hash?: string | null
@@ -12580,6 +12587,8 @@ export type Database = {
           user_agent?: string | null
         }
         Update: {
+          comprovante_gerado_em?: string | null
+          comprovante_hash?: string | null
           created_at?: string
           data_hora?: string
           device_hash?: string | null
