@@ -235,9 +235,19 @@ export default function PontoExportacao() {
                       <Badge variant={l.status === "gerado" ? "default" : "secondary"}>{l.status}</Badge>
                     </td>
                     <td className="p-3">
-                      {l.arquivo_url && <Button size="sm" variant="ghost" onClick={() => baixar(l)}>
-                        <Download className="h-4 w-4" />
-                      </Button>}
+                      <div className="flex items-center justify-end gap-1">
+                        {l.arquivo_url && (
+                          <Button size="sm" variant="ghost" onClick={() => baixar(l)} title="Baixar">
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button size="sm" variant="ghost" onClick={() => setReabrirTarget(l)} title="Reabrir período">
+                          <Unlock className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setDelTarget(l)} title="Excluir">
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
