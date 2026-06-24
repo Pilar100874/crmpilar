@@ -56,6 +56,7 @@ import PontoDepartamentos from "./pages/ponto/PontoDepartamentos";
 import PontoCargos from "./pages/ponto/PontoCargos";
 import PontoEquipes from "./pages/ponto/PontoEquipes";
 import PontoFuncionarios from "./pages/ponto/PontoFuncionarios";
+import PontoEscalas from "./pages/ponto/PontoEscalas";
 import PontoRegistro from "./pages/ponto/PontoRegistro";
 import PontoTratamento from "./pages/ponto/PontoTratamento";
 import PontoAjustes from "./pages/ponto/PontoAjustes";
@@ -359,6 +360,7 @@ const App = () => (
                 <Route path="departamentos" element={<PontoDepartamentos />} />
                 <Route path="cargos" element={<PontoCargos />} />
                 <Route path="equipes" element={<PontoEquipes />} />
+                <Route path="escalas" element={<PontoEscalas />} />
                 <Route path="funcionarios" element={<PontoFuncionarios />} />
                 <Route path="registro" element={<PontoRegistro />} />
                 <Route path="tratamento" element={<PontoTratamento />} />

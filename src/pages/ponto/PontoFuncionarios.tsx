@@ -140,6 +140,7 @@ export default function PontoFuncionarios() {
     if (!f.departamento_id) return toast.error("Departamento obrigatório");
     if (!f.cargo_id) return toast.error("Cargo obrigatório");
     if (!f.equipe_id) return toast.error("Equipe obrigatória");
+    if (!f.escala_id) return toast.error("Escala obrigatória");
     if (f.pis && !validatePIS(f.pis)) return toast.error("PIS inválido");
     if (f.email && !validateEmail(f.email)) return toast.error("E-mail inválido");
     if (f.telefone && !validatePhone(f.telefone)) return toast.error("Telefone inválido");
@@ -399,10 +400,15 @@ export default function PontoFuncionarios() {
               </Select>
             </div>
             <div className="sm:col-span-3">
-              <Label>Escala</Label>
+              <Label>Escala *</Label>
               <Select value={f.escala_id || undefined} onValueChange={(v) => setF({ ...f, escala_id: v })}>
-                <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
+                  {escalas.length === 0 && (
+                    <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                      Nenhuma escala cadastrada
+                    </div>
+                  )}
                   {escalas.map((x) => <SelectItem key={x.id} value={x.id}>{x.nome}</SelectItem>)}
                 </SelectContent>
               </Select>
