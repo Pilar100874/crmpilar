@@ -87,6 +87,7 @@ import EspelhoFuncionario from "./pages/ponto/EspelhoFuncionario";
 import PontoTotem from "./pages/ponto/PontoTotem";
 import PontoEsocial from "./pages/ponto/PontoEsocial";
 import PontoImportacao from "./pages/ponto/PontoImportacao";
+import PontoImportarAFD from "./pages/ponto/PontoImportarAFD";
 import PontoNotificacoes from "./pages/ponto/PontoNotificacoes";
 import PontoManual from "./pages/ponto/PontoManual";
 import ChatInterno from "./pages/ChatInterno";
@@ -396,6 +397,7 @@ const App = () => (
                 <Route path="afd" element={<PontoAFD />} />
                 <Route path="esocial" element={<PontoEsocial />} />
                 <Route path="importacao" element={<PontoImportacao />} />
+                <Route path="importar-afd" element={<PontoImportarAFD />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
                 <Route path="manual" element={<PontoManual />} />
               </Route>
