@@ -147,8 +147,8 @@ export default function PontoRegistro() {
 
   const enviar = async () => {
     if (!funcId) return toast.error("Selecione o funcionário");
-    if (!gps) return toast.error("Aguardando GPS");
-    if (!fotoB64) return toast.error("Capture sua selfie");
+    if (antifraudeAtivo && !gps) return toast.error("Aguardando GPS");
+    if (antifraudeAtivo && !fotoB64) return toast.error("Capture sua selfie");
     setEnviando(true);
     setResultado(null);
     try {
