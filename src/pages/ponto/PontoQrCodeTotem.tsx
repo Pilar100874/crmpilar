@@ -3,9 +3,10 @@ import QRCode from "qrcode";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { usePontoEmpresa } from "./usePontoEmpresa";
-import { QrCode as QrCodeIcon } from "lucide-react";
+import { QrCode as QrCodeIcon, Maximize2 } from "lucide-react";
 
 const ROTATE_MS = 15000;
 
