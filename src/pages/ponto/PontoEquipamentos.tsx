@@ -141,6 +141,7 @@ export default function PontoEquipamentos() {
       data_inicio_coleta: f.data_inicio_coleta || null,
       ip: f.ip || null,
       porta: porta || null,
+      usa_https: f.usa_https,
       numero_fabricacao: f.numero_fabricacao || null,
       serial: f.serial || null,
       usuario: f.usuario || null,
