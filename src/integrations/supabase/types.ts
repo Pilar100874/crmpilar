@@ -10876,6 +10876,9 @@ export type Database = {
       }
       ponto_espelho_diario: {
         Row: {
+          abono_min: number | null
+          afastamento_id: string | null
+          atestado_id: string | null
           atraso_min: number | null
           calculado_em: string | null
           created_at: string
@@ -10894,9 +10897,13 @@ export type Database = {
           saida_antec_min: number | null
           saida_intervalo: string | null
           saldo_banco_min: number | null
+          tipo_dia: string | null
           updated_at: string
         }
         Insert: {
+          abono_min?: number | null
+          afastamento_id?: string | null
+          atestado_id?: string | null
           atraso_min?: number | null
           calculado_em?: string | null
           created_at?: string
@@ -10915,9 +10922,13 @@ export type Database = {
           saida_antec_min?: number | null
           saida_intervalo?: string | null
           saldo_banco_min?: number | null
+          tipo_dia?: string | null
           updated_at?: string
         }
         Update: {
+          abono_min?: number | null
+          afastamento_id?: string | null
+          atestado_id?: string | null
           atraso_min?: number | null
           calculado_em?: string | null
           created_at?: string
@@ -10936,6 +10947,7 @@ export type Database = {
           saida_antec_min?: number | null
           saida_intervalo?: string | null
           saldo_banco_min?: number | null
+          tipo_dia?: string | null
           updated_at?: string
         }
         Relationships: [
