@@ -10876,6 +10876,9 @@ export type Database = {
       }
       ponto_espelho_diario: {
         Row: {
+          abono_min: number | null
+          afastamento_id: string | null
+          atestado_id: string | null
           atraso_min: number | null
           calculado_em: string | null
           created_at: string
@@ -10894,9 +10897,13 @@ export type Database = {
           saida_antec_min: number | null
           saida_intervalo: string | null
           saldo_banco_min: number | null
+          tipo_dia: string | null
           updated_at: string
         }
         Insert: {
+          abono_min?: number | null
+          afastamento_id?: string | null
+          atestado_id?: string | null
           atraso_min?: number | null
           calculado_em?: string | null
           created_at?: string
@@ -10915,9 +10922,13 @@ export type Database = {
           saida_antec_min?: number | null
           saida_intervalo?: string | null
           saldo_banco_min?: number | null
+          tipo_dia?: string | null
           updated_at?: string
         }
         Update: {
+          abono_min?: number | null
+          afastamento_id?: string | null
+          atestado_id?: string | null
           atraso_min?: number | null
           calculado_em?: string | null
           created_at?: string
@@ -10936,6 +10947,7 @@ export type Database = {
           saida_antec_min?: number | null
           saida_intervalo?: string | null
           saldo_banco_min?: number | null
+          tipo_dia?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -11348,6 +11360,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ponto_funcionario_escala_historico: {
+        Row: {
+          alterado_por: string | null
+          cargo_id: string | null
+          created_at: string
+          data_fim: string | null
+          data_inicio: string
+          departamento_id: string | null
+          empresa_id: string | null
+          escala_id: string | null
+          filial_id: string | null
+          funcionario_id: string
+          id: string
+          jornada_contratada_horas: number | null
+          motivo: string | null
+          valor_hora: number | null
+        }
+        Insert: {
+          alterado_por?: string | null
+          cargo_id?: string | null
+          created_at?: string
+          data_fim?: string | null
+          data_inicio: string
+          departamento_id?: string | null
+          empresa_id?: string | null
+          escala_id?: string | null
+          filial_id?: string | null
+          funcionario_id: string
+          id?: string
+          jornada_contratada_horas?: number | null
+          motivo?: string | null
+          valor_hora?: number | null
+        }
+        Update: {
+          alterado_por?: string | null
+          cargo_id?: string | null
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          departamento_id?: string | null
+          empresa_id?: string | null
+          escala_id?: string | null
+          filial_id?: string | null
+          funcionario_id?: string
+          id?: string
+          jornada_contratada_horas?: number | null
+          motivo?: string | null
+          valor_hora?: number | null
+        }
+        Relationships: []
       }
       ponto_funcionario_vinculos: {
         Row: {
@@ -17218,6 +17281,31 @@ export type Database = {
           to: "pedido_tracking"
           isOneToOne: false
           isSetofReturn: true
+        }
+      }
+      ponto_get_vigencia: {
+        Args: { _data: string; _func_id: string }
+        Returns: {
+          alterado_por: string | null
+          cargo_id: string | null
+          created_at: string
+          data_fim: string | null
+          data_inicio: string
+          departamento_id: string | null
+          empresa_id: string | null
+          escala_id: string | null
+          filial_id: string | null
+          funcionario_id: string
+          id: string
+          jornada_contratada_horas: number | null
+          motivo: string | null
+          valor_hora: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ponto_funcionario_escala_historico"
+          isOneToOne: true
+          isSetofReturn: false
         }
       }
       roles_present: { Args: never; Returns: boolean }

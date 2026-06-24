@@ -55,27 +55,46 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Carrega funcionário + escala + regras
+    // Carrega funcionário
     const { data: func } = await supabase
       .from("ponto_funcionarios")
-      .select("id, empresa_id, escala_id, registra_ponto, jornada_contratada_horas, tipo_contrato, status, data_inicio_ponto, ponto_escalas(jornada,intervalo_minutos)")
+      .select("id, empresa_id, registra_ponto, tipo_contrato, status, data_inicio_ponto")
       .eq("id", funcionario_id).single();
 
-    // Funcionário não registra ponto (ex.: isento, comissionista puro) → não calcula
     if (func && func.registra_ponto === false) {
       return new Response(JSON.stringify({ ok: true, skipped: "funcionario_nao_registra_ponto" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    // Antes da data de início do ponto → não calcula
     if (func?.data_inicio_ponto && data < func.data_inicio_ponto) {
       return new Response(JSON.stringify({ ok: true, skipped: "antes_inicio_ponto" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    // Funcionário inativo/demitido → não calcula
-    if (func?.status && !["ativo", "ferias", "afastado"].includes(func.status)) {
-      return new Response(JSON.stringify({ ok: true, skipped: `status_${func.status}` }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    // 🔑 HISTÓRICO: busca a escala/jornada VIGENTE na data — não a atual do cadastro
+    const { data: vigencia } = await supabase.rpc("ponto_get_vigencia", { _func_id: funcionario_id, _data: data });
+    const vig: any = Array.isArray(vigencia) ? vigencia[0] : vigencia;
+
+    // Carrega a escala referenciada pela vigência
+    let escala: any = null;
+    if (vig?.escala_id) {
+      const { data: esc } = await supabase.from("ponto_escalas")
+        .select("jornada, intervalo_minutos").eq("id", vig.escala_id).maybeSingle();
+      escala = esc;
     }
+
+    // 🔑 ATESTADO aprovado no dia → abona, não considera falta
+    const { data: atestado } = await supabase.from("ponto_atestados")
+      .select("id, data_inicio, data_fim, status, cid")
+      .eq("funcionario_id", funcionario_id)
+      .lte("data_inicio", data).gte("data_fim", data)
+      .eq("status", "aprovado").maybeSingle();
+
+    // 🔑 FÉRIAS / AFASTAMENTO no dia → marca tipo e zera falta
+    const { data: ferias } = await supabase.from("ponto_ferias_afastamentos")
+      .select("id, tipo, data_inicio, data_fim, status, bloqueia_marcacao")
+      .eq("funcionario_id", funcionario_id)
+      .lte("data_inicio", data).gte("data_fim", data)
+      .in("status", ["aprovado", "ativo"]).maybeSingle();
 
     const empId = empresa_id || func?.empresa_id;
     const { data: regra } = await supabase
@@ -91,9 +110,8 @@ Deno.serve(async (req) => {
       banco_horas_ativo: regra?.banco_horas_ativo ?? false,
     };
 
-    // Carga diária derivada da jornada contratada do funcionário (sobrescreve escala se definida)
-    const cargaContratadaDiariaMin = (func as any)?.jornada_contratada_horas
-      ? Math.round(Number((func as any).jornada_contratada_horas) * 60 / 5) // semanal → diária (5 dias)
+    const cargaContratadaDiariaMin = vig?.jornada_contratada_horas
+      ? Math.round(Number(vig.jornada_contratada_horas) * 60 / 5)
       : null;
 
     // Registros do dia
@@ -112,19 +130,31 @@ Deno.serve(async (req) => {
     const retornoIntervalo = lista.find(x => x.tipo === "retorno_intervalo");
     const saida = [...lista].reverse().find(x => x.tipo === "saida");
 
-    const falta = !entrada && !saida;
+    let falta = !entrada && !saida;
     let minutos_trabalhados = 0;
     let atraso_min = 0;
     let saida_antec_min = 0;
     let extra_min = 0;
     let noturno_min = 0;
+    let tipo_dia = "normal";
+    let abono_min = 0;
 
-    const jornada = (func as any)?.ponto_escalas?.jornada || {};
+    const jornada = escala?.jornada || {};
     const dow = new Date(`${data}T12:00:00Z`).getUTCDay();
     const diaKeys = ["dom","seg","ter","qua","qui","sex","sab"];
-    const jornadaDia = jornada[diaKeys[dow]]; // {entrada,saida,carga_min}
+    const jornadaDia = jornada[diaKeys[dow]];
+    const cargaPrevistaDia = jornadaDia?.carga_min ?? cargaContratadaDiariaMin ?? 480;
 
-    if (entrada && saida) {
+    // 🔑 Férias / Afastamento têm prioridade
+    if (ferias) {
+      tipo_dia = ferias.tipo || "ferias";
+      falta = false;
+      abono_min = cargaPrevistaDia;
+    } else if (atestado) {
+      tipo_dia = "atestado";
+      falta = false;
+      abono_min = cargaPrevistaDia;
+    } else if (entrada && saida) {
       const e = new Date(entrada.data_hora);
       const s = new Date(saida.data_hora);
       let total = (s.getTime() - e.getTime()) / 60000;
@@ -134,7 +164,7 @@ Deno.serve(async (req) => {
         const ri = new Date(retornoIntervalo.data_hora);
         total -= (ri.getTime() - si.getTime()) / 60000;
       } else {
-        total -= ((func as any)?.ponto_escalas?.intervalo_minutos ?? 60);
+        total -= (escala?.intervalo_minutos ?? 60);
       }
       minutos_trabalhados = Math.max(0, Math.round(total));
 
@@ -151,18 +181,13 @@ Deno.serve(async (req) => {
         if (diff > r.tolerancia_saida_antec_min) saida_antec_min = diff;
       }
 
-      // Carga prevista: prioriza jornada do dia da escala, depois jornada contratada do funcionário, default 480
-      const cargaPrevista = jornadaDia?.carga_min ?? cargaContratadaDiariaMin ?? 480;
-      if (minutos_trabalhados > cargaPrevista) extra_min = minutos_trabalhados - cargaPrevista;
-
+      if (minutos_trabalhados > cargaPrevistaDia) extra_min = minutos_trabalhados - cargaPrevistaDia;
       noturno_min = calcNoturno(e, s, r.noturno_inicio, r.noturno_fim);
     }
 
     const saldo_banco_min = r.banco_horas_ativo ? extra_min : 0;
-    // Hora reduzida noturna (CLT art. 73 §1º): 52min30s = 1 hora noturna
     const noturno_min_reduzido = Math.round(noturno_min * (60 / 52.5));
-    // DSR sobre HE — aproximação diária: HE / 6 (dias úteis)
-    const dsr_min = Math.round(extra_min / 6);
+    const dsr_min = falta ? 0 : Math.round(extra_min / 6);
 
     const payload = {
       funcionario_id,
@@ -180,6 +205,10 @@ Deno.serve(async (req) => {
       noturno_min_reduzido,
       dsr_min,
       saldo_banco_min,
+      tipo_dia,
+      abono_min,
+      atestado_id: atestado?.id || null,
+      afastamento_id: ferias?.id || null,
       calculado_em: new Date().toISOString(),
     };
 
