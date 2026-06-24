@@ -12692,6 +12692,7 @@ export type Database = {
           genero: string | null
           id: string
           jornada_contratada_horas: number | null
+          layout_exportacao_id: string | null
           matricula: string | null
           matricula_esocial: string | null
           nome: string
@@ -12762,6 +12763,7 @@ export type Database = {
           genero?: string | null
           id?: string
           jornada_contratada_horas?: number | null
+          layout_exportacao_id?: string | null
           matricula?: string | null
           matricula_esocial?: string | null
           nome: string
@@ -12832,6 +12834,7 @@ export type Database = {
           genero?: string | null
           id?: string
           jornada_contratada_horas?: number | null
+          layout_exportacao_id?: string | null
           matricula?: string | null
           matricula_esocial?: string | null
           nome?: string
@@ -12893,6 +12896,13 @@ export type Database = {
             columns: ["filial_id"]
             isOneToOne: false
             referencedRelation: "ponto_filiais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_funcionarios_layout_exportacao_id_fkey"
+            columns: ["layout_exportacao_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_export_layouts"
             referencedColumns: ["id"]
           },
         ]
