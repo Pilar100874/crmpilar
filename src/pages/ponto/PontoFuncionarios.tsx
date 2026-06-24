@@ -115,6 +115,7 @@ export default function PontoFuncionarios() {
   const [departamentos, setDepartamentos] = useState<any[]>([]);
   const [cargos, setCargos] = useState<any[]>([]);
   const [equipes, setEquipes] = useState<any[]>([]);
+  const [exportLayouts, setExportLayouts] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState<Func | null>(null);
   const [editing, setEditing] = useState<Func | null>(null);
