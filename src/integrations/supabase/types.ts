@@ -10199,6 +10199,63 @@ export type Database = {
           },
         ]
       }
+      ponto_anexos: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_tamanho: number | null
+          arquivo_tipo: string | null
+          arquivo_url: string
+          contexto: string
+          created_at: string
+          funcionario_id: string | null
+          hash_sha256: string | null
+          id: string
+          referencia_id: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_tipo?: string | null
+          arquivo_url: string
+          contexto: string
+          created_at?: string
+          funcionario_id?: string | null
+          hash_sha256?: string | null
+          id?: string
+          referencia_id?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_tipo?: string | null
+          arquivo_url?: string
+          contexto?: string
+          created_at?: string
+          funcionario_id?: string | null
+          hash_sha256?: string | null
+          id?: string
+          referencia_id?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_anexos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "ponto_anexos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_anomalias: {
         Row: {
           acao_aprovacao: string | null
@@ -10413,6 +10470,69 @@ export type Database = {
           valor_min_min?: number
         }
         Relationships: []
+      }
+      ponto_assinatura_tokens: {
+        Row: {
+          canal_2fa: string
+          codigo_2fa: string
+          created_at: string
+          espelho_id: string | null
+          expira_em: string
+          funcionario_id: string
+          id: string
+          ip_validacao: unknown
+          max_tentativas: number
+          tentativas: number
+          token_hash: string
+          user_agent_validacao: string | null
+          validado_em: string | null
+        }
+        Insert: {
+          canal_2fa?: string
+          codigo_2fa: string
+          created_at?: string
+          espelho_id?: string | null
+          expira_em: string
+          funcionario_id: string
+          id?: string
+          ip_validacao?: unknown
+          max_tentativas?: number
+          tentativas?: number
+          token_hash: string
+          user_agent_validacao?: string | null
+          validado_em?: string | null
+        }
+        Update: {
+          canal_2fa?: string
+          codigo_2fa?: string
+          created_at?: string
+          espelho_id?: string | null
+          expira_em?: string
+          funcionario_id?: string
+          id?: string
+          ip_validacao?: unknown
+          max_tentativas?: number
+          tentativas?: number
+          token_hash?: string
+          user_agent_validacao?: string | null
+          validado_em?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_assinatura_tokens_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "ponto_assinatura_tokens_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ponto_assinaturas_espelho: {
         Row: {
@@ -12566,6 +12686,66 @@ export type Database = {
         }
         Relationships: []
       }
+      ponto_lgpd_solicitacoes: {
+        Row: {
+          arquivo_resultado_url: string | null
+          created_at: string
+          funcionario_id: string
+          id: string
+          motivo: string | null
+          prazo_resposta: string | null
+          respondido_em: string | null
+          respondido_por: string | null
+          resposta: string | null
+          status: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          arquivo_resultado_url?: string | null
+          created_at?: string
+          funcionario_id: string
+          id?: string
+          motivo?: string | null
+          prazo_resposta?: string | null
+          respondido_em?: string | null
+          respondido_por?: string | null
+          resposta?: string | null
+          status?: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          arquivo_resultado_url?: string | null
+          created_at?: string
+          funcionario_id?: string
+          id?: string
+          motivo?: string | null
+          prazo_resposta?: string | null
+          respondido_em?: string | null
+          respondido_por?: string | null
+          resposta?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_lgpd_solicitacoes_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "ponto_lgpd_solicitacoes_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_notificacoes_config: {
         Row: {
           canais: Json
@@ -12731,6 +12911,60 @@ export type Database = {
             columns: ["filial_id"]
             isOneToOne: false
             referencedRelation: "ponto_filiais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_push_subscriptions: {
+        Row: {
+          ativo: boolean
+          auth: string
+          created_at: string
+          endpoint: string
+          funcionario_id: string
+          id: string
+          p256dh: string
+          ultimo_uso: string | null
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          auth: string
+          created_at?: string
+          endpoint: string
+          funcionario_id: string
+          id?: string
+          p256dh: string
+          ultimo_uso?: string | null
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          funcionario_id?: string
+          id?: string
+          p256dh?: string
+          ultimo_uso?: string | null
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_push_subscriptions_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "ponto_push_subscriptions_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
             referencedColumns: ["id"]
           },
         ]

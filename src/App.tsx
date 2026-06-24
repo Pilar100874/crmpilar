@@ -99,6 +99,7 @@ import PontoCompliance from "./pages/ponto/PontoCompliance";
 import PontoAprovacaoRegras from "./pages/ponto/PontoAprovacaoRegras";
 import PontoSobreaviso from "./pages/ponto/PontoSobreaviso";
 import PontoDSR from "./pages/ponto/PontoDSR";
+import PontoLGPDPortal from "./pages/ponto/PontoLGPDPortal";
 import PontoBancoHorasExpirar from "./pages/ponto/PontoBancoHorasExpirar";
 import PontoNotificacoes from "./pages/ponto/PontoNotificacoes";
 import PontoManual from "./pages/ponto/PontoManual";
@@ -422,6 +423,7 @@ const App = () => (
                 <Route path="aprovacao-regras" element={<PontoAprovacaoRegras />} />
                 <Route path="sobreaviso" element={<PontoSobreaviso />} />
                 <Route path="dsr" element={<PontoDSR />} />
+                <Route path="lgpd" element={<PontoLGPDPortal />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
                 <Route path="manual" element={<PontoManual />} />
               </Route>
