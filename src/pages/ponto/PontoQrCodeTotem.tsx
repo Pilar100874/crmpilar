@@ -66,13 +66,23 @@ export default function PontoQrCodeTotem() {
             Aponte o celular para registrar ponto. Código renova a cada 15s.
           </p>
         </div>
-        <div className="w-64">
-          <Select value={filialId} onValueChange={setFilialId}>
-            <SelectTrigger><SelectValue placeholder="Selecione a filial" /></SelectTrigger>
-            <SelectContent>
-              {filiais.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
-            </SelectContent>
-          </Select>
+        <div className="flex items-center gap-2">
+          <div className="w-64">
+            <Select value={filialId} onValueChange={setFilialId}>
+              <SelectTrigger><SelectValue placeholder="Selecione a filial" /></SelectTrigger>
+              <SelectContent>
+                {filiais.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!filialId}
+            onClick={() => window.open(`/ponto/totem?filial=${filialId}`, "_blank")}
+          >
+            <Maximize2 className="h-4 w-4 mr-2" /> Modo Totem
+          </Button>
         </div>
       </div>
 
