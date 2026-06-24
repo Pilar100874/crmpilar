@@ -10724,7 +10724,9 @@ export type Database = {
           status: string | null
           tipo_relogio: string | null
           ultima_sync: string | null
+          ultimo_erro: string | null
           updated_at: string
+          usa_https: boolean
           usuario: string | null
         }
         Insert: {
@@ -10753,7 +10755,9 @@ export type Database = {
           status?: string | null
           tipo_relogio?: string | null
           ultima_sync?: string | null
+          ultimo_erro?: string | null
           updated_at?: string
+          usa_https?: boolean
           usuario?: string | null
         }
         Update: {
@@ -10782,7 +10786,9 @@ export type Database = {
           status?: string | null
           tipo_relogio?: string | null
           ultima_sync?: string | null
+          ultimo_erro?: string | null
           updated_at?: string
+          usa_https?: boolean
           usuario?: string | null
         }
         Relationships: [
