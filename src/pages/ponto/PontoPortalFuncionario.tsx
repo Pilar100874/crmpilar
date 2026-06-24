@@ -260,6 +260,36 @@ export default function PontoPortalFuncionario() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <Dialog open={openFerias} onOpenChange={setOpenFerias}>
+          <DialogTrigger asChild>
+            <Button variant="outline"><Palmtree className="mr-2 h-4 w-4" /> Solicitar férias/afastamento</Button>
+          </DialogTrigger>
+          <DialogContent className="w-[95vw] max-h-[90vh] overflow-y-auto">
+            <DialogHeader><DialogTitle>Solicitar férias ou afastamento</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div><Label>Tipo</Label>
+                <Select value={novaFerias.tipo} onValueChange={v => setNovaFerias({ ...novaFerias, tipo: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ferias">Férias</SelectItem>
+                    <SelectItem value="abono">Abono</SelectItem>
+                    <SelectItem value="licenca">Licença</SelectItem>
+                    <SelectItem value="afastamento">Afastamento</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Início</Label><Input type="date" value={novaFerias.data_inicio}
+                  onChange={e => setNovaFerias({ ...novaFerias, data_inicio: e.target.value })} /></div>
+                <div><Label>Fim</Label><Input type="date" value={novaFerias.data_fim}
+                  onChange={e => setNovaFerias({ ...novaFerias, data_fim: e.target.value })} /></div>
+              </div>
+              <div><Label>Motivo</Label><Textarea value={novaFerias.motivo}
+                onChange={e => setNovaFerias({ ...novaFerias, motivo: e.target.value })} placeholder="Ex: férias programadas" /></div>
+            </div>
+            <DialogFooter><Button onClick={enviarFerias}>Enviar</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
 
