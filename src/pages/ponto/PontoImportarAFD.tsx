@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePontoEmpresa } from "./usePontoEmpresa";
 
 export default function PontoImportarAFD() {
-  const { empresaId, estabelecimentoId } = usePontoEmpresa() as any;
+  const { empresaId } = usePontoEmpresa();
   const [formato, setFormato] = useState("rep-c");
   const [filialId, setFilialId] = useState<string>("");
   const [equipamentoId, setEquipamentoId] = useState<string>("");
