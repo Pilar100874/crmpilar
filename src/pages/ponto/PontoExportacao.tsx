@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, FileText, AlertTriangle, ShieldCheck, Settings } from "lucide-react";
+import { Download, FileText, AlertTriangle, ShieldCheck, Settings, Trash2, Unlock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePontoEmpresa } from "./usePontoEmpresa";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 export default function PontoExportacao() {
   const { empresaId } = usePontoEmpresa();
@@ -25,6 +26,8 @@ export default function PontoExportacao() {
   const [generating, setGenerating] = useState(false);
   const [validando, setValidando] = useState(false);
   const [erros, setErros] = useState<any[]>([]);
+  const [delTarget, setDelTarget] = useState<any | null>(null);
+  const [reabrirTarget, setReabrirTarget] = useState<any | null>(null);
 
   const loadLayouts = async () => {
     if (!empresaId) return;
@@ -82,6 +85,52 @@ export default function PontoExportacao() {
     if (!log.arquivo_url) return toast.error("Arquivo indisponível");
     const { data } = await supabase.storage.from("ponto-exports").createSignedUrl(log.arquivo_url, 60);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+  };
+
+  const excluirExport = async (log: any) => {
+    try {
+      if (log.arquivo_url) {
+        await supabase.storage.from("ponto-exports").remove([log.arquivo_url]);
+      }
+      const { error } = await supabase.from("ponto_export_logs").delete().eq("id", log.id);
+      if (error) throw error;
+      toast.success("Exportação excluída");
+      setDelTarget(null);
+      loadLogs();
+    } catch (e: any) { toast.error(e.message); }
+  };
+
+  const reabrirPeriodo = async (log: any) => {
+    if (!empresaId) return;
+    try {
+      // Remove fechamentos que se sobrepõem ao período do export
+      const { data: fechs, error: fErr } = await supabase
+        .from("ponto_periodos_fechamento")
+        .select("id, mes_referencia")
+        .eq("empresa_id", empresaId)
+        .gte("mes_referencia", log.periodo_inicio)
+        .lte("mes_referencia", log.periodo_fim);
+      if (fErr) throw fErr;
+      let removidos = 0;
+      if (fechs?.length) {
+        const { error: dErr } = await supabase
+          .from("ponto_periodos_fechamento")
+          .delete()
+          .in("id", fechs.map((f) => f.id));
+        if (dErr) throw dErr;
+        removidos = fechs.length;
+      }
+      // Marca o log como reaberto
+      await supabase.from("ponto_export_logs")
+        .update({ status: "reaberto", observacao: `Reaberto em ${new Date().toLocaleString("pt-BR")}` })
+        .eq("id", log.id);
+      toast.success(`Período reaberto${removidos ? ` (${removidos} fechamento(s) removido(s))` : ""}`);
+      setReabrirTarget(null);
+      // Pré-popula faixa para nova geração
+      setInicio(log.periodo_inicio);
+      setFim(log.periodo_fim);
+      loadLogs();
+    } catch (e: any) { toast.error(e.message); }
   };
 
   return (
@@ -186,9 +235,19 @@ export default function PontoExportacao() {
                       <Badge variant={l.status === "gerado" ? "default" : "secondary"}>{l.status}</Badge>
                     </td>
                     <td className="p-3">
-                      {l.arquivo_url && <Button size="sm" variant="ghost" onClick={() => baixar(l)}>
-                        <Download className="h-4 w-4" />
-                      </Button>}
+                      <div className="flex items-center justify-end gap-1">
+                        {l.arquivo_url && (
+                          <Button size="sm" variant="ghost" onClick={() => baixar(l)} title="Baixar">
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button size="sm" variant="ghost" onClick={() => setReabrirTarget(l)} title="Reabrir período">
+                          <Unlock className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setDelTarget(l)} title="Excluir">
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -197,6 +256,23 @@ export default function PontoExportacao() {
           </div>
         )}
       </div>
+
+      <DeleteConfirmDialog
+        open={!!delTarget}
+        onOpenChange={(o) => !o && setDelTarget(null)}
+        onConfirm={() => delTarget && excluirExport(delTarget)}
+        title="Excluir exportação?"
+        description={delTarget ? `O arquivo gerado em ${new Date(delTarget.created_at).toLocaleString("pt-BR")} para o período ${delTarget.periodo_inicio} → ${delTarget.periodo_fim} será removido permanentemente.` : ""}
+      />
+
+      <DeleteConfirmDialog
+        open={!!reabrirTarget}
+        onOpenChange={(o) => !o && setReabrirTarget(null)}
+        onConfirm={() => reabrirTarget && reabrirPeriodo(reabrirTarget)}
+        title="Reabrir período exportado?"
+        description={reabrirTarget ? `O período ${reabrirTarget.periodo_inicio} → ${reabrirTarget.periodo_fim} ficará disponível para nova edição e geração. Fechamentos mensais sobrepostos serão removidos.` : ""}
+      />
+
     </div>
   );
 }
