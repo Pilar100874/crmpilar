@@ -235,6 +235,7 @@ const App = () => (
             <Route path="/" element={<Splash />} />
             <Route path="/login" element={<Login />} />
             <Route path="/espelho-funcionario/:token" element={<EspelhoFuncionario />} />
+            <Route path="/ponto/totem" element={<PontoTotem />} />
             <Route element={<LayoutWrapper />}>
             <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/atendimento" element={<Atendimento />} />
