@@ -11142,6 +11142,100 @@ export type Database = {
           },
         ]
       }
+      ponto_funcionario_dependentes: {
+        Row: {
+          cpf: string | null
+          created_at: string
+          data_nascimento: string | null
+          deduz_irrf: boolean
+          funcionario_id: string
+          id: string
+          nome: string
+          previdenciario: boolean
+          salario_familia: boolean
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          cpf?: string | null
+          created_at?: string
+          data_nascimento?: string | null
+          deduz_irrf?: boolean
+          funcionario_id: string
+          id?: string
+          nome: string
+          previdenciario?: boolean
+          salario_familia?: boolean
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          cpf?: string | null
+          created_at?: string
+          data_nascimento?: string | null
+          deduz_irrf?: boolean
+          funcionario_id?: string
+          id?: string
+          nome?: string
+          previdenciario?: boolean
+          salario_familia?: boolean
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_funcionario_dependentes_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_funcionario_documentos: {
+        Row: {
+          arquivo_url: string | null
+          created_at: string
+          data_expedicao: string | null
+          funcionario_id: string
+          id: string
+          numero: string
+          orgao_expedidor: string | null
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          arquivo_url?: string | null
+          created_at?: string
+          data_expedicao?: string | null
+          funcionario_id: string
+          id?: string
+          numero: string
+          orgao_expedidor?: string | null
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          arquivo_url?: string | null
+          created_at?: string
+          data_expedicao?: string | null
+          funcionario_id?: string
+          id?: string
+          numero?: string
+          orgao_expedidor?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_funcionario_documentos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_funcionario_vinculos: {
         Row: {
           ativo: boolean
@@ -11216,71 +11310,203 @@ export type Database = {
         Row: {
           admissao: string | null
           auth_user_id: string | null
+          bairro: string | null
           cargo: string | null
           cargo_id: string | null
+          centro_custo: string | null
+          cep: string | null
+          cidade: string | null
+          cidade_nascimento: string | null
           codigo_dominio: string | null
+          complemento: string | null
+          config_controle_ponto: string | null
           cpf: string
           created_at: string
+          data_inicio_ponto: string | null
+          data_nascimento: string | null
+          deficiencia_auditiva: boolean
+          deficiencia_fisica: boolean
+          deficiencia_intelectual: boolean
+          deficiencia_mental: boolean
+          deficiencia_visual: boolean
           demissao: string | null
           departamento_id: string | null
+          eh_aposentado: boolean
+          eh_clt: boolean
           email: string | null
+          email_alt: string | null
           empresa_id: string
+          endereco: string | null
           escala_id: string | null
+          escolaridade: string | null
+          estado_civil: string | null
+          etnia: string | null
           filial_id: string | null
           foto_referencia_url: string | null
+          foto_url: string | null
+          genero: string | null
           id: string
+          jornada_contratada_horas: number | null
           matricula: string | null
+          matricula_esocial: string | null
           nome: string
+          nome_mae: string | null
+          nome_pai: string | null
+          notas: string | null
+          notas_especiais: string | null
+          numero: string | null
+          pais_nascimento: string | null
+          permitir_localizacao: string | null
+          permitir_offline: string | null
+          permitir_qualquer_dispositivo: boolean
+          pin: string | null
           pis: string | null
+          reabilitado: boolean
+          registra_ponto: boolean
+          sobrenome: string | null
           status: string
           telefone: string | null
+          telefone_alt: string | null
+          tipo_contrato: string | null
+          tipo_local: string | null
+          tipo_registro_ponto: string | null
+          uf: string | null
           updated_at: string
+          valor_hora: number | null
         }
         Insert: {
           admissao?: string | null
           auth_user_id?: string | null
+          bairro?: string | null
           cargo?: string | null
           cargo_id?: string | null
+          centro_custo?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cidade_nascimento?: string | null
           codigo_dominio?: string | null
+          complemento?: string | null
+          config_controle_ponto?: string | null
           cpf: string
           created_at?: string
+          data_inicio_ponto?: string | null
+          data_nascimento?: string | null
+          deficiencia_auditiva?: boolean
+          deficiencia_fisica?: boolean
+          deficiencia_intelectual?: boolean
+          deficiencia_mental?: boolean
+          deficiencia_visual?: boolean
           demissao?: string | null
           departamento_id?: string | null
+          eh_aposentado?: boolean
+          eh_clt?: boolean
           email?: string | null
+          email_alt?: string | null
           empresa_id: string
+          endereco?: string | null
           escala_id?: string | null
+          escolaridade?: string | null
+          estado_civil?: string | null
+          etnia?: string | null
           filial_id?: string | null
           foto_referencia_url?: string | null
+          foto_url?: string | null
+          genero?: string | null
           id?: string
+          jornada_contratada_horas?: number | null
           matricula?: string | null
+          matricula_esocial?: string | null
           nome: string
+          nome_mae?: string | null
+          nome_pai?: string | null
+          notas?: string | null
+          notas_especiais?: string | null
+          numero?: string | null
+          pais_nascimento?: string | null
+          permitir_localizacao?: string | null
+          permitir_offline?: string | null
+          permitir_qualquer_dispositivo?: boolean
+          pin?: string | null
           pis?: string | null
+          reabilitado?: boolean
+          registra_ponto?: boolean
+          sobrenome?: string | null
           status?: string
           telefone?: string | null
+          telefone_alt?: string | null
+          tipo_contrato?: string | null
+          tipo_local?: string | null
+          tipo_registro_ponto?: string | null
+          uf?: string | null
           updated_at?: string
+          valor_hora?: number | null
         }
         Update: {
           admissao?: string | null
           auth_user_id?: string | null
+          bairro?: string | null
           cargo?: string | null
           cargo_id?: string | null
+          centro_custo?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cidade_nascimento?: string | null
           codigo_dominio?: string | null
+          complemento?: string | null
+          config_controle_ponto?: string | null
           cpf?: string
           created_at?: string
+          data_inicio_ponto?: string | null
+          data_nascimento?: string | null
+          deficiencia_auditiva?: boolean
+          deficiencia_fisica?: boolean
+          deficiencia_intelectual?: boolean
+          deficiencia_mental?: boolean
+          deficiencia_visual?: boolean
           demissao?: string | null
           departamento_id?: string | null
+          eh_aposentado?: boolean
+          eh_clt?: boolean
           email?: string | null
+          email_alt?: string | null
           empresa_id?: string
+          endereco?: string | null
           escala_id?: string | null
+          escolaridade?: string | null
+          estado_civil?: string | null
+          etnia?: string | null
           filial_id?: string | null
           foto_referencia_url?: string | null
+          foto_url?: string | null
+          genero?: string | null
           id?: string
+          jornada_contratada_horas?: number | null
           matricula?: string | null
+          matricula_esocial?: string | null
           nome?: string
+          nome_mae?: string | null
+          nome_pai?: string | null
+          notas?: string | null
+          notas_especiais?: string | null
+          numero?: string | null
+          pais_nascimento?: string | null
+          permitir_localizacao?: string | null
+          permitir_offline?: string | null
+          permitir_qualquer_dispositivo?: boolean
+          pin?: string | null
           pis?: string | null
+          reabilitado?: boolean
+          registra_ponto?: boolean
+          sobrenome?: string | null
           status?: string
           telefone?: string | null
+          telefone_alt?: string | null
+          tipo_contrato?: string | null
+          tipo_local?: string | null
+          tipo_registro_ponto?: string | null
+          uf?: string | null
           updated_at?: string
+          valor_hora?: number | null
         }
         Relationships: [
           {
