@@ -410,6 +410,8 @@ const App = () => (
                 <Route path="dashboard-executivo" element={<PontoDashboardExecutivo />} />
                 <Route path="aprovacoes" element={<PontoAprovacoes />} />
                 <Route path="webhook-catracas" element={<PontoWebhookCatracas />} />
+                <Route path="clt-config" element={<PontoCltConfig />} />
+                <Route path="anomalias" element={<PontoAnomalias />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
                 <Route path="manual" element={<PontoManual />} />
               </Route>
