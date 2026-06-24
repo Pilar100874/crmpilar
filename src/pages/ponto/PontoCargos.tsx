@@ -153,7 +153,14 @@ export default function PontoCargos() {
           <div className="space-y-3">
             <div><Label>Nome *</Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>CBO</Label><Input value={form.cbo} onChange={(e) => setForm({ ...form, cbo: e.target.value })} placeholder="0000-00" /></div>
+              <div>
+                <Label>CBO</Label>
+                <CBOPicker
+                  value={form.cbo}
+                  onChange={(codigo, titulo) => setForm((f) => ({ ...f, cbo: codigo, nome: titulo && !f.nome ? titulo : f.nome }))}
+                />
+              </div>
+
               <div><Label>Salário base (R$)</Label><Input value={form.salario_base} onChange={(e) => setForm({ ...form, salario_base: e.target.value })} placeholder="0,00" /></div>
             </div>
             <div><Label>Descrição</Label><Input value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} /></div>
