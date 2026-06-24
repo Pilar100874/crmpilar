@@ -130,19 +130,31 @@ Deno.serve(async (req) => {
     const retornoIntervalo = lista.find(x => x.tipo === "retorno_intervalo");
     const saida = [...lista].reverse().find(x => x.tipo === "saida");
 
-    const falta = !entrada && !saida;
+    let falta = !entrada && !saida;
     let minutos_trabalhados = 0;
     let atraso_min = 0;
     let saida_antec_min = 0;
     let extra_min = 0;
     let noturno_min = 0;
+    let tipo_dia = "normal";
+    let abono_min = 0;
 
-    const jornada = (func as any)?.ponto_escalas?.jornada || {};
+    const jornada = escala?.jornada || {};
     const dow = new Date(`${data}T12:00:00Z`).getUTCDay();
     const diaKeys = ["dom","seg","ter","qua","qui","sex","sab"];
-    const jornadaDia = jornada[diaKeys[dow]]; // {entrada,saida,carga_min}
+    const jornadaDia = jornada[diaKeys[dow]];
+    const cargaPrevistaDia = jornadaDia?.carga_min ?? cargaContratadaDiariaMin ?? 480;
 
-    if (entrada && saida) {
+    // 🔑 Férias / Afastamento têm prioridade
+    if (ferias) {
+      tipo_dia = ferias.tipo || "ferias";
+      falta = false;
+      abono_min = cargaPrevistaDia;
+    } else if (atestado) {
+      tipo_dia = "atestado";
+      falta = false;
+      abono_min = cargaPrevistaDia;
+    } else if (entrada && saida) {
       const e = new Date(entrada.data_hora);
       const s = new Date(saida.data_hora);
       let total = (s.getTime() - e.getTime()) / 60000;
@@ -152,7 +164,7 @@ Deno.serve(async (req) => {
         const ri = new Date(retornoIntervalo.data_hora);
         total -= (ri.getTime() - si.getTime()) / 60000;
       } else {
-        total -= ((func as any)?.ponto_escalas?.intervalo_minutos ?? 60);
+        total -= (escala?.intervalo_minutos ?? 60);
       }
       minutos_trabalhados = Math.max(0, Math.round(total));
 
@@ -169,18 +181,13 @@ Deno.serve(async (req) => {
         if (diff > r.tolerancia_saida_antec_min) saida_antec_min = diff;
       }
 
-      // Carga prevista: prioriza jornada do dia da escala, depois jornada contratada do funcionário, default 480
-      const cargaPrevista = jornadaDia?.carga_min ?? cargaContratadaDiariaMin ?? 480;
-      if (minutos_trabalhados > cargaPrevista) extra_min = minutos_trabalhados - cargaPrevista;
-
+      if (minutos_trabalhados > cargaPrevistaDia) extra_min = minutos_trabalhados - cargaPrevistaDia;
       noturno_min = calcNoturno(e, s, r.noturno_inicio, r.noturno_fim);
     }
 
     const saldo_banco_min = r.banco_horas_ativo ? extra_min : 0;
-    // Hora reduzida noturna (CLT art. 73 §1º): 52min30s = 1 hora noturna
     const noturno_min_reduzido = Math.round(noturno_min * (60 / 52.5));
-    // DSR sobre HE — aproximação diária: HE / 6 (dias úteis)
-    const dsr_min = Math.round(extra_min / 6);
+    const dsr_min = falta ? 0 : Math.round(extra_min / 6);
 
     const payload = {
       funcionario_id,
@@ -198,6 +205,10 @@ Deno.serve(async (req) => {
       noturno_min_reduzido,
       dsr_min,
       saldo_banco_min,
+      tipo_dia,
+      abono_min,
+      atestado_id: atestado?.id || null,
+      afastamento_id: ferias?.id || null,
       calculado_em: new Date().toISOString(),
     };
 
