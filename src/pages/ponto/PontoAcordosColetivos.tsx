@@ -20,7 +20,28 @@ export default function PontoAcordosColetivos() {
     he_multiplicador_50: 1.5, he_multiplicador_100: 2.0,
     adicional_noturno_percentual: 20, banco_horas_prazo_meses: 6,
     sobreaviso_percentual: 33.33,
+    he_faixas_customizadas: [] as any[],
   });
+
+  function addFaixa() {
+    setForm({
+      ...form,
+      he_faixas_customizadas: [
+        ...(form.he_faixas_customizadas || []),
+        { nome: "HE 60%", percentual: 60, multiplicador: 1.6, condicao: "padrao", aplicar_apos_min: 0, limite_diario_min: 120, rubrica_dominio: "" },
+      ],
+    });
+  }
+  function updFaixa(i: number, patch: any) {
+    const arr = [...(form.he_faixas_customizadas || [])];
+    arr[i] = { ...arr[i], ...patch };
+    setForm({ ...form, he_faixas_customizadas: arr });
+  }
+  function rmFaixa(i: number) {
+    const arr = [...(form.he_faixas_customizadas || [])];
+    arr.splice(i, 1);
+    setForm({ ...form, he_faixas_customizadas: arr });
+  }
 
   async function carregar() {
     const { data } = await (supabase as any).from("ponto_acordos_coletivos")
