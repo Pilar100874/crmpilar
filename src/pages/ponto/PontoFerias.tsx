@@ -154,14 +154,35 @@ export default function PontoFerias() {
               <div><Label>Fim *</Label><Input type="date" value={form.data_fim || ""} onChange={(e) => setForm({ ...form, data_fim: e.target.value })} /></div>
             </div>
             <div><Label>Motivo</Label><Input value={form.motivo || ""} onChange={(e) => setForm({ ...form, motivo: e.target.value })} /></div>
+            {form.tipo === "ferias" && (
+              <div>
+                <Label>Abono Pecuniário (⅓ – CLT art. 143) — dias</Label>
+                <Input type="number" min={0} max={cltCfg.ferias_abono_max_dias}
+                  value={form.abono_pecuniario_dias || 0}
+                  onChange={(e) => setForm({ ...form, abono_pecuniario_dias: parseInt(e.target.value) || 0 })} />
+                <p className="text-xs text-muted-foreground mt-1">Até {cltCfg.ferias_abono_max_dias} dias convertidos em dinheiro.</p>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <Label>Bloquear marcação durante o período</Label>
               <Switch checked={form.bloqueia_marcacao} onCheckedChange={(c) => setForm({ ...form, bloqueia_marcacao: c })} />
             </div>
+            {form.tipo === "ferias" && dias > 0 && (
+              <div className="rounded-md bg-muted p-3 text-xs space-y-1">
+                <div>📅 <b>{dias}</b> dias • Aviso prévio: <b>{avisoDias}</b> dias • Fracionamento nº <b>{totalFracionamentos}</b></div>
+                {validationErrors.length > 0 ? (
+                  <ul className="text-destructive list-disc ml-4">
+                    {validationErrors.map((e, i) => <li key={i}>{e}</li>)}
+                  </ul>
+                ) : (
+                  <div className="text-green-600">✓ Conforme CLT e Lei 13.467/17</div>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button onClick={salvar}>Salvar</Button>
+            <Button onClick={salvar} disabled={validationErrors.length > 0}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
