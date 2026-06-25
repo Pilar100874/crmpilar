@@ -121,6 +121,7 @@ export default function PontoEscalas() {
   const [editing, setEditing] = useState<Escala | null>(null);
   const [form, setForm] = useState(emptyForm());
   const [deleting, setDeleting] = useState<Escala | null>(null);
+  const [tab, setTab] = useState("geral");
 
   const load = async () => {
     if (!empresaId) return;
@@ -310,11 +311,23 @@ export default function PontoEscalas() {
             <DialogTitle>{editing ? "Editar escala" : "Nova escala"}</DialogTitle>
           </DialogHeader>
 
-          <Tabs defaultValue="geral" className="w-full">
-            <TabsList className="w-full justify-start overflow-x-auto">
+          <Tabs value={tab} onValueChange={setTab} className="w-full">
+            <div className="sm:hidden mb-2">
+              <Select value={tab} onValueChange={setTab}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="geral">Geral</SelectItem>
+                  <SelectItem value="jornada">Jornada</SelectItem>
+                  <SelectItem value="pre">Intervalo pré-assinalado</SelectItem>
+                  <SelectItem value="intra">Intrajornada</SelectItem>
+                  <SelectItem value="feriados">Feriados</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <TabsList className="hidden sm:grid w-full grid-cols-3 md:grid-cols-5 h-auto">
               <TabsTrigger value="geral">Geral</TabsTrigger>
               <TabsTrigger value="jornada">Jornada</TabsTrigger>
-              <TabsTrigger value="pre">Intervalo pré-assinalado</TabsTrigger>
+              <TabsTrigger value="pre" className="text-xs md:text-sm">Intervalo pré</TabsTrigger>
               <TabsTrigger value="intra">Intrajornada</TabsTrigger>
               <TabsTrigger value="feriados">Feriados</TabsTrigger>
             </TabsList>
@@ -395,8 +408,9 @@ export default function PontoEscalas() {
                   Preencher Ter-Sex com Segunda
                 </Button>
               </div>
-              <div className="overflow-x-auto rounded-md border">
-                <table className="w-full min-w-[900px] text-sm resp-table">
+              {/* Desktop/tablet table */}
+              <div className="hidden md:block overflow-x-auto rounded-md border">
+                <table className="w-full min-w-[900px] text-sm">
                   <thead className="bg-muted/50">
                     <tr className="text-left">
                       <th className="p-2">Dia</th>
@@ -438,6 +452,37 @@ export default function PontoEscalas() {
                     })}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile cards */}
+              <div className="md:hidden space-y-3">
+                {DIAS.map((d) => {
+                  const j = form.jornada[d.key];
+                  const disabled = j.classificacao !== "trabalho";
+                  return (
+                    <div key={d.key} className="rounded-md border p-3 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold text-sm">{d.label}</span>
+                        <Select value={j.classificacao} onValueChange={(v: any) => setJ(d.key, { classificacao: v })}>
+                          <SelectTrigger className="h-8 w-[150px]"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="trabalho">Trabalho</SelectItem>
+                            <SelectItem value="descanso">Descanso</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div><Label className="text-xs">1ª entrada</Label><Input className="h-9" type="time" disabled={disabled} value={j.entrada1} onChange={(e) => setJ(d.key, { entrada1: e.target.value })} /></div>
+                        <div><Label className="text-xs">1ª saída</Label><Input className="h-9" type="time" disabled={disabled} value={j.saida1} onChange={(e) => setJ(d.key, { saida1: e.target.value })} /></div>
+                        <div><Label className="text-xs">2ª entrada</Label><Input className="h-9" type="time" disabled={disabled} value={j.entrada2} onChange={(e) => setJ(d.key, { entrada2: e.target.value })} /></div>
+                        <div><Label className="text-xs">2ª saída</Label><Input className="h-9" type="time" disabled={disabled} value={j.saida2} onChange={(e) => setJ(d.key, { saida2: e.target.value })} /></div>
+                        <div><Label className="text-xs">Intervalo</Label><Input className="h-9" type="time" disabled={disabled} value={j.intervalo_principal} onChange={(e) => setJ(d.key, { intervalo_principal: e.target.value })} /></div>
+                        <div><Label className="text-xs">Virada</Label><Input className="h-9" type="time" value={j.horario_virada} onChange={(e) => setJ(d.key, { horario_virada: e.target.value })} /></div>
+                        <div className="col-span-2"><Label className="text-xs">Limite HE 50%</Label><Input className="h-9" type="time" value={j.limite_he50} onChange={(e) => setJ(d.key, { limite_he50: e.target.value })} /></div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </TabsContent>
 
