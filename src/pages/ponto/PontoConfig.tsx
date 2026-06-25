@@ -38,6 +38,18 @@ const items = [
     icon: Building2,
   },
   {
+    title: "Escalas e Jornadas",
+    description: "Horários de entrada/saída, intervalo de almoço e carga diária por dia da semana",
+    url: "/ponto/escalas",
+    icon: Clock,
+  },
+  {
+    title: "Regras CLT / Tolerâncias",
+    description: "Tolerância de atraso, hora extra, adicional noturno e limites legais",
+    url: "/ponto/clt-config",
+    icon: Scale,
+  },
+  {
     title: "Funcionários",
     description: "Cadastro de funcionários, jornadas e vínculos",
     url: "/ponto/funcionarios",
