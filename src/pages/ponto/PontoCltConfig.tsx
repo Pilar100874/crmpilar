@@ -22,6 +22,7 @@ export default function PontoCltConfig() {
   const { empresaId } = usePontoEmpresa();
   const [cfg, setCfg] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
+  const [tab, setTab] = useState("jornada");
 
   const load = async () => {
     if (!empresaId) return;
@@ -84,7 +85,6 @@ export default function PontoCltConfig() {
     { v: "notif", l: "Notificações", icon: Bell },
     { v: "ferias", l: "Férias", icon: Plane },
   ];
-  const [tab, setTab] = useState("jornada");
 
   return (
     <div className="space-y-4 p-3 sm:p-6">
