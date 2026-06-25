@@ -11,6 +11,8 @@ import {
   Wand2,
   Briefcase,
   Network,
+  Clock,
+  Scale,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
