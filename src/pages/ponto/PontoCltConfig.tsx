@@ -85,7 +85,6 @@ export default function PontoCltConfig() {
     { v: "notif", l: "Notificações", icon: Bell },
     { v: "ferias", l: "Férias", icon: Plane },
   ];
-  const [tab, setTab] = useState("jornada");
 
   return (
     <div className="space-y-4 p-3 sm:p-6">
