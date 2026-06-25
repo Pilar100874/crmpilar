@@ -57,7 +57,7 @@ export default function PontoAFD() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2"><FileText className="w-6 h-6" /> Arquivos Legais (Portaria 671/2021)</h1>
         <p className="text-muted-foreground text-sm">AFD com NSR sequencial e hash SHA-256 encadeado para fiscalização do MTE</p>

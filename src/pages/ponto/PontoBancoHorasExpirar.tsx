@@ -39,7 +39,7 @@ export default function PontoBancoHorasExpirar() {
   const sevColor = (dias: number) => dias <= 0 ? "destructive" : dias <= 7 ? "destructive" : dias <= 30 ? "default" : "secondary";
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Hourglass className="h-8 w-8 text-primary" />
