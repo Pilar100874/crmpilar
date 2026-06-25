@@ -821,3 +821,72 @@ All colors MUST be HSL.
   }
 }
 
+/* ==========================================================================
+   Módulo Ponto — proibir rolagem horizontal em qualquer tela.
+   Aplicado via .ponto-shell no PontoLayout. Mantém scroll vertical normal.
+   ========================================================================== */
+.ponto-shell,
+.ponto-shell * {
+  min-width: 0;
+}
+.ponto-shell {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+.ponto-shell main {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+/* Imagens, vídeos, iframes nunca estouram */
+.ponto-shell img,
+.ponto-shell video,
+.ponto-shell iframe,
+.ponto-shell canvas,
+.ponto-shell svg {
+  max-width: 100%;
+  height: auto;
+}
+/* Textos longos quebram em vez de empurrar layout */
+.ponto-shell pre,
+.ponto-shell code,
+.ponto-shell .break-anywhere {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+/* Tabelas largas: envolver com rolagem interna (não no body) */
+.ponto-shell table {
+  max-width: 100%;
+}
+/* Em telas pequenas/tablet, qualquer tabela rola dentro do próprio container */
+@media (max-width: 1023.98px) {
+  .ponto-shell .overflow-x-auto,
+  .ponto-shell .overflow-auto {
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ponto-shell table:not(.resp-table) {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Grids fixos não estouram */
+  .ponto-shell [class*="grid-cols-"] {
+    max-width: 100%;
+  }
+  /* Flex rows com muitos filhos quebram em vez de empurrar */
+  .ponto-shell .flex:not(.flex-nowrap):not(.no-wrap-mobile) {
+    flex-wrap: wrap;
+  }
+}
+/* Inputs e selects nunca ultrapassam o container */
+.ponto-shell input,
+.ponto-shell textarea,
+.ponto-shell select,
+.ponto-shell .input,
+.ponto-shell [role="combobox"] {
+  max-width: 100%;
+}
+
+
