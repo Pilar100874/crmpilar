@@ -74,39 +74,69 @@ export default function PontoCltConfig() {
     </div>
   );
 
+  const TABS = [
+    { v: "jornada", l: "Jornada (CLT)", icon: Scale },
+    { v: "noturno", l: "Noturno", icon: Moon },
+    { v: "banco", l: "Banco / Anti-dup", icon: Clock },
+    { v: "aprovacao", l: "Aprovação", icon: Shield },
+    { v: "acoes", l: "Ações por violação", icon: AlertTriangle },
+    { v: "fraude", l: "Anti-fraude", icon: AlertTriangle },
+    { v: "notif", l: "Notificações", icon: Bell },
+    { v: "ferias", l: "Férias", icon: Plane },
+  ];
+  const [tab, setTab] = useState("jornada");
+
   return (
-    <div className="space-y-4 p-4 sm:p-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="flex items-center gap-2 text-xl font-semibold sm:text-2xl">
-            <Shield className="h-5 w-5" /> Configuração CLT / Portaria 671
+    <div className="space-y-4 p-3 sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h2 className="flex items-center gap-2 text-lg font-semibold sm:text-2xl">
+            <Shield className="h-5 w-5 shrink-0" />
+            <span className="truncate">Configuração CLT / Portaria 671</span>
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Todos os limites legais são parametrizáveis. Acordo coletivo pode alterar valores padrão da CLT.
           </p>
         </div>
-        <Button onClick={save} disabled={saving}><Save className="mr-2 h-4 w-4" /> Salvar</Button>
+        <Button onClick={save} disabled={saving} className="w-full sm:w-auto">
+          <Save className="mr-2 h-4 w-4" /> Salvar
+        </Button>
       </div>
 
       <Alert>
         <AlertTriangle className="h-4 w-4" />
         <AlertTitle>Aviso jurídico</AlertTitle>
-        <AlertDescription>
+        <AlertDescription className="text-xs sm:text-sm">
           Valores padrão são os mínimos legais da CLT. Mudanças devem ser respaldadas por acordo coletivo, convenção
           ou acordo individual escrito. Bloqueios servem como camada de proteção; alertas geram anomalias para revisão.
         </AlertDescription>
       </Alert>
 
-      <Tabs defaultValue="jornada">
-        <TabsList className="flex flex-wrap">
-          <TabsTrigger value="jornada"><Scale className="mr-1 h-4 w-4" /> Jornada (CLT)</TabsTrigger>
-          <TabsTrigger value="noturno"><Moon className="mr-1 h-4 w-4" /> Noturno</TabsTrigger>
-          <TabsTrigger value="banco"><Clock className="mr-1 h-4 w-4" /> Banco / Anti-dup</TabsTrigger>
-          <TabsTrigger value="aprovacao"><Shield className="mr-1 h-4 w-4" /> Aprovação</TabsTrigger>
-          <TabsTrigger value="acoes"><AlertTriangle className="mr-1 h-4 w-4" /> Ações por violação</TabsTrigger>
-          <TabsTrigger value="fraude"><AlertTriangle className="mr-1 h-4 w-4" /> Anti-fraude</TabsTrigger>
-          <TabsTrigger value="notif"><Bell className="mr-1 h-4 w-4" /> Notificações</TabsTrigger>
-          <TabsTrigger value="ferias"><Plane className="mr-1 h-4 w-4" /> Férias</TabsTrigger>
+      <Tabs value={tab} onValueChange={setTab}>
+        {/* Mobile: Select. Tablet/Desktop: tabs em grade */}
+        <div className="sm:hidden">
+          <Select value={tab} onValueChange={setTab}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TABS.map((t) => (
+                <SelectItem key={t.v} value={t.v}>
+                  <span className="flex items-center gap-2">
+                    <t.icon className="h-4 w-4" /> {t.l}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <TabsList className="hidden sm:grid h-auto w-full grid-cols-4 gap-1 lg:grid-cols-8">
+          {TABS.map((t) => (
+            <TabsTrigger key={t.v} value={t.v} className="text-xs lg:text-sm">
+              <t.icon className="mr-1 h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{t.l}</span>
+            </TabsTrigger>
+          ))}
         </TabsList>
 
         <TabsContent value="jornada">
