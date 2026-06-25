@@ -15,7 +15,7 @@ export default function PontoLayout() {
   const { empresas, empresaId, setEmpresaId } = usePontoEmpresa();
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="ponto-shell min-h-screen bg-background text-foreground overflow-x-hidden max-w-[100vw]">
       <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur">
         <div className="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-3">
           <div className="flex items-center gap-2 min-w-0">
