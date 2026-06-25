@@ -121,6 +121,7 @@ export default function PontoEscalas() {
   const [editing, setEditing] = useState<Escala | null>(null);
   const [form, setForm] = useState(emptyForm());
   const [deleting, setDeleting] = useState<Escala | null>(null);
+  const [tab, setTab] = useState("geral");
 
   const load = async () => {
     if (!empresaId) return;
