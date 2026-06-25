@@ -310,10 +310,18 @@ export default function PontoEscalas() {
             <DialogTitle>{editing ? "Editar escala" : "Nova escala"}</DialogTitle>
           </DialogHeader>
 
-          <Tabs defaultValue="geral" className="w-full" value={undefined}>
-            {/* Mobile: Select; >=sm: Tabs */}
+          <Tabs value={tab} onValueChange={setTab} className="w-full">
             <div className="sm:hidden mb-2">
-              <TabSelectMobile />
+              <Select value={tab} onValueChange={setTab}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="geral">Geral</SelectItem>
+                  <SelectItem value="jornada">Jornada</SelectItem>
+                  <SelectItem value="pre">Intervalo pré-assinalado</SelectItem>
+                  <SelectItem value="intra">Intrajornada</SelectItem>
+                  <SelectItem value="feriados">Feriados</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <TabsList className="hidden sm:grid w-full grid-cols-3 md:grid-cols-5 h-auto">
               <TabsTrigger value="geral">Geral</TabsTrigger>
