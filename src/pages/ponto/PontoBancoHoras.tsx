@@ -36,9 +36,9 @@ export default function PontoBancoHoras() {
   const totalDebito = saldos.reduce((a, s) => a + Math.min(0, s.saldo_minutos), 0);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2"><Clock className="w-6 h-6" /> Banco de Horas</h1>
+        <h1 className="text-xl md:text-2xl font-bold flex items-center gap-2"><Clock className="w-5 h-5 md:w-6 md:h-6" /> Banco de Horas</h1>
         <p className="text-muted-foreground text-sm">Saldos, créditos, débitos e compensações</p>
       </div>
 
