@@ -11,6 +11,8 @@ import {
   Wand2,
   Briefcase,
   Network,
+  Clock,
+  Scale,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -34,6 +36,18 @@ const items = [
     description: "Unidades vinculadas à empresa selecionada (endereço, GPS, raio)",
     url: "/ponto/filiais",
     icon: Building2,
+  },
+  {
+    title: "Escalas e Jornadas",
+    description: "Horários de entrada/saída, intervalo de almoço e carga diária por dia da semana",
+    url: "/ponto/escalas",
+    icon: Clock,
+  },
+  {
+    title: "Regras CLT / Tolerâncias",
+    description: "Tolerância de atraso, hora extra, adicional noturno e limites legais",
+    url: "/ponto/clt-config",
+    icon: Scale,
   },
   {
     title: "Funcionários",
