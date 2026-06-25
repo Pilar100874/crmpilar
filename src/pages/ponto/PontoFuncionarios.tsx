@@ -396,7 +396,22 @@ export default function PontoFuncionarios() {
           </DialogHeader>
 
           <Tabs value={tab} onValueChange={setTab} className="w-full">
-            <TabsList className="flex flex-wrap h-auto gap-1">
+            <div className="sm:hidden mb-2">
+              <Select value={tab} onValueChange={setTab}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="definicoes">Definições</SelectItem>
+                  <SelectItem value="pessoais">Dados pessoais</SelectItem>
+                  <SelectItem value="contato">Contato/Endereço</SelectItem>
+                  <SelectItem value="empresa">Dados da empresa</SelectItem>
+                  <SelectItem value="dependentes">Dependentes</SelectItem>
+                  <SelectItem value="documentos">Documentos</SelectItem>
+                  <SelectItem value="especiais">Inf. especiais</SelectItem>
+                  <SelectItem value="extras">Config. extras</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <TabsList className="hidden sm:flex flex-wrap h-auto gap-1">
               <TabsTrigger value="definicoes">Definições</TabsTrigger>
               <TabsTrigger value="pessoais">Dados pessoais</TabsTrigger>
               <TabsTrigger value="contato">Contato/Endereço</TabsTrigger>

@@ -45,7 +45,7 @@ export default function PontoNotificacoes() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-3xl">
+    <div className="p-4 md:p-6 space-y-6 max-w-3xl">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2"><Bell className="w-6 h-6" /> Notificações</h1>
         <p className="text-muted-foreground text-sm">Configure alertas automáticos do sistema de ponto</p>

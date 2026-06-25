@@ -26,7 +26,7 @@ export default function PontoCompliance() {
   const funcAfetados = dados.reduce((s, d) => Math.max(s, d.funcionarios_afetados || 0), 0);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       <div className="flex items-center gap-3">
         <ShieldCheck className="h-8 w-8 text-primary" />
         <div>

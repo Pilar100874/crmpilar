@@ -54,7 +54,7 @@ export default function PontoImportacao() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2"><Upload className="w-6 h-6" /> Importação em Lote</h1>
         <p className="text-muted-foreground text-sm">Funcionários, escalas e feriados via CSV</p>

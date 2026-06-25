@@ -40,7 +40,7 @@ export default function PontoPreFechamento() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2"><ClipboardCheck className="w-6 h-6" /> Pré-Fechamento Mensal</h1>
         <p className="text-muted-foreground text-sm">Checklist de pendências antes de fechar o período para a folha</p>

@@ -41,19 +41,19 @@ export default function PontoFechamento() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2"><Lock className="h-6 w-6" /> Fechamento de folha</h1>
+        <h1 className="text-xl md:text-2xl font-bold flex items-center gap-2"><Lock className="h-5 w-5 md:h-6 md:w-6" /> Fechamento de folha</h1>
         <p className="text-muted-foreground text-sm">Calcula tudo do período e trava ajustes do mês.</p>
       </div>
 
-      <Card className="p-6">
-        <div className="flex items-end gap-3">
-          <div className="flex-1 max-w-xs">
+      <Card className="p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+          <div className="flex-1 sm:max-w-xs">
             <Label>Mês de referência</Label>
             <Input type="month" value={mes} onChange={(e) => setMes(e.target.value)} />
           </div>
-          <Button onClick={fechar} disabled={loading}>
+          <Button onClick={fechar} disabled={loading} className="w-full sm:w-auto">
             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
             Fechar folha (1 clique)
           </Button>
@@ -65,14 +65,14 @@ export default function PontoFechamento() {
         <div className="divide-y">
           {fechamentos.length === 0 && <p className="p-8 text-center text-sm text-muted-foreground">Nenhum período fechado ainda.</p>}
           {fechamentos.map((f) => (
-            <div key={f.id} className="p-4 flex items-center justify-between text-sm">
+            <div key={f.id} className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm">
               <div>
                 <div className="font-medium">{(f.mes_referencia || "").slice(0, 7)}</div>
                 <div className="text-xs text-muted-foreground">
                   Fechado em {new Date(f.fechado_em).toLocaleString("pt-BR")}
                 </div>
               </div>
-              <div className="flex gap-2 items-center">
+              <div className="flex flex-wrap gap-2 items-center">
                 <Badge variant="secondary">{f.total_funcionarios} func.</Badge>
                 <Badge variant="secondary">{((f.total_he_min || 0) / 60).toFixed(1)}h HE</Badge>
                 <Badge variant="secondary">{f.total_faltas || 0} faltas</Badge>

@@ -95,13 +95,13 @@ export default function PontoFerias() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 md:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><Plane className="w-6 h-6" /> Férias & Afastamentos</h1>
+          <h1 className="text-xl md:text-2xl font-bold flex items-center gap-2"><Plane className="w-5 h-5 md:w-6 md:h-6" /> Férias & Afastamentos</h1>
           <p className="text-muted-foreground text-sm">Gestão de períodos com bloqueio automático de marcação</p>
         </div>
-        <Button onClick={() => setOpen(true)}><Plus className="w-4 h-4 mr-2" />Novo</Button>
+        <Button onClick={() => setOpen(true)} className="w-full sm:w-auto"><Plus className="w-4 h-4 mr-2" />Novo</Button>
       </div>
 
       <Card>

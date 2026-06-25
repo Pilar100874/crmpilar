@@ -105,7 +105,7 @@ export default function PontoFaceEnroll() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl">
+    <div className="p-4 md:p-6 space-y-6 max-w-4xl">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <ScanFace className="h-6 w-6" /> Reconhecimento Facial 1:1
