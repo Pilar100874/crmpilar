@@ -191,34 +191,81 @@ const STEPS: Step[] = [
     url: "/ponto/equipamentos",
     ctaLabel: "Configurar equipamentos",
     whyItMatters:
-      "Os equipamentos são a fonte dos registros. Sem eles, o sistema só aceita registros via app.",
+      "Os equipamentos são a fonte dos registros físicos. Sem eles, o sistema só aceita registros via app/portal.",
     checklist: [
       "Cadastrar relógios físicos (IP e modelo)",
-      "Ou habilitar apenas ponto via app",
       "Vincular cada equipamento à filial correta",
+      "Configurar HTTPS e testar conexão",
+    ],
+    optional: true,
+  },
+  {
+    id: "webhooks-catracas",
+    title: "Webhook de Catracas (Hardware)",
+    description: "Token para integração de hardware de terceiros e catracas em tempo real.",
+    icon: Activity,
+    url: "/ponto/webhook-catracas",
+    ctaLabel: "Configurar Webhooks",
+    whyItMatters:
+      "Permite que catracas e catracas virtuais enviem batidas instantaneamente ao sistema via API.",
+    checklist: [
+      "Gerar token de acesso do Webhook",
+      "Cadastrar as URLs das catracas integradas",
+      "Monitorar o status das últimas comunicações",
     ],
     optional: true,
   },
   {
     id: "antifraude",
-    title: "Antifraude (Geofence e Rede)",
-    description: "Defina raio de localização e redes WiFi autorizadas.",
+    title: "Antifraude e Biometria Facial",
+    description: "Defina raio de localização (Geofence) e gerencie matrículas de biometria facial.",
     icon: ShieldCheck,
     url: "/ponto/antifraude",
     ctaLabel: "Configurar antifraude",
     whyItMatters:
-      "Bloqueia batidas fora do local de trabalho. Essencial para registro via app.",
+      "Garante a autenticidade de cada marcação via aplicativo usando reconhecimento facial e cercas geográficas.",
     checklist: [
       "Definir coordenada e raio de cada filial",
       "Listar redes WiFi confiáveis (opcional)",
-      "Ativar validação por foto/biometria",
+      "Ativar validação por foto/biometria facial",
+    ],
+    optional: true,
+  },
+  {
+    id: "clt-config",
+    title: "Configuração CLT / Portaria 671",
+    description: "Defina os parâmetros legais de tolerância, jornada noturna e regras CLT.",
+    icon: Scale,
+    url: "/ponto/clt-config",
+    ctaLabel: "Configurar CLT / Portaria 671",
+    whyItMatters:
+      "Evita multas trabalhistas garantindo que todas as regras de tolerância, banco de horas e adicionais noturnos estejam conforme as Portarias MTE.",
+    checklist: [
+      "Definir tempo de tolerância legal (padrão 10 minutos)",
+      "Ajustar regras de hora noturna reduzida",
+      "Configurar regras de DSR e descanso mínimo",
+    ],
+  },
+  {
+    id: "acordos-coletivos",
+    title: "Acordos e Convenções Coletivas",
+    description: "Cadastre as regras de sindicatos, adicionais personalizados (ex: 60%) e regras de DSR.",
+    icon: FileText,
+    url: "/ponto/acordos-coletivos",
+    ctaLabel: "Configurar Acordos Coletivos",
+    whyItMatters:
+      "A CLT permite flexibilização de adicionais de horas extras ou banco de horas mediante acordo ou convenção coletiva por sindicato.",
+    checklist: [
+      "Cadastrar o acordo ou convenção coletiva",
+      "Definir faixas customizadas de horas extras (ex: 50%, 60%, 100%)",
+      "Associar os funcionários ou equipes abrangidos pelo acordo",
     ],
     optional: true,
   },
   {
     id: "escalas",
-    title: "Escalas / Jornadas",
-    description: "Defina as jornadas de trabalho (5x2, 6x1, 12x36) antes de cadastrar funcionários.",
+    title: "Escalas e Jornadas",
+    description: "Defina as jornadas de trabalho (5x2, 6x1, 12x36, etc.).",
     icon: CalendarClock,
     url: "/ponto/escalas",
     ctaLabel: "Abrir escalas",
@@ -226,8 +273,8 @@ const STEPS: Step[] = [
       "Toda funcionário precisa estar vinculado a uma escala. Sem ela não é possível calcular horas trabalhadas, banco de horas ou extras.",
     checklist: [
       "Cadastrar a(s) escala(s) padrão da empresa",
-      "Configurar horários por dia da semana",
-      "Definir intervalo e carga semanal",
+      "Configurar horários por dia da semana e folgas",
+      "Definir intervalo mínimo e carga semanal",
     ],
     check: async ({ empresaId }) => {
       if (!empresaId) return false;
@@ -237,6 +284,22 @@ const STEPS: Step[] = [
         .eq("empresa_id", empresaId);
       return (count ?? 0) > 0;
     },
+  },
+  {
+    id: "compensacao",
+    title: "Compensação de Jornada (Eventos/Copa)",
+    description: "Gerencie dispensas parciais ou pontes de feriados com compensação legal.",
+    icon: Calendar,
+    url: "/ponto/compensacao",
+    ctaLabel: "Gerenciar Compensações",
+    whyItMatters:
+      "Permite dispensar funcionários em dias de jogos, feriados ou eventos corporativos, exigindo compensação planejada de minutos diários dentro do limite legal de 2h diárias.",
+    checklist: [
+      "Criar acordo de compensação coletivo ou individual",
+      "Definir data do evento ou ponte e período de compensação",
+      "Vincular participantes e colher assinaturas digitais",
+    ],
+    optional: true,
   },
   {
     id: "funcionarios",
@@ -278,9 +341,41 @@ const STEPS: Step[] = [
     whyItMatters:
       "Sem o coletor, registros dos relógios físicos não chegam ao sistema.",
     checklist: [
-      "Baixar instalador",
+      "Baixar instalador para Windows, Mac ou Linux",
       "Configurar com a chave da empresa",
       "Deixar rodando em uma máquina sempre ligada",
+    ],
+    optional: true,
+  },
+  {
+    id: "aprovacao-regras",
+    title: "Fluxos de Aprovação Multinível",
+    description: "Defina a hierarquia de aprovadores para ajustes e justificativas.",
+    icon: GitFork,
+    url: "/ponto/aprovacoes",
+    ctaLabel: "Configurar Aprovações",
+    whyItMatters:
+      "Garante que os ajustes propostos pelos funcionários ou líderes passem por uma trilha de auditoria e aprovação com assinatura eletrônica.",
+    checklist: [
+      "Cadastrar regras de aprovação multinível",
+      "Definir quem aprova cada departamento ou equipe",
+      "Garantir cumprimento do fluxo nas apurações",
+    ],
+    optional: true,
+  },
+  {
+    id: "portal-colaborador",
+    title: "Portal do Colaborador",
+    description: "Monitore o portal que os funcionários utilizam para ver espelho e fazer solicitações.",
+    icon: Smartphone,
+    url: "/ponto/portal-funcionario",
+    ctaLabel: "Ver Portal do Colaborador",
+    whyItMatters:
+      "Dá transparência total ao colaborador, que pode visualizar suas horas, saldo de banco de horas e solicitar férias ou abonos.",
+    checklist: [
+      "Verificar se o portal está ativo para os funcionários",
+      "Testar a visualização do espelho de ponto",
+      "Testar envio de atestados e pedidos de abono",
     ],
     optional: true,
   },
