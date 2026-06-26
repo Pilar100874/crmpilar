@@ -131,7 +131,7 @@ export default function PontoCompensacao() {
     if (!form.titulo || !form.data_inicio_compensacao || !form.data_fim_compensacao)
       return toast.error("Preencha título e período de compensação");
     const dispensados = (form.dias_dispensados || "").split(",").map((s) => s.trim()).filter(Boolean);
-    const { error } = await supabase.from("ponto_compensacao_acordos").insert({
+    const { error } = await (supabase as any).from("ponto_compensacao_acordos").insert({
       empresa_id: empresaId,
       titulo: form.titulo,
       motivo: form.motivo,
@@ -164,18 +164,18 @@ export default function PontoCompensacao() {
     loadAcordos();
   }
   async function concluir(a: Acordo) {
-    const { error } = await supabase.from("ponto_compensacao_acordos").update({ status: "concluido" }).eq("id", a.id);
+    const { error } = await (supabase as any).from("ponto_compensacao_acordos").update({ status: "concluido" }).eq("id", a.id);
     if (error) return toast.error(error.message);
     loadAcordos();
   }
   async function cancelar(a: Acordo) {
-    const { error } = await supabase.from("ponto_compensacao_acordos").update({ status: "cancelado" }).eq("id", a.id);
+    const { error } = await (supabase as any).from("ponto_compensacao_acordos").update({ status: "cancelado" }).eq("id", a.id);
     if (error) return toast.error(error.message);
     loadAcordos();
   }
   async function excluir() {
     if (!delId) return;
-    const { error } = await supabase.from("ponto_compensacao_acordos").delete().eq("id", delId);
+    const { error } = await (supabase as any).from("ponto_compensacao_acordos").delete().eq("id", delId);
     if (error) return toast.error(error.message);
     toast.success("Excluído");
     setDelId(null);
@@ -199,13 +199,13 @@ export default function PontoCompensacao() {
       status: "pendente",
     }));
     if (!rows.length) return toast.error("Selecione funcionários");
-    const { error } = await supabase.from("ponto_compensacao_participantes").upsert(rows, { onConflict: "acordo_id,funcionario_id" });
+    const { error } = await (supabase as any).from("ponto_compensacao_participantes").upsert(rows, { onConflict: "acordo_id,funcionario_id" });
     if (error) return toast.error(error.message);
     toast.success(`${rows.length} adicionado(s)`);
     openParticipantes(openPart);
   }
   async function removerPart(id: string) {
-    await supabase.from("ponto_compensacao_participantes").delete().eq("id", id);
+    await (supabase as any).from("ponto_compensacao_participantes").delete().eq("id", id);
     if (openPart) openParticipantes(openPart);
   }
   async function marcarAceito(id: string) {
