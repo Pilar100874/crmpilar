@@ -146,7 +146,9 @@ async function lerBatidasControlID(equip, lastNSR = 0) {
     port: equip.porta || 80,
     https: resolverProtocolo(equip),
     login: equip.usuario || 'admin',
-    password: equip.chave_comunicacao || equip.senha || 'admin',
+    // Para login no Control iD use a senha do usuário do relógio.
+    // A chave de comunicação fica como fallback para instalações antigas.
+    password: equip.senha || equip.chave_comunicacao || 'admin',
   };
   let session;
   const r = await tentarLogin(cfg);
@@ -161,4 +163,4 @@ async function lerBatidasControlID(equip, lastNSR = 0) {
   }
 }
 
-module.exports = { lerBatidasControlID, parseAFDPunches, login, getAFD, logout };
+module.exports = { lerBatidasControlID, parseAFDPunches, login, getAFD, logout, resolverProtocolo, tentarLogin };

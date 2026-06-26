@@ -38,6 +38,11 @@ const MODELOS = [
   "Outro",
 ];
 
+const aplicarPresetConexao = (tipo: "http80" | "https443") => {
+  if (tipo === "https443") return { porta: "443", usa_https: true };
+  return { porta: "80", usa_https: false };
+};
+
 const FORM_INICIAL = {
   tipo_relogio: "REP-C",
   codigo: "",
@@ -399,9 +404,31 @@ export default function PontoEquipamentos() {
                 value={f.porta}
                 onChange={(e) => setF({ ...f, porta: e.target.value })}
               />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Control iD normalmente usa <b>80 sem HTTPS</b>. Se o relógio estiver configurado com SSL/HTTPS, use <b>443 com HTTPS</b>.
+              </p>
             </div>
 
             <div className="sm:col-span-2 flex flex-col gap-3 rounded-md border bg-muted/30 p-3">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant={!f.usa_https && f.porta === "80" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setF({ ...f, ...aplicarPresetConexao("http80") })}
+                >
+                  Usar porta 80 sem HTTPS
+                </Button>
+                <Button
+                  type="button"
+                  variant={f.usa_https && f.porta === "443" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setF({ ...f, ...aplicarPresetConexao("https443") })}
+                >
+                  Usar porta 443 com HTTPS
+                </Button>
+              </div>
+
               <div className="flex items-center gap-2">
                 <Switch
                   id="usa_https"
@@ -463,7 +490,7 @@ export default function PontoEquipamentos() {
               )}
 
               <p className="w-full text-xs text-muted-foreground">
-                <b>Observação:</b> O teste pelo navegador exige que você esteja na mesma rede local que o relógio e que ele possua IP acessível de fora ou HTTPS configurado. A opção de <b>Testar via Coletor Desktop</b> delega o teste ao Coletor rodando dentro da sua infraestrutura, sem bloqueios de rede.
+                <b>Orientação:</b> para Control iD/iDClass comece com <b>porta 80 sem HTTPS</b>. Se continuar offline ou o relógio estiver configurado para SSL, altere para <b>porta 443 com HTTPS</b>. O teste pelo navegador só valida IP público/acessível pela internet; para IP interno como 192.168.x.x use <b>Testar via Coletor Desktop</b> com o coletor aberto e rodando na mesma rede do relógio.
               </p>
             </div>
 

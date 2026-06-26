@@ -101,7 +101,7 @@ async function pollOnce() {
             port: eq.porta || 80,
             https: resolverProtocolo(eq),
             login: eq.usuario || 'admin',
-            password: eq.chave_comunicacao || eq.senha || 'admin',
+            password: eq.senha || eq.chave_comunicacao || 'admin',
           };
           await tentarLogin(testCfg);
           resultado_teste = "Sucesso: Conectado com sucesso pelo Coletor Desktop!";
