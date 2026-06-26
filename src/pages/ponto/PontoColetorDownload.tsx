@@ -5,7 +5,14 @@ import { Download, Monitor, Apple, Cpu, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 const platforms = [
-  { id: "win", label: "Windows", file: "PontoColetor-Windows.zip", icon: Monitor, badge: "Win 10/11 · x64" },
+  { 
+    id: "win", 
+    label: "Windows", 
+    file: "PontoColetor-Setup.exe", 
+    icon: Monitor, 
+    badge: "Instalador Setup (.exe) · x64",
+    url: "/__l5e/assets-v1/5b1982ea-4284-4c95-ae16-8df829ab91df/PontoColetor-Setup.exe"
+  },
   { id: "mac", label: "macOS", file: "PontoColetor-macOS.zip", icon: Apple, badge: "Apple Silicon / Intel" },
   { id: "linux", label: "Linux", file: "PontoColetor-Linux.tar.gz", icon: Cpu, badge: "Debian/Ubuntu/Fedora" },
 ];
@@ -13,9 +20,19 @@ const platforms = [
 export default function PontoColetorDownload() {
   const [downloading, setDownloading] = useState<string | null>(null);
 
-  const baixar = async (file: string, id: string) => {
+  const baixar = async (file: string, id: string, customUrl?: string) => {
     setDownloading(id);
     try {
+      if (customUrl) {
+        const a = document.createElement("a");
+        a.href = customUrl;
+        a.download = file;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        toast.success("Download iniciado");
+        return;
+      }
       const res = await fetch(`/coletor/${file}`);
       if (!res.ok) throw new Error("Arquivo indisponível");
       const blob = await res.blob();
