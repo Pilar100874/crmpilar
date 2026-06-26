@@ -115,6 +115,63 @@ export default function PontoColetorDownload() {
         ))}
       </div>
 
+      <Card className="border-primary/20 bg-primary/5 dark:bg-primary/5">
+        <CardContent className="space-y-4 p-5">
+          <div className="flex items-center gap-2">
+            <Database className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold text-foreground">Dados de Conexão (Para colar no Coletor Desktop)</h3>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Ao configurar o Coletor Desktop, use estes dados exatos para conectá-lo à nuvem:
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5 rounded-lg border bg-background p-3.5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <Database className="h-3.5 w-3.5 text-primary" /> URL do Supabase
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => {
+                    navigator.clipboard.writeText("https://ioxugupvxlcdweldocmq.supabase.co");
+                    toast.success("URL copiada!");
+                  }}
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <code className="block select-all break-all rounded bg-muted/60 p-2 text-xs font-mono text-foreground font-medium border">
+                https://ioxugupvxlcdweldocmq.supabase.co
+              </code>
+            </div>
+
+            <div className="space-y-1.5 rounded-lg border bg-background p-3.5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <Key className="h-3.5 w-3.5 text-yellow-500" /> Chave Anon (Anon Key)
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => {
+                    navigator.clipboard.writeText("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc");
+                    toast.success("Chave Anon copiada!");
+                  }}
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <code className="block select-all break-all rounded bg-muted/60 p-2 text-xs font-mono text-foreground font-medium border truncate max-w-full" title="Clique para copiar">
+                eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...eFkzWc
+              </code>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardContent className="space-y-3 p-5">
           <h3 className="font-semibold">Como instalar</h3>
