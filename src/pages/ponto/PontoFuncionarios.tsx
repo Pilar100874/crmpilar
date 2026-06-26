@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, Pencil, Trash2 } from "lucide-react";
+import { Plus, Users, Pencil, Trash2, Layers } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import PontoFuncionariosLoteDialog from "@/components/ponto/PontoFuncionariosLoteDialog";
 import {
   Dialog,
   DialogContent,
@@ -122,7 +124,10 @@ export default function PontoFuncionarios() {
   const [f, setF] = useState<any>(emptyForm);
   const [tab, setTab] = useState("definicoes");
 
-  // child collections
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [loteOpen, setLoteOpen] = useState(false);
+
+
   const [dependentes, setDependentes] = useState<any[]>([]);
   const [documentos, setDocumentos] = useState<any[]>([]);
   const [novoDep, setNovoDep] = useState<any>({ tipo: "", nome: "", cpf: "", data_nascimento: "", deduz_irrf: false, salario_familia: false, previdenciario: false });
@@ -335,9 +340,16 @@ export default function PontoFuncionarios() {
           <h2 className="text-xl font-semibold sm:text-2xl">Funcionários</h2>
           <p className="text-sm text-muted-foreground">Cadastro completo de colaboradores</p>
         </div>
-        <Button onClick={openCreate} disabled={!empresaId} className="w-full sm:w-auto">
-          <Plus className="mr-2 h-4 w-4" /> Novo
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          {selected.size > 0 && (
+            <Button variant="secondary" onClick={() => setLoteOpen(true)} className="w-full sm:w-auto">
+              <Layers className="mr-2 h-4 w-4" /> Editar em lote ({selected.size})
+            </Button>
+          )}
+          <Button onClick={openCreate} disabled={!empresaId} className="w-full sm:w-auto">
+            <Plus className="mr-2 h-4 w-4" /> Novo
+          </Button>
+        </div>
       </div>
 
       {items.length === 0 ? (
@@ -354,6 +366,15 @@ export default function PontoFuncionarios() {
           <table className="w-full min-w-[640px] text-sm resp-table">
             <thead className="bg-muted/50">
               <tr className="text-left">
+                <th className="p-3 w-10">
+                  <Checkbox
+                    checked={items.length > 0 && selected.size === items.length}
+                    onCheckedChange={(v) => {
+                      if (v) setSelected(new Set(items.map((i) => i.id)));
+                      else setSelected(new Set());
+                    }}
+                  />
+                </th>
                 <th className="p-3">Nome</th>
                 <th className="p-3 hidden sm:table-cell">CPF</th>
                 <th className="p-3 hidden md:table-cell">Matrícula</th>
@@ -365,6 +386,16 @@ export default function PontoFuncionarios() {
             <tbody>
               {items.map((x) => (
                 <tr key={x.id} className="border-t">
+                  <td className="p-3">
+                    <Checkbox
+                      checked={selected.has(x.id)}
+                      onCheckedChange={(v) => {
+                        const ns = new Set(selected);
+                        if (v) ns.add(x.id); else ns.delete(x.id);
+                        setSelected(ns);
+                      }}
+                    />
+                  </td>
                   <td className="p-3 font-medium">{x.nome} {x.sobrenome || ""}</td>
                   <td className="p-3 hidden sm:table-cell">{maskCPF(x.cpf)}</td>
                   <td className="p-3 hidden md:table-cell">{x.matricula}</td>
@@ -741,6 +772,20 @@ export default function PontoFuncionarios() {
         onConfirm={remove}
         itemName={deleting?.nome ?? ""}
         title="Excluir funcionário"
+      />
+
+      <PontoFuncionariosLoteDialog
+        open={loteOpen}
+        onOpenChange={setLoteOpen}
+        selectedIds={Array.from(selected)}
+        empresaId={empresaId || ""}
+        cargos={cargos}
+        departamentos={departamentos}
+        equipes={equipes}
+        filiais={filiais}
+        escalas={escalas}
+        exportLayouts={exportLayouts.map((l) => ({ id: l.id, descricao: l.descricao }))}
+        onSaved={() => { setSelected(new Set()); load(); }}
       />
     </div>
   );
