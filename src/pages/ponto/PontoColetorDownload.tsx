@@ -185,13 +185,16 @@ export default function PontoColetorDownload() {
                 <li>Extraia todo o conteúdo do arquivo <strong>PontoColetor-Windows.zip</strong> para uma pasta permanente de sua preferência (ex: <code>C:\PontoColetor</code> ou dentro da sua pasta de <code>Documentos</code>).</li>
                 <li>Abra essa pasta extraída. Você verá exatamente os arquivos exibidos na imagem (incluindo o executável principal <strong>PontoColetor.exe</strong> com o ícone do aplicativo).</li>
                 <li>
-                  <strong className="text-amber-600 dark:text-amber-400">⚠️ Se aparecer o aviso do Windows (SmartScreen):</strong>
+                  <strong className="text-amber-600 dark:text-amber-400">⚠️ Se aparecer o aviso do Windows toda vez que abrir:</strong>
                   <p className="text-xs text-muted-foreground pl-4 mt-1">
-                    Como o aplicativo foi desenvolvido sob medida para a sua empresa e baixado diretamente da nuvem, o Windows pode exibir uma tela azul ou cinza dizendo que o app não é verificado pela Microsoft.
+                    Essa mensagem não é do coletor; é uma configuração do Windows chamada "Escolher onde obter aplicativos". Ela aparece quando o Windows está configurado para preferir ou permitir apenas aplicativos da Microsoft Store.
                   </p>
                   <ul className="ml-8 list-disc space-y-1 text-xs mt-1 text-foreground">
-                    <li>Basta clicar no botão <strong>"Instalar mesmo assim"</strong> (ou em <em>"Mais informações"</em> e depois em <strong>"Executar assim mesmo"</strong>).</li>
-                    <li>Este aviso só aparece na primeira vez que você executa o aplicativo!</li>
+                    <li>Clique em <strong>"Instalar mesmo assim"</strong> para abrir agora.</li>
+                    <li>Para parar de aparecer: abra <strong>Configurações do Windows</strong> → <strong>Aplicativos</strong> → <strong>Configurações avançadas de aplicativos</strong>.</li>
+                    <li>Em <strong>"Escolher onde obter aplicativos"</strong>, selecione <strong>"Qualquer lugar"</strong>.</li>
+                    <li>Se essa opção estiver bloqueada, peça ao TI/administrador do Windows para liberar apps fora da Microsoft Store.</li>
+                    <li>Opcional: clique com o botão direito no arquivo <strong>PontoColetor.exe</strong> → <strong>Propriedades</strong> → marque <strong>Desbloquear</strong> → <strong>Aplicar</strong>.</li>
                   </ul>
                 </li>
                 <li><strong>Para criar um atalho na sua Área de Trabalho:</strong>
