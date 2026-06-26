@@ -64,18 +64,30 @@
       document.getElementById('equips').innerHTML = (s.equipamentos || []).map(e =>
         `<div>📟 ${e.nome} — ${e.ip}:${e.porta || 4370} <span class="${e.status === 'online' ? 'ok' : 'err'}">[${e.status}]</span></div>`
       ).join('') || '<em>Nenhum equipamento cadastrado no CRM</em>';
+    }
+    async function carregarConfig() {
+      const cfg = await window.coletor.loadConfig();
       ['url','anonKey','email','password'].forEach(k => {
         const el = document.getElementById(k);
-        if (!el.value && s.config?.[k]) el.value = s.config[k];
+        if (el && cfg?.[k]) el.value = cfg[k];
       });
     }
     async function start() { await window.coletor.start(); refresh(); }
     async function stop()  { await window.coletor.stop();  refresh(); }
     async function salvar() {
-      // Salvo via fetch a um pseudo handler — simplificação: regrava via getStatus path
-      alert('Configuração salva. Reinicie o coletor.');
+      const cfg = {
+        url: document.getElementById('url').value.trim(),
+        anonKey: document.getElementById('anonKey').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value,
+      };
+      if (!cfg.url || !cfg.anonKey) { alert('Preencha URL e Anon Key'); return; }
+      await window.coletor.saveConfig(cfg);
+      alert('✅ Configuração salva e coletor reiniciado!');
+      refresh();
     }
     setInterval(refresh, 5000);
+    carregarConfig();
     refresh();
   </script>
 </body>
