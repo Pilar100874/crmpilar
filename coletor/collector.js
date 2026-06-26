@@ -1,8 +1,12 @@
 // Coletor: poll de equipamentos, busca batidas via protocolo do fabricante e envia ao CRM.
-const { createClient } = require('@supabase/supabase-js');
+// PRE-CONFIGURADO: URL e Anon Key embutidas. Não exige login do usuário.
 const fs = require('fs');
 const path = require('path');
 const { lerBatidasControlID } = require('./controlid');
+
+// 🔧 Configuração embutida — substitua se republicar para outro tenant
+const DEFAULT_URL = process.env.PONTO_SUPABASE_URL || 'https://ioxugupvxlcdweldocmq.supabase.co';
+const DEFAULT_ANON_KEY = process.env.PONTO_SUPABASE_ANON || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc';
 
 const CONFIG_PATH = path.join(require('os').homedir(), '.ponto-coletor.json');
 const STATE = {
@@ -14,31 +18,34 @@ const STATE = {
   lastErrors: {},
 };
 
-// Último NSR por equipamento (evita reenviar batidas já importadas)
 const lastNSRByEquip = {};
-
-function loadConfig() {
-  try { return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8')); }
-  catch { return { url: '', anonKey: '', email: '', password: '' }; }
-}
-function saveConfig(cfg) { fs.writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2)); supabase = null; }
-
-let supabase = null;
 let timer = null;
 
-async function ensureClient() {
+function loadConfig() {
+  let saved = {};
+  try { saved = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8')); } catch {}
+  return {
+    url: saved.url || DEFAULT_URL,
+    anonKey: saved.anonKey || DEFAULT_ANON_KEY,
+  };
+}
+function saveConfig(cfg) { fs.writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2)); }
+
+async function callBootstrap(statusUpdates = []) {
   const cfg = loadConfig();
-  if (!cfg.url || !cfg.anonKey) throw new Error('Configure URL e chave do Supabase');
-  if (!supabase) {
-    supabase = createClient(cfg.url, cfg.anonKey, { auth: { persistSession: false } });
-    if (cfg.email && cfg.password) {
-      await supabase.auth.signInWithPassword({ email: cfg.email, password: cfg.password });
-    }
-  }
-  return supabase;
+  const resp = await fetch(`${cfg.url}/functions/v1/ponto-coletor-bootstrap`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': cfg.anonKey,
+      'Authorization': `Bearer ${cfg.anonKey}`,
+    },
+    body: JSON.stringify({ status_updates: statusUpdates }),
+  });
+  if (!resp.ok) throw new Error(`bootstrap HTTP ${resp.status}`);
+  return await resp.json();
 }
 
-// Despacha por marca usando o campo `modelo` cadastrado no CRM.
 async function lerBatidas(equip) {
   const modelo = (equip.modelo || '').toLowerCase();
   if (modelo.includes('control') || modelo.includes('idclass') || modelo.includes('idx') || modelo.includes('idface')) {
@@ -47,17 +54,15 @@ async function lerBatidas(equip) {
     if (novas.length) lastNSRByEquip[equip.id] = Math.max(...novas.map(p => p.nsr));
     return novas;
   }
-  // ZKTeco / Henry / Topdata: ainda não implementados nativamente.
-  // Para esses use a importação AFD manual ou configure webhook em tempo real.
   return [];
 }
 
 async function pollOnce() {
   try {
-    const sb = await ensureClient();
-    const { data: equips, error } = await sb.from('ponto_equipamentos').select('*').eq('ativo', true);
-    if (error) throw error;
-    STATE.equipamentos = equips || [];
+    const cfg = loadConfig();
+    const boot = await callBootstrap([]);
+    STATE.equipamentos = boot.equipamentos || [];
+    const updates = [];
 
     for (const eq of STATE.equipamentos) {
       let batidas = [];
@@ -73,16 +78,9 @@ async function pollOnce() {
         STATE.errors++;
       }
 
-      await sb.from('ponto_equipamentos').update({
-        ultima_sync: new Date().toISOString(),
-        status: statusNovo,
-        ultimo_erro: erroMsg,
-      }).eq('id', eq.id);
+      updates.push({ id: eq.id, status: statusNovo, ultimo_erro: erroMsg, ultima_sync: new Date().toISOString() });
 
       if (batidas.length === 0) continue;
-
-      // Envia em lote pro ingest (valida chave + dedup + bloqueios)
-      const cfg = loadConfig();
       try {
         const resp = await fetch(`${cfg.url}/functions/v1/ponto-coletor-ingest`, {
           method: 'POST',
@@ -97,10 +95,7 @@ async function pollOnce() {
             equipamento_id: eq.id,
             chave_comunicacao: eq.chave_comunicacao,
             registros: batidas.map(b => ({
-              cpf: b.cpf,
-              data_hora: b.data_hora,
-              tipo: b.tipo,
-              equipamento_id: eq.id,
+              cpf: b.cpf, data_hora: b.data_hora, tipo: b.tipo, equipamento_id: eq.id,
             })),
           }),
         });
@@ -110,6 +105,11 @@ async function pollOnce() {
         STATE.errors++;
         console.error('[coletor] ingest', e.message);
       }
+    }
+
+    // Envia status em batch
+    if (updates.length) {
+      try { await callBootstrap(updates); } catch (e) { console.error('[coletor] status', e.message); }
     }
     STATE.lastSync = new Date().toISOString();
   } catch (e) {

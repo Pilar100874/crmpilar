@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "asset_id": "d7337e7b-ad77-476c-a803-4a579ab8ba64",
+  "asset_id": "ca215edd-d50f-4dd3-94d5-adce497b0bbc",
   "project_id": "1afb47be-da35-40df-a390-d0f257cc5ab1",
-  "url": "/__l5e/assets-v1/d7337e7b-ad77-476c-a803-4a579ab8ba64/PontoColetor-Linux.tar.gz",
-  "r2_key": "a/v1/1afb47be-da35-40df-a390-d0f257cc5ab1/d7337e7b-ad77-476c-a803-4a579ab8ba64/PontoColetor-Linux.tar.gz",
+  "url": "/__l5e/assets-v1/ca215edd-d50f-4dd3-94d5-adce497b0bbc/PontoColetor-Linux.tar.gz",
+  "r2_key": "a/v1/1afb47be-da35-40df-a390-d0f257cc5ab1/ca215edd-d50f-4dd3-94d5-adce497b0bbc/PontoColetor-Linux.tar.gz",
   "original_filename": "PontoColetor-Linux.tar.gz",
-  "size": 107263848,
+  "size": 105611986,
   "content_type": "application/x-gzip",
-  "created_at": "2026-06-26T14:02:05Z"
+  "created_at": "2026-06-26T18:06:17Z"
 }
