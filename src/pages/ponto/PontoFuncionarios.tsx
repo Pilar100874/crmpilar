@@ -124,7 +124,10 @@ export default function PontoFuncionarios() {
   const [f, setF] = useState<any>(emptyForm);
   const [tab, setTab] = useState("definicoes");
 
-  // child collections
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [loteOpen, setLoteOpen] = useState(false);
+
+
   const [dependentes, setDependentes] = useState<any[]>([]);
   const [documentos, setDocumentos] = useState<any[]>([]);
   const [novoDep, setNovoDep] = useState<any>({ tipo: "", nome: "", cpf: "", data_nascimento: "", deduz_irrf: false, salario_familia: false, previdenciario: false });
