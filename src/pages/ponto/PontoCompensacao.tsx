@@ -124,7 +124,8 @@ export default function PontoCompensacao() {
       }).filter((d) => !form.excluir_fds || !isWeekend(d));
       const totalMin = dias.length * Number(form.minutos_por_dia || 0);
       const dispCount = (form.dias_dispensados || "").split(",").map((s) => s.trim()).filter(Boolean).length;
-      const necessario = dispCount * 8 * 60; // 8h/dia padrão
+      const cargaDispMin = form.tipo_dispensa === "dia_completo" ? 480 : Number(form.minutos_dispensados || 180);
+      const necessario = dispCount * cargaDispMin;
       return { diasUteis: dias.length, totalMin, necessario, dispCount, datas: dias.map((d) => format(d, "yyyy-MM-dd")) };
     } catch { return null; }
   }, [form]);
@@ -149,6 +150,8 @@ export default function PontoCompensacao() {
       dias_compensacao: previa?.datas || [],
       observacoes: form.observacoes,
       status: "rascunho",
+      tipo_dispensa: form.tipo_dispensa,
+      minutos_dispensados: form.tipo_dispensa === "dia_completo" ? 480 : Number(form.minutos_dispensados),
     });
     if (error) return toast.error(error.message);
     toast.success("Acordo criado");
