@@ -129,7 +129,7 @@ async function tentarLogin(cfg) {
         throw new Error('Credenciais inválidas (usuário/senha do relógio). Verifique o campo Usuário e Chave de Comunicação.');
       }
       // Erros de rede/protocolo → continua tentando
-      if (!/WRONG_VERSION_NUMBER|EPROTO|ECONNRESET|ECONNREFUSED|EHOSTUNREACH|ETIMEDOUT|socket hang up|timeout|HTTP\/1\.1 400/i.test(msg)) {
+      if (!/WRONG_VERSION_NUMBER|EPROTO|ECONNRESET|ECONNREFUSED|EHOSTUNREACH|ETIMEDOUT|socket hang up|timeout|HTTP\/1\.1 400|HPE_|Parse Error/i.test(msg)) {
         // Erro não recuperável
         throw e;
       }
