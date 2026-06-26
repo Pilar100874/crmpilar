@@ -184,6 +184,16 @@ export default function PontoColetorDownload() {
               <ol className="ml-4 list-decimal space-y-2">
                 <li>Extraia todo o conteúdo do arquivo <strong>PontoColetor-Windows.zip</strong> para uma pasta permanente de sua preferência (ex: <code>C:\PontoColetor</code> ou dentro da sua pasta de <code>Documentos</code>).</li>
                 <li>Abra essa pasta extraída. Você verá exatamente os arquivos exibidos na imagem (incluindo o executável principal <strong>PontoColetor.exe</strong> com o ícone do aplicativo).</li>
+                <li>
+                  <strong className="text-amber-600 dark:text-amber-400">⚠️ Se aparecer o aviso do Windows (SmartScreen):</strong>
+                  <p className="text-xs text-muted-foreground pl-4 mt-1">
+                    Como o aplicativo foi desenvolvido sob medida para a sua empresa e baixado diretamente da nuvem, o Windows pode exibir uma tela azul ou cinza dizendo que o app não é verificado pela Microsoft.
+                  </p>
+                  <ul className="ml-8 list-disc space-y-1 text-xs mt-1 text-foreground">
+                    <li>Basta clicar no botão <strong>"Instalar mesmo assim"</strong> (ou em <em>"Mais informações"</em> e depois em <strong>"Executar assim mesmo"</strong>).</li>
+                    <li>Este aviso só aparece na primeira vez que você executa o aplicativo!</li>
+                  </ul>
+                </li>
                 <li><strong>Para criar um atalho na sua Área de Trabalho:</strong>
                   <ul className="ml-5 list-disc space-y-1 text-xs mt-1">
                     <li>Clique com o <strong>botão direito</strong> sobre o arquivo <strong>PontoColetor.exe</strong>.</li>
