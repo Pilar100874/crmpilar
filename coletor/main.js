@@ -1,6 +1,6 @@
 const { app, BrowserWindow, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
-const { startCollector, stopCollector, getStatus } = require('./collector');
+const { startCollector, stopCollector, getStatus, saveConfig, loadConfig } = require('./collector');
 
 let win;
 let tray;
@@ -52,3 +52,10 @@ const { ipcMain } = require('electron');
 ipcMain.handle('collector:status', () => getStatus());
 ipcMain.handle('collector:start', () => startCollector());
 ipcMain.handle('collector:stop', () => stopCollector());
+ipcMain.handle('collector:saveConfig', (_e, cfg) => {
+  saveConfig(cfg);
+  stopCollector();
+  startCollector();
+  return { ok: true };
+});
+ipcMain.handle('collector:loadConfig', () => loadConfig());

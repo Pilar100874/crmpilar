@@ -21,7 +21,7 @@ function loadConfig() {
   try { return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8')); }
   catch { return { url: '', anonKey: '', email: '', password: '' }; }
 }
-function saveConfig(cfg) { fs.writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2)); }
+function saveConfig(cfg) { fs.writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2)); supabase = null; }
 
 let supabase = null;
 let timer = null;
