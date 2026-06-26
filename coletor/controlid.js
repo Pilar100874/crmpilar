@@ -35,11 +35,10 @@ function rawRequest(opts, body) {
     const requestText = `${opts.method || 'GET'} ${opts.path || '/'} HTTP/1.1\r\n${headerLines}\r\n\r\n${payload}`;
     const chunks = [];
     const socket = isHttps
-      ? tls.connect({ host: opts.hostname, port: opts.port, rejectUnauthorized: false, servername: opts.hostname })
-      : net.connect({ host: opts.hostname, port: opts.port });
+      ? tls.connect({ host: opts.hostname, port: opts.port, rejectUnauthorized: false, servername: opts.hostname }, () => socket.write(requestText))
+      : net.connect({ host: opts.hostname, port: opts.port }, () => socket.write(requestText));
 
     socket.setTimeout(opts.timeout || 10000);
-    socket.once('connect', () => socket.write(requestText));
     socket.on('data', (chunk) => chunks.push(chunk));
     socket.once('timeout', () => socket.destroy(new Error('timeout')));
     socket.once('error', reject);
