@@ -186,10 +186,9 @@ export default function PontoColetorDownload() {
                   Por se tratar de um pacote portátil do Windows, o aplicativo é instalado e executado a partir da sua pasta de dados locais. Para abrir de forma rápida sem disparar a tela de configuração novamente:
                 </p>
                 <ul className="ml-8 list-disc space-y-1 text-xs mt-1">
-                  <li>Abra o menu Executar do Windows (pressione as teclas <strong>Win + R</strong>).</li>
-                  <li>Digite exatamente: <code className="bg-muted px-1 py-0.5 rounded font-mono font-semibold">%localappdata%\PontoColetor</code> e dê Enter.</li>
-                  <li>Na pasta que abrir, clique com o botão direito sobre o arquivo <strong>PontoColetor.exe</strong> (ou o ícone azul do app) → Escolha <strong>Enviar para</strong> → <strong>Área de trabalho (criar atalho)</strong>.</li>
-                  <li>Pronto! Use esse novo atalho da Área de Trabalho para abrir o app instantaneamente de forma definitiva.</li>
+                  <li><strong>Opção 1 (Mais Fácil):</strong> Clique no menu Iniciar do Windows e digite <strong>ponto-coletor</strong> ou <strong>Ponto Coletor</strong>. Quando o app aparecer, clique com o botão direito e selecione "Fixar no Iniciar" ou "Fixar na barra de tarefas".</li>
+                  <li><strong>Opção 2 (Via pasta de sistema):</strong> Pressione as teclas <strong>Win + R</strong>, digite <code className="bg-muted px-1 py-0.5 rounded font-mono font-semibold">%localappdata%\ponto-coletor</code> e dê Enter.</li>
+                  <li>Na pasta que abrir, você verá o executável <strong>ponto-coletor.exe</strong>. Clique com o botão direito sobre ele → Escolha <strong>Enviar para</strong> → <strong>Área de trabalho (criar atalho)</strong>.</li>
                 </ul>
               </ol>
             </div>
