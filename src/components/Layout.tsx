@@ -96,6 +96,7 @@ interface SubMenuItem {
   title: string;
   url: string;
   icon: any;
+  group?: string;
 }
 
 interface MenuItem {
@@ -173,30 +174,34 @@ const menuItems: MenuItem[] = [
     title: "Controle de Ponto",
     icon: Clock,
     subItems: [
-      { id: "Ponto Dashboard", title: "Dashboard RH", url: "/ponto", icon: LayoutDashboard },
-      { id: "Ponto Registro", title: "Registro via App", url: "/ponto/registro", icon: LucideIcons.Smartphone },
-      { id: "Ponto Portal", title: "Portal do Funcionário", url: "/ponto/portal", icon: LucideIcons.User },
-      { id: "Ponto Tratamento", title: "Tratamento", url: "/ponto/tratamento", icon: LucideIcons.Wrench },
-      { id: "Ponto Ajustes", title: "Ajustes", url: "/ponto/ajustes", icon: LucideIcons.FileEdit },
-      { id: "Ponto Espelho", title: "Espelho de Ponto", url: "/ponto/espelho", icon: LucideIcons.FileSignature },
-      { id: "Ponto Alertas", title: "Antifraude (Alertas)", url: "/ponto/alertas", icon: LucideIcons.ShieldAlert },
-      { id: "Ponto Auditoria", title: "Auditoria", url: "/ponto/auditoria", icon: LucideIcons.ShieldCheck },
-      { id: "Ponto Assistente", title: "Assistente RH (IA)", url: "/ponto/assistente", icon: LucideIcons.Sparkles },
-      { id: "Ponto Predições", title: "Inteligência Preditiva", url: "/ponto/predicoes", icon: LucideIcons.TrendingUp },
-      { id: "Ponto Simulador", title: "Simulador de Cenários", url: "/ponto/simulador", icon: LucideIcons.Calculator },
-      { id: "Ponto Mapa", title: "Mapa de Equipes", url: "/ponto/mapa", icon: LucideIcons.MapPin },
-      { id: "Ponto QrCode", title: "QR Code Totem", url: "/ponto/qrcode", icon: LucideIcons.QrCode },
-      { id: "Ponto Atestados Admin", title: "Atestados (RH)", url: "/ponto/atestados-admin", icon: LucideIcons.FileCheck },
-      { id: "Ponto Pre Fechamento", title: "Pré-Fechamento (Checklist)", url: "/ponto/pre-fechamento", icon: LucideIcons.ClipboardCheck },
-      { id: "Ponto Fechamento", title: "Fechamento de Folha", url: "/ponto/fechamento", icon: LucideIcons.Lock },
-      { id: "Ponto Banco Horas", title: "Banco de Horas", url: "/ponto/banco-horas", icon: LucideIcons.Clock },
-      { id: "Ponto Férias", title: "Férias e Afastamentos", url: "/ponto/ferias", icon: LucideIcons.Plane },
-      { id: "Ponto AFD", title: "Arquivos Legais (AFD/AEJ)", url: "/ponto/afd", icon: LucideIcons.FileText },
-      { id: "Ponto eSocial", title: "eSocial", url: "/ponto/esocial", icon: LucideIcons.FileCode },
-      { id: "Ponto Manual", title: "Manual de Uso", url: "/ponto/manual", icon: LucideIcons.BookOpen },
-      { id: "Ponto Config", title: "Configurações", url: "/ponto/config", icon: Settings },
+      { id: "Ponto Dashboard", title: "Dashboard RH", url: "/ponto", icon: LayoutDashboard, group: "Geral" },
+      
+      { id: "Ponto Registro", title: "Registro via App", url: "/ponto/registro", icon: LucideIcons.Smartphone, group: "Operacional" },
+      { id: "Ponto Portal", title: "Portal do Funcionário", url: "/ponto/portal", icon: LucideIcons.User, group: "Operacional" },
+      { id: "Ponto Tratamento", title: "Tratamento", url: "/ponto/tratamento", icon: LucideIcons.Wrench, group: "Operacional" },
+      { id: "Ponto Ajustes", title: "Ajustes", url: "/ponto/ajustes", icon: LucideIcons.FileEdit, group: "Operacional" },
+      { id: "Ponto Espelho", title: "Espelho de Ponto", url: "/ponto/espelho", icon: LucideIcons.FileSignature, group: "Operacional" },
+      { id: "Ponto Mapa", title: "Mapa de Equipes", url: "/ponto/mapa", icon: LucideIcons.MapPin, group: "Operacional" },
+      { id: "Ponto QrCode", title: "QR Code Totem", url: "/ponto/qrcode", icon: LucideIcons.QrCode, group: "Operacional" },
+      
+      { id: "Ponto Pre Fechamento", title: "Pré-Fechamento (Checklist)", url: "/ponto/pre-fechamento", icon: LucideIcons.ClipboardCheck, group: "Fechamento & Banco" },
+      { id: "Ponto Fechamento", title: "Fechamento de Folha", url: "/ponto/fechamento", icon: LucideIcons.Lock, group: "Fechamento & Banco" },
+      { id: "Ponto Banco Horas", title: "Banco de Horas", url: "/ponto/banco-horas", icon: LucideIcons.Clock, group: "Fechamento & Banco" },
+      { id: "Ponto Férias", title: "Férias e Afastamentos", url: "/ponto/ferias", icon: LucideIcons.Plane, group: "Fechamento & Banco" },
+      { id: "Ponto Atestados Admin", title: "Atestados (RH)", url: "/ponto/atestados-admin", icon: LucideIcons.FileCheck, group: "Fechamento & Banco" },
+      
+      { id: "Ponto Alertas", title: "Antifraude (Alertas)", url: "/ponto/alertas", icon: LucideIcons.ShieldAlert, group: "Compliance & Auditoria" },
+      { id: "Ponto Auditoria", title: "Auditoria", url: "/ponto/auditoria", icon: LucideIcons.ShieldCheck, group: "Compliance & Auditoria" },
+      { id: "Ponto AFD", title: "Arquivos Legais (AFD/AEJ)", url: "/ponto/afd", icon: LucideIcons.FileText, group: "Compliance & Auditoria" },
+      { id: "Ponto eSocial", title: "eSocial", url: "/ponto/esocial", icon: LucideIcons.FileCode, group: "Compliance & Auditoria" },
+      
+      { id: "Ponto Assistente", title: "Assistente RH (IA)", url: "/ponto/assistente", icon: LucideIcons.Sparkles, group: "Inteligência IA" },
+      { id: "Ponto Predições", title: "Inteligência Preditiva", url: "/ponto/predicoes", icon: LucideIcons.TrendingUp, group: "Inteligência IA" },
+      { id: "Ponto Simulador", title: "Simulador de Cenários", url: "/ponto/simulador", icon: LucideIcons.Calculator, group: "Inteligência IA" },
+      
+      { id: "Ponto Config", title: "Configurações", url: "/ponto/config", icon: Settings, group: "Sistema & Ajuda" },
+      { id: "Ponto Manual", title: "Manual de Uso", url: "/ponto/manual", icon: LucideIcons.BookOpen, group: "Sistema & Ajuda" },
     ],
-
   },
 
   {
@@ -872,27 +877,25 @@ export default function Layout({ children }: LayoutProps) {
                               </h3>
                                
                                <div className="space-y-1">
-                                  {item.subItems.map((subItem) => {
+                                  {item.subItems.map((subItem, index) => {
                                     const isInAtalhos = atalhos.some(a => a.path === subItem.url);
                                     
-                                    // Tratamento especial para Alterar Senha
-                                    if (subItem.url === "#alterar-senha") {
-                                      return (
-                                        <button
-                                          key={subItem.id}
-                                          onClick={() => {
-                                            setOpenSubmenuId(null);
-                                            setShowChangePasswordDialog(true);
-                                          }}
-                                          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
-                                        >
-                                          <subItem.icon className="w-4 h-4 flex-shrink-0" />
-                                          <span className="text-sm">{subItem.title}</span>
-                                        </button>
-                                      );
-                                    }
+                                    const previousGroup = index > 0 ? item.subItems[index - 1].group : null;
+                                    const showGroupHeader = subItem.group && subItem.group !== previousGroup;
                                     
-                                    return (
+                                    const renderedItem = subItem.url === "#alterar-senha" ? (
+                                      <button
+                                        key={subItem.id}
+                                        onClick={() => {
+                                          setOpenSubmenuId(null);
+                                          setShowChangePasswordDialog(true);
+                                        }}
+                                        className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
+                                      >
+                                        <subItem.icon className="w-4 h-4 flex-shrink-0" />
+                                        <span className="text-sm">{subItem.title}</span>
+                                      </button>
+                                    ) : (
                                       <NavLink
                                         key={subItem.id}
                                         to={subItem.url}
@@ -908,6 +911,19 @@ export default function Layout({ children }: LayoutProps) {
                                         <subItem.icon className="w-4 h-4 flex-shrink-0" />
                                         <span className="text-sm">{subItem.title}</span>
                                       </NavLink>
+                                    );
+
+                                    return (
+                                      <div key={subItem.id} className="space-y-1">
+                                        {showGroupHeader && (
+                                          <div className="pt-3 pb-1 px-2 border-t border-sidebar-border/30 mt-2 first-of-type:border-0 first-of-type:mt-0">
+                                            <span className="text-[10px] font-bold text-sidebar-foreground/40 tracking-wider uppercase">
+                                              {subItem.group}
+                                            </span>
+                                          </div>
+                                        )}
+                                        {renderedItem}
+                                      </div>
                                     );
                                   })}
                                </div>
@@ -938,44 +954,55 @@ export default function Layout({ children }: LayoutProps) {
                        
                         {isMenuOpen && (
                           <div className="mt-1 ml-8 space-y-1">
-                            {item.subItems.map((subItem) => {
-                              const isInAtalhos = atalhos.some(a => a.path === subItem.url);
-                              
-                              // Tratamento especial para Alterar Senha
-                              if (subItem.url === "#alterar-senha") {
-                                return (
-                                  <button
-                                    key={subItem.id}
-                                    onClick={() => {
-                                      setOpenSubmenuId(null);
-                                      setShowChangePasswordDialog(true);
-                                    }}
-                                    className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
-                                  >
-                                    <subItem.icon className="w-4 h-4 flex-shrink-0" />
-                                    <span className="text-sm">{subItem.title}</span>
-                                  </button>
-                                );
-                              }
-                              
-                              return (
-                                <NavLink
-                                  key={subItem.id}
-                                  to={subItem.url}
-                                  onClick={() => setOpenSubmenuId(null)}
-                                  className={({ isActive }) =>
-                                    `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                                      isActive && !isInAtalhos
-                                        ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
-                                        : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
-                                    }`
-                                  }
-                                >
-                                  <subItem.icon className="w-4 h-4 flex-shrink-0" />
-                                  <span className="text-sm">{subItem.title}</span>
-                                </NavLink>
-                              );
-                            })}
+                             {item.subItems.map((subItem, index) => {
+                               const isInAtalhos = atalhos.some(a => a.path === subItem.url);
+                               
+                               const previousGroup = index > 0 ? item.subItems[index - 1].group : null;
+                               const showGroupHeader = subItem.group && subItem.group !== previousGroup;
+                               
+                               const renderedItem = subItem.url === "#alterar-senha" ? (
+                                 <button
+                                   key={subItem.id}
+                                   onClick={() => {
+                                     setOpenSubmenuId(null);
+                                     setShowChangePasswordDialog(true);
+                                   }}
+                                   className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
+                                 >
+                                   <subItem.icon className="w-4 h-4 flex-shrink-0" />
+                                   <span className="text-sm">{subItem.title}</span>
+                                 </button>
+                               ) : (
+                                 <NavLink
+                                   key={subItem.id}
+                                   to={subItem.url}
+                                   onClick={() => setOpenSubmenuId(null)}
+                                   className={({ isActive }) =>
+                                     `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                                       isActive && !isInAtalhos
+                                         ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                                         : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
+                                     }`
+                                   }
+                                 >
+                                   <subItem.icon className="w-4 h-4 flex-shrink-0" />
+                                   <span className="text-sm">{subItem.title}</span>
+                                 </NavLink>
+                               );
+
+                               return (
+                                 <div key={subItem.id} className="space-y-1">
+                                   {showGroupHeader && (
+                                     <div className="pt-3 pb-1 first-of-type:pt-1">
+                                       <span className="text-[10px] font-bold text-sidebar-foreground/40 tracking-wider uppercase">
+                                         {subItem.group}
+                                       </span>
+                                     </div>
+                                   )}
+                                   {renderedItem}
+                                 </div>
+                               );
+                             })}
                           </div>
                         )}
                     </div>
