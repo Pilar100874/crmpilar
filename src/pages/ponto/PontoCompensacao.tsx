@@ -93,7 +93,7 @@ export default function PontoCompensacao() {
 
   async function loadAcordos() {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("ponto_compensacao_acordos")
       .select("*")
       .eq("empresa_id", empresaId)
