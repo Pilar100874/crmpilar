@@ -22,8 +22,13 @@ export function usePontoEmpresa() {
 
   const setEmpresaId = (id: string | null) => {
     setEmpresaIdState(id);
-    if (id) localStorage.setItem(STORAGE_KEY, id);
-    else localStorage.removeItem(STORAGE_KEY);
+    if (id) {
+      localStorage.setItem(STORAGE_KEY, id);
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+    // Disparar evento para atualizar outros componentes que usam este hook
+    window.dispatchEvent(new CustomEvent("ponto:empresa-changed", { detail: id }));
   };
 
   const reload = async () => {
@@ -33,15 +38,33 @@ export function usePontoEmpresa() {
       .select("id, razao_social, nome_fantasia, cnpj, cidade, uf, ativo")
       .order("razao_social");
     setEmpresas((data as any) || []);
-    if (data && data.length && !empresaId) {
-      setEmpresaId(data[0].id);
+    
+    const currentStored = localStorage.getItem(STORAGE_KEY);
+    if (data && data.length) {
+      if (!currentStored) {
+        setEmpresaId(data[0].id);
+      } else if (!data.some(e => e.id === currentStored)) {
+        setEmpresaId(data[0].id);
+      } else if (empresaId !== currentStored) {
+        setEmpresaIdState(currentStored);
+      }
     }
     setLoading(false);
   };
 
   useEffect(() => {
     reload();
-  }, []);
+
+    const handleChanged = (e: Event) => {
+      const customEvent = e as CustomEvent<string | null>;
+      setEmpresaIdState(customEvent.detail);
+    };
+
+    window.addEventListener("ponto:empresa-changed", handleChanged);
+    return () => {
+      window.removeEventListener("ponto:empresa-changed", handleChanged);
+    };
+  }, [empresaId]);
 
   return { empresas, empresaId, setEmpresaId, loading, reload };
 }
