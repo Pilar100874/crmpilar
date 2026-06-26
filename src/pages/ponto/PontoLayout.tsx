@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { Menu, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePontoEmpresa } from "./usePontoEmpresa";
@@ -13,6 +13,15 @@ import {
 
 export default function PontoLayout() {
   const { empresas, empresaId, setEmpresaId } = usePontoEmpresa();
+  const location = useLocation();
+
+  // Ocultar o seletor de empresa em telas globais de configuração ou ajuda
+  const rotasGlobais = [
+    "/ponto/empresas",
+    "/ponto/manual",
+    "/ponto/coletor-download"
+  ];
+  const showSelector = !rotasGlobais.some(path => location.pathname.includes(path));
 
   return (
     <div className="ponto-shell min-h-screen bg-background text-foreground overflow-x-hidden max-w-[100vw]">
@@ -37,28 +46,30 @@ export default function PontoLayout() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Select
-              value={empresaId ?? undefined}
-              onValueChange={(v) => setEmpresaId(v)}
-            >
-              <SelectTrigger className="h-9 w-full sm:w-[260px]">
-                <SelectValue placeholder="Selecione a empresa" />
-              </SelectTrigger>
-              <SelectContent>
-                {empresas.length === 0 && (
-                  <div className="px-2 py-3 text-xs text-muted-foreground">
-                    Nenhuma empresa cadastrada
-                  </div>
-                )}
-                {empresas.map((e) => (
-                  <SelectItem key={e.id} value={e.id}>
-                    {e.razao_social}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {showSelector && (
+            <div className="flex items-center gap-2">
+              <Select
+                value={empresaId ?? undefined}
+                onValueChange={(v) => setEmpresaId(v)}
+              >
+                <SelectTrigger className="h-9 w-full sm:w-[260px]">
+                  <SelectValue placeholder="Selecione a empresa" />
+                </SelectTrigger>
+                <SelectContent>
+                  {empresas.length === 0 && (
+                    <div className="px-2 py-3 text-xs text-muted-foreground">
+                      Nenhuma empresa cadastrada
+                    </div>
+                  )}
+                  {empresas.map((e) => (
+                    <SelectItem key={e.id} value={e.id}>
+                      {e.razao_social}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
       </header>
       <main className="overflow-x-hidden p-3 sm:p-5">
