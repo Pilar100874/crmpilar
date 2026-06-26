@@ -12,6 +12,7 @@
     "@supabase/supabase-js": "^2.45.0"
   },
   "devDependencies": {
-    "electron": "^31.0.0"
+    "@electron/packager": "^20.0.1",
+    "electron": "^31.7.7"
   }
 }
