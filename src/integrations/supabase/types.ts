@@ -11295,11 +11295,13 @@ export type Database = {
           empresa_id: string
           feriado_data: string | null
           id: string
+          minutos_dispensados: number | null
           minutos_por_dia: number
           modalidade: string
           motivo: string
           observacoes: string | null
           status: string
+          tipo_dispensa: string | null
           titulo: string
           total_minutos_a_compensar: number
           updated_at: string
@@ -11319,11 +11321,13 @@ export type Database = {
           empresa_id: string
           feriado_data?: string | null
           id?: string
+          minutos_dispensados?: number | null
           minutos_por_dia?: number
           modalidade?: string
           motivo?: string
           observacoes?: string | null
           status?: string
+          tipo_dispensa?: string | null
           titulo: string
           total_minutos_a_compensar?: number
           updated_at?: string
@@ -11343,11 +11347,13 @@ export type Database = {
           empresa_id?: string
           feriado_data?: string | null
           id?: string
+          minutos_dispensados?: number | null
           minutos_por_dia?: number
           modalidade?: string
           motivo?: string
           observacoes?: string | null
           status?: string
+          tipo_dispensa?: string | null
           titulo?: string
           total_minutos_a_compensar?: number
           updated_at?: string

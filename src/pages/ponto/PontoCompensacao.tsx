@@ -44,6 +44,7 @@ type Funcionario = { id: string; nome: string; matricula: string | null; empresa
 const MOTIVOS = [
   { v: "emenda_feriado", l: "Emenda de feriado / ponte" },
   { v: "ponte_recesso", l: "Recesso / fim de ano" },
+  { v: "evento_esportivo", l: "Jogo da Copa / Evento Esportivo" },
   { v: "evento_extraordinario", l: "Evento extraordinário (clima, manutenção)" },
   { v: "outro", l: "Outro" },
 ];
@@ -79,6 +80,8 @@ export default function PontoCompensacao() {
     observacoes: "",
     dias_dispensados: "" as string,
     excluir_fds: true,
+    tipo_dispensa: "dia_completo",
+    minutos_dispensados: 180, // padrão 3h para partidas/eventos
   });
 
   useEffect(() => {
@@ -121,7 +124,8 @@ export default function PontoCompensacao() {
       }).filter((d) => !form.excluir_fds || !isWeekend(d));
       const totalMin = dias.length * Number(form.minutos_por_dia || 0);
       const dispCount = (form.dias_dispensados || "").split(",").map((s) => s.trim()).filter(Boolean).length;
-      const necessario = dispCount * 8 * 60; // 8h/dia padrão
+      const cargaDispMin = form.tipo_dispensa === "dia_completo" ? 480 : Number(form.minutos_dispensados || 180);
+      const necessario = dispCount * cargaDispMin;
       return { diasUteis: dias.length, totalMin, necessario, dispCount, datas: dias.map((d) => format(d, "yyyy-MM-dd")) };
     } catch { return null; }
   }, [form]);
@@ -146,6 +150,8 @@ export default function PontoCompensacao() {
       dias_compensacao: previa?.datas || [],
       observacoes: form.observacoes,
       status: "rascunho",
+      tipo_dispensa: form.tipo_dispensa,
+      minutos_dispensados: form.tipo_dispensa === "dia_completo" ? 480 : Number(form.minutos_dispensados),
     });
     if (error) return toast.error(error.message);
     toast.success("Acordo criado");
@@ -250,11 +256,14 @@ export default function PontoCompensacao() {
               <div className="grid md:grid-cols-2 gap-3 mt-3">
                 <div className="md:col-span-2">
                   <Label>Título</Label>
-                  <Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} placeholder="Ex.: Emenda Corpus Christi 2026" />
+                  <Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} placeholder="Ex.: Jogo do Brasil - Copa 2026" />
                 </div>
                 <div>
                   <Label>Motivo</Label>
-                  <Select value={form.motivo} onValueChange={(v) => setForm({ ...form, motivo: v })}>
+                  <Select value={form.motivo} onValueChange={(v) => {
+                    const extraFields = v === "evento_esportivo" ? { titulo: form.titulo || "Dispensa Jogo da Copa", tipo_dispensa: "horas", minutos_dispensados: 180 } : {};
+                    setForm({ ...form, motivo: v, ...extraFields });
+                  }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{MOTIVOS.map((m) => <SelectItem key={m.v} value={m.v}>{m.l}</SelectItem>)}</SelectContent>
                   </Select>
@@ -266,13 +275,45 @@ export default function PontoCompensacao() {
                     <SelectContent>{MODALIDADES.map((m) => <SelectItem key={m.v} value={m.v}>{m.l}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
+
                 <div>
-                  <Label>Feriado/data referência</Label>
-                  <Input type="date" value={form.feriado_data} onChange={(e) => setForm({ ...form, feriado_data: e.target.value })} />
+                  <Label>Tipo de Dispensa</Label>
+                  <Select value={form.tipo_dispensa} onValueChange={(v) => setForm({ ...form, tipo_dispensa: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="dia_completo">Dia Completo (Feriado/Ponte)</SelectItem>
+                      <SelectItem value="horas">Parcial / Horas (Copa, Evento, etc.)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+
+                {form.tipo_dispensa === "horas" ? (
+                  <div>
+                    <Label>Minutos dispensados por dia</Label>
+                    <div className="flex gap-2 items-center">
+                      <Input type="number" min={15} max={480} value={form.minutos_dispensados} onChange={(e) => setForm({ ...form, minutos_dispensados: Number(e.target.value) })} />
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        ({Math.floor(form.minutos_dispensados / 60)}h{form.minutos_dispensados % 60}m)
+                      </span>
+                    </div>
+                    <div className="flex gap-1 mt-1 flex-wrap">
+                      {[60, 120, 180, 240].map((m) => (
+                        <Button key={m} type="button" variant="outline" size="sm" className="text-[10px] py-0 h-5 px-1.5" onClick={() => setForm({ ...form, minutos_dispensados: m })}>
+                          {m/60}h
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <Label>Feriado/data referência</Label>
+                    <Input type="date" value={form.feriado_data} onChange={(e) => setForm({ ...form, feriado_data: e.target.value })} />
+                  </div>
+                )}
+
                 <div>
-                  <Label>Dias dispensados (datas separadas por vírgula)</Label>
-                  <Input value={form.dias_dispensados} onChange={(e) => setForm({ ...form, dias_dispensados: e.target.value })} placeholder="2026-06-05" />
+                  <Label>Datas da Dispensa (separadas por vírgula)</Label>
+                  <Input value={form.dias_dispensados} onChange={(e) => setForm({ ...form, dias_dispensados: e.target.value })} placeholder="2026-06-05, 2026-06-18" />
                 </div>
                 <div>
                   <Label>Início da compensação</Label>
@@ -283,7 +324,7 @@ export default function PontoCompensacao() {
                   <Input type="date" value={form.data_fim_compensacao} onChange={(e) => setForm({ ...form, data_fim_compensacao: e.target.value })} />
                 </div>
                 <div>
-                  <Label>Minutos extras por dia útil</Label>
+                  <Label>Minutos extras por dia útil de compensação</Label>
                   <Input type="number" min={5} max={120} value={form.minutos_por_dia} onChange={(e) => setForm({ ...form, minutos_por_dia: Number(e.target.value) })} />
                   <p className="text-xs text-muted-foreground mt-1">Máx. 2h/dia (CLT art. 59).</p>
                 </div>
@@ -305,7 +346,7 @@ export default function PontoCompensacao() {
                 <Card className="mt-3 bg-muted/40">
                   <CardContent className="pt-4 text-sm space-y-1">
                     <div><b>{previa.diasUteis}</b> dias úteis × <b>{form.minutos_por_dia}</b> min = <b>{Math.floor(previa.totalMin/60)}h{previa.totalMin%60 ? `${previa.totalMin%60}m`:""}</b></div>
-                    <div>Necessário compensar: <b>{Math.floor(previa.necessario/60)}h</b> ({previa.dispCount} dia(s) × 8h)</div>
+                    <div>Necessário compensar: <b>{Math.floor(previa.necessario/60)}h{previa.necessario%60 ? `${previa.necessario%60}m`:""}</b> ({previa.dispCount} dia(s) × {form.tipo_dispensa === "dia_completo" ? "8h" : `${Math.floor((form.minutos_dispensados || 180)/60)}h${(form.minutos_dispensados || 180)%60 ? `${(form.minutos_dispensados || 180)%60}m` : ""}`})</div>
                     {previa.totalMin < previa.necessario && previa.dispCount > 0 && (
                       <div className="text-destructive">⚠ Saldo insuficiente — aumente os minutos/dia ou estenda o período.</div>
                     )}
