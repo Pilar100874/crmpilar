@@ -1,6 +1,6 @@
 const { app, BrowserWindow, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
-const { startCollector, stopCollector, getStatus } = require('./collector');
+const { startCollector, stopCollector, getStatus, saveConfig, loadConfig } = require('./collector');
 
 let win;
 let tray;
