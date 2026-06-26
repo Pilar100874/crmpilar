@@ -15,7 +15,12 @@ const https = require('https');
 
 function request(opts, body) {
   return new Promise((resolve, reject) => {
-    const lib = opts.protocol === 'https:' ? https : http;
+    const isHttps = opts.protocol === 'https:';
+    const lib = isHttps ? https : http;
+    // Control iD usa certificado autoassinado de fábrica — aceitar
+    if (isHttps && opts.rejectUnauthorized === undefined) {
+      opts.rejectUnauthorized = false;
+    }
     const req = lib.request(opts, (res) => {
       let data = '';
       res.on('data', (chunk) => data += chunk);
