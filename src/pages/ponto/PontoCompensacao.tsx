@@ -44,6 +44,7 @@ type Funcionario = { id: string; nome: string; matricula: string | null; empresa
 const MOTIVOS = [
   { v: "emenda_feriado", l: "Emenda de feriado / ponte" },
   { v: "ponte_recesso", l: "Recesso / fim de ano" },
+  { v: "evento_esportivo", l: "Jogo da Copa / Evento Esportivo" },
   { v: "evento_extraordinario", l: "Evento extraordinário (clima, manutenção)" },
   { v: "outro", l: "Outro" },
 ];
@@ -79,6 +80,8 @@ export default function PontoCompensacao() {
     observacoes: "",
     dias_dispensados: "" as string,
     excluir_fds: true,
+    tipo_dispensa: "dia_completo",
+    minutos_dispensados: 180, // padrão 3h para partidas/eventos
   });
 
   useEffect(() => {
