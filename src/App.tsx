@@ -103,6 +103,7 @@ import PontoLGPDPortal from "./pages/ponto/PontoLGPDPortal";
 import PontoEsocialFila from "./pages/ponto/PontoEsocialFila";
 import PontoAcordosColetivos from "./pages/ponto/PontoAcordosColetivos";
 import PontoCompensacao from "./pages/ponto/PontoCompensacao";
+import PontoCompensacaoVotacao from "./pages/ponto/PontoCompensacaoVotacao";
 import PontoBancoHorasExpirar from "./pages/ponto/PontoBancoHorasExpirar";
 import PontoNotificacoes from "./pages/ponto/PontoNotificacoes";
 import PontoManual from "./pages/ponto/PontoManual";
@@ -430,6 +431,7 @@ const App = () => (
                 <Route path="esocial-fila" element={<PontoEsocialFila />} />
                 <Route path="acordos-coletivos" element={<PontoAcordosColetivos />} />
                 <Route path="compensacao" element={<PontoCompensacao />} />
+                <Route path="compensacao-votacao" element={<PontoCompensacaoVotacao />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
                 <Route path="manual" element={<PontoManual />} />
               </Route>

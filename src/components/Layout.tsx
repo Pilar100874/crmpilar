@@ -189,6 +189,7 @@ const menuItems: MenuItem[] = [
       { id: "Ponto Banco Horas", title: "Banco de Horas", url: "/ponto/banco-horas", icon: LucideIcons.Clock, group: "Fechamento & Banco" },
       { id: "Ponto Férias", title: "Férias e Afastamentos", url: "/ponto/ferias", icon: LucideIcons.Plane, group: "Fechamento & Banco" },
       { id: "Ponto Compensacao", title: "Compensação (Emenda Feriado)", url: "/ponto/compensacao", icon: LucideIcons.Scale, group: "Fechamento & Banco" },
+      { id: "Ponto Compensacao Votacao", title: "Votação de Compensação", url: "/ponto/compensacao-votacao", icon: LucideIcons.Vote, group: "Fechamento & Banco" },
       { id: "Ponto Atestados Admin", title: "Atestados (RH)", url: "/ponto/atestados-admin", icon: LucideIcons.FileCheck, group: "Fechamento & Banco" },
       
       { id: "Ponto Alertas", title: "Antifraude (Alertas)", url: "/ponto/alertas", icon: LucideIcons.ShieldAlert, group: "Compliance & Auditoria" },

@@ -11300,12 +11300,22 @@ export type Database = {
           modalidade: string
           motivo: string
           observacoes: string | null
+          quorum_percentual: number
           status: string
+          termo_ciencia_url: string | null
           tipo_dispensa: string | null
           titulo: string
+          total_elegiveis: number
           total_minutos_a_compensar: number
+          total_votos_nao: number
+          total_votos_sim: number
           updated_at: string
           usa_banco_horas: boolean
+          votacao_abre_em: string | null
+          votacao_ativa: boolean
+          votacao_fecha_em: string | null
+          votacao_finalizada_em: string | null
+          votacao_resultado: string | null
         }
         Insert: {
           anexo_url?: string | null
@@ -11326,12 +11336,22 @@ export type Database = {
           modalidade?: string
           motivo?: string
           observacoes?: string | null
+          quorum_percentual?: number
           status?: string
+          termo_ciencia_url?: string | null
           tipo_dispensa?: string | null
           titulo: string
+          total_elegiveis?: number
           total_minutos_a_compensar?: number
+          total_votos_nao?: number
+          total_votos_sim?: number
           updated_at?: string
           usa_banco_horas?: boolean
+          votacao_abre_em?: string | null
+          votacao_ativa?: boolean
+          votacao_fecha_em?: string | null
+          votacao_finalizada_em?: string | null
+          votacao_resultado?: string | null
         }
         Update: {
           anexo_url?: string | null
@@ -11352,12 +11372,22 @@ export type Database = {
           modalidade?: string
           motivo?: string
           observacoes?: string | null
+          quorum_percentual?: number
           status?: string
+          termo_ciencia_url?: string | null
           tipo_dispensa?: string | null
           titulo?: string
+          total_elegiveis?: number
           total_minutos_a_compensar?: number
+          total_votos_nao?: number
+          total_votos_sim?: number
           updated_at?: string
           usa_banco_horas?: boolean
+          votacao_abre_em?: string | null
+          votacao_ativa?: boolean
+          votacao_fecha_em?: string | null
+          votacao_finalizada_em?: string | null
+          votacao_resultado?: string | null
         }
         Relationships: []
       }
@@ -11398,6 +11428,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "ponto_compensacao_participantes_acordo_id_fkey"
+            columns: ["acordo_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_compensacao_acordos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_compensacao_votos: {
+        Row: {
+          acordo_id: string
+          created_at: string
+          funcionario_id: string
+          id: string
+          ip: string | null
+          justificativa: string | null
+          user_agent: string | null
+          voto: string
+        }
+        Insert: {
+          acordo_id: string
+          created_at?: string
+          funcionario_id: string
+          id?: string
+          ip?: string | null
+          justificativa?: string | null
+          user_agent?: string | null
+          voto: string
+        }
+        Update: {
+          acordo_id?: string
+          created_at?: string
+          funcionario_id?: string
+          id?: string
+          ip?: string | null
+          justificativa?: string | null
+          user_agent?: string | null
+          voto?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_compensacao_votos_acordo_id_fkey"
             columns: ["acordo_id"]
             isOneToOne: false
             referencedRelation: "ponto_compensacao_acordos"
