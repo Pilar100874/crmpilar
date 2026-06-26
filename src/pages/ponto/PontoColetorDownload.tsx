@@ -177,19 +177,20 @@ export default function PontoColetorDownload() {
           <h3 className="font-semibold">Como instalar</h3>
           <div className="space-y-3 text-sm text-muted-foreground">
             <div>
-              <p className="font-medium text-foreground">Windows</p>
-              <ol className="ml-4 list-decimal space-y-1">
-                <li>Descompacte o arquivo <strong>.zip</strong> em qualquer pasta de sua preferência.</li>
-                <li>Execute o <strong>PontoColetor.exe</strong>. O Electron (utilizando o instalador padrão Squirrel) fará uma instalação automática ultra rápida e abrirá o aplicativo diretamente.</li>
-                <li className="text-amber-600 dark:text-amber-400 font-medium">⚠️ Por que não cria atalho automático em alguns sistemas?</li>
-                <p className="text-xs text-muted-foreground pl-4 mt-0.5">
-                  Por se tratar de um pacote portátil do Windows, o aplicativo é instalado e executado a partir da sua pasta de dados locais. Para abrir de forma rápida sem disparar a tela de configuração novamente:
-                </p>
-                <ul className="ml-8 list-disc space-y-1 text-xs mt-1">
-                  <li><strong>Opção 1 (Mais Fácil):</strong> Clique no menu Iniciar do Windows e digite <strong>ponto-coletor</strong> ou <strong>Ponto Coletor</strong>. Quando o app aparecer, clique com o botão direito e selecione "Fixar no Iniciar" ou "Fixar na barra de tarefas".</li>
-                  <li><strong>Opção 2 (Via pasta de sistema):</strong> Pressione as teclas <strong>Win + R</strong>, digite <code className="bg-muted px-1 py-0.5 rounded font-mono font-semibold">%localappdata%\ponto-coletor</code> e dê Enter.</li>
-                  <li>Na pasta que abrir, você verá o executável <strong>ponto-coletor.exe</strong>. Clique com o botão direito sobre ele → Escolha <strong>Enviar para</strong> → <strong>Área de trabalho (criar atalho)</strong>.</li>
-                </ul>
+              <p className="font-medium text-foreground text-base">Windows (Pacote Portátil - Sem instalação)</p>
+              <p className="text-xs text-muted-foreground mt-1 mb-2">
+                O arquivo baixado para Windows é um <strong>Pacote Portátil (.zip)</strong>. Ele não possui um instalador tradicional porque roda diretamente da pasta onde você descompactar.
+              </p>
+              <ol className="ml-4 list-decimal space-y-2">
+                <li>Extraia todo o conteúdo do arquivo <strong>PontoColetor-Windows.zip</strong> para uma pasta permanente de sua preferência (ex: <code>C:\PontoColetor</code> ou dentro da sua pasta de <code>Documentos</code>).</li>
+                <li>Abra essa pasta extraída. Você verá exatamente os arquivos exibidos na imagem (incluindo o executável principal <strong>PontoColetor.exe</strong> com o ícone do aplicativo).</li>
+                <li><strong>Para criar um atalho na sua Área de Trabalho:</strong>
+                  <ul className="ml-5 list-disc space-y-1 text-xs mt-1">
+                    <li>Clique com o <strong>botão direito</strong> sobre o arquivo <strong>PontoColetor.exe</strong>.</li>
+                    <li>Posicione o mouse sobre a opção <strong>Enviar para</strong> e depois clique em <strong>Área de trabalho (criar atalho)</strong>.</li>
+                  </ul>
+                </li>
+                <li>Para abrir o sistema, basta dar dois cliques no novo atalho criado na sua Área de Trabalho (ou diretamente no <strong>PontoColetor.exe</strong> dentro da pasta).</li>
               </ol>
             </div>
             <div>
