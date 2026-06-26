@@ -68,6 +68,71 @@ export default function PontoEquipamentos() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<any>(null);
   const [f, setF] = useState({ ...FORM_INICIAL });
+  const [testingRemote, setTestingRemote] = useState(false);
+  const [remoteTestStatus, setRemoteTestStatus] = useState("");
+
+  const testConnectionRemote = async () => {
+    if (!editingId) {
+      return toast.error("Para testar via Coletor Desktop, salve o equipamento primeiro para que o coletor local possa localizá-lo.");
+    }
+    setTestingRemote(true);
+    setRemoteTestStatus("Solicitando teste ao Coletor Desktop...");
+    
+    const { error } = await supabase
+      .from("ponto_equipamentos")
+      .update({
+        solicitar_teste: true,
+        resultado_teste: "Aguardando coletor local executar o teste..."
+      })
+      .eq("id", editingId);
+
+    if (error) {
+      setTestingRemote(false);
+      return toast.error("Erro ao solicitar teste: " + error.message);
+    }
+
+    let attempts = 0;
+    const interval = setInterval(async () => {
+      attempts++;
+      if (attempts > 30) { // 45s limit
+        clearInterval(interval);
+        setTestingRemote(false);
+        setRemoteTestStatus("");
+        toast.error("Tempo limite esgotado. Certifique-se de que o Coletor Desktop está aberto, rodando e conectado.");
+        return;
+      }
+
+      const { data, error: readError } = await supabase
+        .from("ponto_equipamentos")
+        .select("solicitar_teste, resultado_teste")
+        .eq("id", editingId)
+        .single();
+
+      if (readError) {
+        clearInterval(interval);
+        setTestingRemote(false);
+        setRemoteTestStatus("");
+        toast.error("Erro ao ler status: " + readError.message);
+        return;
+      }
+
+      if (data) {
+        if (data.resultado_teste) {
+          setRemoteTestStatus(data.resultado_teste);
+        }
+        
+        if (!data.solicitar_teste && data.resultado_teste && (data.resultado_teste.startsWith("Sucesso:") || data.resultado_teste.startsWith("Falha:"))) {
+          clearInterval(interval);
+          setTestingRemote(false);
+          if (data.resultado_teste.startsWith("Sucesso:")) {
+            toast.success(data.resultado_teste);
+          } else {
+            toast.error(data.resultado_teste);
+          }
+        }
+      }
+    }, 1500);
+  };
 
   const load = async () => {
     if (!empresaId) return;
