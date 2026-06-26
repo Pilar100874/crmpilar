@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, Pencil, Trash2 } from "lucide-react";
+import { Plus, Users, Pencil, Trash2, Layers } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import PontoFuncionariosLoteDialog from "@/components/ponto/PontoFuncionariosLoteDialog";
 import {
   Dialog,
   DialogContent,
