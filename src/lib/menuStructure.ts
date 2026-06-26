@@ -8,6 +8,7 @@ export interface SubMenuItem {
   title: string;
   url: string;
   icon: any;
+  group?: string;
 }
 
 export interface MenuCategory {
