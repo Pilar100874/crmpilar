@@ -52,10 +52,3 @@ const { ipcMain } = require('electron');
 ipcMain.handle('collector:status', () => getStatus());
 ipcMain.handle('collector:start', () => startCollector());
 ipcMain.handle('collector:stop', () => stopCollector());
-ipcMain.handle('collector:saveConfig', (_e, cfg) => {
-  saveConfig(cfg);
-  stopCollector();
-  startCollector();
-  return { ok: true };
-});
-ipcMain.handle('collector:loadConfig', () => loadConfig());
