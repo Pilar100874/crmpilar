@@ -11280,6 +11280,125 @@ export type Database = {
           },
         ]
       }
+      ponto_compensacao_acordos: {
+        Row: {
+          anexo_url: string | null
+          aprovado_em: string | null
+          aprovado_por: string | null
+          base_legal: string | null
+          created_at: string
+          criado_por: string | null
+          data_fim_compensacao: string
+          data_inicio_compensacao: string
+          dias_compensacao: Json
+          dias_dispensados: Json
+          empresa_id: string
+          feriado_data: string | null
+          id: string
+          minutos_por_dia: number
+          modalidade: string
+          motivo: string
+          observacoes: string | null
+          status: string
+          titulo: string
+          total_minutos_a_compensar: number
+          updated_at: string
+          usa_banco_horas: boolean
+        }
+        Insert: {
+          anexo_url?: string | null
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          base_legal?: string | null
+          created_at?: string
+          criado_por?: string | null
+          data_fim_compensacao: string
+          data_inicio_compensacao: string
+          dias_compensacao?: Json
+          dias_dispensados?: Json
+          empresa_id: string
+          feriado_data?: string | null
+          id?: string
+          minutos_por_dia?: number
+          modalidade?: string
+          motivo?: string
+          observacoes?: string | null
+          status?: string
+          titulo: string
+          total_minutos_a_compensar?: number
+          updated_at?: string
+          usa_banco_horas?: boolean
+        }
+        Update: {
+          anexo_url?: string | null
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          base_legal?: string | null
+          created_at?: string
+          criado_por?: string | null
+          data_fim_compensacao?: string
+          data_inicio_compensacao?: string
+          dias_compensacao?: Json
+          dias_dispensados?: Json
+          empresa_id?: string
+          feriado_data?: string | null
+          id?: string
+          minutos_por_dia?: number
+          modalidade?: string
+          motivo?: string
+          observacoes?: string | null
+          status?: string
+          titulo?: string
+          total_minutos_a_compensar?: number
+          updated_at?: string
+          usa_banco_horas?: boolean
+        }
+        Relationships: []
+      }
+      ponto_compensacao_participantes: {
+        Row: {
+          aceito_em: string | null
+          acordo_id: string
+          assinatura_token: string | null
+          created_at: string
+          funcionario_id: string
+          id: string
+          observacoes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          aceito_em?: string | null
+          acordo_id: string
+          assinatura_token?: string | null
+          created_at?: string
+          funcionario_id: string
+          id?: string
+          observacoes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          aceito_em?: string | null
+          acordo_id?: string
+          assinatura_token?: string | null
+          created_at?: string
+          funcionario_id?: string
+          id?: string
+          observacoes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_compensacao_participantes_acordo_id_fkey"
+            columns: ["acordo_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_compensacao_acordos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_departamentos: {
         Row: {
           ativo: boolean
