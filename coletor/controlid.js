@@ -21,6 +21,12 @@ function request(opts, body) {
     if (isHttps && opts.rejectUnauthorized === undefined) {
       opts.rejectUnauthorized = false;
     }
+    // Control iD envia cabeçalhos fora do padrão HTTP/1.1 (caracteres inválidos);
+    // o parser estrito do Node rejeita com "Parse Error: Invalid header value char".
+    // O parser permissivo aceita esses cabeçalhos.
+    if (opts.insecureHTTPParser === undefined) {
+      opts.insecureHTTPParser = true;
+    }
     const req = lib.request(opts, (res) => {
       let data = '';
       res.on('data', (chunk) => data += chunk);
@@ -123,7 +129,7 @@ async function tentarLogin(cfg) {
         throw new Error('Credenciais inválidas (usuário/senha do relógio). Verifique o campo Usuário e Chave de Comunicação.');
       }
       // Erros de rede/protocolo → continua tentando
-      if (!/WRONG_VERSION_NUMBER|EPROTO|ECONNRESET|ECONNREFUSED|EHOSTUNREACH|ETIMEDOUT|socket hang up|timeout|HTTP\/1\.1 400/i.test(msg)) {
+      if (!/WRONG_VERSION_NUMBER|EPROTO|ECONNRESET|ECONNREFUSED|EHOSTUNREACH|ETIMEDOUT|socket hang up|timeout|HTTP\/1\.1 400|HPE_|Parse Error/i.test(msg)) {
         // Erro não recuperável
         throw e;
       }
