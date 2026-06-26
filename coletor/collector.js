@@ -144,7 +144,7 @@ function startCollector() {
   if (STATE.running) return STATE;
   STATE.running = true;
   pollOnce();
-  timer = setInterval(pollOnce, 60_000);
+  timer = setInterval(pollOnce, 15_000);
   return STATE;
 }
 function stopCollector() {
