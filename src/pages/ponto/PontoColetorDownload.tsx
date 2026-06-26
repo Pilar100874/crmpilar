@@ -179,9 +179,18 @@ export default function PontoColetorDownload() {
             <div>
               <p className="font-medium text-foreground">Windows</p>
               <ol className="ml-4 list-decimal space-y-1">
-                <li>Descompacte o <strong>.zip</strong> em uma pasta (ex.: <code>C:\PontoColetor</code>).</li>
-                <li>Execute <strong>PontoColetor.exe</strong> dentro da pasta extraída.</li>
-                <li>Opcional: crie um atalho na Área de Trabalho ou na Inicialização.</li>
+                <li>Descompacte o arquivo <strong>.zip</strong> em qualquer pasta de sua preferência.</li>
+                <li>Execute o <strong>PontoColetor.exe</strong>. O Electron (utilizando o instalador padrão Squirrel) fará uma instalação automática ultra rápida e abrirá o aplicativo diretamente.</li>
+                <li className="text-amber-600 dark:text-amber-400 font-medium">⚠️ Por que não cria atalho automático em alguns sistemas?</li>
+                <p className="text-xs text-muted-foreground pl-4 mt-0.5">
+                  Por se tratar de um pacote portátil do Windows, o aplicativo é instalado e executado a partir da sua pasta de dados locais. Para abrir de forma rápida sem disparar a tela de configuração novamente:
+                </p>
+                <ul className="ml-8 list-disc space-y-1 text-xs mt-1">
+                  <li>Abra o menu Executar do Windows (pressione as teclas <strong>Win + R</strong>).</li>
+                  <li>Digite exatamente: <code className="bg-muted px-1 py-0.5 rounded font-mono font-semibold">%localappdata%\PontoColetor</code> e dê Enter.</li>
+                  <li>Na pasta que abrir, clique com o botão direito sobre o arquivo <strong>PontoColetor.exe</strong> (ou o ícone azul do app) → Escolha <strong>Enviar para</strong> → <strong>Área de trabalho (criar atalho)</strong>.</li>
+                  <li>Pronto! Use esse novo atalho da Área de Trabalho para abrir o app instantaneamente de forma definitiva.</li>
+                </ul>
               </ol>
             </div>
             <div>
