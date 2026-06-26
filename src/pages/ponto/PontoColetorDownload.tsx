@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Monitor, Apple, Cpu, CheckCircle2 } from "lucide-react";
+import { Download, Monitor, Apple, Cpu, CheckCircle2, Copy, Check, Database, Key } from "lucide-react";
 import { toast } from "sonner";
 import winAsset from "../../../public/coletor/PontoColetor-Windows.asset.json";
 import linuxAsset from "../../../public/coletor/PontoColetor-Linux.asset.json";
