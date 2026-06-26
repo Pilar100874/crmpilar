@@ -431,6 +431,7 @@ const App = () => (
                 <Route path="esocial-fila" element={<PontoEsocialFila />} />
                 <Route path="acordos-coletivos" element={<PontoAcordosColetivos />} />
                 <Route path="compensacao" element={<PontoCompensacao />} />
+                <Route path="compensacao-votacao" element={<PontoCompensacaoVotacao />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
                 <Route path="manual" element={<PontoManual />} />
               </Route>
