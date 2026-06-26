@@ -98,17 +98,45 @@ function resolverProtocolo(equip) {
 }
 
 async function tentarLogin(cfg) {
-  try {
-    return await login(cfg);
-  } catch (e) {
-    const msg = String(e.message || '');
-    // Erros típicos de protocolo errado: tentar com o oposto
-    if (/WRONG_VERSION_NUMBER|EPROTO|ECONNRESET|socket hang up|HTTP\/1\.1 400/i.test(msg)) {
-      const alt = { ...cfg, https: !cfg.https };
-      return await login(alt).then(s => ({ session: s, cfgUsado: alt })).catch(() => { throw e; });
+  // Tenta combinações comuns do Control iD: (porta/protocolo configurado),
+  // (mesma porta protocolo oposto), (443 HTTPS), (80 HTTP).
+  const tentativas = [
+    { ...cfg },
+    { ...cfg, https: !cfg.https },
+    { ...cfg, port: 443, https: true },
+    { ...cfg, port: 80, https: false },
+  ];
+  const vistas = new Set();
+  let ultimoErro;
+  for (const t of tentativas) {
+    const chave = `${t.https ? 'https' : 'http'}:${t.port}`;
+    if (vistas.has(chave)) continue;
+    vistas.add(chave);
+    try {
+      const session = await login(t);
+      return { session, cfgUsado: t };
+    } catch (e) {
+      ultimoErro = e;
+      const msg = String(e.message || '');
+      // Se for erro de credencial, não adianta tentar outras portas
+      if (/login falhou: HTTP 401|unauthorized|invalid (login|password)/i.test(msg)) {
+        throw new Error('Credenciais inválidas (usuário/senha do relógio). Verifique o campo Usuário e Chave de Comunicação.');
+      }
+      // Erros de rede/protocolo → continua tentando
+      if (!/WRONG_VERSION_NUMBER|EPROTO|ECONNRESET|ECONNREFUSED|EHOSTUNREACH|ETIMEDOUT|socket hang up|timeout|HTTP\/1\.1 400/i.test(msg)) {
+        // Erro não recuperável
+        throw e;
+      }
     }
-    throw e;
   }
+  const m = String(ultimoErro?.message || 'falha desconhecida');
+  if (/ECONNRESET|socket hang up/i.test(m)) {
+    throw new Error(`Relógio fechou a conexão (ECONNRESET). Possíveis causas: porta/protocolo incorretos, firewall bloqueando, ou o equipamento exige HTTPS na 443. Tente trocar a porta para 443 (HTTPS) ou 80 (HTTP) no cadastro.`);
+  }
+  if (/ETIMEDOUT|EHOSTUNREACH|ECONNREFUSED/i.test(m)) {
+    throw new Error(`Não foi possível alcançar ${cfg.host}:${cfg.port}. Verifique IP, rede e se o Coletor Desktop está na mesma LAN do relógio.`);
+  }
+  throw ultimoErro;
 }
 
 // Lê batidas novas desde lastNSR (filtra após parse)
