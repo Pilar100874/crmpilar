@@ -102,6 +102,7 @@ import PontoDSR from "./pages/ponto/PontoDSR";
 import PontoLGPDPortal from "./pages/ponto/PontoLGPDPortal";
 import PontoEsocialFila from "./pages/ponto/PontoEsocialFila";
 import PontoAcordosColetivos from "./pages/ponto/PontoAcordosColetivos";
+import PontoCompensacao from "./pages/ponto/PontoCompensacao";
 import PontoBancoHorasExpirar from "./pages/ponto/PontoBancoHorasExpirar";
 import PontoNotificacoes from "./pages/ponto/PontoNotificacoes";
 import PontoManual from "./pages/ponto/PontoManual";
