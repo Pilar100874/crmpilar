@@ -366,6 +366,15 @@ export default function PontoFuncionarios() {
           <table className="w-full min-w-[640px] text-sm resp-table">
             <thead className="bg-muted/50">
               <tr className="text-left">
+                <th className="p-3 w-10">
+                  <Checkbox
+                    checked={items.length > 0 && selected.size === items.length}
+                    onCheckedChange={(v) => {
+                      if (v) setSelected(new Set(items.map((i) => i.id)));
+                      else setSelected(new Set());
+                    }}
+                  />
+                </th>
                 <th className="p-3">Nome</th>
                 <th className="p-3 hidden sm:table-cell">CPF</th>
                 <th className="p-3 hidden md:table-cell">Matrícula</th>
@@ -377,6 +386,16 @@ export default function PontoFuncionarios() {
             <tbody>
               {items.map((x) => (
                 <tr key={x.id} className="border-t">
+                  <td className="p-3">
+                    <Checkbox
+                      checked={selected.has(x.id)}
+                      onCheckedChange={(v) => {
+                        const ns = new Set(selected);
+                        if (v) ns.add(x.id); else ns.delete(x.id);
+                        setSelected(ns);
+                      }}
+                    />
+                  </td>
                   <td className="p-3 font-medium">{x.nome} {x.sobrenome || ""}</td>
                   <td className="p-3 hidden sm:table-cell">{maskCPF(x.cpf)}</td>
                   <td className="p-3 hidden md:table-cell">{x.matricula}</td>
