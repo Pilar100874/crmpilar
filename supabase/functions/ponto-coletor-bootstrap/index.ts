@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
     }
 
     const { data, error } = await sb.from("ponto_equipamentos")
-      .select("id, empresa_id, nome, modelo, ip, porta, usuario, chave_comunicacao, usa_https, ativo, status, data_inicio_coleta, solicitar_teste")
+      .select("id, empresa_id, nome, modelo, ip, porta, usuario, senha, chave_comunicacao, usa_https, ativo, status, data_inicio_coleta, solicitar_teste")
       .eq("ativo", true);
     if (error) throw error;
 
