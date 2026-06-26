@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { handleLockError } from "@/lib/ponto/lockErrors";
+import { handlePontoLockError as handleLockError } from "@/lib/ponto/lockErrors";
 
 type Opt = { id: string; nome: string };
 
