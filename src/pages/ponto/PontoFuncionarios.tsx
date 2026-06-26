@@ -773,6 +773,20 @@ export default function PontoFuncionarios() {
         itemName={deleting?.nome ?? ""}
         title="Excluir funcionário"
       />
+
+      <PontoFuncionariosLoteDialog
+        open={loteOpen}
+        onOpenChange={setLoteOpen}
+        selectedIds={Array.from(selected)}
+        empresaId={empresaId || ""}
+        cargos={cargos}
+        departamentos={departamentos}
+        equipes={equipes}
+        filiais={filiais}
+        escalas={escalas}
+        exportLayouts={exportLayouts.map((l) => ({ id: l.id, descricao: l.descricao }))}
+        onSaved={() => { setSelected(new Set()); load(); }}
+      />
     </div>
   );
 }
