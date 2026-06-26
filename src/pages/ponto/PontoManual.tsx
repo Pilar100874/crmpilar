@@ -338,6 +338,222 @@ const SECOES: Secao[] = [
       },
     ],
   },
+  {
+    id: "15-compensacao",
+    titulo: "15. Compensação de Jornada (Emenda Feriado / Eventos)",
+    icone: CalendarDays,
+    objetivo: "Acordos para dispensar funcionários em pontes de feriado, jogos da Copa, eventos ou meio-período, compensando com minutos extras nos dias seguintes — sem precisar usar banco de horas. Base legal: art. 59 e 59-B CLT + Súmula 85 TST.",
+    passos: [
+      {
+        titulo: "Criar acordo de compensação",
+        link: "/ponto/compensacao",
+        descricao: "Configure dispensa (dia inteiro ou parcial em minutos), período de compensação e quanto cada dia trabalhado adicionará.",
+        campos: [
+          { nome: "Motivo", explica: "Emenda de feriado, evento esportivo (Copa), confraternização, etc.", obrigatorio: true },
+          { nome: "Modalidade", explica: "Individual (1 funcionário), coletivo (grupo selecionado) ou empresa toda.", obrigatorio: true },
+          { nome: "Tipo de dispensa", explica: "Dia completo (feriado/ponte = 8h) OU parcial (informa minutos exatos, ex.: 180 min para jogo da tarde).", obrigatorio: true },
+          { nome: "Dias dispensados", explica: "Lista de datas em que os funcionários NÃO trabalharão.", obrigatorio: true },
+          { nome: "Período de compensação", explica: "Janela em que os minutos extras serão acumulados (ex.: 15 dias úteis seguintes).", obrigatorio: true },
+          { nome: "Minutos extras/dia", explica: "Quanto cada dia útil terá a mais. Limite legal de 2h (120 min) por dia.", obrigatorio: true },
+          { nome: "Usar banco de horas", explica: "Se marcado, em vez de exigir extras, debita do saldo de BH do funcionário.", obrigatorio: false },
+        ],
+        dica: "A prévia automática mostra se o saldo de minutos cobre a dispensa antes de você salvar.",
+      },
+      {
+        titulo: "Vincular funcionários e coletar assinatura",
+        descricao: "Em modalidades individual/coletivo, selecione os CPFs. Ao ativar, o sistema envia magic link + 2FA para cada um assinar digitalmente.",
+      },
+    ],
+  },
+  {
+    id: "16-coletor",
+    titulo: "16. Coletor Desktop (Windows / macOS / Linux)",
+    icone: Smartphone,
+    objetivo: "Agente local que conecta nos relógios Control iD/iDClass (mesmo offline) e envia batidas para a nuvem. Necessário quando o equipamento não tem internet própria.",
+    passos: [
+      {
+        titulo: "Baixar e instalar",
+        link: "/ponto/coletor",
+        descricao: "Escolha o instalador da sua plataforma (Windows .exe, macOS .dmg Intel/Apple Silicon, Linux AppImage).",
+      },
+      {
+        titulo: "Configurar IP do relógio",
+        link: "/ponto/equipamentos",
+        descricao: "Informe IP, usuário, senha e marque 'Usar HTTPS' se o relógio exigir. Botão 'Testar conexão' valida em tempo real.",
+        campos: [
+          { nome: "IP local", explica: "Ex.: 192.168.0.50. Deve estar na mesma rede do coletor.", obrigatorio: true },
+          { nome: "Usar HTTPS", explica: "Ative para Control iD P671 com firmware recente.", obrigatorio: false },
+        ],
+        dica: "Se o coletor cair, batidas ficam em fila offline e sincronizam quando voltar — sem perder NSR.",
+      },
+    ],
+  },
+  {
+    id: "17-afd",
+    titulo: "17. Importar AFD de Outro Sistema",
+    icone: Upload,
+    objetivo: "Migrar de outro REP/software. O sistema lê o arquivo AFD (Portaria 671) e popula funcionários + batidas históricas com idempotência (não duplica).",
+    passos: [
+      {
+        titulo: "Importar AFD",
+        link: "/ponto/importar-afd",
+        descricao: "Selecione o .txt AFD. O sistema valida CNPJ-cabeçalho, identifica tipo 2/3/7 e gera log com cada NSR processado.",
+        dica: "Reimportações são seguras — registros com mesmo NSR são ignorados.",
+      },
+    ],
+  },
+  {
+    id: "18-sobreaviso-dsr",
+    titulo: "18. Sobreaviso e DSR",
+    icone: Clock,
+    objetivo: "Sobreaviso (plantão remoto) paga 1/3 da hora normal. DSR (descanso semanal remunerado) é perdido se houver falta injustificada na semana.",
+    passos: [
+      {
+        titulo: "Lançar escalas de sobreaviso",
+        link: "/ponto/sobreaviso",
+        descricao: "Defina período do plantão e funcionário. Cálculo de 1/3 entra automático na folha.",
+      },
+      {
+        titulo: "Apurar DSR",
+        link: "/ponto/dsr",
+        descricao: "Mostra quem perdeu DSR por faltas/atrasos. Integra com o layout de exportação.",
+      },
+    ],
+  },
+  {
+    id: "19-portal-colaborador",
+    titulo: "19. Portal do Colaborador",
+    icone: Smartphone,
+    objetivo: "App/web do funcionário: ver espelho, solicitar férias, justificar faltas, anexar atestados.",
+    passos: [
+      {
+        titulo: "Acessar portal",
+        link: "/ponto/portal",
+        descricao: "Funcionário vê batidas, saldos de BH, férias e abre solicitações que entram na fila de aprovação multinível.",
+      },
+      {
+        titulo: "Solicitar férias (regra 14+5+5)",
+        link: "/ponto/ferias",
+        descricao: "Sistema impõe divisão legal: 1 período de no mínimo 14 dias + até 2 outros de 5+ dias, com aviso prévio de 30 dias.",
+      },
+    ],
+  },
+  {
+    id: "20-dashboards",
+    titulo: "20. Dashboards Executivos e Anomalias",
+    icone: TrendingUp,
+    objetivo: "Visão consolidada de KPIs (absenteísmo, HE, turnover) e violações detectadas automaticamente.",
+    passos: [
+      {
+        titulo: "Dashboard executivo",
+        link: "/ponto/dashboard-executivo",
+        descricao: "Cards de KPI por filial, gráficos de tendência e ranking de gestores.",
+      },
+      {
+        titulo: "Anomalias detectadas",
+        link: "/ponto/anomalias",
+        descricao: "Job diário identifica intervalos curtos, HE acima do limite, batidas fora de geofence, intervalos interjornada <11h, etc.",
+        dica: "Cada anomalia gera uma sugestão de motivo padrão para o gestor justificar/abonar com 1 clique.",
+      },
+    ],
+  },
+  {
+    id: "21-webhook",
+    titulo: "21. Webhook em Tempo Real (Catracas)",
+    icone: GitBranch,
+    objetivo: "Receber batidas direto do hardware (Control iD push) sem precisar do coletor.",
+    passos: [
+      {
+        titulo: "Gerar token de webhook",
+        link: "/ponto/webhook-catracas",
+        descricao: "Crie um token por equipamento e cole a URL no painel do relógio. Toda batida chega na hora.",
+      },
+    ],
+  },
+  {
+    id: "22-edicao-lote",
+    titulo: "22. Edição em Lote de Funcionários",
+    icone: Users,
+    objetivo: "Atualizar centenas de cadastros de uma vez (cargo, escala, layout de folha, filial, etc.) respeitando travamentos de período fechado.",
+    passos: [
+      {
+        titulo: "Selecionar e editar",
+        link: "/ponto/funcionarios",
+        descricao: "Marque os checkboxes da lista e clique em 'Editar em lote'. Escolha qual campo alterar e o novo valor.",
+        dica: "Se algum funcionário tiver período fechado afetando a mudança (ex.: trocar escala em mês exportado), o sistema bloqueia só os afetados e processa o resto.",
+      },
+    ],
+  },
+  {
+    id: "23-exportacao-multi",
+    titulo: "23. Exportação Consolidada (multi-layout)",
+    icone: FileDown,
+    objetivo: "Empresa com funcionários em layouts diferentes (ex.: alguns com adicional 50%, outros 60%) gera UM único arquivo consolidado.",
+    passos: [
+      {
+        titulo: "Vincular layout por funcionário",
+        link: "/ponto/funcionarios",
+        descricao: "Cada funcionário tem o campo 'Layout de exportação' (Domínio, Sage, custom 60%...).",
+      },
+      {
+        titulo: "Faixas customizadas de HE",
+        link: "/ponto/acordos-coletivos",
+        descricao: "Defina multiplicadores extras (ex.: 60%, 80%) no acordo da categoria. O exportador usa a faixa correta por funcionário.",
+      },
+      {
+        titulo: "Exportar consolidado",
+        link: "/ponto/exportacao",
+        descricao: "Botão 'Exportar consolidado' agrupa funcionários por layout, gera cada bloco e devolve um único pacote pronto para a folha.",
+      },
+    ],
+  },
+  {
+    id: "24-bloqueios",
+    titulo: "24. Travamentos e Avisos",
+    icone: Lock,
+    objetivo: "Após exportação/fechamento, o sistema bloqueia alterações em batidas, ajustes, escalas, férias, feriados e regras do período. Avisos amigáveis com link para a tela que destrava.",
+    passos: [
+      {
+        titulo: "Ver bloqueios ativos",
+        link: "/ponto/fechamento",
+        descricao: "Banner global lista fechamentos e exportações vigentes com links para reabrir/excluir.",
+      },
+      {
+        titulo: "Reabrir período / excluir exportação",
+        link: "/ponto/exportacao",
+        descricao: "Botões 'Reabrir período' (apaga fechamento) e 'Excluir exportação' (remove arquivos do storage e libera o intervalo).",
+        dica: "Toda reabertura fica registrada em auditoria com usuário, data e motivo.",
+      },
+    ],
+  },
+  {
+    id: "25-configuracoes-extras",
+    titulo: "25. Configurações Avançadas",
+    icone: Settings,
+    objetivo: "Telas de ajuste fino que normalmente o DP só toca quando muda lei ou política interna.",
+    passos: [
+      {
+        titulo: "Regras de aprovação multinível",
+        link: "/ponto/aprovacao-regras",
+        descricao: "Quem aprova o quê, em quantos níveis, com qual SLA. Já coberto na seção 7.",
+      },
+      {
+        titulo: "Notificações automáticas",
+        link: "/ponto/notificacoes",
+        descricao: "Configure templates (Resend/email + push) para atraso, HE pendente, espelho a assinar, BH vencendo.",
+      },
+      {
+        titulo: "Sugestão de escala por IA",
+        link: "/ponto/sugerir-escala",
+        descricao: "IA analisa histórico e sugere a melhor escala para reduzir HE/absenteísmo.",
+      },
+      {
+        titulo: "Antifraude",
+        link: "/ponto/antifraude",
+        descricao: "Geofences, redes Wi-Fi autorizadas e regras de selfie obrigatória.",
+      },
+    ],
+  },
 ];
 
 export default function PontoManual() {
@@ -355,7 +571,7 @@ export default function PontoManual() {
         <Sparkles className="h-4 w-4" />
         <AlertTitle>Como usar este manual</AlertTitle>
         <AlertDescription>
-          Siga as 14 seções na ordem. Cada passo tem um botão <Badge variant="outline">Abrir tela</Badge> que leva direto à página correspondente.
+          Siga as seções na ordem. Cada passo tem um botão <Badge variant="outline">Abrir tela</Badge> que leva direto à página correspondente.
           Os <span className="font-medium">campos obrigatórios</span> estão marcados em vermelho. Termine uma seção antes de partir para a próxima — algumas dependem da anterior.
         </AlertDescription>
       </Alert>
