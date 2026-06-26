@@ -429,6 +429,7 @@ const App = () => (
                 <Route path="lgpd" element={<PontoLGPDPortal />} />
                 <Route path="esocial-fila" element={<PontoEsocialFila />} />
                 <Route path="acordos-coletivos" element={<PontoAcordosColetivos />} />
+                <Route path="compensacao" element={<PontoCompensacao />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
                 <Route path="manual" element={<PontoManual />} />
               </Route>
