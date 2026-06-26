@@ -171,4 +171,6 @@ function stopCollector() {
 }
 function getStatus() { return { ...STATE, config: loadConfig() }; }
 
-module.exports = { startCollector, stopCollector, getStatus, saveConfig, loadConfig };
+async function pollNow() { await pollOnce(); return getStatus(); }
+
+module.exports = { startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow };

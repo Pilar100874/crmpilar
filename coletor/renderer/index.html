@@ -52,7 +52,7 @@
     <div style="margin-top:14px">
       <button id="btnStart" onclick="start(event)">▶ Iniciar</button>
       <button id="btnStop" onclick="stop(event)">⏸ Parar</button>
-      <button id="btnRefresh" onclick="refresh(event)">↻ Atualizar</button>
+      <button id="btnRefresh" onclick="refreshNow(event)">↻ Atualizar agora</button>
     </div>
     <div class="muted">
       O coletor já vem configurado para se conectar ao seu CRM. Basta cadastrar os relógios em
@@ -133,6 +133,7 @@
     }
     async function start(ev) { flash(ev?.currentTarget); await window.coletor.start(); refresh(); }
     async function stop(ev)  { flash(ev?.currentTarget); await window.coletor.stop();  refresh(); }
+    async function refreshNow(ev) { flash(ev?.currentTarget); await window.coletor.pollNow(); refresh(); }
     setInterval(refresh, 1500);
     refresh();
   </script>
