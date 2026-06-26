@@ -11654,8 +11654,10 @@ export type Database = {
           numero_fabricacao: string | null
           porta: number | null
           protocolo: string | null
+          resultado_teste: string | null
           senha: string | null
           serial: string | null
+          solicitar_teste: boolean
           status: string | null
           tipo_relogio: string | null
           ultima_sync: string | null
@@ -11685,8 +11687,10 @@ export type Database = {
           numero_fabricacao?: string | null
           porta?: number | null
           protocolo?: string | null
+          resultado_teste?: string | null
           senha?: string | null
           serial?: string | null
+          solicitar_teste?: boolean
           status?: string | null
           tipo_relogio?: string | null
           ultima_sync?: string | null
@@ -11716,8 +11720,10 @@ export type Database = {
           numero_fabricacao?: string | null
           porta?: number | null
           protocolo?: string | null
+          resultado_teste?: string | null
           senha?: string | null
           serial?: string | null
+          solicitar_teste?: boolean
           status?: string | null
           tipo_relogio?: string | null
           ultima_sync?: string | null
