@@ -78,7 +78,29 @@ async function pollOnce() {
         STATE.errors++;
       }
 
-      updates.push({ id: eq.id, status: statusNovo, ultimo_erro: erroMsg, ultima_sync: new Date().toISOString() });
+      const updateObj = { id: eq.id, status: statusNovo, ultimo_erro: erroMsg, ultima_sync: new Date().toISOString() };
+
+      if (eq.solicitar_teste) {
+        let resultado_teste = "";
+        try {
+          const { login, resolverProtocolo, tentarLogin } = require('./controlid');
+          let testCfg = {
+            host: eq.ip,
+            port: eq.porta || 80,
+            https: resolverProtocolo(eq),
+            login: eq.usuario || 'admin',
+            password: eq.chave_comunicacao || eq.senha || 'admin',
+          };
+          await tentarLogin(testCfg);
+          resultado_teste = "Sucesso: Conectado com sucesso pelo Coletor Desktop!";
+        } catch (e) {
+          resultado_teste = `Falha: ${e.message}`;
+        }
+        updateObj.solicitar_teste = false;
+        updateObj.resultado_teste = resultado_teste;
+      }
+
+      updates.push(updateObj);
 
       if (batidas.length === 0) continue;
       try {
