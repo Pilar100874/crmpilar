@@ -88,16 +88,42 @@ function parseAFDPunches(afdText) {
   return out;
 }
 
+// Auto-detecta protocolo: porta 443 sempre HTTPS, porta 80 sempre HTTP,
+// outras portas respeitam o flag. Em caso de falha de protocolo, tenta o oposto.
+function resolverProtocolo(equip) {
+  const port = equip.porta || 80;
+  if (port === 443) return true;
+  if (port === 80) return false;
+  return equip.usa_https === true;
+}
+
+async function tentarLogin(cfg) {
+  try {
+    return await login(cfg);
+  } catch (e) {
+    const msg = String(e.message || '');
+    // Erros típicos de protocolo errado: tentar com o oposto
+    if (/WRONG_VERSION_NUMBER|EPROTO|ECONNRESET|socket hang up|HTTP\/1\.1 400/i.test(msg)) {
+      const alt = { ...cfg, https: !cfg.https };
+      return await login(alt).then(s => ({ session: s, cfgUsado: alt })).catch(() => { throw e; });
+    }
+    throw e;
+  }
+}
+
 // Lê batidas novas desde lastNSR (filtra após parse)
 async function lerBatidasControlID(equip, lastNSR = 0) {
-  const cfg = {
+  let cfg = {
     host: equip.ip,
     port: equip.porta || 80,
-    https: equip.usa_https === true,
+    https: resolverProtocolo(equip),
     login: equip.usuario || 'admin',
     password: equip.chave_comunicacao || equip.senha || 'admin',
   };
-  const session = await login(cfg);
+  let session;
+  const r = await tentarLogin(cfg);
+  if (typeof r === 'string') session = r;
+  else { session = r.session; cfg = r.cfgUsado; }
   try {
     const afd = await getAFD({ ...cfg, session, mode: '671' });
     const punches = parseAFDPunches(afd);
