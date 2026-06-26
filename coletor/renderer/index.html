@@ -14,13 +14,13 @@
     .stat .value { font-size:22px; font-weight:700; margin-top:4px; }
     button { background:#3b82f6; color:white; border:0; padding:8px 14px; border-radius:6px; cursor:pointer; margin-right:6px; }
     button.secondary { background:#475569; }
-    label { display:block; font-size:12px; margin-top:8px; color:#94a3b8; }
-    input { width:100%; padding:8px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:#e2e8f0; margin-top:4px; }
     .ok { color:#22c55e; } .err { color:#ef4444; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:999px; background:#22c55e22; color:#22c55e; font-size:11px; margin-left:6px; }
+    .muted { color:#94a3b8; font-size:12px; margin-top:8px; }
   </style>
 </head>
 <body>
-  <h1>🕒 Ponto Coletor</h1>
+  <h1>🕒 Ponto Coletor <span class="badge">pré-configurado</span></h1>
 
   <div class="card">
     <div class="grid">
@@ -33,26 +33,20 @@
       <button class="secondary" onclick="stop()">Parar</button>
       <button class="secondary" onclick="refresh()">Atualizar</button>
     </div>
-  </div>
-
-  <div class="card">
-    <h3 style="margin-top:0">Configuração</h3>
-    <label>URL Supabase</label>
-    <input id="url" placeholder="https://xxx.supabase.co" />
-    <label>Anon Key</label>
-    <input id="anonKey" />
-    <label>Email do usuário</label>
-    <input id="email" />
-    <label>Senha</label>
-    <input id="password" type="password" />
-    <div style="margin-top:12px">
-      <button onclick="salvar()">Salvar</button>
+    <div class="muted">
+      O coletor já vem configurado para se conectar ao seu CRM. Basta cadastrar os relógios em
+      <b>Controle de Ponto → Equipamentos</b> e este aplicativo coleta automaticamente a cada 60s.
     </div>
   </div>
 
   <div class="card">
     <h3 style="margin-top:0">Equipamentos detectados</h3>
     <div id="equips">—</div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Servidor</h3>
+    <div id="server" class="muted">—</div>
   </div>
 
   <script>
@@ -62,32 +56,13 @@
       document.getElementById('lastSync').textContent = s.lastSync ? new Date(s.lastSync).toLocaleString('pt-BR') : '—';
       document.getElementById('total').textContent = s.totalSent;
       document.getElementById('equips').innerHTML = (s.equipamentos || []).map(e =>
-        `<div>📟 ${e.nome} — ${e.ip}:${e.porta || 4370} <span class="${e.status === 'online' ? 'ok' : 'err'}">[${e.status}]</span></div>`
-      ).join('') || '<em>Nenhum equipamento cadastrado no CRM</em>';
-    }
-    async function carregarConfig() {
-      const cfg = await window.coletor.loadConfig();
-      ['url','anonKey','email','password'].forEach(k => {
-        const el = document.getElementById(k);
-        if (el && cfg?.[k]) el.value = cfg[k];
-      });
+        `<div>📟 ${e.nome} — ${e.ip}:${e.porta || 80} <span class="${e.status === 'online' ? 'ok' : 'err'}">[${e.status}]</span></div>`
+      ).join('') || '<em>Nenhum equipamento ativo cadastrado no CRM</em>';
+      document.getElementById('server').textContent = (s.config?.url || '');
     }
     async function start() { await window.coletor.start(); refresh(); }
     async function stop()  { await window.coletor.stop();  refresh(); }
-    async function salvar() {
-      const cfg = {
-        url: document.getElementById('url').value.trim(),
-        anonKey: document.getElementById('anonKey').value.trim(),
-        email: document.getElementById('email').value.trim(),
-        password: document.getElementById('password').value,
-      };
-      if (!cfg.url || !cfg.anonKey) { alert('Preencha URL e Anon Key'); return; }
-      await window.coletor.saveConfig(cfg);
-      alert('✅ Configuração salva e coletor reiniciado!');
-      refresh();
-    }
     setInterval(refresh, 5000);
-    carregarConfig();
     refresh();
   </script>
 </body>
