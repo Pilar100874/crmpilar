@@ -298,7 +298,7 @@ export default function PontoCompensacao() {
                     </div>
                     <div className="flex gap-1 mt-1 flex-wrap">
                       {[60, 120, 180, 240].map((m) => (
-                        <Button key={m} type="button" variant="outline" size="xs" className="text-[10px] py-0 h-5 px-1.5" onClick={() => setForm({ ...form, minutos_dispensados: m })}>
+                        <Button key={m} type="button" variant="outline" size="sm" className="text-[10px] py-0 h-5 px-1.5" onClick={() => setForm({ ...form, minutos_dispensados: m })}>
                           {m/60}h
                         </Button>
                       ))}
