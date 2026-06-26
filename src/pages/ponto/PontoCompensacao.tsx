@@ -155,7 +155,7 @@ export default function PontoCompensacao() {
   }
 
   async function ativar(a: Acordo) {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("ponto_compensacao_acordos")
       .update({ status: "ativo", aprovado_em: new Date().toISOString() })
       .eq("id", a.id);
