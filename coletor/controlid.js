@@ -12,6 +12,51 @@
 
 const http = require('http');
 const https = require('https');
+const net = require('net');
+const tls = require('tls');
+
+function isHeaderParseError(error) {
+  const msg = String(error?.message || error || '');
+  return /Invalid header value char|Parse Error|HPE_/i.test(msg);
+}
+
+function rawRequest(opts, body) {
+  return new Promise((resolve, reject) => {
+    const isHttps = opts.protocol === 'https:';
+    const payload = body ? (typeof body === 'string' ? body : JSON.stringify(body)) : '';
+    const headers = {
+      Host: `${opts.hostname}:${opts.port}`,
+      Connection: 'close',
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(payload),
+      ...(opts.headers || {}),
+    };
+    const headerLines = Object.entries(headers).map(([k, v]) => `${k}: ${v}`).join('\r\n');
+    const requestText = `${opts.method || 'GET'} ${opts.path || '/'} HTTP/1.1\r\n${headerLines}\r\n\r\n${payload}`;
+    const chunks = [];
+    const socket = isHttps
+      ? tls.connect({ host: opts.hostname, port: opts.port, rejectUnauthorized: false, servername: opts.hostname }, () => socket.write(requestText))
+      : net.connect({ host: opts.hostname, port: opts.port }, () => socket.write(requestText));
+
+    socket.setTimeout(opts.timeout || 10000);
+    socket.on('data', (chunk) => chunks.push(chunk));
+    socket.once('timeout', () => socket.destroy(new Error('timeout')));
+    socket.once('error', reject);
+    socket.once('end', () => {
+      const raw = Buffer.concat(chunks).toString('utf8');
+      const splitAt = raw.indexOf('\r\n\r\n');
+      if (splitAt < 0) return reject(new Error(`resposta inválida do relógio: ${raw.slice(0, 120)}`));
+      const head = raw.slice(0, splitAt);
+      let responseBody = raw.slice(splitAt + 4);
+      const statusMatch = head.match(/^HTTP\/\d(?:\.\d)?\s+(\d+)/i);
+      const status = statusMatch ? Number(statusMatch[1]) : 0;
+      if (/transfer-encoding:\s*chunked/i.test(head)) {
+        responseBody = responseBody.replace(/^[0-9a-f]+\r\n/i, '').replace(/\r\n0\r\n\r\n$/i, '');
+      }
+      resolve({ status, body: responseBody, headers: {} });
+    });
+  });
+}
 
 function request(opts, body) {
   return new Promise((resolve, reject) => {
@@ -32,7 +77,18 @@ function request(opts, body) {
       res.on('data', (chunk) => data += chunk);
       res.on('end', () => resolve({ status: res.statusCode, body: data, headers: res.headers }));
     });
-    req.on('error', reject);
+    req.on('error', async (error) => {
+      if (isHeaderParseError(error)) {
+        try {
+          resolve(await rawRequest(opts, body));
+          return;
+        } catch (fallbackError) {
+          reject(fallbackError);
+          return;
+        }
+      }
+      reject(error);
+    });
     req.setTimeout(opts.timeout || 10000, () => { req.destroy(new Error('timeout')); });
     if (body) req.write(typeof body === 'string' ? body : JSON.stringify(body));
     req.end();

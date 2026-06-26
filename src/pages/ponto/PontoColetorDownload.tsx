@@ -41,7 +41,7 @@ const platforms: Platform[] = [
   {
     id: "linux",
     label: "Linux",
-    file: "PontoColetor-Linux.tar.gz",
+    file: "PontoColetor-Linux.zip",
     icon: Cpu,
     badge: "Debian/Ubuntu/Fedora · x64",
     url: linuxAsset.url,
@@ -217,7 +217,7 @@ export default function PontoColetorDownload() {
             <div>
               <p className="font-medium text-foreground">Linux</p>
               <ol className="ml-4 list-decimal space-y-1">
-                <li>Extraia o arquivo: <code>tar -xzf PontoColetor-Linux.tar.gz</code></li>
+                <li>Extraia o arquivo <strong>PontoColetor-Linux.zip</strong>.</li>
                 <li>Entre na pasta: <code>cd PontoColetor-linux-x64</code></li>
                 <li>Dê permissão e execute: <code>chmod +x PontoColetor && ./PontoColetor</code></li>
               </ol>
