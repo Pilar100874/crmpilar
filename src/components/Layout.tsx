@@ -96,6 +96,7 @@ interface SubMenuItem {
   title: string;
   url: string;
   icon: any;
+  group?: string;
 }
 
 interface MenuItem {
