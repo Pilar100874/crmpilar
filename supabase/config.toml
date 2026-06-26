@@ -299,3 +299,9 @@ verify_jwt = false
 
 [functions.bot-generate-product-samples]
 verify_jwt = false
+
+[functions.ponto-coletor-bootstrap]
+verify_jwt = false
+
+[functions.ponto-coletor-ingest]
+verify_jwt = false
