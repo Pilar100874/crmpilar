@@ -146,7 +146,7 @@
     "minimatch": "^9.0.5",
     "glob": "^10.4.5",
     "@xmldom/xmldom": "^0.8.10",
-    "@isaacs/brace-expansion": "^4.0.0",
+    "@isaacs/brace-expansion": "^5.0.0",
     "http-cache-semantics": "^4.1.1",
     "underscore": "^1.13.7",
     "diff": "^5.2.0",
