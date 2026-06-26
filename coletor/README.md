@@ -5,10 +5,9 @@ e sincroniza com o CRM Pilar — Controle de Ponto.
 
 ## Instalação
 
-1. Descompacte o ZIP.
-2. **Windows**: dê duplo clique em `PontoColetor.exe`
-3. **macOS**: arraste `PontoColetor.app` para Aplicativos.
-4. **Linux**: rode `./PontoColetor`
+1. **Windows**: Execute o instalador `PontoColetor-Setup.exe` para instalar o aplicativo e criar os atalhos automaticamente.
+2. **macOS**: Descompacte e arraste `PontoColetor.app` para a pasta de Aplicativos.
+3. **Linux**: Descompacte e execute `./PontoColetor`
 
 ## Primeira configuração
 
