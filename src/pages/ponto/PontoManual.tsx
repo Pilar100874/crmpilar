@@ -571,7 +571,7 @@ export default function PontoManual() {
         <Sparkles className="h-4 w-4" />
         <AlertTitle>Como usar este manual</AlertTitle>
         <AlertDescription>
-          Siga as 14 seções na ordem. Cada passo tem um botão <Badge variant="outline">Abrir tela</Badge> que leva direto à página correspondente.
+          Siga as seções na ordem. Cada passo tem um botão <Badge variant="outline">Abrir tela</Badge> que leva direto à página correspondente.
           Os <span className="font-medium">campos obrigatórios</span> estão marcados em vermelho. Termine uma seção antes de partir para a próxima — algumas dependem da anterior.
         </AlertDescription>
       </Alert>
