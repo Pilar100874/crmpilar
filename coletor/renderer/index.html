@@ -133,6 +133,7 @@
     }
     async function start(ev) { flash(ev?.currentTarget); await window.coletor.start(); refresh(); }
     async function stop(ev)  { flash(ev?.currentTarget); await window.coletor.stop();  refresh(); }
+    async function refreshNow(ev) { flash(ev?.currentTarget); await window.coletor.pollNow(); refresh(); }
     setInterval(refresh, 1500);
     refresh();
   </script>
