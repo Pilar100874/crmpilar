@@ -80,7 +80,8 @@ export default function PontoColetorDownload() {
         <CardContent className="space-y-3 p-5">
           <h3 className="font-semibold">Como instalar</h3>
           <ol className="ml-4 list-decimal space-y-2 text-sm text-muted-foreground">
-            <li>No Windows, execute o instalador <strong>PontoColetor-Setup.exe</strong>. Nas demais plataformas, descompacte o pacote.</li>
+            <li>Descompacte o pacote em uma pasta (ex.: <code>C:\PontoColetor</code>).</li>
+            <li>No Windows, execute <strong>PontoColetor.exe</strong> dentro da pasta extraída (crie um atalho na Área de Trabalho se desejar).</li>
             <li>Execute o aplicativo <strong>Ponto Coletor</strong>.</li>
             <li>Faça login com o usuário e senha do CRM.</li>
             <li>Cadastre os relógios em <strong>Equipamentos</strong> e o coletor reconhece automaticamente.</li>
