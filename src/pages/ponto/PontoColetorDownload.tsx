@@ -5,7 +5,14 @@ import { Download, Monitor, Apple, Cpu, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 const platforms = [
-  { id: "win", label: "Windows", file: "PontoColetor-Windows.zip", icon: Monitor, badge: "Win 10/11 · x64" },
+  { 
+    id: "win", 
+    label: "Windows", 
+    file: "PontoColetor-Setup.exe", 
+    icon: Monitor, 
+    badge: "Instalador Setup (.exe) · x64",
+    url: "/__l5e/assets-v1/5b1982ea-4284-4c95-ae16-8df829ab91df/PontoColetor-Setup.exe"
+  },
   { id: "mac", label: "macOS", file: "PontoColetor-macOS.zip", icon: Apple, badge: "Apple Silicon / Intel" },
   { id: "linux", label: "Linux", file: "PontoColetor-Linux.tar.gz", icon: Cpu, badge: "Debian/Ubuntu/Fedora" },
 ];
@@ -13,9 +20,19 @@ const platforms = [
 export default function PontoColetorDownload() {
   const [downloading, setDownloading] = useState<string | null>(null);
 
-  const baixar = async (file: string, id: string) => {
+  const baixar = async (file: string, id: string, customUrl?: string) => {
     setDownloading(id);
     try {
+      if (customUrl) {
+        const a = document.createElement("a");
+        a.href = customUrl;
+        a.download = file;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        toast.success("Download iniciado");
+        return;
+      }
       const res = await fetch(`/coletor/${file}`);
       if (!res.ok) throw new Error("Arquivo indisponível");
       const blob = await res.blob();
@@ -49,7 +66,7 @@ export default function PontoColetorDownload() {
               <p.icon className="mx-auto h-10 w-10 text-primary" />
               <h3 className="font-semibold">{p.label}</h3>
               <p className="text-xs text-muted-foreground">{p.badge}</p>
-              <Button className="w-full" onClick={() => baixar(p.file, p.id)} disabled={downloading === p.id}>
+              <Button className="w-full" onClick={() => baixar(p.file, p.id, p.url)} disabled={downloading === p.id}>
                 <Download className="mr-2 h-4 w-4" />
                 {downloading === p.id ? "Baixando…" : "Baixar"}
               </Button>
@@ -62,11 +79,11 @@ export default function PontoColetorDownload() {
         <CardContent className="space-y-3 p-5">
           <h3 className="font-semibold">Como instalar</h3>
           <ol className="ml-4 list-decimal space-y-2 text-sm text-muted-foreground">
-            <li>Baixe o pacote da sua plataforma e descompacte.</li>
-            <li>Execute o aplicativo <strong>PontoColetor</strong>.</li>
+            <li>No Windows, execute o instalador <strong>PontoColetor-Setup.exe</strong>. Nas demais plataformas, descompacte o pacote.</li>
+            <li>Execute o aplicativo <strong>Ponto Coletor</strong>.</li>
             <li>Faça login com o usuário e senha do CRM.</li>
             <li>Cadastre os relógios em <strong>Equipamentos</strong> e o coletor reconhece automaticamente.</li>
-            <li>O serviço fica em segundo plano e sincroniza a cada 60s.</li>
+            <li>O serviço fica rodando em segundo plano e sincroniza a cada 60s.</li>
           </ol>
           <div className="rounded-md bg-muted/50 p-3 text-xs">
             <p className="font-medium mb-1">Marcas e protocolos suportados</p>
