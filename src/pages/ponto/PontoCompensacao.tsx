@@ -103,7 +103,7 @@ export default function PontoCompensacao() {
     setAcordos((data as any) || []);
   }
   async function loadFuncs() {
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("ponto_funcionarios")
       .select("id,nome,matricula,empresa_id")
       .eq("empresa_id", empresaId)
