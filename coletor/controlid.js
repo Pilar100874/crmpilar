@@ -21,6 +21,12 @@ function request(opts, body) {
     if (isHttps && opts.rejectUnauthorized === undefined) {
       opts.rejectUnauthorized = false;
     }
+    // Control iD envia cabeçalhos fora do padrão HTTP/1.1 (caracteres inválidos);
+    // o parser estrito do Node rejeita com "Parse Error: Invalid header value char".
+    // O parser permissivo aceita esses cabeçalhos.
+    if (opts.insecureHTTPParser === undefined) {
+      opts.insecureHTTPParser = true;
+    }
     const req = lib.request(opts, (res) => {
       let data = '';
       res.on('data', (chunk) => data += chunk);
