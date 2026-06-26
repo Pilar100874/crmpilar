@@ -340,9 +340,16 @@ export default function PontoFuncionarios() {
           <h2 className="text-xl font-semibold sm:text-2xl">Funcionários</h2>
           <p className="text-sm text-muted-foreground">Cadastro completo de colaboradores</p>
         </div>
-        <Button onClick={openCreate} disabled={!empresaId} className="w-full sm:w-auto">
-          <Plus className="mr-2 h-4 w-4" /> Novo
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          {selected.size > 0 && (
+            <Button variant="secondary" onClick={() => setLoteOpen(true)} className="w-full sm:w-auto">
+              <Layers className="mr-2 h-4 w-4" /> Editar em lote ({selected.size})
+            </Button>
+          )}
+          <Button onClick={openCreate} disabled={!empresaId} className="w-full sm:w-auto">
+            <Plus className="mr-2 h-4 w-4" /> Novo
+          </Button>
+        </div>
       </div>
 
       {items.length === 0 ? (
