@@ -66,7 +66,7 @@ export default function PontoColetorDownload() {
               <p.icon className="mx-auto h-10 w-10 text-primary" />
               <h3 className="font-semibold">{p.label}</h3>
               <p className="text-xs text-muted-foreground">{p.badge}</p>
-              <Button className="w-full" onClick={() => baixar(p.file, p.id)} disabled={downloading === p.id}>
+              <Button className="w-full" onClick={() => baixar(p.file, p.id, p.url)} disabled={downloading === p.id}>
                 <Download className="mr-2 h-4 w-4" />
                 {downloading === p.id ? "Baixando…" : "Baixar"}
               </Button>
