@@ -60,17 +60,27 @@ async function lerBatidas(equip) {
 
 async function pollOnce() {
   try {
+    STATE.progress = { ativo: true, etapa: 'bootstrap', equipNome: '', indice: 0, total: 0, batidasEquip: 0 };
     const cfg = loadConfig();
     const boot = await callBootstrap([]);
     STATE.equipamentos = boot.equipamentos || [];
     const updates = [];
+    const total = STATE.equipamentos.length;
+    STATE.progress.total = total;
 
-    for (const eq of STATE.equipamentos) {
+    for (let i = 0; i < total; i++) {
+      const eq = STATE.equipamentos[i];
+      STATE.progress.indice = i + 1;
+      STATE.progress.equipNome = eq.nome || eq.ip;
+      STATE.progress.etapa = 'lendo';
+      STATE.progress.batidasEquip = 0;
+
       let batidas = [];
       let statusNovo = 'online';
       let erroMsg = null;
       try {
         batidas = await lerBatidas(eq);
+        STATE.progress.batidasEquip = batidas.length;
         delete STATE.lastErrors[eq.id];
       } catch (e) {
         statusNovo = 'offline';
@@ -82,9 +92,10 @@ async function pollOnce() {
       const updateObj = { id: eq.id, status: statusNovo, ultimo_erro: erroMsg, ultima_sync: new Date().toISOString() };
 
       if (eq.solicitar_teste) {
+        STATE.progress.etapa = 'testando';
         let resultado_teste = "";
         try {
-          const { login, resolverProtocolo, tentarLogin } = require('./controlid');
+          const { resolverProtocolo, tentarLogin } = require('./controlid');
           let testCfg = {
             host: eq.ip,
             port: eq.porta || 80,
@@ -104,6 +115,7 @@ async function pollOnce() {
       updates.push(updateObj);
 
       if (batidas.length === 0) continue;
+      STATE.progress.etapa = 'enviando';
       try {
         const resp = await fetch(`${cfg.url}/functions/v1/ponto-coletor-ingest`, {
           method: 'POST',
@@ -135,8 +147,11 @@ async function pollOnce() {
       try { await callBootstrap(updates); } catch (e) { console.error('[coletor] status', e.message); }
     }
     STATE.lastSync = new Date().toISOString();
+    STATE.progress = { ativo: false, etapa: 'idle', equipNome: '', indice: total, total, batidasEquip: 0 };
   } catch (e) {
     STATE.errors++;
+    STATE.progress.ativo = false;
+    STATE.progress.etapa = 'erro';
     console.error('[coletor]', e.message);
   }
 }
