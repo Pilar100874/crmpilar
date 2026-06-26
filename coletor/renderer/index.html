@@ -12,11 +12,23 @@
     .stat { background:#0f172a; padding:14px; border-radius:8px; }
     .stat .label { font-size:11px; color:#94a3b8; text-transform:uppercase; }
     .stat .value { font-size:22px; font-weight:700; margin-top:4px; }
-    button { background:#3b82f6; color:white; border:0; padding:8px 14px; border-radius:6px; cursor:pointer; margin-right:6px; }
-    button.secondary { background:#475569; }
+    button { background:#334155; color:#e2e8f0; border:1px solid #475569; padding:8px 14px; border-radius:6px; cursor:pointer; margin-right:6px; transition:all .15s; font-weight:500; }
+    button:hover { background:#475569; }
+    button.active { background:#22c55e; border-color:#16a34a; color:white; box-shadow:0 0 0 3px #22c55e33; }
+    button.active-stop { background:#ef4444; border-color:#dc2626; color:white; box-shadow:0 0 0 3px #ef444433; }
+    button.flash { animation: flash .4s ease; }
+    @keyframes flash { 0%{transform:scale(1)} 50%{transform:scale(0.95); background:#3b82f6} 100%{transform:scale(1)} }
     .ok { color:#22c55e; } .err { color:#ef4444; }
     .badge { display:inline-block; padding:2px 8px; border-radius:999px; background:#22c55e22; color:#22c55e; font-size:11px; margin-left:6px; }
     .muted { color:#94a3b8; font-size:12px; margin-top:8px; }
+    .progress-wrap { margin-top:14px; }
+    .progress-bar { width:100%; height:10px; background:#0f172a; border-radius:999px; overflow:hidden; border:1px solid #334155; }
+    .progress-fill { height:100%; background:linear-gradient(90deg,#3b82f6,#22c55e); width:0%; transition:width .4s ease; }
+    .progress-fill.indet { background:linear-gradient(90deg,transparent,#3b82f6,transparent); background-size:200% 100%; animation: shimmer 1.2s linear infinite; width:100%; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .progress-label { display:flex; justify-content:space-between; font-size:12px; color:#94a3b8; margin-bottom:6px; }
+    .pulse { animation: pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
   </style>
 </head>
 <body>
@@ -28,14 +40,23 @@
       <div class="stat"><div class="label">Última sync</div><div class="value" id="lastSync" style="font-size:14px">—</div></div>
       <div class="stat"><div class="label">Batidas enviadas</div><div class="value" id="total">0</div></div>
     </div>
+
+    <div class="progress-wrap" id="progressWrap" style="display:none">
+      <div class="progress-label">
+        <span id="progressText">—</span>
+        <span id="progressCount">—</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+
     <div style="margin-top:14px">
-      <button onclick="start()">Iniciar</button>
-      <button class="secondary" onclick="stop()">Parar</button>
-      <button class="secondary" onclick="refresh()">Atualizar</button>
+      <button id="btnStart" onclick="start(event)">▶ Iniciar</button>
+      <button id="btnStop" onclick="stop(event)">⏸ Parar</button>
+      <button id="btnRefresh" onclick="refresh(event)">↻ Atualizar</button>
     </div>
     <div class="muted">
       O coletor já vem configurado para se conectar ao seu CRM. Basta cadastrar os relógios em
-      <b>Controle de Ponto → Equipamentos</b> e este aplicativo coleta automaticamente a cada 60s.
+      <b>Controle de Ponto → Equipamentos</b> e este aplicativo coleta automaticamente a cada 15s.
     </div>
   </div>
 
@@ -50,19 +71,69 @@
   </div>
 
   <script>
-    async function refresh() {
+    function flash(btn) {
+      if (!btn) return;
+      btn.classList.add('flash');
+      setTimeout(() => btn.classList.remove('flash'), 400);
+    }
+    function etapaLabel(e) {
+      return ({
+        bootstrap: 'Conectando ao servidor…',
+        lendo: 'Baixando batidas do relógio',
+        enviando: 'Enviando batidas ao CRM',
+        testando: 'Testando conexão',
+        idle: 'Aguardando próximo ciclo',
+        erro: 'Erro no último ciclo',
+      })[e] || e;
+    }
+    async function refresh(ev) {
+      flash(ev?.currentTarget);
       const s = await window.coletor.getStatus();
-      document.getElementById('running').textContent = s.running ? '🟢 Rodando' : '⚫ Parado';
+      const running = !!s.running;
+      document.getElementById('running').textContent = running ? '🟢 Rodando' : '⚫ Parado';
       document.getElementById('lastSync').textContent = s.lastSync ? new Date(s.lastSync).toLocaleString('pt-BR') : '—';
       document.getElementById('total').textContent = s.totalSent;
       document.getElementById('equips').innerHTML = (s.equipamentos || []).map(e =>
         `<div>📟 ${e.nome} — ${e.ip}:${e.porta || 80} <span class="${e.status === 'online' ? 'ok' : 'err'}">[${e.status}]</span></div>`
       ).join('') || '<em>Nenhum equipamento ativo cadastrado no CRM</em>';
       document.getElementById('server').textContent = (s.config?.url || '');
+
+      // Botões: estado ativo conforme running
+      const bStart = document.getElementById('btnStart');
+      const bStop = document.getElementById('btnStop');
+      bStart.classList.toggle('active', running);
+      bStop.classList.toggle('active-stop', !running);
+
+      // Progresso
+      const p = s.progress || { ativo:false };
+      const wrap = document.getElementById('progressWrap');
+      const fill = document.getElementById('progressFill');
+      const txt = document.getElementById('progressText');
+      const cnt = document.getElementById('progressCount');
+      if (p.ativo) {
+        wrap.style.display = '';
+        const pct = p.total > 0 ? Math.round(((p.indice - 1) / p.total) * 100 + (p.etapa==='enviando'?100/p.total:50/p.total)) : 0;
+        if (p.etapa === 'bootstrap' || !p.total) {
+          fill.classList.add('indet');
+          fill.style.width = '100%';
+        } else {
+          fill.classList.remove('indet');
+          fill.style.width = Math.min(100, Math.max(5, pct)) + '%';
+        }
+        const equipPart = p.equipNome ? ` · ${p.equipNome}` : '';
+        txt.innerHTML = `<span class="pulse">${etapaLabel(p.etapa)}${equipPart}</span>`;
+        cnt.textContent = p.total ? `${p.indice}/${p.total}` + (p.batidasEquip ? ` · ${p.batidasEquip} batidas` : '') : '';
+      } else {
+        wrap.style.display = running ? '' : 'none';
+        fill.classList.remove('indet');
+        fill.style.width = '100%';
+        txt.textContent = etapaLabel(p.etapa || 'idle');
+        cnt.textContent = p.total ? `${p.total} equipamento(s)` : '';
+      }
     }
-    async function start() { await window.coletor.start(); refresh(); }
-    async function stop()  { await window.coletor.stop();  refresh(); }
-    setInterval(refresh, 5000);
+    async function start(ev) { flash(ev?.currentTarget); await window.coletor.start(); refresh(); }
+    async function stop(ev)  { flash(ev?.currentTarget); await window.coletor.stop();  refresh(); }
+    setInterval(refresh, 1500);
     refresh();
   </script>
 </body>
