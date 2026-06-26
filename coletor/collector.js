@@ -16,6 +16,7 @@ const STATE = {
   errors: 0,
   equipamentos: [],
   lastErrors: {},
+  progress: { ativo: false, etapa: 'idle', equipNome: '', indice: 0, total: 0, batidasEquip: 0 },
 };
 
 const lastNSRByEquip = {};
