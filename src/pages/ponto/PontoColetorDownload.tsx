@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Monitor, Apple, Cpu, CheckCircle2 } from "lucide-react";
+import { Download, Monitor, Apple, Cpu } from "lucide-react";
 import { toast } from "sonner";
+import winAsset from "../../../public/coletor/PontoColetor-Windows.asset.json";
 
 const platforms = [
-  { 
-    id: "win", 
-    label: "Windows", 
-    file: "PontoColetor-Setup.exe", 
-    icon: Monitor, 
-    badge: "Instalador Setup (.exe) · x64",
-    url: "/__l5e/assets-v1/5b1982ea-4284-4c95-ae16-8df829ab91df/PontoColetor-Setup.exe"
+  {
+    id: "win",
+    label: "Windows",
+    file: "PontoColetor-Windows.zip",
+    icon: Monitor,
+    badge: "Pacote portátil (.zip) · x64",
+    url: winAsset.url,
   },
   { id: "mac", label: "macOS", file: "PontoColetor-macOS.zip", icon: Apple, badge: "Apple Silicon / Intel" },
   { id: "linux", label: "Linux", file: "PontoColetor-Linux.tar.gz", icon: Cpu, badge: "Debian/Ubuntu/Fedora" },
