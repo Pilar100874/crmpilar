@@ -26,16 +26,23 @@ Deno.serve(async (req) => {
     if (Array.isArray(body.status_updates) && body.status_updates.length) {
       for (const u of body.status_updates) {
         if (!u?.id) continue;
-        await sb.from("ponto_equipamentos").update({
+        const updatePayload: any = {
           ultima_sync: u.ultima_sync || new Date().toISOString(),
           status: u.status || "online",
           ultimo_erro: u.ultimo_erro ?? null,
-        }).eq("id", u.id);
+        };
+        if (u.solicitar_teste !== undefined) {
+          updatePayload.solicitar_teste = u.solicitar_teste;
+        }
+        if (u.resultado_teste !== undefined) {
+          updatePayload.resultado_teste = u.resultado_teste;
+        }
+        await sb.from("ponto_equipamentos").update(updatePayload).eq("id", u.id);
       }
     }
 
     const { data, error } = await sb.from("ponto_equipamentos")
-      .select("id, empresa_id, nome, modelo, ip, porta, usuario, chave_comunicacao, usa_https, ativo, status, data_inicio_coleta")
+      .select("id, empresa_id, nome, modelo, ip, porta, usuario, chave_comunicacao, usa_https, ativo, status, data_inicio_coleta, solicitar_teste")
       .eq("ativo", true);
     if (error) throw error;
 
