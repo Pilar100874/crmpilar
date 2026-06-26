@@ -954,44 +954,55 @@ export default function Layout({ children }: LayoutProps) {
                        
                         {isMenuOpen && (
                           <div className="mt-1 ml-8 space-y-1">
-                            {item.subItems.map((subItem) => {
-                              const isInAtalhos = atalhos.some(a => a.path === subItem.url);
-                              
-                              // Tratamento especial para Alterar Senha
-                              if (subItem.url === "#alterar-senha") {
-                                return (
-                                  <button
-                                    key={subItem.id}
-                                    onClick={() => {
-                                      setOpenSubmenuId(null);
-                                      setShowChangePasswordDialog(true);
-                                    }}
-                                    className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
-                                  >
-                                    <subItem.icon className="w-4 h-4 flex-shrink-0" />
-                                    <span className="text-sm">{subItem.title}</span>
-                                  </button>
-                                );
-                              }
-                              
-                              return (
-                                <NavLink
-                                  key={subItem.id}
-                                  to={subItem.url}
-                                  onClick={() => setOpenSubmenuId(null)}
-                                  className={({ isActive }) =>
-                                    `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                                      isActive && !isInAtalhos
-                                        ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
-                                        : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
-                                    }`
-                                  }
-                                >
-                                  <subItem.icon className="w-4 h-4 flex-shrink-0" />
-                                  <span className="text-sm">{subItem.title}</span>
-                                </NavLink>
-                              );
-                            })}
+                             {item.subItems.map((subItem, index) => {
+                               const isInAtalhos = atalhos.some(a => a.path === subItem.url);
+                               
+                               const previousGroup = index > 0 ? item.subItems[index - 1].group : null;
+                               const showGroupHeader = subItem.group && subItem.group !== previousGroup;
+                               
+                               const renderedItem = subItem.url === "#alterar-senha" ? (
+                                 <button
+                                   key={subItem.id}
+                                   onClick={() => {
+                                     setOpenSubmenuId(null);
+                                     setShowChangePasswordDialog(true);
+                                   }}
+                                   className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
+                                 >
+                                   <subItem.icon className="w-4 h-4 flex-shrink-0" />
+                                   <span className="text-sm">{subItem.title}</span>
+                                 </button>
+                               ) : (
+                                 <NavLink
+                                   key={subItem.id}
+                                   to={subItem.url}
+                                   onClick={() => setOpenSubmenuId(null)}
+                                   className={({ isActive }) =>
+                                     `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                                       isActive && !isInAtalhos
+                                         ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                                         : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
+                                     }`
+                                   }
+                                 >
+                                   <subItem.icon className="w-4 h-4 flex-shrink-0" />
+                                   <span className="text-sm">{subItem.title}</span>
+                                 </NavLink>
+                               );
+
+                               return (
+                                 <div key={subItem.id} className="space-y-1">
+                                   {showGroupHeader && (
+                                     <div className="pt-3 pb-1 first-of-type:pt-1">
+                                       <span className="text-[10px] font-bold text-sidebar-foreground/40 tracking-wider uppercase">
+                                         {subItem.group}
+                                       </span>
+                                     </div>
+                                   )}
+                                   {renderedItem}
+                                 </div>
+                               );
+                             })}
                           </div>
                         )}
                     </div>
