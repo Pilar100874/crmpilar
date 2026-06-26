@@ -401,7 +401,7 @@ export default function PontoEquipamentos() {
               />
             </div>
 
-            <div className="sm:col-span-2 flex flex-wrap items-center gap-3 rounded-md border bg-muted/30 p-3">
+            <div className="sm:col-span-2 flex flex-col gap-3 rounded-md border bg-muted/30 p-3">
               <div className="flex items-center gap-2">
                 <Switch
                   id="usa_https"
@@ -410,38 +410,60 @@ export default function PontoEquipamentos() {
                 />
                 <Label htmlFor="usa_https" className="cursor-pointer">Usar HTTPS na comunicação</Label>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  if (!f.ip) return toast.error("Informe o IP primeiro");
-                  const proto = f.usa_https ? "https" : "http";
-                  const url = `${proto}://${f.ip}:${f.porta || (f.usa_https ? 443 : 80)}/login.fcgi`;
-                  const t = toast.loading(`Testando ${url}...`);
-                  try {
-                    const ctrl = new AbortController();
-                    const to = setTimeout(() => ctrl.abort(), 6000);
-                    const resp = await fetch(url, {
-                      method: "POST",
-                      mode: "no-cors",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ login: f.usuario, password: f.senha }),
-                      signal: ctrl.signal,
-                    });
-                    clearTimeout(to);
-                    toast.dismiss(t);
-                    toast.success(`Equipamento respondeu (HTTP ${resp.status || "opaque"}). Login real só pode ser validado pelo Coletor Desktop devido a CORS.`);
-                  } catch (e: any) {
-                    toast.dismiss(t);
-                    toast.error(`Falha: ${e.message}. Verifique se está na mesma rede do relógio. O Coletor Desktop não tem essa limitação.`);
-                  }
-                }}
-              >
-                <Wifi className="mr-2 h-4 w-4" /> Testar conexão
-              </Button>
+              
+              <div className="flex flex-wrap gap-2 pt-1 border-t border-muted/50 mt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    if (!f.ip) return toast.error("Informe o IP primeiro");
+                    const proto = f.usa_https ? "https" : "http";
+                    const url = `${proto}://${f.ip}:${f.porta || (f.usa_https ? 443 : 80)}/login.fcgi`;
+                    const t = toast.loading(`Testando ${url}...`);
+                    try {
+                      const ctrl = new AbortController();
+                      const to = setTimeout(() => ctrl.abort(), 6000);
+                      const resp = await fetch(url, {
+                        method: "POST",
+                        mode: "no-cors",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ login: f.usuario, password: f.senha }),
+                        signal: ctrl.signal,
+                      });
+                      clearTimeout(to);
+                      toast.dismiss(t);
+                      toast.success(`IP respondeu. Login real só pode ser validado pelo Coletor Desktop devido a políticas de segurança de rede (CORS).`);
+                    } catch (e: any) {
+                      toast.dismiss(t);
+                      toast.error(`Erro: ${e.message}. Se o relógio estiver em IP interno, use a opção "Testar via Coletor Desktop" abaixo.`);
+                    }
+                  }}
+                >
+                  <Wifi className="mr-2 h-4 w-4" /> Testar pelo Navegador (IP Público)
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={testingRemote}
+                  onClick={testConnectionRemote}
+                  className="bg-primary/5 hover:bg-primary/10 border-primary/20 text-primary"
+                >
+                  <Wifi className="mr-2 h-4 w-4" /> Testar via Coletor Desktop (IP Interno / Local)
+                </Button>
+              </div>
+
+              {testingRemote && (
+                <div className="text-xs text-primary animate-pulse flex items-center gap-2 font-medium bg-primary/5 p-2 rounded border border-primary/10">
+                  <span className="h-2 w-2 rounded-full bg-primary animate-ping" />
+                  {remoteTestStatus}
+                </div>
+              )}
+
               <p className="w-full text-xs text-muted-foreground">
-                O teste pelo navegador apenas confirma se o IP responde. A autenticação real (login + leitura de batidas) é feita pelo Coletor Desktop instalado na rede local.
+                <b>Observação:</b> O teste pelo navegador exige que você esteja na mesma rede local que o relógio e que ele possua IP acessível de fora ou HTTPS configurado. A opção de <b>Testar via Coletor Desktop</b> delega o teste ao Coletor rodando dentro da sua infraestrutura, sem bloqueios de rede.
               </p>
             </div>
 
