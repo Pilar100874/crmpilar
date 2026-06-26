@@ -877,27 +877,25 @@ export default function Layout({ children }: LayoutProps) {
                               </h3>
                                
                                <div className="space-y-1">
-                                  {item.subItems.map((subItem) => {
+                                  {item.subItems.map((subItem, index) => {
                                     const isInAtalhos = atalhos.some(a => a.path === subItem.url);
                                     
-                                    // Tratamento especial para Alterar Senha
-                                    if (subItem.url === "#alterar-senha") {
-                                      return (
-                                        <button
-                                          key={subItem.id}
-                                          onClick={() => {
-                                            setOpenSubmenuId(null);
-                                            setShowChangePasswordDialog(true);
-                                          }}
-                                          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
-                                        >
-                                          <subItem.icon className="w-4 h-4 flex-shrink-0" />
-                                          <span className="text-sm">{subItem.title}</span>
-                                        </button>
-                                      );
-                                    }
+                                    const previousGroup = index > 0 ? item.subItems[index - 1].group : null;
+                                    const showGroupHeader = subItem.group && subItem.group !== previousGroup;
                                     
-                                    return (
+                                    const renderedItem = subItem.url === "#alterar-senha" ? (
+                                      <button
+                                        key={subItem.id}
+                                        onClick={() => {
+                                          setOpenSubmenuId(null);
+                                          setShowChangePasswordDialog(true);
+                                        }}
+                                        className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
+                                      >
+                                        <subItem.icon className="w-4 h-4 flex-shrink-0" />
+                                        <span className="text-sm">{subItem.title}</span>
+                                      </button>
+                                    ) : (
                                       <NavLink
                                         key={subItem.id}
                                         to={subItem.url}
@@ -913,6 +911,19 @@ export default function Layout({ children }: LayoutProps) {
                                         <subItem.icon className="w-4 h-4 flex-shrink-0" />
                                         <span className="text-sm">{subItem.title}</span>
                                       </NavLink>
+                                    );
+
+                                    return (
+                                      <div key={subItem.id} className="space-y-1">
+                                        {showGroupHeader && (
+                                          <div className="pt-3 pb-1 px-2 border-t border-sidebar-border/30 mt-2 first-of-type:border-0 first-of-type:mt-0">
+                                            <span className="text-[10px] font-bold text-sidebar-foreground/40 tracking-wider uppercase">
+                                              {subItem.group}
+                                            </span>
+                                          </div>
+                                        )}
+                                        {renderedItem}
+                                      </div>
                                     );
                                   })}
                                </div>
