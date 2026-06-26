@@ -372,9 +372,9 @@ const SECOES: Secao[] = [
     objetivo: "Agente local que conecta nos relógios Control iD/iDClass (mesmo offline) e envia batidas para a nuvem. Necessário quando o equipamento não tem internet própria.",
     passos: [
       {
-        titulo: "Baixar e instalar",
+        titulo: "Baixar e Extrair",
         link: "/ponto/coletor",
-        descricao: "Escolha o instalador da sua plataforma (Windows .exe, macOS .dmg Intel/Apple Silicon, Linux AppImage).",
+        descricao: "Escolha o pacote da sua plataforma. No Windows, baixe o arquivo .zip, extraia todo o conteúdo para uma pasta definitiva (ex: C:\\PontoColetor) e execute o PontoColetor.exe diretamente (sem necessidade de instalar!).",
       },
       {
         titulo: "Configurar IP do relógio",
