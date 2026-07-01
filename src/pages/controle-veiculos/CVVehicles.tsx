@@ -11,8 +11,9 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
   Plus, Pencil, Trash2, Car, Gauge, Droplets,
-  AlertTriangle, CheckCircle, ToggleLeft, ToggleRight, Search,
+  AlertTriangle, CheckCircle, ToggleLeft, ToggleRight, Search, Truck,
 } from "lucide-react";
+import { CVPageHeader } from "./CVPageHeader";
 import type { Vehicle, VehicleType } from "@/types/vehicle";
 
 const TYPES: { value: VehicleType; label: string }[] = [
@@ -75,18 +76,20 @@ export default function CVVehicles() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-        <div>
-          <h2 className="text-xl font-semibold">Veículos</h2>
-          <p className="text-sm text-muted-foreground">{rows.length} cadastrados • {rows.filter(r => r.active).length} ativos</p>
-        </div>
-        <div className="flex gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar nome ou placa..." value={q} onChange={e => setQ(e.target.value)} className="pl-8 w-64" />
-          </div>
-          <Button onClick={openNew}><Plus className="h-4 w-4 mr-1" />Novo Veículo</Button>
-        </div>
+      <CVPageHeader
+        icon={Truck}
+        title="Veículos"
+        subtitle={`${rows.length} cadastrados • ${rows.filter(r => r.active).length} ativos`}
+        actions={
+          <Button onClick={openNew} className="bg-white text-primary hover:bg-white/90">
+            <Plus className="h-4 w-4 mr-1" />Novo Veículo
+          </Button>
+        }
+      />
+
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input placeholder="Buscar nome ou placa..." value={q} onChange={e => setQ(e.target.value)} className="pl-9" />
       </div>
 
       {filtered.length === 0 ? (
