@@ -129,20 +129,37 @@ export default function CVInspectionConfig() {
                 <Label className="text-xs">Nome do ângulo</Label>
                 <Input value={a.label} onChange={(e) => updateAngle(i, { label: e.target.value })} />
               </div>
-              <div className="min-w-[180px] space-y-1">
+              <div className="min-w-[160px] space-y-1">
                 <Label className="text-xs">Origem da imagem</Label>
                 <Select
-                  value={a.source ?? "both"}
-                  onValueChange={(v) => updateAngle(i, { source: v as AngleSource })}
+                  value={a.source ?? "device"}
+                  onValueChange={(v) => updateAngle(i, { source: v as AngleSource, camera_id: v === "device" ? null : a.camera_id ?? null })}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="both">Câmera do dispositivo + IP</SelectItem>
-                    <SelectItem value="device">Somente foto (dispositivo)</SelectItem>
-                    <SelectItem value="ip_camera">Somente câmera IP</SelectItem>
+                    <SelectItem value="device">Foto</SelectItem>
+                    <SelectItem value="ip_camera">Câmera IP</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              {a.source === "ip_camera" && (
+                <div className="min-w-[200px] space-y-1">
+                  <Label className="text-xs">Câmera</Label>
+                  <Select
+                    value={a.camera_id ?? ""}
+                    onValueChange={(v) => updateAngle(i, { camera_id: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={cameras.length ? "Selecione a câmera" : "Nenhuma câmera cadastrada"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cameras.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="flex items-center gap-2 pb-2">
                 <Switch checked={a.required} onCheckedChange={(v) => updateAngle(i, { required: v })} />
                 <Label className="text-sm">Obrigatória</Label>
