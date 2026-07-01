@@ -11589,6 +11589,7 @@ export type Database = {
           created_at: string
           endereco: string | null
           estabelecimento_id: string
+          geofence_obrigatorio_app: boolean
           id: string
           inscricao_estadual: string | null
           nome_fantasia: string | null
@@ -11606,6 +11607,7 @@ export type Database = {
           created_at?: string
           endereco?: string | null
           estabelecimento_id: string
+          geofence_obrigatorio_app?: boolean
           id?: string
           inscricao_estadual?: string | null
           nome_fantasia?: string | null
@@ -11623,6 +11625,7 @@ export type Database = {
           created_at?: string
           endereco?: string | null
           estabelecimento_id?: string
+          geofence_obrigatorio_app?: boolean
           id?: string
           inscricao_estadual?: string | null
           nome_fantasia?: string | null
