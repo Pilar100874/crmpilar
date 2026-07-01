@@ -98,7 +98,7 @@ export default function CVVehicles() {
           Nenhum veículo encontrado.
         </CardContent></Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map(v => {
             const km = v.next_oil_change_km - v.current_km;
             const overdue = km <= 0;
