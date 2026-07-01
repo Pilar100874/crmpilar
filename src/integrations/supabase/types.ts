@@ -3819,6 +3819,331 @@ export type Database = {
           },
         ]
       }
+      cv_defect_reports: {
+        Row: {
+          cost: number | null
+          created_at: string
+          damage_points: Json | null
+          defect_description: string
+          defect_type_id: string | null
+          driver_id: string | null
+          estabelecimento_id: string | null
+          id: string
+          is_damage_report: boolean
+          movement_id: string | null
+          reported_at: string
+          reported_by: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          solution: string | null
+          status: Database["public"]["Enums"]["cv_defect_status"]
+          updated_at: string
+          validated_by: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string
+          damage_points?: Json | null
+          defect_description: string
+          defect_type_id?: string | null
+          driver_id?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          is_damage_report?: boolean
+          movement_id?: string | null
+          reported_at?: string
+          reported_by?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          solution?: string | null
+          status?: Database["public"]["Enums"]["cv_defect_status"]
+          updated_at?: string
+          validated_by?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string
+          damage_points?: Json | null
+          defect_description?: string
+          defect_type_id?: string | null
+          driver_id?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          is_damage_report?: boolean
+          movement_id?: string | null
+          reported_at?: string
+          reported_by?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          solution?: string | null
+          status?: Database["public"]["Enums"]["cv_defect_status"]
+          updated_at?: string
+          validated_by?: string | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_defect_reports_defect_type_id_fkey"
+            columns: ["defect_type_id"]
+            isOneToOne: false
+            referencedRelation: "cv_defect_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_defect_reports_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "cv_drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_defect_reports_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_defect_reports_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "cv_vehicle_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_defect_reports_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "cv_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cv_defect_types: {
+        Row: {
+          category: Database["public"]["Enums"]["cv_defect_category"]
+          created_at: string
+          description: string | null
+          estabelecimento_id: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["cv_defect_category"]
+          created_at?: string
+          description?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["cv_defect_category"]
+          created_at?: string
+          description?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_defect_types_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cv_drivers: {
+        Row: {
+          active: boolean
+          created_at: string
+          estabelecimento_id: string | null
+          id: string
+          license: string
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          estabelecimento_id?: string | null
+          id?: string
+          license: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          estabelecimento_id?: string | null
+          id?: string
+          license?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_drivers_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cv_vehicle_movements: {
+        Row: {
+          created_at: string
+          damage_notes: string | null
+          driver_id: string
+          entry_km: number | null
+          entry_time: string | null
+          estabelecimento_id: string | null
+          exit_km: number
+          exit_notes: string | null
+          exit_time: string
+          has_helper: boolean
+          helper_name: string | null
+          id: string
+          inspected_all_sides: boolean
+          inspected_by: string | null
+          reported_defects: string | null
+          resolved_at: string | null
+          security_guard_id: string | null
+          status: Database["public"]["Enums"]["cv_movement_status"]
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          damage_notes?: string | null
+          driver_id: string
+          entry_km?: number | null
+          entry_time?: string | null
+          estabelecimento_id?: string | null
+          exit_km?: number
+          exit_notes?: string | null
+          exit_time?: string
+          has_helper?: boolean
+          helper_name?: string | null
+          id?: string
+          inspected_all_sides?: boolean
+          inspected_by?: string | null
+          reported_defects?: string | null
+          resolved_at?: string | null
+          security_guard_id?: string | null
+          status?: Database["public"]["Enums"]["cv_movement_status"]
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          damage_notes?: string | null
+          driver_id?: string
+          entry_km?: number | null
+          entry_time?: string | null
+          estabelecimento_id?: string | null
+          exit_km?: number
+          exit_notes?: string | null
+          exit_time?: string
+          has_helper?: boolean
+          helper_name?: string | null
+          id?: string
+          inspected_all_sides?: boolean
+          inspected_by?: string | null
+          reported_defects?: string | null
+          resolved_at?: string | null
+          security_guard_id?: string | null
+          status?: Database["public"]["Enums"]["cv_movement_status"]
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_vehicle_movements_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "cv_drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_vehicle_movements_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_vehicle_movements_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "cv_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cv_vehicles: {
+        Row: {
+          active: boolean
+          created_at: string
+          current_km: number
+          estabelecimento_id: string | null
+          id: string
+          last_oil_change_km: number
+          name: string
+          next_oil_change_km: number
+          oil_change_interval: number
+          plate: string
+          updated_at: string
+          vehicle_type: Database["public"]["Enums"]["cv_vehicle_type"]
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          current_km?: number
+          estabelecimento_id?: string | null
+          id?: string
+          last_oil_change_km?: number
+          name: string
+          next_oil_change_km?: number
+          oil_change_interval?: number
+          plate: string
+          updated_at?: string
+          vehicle_type?: Database["public"]["Enums"]["cv_vehicle_type"]
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          current_km?: number
+          estabelecimento_id?: string | null
+          id?: string
+          last_oil_change_km?: number
+          name?: string
+          next_oil_change_km?: number
+          oil_change_interval?: number
+          plate?: string
+          updated_at?: string
+          vehicle_type?: Database["public"]["Enums"]["cv_vehicle_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_vehicles_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       database_connections: {
         Row: {
           active: boolean | null
@@ -19282,6 +19607,15 @@ export type Database = {
         | "aguardando_cliente"
         | "encerrado"
         | "reaberto"
+      cv_defect_category:
+        | "mechanical"
+        | "electrical"
+        | "bodywork"
+        | "safety"
+        | "other"
+      cv_defect_status: "pending" | "in_progress" | "resolved"
+      cv_movement_status: "out" | "returned"
+      cv_vehicle_type: "vuc" | "truck" | "carro" | "carreta" | "outro"
       tipo_roteamento:
         | "round_robin"
         | "por_skill"
@@ -19433,6 +19767,16 @@ export const Constants = {
         "encerrado",
         "reaberto",
       ],
+      cv_defect_category: [
+        "mechanical",
+        "electrical",
+        "bodywork",
+        "safety",
+        "other",
+      ],
+      cv_defect_status: ["pending", "in_progress", "resolved"],
+      cv_movement_status: ["out", "returned"],
+      cv_vehicle_type: ["vuc", "truck", "carro", "carreta", "outro"],
       tipo_roteamento: [
         "round_robin",
         "por_skill",
