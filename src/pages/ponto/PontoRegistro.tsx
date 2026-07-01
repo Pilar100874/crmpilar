@@ -317,6 +317,15 @@ export default function PontoRegistro() {
             )}
           </div>
           <div className="flex items-center justify-between">
+            <span className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Área permitida</span>
+            <Badge
+              variant={geoStatus.dentro ? "secondary" : "destructive"}
+              className="text-xs max-w-[65%] text-right whitespace-normal"
+            >
+              {geoStatus.texto}
+            </Badge>
+          </div>
+          <div className="flex items-center justify-between">
             <span>QR Token</span>
             <Badge variant={qrToken ? "secondary" : "outline"} className="text-xs">
               {qrToken ? "Ativo (15s)" : "Aguardando..."}
@@ -329,10 +338,35 @@ export default function PontoRegistro() {
         </CardContent>
       </Card>
 
-      <Button onClick={enviar} disabled={enviando || !funcId || (antifraudeAtivo && (!gps || !fotoB64))} size="lg" className="w-full">
+      {bloqueadoPorGeofence && (
+        <div className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <div>
+            <div className="font-medium">Marcação bloqueada por localização</div>
+            <div className="text-xs opacity-90">
+              {geofences.length === 0
+                ? "Nenhuma área de GPS foi cadastrada. Peça ao RH para cadastrar em Configurações Antifraude → Geofences."
+                : `Você precisa estar dentro de uma das áreas permitidas: ${geofences.map((g) => g.nome).join(", ")}.`}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Button
+        onClick={enviar}
+        disabled={
+          enviando ||
+          !funcId ||
+          (antifraudeAtivo && (!gps || !fotoB64)) ||
+          bloqueadoPorGeofence
+        }
+        size="lg"
+        className="w-full"
+      >
         {enviando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
         Registrar Ponto
       </Button>
+
 
       {resultado && (
         <Card>
