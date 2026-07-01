@@ -23,20 +23,27 @@ export default function CVInspectionConfig() {
   const [entryRequired, setEntryRequired] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [cameras, setCameras] = useState<CameraOption[]>([]);
+
+  const normalize = (list: any[]): Angle[] =>
+    (list ?? []).map((a: any) => ({
+      key: a.key,
+      label: a.label,
+      required: !!a.required,
+      source: a.source === "ip_camera" ? "ip_camera" : "device",
+      camera_id: a.camera_id ?? null,
+    }));
 
   const load = async () => {
-    const { data } = await supabase
-      .from("cv_inspection_config")
-      .select("*")
-      .eq("active", true)
-      .order("created_at")
-      .limit(1)
-      .maybeSingle();
+    const [{ data }, { data: cams }] = await Promise.all([
+      supabase.from("cv_inspection_config").select("*").eq("active", true).order("created_at").limit(1).maybeSingle(),
+      supabase.from("cv_cameras").select("id, nome").eq("ativo", true).order("nome"),
+    ]);
+    setCameras((cams ?? []) as CameraOption[]);
     if (data) {
       setId(data.id);
-      // usa exit_photos como fonte única; se vazio, tenta entry_photos
-      const base = ((data.exit_photos as any) ?? []) as Angle[];
-      const fallback = ((data.entry_photos as any) ?? []) as Angle[];
+      const base = normalize((data.exit_photos as any) ?? []);
+      const fallback = normalize((data.entry_photos as any) ?? []);
       setPhotos(base.length ? base : fallback);
       setExitRequired((data as any).exit_photos_required ?? true);
       setEntryRequired((data as any).entry_photos_required ?? true);
@@ -49,7 +56,7 @@ export default function CVInspectionConfig() {
     s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || `angle_${Date.now()}`;
 
-  const addAngle = () => setPhotos([...photos, { key: `angle_${Date.now()}`, label: "Novo ângulo", required: true, source: "both" }]);
+  const addAngle = () => setPhotos([...photos, { key: `angle_${Date.now()}`, label: "Novo ângulo", required: true, source: "device", camera_id: null }]);
   const removeAngle = (i: number) => setPhotos(photos.filter((_, idx) => idx !== i));
 
   const updateAngle = (i: number, patch: Partial<Angle>) =>
