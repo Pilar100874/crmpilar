@@ -185,6 +185,13 @@ export default function PontoRegistro() {
     if (!funcId) return toast.error("Selecione o funcionário");
     if (antifraudeAtivo && !gps) return toast.error("Aguardando GPS");
     if (antifraudeAtivo && !fotoB64) return toast.error("Capture sua selfie");
+    if (bloqueadoPorGeofence) {
+      return toast.error(
+        geofences.length === 0
+          ? "Nenhuma área de GPS cadastrada. Contate o RH."
+          : `Fora da área permitida. ${geoStatus.texto}`,
+      );
+    }
     const payload = {
       funcionario_id: funcId,
       tipo,
@@ -210,8 +217,29 @@ export default function PontoRegistro() {
       const { data, error } = await supabase.functions.invoke("ponto-validar-marcacao", {
         body: payload,
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (error) {
+        // Erro de negócio (403 fora de geofence) vem no context.response
+        const ctxResp: Response | undefined = (error as any)?.context?.response;
+        if (ctxResp) {
+          try {
+            const j = await ctxResp.clone().json();
+            if (j?.codigo === "fora_geofence" || j?.codigo === "gps_ausente" || j?.codigo === "sem_geofence_cadastrada") {
+              toast.error(j.error);
+              setEnviando(false);
+              return;
+            }
+            if (j?.error) throw new Error(j.error);
+          } catch { /* fallthrough */ }
+        }
+        throw error;
+      }
+      if (data?.error) {
+        if (data?.codigo?.startsWith("fora_") || data?.codigo === "gps_ausente" || data?.codigo === "sem_geofence_cadastrada") {
+          toast.error(data.error);
+          return;
+        }
+        throw new Error(data.error);
+      }
       setResultado({ score: data.score_confianca, fatores: data.fatores });
       toast.success(`Ponto registrado · confiança ${data.score_confianca}%`);
       setFotoB64("");
@@ -223,6 +251,7 @@ export default function PontoRegistro() {
     } finally {
       setEnviando(false);
     }
+
   };
 
   return (
