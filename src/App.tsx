@@ -459,6 +459,8 @@ const App = () => (
                 <Route path="tipos-defeito" element={<CVDefectTypes />} />
                 <Route path="manutencao" element={<CVMaintenance />} />
                 <Route path="vistoria-config" element={<CVInspectionConfig />} />
+                <Route path="ajudantes" element={<CVHelpers />} />
+
               </Route>
             </Route>
             {/* Public routes (no layout) */}
