@@ -331,7 +331,7 @@ export default function CVVehicleExit() {
                         <span>Fotos obrigatórias pendentes: <strong>{missingRequired.map((a) => a.label).join(", ")}</strong></span>
                       </div>
                     )}
-                    <CVPhotoCapture stage="exit" angles={angles} value={photos} onChange={setPhotos} />
+                    <CVPhotoCapture stage="exit" angles={angles} value={photos} onChange={setPhotos} vehicleId={form.vehicle_id} aiCompare />
                   </>
                 )}
 
