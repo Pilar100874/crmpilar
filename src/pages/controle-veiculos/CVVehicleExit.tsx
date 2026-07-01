@@ -335,16 +335,7 @@ export default function CVVehicleExit() {
                   </>
                 )}
 
-                  <>
-                    {missingRequired.length > 0 && (
-                      <div className="p-3 bg-warning/10 border border-warning/30 rounded text-sm flex items-start gap-2">
-                        <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
-                        <span>Fotos obrigatórias pendentes: <strong>{missingRequired.map((a) => a.label).join(", ")}</strong></span>
-                      </div>
-                    )}
-                    <CVPhotoCapture stage="exit" angles={angles} value={photos} onChange={setPhotos} />
-                  </>
-                )}
+
               </div>
             )}
 
