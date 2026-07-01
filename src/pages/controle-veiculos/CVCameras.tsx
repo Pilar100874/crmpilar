@@ -161,11 +161,8 @@ export default function CVCameras() {
               <div className="text-muted-foreground">
                 {MARCAS.find((m) => m.value === r.marca)?.label} · {r.protocolo}://{r.host}:{r.porta ?? "auto"}
               </div>
-              <div>Ângulo: <Badge variant="outline">{r.angulo_key || "—"}</Badge></div>
-              {r.vehicle_id && (
-                <div className="text-xs">Veículo: {vehicles.find((v) => v.id === r.vehicle_id)?.plate}</div>
-              )}
               {r.local_descricao && <div className="text-xs">Local: {r.local_descricao}</div>}
+
               <div className="flex gap-2 pt-2">
                 <Button size="sm" variant="outline" onClick={() => openEdit(r)}>
                   <Edit className="h-3 w-3 mr-1" /> Editar
