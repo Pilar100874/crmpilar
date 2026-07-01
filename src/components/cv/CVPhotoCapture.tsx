@@ -319,18 +319,21 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                 onChange={(e) => handleFile(a, e.target.files?.[0])}
               />
               <div className="flex gap-2 flex-wrap">
-                <Button
-                  type="button"
-                  variant={captured ? "outline" : "default"}
-                  size="sm"
-                  className="flex-1"
-                  disabled={uploading === a.key || capturingCam === a.key}
-                  onClick={() => captureFor(a)}
-                >
-                  <Camera className="h-4 w-4 mr-2" />
-                  {captured ? "Refazer foto" : "Tirar foto"}
-                </Button>
-                {(ipCams[a.key]?.length ?? 0) > 0 &&
+                {(a.source ?? "both") !== "ip_camera" && (
+                  <Button
+                    type="button"
+                    variant={captured ? "outline" : "default"}
+                    size="sm"
+                    className="flex-1"
+                    disabled={uploading === a.key || capturingCam === a.key}
+                    onClick={() => captureFor(a)}
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    {captured ? "Refazer foto" : "Tirar foto"}
+                  </Button>
+                )}
+                {(a.source ?? "both") !== "device" &&
+                  (ipCams[a.key]?.length ?? 0) > 0 &&
                   ipCams[a.key].map((cam) => (
                     <Button
                       key={cam.id}
@@ -349,6 +352,12 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                       {cam.nome}
                     </Button>
                   ))}
+                {(a.source ?? "both") === "ip_camera" && (ipCams[a.key]?.length ?? 0) === 0 && (
+                  <span className="text-[11px] text-muted-foreground self-center">
+                    Nenhuma câmera IP cadastrada para este ângulo (chave: {a.key}).
+                  </span>
+                )}
+
                 {captured && prev && aiCompare && (
                   <Button
                     type="button"
