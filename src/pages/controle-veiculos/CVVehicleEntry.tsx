@@ -155,17 +155,20 @@ export default function CVVehicleEntry() {
   if (selected) {
     const v = selected.vehicle, d = selected.driver;
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3 max-w-lg mx-auto">
-          <LogIn className="h-8 w-8 text-success" />
-          <h1 className="text-3xl font-bold tracking-tight">Registrar Entrada</h1>
-        </div>
+      <div className="space-y-4">
+        <CVPageHeader
+          icon={LogIn}
+          title="Registrar Entrada"
+          subtitle={`${v?.name} — ${v?.plate}`}
+        />
 
-        <Card className="max-w-lg mx-auto shadow-md">
-          <CardHeader className="bg-success text-success-foreground rounded-t-lg">
-            <CardTitle className="flex items-center gap-2"><LogIn className="h-5 w-5" /> Registrar Entrada de Veículo</CardTitle>
+        <Card className="max-w-2xl mx-auto shadow-sm">
+          <CardHeader className="bg-emerald-500/10 border-b border-emerald-500/20">
+            <CardTitle className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
+              <LogIn className="h-5 w-5" /> Registrar Retorno
+            </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="mb-6 p-4 bg-muted/50 rounded space-y-2">
               <h3 className="font-semibold text-sm">Informações da Saída:</h3>
               <div className="grid grid-cols-2 gap-2 text-sm">
