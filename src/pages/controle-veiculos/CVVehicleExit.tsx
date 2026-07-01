@@ -15,6 +15,7 @@ import {
   LogOut, Calendar, Clock, User, Car, Users, Save, X, FileText, AlertCircle, CheckCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { CVPageHeader } from "./CVPageHeader";
 import type { Vehicle, Driver } from "@/types/vehicle";
 
 export default function CVVehicleExit() {
@@ -183,17 +184,20 @@ export default function CVVehicleExit() {
         </DialogContent>
       </Dialog>
 
-      <div className="space-y-6">
-        <div className="flex items-center gap-3 max-w-lg mx-auto">
-          <LogOut className="h-8 w-8 text-warning" />
-          <h1 className="text-3xl font-bold tracking-tight">Registrar Saída</h1>
-        </div>
+      <div className="space-y-4">
+        <CVPageHeader
+          icon={LogOut}
+          title="Registrar Saída"
+          subtitle="Autorize a saída de um veículo da base"
+        />
 
-        <Card className="max-w-lg mx-auto shadow-md">
-          <CardHeader className="bg-warning text-warning-foreground rounded-t-lg">
-            <CardTitle className="flex items-center gap-2"><LogOut className="h-5 w-5" /> Registrar Saída de Veículo</CardTitle>
+        <Card className="max-w-2xl mx-auto shadow-sm">
+          <CardHeader className="bg-amber-500/10 border-b border-amber-500/20">
+            <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+              <LogOut className="h-5 w-5" /> Nova Saída
+            </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="mb-4 p-3 bg-muted/50 rounded flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" /><Clock className="h-4 w-4" />
               Data/Hora atual: {new Date().toLocaleString("pt-BR")}
