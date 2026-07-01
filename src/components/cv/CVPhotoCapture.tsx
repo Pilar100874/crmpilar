@@ -10,7 +10,8 @@ export interface PhotoAngle {
   key: string;
   label: string;
   required?: boolean;
-  source?: "both" | "device" | "ip_camera";
+  source?: "device" | "ip_camera";
+  camera_id?: string | null;
 }
 
 
