@@ -229,7 +229,7 @@ export default function CVMaintenance() {
       </div>
 
       <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><TrendingUp className="h-4 w-4" />Evolução Mensal (12 meses)</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><TrendingUp className="h-4 w-4" />Evolução {periodFilter === "custom" && customDate ? `em ${format(customDate, "dd/MM/yyyy", { locale: ptBR })}` : periodFilter === "30" ? "— Últimos 30 dias" : periodFilter === "60" ? "— Últimos 60 dias" : periodFilter === "90" ? "— Últimos 90 dias" : periodFilter === "year" ? "— Este ano" : "— Todo o período"}</CardTitle></CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={monthly}>
