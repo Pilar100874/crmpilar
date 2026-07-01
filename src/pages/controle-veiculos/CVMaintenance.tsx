@@ -141,17 +141,43 @@ export default function CVMaintenance() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-primary" /> Filtrar por veículo
+            <BarChart3 className="h-4 w-4 text-primary" /> Filtros
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col sm:flex-row gap-3">
           <Select value={vehicleFilter} onValueChange={setVehicleFilter}>
-            <SelectTrigger className="max-w-sm"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="max-w-sm"><SelectValue placeholder="Veículo" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os veículos</SelectItem>
               {vehicles.map(v => <SelectItem key={v.id} value={v.id}>{v.name} — {v.plate}</SelectItem>)}
             </SelectContent>
           </Select>
+
+          <Select value={periodFilter} onValueChange={(v) => { setPeriodFilter(v as PeriodFilter); if (v !== "custom") setCustomDate(undefined); }}>
+            <SelectTrigger className="max-w-sm"><SelectValue placeholder="Período" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="30">Últimos 30 dias</SelectItem>
+              <SelectItem value="60">Últimos 60 dias</SelectItem>
+              <SelectItem value="90">Últimos 90 dias</SelectItem>
+              <SelectItem value="year">Este ano</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="custom">Data específica</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {periodFilter === "custom" && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className={cn("max-w-sm justify-start text-left font-normal", !customDate && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {customDate ? format(customDate, "dd/MM/yyyy", { locale: ptBR }) : <span>Selecione a data</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={customDate} onSelect={setCustomDate} initialFocus className={cn("p-3 pointer-events-auto")} />
+              </PopoverContent>
+            </Popover>
+          )}
         </CardContent>
       </Card>
 
