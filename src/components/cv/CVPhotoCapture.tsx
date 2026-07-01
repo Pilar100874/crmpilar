@@ -49,12 +49,30 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
   const [lastPhotos, setLastPhotos] = useState<Record<string, { path: string; url: string; stage: string; when: string } | null>>({});
   const [aiResults, setAiResults] = useState<Record<string, AiFinding | null>>({});
   const [aiLoading, setAiLoading] = useState<Record<string, boolean>>({});
+  const [ipCams, setIpCams] = useState<Record<string, any[]>>({});
+  const [capturingCam, setCapturingCam] = useState<string | null>(null);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const getUrl = async (path: string) => {
     const { data } = await supabase.storage.from("cv-vehicle-photos").createSignedUrl(path, 3600);
     return data?.signedUrl ?? "";
   };
+
+  // Carrega câmeras IP disponíveis para cada ângulo
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("cv_cameras")
+        .select("id, nome, marca, tipo_rede, angulo_key, vehicle_id")
+        .eq("ativo", true);
+      const byAngle: Record<string, any[]> = {};
+      for (const c of data ?? []) {
+        if (vehicleId && c.vehicle_id && c.vehicle_id !== vehicleId) continue;
+        (byAngle[c.angulo_key] ||= []).push(c);
+      }
+      setIpCams(byAngle);
+    })();
+  }, [vehicleId]);
 
   // Carrega a última foto disponível por ângulo para o veículo (qualquer stage)
   useEffect(() => {
