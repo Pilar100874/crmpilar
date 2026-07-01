@@ -39,8 +39,6 @@ const emptyCam = {
 
 export default function CVCameras() {
   const [rows, setRows] = useState<any[]>([]);
-  const [angles, setAngles] = useState<{ key: string; label: string }[]>([]);
-  const [vehicles, setVehicles] = useState<any[]>([]);
   const [collectorEnabled, setCollectorEnabled] = useState(false);
   const [collectorId, setCollectorId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -49,20 +47,17 @@ export default function CVCameras() {
   const [testing, setTesting] = useState<string | null>(null);
 
   const load = async () => {
-    const [{ data: cams }, { data: cfg }, { data: veh }, { data: coletor }] = await Promise.all([
+    const [{ data: cams }, { data: coletor }] = await Promise.all([
       supabase.from("cv_cameras").select("*").order("nome"),
-      supabase.from("cv_inspection_config").select("exit_photos").eq("active", true).maybeSingle(),
-      supabase.from("cv_vehicles").select("id, plate, model").order("plate"),
       supabase.from("cv_coletor_config").select("*").maybeSingle(),
     ]);
     setRows(cams ?? []);
-    setAngles(((cfg?.exit_photos as any) ?? []) as any);
-    setVehicles(veh ?? []);
     if (coletor) {
       setCollectorEnabled(coletor.cameras_habilitado);
       setCollectorId(coletor.id);
     }
   };
+
   useEffect(() => { load(); }, []);
 
   const openNew = () => { setEditing(emptyCam); setDialogOpen(true); };
