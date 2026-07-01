@@ -147,16 +147,4 @@ export default function CVInspectionConfig() {
     </div>
   );
 }
-      <div className="flex justify-end">
-        <Button onClick={save} disabled={saving}>
-          <Save className="h-4 w-4 mr-2" /> {saving ? "Salvando..." : "Salvar configuração"}
-        </Button>
-      </div>
-      <Card className="bg-muted/30">
-        <CardContent className="p-4 text-sm text-muted-foreground space-y-1">
-          <p className="flex items-center gap-2"><Badge variant="outline">Dica</Badge> Ângulos marcados como <strong>Obrigatórios</strong> bloqueiam a conclusão do registro caso a foto não seja tirada.</p>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+
