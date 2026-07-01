@@ -270,42 +270,54 @@ export default function CVVehicleEntry() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <LogIn className="h-8 w-8 text-success" />
-        <h1 className="text-3xl font-bold tracking-tight">Registrar Entrada</h1>
-      </div>
+    <div className="space-y-4">
+      <CVPageHeader
+        icon={LogIn}
+        title="Registrar Entrada"
+        subtitle={`${openMoves.length} veículo(s) em trânsito`}
+      />
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Clock className="h-5 w-5" /> Veículos em Trânsito</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Clock className="h-4 w-4 text-primary" /> Selecione o veículo que está retornando
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground mb-4">Selecione o veículo que está retornando:</p>
-          <div className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {openMoves.map((m) => {
               const timeOut = Date.now() - new Date(m.exit_time).getTime();
               const h = Math.floor(timeOut / 3600000);
               const min = Math.floor((timeOut % 3600000) / 60000);
               return (
-                <Card key={m.id} className="cursor-pointer hover:shadow-md transition-all border-l-4 border-l-warning"
-                  onClick={() => handleSelect(m)}>
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Car className="h-4 w-4 text-primary" />
-                        <span className="font-semibold">{m.vehicle?.name} — {m.vehicle?.plate}</span>
+                <Card
+                  key={m.id}
+                  className="cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all border-l-4 border-l-amber-500"
+                  onClick={() => handleSelect(m)}
+                >
+                  <CardContent className="p-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Car className="h-4 w-4 text-primary shrink-0" />
+                        <span className="font-semibold truncate">{m.vehicle?.name}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>Motorista: {m.driver?.name}</span>
-                        {m.has_helper && <Badge variant="outline" className="text-xs">Ajudante: {m.helper_name}</Badge>}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        Saída: {new Date(m.exit_time).toLocaleString("pt-BR")}
-                        <span className="ml-2 text-warning font-medium">({h}h {min}min em trânsito)</span>
-                      </div>
+                      <Badge variant="outline" className="font-mono text-xs">{m.vehicle?.plate}</Badge>
                     </div>
-                    <Badge variant="outline" className="bg-warning/10 text-warning border-warning">Em Trânsito</Badge>
+                    <div className="text-sm text-muted-foreground truncate">
+                      <span className="font-medium">Motorista:</span> {m.driver?.name}
+                    </div>
+                    {m.has_helper && (
+                      <Badge variant="outline" className="text-xs">Ajudante: {m.helper_name}</Badge>
+                    )}
+                    <div className="pt-2 border-t space-y-1">
+                      <p className="text-xs text-muted-foreground">
+                        Saída: {new Date(m.exit_time).toLocaleString("pt-BR")}
+                      </p>
+                      <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-0">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {h}h {min}min em trânsito
+                      </Badge>
+                    </div>
                   </CardContent>
                 </Card>
               );
