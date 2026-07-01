@@ -1,47 +1,54 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  LogOut, Calendar, Clock, User, Car, Users, Save, X, FileText, AlertCircle, CheckCircle,
+  LogOut, Car, User, Users, FileText, Camera, CheckCircle, ChevronRight, ChevronLeft,
+  AlertCircle, Save, X, Truck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
+import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
 import type { Vehicle, Driver } from "@/types/vehicle";
+
+const STEPS = ["Veículo", "Motorista", "Detalhes", "Fotos", "Confirmação"] as const;
 
 export default function CVVehicleExit() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [busyVehicleIds, setBusyVehicleIds] = useState<Set<string>>(new Set());
   const [busyDriverIds, setBusyDriverIds] = useState<Set<string>>(new Set());
+  const [angles, setAngles] = useState<PhotoAngle[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successDetails, setSuccessDetails] = useState<any>(null);
+
+  const [step, setStep] = useState(0);
   const [form, setForm] = useState({
     vehicle_id: "", driver_id: "", has_helper: false, helper_name: "", exit_notes: "",
   });
+  const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
 
   const load = async () => {
     setLoading(true);
-    const [v, d, m] = await Promise.all([
+    const [v, d, m, cfg] = await Promise.all([
       supabase.from("cv_vehicles").select("*").eq("active", true).order("name"),
       supabase.from("cv_drivers").select("*").eq("active", true).order("name"),
       supabase.from("cv_vehicle_movements").select("vehicle_id, driver_id").eq("status", "out"),
+      supabase.from("cv_inspection_config").select("*").eq("active", true).limit(1).maybeSingle(),
     ]);
     setVehicles((v.data ?? []) as Vehicle[]);
     setDrivers((d.data ?? []) as Driver[]);
     setBusyVehicleIds(new Set((m.data ?? []).map((x: any) => x.vehicle_id)));
     setBusyDriverIds(new Set((m.data ?? []).map((x: any) => x.driver_id)));
+    setAngles(((cfg.data?.exit_photos as any) ?? []) as PhotoAngle[]);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
@@ -49,24 +56,36 @@ export default function CVVehicleExit() {
   const availableVehicles = vehicles.filter((v) => !busyVehicleIds.has(v.id));
   const availableDrivers = drivers.filter((d) => !busyDriverIds.has(d.id));
   const selectedVehicle = vehicles.find((v) => v.id === form.vehicle_id);
+  const selectedDriver = drivers.find((d) => d.id === form.driver_id);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.vehicle_id || !form.driver_id) {
-      toast.error("Selecione veículo e motorista");
+  const requiredAngles = useMemo(() => angles.filter((a) => a.required), [angles]);
+  const missingRequired = requiredAngles.filter((a) => !photos.some((p) => p.angle_key === a.key));
+
+  const canNext = () => {
+    if (step === 0) return !!form.vehicle_id;
+    if (step === 1) return !!form.driver_id;
+    if (step === 2) return !form.has_helper || form.helper_name.trim().length > 0;
+    if (step === 3) return missingRequired.length === 0;
+    return true;
+  };
+
+  const goNext = () => {
+    if (!canNext()) {
+      if (step === 3) toast.error(`Fotos obrigatórias pendentes: ${missingRequired.map((a) => a.label).join(", ")}`);
+      else toast.error("Complete os campos obrigatórios");
       return;
     }
-    if (form.has_helper && !form.helper_name.trim()) {
-      toast.error("Informe o nome do ajudante");
-      return;
-    }
+    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  };
+  const goBack = () => setStep((s) => Math.max(s - 1, 0));
+
+  const handleSubmit = async () => {
     setBusy(true);
     const { data: { user } } = await supabase.auth.getUser();
     const exitTime = new Date();
     const exitKm = selectedVehicle?.current_km ?? 0;
-    const driver = drivers.find((d) => d.id === form.driver_id);
 
-    const { error } = await supabase.from("cv_vehicle_movements").insert({
+    const { data: mv, error } = await supabase.from("cv_vehicle_movements").insert({
       vehicle_id: form.vehicle_id,
       driver_id: form.driver_id,
       security_guard_id: user?.id ?? null,
@@ -77,77 +96,54 @@ export default function CVVehicleExit() {
       exit_notes: form.exit_notes || null,
       inspected_by: user?.id ?? null,
       status: "out",
-    });
-    setBusy(false);
-    if (error) return toast.error(error.message);
+    }).select().single();
 
+    if (error || !mv) { setBusy(false); return toast.error(error?.message ?? "Erro"); }
+
+    if (photos.length > 0) {
+      await supabase.from("cv_movement_photos").insert(
+        photos.map((p) => ({
+          movement_id: mv.id,
+          stage: "exit",
+          angle_key: p.angle_key,
+          angle_label: p.angle_label,
+          photo_url: p.photo_url,
+          created_by: user?.id ?? null,
+        })),
+      );
+    }
+
+    setBusy(false);
     setSuccessDetails({
       vehicleName: selectedVehicle?.name,
       vehiclePlate: selectedVehicle?.plate,
-      driverName: driver?.name,
+      driverName: selectedDriver?.name,
       exitTime: exitTime.toLocaleString("pt-BR"),
+      photoCount: photos.length,
     });
     setShowSuccess(true);
     toast.success("Saída autorizada! Boa viagem");
     setForm({ vehicle_id: "", driver_id: "", has_helper: false, helper_name: "", exit_notes: "" });
+    setPhotos([]);
+    setStep(0);
     load();
   };
 
   if (loading) {
-    return (
-      <div className="max-w-lg mx-auto p-6">
-        <Card><CardContent className="p-8 text-center text-muted-foreground">Carregando...</CardContent></Card>
-      </div>
-    );
+    return <div className="max-w-lg mx-auto p-6"><Card><CardContent className="p-8 text-center text-muted-foreground">Carregando...</CardContent></Card></div>;
   }
 
-  if (vehicles.length === 0 || drivers.length === 0) {
+  if (vehicles.length === 0 || drivers.length === 0 || availableVehicles.length === 0 || availableDrivers.length === 0) {
     return (
       <div className="max-w-lg mx-auto p-6">
         <Card className="border-warning">
-          <CardHeader className="bg-warning text-warning-foreground rounded-t-lg">
-            <CardTitle className="flex items-center gap-2"><AlertCircle className="h-5 w-5" /> Cadastros Necessários</CardTitle>
+          <CardHeader className="bg-warning/10 border-b">
+            <CardTitle className="flex items-center gap-2"><AlertCircle className="h-5 w-5" /> Sem disponibilidade</CardTitle>
           </CardHeader>
-          <CardContent className="p-6 space-y-3">
-            <p>Para registrar saída é necessário ter:</p>
-            {vehicles.length === 0 && (
-              <div className="p-3 bg-warning/10 rounded border border-warning/20">
-                <p className="text-sm">✓ Pelo menos um veículo ativo</p>
-                <a href="/controle-veiculos/veiculos" className="text-primary hover:underline text-sm">→ Cadastrar veículos</a>
-              </div>
-            )}
-            {drivers.length === 0 && (
-              <div className="p-3 bg-warning/10 rounded border border-warning/20">
-                <p className="text-sm">✓ Pelo menos um motorista ativo</p>
-                <a href="/controle-veiculos/motoristas" className="text-primary hover:underline text-sm">→ Cadastrar motoristas</a>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (availableVehicles.length === 0 || availableDrivers.length === 0) {
-    return (
-      <div className="max-w-lg mx-auto p-6">
-        <Card className="border-warning">
-          <CardHeader className="bg-warning text-warning-foreground rounded-t-lg">
-            <CardTitle className="flex items-center gap-2"><AlertCircle className="h-5 w-5" /> Nenhum Disponível</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 space-y-3">
-            {availableVehicles.length === 0 && (
-              <div className="p-3 bg-warning/10 rounded border border-warning/20">
-                <p className="text-sm">⚠️ Todos os veículos estão em uso</p>
-                <a href="/controle-veiculos/movimentacoes" className="text-primary hover:underline text-sm">→ Ver movimentações ativas</a>
-              </div>
-            )}
-            {availableDrivers.length === 0 && (
-              <div className="p-3 bg-warning/10 rounded border border-warning/20">
-                <p className="text-sm">⚠️ Todos os motoristas estão na rua</p>
-                <a href="/controle-veiculos/movimentacoes" className="text-primary hover:underline text-sm">→ Ver movimentações ativas</a>
-              </div>
-            )}
+          <CardContent className="p-6 space-y-2 text-sm">
+            {availableVehicles.length === 0 && <p>⚠️ Nenhum veículo disponível no momento.</p>}
+            {availableDrivers.length === 0 && <p>⚠️ Nenhum motorista disponível no momento.</p>}
+            <a href="/controle-veiculos/movimentacoes" className="text-primary hover:underline">→ Ver movimentações ativas</a>
           </CardContent>
         </Card>
       </div>
@@ -166,18 +162,10 @@ export default function CVVehicleExit() {
           </DialogHeader>
           {successDetails && (
             <div className="space-y-3 text-center">
-              <div className="p-3 bg-muted/50 rounded">
-                <p className="text-sm text-muted-foreground">Veículo</p>
-                <p className="font-semibold">{successDetails.vehicleName} — {successDetails.vehiclePlate}</p>
-              </div>
-              <div className="p-3 bg-muted/50 rounded">
-                <p className="text-sm text-muted-foreground">Motorista</p>
-                <p className="font-semibold">{successDetails.driverName}</p>
-              </div>
-              <div className="p-3 bg-muted/50 rounded">
-                <p className="text-sm text-muted-foreground">Data/Hora</p>
-                <p className="font-semibold">{successDetails.exitTime}</p>
-              </div>
+              <div className="p-3 bg-muted/50 rounded"><p className="text-xs text-muted-foreground">Veículo</p><p className="font-semibold">{successDetails.vehicleName} — {successDetails.vehiclePlate}</p></div>
+              <div className="p-3 bg-muted/50 rounded"><p className="text-xs text-muted-foreground">Motorista</p><p className="font-semibold">{successDetails.driverName}</p></div>
+              <div className="p-3 bg-muted/50 rounded"><p className="text-xs text-muted-foreground">Data/Hora</p><p className="font-semibold">{successDetails.exitTime}</p></div>
+              <div className="p-3 bg-muted/50 rounded"><p className="text-xs text-muted-foreground">Fotos capturadas</p><p className="font-semibold">{successDetails.photoCount}</p></div>
               <Button className="w-full" onClick={() => setShowSuccess(false)}>OK</Button>
             </div>
           )}
@@ -185,61 +173,93 @@ export default function CVVehicleExit() {
       </Dialog>
 
       <div className="space-y-4">
-        <CVPageHeader
-          icon={LogOut}
-          title="Registrar Saída"
-          subtitle="Autorize a saída de um veículo da base"
-        />
+        <CVPageHeader icon={LogOut} title="Registrar Saída" subtitle="Assistente passo a passo para autorizar a saída" />
 
-        <Card className="max-w-2xl mx-auto shadow-sm">
-          <CardHeader className="bg-amber-500/10 border-b border-amber-500/20">
-            <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
-              <LogOut className="h-5 w-5" /> Nova Saída
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6">
-            <div className="mb-4 p-3 bg-muted/50 rounded flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="h-4 w-4" /><Clock className="h-4 w-4" />
-              Data/Hora atual: {new Date().toLocaleString("pt-BR")}
+        <Card className="max-w-4xl mx-auto shadow-sm">
+          <CardHeader className="border-b">
+            <div className="flex items-center justify-between gap-2 overflow-x-auto">
+              {STEPS.map((label, i) => {
+                const active = i === step;
+                const done = i < step;
+                return (
+                  <div key={label} className="flex items-center gap-2 shrink-0">
+                    <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-semibold border-2 ${
+                      active ? "border-primary bg-primary text-primary-foreground"
+                      : done ? "border-success bg-success/10 text-success"
+                      : "border-muted-foreground/30 text-muted-foreground"
+                    }`}>
+                      {done ? <CheckCircle className="h-4 w-4" /> : i + 1}
+                    </div>
+                    <span className={`text-xs sm:text-sm hidden sm:inline ${active ? "font-semibold" : "text-muted-foreground"}`}>{label}</span>
+                    {i < STEPS.length - 1 && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                  </div>
+                );
+              })}
             </div>
+          </CardHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Veículo</Label>
-                <Select value={form.vehicle_id} onValueChange={(v) => setForm({ ...form, vehicle_id: v })}>
-                  <SelectTrigger><Car className="h-4 w-4 mr-2" /><SelectValue placeholder="Selecione o veículo" /></SelectTrigger>
-                  <SelectContent>
-                    {availableVehicles.map((v) => (
-                      <SelectItem key={v.id} value={v.id}>{v.name} — {v.plate} (KM: {v.current_km?.toLocaleString()})</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          <CardContent className="p-4 sm:p-6 min-h-[360px]">
+            {step === 0 && (
+              <div>
+                <div className="mb-3 flex items-center gap-2"><Truck className="h-5 w-5 text-primary" /><h3 className="font-semibold">Selecione o veículo</h3></div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {availableVehicles.map((v) => {
+                    const active = form.vehicle_id === v.id;
+                    return (
+                      <button key={v.id} type="button" onClick={() => setForm({ ...form, vehicle_id: v.id })}
+                        className={`text-left p-4 rounded-lg border-2 transition-all hover:shadow-md ${
+                          active ? "border-primary bg-primary/5 shadow-md" : "border-border bg-card"
+                        }`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <Car className={`h-5 w-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                          {active && <CheckCircle className="h-5 w-5 text-primary" />}
+                        </div>
+                        <p className="font-semibold truncate">{v.name}</p>
+                        <Badge variant="outline" className="font-mono text-xs mt-1">{v.plate}</Badge>
+                        <p className="text-xs text-muted-foreground mt-2">KM: {v.current_km?.toLocaleString()}</p>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+            )}
 
-              <div className="space-y-2">
-                <Label>Motorista</Label>
-                <Select value={form.driver_id} onValueChange={(v) => setForm({ ...form, driver_id: v })}>
-                  <SelectTrigger><User className="h-4 w-4 mr-2" /><SelectValue placeholder="Selecione o motorista" /></SelectTrigger>
-                  <SelectContent>
-                    {availableDrivers.map((d) => (
-                      <SelectItem key={d.id} value={d.id}>{d.name} — CNH: {d.license}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {step === 1 && (
+              <div>
+                <div className="mb-3 flex items-center gap-2"><User className="h-5 w-5 text-primary" /><h3 className="font-semibold">Selecione o motorista</h3></div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {availableDrivers.map((d) => {
+                    const active = form.driver_id === d.id;
+                    return (
+                      <button key={d.id} type="button" onClick={() => setForm({ ...form, driver_id: d.id })}
+                        className={`text-left p-4 rounded-lg border-2 transition-all hover:shadow-md ${
+                          active ? "border-primary bg-primary/5 shadow-md" : "border-border bg-card"
+                        }`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <User className={`h-5 w-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                          {active && <CheckCircle className="h-5 w-5 text-primary" />}
+                        </div>
+                        <p className="font-semibold truncate">{d.name}</p>
+                        <p className="text-xs text-muted-foreground mt-1">CNH: {d.license}</p>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+            )}
 
-              <div className="space-y-2">
-                <Label>Quilometragem de Saída</Label>
-                <Input type="number" value={selectedVehicle?.current_km ?? 0} readOnly className="bg-muted/50" />
-                <p className="text-xs text-muted-foreground">KM atual do veículo (não editável)</p>
-              </div>
+            {step === 2 && (
+              <div className="space-y-4 max-w-xl">
+                <div className="mb-1 flex items-center gap-2"><FileText className="h-5 w-5 text-primary" /><h3 className="font-semibold">Detalhes da saída</h3></div>
+                <div className="p-3 bg-muted/50 rounded text-sm space-y-1">
+                  <p><strong>Veículo:</strong> {selectedVehicle?.name} — {selectedVehicle?.plate}</p>
+                  <p><strong>Motorista:</strong> {selectedDriver?.name}</p>
+                  <p><strong>KM saída:</strong> {selectedVehicle?.current_km?.toLocaleString()}</p>
+                </div>
 
-              <div className="space-y-3">
                 <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="hasHelper" checked={form.has_helper}
-                    onCheckedChange={(c) => setForm({ ...form, has_helper: !!c, helper_name: c ? form.helper_name : "" })}
-                  />
+                  <Checkbox id="hasHelper" checked={form.has_helper}
+                    onCheckedChange={(c) => setForm({ ...form, has_helper: !!c, helper_name: c ? form.helper_name : "" })} />
                   <Label htmlFor="hasHelper" className="flex items-center gap-2"><Users className="h-4 w-4" /> Há ajudante</Label>
                 </div>
                 {form.has_helper && (
@@ -248,24 +268,63 @@ export default function CVVehicleExit() {
                     <Input value={form.helper_name} onChange={(e) => setForm({ ...form, helper_name: e.target.value })} placeholder="Nome completo" />
                   </div>
                 )}
-              </div>
 
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2"><FileText className="h-4 w-4 text-primary" /> Motivo/Observações</Label>
-                <Textarea rows={3} value={form.exit_notes} onChange={(e) => setForm({ ...form, exit_notes: e.target.value })}
-                  placeholder='Ex: "Entrega em São Paulo", "Coleta no centro"...' />
+                <div className="space-y-2">
+                  <Label>Motivo/Observações</Label>
+                  <Textarea rows={3} value={form.exit_notes} onChange={(e) => setForm({ ...form, exit_notes: e.target.value })}
+                    placeholder='Ex: "Entrega em São Paulo", "Coleta no centro"...' />
+                </div>
               </div>
+            )}
 
-              <div className="flex gap-3 pt-4">
-                <Button type="submit" disabled={busy} className="flex-1 bg-warning text-warning-foreground hover:opacity-90">
-                  <Save className="h-4 w-4 mr-2" /> Registrar Saída
-                </Button>
-                <Button type="button" variant="outline" className="flex-1" onClick={() => window.history.back()}>
-                  <X className="h-4 w-4 mr-2" /> Cancelar
-                </Button>
+            {step === 3 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2"><Camera className="h-5 w-5 text-primary" /><h3 className="font-semibold">Vistoria fotográfica</h3></div>
+                {angles.length === 0 ? (
+                  <div className="p-4 bg-muted/50 rounded text-sm text-muted-foreground">
+                    Nenhum ângulo configurado. <a href="/controle-veiculos/vistoria-config" className="text-primary hover:underline">Configurar agora</a>
+                  </div>
+                ) : (
+                  <>
+                    {missingRequired.length > 0 && (
+                      <div className="p-3 bg-warning/10 border border-warning/30 rounded text-sm flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                        <span>Fotos obrigatórias pendentes: <strong>{missingRequired.map((a) => a.label).join(", ")}</strong></span>
+                      </div>
+                    )}
+                    <CVPhotoCapture stage="exit" angles={angles} value={photos} onChange={setPhotos} />
+                  </>
+                )}
               </div>
-            </form>
+            )}
+
+            {step === 4 && (
+              <div className="space-y-3 max-w-xl">
+                <div className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-success" /><h3 className="font-semibold">Confirme os dados</h3></div>
+                <div className="p-4 bg-muted/50 rounded text-sm space-y-2">
+                  <p><strong>Veículo:</strong> {selectedVehicle?.name} — {selectedVehicle?.plate}</p>
+                  <p><strong>Motorista:</strong> {selectedDriver?.name}</p>
+                  <p><strong>KM saída:</strong> {selectedVehicle?.current_km?.toLocaleString()}</p>
+                  {form.has_helper && <p><strong>Ajudante:</strong> {form.helper_name}</p>}
+                  {form.exit_notes && <p><strong>Observações:</strong> {form.exit_notes}</p>}
+                  <p><strong>Fotos:</strong> {photos.length} de {angles.length}</p>
+                </div>
+              </div>
+            )}
           </CardContent>
+
+          <div className="p-4 sm:p-6 border-t flex flex-col-reverse sm:flex-row gap-3 sm:justify-between">
+            <Button variant="outline" onClick={step === 0 ? () => window.history.back() : goBack}>
+              {step === 0 ? <><X className="h-4 w-4 mr-2" />Cancelar</> : <><ChevronLeft className="h-4 w-4 mr-2" />Voltar</>}
+            </Button>
+            {step < STEPS.length - 1 ? (
+              <Button onClick={goNext}>Próximo <ChevronRight className="h-4 w-4 ml-2" /></Button>
+            ) : (
+              <Button onClick={handleSubmit} disabled={busy} className="bg-warning text-warning-foreground hover:opacity-90">
+                <Save className="h-4 w-4 mr-2" /> {busy ? "Registrando..." : "Confirmar Saída"}
+              </Button>
+            )}
+          </div>
         </Card>
       </div>
     </>
