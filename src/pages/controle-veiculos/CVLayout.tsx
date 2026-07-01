@@ -15,33 +15,49 @@ const links = [
 
 export default function CVLayout() {
   return (
-    <div className="flex flex-col h-full">
-      <div className="border-b bg-card px-4 py-3">
-        <h1 className="text-xl font-semibold">Controle de Veículos</h1>
-        <p className="text-sm text-muted-foreground">Gestão de frota, saídas, entradas e manutenção</p>
+    <div className="flex h-full flex-col bg-muted/30">
+      <div
+        className="relative overflow-hidden border-b"
+        style={{ background: "var(--gradient-hero)" }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent" />
+        <div className="relative px-4 py-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 ring-1 ring-white/30 backdrop-blur-sm">
+              <Truck className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-white sm:text-xl">Controle de Veículos</h1>
+              <p className="text-xs text-white/85 sm:text-sm">Gestão de frota, saídas, entradas e manutenção</p>
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="border-b bg-background overflow-x-auto">
-        <nav className="flex gap-1 px-4 py-2 min-w-max">
+
+      <div className="border-b bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60 overflow-x-auto">
+        <nav className="flex gap-1 px-2 py-2 min-w-max sm:px-4">
           {links.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
               className={({ isActive }) =>
-                `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+                `flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all whitespace-nowrap ${
                   isActive
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`
               }
             >
               <Icon className="h-4 w-4" />
-              {label}
+              <span className="hidden sm:inline">{label}</span>
+              <span className="sm:hidden">{label.split(" ")[0]}</span>
             </NavLink>
           ))}
         </nav>
       </div>
-      <div className="flex-1 overflow-auto p-4">
+
+      <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6">
         <Outlet />
       </div>
     </div>
