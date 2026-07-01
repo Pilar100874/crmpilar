@@ -330,8 +330,8 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                   </Button>
                 )}
                 {(a.source ?? "both") !== "device" &&
-                  (ipCams[a.key]?.length ?? 0) > 0 &&
-                  ipCams[a.key].map((cam) => (
+                  ipCams.length > 0 &&
+                  ipCams.map((cam) => (
                     <Button
                       key={cam.id}
                       type="button"
@@ -349,11 +349,12 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                       {cam.nome}
                     </Button>
                   ))}
-                {(a.source ?? "both") === "ip_camera" && (ipCams[a.key]?.length ?? 0) === 0 && (
+                {(a.source ?? "both") === "ip_camera" && ipCams.length === 0 && (
                   <span className="text-[11px] text-muted-foreground self-center">
-                    Nenhuma câmera IP cadastrada para este ângulo (chave: {a.key}).
+                    Nenhuma câmera IP cadastrada.
                   </span>
                 )}
+
 
                 {captured && prev && aiCompare && (
                   <Button
