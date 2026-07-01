@@ -461,6 +461,7 @@ const App = () => (
                 <Route path="manutencao" element={<CVMaintenance />} />
                 <Route path="vistoria-config" element={<CVInspectionConfig />} />
                 <Route path="ajudantes" element={<CVHelpers />} />
+                <Route path="cameras" element={<CVCameras />} />
 
               </Route>
             </Route>
