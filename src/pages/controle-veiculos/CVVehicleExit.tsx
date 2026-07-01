@@ -22,9 +22,11 @@ const STEPS = ["Veículo", "Motorista", "Detalhes", "Fotos", "Confirmação"] as
 export default function CVVehicleExit() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [helpers, setHelpers] = useState<{ id: string; name: string; phone: string | null }[]>([]);
   const [busyVehicleIds, setBusyVehicleIds] = useState<Set<string>>(new Set());
   const [busyDriverIds, setBusyDriverIds] = useState<Set<string>>(new Set());
   const [angles, setAngles] = useState<PhotoAngle[]>([]);
+  const [photosRequired, setPhotosRequired] = useState(true);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -32,26 +34,30 @@ export default function CVVehicleExit() {
 
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({
-    vehicle_id: "", driver_id: "", has_helper: false, helper_name: "", exit_notes: "",
+    vehicle_id: "", driver_id: "", has_helper: false, helper_id: "", helper_name: "", exit_notes: "",
   });
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
 
   const load = async () => {
     setLoading(true);
-    const [v, d, m, cfg] = await Promise.all([
+    const [v, d, h, m, cfg] = await Promise.all([
       supabase.from("cv_vehicles").select("*").eq("active", true).order("name"),
       supabase.from("cv_drivers").select("*").eq("active", true).order("name"),
+      supabase.from("cv_helpers").select("id,name,phone").eq("active", true).order("name"),
       supabase.from("cv_vehicle_movements").select("vehicle_id, driver_id").eq("status", "out"),
       supabase.from("cv_inspection_config").select("*").eq("active", true).limit(1).maybeSingle(),
     ]);
     setVehicles((v.data ?? []) as Vehicle[]);
     setDrivers((d.data ?? []) as Driver[]);
+    setHelpers((h.data ?? []) as any);
     setBusyVehicleIds(new Set((m.data ?? []).map((x: any) => x.vehicle_id)));
     setBusyDriverIds(new Set((m.data ?? []).map((x: any) => x.driver_id)));
     setAngles(((cfg.data?.exit_photos as any) ?? []) as PhotoAngle[]);
+    setPhotosRequired((cfg.data as any)?.exit_photos_required ?? true);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
+
 
   const availableVehicles = vehicles.filter((v) => !busyVehicleIds.has(v.id));
   const availableDrivers = drivers.filter((d) => !busyDriverIds.has(d.id));
@@ -64,10 +70,11 @@ export default function CVVehicleExit() {
   const canNext = () => {
     if (step === 0) return !!form.vehicle_id;
     if (step === 1) return !!form.driver_id;
-    if (step === 2) return !form.has_helper || form.helper_name.trim().length > 0;
-    if (step === 3) return missingRequired.length === 0;
+    if (step === 2) return !form.has_helper || !!form.helper_id;
+    if (step === 3) return !photosRequired || missingRequired.length === 0;
     return true;
   };
+
 
   const goNext = () => {
     if (!canNext()) {
@@ -90,13 +97,15 @@ export default function CVVehicleExit() {
       driver_id: form.driver_id,
       security_guard_id: user?.id ?? null,
       has_helper: form.has_helper,
-      helper_name: form.has_helper ? form.helper_name : null,
+      helper_id: form.has_helper ? form.helper_id : null,
+      helper_name: form.has_helper ? (helpers.find(h => h.id === form.helper_id)?.name ?? null) : null,
       exit_time: exitTime.toISOString(),
       exit_km: exitKm,
       exit_notes: form.exit_notes || null,
       inspected_by: user?.id ?? null,
       status: "out",
-    }).select().single();
+    } as any).select().single();
+
 
     if (error || !mv) { setBusy(false); return toast.error(error?.message ?? "Erro"); }
 
@@ -123,8 +132,9 @@ export default function CVVehicleExit() {
     });
     setShowSuccess(true);
     toast.success("Saída autorizada! Boa viagem");
-    setForm({ vehicle_id: "", driver_id: "", has_helper: false, helper_name: "", exit_notes: "" });
+    setForm({ vehicle_id: "", driver_id: "", has_helper: false, helper_id: "", helper_name: "", exit_notes: "" });
     setPhotos([]);
+
     setStep(0);
     load();
   };
@@ -259,15 +269,39 @@ export default function CVVehicleExit() {
 
                 <div className="flex items-center space-x-2">
                   <Checkbox id="hasHelper" checked={form.has_helper}
-                    onCheckedChange={(c) => setForm({ ...form, has_helper: !!c, helper_name: c ? form.helper_name : "" })} />
+                    onCheckedChange={(c) => setForm({ ...form, has_helper: !!c, helper_id: c ? form.helper_id : "" })} />
                   <Label htmlFor="hasHelper" className="flex items-center gap-2"><Users className="h-4 w-4" /> Há ajudante</Label>
                 </div>
                 {form.has_helper && (
                   <div className="space-y-2 ml-6">
-                    <Label>Nome do Ajudante</Label>
-                    <Input value={form.helper_name} onChange={(e) => setForm({ ...form, helper_name: e.target.value })} placeholder="Nome completo" />
+                    <Label>Selecione o ajudante</Label>
+                    {helpers.length === 0 ? (
+                      <div className="p-3 bg-muted/50 rounded text-sm text-muted-foreground">
+                        Nenhum ajudante cadastrado. <a href="/controle-veiculos/ajudantes" className="text-primary hover:underline">Cadastrar agora</a>
+                      </div>
+                    ) : (
+                      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        {helpers.map((h) => {
+                          const active = form.helper_id === h.id;
+                          return (
+                            <button key={h.id} type="button" onClick={() => setForm({ ...form, helper_id: h.id })}
+                              className={`text-left p-3 rounded-lg border-2 transition-all hover:shadow-sm ${
+                                active ? "border-primary bg-primary/5" : "border-border bg-card"
+                              }`}>
+                              <div className="flex items-center justify-between mb-1">
+                                <Users className={`h-4 w-4 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                                {active && <CheckCircle className="h-4 w-4 text-primary" />}
+                              </div>
+                              <p className="font-medium text-sm truncate">{h.name}</p>
+                              {h.phone && <p className="text-xs text-muted-foreground truncate">{h.phone}</p>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
+
 
                 <div className="space-y-2">
                   <Label>Motivo/Observações</Label>
@@ -285,6 +319,22 @@ export default function CVVehicleExit() {
                     Nenhum ângulo configurado. <a href="/controle-veiculos/vistoria-config" className="text-primary hover:underline">Configurar agora</a>
                   </div>
                 ) : (
+                  <>
+                    {!photosRequired && (
+                      <div className="p-3 bg-muted/50 border rounded text-sm text-muted-foreground">
+                        As fotos estão marcadas como <strong>opcionais</strong> na configuração de vistoria.
+                      </div>
+                    )}
+                    {photosRequired && missingRequired.length > 0 && (
+                      <div className="p-3 bg-warning/10 border border-warning/30 rounded text-sm flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                        <span>Fotos obrigatórias pendentes: <strong>{missingRequired.map((a) => a.label).join(", ")}</strong></span>
+                      </div>
+                    )}
+                    <CVPhotoCapture stage="exit" angles={angles} value={photos} onChange={setPhotos} />
+                  </>
+                )}
+
                   <>
                     {missingRequired.length > 0 && (
                       <div className="p-3 bg-warning/10 border border-warning/30 rounded text-sm flex items-start gap-2">
