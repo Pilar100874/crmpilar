@@ -40,6 +40,10 @@ export default function CVInspectionConfig() {
   };
   useEffect(() => { load(); }, []);
 
+  const slugify = (s: string) =>
+    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || `angle_${Date.now()}`;
+
   const addAngle = (list: Angle[], setter: (a: Angle[]) => void) => {
     setter([...list, { key: `angle_${Date.now()}`, label: "Novo ângulo", required: true }]);
   };
@@ -47,7 +51,12 @@ export default function CVInspectionConfig() {
     setter(list.filter((_, idx) => idx !== i));
   };
   const updateAngle = (i: number, patch: Partial<Angle>, list: Angle[], setter: (a: Angle[]) => void) => {
-    setter(list.map((a, idx) => (idx === i ? { ...a, ...patch } : a)));
+    setter(list.map((a, idx) => {
+      if (idx !== i) return a;
+      const next = { ...a, ...patch };
+      if (patch.label !== undefined) next.key = slugify(patch.label);
+      return next;
+    }));
   };
 
   const save = async () => {
@@ -84,13 +93,9 @@ export default function CVInspectionConfig() {
         {list.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum ângulo configurado</p>}
         {list.map((a, i) => (
           <div key={i} className="flex flex-wrap items-end gap-2 p-3 border rounded bg-muted/30">
-            <div className="flex-1 min-w-[180px] space-y-1">
-              <Label className="text-xs">Nome exibido</Label>
+            <div className="flex-1 min-w-[220px] space-y-1">
+              <Label className="text-xs">Nome do ângulo</Label>
               <Input value={a.label} onChange={(e) => updateAngle(i, { label: e.target.value }, list, setter)} />
-            </div>
-            <div className="w-32 space-y-1">
-              <Label className="text-xs">Chave</Label>
-              <Input value={a.key} onChange={(e) => updateAngle(i, { key: e.target.value }, list, setter)} />
             </div>
             <div className="flex items-center gap-2 pb-2">
               <Switch checked={a.required} onCheckedChange={(v) => updateAngle(i, { required: v }, list, setter)} />
