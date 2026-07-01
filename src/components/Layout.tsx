@@ -205,22 +205,7 @@ const menuItems: MenuItem[] = [
       { id: "Ponto Manual", title: "Manual de Uso", url: "/ponto/manual", icon: LucideIcons.BookOpen, group: "Sistema & Ajuda" },
     ],
   },
-  {
-    id: "Controle de Veículos",
-    title: "Controle de Veículos",
-    icon: LucideIcons.Car,
-    subItems: [
-      { id: "CV Dashboard", title: "Dashboard", url: "/controle-veiculos", icon: LayoutDashboard },
-      { id: "CV Veículos", title: "Veículos", url: "/controle-veiculos/veiculos", icon: LucideIcons.Truck },
-      { id: "CV Motoristas", title: "Motoristas", url: "/controle-veiculos/motoristas", icon: LucideIcons.Users },
-      { id: "CV Saída", title: "Registrar Saída", url: "/controle-veiculos/saida", icon: LucideIcons.LogOut },
-      { id: "CV Entrada", title: "Registrar Entrada", url: "/controle-veiculos/entrada", icon: LucideIcons.LogIn },
-      { id: "CV Movimentações", title: "Movimentações", url: "/controle-veiculos/movimentacoes", icon: LucideIcons.ListChecks },
-      { id: "CV Defeitos", title: "Defeitos & Avarias", url: "/controle-veiculos/defeitos", icon: LucideIcons.AlertTriangle },
-      { id: "CV Tipos", title: "Tipos de Defeito", url: "/controle-veiculos/tipos-defeito", icon: LucideIcons.Tag },
-      { id: "CV Manutenção", title: "Análise de Manutenção", url: "/controle-veiculos/manutencao", icon: LucideIcons.Wrench },
-    ],
-  },
+  { id: "Controle de Veículos", title: "Controle de Veículos", url: "/controle-veiculos", icon: LucideIcons.Car },
 
 
 
