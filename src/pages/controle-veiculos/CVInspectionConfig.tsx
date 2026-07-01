@@ -16,6 +16,8 @@ export default function CVInspectionConfig() {
   const [id, setId] = useState<string | null>(null);
   const [exitPhotos, setExitPhotos] = useState<Angle[]>([]);
   const [entryPhotos, setEntryPhotos] = useState<Angle[]>([]);
+  const [exitRequired, setExitRequired] = useState(true);
+  const [entryRequired, setEntryRequired] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -31,6 +33,8 @@ export default function CVInspectionConfig() {
       setId(data.id);
       setExitPhotos((data.exit_photos as any) ?? []);
       setEntryPhotos((data.entry_photos as any) ?? []);
+      setExitRequired((data as any).exit_photos_required ?? true);
+      setEntryRequired((data as any).entry_photos_required ?? true);
     }
     setLoading(false);
   };
@@ -48,7 +52,13 @@ export default function CVInspectionConfig() {
 
   const save = async () => {
     setSaving(true);
-    const payload = { exit_photos: exitPhotos as any, entry_photos: entryPhotos as any, updated_at: new Date().toISOString() };
+    const payload: any = {
+      exit_photos: exitPhotos as any,
+      entry_photos: entryPhotos as any,
+      exit_photos_required: exitRequired,
+      entry_photos_required: entryRequired,
+      updated_at: new Date().toISOString(),
+    };
     const q = id
       ? supabase.from("cv_inspection_config").update(payload).eq("id", id)
       : supabase.from("cv_inspection_config").insert({ ...payload, name: "default" });
@@ -58,6 +68,7 @@ export default function CVInspectionConfig() {
     toast.success("Configuração salva");
     load();
   };
+
 
   const renderList = (title: string, list: Angle[], setter: (a: Angle[]) => void) => (
     <Card>
@@ -104,6 +115,22 @@ export default function CVInspectionConfig() {
         subtitle="Defina os ângulos de foto obrigatórios na entrada e saída"
       />
       <div className="grid gap-4 lg:grid-cols-2">
+        <Card className="p-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="font-medium">Fotos da Saída obrigatórias</p>
+            <p className="text-xs text-muted-foreground">Se desligado, o operador pode concluir a saída sem tirar fotos.</p>
+          </div>
+          <Switch checked={exitRequired} onCheckedChange={setExitRequired} />
+        </Card>
+        <Card className="p-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="font-medium">Fotos da Entrada obrigatórias</p>
+            <p className="text-xs text-muted-foreground">Se desligado, o operador pode concluir a entrada sem tirar fotos.</p>
+          </div>
+          <Switch checked={entryRequired} onCheckedChange={setEntryRequired} />
+        </Card>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
         {renderList("Fotos na Saída", exitPhotos, setExitPhotos)}
         {renderList("Fotos na Entrada", entryPhotos, setEntryPhotos)}
       </div>
@@ -114,9 +141,10 @@ export default function CVInspectionConfig() {
       </div>
       <Card className="bg-muted/30">
         <CardContent className="p-4 text-sm text-muted-foreground space-y-1">
-          <p className="flex items-center gap-2"><Badge variant="outline">Dica</Badge> Ângulos marcados como <strong>Obrigatórios</strong> bloqueiam a conclusão do registro caso a foto não seja tirada.</p>
+          <p className="flex items-center gap-2"><Badge variant="outline">Dica</Badge> Se a opção "obrigatórias" estiver <strong>ligada</strong>, ângulos marcados como Obrigatórios travam a conclusão até serem capturados.</p>
         </CardContent>
       </Card>
     </div>
   );
 }
+

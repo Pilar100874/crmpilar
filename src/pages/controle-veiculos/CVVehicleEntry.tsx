@@ -22,6 +22,7 @@ export default function CVVehicleEntry() {
   const [openMoves, setOpenMoves] = useState<any[]>([]);
   const [defectTypes, setDefectTypes] = useState<any[]>([]);
   const [angles, setAngles] = useState<PhotoAngle[]>([]);
+  const [photosRequired, setPhotosRequired] = useState(true);
   const [selected, setSelected] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -47,9 +48,11 @@ export default function CVVehicleEntry() {
     setOpenMoves(m.data ?? []);
     setDefectTypes(dt.data ?? []);
     setAngles(((cfg.data?.entry_photos as any) ?? []) as PhotoAngle[]);
+    setPhotosRequired((cfg.data as any)?.entry_photos_required ?? true);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
+
 
   const handleSelectVehicle = (move: any) => {
     setSelected(move);
@@ -74,7 +77,7 @@ export default function CVVehicleEntry() {
       if (form.reported_defects.trim() && !form.defect_type_id) return false;
       return true;
     }
-    if (step === 2) return missingRequired.length === 0;
+    if (step === 2) return !photosRequired || missingRequired.length === 0;
     return true;
   };
 
@@ -319,12 +322,18 @@ export default function CVVehicleEntry() {
                 </div>
               ) : (
                 <>
-                  {missingRequired.length > 0 && (
+                  {!photosRequired && (
+                    <div className="p-3 bg-muted/50 border rounded text-sm text-muted-foreground">
+                      As fotos estão marcadas como <strong>opcionais</strong> na configuração de vistoria.
+                    </div>
+                  )}
+                  {photosRequired && missingRequired.length > 0 && (
                     <div className="p-3 bg-warning/10 border border-warning/30 rounded text-sm flex items-start gap-2">
                       <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
                       <span>Fotos obrigatórias pendentes: <strong>{missingRequired.map((a) => a.label).join(", ")}</strong></span>
                     </div>
                   )}
+
                   <CVPhotoCapture stage="entry" angles={angles} value={photos} onChange={setPhotos} />
                 </>
               )}
