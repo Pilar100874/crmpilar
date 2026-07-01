@@ -17,6 +17,7 @@ import {
   MessageSquare, Eye, CalendarIcon, Plus, User, Tags,
 } from "lucide-react";
 import { toast } from "sonner";
+import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
 
 const categoryLabels: Record<string, string> = {
   mechanical: "Mecânico", electrical: "Elétrico", bodywork: "Carroceria",
@@ -139,13 +140,18 @@ export default function CVDefects() {
   const totalCost = defects.filter((d) => d.status === "resolved").reduce((s, d) => s + (Number(d.cost) || 0), 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <AlertTriangle className="h-8 w-8 text-warning" />
-          <h1 className="text-3xl font-bold tracking-tight">Defeitos Reportados</h1>
-        </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+    <div className="space-y-4">
+      <CVPageHeader
+        icon={AlertTriangle}
+        title="Defeitos & Avarias"
+        subtitle={`${pendingCount} pendente(s) • ${resolvedCount} resolvido(s)`}
+        actions={
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-white text-primary hover:bg-white/90">
+                <Plus className="h-4 w-4 mr-1" /> Reportar Defeito
+              </Button>
+            </DialogTrigger>
           <DialogTrigger asChild>
             <Button className="bg-primary hover:opacity-90"><Plus className="h-4 w-4 mr-2" /> Reportar Defeito</Button>
           </DialogTrigger>
