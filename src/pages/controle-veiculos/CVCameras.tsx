@@ -242,25 +242,11 @@ export default function CVCameras() {
               <Input placeholder="/ISAPI/Streaming/channels/101/picture" value={editing.snapshot_path ?? ""} onChange={(e) => setEditing({ ...editing, snapshot_path: e.target.value })} />
               <p className="text-[11px] text-muted-foreground">Deixe em branco para usar o padrão da marca.</p>
             </div>
-            <div className="space-y-1">
-              <Label>Ângulo fixo</Label>
-              <Select value={editing.angulo_key} onValueChange={(v) => setEditing({ ...editing, angulo_key: v })}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>
-                  {angles.map((a) => <SelectItem key={a.key} value={a.key}>{a.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
+            <div className="sm:col-span-2 space-y-1">
+              <Label>Descrição do local</Label>
+              <Input placeholder="Ex.: Vaga 3 — pátio traseiro" value={editing.local_descricao ?? ""} onChange={(e) => setEditing({ ...editing, local_descricao: e.target.value })} />
             </div>
-            <div className="space-y-1">
-              <Label>Veículo (opcional)</Label>
-              <Select value={editing.vehicle_id ?? "none"} onValueChange={(v) => setEditing({ ...editing, vehicle_id: v === "none" ? null : v })}>
-                <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhum (vaga fixa)</SelectItem>
-                  {vehicles.map((v) => <SelectItem key={v.id} value={v.id}>{v.plate} — {v.model}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+
             <div className="sm:col-span-2 space-y-1">
               <Label>Descrição do local</Label>
               <Input placeholder="Ex.: Vaga 3 — pátio traseiro" value={editing.local_descricao ?? ""} onChange={(e) => setEditing({ ...editing, local_descricao: e.target.value })} />
