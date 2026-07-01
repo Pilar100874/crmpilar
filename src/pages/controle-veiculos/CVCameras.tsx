@@ -32,10 +32,9 @@ const emptyCam = {
   usuario: "",
   senha: "",
   snapshot_path: "",
-  angulo_key: "",
-  vehicle_id: null as string | null,
   local_descricao: "",
   ativo: true,
+
 };
 
 export default function CVCameras() {
