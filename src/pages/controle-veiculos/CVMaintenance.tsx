@@ -4,16 +4,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
-import { Wrench, BarChart3, TrendingUp, DollarSign, Droplets, AlertTriangle, CheckCircle } from "lucide-react";
+import { format, subDays, startOfDay, endOfDay, startOfYear } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Wrench, BarChart3, TrendingUp, DollarSign, Droplets, AlertTriangle, CheckCircle, CalendarIcon } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, Legend,
 } from "recharts";
+import { cn } from "@/lib/utils";
 import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
 import type { Vehicle } from "@/types/vehicle";
 
 const COLORS = ["hsl(var(--primary))", "#f59e0b", "#10b981", "#3b82f6", "#ec4899", "#8b5cf6"];
+
+type PeriodFilter = "30" | "60" | "90" | "year" | "all" | "custom";
 
 export default function CVMaintenance() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
