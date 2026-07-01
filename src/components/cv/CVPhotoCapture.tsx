@@ -61,7 +61,7 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
     return data?.signedUrl ?? "";
   };
 
-  // Carrega câmeras IP ativas (disponíveis para qualquer ângulo)
+  // Carrega câmeras IP ativas (para exibir nome da câmera vinculada ao ângulo)
   useEffect(() => {
     (async () => {
       const { data } = await supabase
