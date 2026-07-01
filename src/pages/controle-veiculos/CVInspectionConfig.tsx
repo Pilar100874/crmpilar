@@ -6,11 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Camera, Plus, Trash2, Save, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
 
-interface Angle { key: string; label: string; required: boolean; }
+type AngleSource = "both" | "device" | "ip_camera";
+interface Angle { key: string; label: string; required: boolean; source?: AngleSource; }
+
 
 export default function CVInspectionConfig() {
   const [id, setId] = useState<string | null>(null);
@@ -45,8 +48,9 @@ export default function CVInspectionConfig() {
     s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || `angle_${Date.now()}`;
 
-  const addAngle = () => setPhotos([...photos, { key: `angle_${Date.now()}`, label: "Novo ângulo", required: true }]);
+  const addAngle = () => setPhotos([...photos, { key: `angle_${Date.now()}`, label: "Novo ângulo", required: true, source: "both" }]);
   const removeAngle = (i: number) => setPhotos(photos.filter((_, idx) => idx !== i));
+
   const updateAngle = (i: number, patch: Partial<Angle>) =>
     setPhotos(photos.map((a, idx) => {
       if (idx !== i) return a;
@@ -117,6 +121,20 @@ export default function CVInspectionConfig() {
                 <Label className="text-xs">Nome do ângulo</Label>
                 <Input value={a.label} onChange={(e) => updateAngle(i, { label: e.target.value })} />
               </div>
+              <div className="min-w-[180px] space-y-1">
+                <Label className="text-xs">Origem da imagem</Label>
+                <Select
+                  value={a.source ?? "both"}
+                  onValueChange={(v) => updateAngle(i, { source: v as AngleSource })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="both">Câmera do dispositivo + IP</SelectItem>
+                    <SelectItem value="device">Somente foto (dispositivo)</SelectItem>
+                    <SelectItem value="ip_camera">Somente câmera IP</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex items-center gap-2 pb-2">
                 <Switch checked={a.required} onCheckedChange={(v) => updateAngle(i, { required: v })} />
                 <Label className="text-sm">Obrigatória</Label>
@@ -125,6 +143,7 @@ export default function CVInspectionConfig() {
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </div>
+
           ))}
         </CardContent>
       </Card>
