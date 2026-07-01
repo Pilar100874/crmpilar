@@ -12,6 +12,7 @@ import {
   LogIn, Calendar, Clock, AlertTriangle, CheckCircle, Save, X, MessageSquare, Tags, Car, AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { CVPageHeader } from "./CVPageHeader";
 
 export default function CVVehicleEntry() {
   const [openMoves, setOpenMoves] = useState<any[]>([]);
