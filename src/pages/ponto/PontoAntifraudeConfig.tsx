@@ -140,6 +140,43 @@ export default function PontoAntifraudeConfig() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <MapPin className="h-4 w-4" /> Exigir área de GPS no app
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <Label className="text-sm font-medium">
+              {exigirGeoApp ? "Bloqueio ativo" : "Bloqueio desativado"}
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Quando ativo, só é possível bater ponto pelo app/web se o funcionário estiver dentro de uma das geofences cadastradas (matriz, filiais, obras). Marcações via catraca/relógio não são afetadas.
+            </p>
+          </div>
+          <Switch
+            checked={exigirGeoApp}
+            onCheckedChange={async (v) => {
+              if (!empresaId) return;
+              setExigirGeoApp(v);
+              const { error } = await (supabase as any)
+                .from("ponto_empresas")
+                .update({ geofence_obrigatorio_app: v })
+                .eq("id", empresaId);
+              if (error) {
+                toast.error(error.message);
+                setExigirGeoApp(!v);
+              } else {
+                toast.success(v ? "Bloqueio por área ativado" : "Bloqueio por área desativado");
+              }
+            }}
+          />
+        </CardContent>
+      </Card>
+
+
+
       <Tabs defaultValue="geo">
         <TabsList>
           <TabsTrigger value="geo"><MapPin className="mr-2 h-4 w-4" />Geofences</TabsTrigger>
