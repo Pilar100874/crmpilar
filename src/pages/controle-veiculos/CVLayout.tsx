@@ -52,6 +52,7 @@ const navItems: NavItem[] = [
 
   { to: "/controle-veiculos/tipos-defeito", label: "Tipos de Defeito", icon: Tag, group: "config" },
   { to: "/controle-veiculos/vistoria-config", label: "Config. Vistoria", icon: Camera, group: "config" },
+  { to: "/controle-veiculos/cameras", label: "Câmeras IP", icon: Camera, group: "config" },
 ];
 
 function isItemActive(pathname: string, item: NavItem) {

@@ -3819,6 +3819,98 @@ export type Database = {
           },
         ]
       }
+      cv_cameras: {
+        Row: {
+          angulo_key: string
+          ativo: boolean
+          coletor_id: string | null
+          created_at: string
+          host: string
+          id: string
+          local_descricao: string | null
+          marca: string
+          nome: string
+          porta: number | null
+          protocolo: string
+          senha: string | null
+          snapshot_path: string | null
+          tipo_rede: string
+          updated_at: string
+          usuario: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          angulo_key: string
+          ativo?: boolean
+          coletor_id?: string | null
+          created_at?: string
+          host: string
+          id?: string
+          local_descricao?: string | null
+          marca: string
+          nome: string
+          porta?: number | null
+          protocolo?: string
+          senha?: string | null
+          snapshot_path?: string | null
+          tipo_rede?: string
+          updated_at?: string
+          usuario?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          angulo_key?: string
+          ativo?: boolean
+          coletor_id?: string | null
+          created_at?: string
+          host?: string
+          id?: string
+          local_descricao?: string | null
+          marca?: string
+          nome?: string
+          porta?: number | null
+          protocolo?: string
+          senha?: string | null
+          snapshot_path?: string | null
+          tipo_rede?: string
+          updated_at?: string
+          usuario?: string | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_cameras_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "cv_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cv_coletor_config: {
+        Row: {
+          cameras_habilitado: boolean
+          created_at: string
+          id: string
+          intervalo_poll_segundos: number
+          updated_at: string
+        }
+        Insert: {
+          cameras_habilitado?: boolean
+          created_at?: string
+          id?: string
+          intervalo_poll_segundos?: number
+          updated_at?: string
+        }
+        Update: {
+          cameras_habilitado?: boolean
+          created_at?: string
+          id?: string
+          intervalo_poll_segundos?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cv_defect_reports: {
         Row: {
           cost: number | null
@@ -12031,6 +12123,7 @@ export type Database = {
           cidade: string | null
           cnpj: string
           codigo_dominio: string | null
+          coletor_cameras_habilitado: boolean
           created_at: string
           endereco: string | null
           estabelecimento_id: string
@@ -12049,6 +12142,7 @@ export type Database = {
           cidade?: string | null
           cnpj: string
           codigo_dominio?: string | null
+          coletor_cameras_habilitado?: boolean
           created_at?: string
           endereco?: string | null
           estabelecimento_id: string
@@ -12067,6 +12161,7 @@ export type Database = {
           cidade?: string | null
           cnpj?: string
           codigo_dominio?: string | null
+          coletor_cameras_habilitado?: boolean
           created_at?: string
           endereco?: string | null
           estabelecimento_id?: string

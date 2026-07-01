@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Camera, CheckCircle, X, Upload, Loader2, AlertTriangle, Sparkles, History } from "lucide-react";
+import { Camera, CheckCircle, X, Upload, Loader2, AlertTriangle, Sparkles, History, Wifi } from "lucide-react";
 import { toast } from "sonner";
 
 export interface PhotoAngle {
@@ -49,12 +49,30 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
   const [lastPhotos, setLastPhotos] = useState<Record<string, { path: string; url: string; stage: string; when: string } | null>>({});
   const [aiResults, setAiResults] = useState<Record<string, AiFinding | null>>({});
   const [aiLoading, setAiLoading] = useState<Record<string, boolean>>({});
+  const [ipCams, setIpCams] = useState<Record<string, any[]>>({});
+  const [capturingCam, setCapturingCam] = useState<string | null>(null);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const getUrl = async (path: string) => {
     const { data } = await supabase.storage.from("cv-vehicle-photos").createSignedUrl(path, 3600);
     return data?.signedUrl ?? "";
   };
+
+  // Carrega câmeras IP disponíveis para cada ângulo
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("cv_cameras")
+        .select("id, nome, marca, tipo_rede, angulo_key, vehicle_id")
+        .eq("ativo", true);
+      const byAngle: Record<string, any[]> = {};
+      for (const c of data ?? []) {
+        if (vehicleId && c.vehicle_id && c.vehicle_id !== vehicleId) continue;
+        (byAngle[c.angulo_key] ||= []).push(c);
+      }
+      setIpCams(byAngle);
+    })();
+  }, [vehicleId]);
 
   // Carrega a última foto disponível por ângulo para o veículo (qualquer stage)
   useEffect(() => {
@@ -134,6 +152,29 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
     setUploading(null);
     // dispara IA em background
     runAiCompare(angle, path);
+  };
+
+  const captureFromIpCamera = async (angle: PhotoAngle, cameraId: string) => {
+    setCapturingCam(angle.key);
+    try {
+      const { data, error } = await supabase.functions.invoke("cv-camera-snapshot", {
+        body: { camera_id: cameraId },
+      });
+      if (error) throw error;
+      const path = (data as any)?.photo_path;
+      if (!path) throw new Error((data as any)?.error || "Falha ao capturar");
+      const url = await getUrl(path);
+      setPreviews((p) => ({ ...p, [angle.key]: url }));
+      const next = value.filter((p) => p.angle_key !== angle.key);
+      next.push({ angle_key: angle.key, angle_label: angle.label, photo_url: path });
+      onChange(next);
+      toast.success(`${angle.label} capturada da câmera IP`);
+      runAiCompare(angle, path);
+    } catch (e: any) {
+      toast.error(e.message ?? "Falha ao capturar da câmera");
+    } finally {
+      setCapturingCam(null);
+    }
   };
 
   const remove = (angleKey: string) => {
@@ -275,18 +316,37 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                 className="hidden"
                 onChange={(e) => handleFile(a, e.target.files?.[0])}
               />
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button
                   type="button"
                   variant={captured ? "outline" : "default"}
                   size="sm"
                   className="flex-1"
-                  disabled={uploading === a.key}
+                  disabled={uploading === a.key || capturingCam === a.key}
                   onClick={() => captureFor(a)}
                 >
                   <Camera className="h-4 w-4 mr-2" />
                   {captured ? "Refazer foto" : "Tirar foto"}
                 </Button>
+                {(ipCams[a.key]?.length ?? 0) > 0 &&
+                  ipCams[a.key].map((cam) => (
+                    <Button
+                      key={cam.id}
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      disabled={capturingCam === a.key || uploading === a.key}
+                      onClick={() => captureFromIpCamera(a, cam.id)}
+                      title={`Capturar da câmera ${cam.nome}`}
+                    >
+                      {capturingCam === a.key ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <Wifi className="h-4 w-4 mr-1" />
+                      )}
+                      {cam.nome}
+                    </Button>
+                  ))}
                 {captured && prev && aiCompare && (
                   <Button
                     type="button"

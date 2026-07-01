@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Monitor, Apple, Cpu, CheckCircle2, Copy, Check, Database, Key } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Download, Monitor, Apple, Cpu, CheckCircle2, Copy, Check, Database, Key, Camera } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import winAsset from "../../../public/coletor/PontoColetor-Windows.asset.json";
 import linuxAsset from "../../../public/coletor/PontoColetor-Linux.asset.json";
 import macIntelAsset from "../../../public/coletor/PontoColetor-macOS-Intel.asset.json";
@@ -50,6 +52,26 @@ const platforms: Platform[] = [
 
 export default function PontoColetorDownload() {
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [camerasEnabled, setCamerasEnabled] = useState(false);
+  const [camCfgId, setCamCfgId] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("cv_coletor_config").select("*").maybeSingle();
+      if (data) { setCamerasEnabled(data.cameras_habilitado); setCamCfgId(data.id); }
+    })();
+  }, []);
+
+  const toggleCameras = async (v: boolean) => {
+    setCamerasEnabled(v);
+    if (camCfgId) {
+      await supabase.from("cv_coletor_config").update({ cameras_habilitado: v }).eq("id", camCfgId);
+    } else {
+      const { data } = await supabase.from("cv_coletor_config").insert({ cameras_habilitado: v }).select().single();
+      if (data) setCamCfgId(data.id);
+    }
+    toast.success(v ? "Módulo de câmeras habilitado no Coletor" : "Módulo de câmeras desabilitado");
+  };
 
   const baixar = (file: string, id: string, url: string) => {
     setDownloading(id);
@@ -77,6 +99,21 @@ export default function PontoColetorDownload() {
           via TCP/IP, valida, e envia para o controle de ponto.
         </p>
       </div>
+
+      <Card className="border-primary/20">
+        <CardContent className="flex items-center justify-between gap-3 p-4">
+          <div className="flex items-start gap-3">
+            <Camera className="mt-0.5 h-5 w-5 text-primary" />
+            <div>
+              <p className="font-medium">Módulo de câmeras IP (Controle de Veículos)</p>
+              <p className="text-xs text-muted-foreground">
+                Habilita o Coletor Desktop a capturar snapshots de câmeras internas cadastradas em Controle de Veículos → Câmeras.
+              </p>
+            </div>
+          </div>
+          <Switch checked={camerasEnabled} onCheckedChange={toggleCameras} />
+        </CardContent>
+      </Card>
 
       <div className="grid gap-3 sm:grid-cols-3">
         {platforms.map((p) => (
