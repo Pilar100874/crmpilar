@@ -316,18 +316,37 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                 className="hidden"
                 onChange={(e) => handleFile(a, e.target.files?.[0])}
               />
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button
                   type="button"
                   variant={captured ? "outline" : "default"}
                   size="sm"
                   className="flex-1"
-                  disabled={uploading === a.key}
+                  disabled={uploading === a.key || capturingCam === a.key}
                   onClick={() => captureFor(a)}
                 >
                   <Camera className="h-4 w-4 mr-2" />
                   {captured ? "Refazer foto" : "Tirar foto"}
                 </Button>
+                {(ipCams[a.key]?.length ?? 0) > 0 &&
+                  ipCams[a.key].map((cam) => (
+                    <Button
+                      key={cam.id}
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      disabled={capturingCam === a.key || uploading === a.key}
+                      onClick={() => captureFromIpCamera(a, cam.id)}
+                      title={`Capturar da câmera ${cam.nome}`}
+                    >
+                      {capturingCam === a.key ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <Wifi className="h-4 w-4 mr-1" />
+                      )}
+                      {cam.nome}
+                    </Button>
+                  ))}
                 {captured && prev && aiCompare && (
                   <Button
                     type="button"
