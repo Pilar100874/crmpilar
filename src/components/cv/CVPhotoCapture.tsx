@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Camera, CheckCircle, X, Upload, Loader2, AlertTriangle, Sparkles, History } from "lucide-react";
+import { Camera, CheckCircle, X, Upload, Loader2, AlertTriangle, Sparkles, History, Wifi } from "lucide-react";
 import { toast } from "sonner";
 
 export interface PhotoAngle {
