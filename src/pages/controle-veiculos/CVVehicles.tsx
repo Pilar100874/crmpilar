@@ -1,26 +1,25 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import {
+  Plus, Pencil, Trash2, Car, Gauge, Droplets,
+  AlertTriangle, CheckCircle, ToggleLeft, ToggleRight, Search,
+} from "lucide-react";
 import type { Vehicle, VehicleType } from "@/types/vehicle";
 
 const TYPES: { value: VehicleType; label: string }[] = [
-  { value: "carro", label: "Carro" },
-  { value: "vuc", label: "VUC" },
-  { value: "truck", label: "Truck" },
-  { value: "carreta", label: "Carreta" },
+  { value: "carro", label: "Carro" }, { value: "vuc", label: "VUC" },
+  { value: "truck", label: "Truck" }, { value: "carreta", label: "Carreta" },
   { value: "outro", label: "Outro" },
 ];
-
 const empty = {
   name: "", plate: "", vehicle_type: "carro" as VehicleType,
   current_km: 0, oil_change_interval: 10000, last_oil_change_km: 0, active: true,
@@ -28,6 +27,7 @@ const empty = {
 
 export default function CVVehicles() {
   const [rows, setRows] = useState<Vehicle[]>([]);
+  const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(empty);
   const [editing, setEditing] = useState<string | null>(null);
@@ -37,7 +37,6 @@ export default function CVVehicles() {
     if (error) return toast.error(error.message);
     setRows((data ?? []) as Vehicle[]);
   };
-
   useEffect(() => { load(); }, []);
 
   const openNew = () => { setForm(empty); setEditing(null); setOpen(true); };
@@ -49,7 +48,6 @@ export default function CVVehicles() {
     });
     setEditing(v.id); setOpen(true);
   };
-
   const save = async () => {
     if (!form.name || !form.plate) return toast.error("Nome e placa são obrigatórios");
     const next_oil_change_km = Number(form.last_oil_change_km) + Number(form.oil_change_interval);
@@ -58,63 +56,104 @@ export default function CVVehicles() {
       ? await supabase.from("cv_vehicles").update(payload).eq("id", editing)
       : await supabase.from("cv_vehicles").insert(payload);
     if (error) return toast.error(error.message);
-    toast.success("Salvo");
-    setOpen(false); load();
+    toast.success("Salvo"); setOpen(false); load();
   };
-
   const remove = async (id: string) => {
     if (!confirm("Excluir veículo?")) return;
     const { error } = await supabase.from("cv_vehicles").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Excluído"); load();
   };
+  const toggle = async (v: Vehicle) => {
+    await supabase.from("cv_vehicles").update({ active: !v.active }).eq("id", v.id);
+    load();
+  };
+
+  const filtered = rows.filter(v =>
+    !q || v.name.toLowerCase().includes(q.toLowerCase()) || v.plate.toLowerCase().includes(q.toLowerCase())
+  );
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Veículos</h2>
-        <Button onClick={openNew}><Plus className="h-4 w-4 mr-1" />Novo</Button>
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+        <div>
+          <h2 className="text-xl font-semibold">Veículos</h2>
+          <p className="text-sm text-muted-foreground">{rows.length} cadastrados • {rows.filter(r => r.active).length} ativos</p>
+        </div>
+        <div className="flex gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar nome ou placa..." value={q} onChange={e => setQ(e.target.value)} className="pl-8 w-64" />
+          </div>
+          <Button onClick={openNew}><Plus className="h-4 w-4 mr-1" />Novo Veículo</Button>
+        </div>
       </div>
 
-      <Card><CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead><TableHead>Placa</TableHead><TableHead>Tipo</TableHead>
-              <TableHead>KM Atual</TableHead><TableHead>Próx. Óleo</TableHead>
-              <TableHead>Status</TableHead><TableHead className="w-24"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map(v => {
-              const alert = v.current_km >= v.next_oil_change_km;
-              return (
-                <TableRow key={v.id}>
-                  <TableCell className="font-medium">{v.name}</TableCell>
-                  <TableCell><Badge variant="outline">{v.plate}</Badge></TableCell>
-                  <TableCell>{TYPES.find(t => t.value === v.vehicle_type)?.label}</TableCell>
-                  <TableCell>{v.current_km.toLocaleString()} km</TableCell>
-                  <TableCell>
-                    <span className={alert ? "text-destructive font-semibold" : ""}>
-                      {v.next_oil_change_km.toLocaleString()} km
-                    </span>
-                  </TableCell>
-                  <TableCell>{v.active ? <Badge>Ativo</Badge> : <Badge variant="secondary">Inativo</Badge>}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button size="icon" variant="ghost" onClick={() => openEdit(v)}><Pencil className="h-4 w-4" /></Button>
-                      <Button size="icon" variant="ghost" onClick={() => remove(v.id)}><Trash2 className="h-4 w-4" /></Button>
+      {filtered.length === 0 ? (
+        <Card><CardContent className="py-16 text-center text-muted-foreground">
+          <Car className="h-12 w-12 mx-auto mb-3 opacity-40" />
+          Nenhum veículo encontrado.
+        </CardContent></Card>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map(v => {
+            const km = v.next_oil_change_km - v.current_km;
+            const overdue = km <= 0;
+            const near = km > 0 && km <= 1000;
+            return (
+              <Card key={v.id} className="hover:shadow-lg transition-all">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Car className="h-5 w-5 text-primary" />
+                      {v.name}
+                    </CardTitle>
+                    <div className="flex gap-0.5">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(v)}><Pencil className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggle(v)}>
+                        {v.active ? <ToggleRight className="h-4 w-4 text-emerald-500" /> : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => remove(v.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-            {rows.length === 0 && (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Nenhum veículo cadastrado</TableCell></TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </CardContent></Card>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Placa</span>
+                    <Badge variant="outline" className="font-mono">{v.plate}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Tipo</span>
+                    <span>{TYPES.find(t => t.value === v.vehicle_type)?.label}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground flex items-center gap-1"><Gauge className="h-4 w-4" />KM Atual</span>
+                    <span className="font-semibold text-primary">{v.current_km.toLocaleString()} km</span>
+                  </div>
+                  <div className="space-y-1.5 pt-2 border-t">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground flex items-center gap-1"><Droplets className="h-4 w-4" />Troca de Óleo</span>
+                      {overdue ? (
+                        <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" />Vencida</Badge>
+                      ) : near ? (
+                        <Badge variant="outline" className="gap-1 border-amber-500 text-amber-500"><AlertTriangle className="h-3 w-3" />Próxima</Badge>
+                      ) : (
+                        <Badge variant="outline" className="gap-1 border-emerald-500 text-emerald-500"><CheckCircle className="h-3 w-3" />Em dia</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {overdue
+                        ? <span className="text-destructive">Atrasada em {Math.abs(km).toLocaleString()} km</span>
+                        : <>Próxima em {km.toLocaleString()} km ({v.next_oil_change_km.toLocaleString()} km)</>}
+                    </p>
+                  </div>
+                  {!v.active && <Badge variant="secondary" className="w-full justify-center">Inativo</Badge>}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
