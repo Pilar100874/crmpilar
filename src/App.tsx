@@ -118,6 +118,8 @@ import CVDefects from "./pages/controle-veiculos/CVDefects";
 import CVDefectTypes from "./pages/controle-veiculos/CVDefectTypes";
 import CVMaintenance from "./pages/controle-veiculos/CVMaintenance";
 import CVInspectionConfig from "./pages/controle-veiculos/CVInspectionConfig";
+import CVHelpers from "./pages/controle-veiculos/CVHelpers";
+
 import ChatInterno from "./pages/ChatInterno";
 import ConfigSkills from "./pages/ConfigSkills";
 import MonitorarFilas from "./pages/MonitorarFilas";
