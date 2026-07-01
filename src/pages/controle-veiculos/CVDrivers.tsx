@@ -5,17 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, User, Phone, IdCard, Search, ToggleLeft, ToggleRight } from "lucide-react";
+import { CVPageHeader } from "./CVPageHeader";
 import type { Driver } from "@/types/vehicle";
 
 const empty = { name: "", license: "", phone: "", active: true };
 
 export default function CVDrivers() {
   const [rows, setRows] = useState<Driver[]>([]);
+  const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(empty);
   const [editing, setEditing] = useState<string | null>(null);
@@ -41,45 +42,82 @@ export default function CVDrivers() {
     if (error) return toast.error(error.message);
     toast.success("Excluído"); load();
   };
+  const toggle = async (d: Driver) => {
+    await supabase.from("cv_drivers").update({ active: !d.active }).eq("id", d.id);
+    load();
+  };
+
+  const filtered = rows.filter(d =>
+    !q || d.name.toLowerCase().includes(q.toLowerCase()) || d.license.toLowerCase().includes(q.toLowerCase())
+  );
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Motoristas</h2>
-        <Button onClick={() => { setForm(empty); setEditing(null); setOpen(true); }}>
-          <Plus className="h-4 w-4 mr-1" />Novo
-        </Button>
+      <CVPageHeader
+        icon={Users}
+        title="Motoristas"
+        subtitle={`${rows.length} cadastrados • ${rows.filter(r => r.active).length} ativos`}
+        actions={
+          <Button
+            onClick={() => { setForm(empty); setEditing(null); setOpen(true); }}
+            className="bg-white text-primary hover:bg-white/90"
+          >
+            <Plus className="h-4 w-4 mr-1" />Novo Motorista
+          </Button>
+        }
+      />
+
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input placeholder="Buscar nome ou CNH..." value={q} onChange={e => setQ(e.target.value)} className="pl-9" />
       </div>
-      <Card><CardContent className="p-0">
-        <Table>
-          <TableHeader><TableRow>
-            <TableHead>Nome</TableHead><TableHead>CNH</TableHead><TableHead>Telefone</TableHead>
-            <TableHead>Status</TableHead><TableHead className="w-24"></TableHead>
-          </TableRow></TableHeader>
-          <TableBody>
-            {rows.map(d => (
-              <TableRow key={d.id}>
-                <TableCell className="font-medium">{d.name}</TableCell>
-                <TableCell>{d.license}</TableCell>
-                <TableCell>{d.phone || "—"}</TableCell>
-                <TableCell>{d.active ? <Badge>Ativo</Badge> : <Badge variant="secondary">Inativo</Badge>}</TableCell>
-                <TableCell>
-                  <div className="flex gap-1">
-                    <Button size="icon" variant="ghost" onClick={() => {
-                      setForm({ name: d.name, license: d.license, phone: d.phone ?? "", active: d.active });
-                      setEditing(d.id); setOpen(true);
-                    }}><Pencil className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" onClick={() => remove(d.id)}><Trash2 className="h-4 w-4" /></Button>
+
+      {filtered.length === 0 ? (
+        <Card><CardContent className="py-16 text-center text-muted-foreground">
+          <Users className="h-12 w-12 mx-auto mb-3 opacity-40" />
+          Nenhum motorista encontrado.
+        </CardContent></Card>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filtered.map(d => (
+            <Card key={d.id} className="group hover:shadow-md hover:-translate-y-0.5 transition-all">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 ring-1 ring-primary/20">
+                    <User className="h-5 w-5 text-primary" />
                   </div>
-                </TableCell>
-              </TableRow>
-            ))}
-            {rows.length === 0 && (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhum motorista</TableCell></TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </CardContent></Card>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold truncate">{d.name}</p>
+                    {d.active
+                      ? <Badge className="mt-1 h-5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-0">Ativo</Badge>
+                      : <Badge variant="secondary" className="mt-1 h-5">Inativo</Badge>}
+                  </div>
+                </div>
+                <div className="space-y-1.5 text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <IdCard className="h-4 w-4" />
+                    <span className="font-mono truncate">{d.license}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Phone className="h-4 w-4" />
+                    <span className="truncate">{d.phone || "—"}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-end gap-0.5 pt-2 border-t">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
+                    setForm({ name: d.name, license: d.license, phone: d.phone ?? "", active: d.active });
+                    setEditing(d.id); setOpen(true);
+                  }}><Pencil className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggle(d)}>
+                    {d.active ? <ToggleRight className="h-4 w-4 text-emerald-500" /> : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => remove(d.id)}><Trash2 className="h-4 w-4" /></Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

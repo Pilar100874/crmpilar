@@ -7,18 +7,18 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Tag, Wrench, Zap, Shield, Package, Car } from "lucide-react";
+import { CVPageHeader } from "./CVPageHeader";
 import type { DefectType, DefectCategory } from "@/types/vehicle";
 
-const CATS: { value: DefectCategory; label: string }[] = [
-  { value: "mechanical", label: "Mecânico" },
-  { value: "electrical", label: "Elétrico" },
-  { value: "bodywork", label: "Carroceria" },
-  { value: "safety", label: "Segurança" },
-  { value: "other", label: "Outros" },
+const CATS: { value: DefectCategory; label: string; icon: any; tone: string; bg: string }[] = [
+  { value: "mechanical", label: "Mecânico", icon: Wrench, tone: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10 ring-amber-500/20" },
+  { value: "electrical", label: "Elétrico", icon: Zap, tone: "text-sky-600 dark:text-sky-400", bg: "bg-sky-500/10 ring-sky-500/20" },
+  { value: "bodywork", label: "Carroceria", icon: Car, tone: "text-primary", bg: "bg-primary/10 ring-primary/20" },
+  { value: "safety", label: "Segurança", icon: Shield, tone: "text-destructive", bg: "bg-destructive/10 ring-destructive/20" },
+  { value: "other", label: "Outros", icon: Package, tone: "text-muted-foreground", bg: "bg-muted ring-border" },
 ];
 
 const empty = { name: "", description: "", category: "mechanical" as DefectCategory };
@@ -51,43 +51,63 @@ export default function CVDefectTypes() {
     load();
   };
 
+  const grouped = CATS.map(c => ({ ...c, items: rows.filter(r => r.category === c.value) }));
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Tipos de Defeito</h2>
-        <Button onClick={() => { setForm(empty); setEditing(null); setOpen(true); }}>
-          <Plus className="h-4 w-4 mr-1" />Novo
-        </Button>
-      </div>
-      <Card><CardContent className="p-0">
-        <Table>
-          <TableHeader><TableRow>
-            <TableHead>Nome</TableHead><TableHead>Categoria</TableHead>
-            <TableHead>Descrição</TableHead><TableHead className="w-24"></TableHead>
-          </TableRow></TableHeader>
-          <TableBody>
-            {rows.map(t => (
-              <TableRow key={t.id}>
-                <TableCell className="font-medium">{t.name}</TableCell>
-                <TableCell><Badge variant="outline">{CATS.find(c => c.value === t.category)?.label}</Badge></TableCell>
-                <TableCell className="text-muted-foreground">{t.description || "—"}</TableCell>
-                <TableCell>
-                  <div className="flex gap-1">
-                    <Button size="icon" variant="ghost" onClick={() => {
-                      setForm({ name: t.name, description: t.description ?? "", category: t.category });
-                      setEditing(t.id); setOpen(true);
-                    }}><Pencil className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" onClick={() => remove(t.id)}><Trash2 className="h-4 w-4" /></Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-            {rows.length === 0 && (
-              <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">Nenhum tipo cadastrado</TableCell></TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </CardContent></Card>
+      <CVPageHeader
+        icon={Tag}
+        title="Tipos de Defeito"
+        subtitle={`${rows.length} tipos catalogados`}
+        actions={
+          <Button
+            onClick={() => { setForm(empty); setEditing(null); setOpen(true); }}
+            className="bg-white text-primary hover:bg-white/90"
+          >
+            <Plus className="h-4 w-4 mr-1" />Novo Tipo
+          </Button>
+        }
+      />
+
+      {rows.length === 0 ? (
+        <Card><CardContent className="py-16 text-center text-muted-foreground">
+          <Tag className="h-12 w-12 mx-auto mb-3 opacity-40" />
+          Nenhum tipo cadastrado.
+        </CardContent></Card>
+      ) : (
+        <div className="space-y-6">
+          {grouped.filter(g => g.items.length > 0).map(g => (
+            <div key={g.value}>
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`flex h-8 w-8 items-center justify-center rounded-lg ring-1 ${g.bg}`}>
+                  <g.icon className={`h-4 w-4 ${g.tone}`} />
+                </div>
+                <h3 className="font-semibold text-sm">{g.label}</h3>
+                <Badge variant="secondary" className="h-5">{g.items.length}</Badge>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {g.items.map(t => (
+                  <Card key={t.id} className="group hover:shadow-md hover:-translate-y-0.5 transition-all">
+                    <CardContent className="p-4 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-medium leading-tight">{t.name}</p>
+                        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => {
+                            setForm({ name: t.name, description: t.description ?? "", category: t.category });
+                            setEditing(t.id); setOpen(true);
+                          }}><Pencil className="h-3.5 w-3.5" /></Button>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => remove(t.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                        </div>
+                      </div>
+                      {t.description && <p className="text-xs text-muted-foreground line-clamp-2">{t.description}</p>}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
