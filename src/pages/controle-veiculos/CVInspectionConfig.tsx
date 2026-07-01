@@ -11,8 +11,9 @@ import { Camera, Plus, Trash2, Save, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
 
-type AngleSource = "both" | "device" | "ip_camera";
-interface Angle { key: string; label: string; required: boolean; source?: AngleSource; }
+type AngleSource = "device" | "ip_camera";
+interface Angle { key: string; label: string; required: boolean; source?: AngleSource; camera_id?: string | null; }
+interface CameraOption { id: string; nome: string; }
 
 
 export default function CVInspectionConfig() {
@@ -22,20 +23,27 @@ export default function CVInspectionConfig() {
   const [entryRequired, setEntryRequired] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [cameras, setCameras] = useState<CameraOption[]>([]);
+
+  const normalize = (list: any[]): Angle[] =>
+    (list ?? []).map((a: any) => ({
+      key: a.key,
+      label: a.label,
+      required: !!a.required,
+      source: a.source === "ip_camera" ? "ip_camera" : "device",
+      camera_id: a.camera_id ?? null,
+    }));
 
   const load = async () => {
-    const { data } = await supabase
-      .from("cv_inspection_config")
-      .select("*")
-      .eq("active", true)
-      .order("created_at")
-      .limit(1)
-      .maybeSingle();
+    const [{ data }, { data: cams }] = await Promise.all([
+      supabase.from("cv_inspection_config").select("*").eq("active", true).order("created_at").limit(1).maybeSingle(),
+      supabase.from("cv_cameras").select("id, nome").eq("ativo", true).order("nome"),
+    ]);
+    setCameras((cams ?? []) as CameraOption[]);
     if (data) {
       setId(data.id);
-      // usa exit_photos como fonte única; se vazio, tenta entry_photos
-      const base = ((data.exit_photos as any) ?? []) as Angle[];
-      const fallback = ((data.entry_photos as any) ?? []) as Angle[];
+      const base = normalize((data.exit_photos as any) ?? []);
+      const fallback = normalize((data.entry_photos as any) ?? []);
       setPhotos(base.length ? base : fallback);
       setExitRequired((data as any).exit_photos_required ?? true);
       setEntryRequired((data as any).entry_photos_required ?? true);
@@ -48,7 +56,7 @@ export default function CVInspectionConfig() {
     s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || `angle_${Date.now()}`;
 
-  const addAngle = () => setPhotos([...photos, { key: `angle_${Date.now()}`, label: "Novo ângulo", required: true, source: "both" }]);
+  const addAngle = () => setPhotos([...photos, { key: `angle_${Date.now()}`, label: "Novo ângulo", required: true, source: "device", camera_id: null }]);
   const removeAngle = (i: number) => setPhotos(photos.filter((_, idx) => idx !== i));
 
   const updateAngle = (i: number, patch: Partial<Angle>) =>
@@ -121,20 +129,37 @@ export default function CVInspectionConfig() {
                 <Label className="text-xs">Nome do ângulo</Label>
                 <Input value={a.label} onChange={(e) => updateAngle(i, { label: e.target.value })} />
               </div>
-              <div className="min-w-[180px] space-y-1">
+              <div className="min-w-[160px] space-y-1">
                 <Label className="text-xs">Origem da imagem</Label>
                 <Select
-                  value={a.source ?? "both"}
-                  onValueChange={(v) => updateAngle(i, { source: v as AngleSource })}
+                  value={a.source ?? "device"}
+                  onValueChange={(v) => updateAngle(i, { source: v as AngleSource, camera_id: v === "device" ? null : a.camera_id ?? null })}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="both">Câmera do dispositivo + IP</SelectItem>
-                    <SelectItem value="device">Somente foto (dispositivo)</SelectItem>
-                    <SelectItem value="ip_camera">Somente câmera IP</SelectItem>
+                    <SelectItem value="device">Foto</SelectItem>
+                    <SelectItem value="ip_camera">Câmera IP</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              {a.source === "ip_camera" && (
+                <div className="min-w-[200px] space-y-1">
+                  <Label className="text-xs">Câmera</Label>
+                  <Select
+                    value={a.camera_id ?? ""}
+                    onValueChange={(v) => updateAngle(i, { camera_id: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={cameras.length ? "Selecione a câmera" : "Nenhuma câmera cadastrada"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cameras.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="flex items-center gap-2 pb-2">
                 <Switch checked={a.required} onCheckedChange={(v) => updateAngle(i, { required: v })} />
                 <Label className="text-sm">Obrigatória</Label>
