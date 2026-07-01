@@ -4,21 +4,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
-import { Wrench, BarChart3, TrendingUp, DollarSign, Droplets, AlertTriangle, CheckCircle } from "lucide-react";
+import { format, subDays, startOfDay, endOfDay, startOfYear } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Wrench, BarChart3, TrendingUp, DollarSign, Droplets, AlertTriangle, CheckCircle, CalendarIcon } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, Legend,
 } from "recharts";
+import { cn } from "@/lib/utils";
 import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
 import type { Vehicle } from "@/types/vehicle";
 
 const COLORS = ["hsl(var(--primary))", "#f59e0b", "#10b981", "#3b82f6", "#ec4899", "#8b5cf6"];
 
+type PeriodFilter = "30" | "60" | "90" | "year" | "all" | "custom";
+
 export default function CVMaintenance() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [defects, setDefects] = useState<any[]>([]);
   const [vehicleFilter, setVehicleFilter] = useState("all");
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("30");
+  const [customDate, setCustomDate] = useState<Date | undefined>(undefined);
 
   const load = async () => {
     const [v, d] = await Promise.all([
@@ -29,6 +38,29 @@ export default function CVMaintenance() {
     setDefects(d.data ?? []);
   };
   useEffect(() => { load(); }, []);
+
+  const periodBounds = useMemo(() => {
+    const now = new Date();
+    switch (periodFilter) {
+      case "30": return { start: startOfDay(subDays(now, 30)), end: endOfDay(now) };
+      case "60": return { start: startOfDay(subDays(now, 60)), end: endOfDay(now) };
+      case "90": return { start: startOfDay(subDays(now, 90)), end: endOfDay(now) };
+      case "year": return { start: startOfDay(startOfYear(now)), end: endOfDay(now) };
+      case "all": return { start: null, end: null };
+      case "custom": {
+        if (!customDate) return { start: null, end: null };
+        return { start: startOfDay(customDate), end: endOfDay(customDate) };
+      }
+    }
+  }, [periodFilter, customDate]);
+
+  const isWithinPeriod = (dateStr: string | null) => {
+    if (!dateStr) return false;
+    const dt = new Date(dateStr);
+    if (periodBounds.start && dt < periodBounds.start) return false;
+    if (periodBounds.end && dt > periodBounds.end) return false;
+    return true;
+  };
 
   const registerOilChange = async (v: Vehicle) => {
     if (!confirm(`Registrar troca de óleo com KM atual (${v.current_km.toLocaleString()})?`)) return;
@@ -41,8 +73,13 @@ export default function CVMaintenance() {
   };
 
   const resolved = useMemo(
-    () => defects.filter(d => d.status === "resolved" && d.cost && (vehicleFilter === "all" || d.vehicle_id === vehicleFilter)),
-    [defects, vehicleFilter],
+    () => defects.filter(d =>
+      d.status === "resolved" &&
+      d.cost &&
+      (vehicleFilter === "all" || d.vehicle_id === vehicleFilter) &&
+      isWithinPeriod(d.resolved_at)
+    ),
+    [defects, vehicleFilter, periodBounds],
   );
 
   const byVehicle = useMemo(() =>
@@ -58,9 +95,21 @@ export default function CVMaintenance() {
   );
 
   const monthly = useMemo(() => {
+    if (periodFilter === "custom" && customDate) {
+      const label = format(customDate, "dd/MM/yyyy", { locale: ptBR });
+      const dayCost = resolved.reduce((s, d) => s + Number(d.cost ?? 0), 0);
+      const dayCount = resolved.length;
+      return [{ month: label, totalCost: dayCost, count: dayCount, date: customDate }];
+    }
+
     const months: { month: string; totalCost: number; count: number; date: Date }[] = [];
     const now = new Date();
-    for (let i = 11; i >= 0; i--) {
+    const count = periodFilter === "year" ? 12 :
+                  periodFilter === "all" ? 12 :
+                  periodFilter === "90" ? 3 :
+                  periodFilter === "60" ? 2 : 1;
+
+    for (let i = count - 1; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push({
         month: d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }),
@@ -74,7 +123,7 @@ export default function CVMaintenance() {
       if (m) { m.totalCost += Number(d.cost ?? 0); m.count += 1; }
     });
     return months;
-  }, [resolved]);
+  }, [resolved, periodFilter, customDate]);
 
   const totalCost = resolved.reduce((s, d) => s + Number(d.cost ?? 0), 0);
   const total = resolved.length;
@@ -92,17 +141,43 @@ export default function CVMaintenance() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-primary" /> Filtrar por veículo
+            <BarChart3 className="h-4 w-4 text-primary" /> Filtros
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col sm:flex-row gap-3">
           <Select value={vehicleFilter} onValueChange={setVehicleFilter}>
-            <SelectTrigger className="max-w-sm"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="max-w-sm"><SelectValue placeholder="Veículo" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os veículos</SelectItem>
               {vehicles.map(v => <SelectItem key={v.id} value={v.id}>{v.name} — {v.plate}</SelectItem>)}
             </SelectContent>
           </Select>
+
+          <Select value={periodFilter} onValueChange={(v) => { setPeriodFilter(v as PeriodFilter); if (v !== "custom") setCustomDate(undefined); }}>
+            <SelectTrigger className="max-w-sm"><SelectValue placeholder="Período" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="30">Últimos 30 dias</SelectItem>
+              <SelectItem value="60">Últimos 60 dias</SelectItem>
+              <SelectItem value="90">Últimos 90 dias</SelectItem>
+              <SelectItem value="year">Este ano</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="custom">Data específica</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {periodFilter === "custom" && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className={cn("max-w-sm justify-start text-left font-normal", !customDate && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {customDate ? format(customDate, "dd/MM/yyyy", { locale: ptBR }) : <span>Selecione a data</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={customDate} onSelect={setCustomDate} initialFocus className={cn("p-3 pointer-events-auto")} />
+              </PopoverContent>
+            </Popover>
+          )}
         </CardContent>
       </Card>
 
@@ -154,7 +229,7 @@ export default function CVMaintenance() {
       </div>
 
       <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><TrendingUp className="h-4 w-4" />Evolução Mensal (12 meses)</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><TrendingUp className="h-4 w-4" />Evolução {periodFilter === "custom" && customDate ? `em ${format(customDate, "dd/MM/yyyy", { locale: ptBR })}` : periodFilter === "30" ? "— Últimos 30 dias" : periodFilter === "60" ? "— Últimos 60 dias" : periodFilter === "90" ? "— Últimos 90 dias" : periodFilter === "year" ? "— Este ano" : "— Todo o período"}</CardTitle></CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={monthly}>
