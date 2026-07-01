@@ -73,8 +73,13 @@ export default function CVMaintenance() {
   };
 
   const resolved = useMemo(
-    () => defects.filter(d => d.status === "resolved" && d.cost && (vehicleFilter === "all" || d.vehicle_id === vehicleFilter)),
-    [defects, vehicleFilter],
+    () => defects.filter(d =>
+      d.status === "resolved" &&
+      d.cost &&
+      (vehicleFilter === "all" || d.vehicle_id === vehicleFilter) &&
+      isWithinPeriod(d.resolved_at)
+    ),
+    [defects, vehicleFilter, periodBounds],
   );
 
   const byVehicle = useMemo(() =>
@@ -90,9 +95,21 @@ export default function CVMaintenance() {
   );
 
   const monthly = useMemo(() => {
+    if (periodFilter === "custom" && customDate) {
+      const label = format(customDate, "dd/MM/yyyy", { locale: ptBR });
+      const dayCost = resolved.reduce((s, d) => s + Number(d.cost ?? 0), 0);
+      const dayCount = resolved.length;
+      return [{ month: label, totalCost: dayCost, count: dayCount, date: customDate }];
+    }
+
     const months: { month: string; totalCost: number; count: number; date: Date }[] = [];
     const now = new Date();
-    for (let i = 11; i >= 0; i--) {
+    const count = periodFilter === "year" ? 12 :
+                  periodFilter === "all" ? 12 :
+                  periodFilter === "90" ? 3 :
+                  periodFilter === "60" ? 2 : 1;
+
+    for (let i = count - 1; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push({
         month: d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }),
@@ -106,7 +123,7 @@ export default function CVMaintenance() {
       if (m) { m.totalCost += Number(d.cost ?? 0); m.count += 1; }
     });
     return months;
-  }, [resolved]);
+  }, [resolved, periodFilter, customDate]);
 
   const totalCost = resolved.reduce((s, d) => s + Number(d.cost ?? 0), 0);
   const total = resolved.length;
