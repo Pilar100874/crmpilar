@@ -13,6 +13,7 @@ import {
   PanelLeftClose,
   PanelLeft,
   Car,
+  Camera,
   LucideIcon,
 } from "lucide-react";
 import {
@@ -48,6 +49,7 @@ const navItems: NavItem[] = [
   { to: "/controle-veiculos/veiculos", label: "Veículos", icon: Truck, group: "config" },
   { to: "/controle-veiculos/motoristas", label: "Motoristas", icon: Users, group: "config" },
   { to: "/controle-veiculos/tipos-defeito", label: "Tipos de Defeito", icon: Tag, group: "config" },
+  { to: "/controle-veiculos/vistoria-config", label: "Config. Vistoria", icon: Camera, group: "config" },
 ];
 
 function isItemActive(pathname: string, item: NavItem) {

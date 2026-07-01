@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,17 +9,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import {
-  LogIn, Calendar, Clock, AlertTriangle, CheckCircle, Save, X, MessageSquare, Tags, Car, AlertCircle,
+  LogIn, Car, Clock, AlertTriangle, CheckCircle, Save, X, ChevronLeft, ChevronRight,
+  Camera, Tags, AlertCircle, MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
+import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
+
+const STEPS = ["Veículo", "KM & Defeitos", "Fotos", "Confirmação"] as const;
 
 export default function CVVehicleEntry() {
   const [openMoves, setOpenMoves] = useState<any[]>([]);
   const [defectTypes, setDefectTypes] = useState<any[]>([]);
+  const [angles, setAngles] = useState<PhotoAngle[]>([]);
   const [selected, setSelected] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [step, setStep] = useState(0);
   const [form, setForm] = useState({
     entry_km: 0,
     reported_defects: "",
@@ -27,22 +33,25 @@ export default function CVVehicleEntry() {
     damage_notes: "",
     inspected_all_sides: false,
   });
+  const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
 
   const load = async () => {
     setLoading(true);
-    const [m, dt] = await Promise.all([
+    const [m, dt, cfg] = await Promise.all([
       supabase.from("cv_vehicle_movements")
         .select("*, vehicle:cv_vehicles(*), driver:cv_drivers(*)")
         .eq("status", "out").order("exit_time", { ascending: false }),
       supabase.from("cv_defect_types").select("*").neq("category", "bodywork").order("name"),
+      supabase.from("cv_inspection_config").select("*").eq("active", true).limit(1).maybeSingle(),
     ]);
     setOpenMoves(m.data ?? []);
     setDefectTypes(dt.data ?? []);
+    setAngles(((cfg.data?.entry_photos as any) ?? []) as PhotoAngle[]);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
 
-  const handleSelect = (move: any) => {
+  const handleSelectVehicle = (move: any) => {
     setSelected(move);
     setForm({
       entry_km: move.exit_km ?? 0,
@@ -51,23 +60,44 @@ export default function CVVehicleEntry() {
       damage_notes: "",
       inspected_all_sides: false,
     });
+    setPhotos([]);
+    setStep(1);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const requiredAngles = useMemo(() => angles.filter((a) => a.required), [angles]);
+  const missingRequired = requiredAngles.filter((a) => !photos.some((p) => p.angle_key === a.key));
+
+  const canNext = () => {
+    if (step === 1) {
+      if (!selected) return false;
+      if (form.entry_km <= selected.exit_km) return false;
+      if (form.reported_defects.trim() && !form.defect_type_id) return false;
+      return true;
+    }
+    if (step === 2) return missingRequired.length === 0;
+    return true;
+  };
+
+  const goNext = () => {
+    if (!canNext()) {
+      if (step === 1) {
+        if (form.entry_km <= selected.exit_km) toast.error(`KM deve ser maior que ${selected.exit_km}`);
+        else if (form.reported_defects.trim() && !form.defect_type_id) toast.error("Selecione a categoria do defeito");
+      } else if (step === 2) {
+        toast.error(`Fotos obrigatórias pendentes: ${missingRequired.map((a) => a.label).join(", ")}`);
+      }
+      return;
+    }
+    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  };
+  const goBack = () => {
+    if (step === 1) { setSelected(null); setStep(0); return; }
+    setStep((s) => Math.max(s - 1, 0));
+  };
+
+  const handleSubmit = async () => {
     if (!selected) return;
-    if (form.entry_km <= selected.exit_km) {
-      toast.error(`KM entrada deve ser maior que ${selected.exit_km}`);
-      return;
-    }
-    if (form.reported_defects.trim() && !form.defect_type_id) {
-      toast.error("Selecione a categoria do defeito reportado");
-      return;
-    }
-    if (!form.inspected_all_sides) {
-      toast.error("Confirme a vistoria nos 4 lados");
-      return;
-    }
+    if (!form.inspected_all_sides) return toast.error("Confirme a vistoria nos 4 lados");
     setBusy(true);
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -82,49 +112,63 @@ export default function CVVehicleEntry() {
       resolved_at: new Date().toISOString(),
     }).eq("id", selected.id);
 
-    if (!error) {
-      await supabase.from("cv_vehicles").update({ current_km: form.entry_km }).eq("id", selected.vehicle_id);
+    if (error) { setBusy(false); return toast.error(error.message); }
 
-      if (form.reported_defects && form.defect_type_id) {
+    await supabase.from("cv_vehicles").update({ current_km: form.entry_km }).eq("id", selected.vehicle_id);
+
+    if (photos.length > 0) {
+      await supabase.from("cv_movement_photos").insert(
+        photos.map((p) => ({
+          movement_id: selected.id,
+          stage: "entry",
+          angle_key: p.angle_key,
+          angle_label: p.angle_label,
+          photo_url: p.photo_url,
+          created_by: user?.id ?? null,
+        })),
+      );
+    }
+
+    if (form.reported_defects && form.defect_type_id) {
+      await supabase.from("cv_defect_reports").insert({
+        vehicle_id: selected.vehicle_id,
+        driver_id: selected.driver_id,
+        movement_id: selected.id,
+        defect_type_id: form.defect_type_id,
+        defect_description: form.reported_defects,
+        reported_by: user?.id ?? null,
+        status: "pending",
+      });
+    }
+
+    if (form.damage_notes) {
+      let { data: bw } = await supabase.from("cv_defect_types")
+        .select("id").eq("category", "bodywork").limit(1).maybeSingle();
+      if (!bw) {
+        const { data: newT } = await supabase.from("cv_defect_types")
+          .insert({ name: "Avaria de Carroceria", description: "Avarias na vistoria", category: "bodywork" })
+          .select().single();
+        bw = newT;
+      }
+      if (bw) {
         await supabase.from("cv_defect_reports").insert({
           vehicle_id: selected.vehicle_id,
           driver_id: selected.driver_id,
           movement_id: selected.id,
-          defect_type_id: form.defect_type_id,
-          defect_description: form.reported_defects,
+          defect_type_id: bw.id,
+          defect_description: form.damage_notes,
           reported_by: user?.id ?? null,
           status: "pending",
+          is_damage_report: true,
         });
       }
-
-      if (form.damage_notes) {
-        // Encontrar/criar tipo padrão de carroceria
-        let { data: bw } = await supabase.from("cv_defect_types")
-          .select("id").eq("category", "bodywork").limit(1).maybeSingle();
-        if (!bw) {
-          const { data: newT } = await supabase.from("cv_defect_types")
-            .insert({ name: "Avaria de Carroceria", description: "Avarias na vistoria", category: "bodywork" })
-            .select().single();
-          bw = newT;
-        }
-        if (bw) {
-          await supabase.from("cv_defect_reports").insert({
-            vehicle_id: selected.vehicle_id,
-            driver_id: selected.driver_id,
-            movement_id: selected.id,
-            defect_type_id: bw.id,
-            defect_description: form.damage_notes,
-            reported_by: user?.id ?? null,
-            status: "pending",
-            is_damage_report: true,
-          });
-        }
-      }
     }
+
     setBusy(false);
-    if (error) return toast.error(error.message);
     toast.success("Entrada registrada com sucesso!");
     setSelected(null);
+    setStep(0);
+    setPhotos([]);
     load();
   };
 
@@ -136,7 +180,7 @@ export default function CVVehicleEntry() {
     return (
       <div className="max-w-lg mx-auto p-6">
         <Card>
-          <CardHeader className="bg-success text-success-foreground rounded-t-lg">
+          <CardHeader className="bg-success/10 border-b">
             <CardTitle className="flex items-center gap-2"><LogIn className="h-5 w-5" /> Registrar Entrada</CardTitle>
           </CardHeader>
           <CardContent className="p-6 text-center">
@@ -152,42 +196,75 @@ export default function CVVehicleEntry() {
     );
   }
 
-  if (selected) {
-    const v = selected.vehicle, d = selected.driver;
-    return (
-      <div className="space-y-4">
-        <CVPageHeader
-          icon={LogIn}
-          title="Registrar Entrada"
-          subtitle={`${v?.name} — ${v?.plate}`}
-        />
+  return (
+    <div className="space-y-4">
+      <CVPageHeader icon={LogIn} title="Registrar Entrada" subtitle="Assistente passo a passo para o retorno" />
 
-        <Card className="max-w-2xl mx-auto shadow-sm">
-          <CardHeader className="bg-emerald-500/10 border-b border-emerald-500/20">
-            <CardTitle className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
-              <LogIn className="h-5 w-5" /> Registrar Retorno
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6">
-            <div className="mb-6 p-4 bg-muted/50 rounded space-y-2">
-              <h3 className="font-semibold text-sm">Informações da Saída:</h3>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div><span className="text-muted-foreground">Veículo:</span> <Badge variant="outline">{v?.name}</Badge></div>
-                <div><span className="text-muted-foreground">Motorista:</span> <span className="font-medium">{d?.name}</span></div>
-                <div><span className="text-muted-foreground">Saída:</span> {new Date(selected.exit_time).toLocaleString("pt-BR")}</div>
-                <div><span className="text-muted-foreground">KM Saída:</span> <span className="font-medium">{selected.exit_km?.toLocaleString()}</span></div>
-                {selected.has_helper && (
-                  <div className="col-span-2"><span className="text-muted-foreground">Ajudante:</span> <span className="font-medium">{selected.helper_name}</span></div>
-                )}
+      <Card className="max-w-4xl mx-auto shadow-sm">
+        <CardHeader className="border-b">
+          <div className="flex items-center justify-between gap-2 overflow-x-auto">
+            {STEPS.map((label, i) => {
+              const active = i === step;
+              const done = i < step;
+              return (
+                <div key={label} className="flex items-center gap-2 shrink-0">
+                  <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-semibold border-2 ${
+                    active ? "border-primary bg-primary text-primary-foreground"
+                    : done ? "border-success bg-success/10 text-success"
+                    : "border-muted-foreground/30 text-muted-foreground"
+                  }`}>
+                    {done ? <CheckCircle className="h-4 w-4" /> : i + 1}
+                  </div>
+                  <span className={`text-xs sm:text-sm hidden sm:inline ${active ? "font-semibold" : "text-muted-foreground"}`}>{label}</span>
+                  {i < STEPS.length - 1 && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                </div>
+              );
+            })}
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-4 sm:p-6 min-h-[360px]">
+          {step === 0 && (
+            <div>
+              <div className="mb-3 flex items-center gap-2"><Clock className="h-5 w-5 text-primary" /><h3 className="font-semibold">Selecione o veículo que está retornando</h3></div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {openMoves.map((m) => {
+                  const timeOut = Date.now() - new Date(m.exit_time).getTime();
+                  const h = Math.floor(timeOut / 3600000);
+                  const min = Math.floor((timeOut % 3600000) / 60000);
+                  return (
+                    <button key={m.id} type="button" onClick={() => handleSelectVehicle(m)}
+                      className="text-left p-4 rounded-lg border-2 border-l-4 border-l-amber-500 border-border bg-card hover:shadow-md hover:-translate-y-0.5 transition-all">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Car className="h-4 w-4 text-primary shrink-0" />
+                          <span className="font-semibold truncate">{m.vehicle?.name}</span>
+                        </div>
+                        <Badge variant="outline" className="font-mono text-xs">{m.vehicle?.plate}</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate"><span className="font-medium">Motorista:</span> {m.driver?.name}</p>
+                      {m.has_helper && <Badge variant="outline" className="text-xs mt-2">Ajudante: {m.helper_name}</Badge>}
+                      <div className="pt-2 mt-2 border-t space-y-1">
+                        <p className="text-xs text-muted-foreground">Saída: {new Date(m.exit_time).toLocaleString("pt-BR")}</p>
+                        <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-0">
+                          <Clock className="h-3 w-3 mr-1" />{h}h {min}min em trânsito
+                        </Badge>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
+          )}
 
-            <div className="mb-4 p-3 bg-success/10 rounded flex items-center gap-2 text-sm">
-              <Calendar className="h-4 w-4" /><Clock className="h-4 w-4" />
-              Data/Hora entrada: {new Date().toLocaleString("pt-BR")}
+          {step >= 1 && selected && (
+            <div className="mb-4 p-3 bg-muted/50 rounded text-sm">
+              <strong>{selected.vehicle?.name}</strong> — {selected.vehicle?.plate} · Motorista: {selected.driver?.name} · Saída: {new Date(selected.exit_time).toLocaleString("pt-BR")}
             </div>
+          )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+          {step === 1 && selected && (
+            <div className="space-y-4 max-w-xl">
               <div className="space-y-2">
                 <Label>Quilometragem de Entrada</Label>
                 <Input type="number" min={selected.exit_km} value={form.entry_km}
@@ -205,12 +282,6 @@ export default function CVVehicleEntry() {
                 <Textarea rows={3} value={form.reported_defects}
                   onChange={(e) => setForm({ ...form, reported_defects: e.target.value })}
                   placeholder="Descreva defeitos reportados..." />
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <MessageSquare className="h-3 w-3" /> Serão listados em Defeitos Reportados
-                  {form.reported_defects.trim() && !form.defect_type_id && (
-                    <span className="text-destructive font-medium ml-2">⚠️ Categoria obrigatória</span>
-                  )}
-                </p>
               </div>
 
               {form.reported_defects.trim() && (
@@ -222,12 +293,7 @@ export default function CVVehicleEntry() {
                     <SelectTrigger><SelectValue placeholder="Selecione a categoria" /></SelectTrigger>
                     <SelectContent>
                       {defectTypes.map((t) => (
-                        <SelectItem key={t.id} value={t.id}>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{t.name}</span>
-                            {t.description && <span className="text-xs text-muted-foreground">{t.description}</span>}
-                          </div>
-                        </SelectItem>
+                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -239,91 +305,66 @@ export default function CVVehicleEntry() {
                 <Textarea rows={3} value={form.damage_notes}
                   onChange={(e) => setForm({ ...form, damage_notes: e.target.value })}
                   placeholder="Amassados ou avarias encontradas..." />
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <MessageSquare className="h-3 w-3" /> Serão registradas como defeitos de carroceria
-                </p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1"><MessageSquare className="h-3 w-3" /> Serão registradas como defeitos de carroceria</p>
               </div>
+            </div>
+          )}
 
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="all4" checked={form.inspected_all_sides}
-                    onCheckedChange={(c) => setForm({ ...form, inspected_all_sides: !!c })} />
-                  <Label htmlFor="all4" className="flex items-center gap-2 font-medium text-primary">
-                    <CheckCircle className="h-4 w-4" /> Vistoria nos 4 Lados (Obrigatório)
-                  </Label>
+          {step === 2 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2"><Camera className="h-5 w-5 text-primary" /><h3 className="font-semibold">Vistoria fotográfica de entrada</h3></div>
+              {angles.length === 0 ? (
+                <div className="p-4 bg-muted/50 rounded text-sm text-muted-foreground">
+                  Nenhum ângulo configurado. <a href="/controle-veiculos/vistoria-config" className="text-primary hover:underline">Configurar agora</a>
                 </div>
+              ) : (
+                <>
+                  {missingRequired.length > 0 && (
+                    <div className="p-3 bg-warning/10 border border-warning/30 rounded text-sm flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                      <span>Fotos obrigatórias pendentes: <strong>{missingRequired.map((a) => a.label).join(", ")}</strong></span>
+                    </div>
+                  )}
+                  <CVPhotoCapture stage="entry" angles={angles} value={photos} onChange={setPhotos} />
+                </>
+              )}
+            </div>
+          )}
+
+          {step === 3 && selected && (
+            <div className="space-y-3 max-w-xl">
+              <div className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-success" /><h3 className="font-semibold">Confirme os dados</h3></div>
+              <div className="p-4 bg-muted/50 rounded text-sm space-y-2">
+                <p><strong>Veículo:</strong> {selected.vehicle?.name} — {selected.vehicle?.plate}</p>
+                <p><strong>Motorista:</strong> {selected.driver?.name}</p>
+                <p><strong>KM entrada:</strong> {form.entry_km.toLocaleString()} (+{(form.entry_km - selected.exit_km).toLocaleString()} km)</p>
+                {form.reported_defects && <p><strong>Defeitos reportados:</strong> {form.reported_defects}</p>}
+                {form.damage_notes && <p><strong>Avarias:</strong> {form.damage_notes}</p>}
+                <p><strong>Fotos:</strong> {photos.length} de {angles.length}</p>
               </div>
-
-              <div className="flex gap-3 pt-4">
-                <Button type="submit" disabled={busy} className="flex-1 bg-success text-success-foreground hover:opacity-90">
-                  <Save className="h-4 w-4 mr-2" /> Registrar Entrada
-                </Button>
-                <Button type="button" variant="outline" className="flex-1" onClick={() => setSelected(null)}>
-                  <X className="h-4 w-4 mr-2" /> Cancelar
-                </Button>
+              <div className="flex items-center space-x-2">
+                <Checkbox id="all4" checked={form.inspected_all_sides}
+                  onCheckedChange={(c) => setForm({ ...form, inspected_all_sides: !!c })} />
+                <Label htmlFor="all4" className="flex items-center gap-2 font-medium text-primary">
+                  <CheckCircle className="h-4 w-4" /> Vistoria completa realizada (obrigatório)
+                </Label>
               </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <CVPageHeader
-        icon={LogIn}
-        title="Registrar Entrada"
-        subtitle={`${openMoves.length} veículo(s) em trânsito`}
-      />
-
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Clock className="h-4 w-4 text-primary" /> Selecione o veículo que está retornando
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {openMoves.map((m) => {
-              const timeOut = Date.now() - new Date(m.exit_time).getTime();
-              const h = Math.floor(timeOut / 3600000);
-              const min = Math.floor((timeOut % 3600000) / 60000);
-              return (
-                <Card
-                  key={m.id}
-                  className="cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all border-l-4 border-l-amber-500"
-                  onClick={() => handleSelect(m)}
-                >
-                  <CardContent className="p-4 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Car className="h-4 w-4 text-primary shrink-0" />
-                        <span className="font-semibold truncate">{m.vehicle?.name}</span>
-                      </div>
-                      <Badge variant="outline" className="font-mono text-xs">{m.vehicle?.plate}</Badge>
-                    </div>
-                    <div className="text-sm text-muted-foreground truncate">
-                      <span className="font-medium">Motorista:</span> {m.driver?.name}
-                    </div>
-                    {m.has_helper && (
-                      <Badge variant="outline" className="text-xs">Ajudante: {m.helper_name}</Badge>
-                    )}
-                    <div className="pt-2 border-t space-y-1">
-                      <p className="text-xs text-muted-foreground">
-                        Saída: {new Date(m.exit_time).toLocaleString("pt-BR")}
-                      </p>
-                      <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-0">
-                        <Clock className="h-3 w-3 mr-1" />
-                        {h}h {min}min em trânsito
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+            </div>
+          )}
         </CardContent>
+
+        <div className="p-4 sm:p-6 border-t flex flex-col-reverse sm:flex-row gap-3 sm:justify-between">
+          <Button variant="outline" onClick={step === 0 ? () => window.history.back() : goBack}>
+            {step === 0 ? <><X className="h-4 w-4 mr-2" />Cancelar</> : <><ChevronLeft className="h-4 w-4 mr-2" />Voltar</>}
+          </Button>
+          {step === 0 ? null : step < STEPS.length - 1 ? (
+            <Button onClick={goNext}>Próximo <ChevronRight className="h-4 w-4 ml-2" /></Button>
+          ) : (
+            <Button onClick={handleSubmit} disabled={busy} className="bg-success text-success-foreground hover:opacity-90">
+              <Save className="h-4 w-4 mr-2" /> {busy ? "Registrando..." : "Confirmar Entrada"}
+            </Button>
+          )}
+        </div>
       </Card>
     </div>
   );

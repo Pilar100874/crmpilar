@@ -4000,6 +4000,77 @@ export type Database = {
           },
         ]
       }
+      cv_inspection_config: {
+        Row: {
+          active: boolean
+          created_at: string
+          entry_photos: Json
+          exit_photos: Json
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          entry_photos?: Json
+          exit_photos?: Json
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          entry_photos?: Json
+          exit_photos?: Json
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cv_movement_photos: {
+        Row: {
+          angle_key: string
+          angle_label: string
+          created_at: string
+          created_by: string | null
+          id: string
+          movement_id: string
+          photo_url: string
+          stage: string
+        }
+        Insert: {
+          angle_key: string
+          angle_label: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          movement_id: string
+          photo_url: string
+          stage: string
+        }
+        Update: {
+          angle_key?: string
+          angle_label?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          movement_id?: string
+          photo_url?: string
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_movement_photos_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "cv_vehicle_movements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cv_vehicle_movements: {
         Row: {
           created_at: string
