@@ -121,6 +121,20 @@ export default function CVInspectionConfig() {
                 <Label className="text-xs">Nome do ângulo</Label>
                 <Input value={a.label} onChange={(e) => updateAngle(i, { label: e.target.value })} />
               </div>
+              <div className="min-w-[180px] space-y-1">
+                <Label className="text-xs">Origem da imagem</Label>
+                <Select
+                  value={a.source ?? "both"}
+                  onValueChange={(v) => updateAngle(i, { source: v as AngleSource })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="both">Câmera do dispositivo + IP</SelectItem>
+                    <SelectItem value="device">Somente foto (dispositivo)</SelectItem>
+                    <SelectItem value="ip_camera">Somente câmera IP</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex items-center gap-2 pb-2">
                 <Switch checked={a.required} onCheckedChange={(v) => updateAngle(i, { required: v })} />
                 <Label className="text-sm">Obrigatória</Label>
@@ -129,6 +143,7 @@ export default function CVInspectionConfig() {
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </div>
+
           ))}
         </CardContent>
       </Card>
