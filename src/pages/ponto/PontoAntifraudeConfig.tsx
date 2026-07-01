@@ -32,6 +32,7 @@ interface Rede {
 export default function PontoAntifraudeConfig() {
   const { empresaId } = usePontoEmpresa();
   const [ativo, setAtivo] = useState<boolean>(true);
+  const [exigirGeoApp, setExigirGeoApp] = useState<boolean>(true);
   const [geos, setGeos] = useState<Geofence[]>([]);
   const [redes, setRedes] = useState<Rede[]>([]);
   const [novoGeo, setNovoGeo] = useState({ nome: "", lat: "", lng: "", raio: "150" });
@@ -45,12 +46,14 @@ export default function PontoAntifraudeConfig() {
     const [{ data: g }, { data: r }, { data: emp }] = await Promise.all([
       sb.from("ponto_geofences").select("*").eq("empresa_id", empresaId).order("nome"),
       sb.from("ponto_redes_autorizadas").select("*").eq("empresa_id", empresaId).order("tipo"),
-      sb.from("ponto_empresas").select("antifraude_ativo").eq("id", empresaId).maybeSingle(),
+      sb.from("ponto_empresas").select("antifraude_ativo, geofence_obrigatorio_app").eq("id", empresaId).maybeSingle(),
     ]);
     setGeos((g || []) as Geofence[]);
     setRedes((r || []) as Rede[]);
     setAtivo(emp?.antifraude_ativo ?? true);
+    setExigirGeoApp(emp?.geofence_obrigatorio_app !== false);
   };
+
 
   useEffect(() => { loadAll(); }, [empresaId]);
 
