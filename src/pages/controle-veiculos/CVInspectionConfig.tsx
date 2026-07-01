@@ -14,8 +14,7 @@ interface Angle { key: string; label: string; required: boolean; }
 
 export default function CVInspectionConfig() {
   const [id, setId] = useState<string | null>(null);
-  const [exitPhotos, setExitPhotos] = useState<Angle[]>([]);
-  const [entryPhotos, setEntryPhotos] = useState<Angle[]>([]);
+  const [photos, setPhotos] = useState<Angle[]>([]);
   const [exitRequired, setExitRequired] = useState(true);
   const [entryRequired, setEntryRequired] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -31,8 +30,10 @@ export default function CVInspectionConfig() {
       .maybeSingle();
     if (data) {
       setId(data.id);
-      setExitPhotos((data.exit_photos as any) ?? []);
-      setEntryPhotos((data.entry_photos as any) ?? []);
+      // usa exit_photos como fonte única; se vazio, tenta entry_photos
+      const base = ((data.exit_photos as any) ?? []) as Angle[];
+      const fallback = ((data.entry_photos as any) ?? []) as Angle[];
+      setPhotos(base.length ? base : fallback);
       setExitRequired((data as any).exit_photos_required ?? true);
       setEntryRequired((data as any).entry_photos_required ?? true);
     }
@@ -44,26 +45,21 @@ export default function CVInspectionConfig() {
     s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || `angle_${Date.now()}`;
 
-  const addAngle = (list: Angle[], setter: (a: Angle[]) => void) => {
-    setter([...list, { key: `angle_${Date.now()}`, label: "Novo ângulo", required: true }]);
-  };
-  const removeAngle = (i: number, list: Angle[], setter: (a: Angle[]) => void) => {
-    setter(list.filter((_, idx) => idx !== i));
-  };
-  const updateAngle = (i: number, patch: Partial<Angle>, list: Angle[], setter: (a: Angle[]) => void) => {
-    setter(list.map((a, idx) => {
+  const addAngle = () => setPhotos([...photos, { key: `angle_${Date.now()}`, label: "Novo ângulo", required: true }]);
+  const removeAngle = (i: number) => setPhotos(photos.filter((_, idx) => idx !== i));
+  const updateAngle = (i: number, patch: Partial<Angle>) =>
+    setPhotos(photos.map((a, idx) => {
       if (idx !== i) return a;
       const next = { ...a, ...patch };
       if (patch.label !== undefined) next.key = slugify(patch.label);
       return next;
     }));
-  };
 
   const save = async () => {
     setSaving(true);
     const payload: any = {
-      exit_photos: exitPhotos as any,
-      entry_photos: entryPhotos as any,
+      exit_photos: photos as any,
+      entry_photos: photos as any, // mantém sincronizado — mesma lista para entrada e saída
       exit_photos_required: exitRequired,
       entry_photos_required: entryRequired,
       updated_at: new Date().toISOString(),
@@ -78,38 +74,6 @@ export default function CVInspectionConfig() {
     load();
   };
 
-
-  const renderList = (title: string, list: Angle[], setter: (a: Angle[]) => void) => (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between text-base">
-          <span className="flex items-center gap-2"><Camera className="h-4 w-4 text-primary" /> {title}</span>
-          <Button size="sm" variant="outline" onClick={() => addAngle(list, setter)}>
-            <Plus className="h-4 w-4 mr-1" /> Adicionar
-          </Button>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {list.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum ângulo configurado</p>}
-        {list.map((a, i) => (
-          <div key={i} className="flex flex-wrap items-end gap-2 p-3 border rounded bg-muted/30">
-            <div className="flex-1 min-w-[220px] space-y-1">
-              <Label className="text-xs">Nome do ângulo</Label>
-              <Input value={a.label} onChange={(e) => updateAngle(i, { label: e.target.value }, list, setter)} />
-            </div>
-            <div className="flex items-center gap-2 pb-2">
-              <Switch checked={a.required} onCheckedChange={(v) => updateAngle(i, { required: v }, list, setter)} />
-              <Label className="text-sm">Obrigatória</Label>
-            </div>
-            <Button variant="ghost" size="icon" onClick={() => removeAngle(i, list, setter)}>
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  );
-
   if (loading) return <div className="p-6 text-center text-muted-foreground">Carregando...</div>;
 
   return (
@@ -117,7 +81,7 @@ export default function CVInspectionConfig() {
       <CVPageHeader
         icon={Settings}
         title="Configuração de Vistoria"
-        subtitle="Defina os ângulos de foto obrigatórios na entrada e saída"
+        subtitle="Ângulos de foto usados na entrada e na saída do veículo"
       />
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-4 flex items-center justify-between gap-3">
@@ -135,10 +99,36 @@ export default function CVInspectionConfig() {
           <Switch checked={entryRequired} onCheckedChange={setEntryRequired} />
         </Card>
       </div>
-      <div className="grid gap-4 lg:grid-cols-2">
-        {renderList("Fotos na Saída", exitPhotos, setExitPhotos)}
-        {renderList("Fotos na Entrada", entryPhotos, setEntryPhotos)}
-      </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center justify-between text-base">
+            <span className="flex items-center gap-2"><Camera className="h-4 w-4 text-primary" /> Ângulos de foto (entrada e saída)</span>
+            <Button size="sm" variant="outline" onClick={addAngle}>
+              <Plus className="h-4 w-4 mr-1" /> Adicionar
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {photos.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum ângulo configurado</p>}
+          {photos.map((a, i) => (
+            <div key={i} className="flex flex-wrap items-end gap-2 p-3 border rounded bg-muted/30">
+              <div className="flex-1 min-w-[220px] space-y-1">
+                <Label className="text-xs">Nome do ângulo</Label>
+                <Input value={a.label} onChange={(e) => updateAngle(i, { label: e.target.value })} />
+              </div>
+              <div className="flex items-center gap-2 pb-2">
+                <Switch checked={a.required} onCheckedChange={(v) => updateAngle(i, { required: v })} />
+                <Label className="text-sm">Obrigatória</Label>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => removeAngle(i)}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
       <div className="flex justify-end">
         <Button onClick={save} disabled={saving}>
           <Save className="h-4 w-4 mr-2" /> {saving ? "Salvando..." : "Salvar configuração"}
@@ -146,10 +136,11 @@ export default function CVInspectionConfig() {
       </div>
       <Card className="bg-muted/30">
         <CardContent className="p-4 text-sm text-muted-foreground space-y-1">
-          <p className="flex items-center gap-2"><Badge variant="outline">Dica</Badge> Se a opção "obrigatórias" estiver <strong>ligada</strong>, ângulos marcados como Obrigatórios travam a conclusão até serem capturados.</p>
+          <p className="flex items-center gap-2"><Badge variant="outline">Dica</Badge> A mesma lista de ângulos é usada tanto na entrada quanto na saída, para que a comparação lado a lado funcione corretamente.</p>
         </CardContent>
       </Card>
     </div>
   );
 }
+
 
