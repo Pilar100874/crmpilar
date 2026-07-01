@@ -10,30 +10,25 @@ interface Props {
 
 export function CVPageHeader({ icon: Icon, title, subtitle, actions }: Props) {
   return (
-    <div className="relative overflow-hidden rounded-xl border bg-card shadow-sm">
-      <div
-        className="absolute inset-0 opacity-90"
-        style={{ background: "var(--gradient-hero)" }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-transparent" />
-      <div className="relative flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm ring-1 ring-white/30">
-            <Icon className="h-6 w-6 text-white" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-lg font-bold tracking-tight text-white sm:text-xl md:text-2xl">
-              {title}
-            </h1>
-            {subtitle && (
-              <p className="text-xs text-white/85 sm:text-sm">{subtitle}</p>
-            )}
-          </div>
+    <div className="flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Icon className="h-5 w-5" />
         </div>
-        {actions && (
-          <div className="flex flex-wrap items-center gap-2">{actions}</div>
-        )}
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-2xl font-bold tracking-tight truncate">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              {subtitle}
+            </p>
+          )}
+        </div>
       </div>
+      {actions && (
+        <div className="flex flex-wrap items-center gap-2">{actions}</div>
+      )}
     </div>
   );
 }
