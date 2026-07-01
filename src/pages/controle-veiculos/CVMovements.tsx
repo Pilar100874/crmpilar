@@ -3,30 +3,44 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  List, Search, Filter, Car, LogIn, LogOut, Clock, User, Users, AlertTriangle, CheckCircle,
+  List, Search, Filter, Car, LogIn, LogOut, Clock, User, Users, AlertTriangle, CheckCircle, CalendarIcon,
 } from "lucide-react";
 import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 export default function CVMovements() {
   const [movements, setMovements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState<Date>(new Date());
 
   useEffect(() => {
     (async () => {
       setLoading(true);
+      const start = new Date(dateFilter);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(dateFilter);
+      end.setHours(23, 59, 59, 999);
+
       const { data } = await supabase
         .from("cv_vehicle_movements")
         .select("*, vehicle:cv_vehicles(name, plate), driver:cv_drivers(name)")
+        .gte("exit_time", start.toISOString())
+        .lte("exit_time", end.toISOString())
         .order("exit_time", { ascending: false })
         .limit(500);
       setMovements(data ?? []);
       setLoading(false);
     })();
-  }, []);
+  }, [dateFilter]);
 
   const filtered = movements.filter((m) => {
     const s = searchTerm.toLowerCase();
@@ -61,7 +75,33 @@ export default function CVMovements() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Data</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dateFilter && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateFilter ? format(dateFilter, "PPP", { locale: ptBR }) : "Selecione uma data"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateFilter}
+                    onSelect={(d) => d && setDateFilter(d)}
+                    initialFocus
+                    className="p-3"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">Buscar</label>
               <div className="relative">
@@ -104,7 +144,7 @@ export default function CVMovements() {
             <p className="text-muted-foreground">
               {searchTerm || statusFilter !== "all"
                 ? "Tente ajustar os filtros"
-                : "Não há movimentações registradas ainda"}
+                : "Não há movimentações registradas nesta data"}
             </p>
           </CardContent>
         </Card>
