@@ -17,6 +17,7 @@ import {
   MessageSquare, Eye, CalendarIcon, Plus, User, Tags,
 } from "lucide-react";
 import { toast } from "sonner";
+import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
 
 const categoryLabels: Record<string, string> = {
   mechanical: "Mecânico", electrical: "Elétrico", bodywork: "Carroceria",
@@ -139,90 +140,79 @@ export default function CVDefects() {
   const totalCost = defects.filter((d) => d.status === "resolved").reduce((s, d) => s + (Number(d.cost) || 0), 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <AlertTriangle className="h-8 w-8 text-warning" />
-          <h1 className="text-3xl font-bold tracking-tight">Defeitos Reportados</h1>
-        </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:opacity-90"><Plus className="h-4 w-4 mr-2" /> Reportar Defeito</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-warning" /> Reportar Novo Defeito</DialogTitle>
-              <DialogDescription>Registre manualmente um defeito da frota.</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-4">
+      <CVPageHeader
+        icon={AlertTriangle}
+        title="Defeitos & Avarias"
+        subtitle={`${pendingCount} pendente(s) • ${resolvedCount} resolvido(s)`}
+        actions={
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-white text-primary hover:bg-white/90">
+                <Plus className="h-4 w-4 mr-1" /> Reportar Defeito
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-warning" /> Reportar Novo Defeito</DialogTitle>
+                <DialogDescription>Registre manualmente um defeito da frota.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Veículo *</Label>
+                    <Select value={newDefect.vehicle_id} onValueChange={(v) => setNewDefect({ ...newDefect, vehicle_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {vehicles.map((v) => <SelectItem key={v.id} value={v.id}>{v.name} — {v.plate}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Motorista *</Label>
+                    <Select value={newDefect.driver_id} onValueChange={(v) => setNewDefect({ ...newDefect, driver_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {drivers.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <div className="space-y-2">
-                  <Label>Veículo *</Label>
-                  <Select value={newDefect.vehicle_id} onValueChange={(v) => setNewDefect({ ...newDefect, vehicle_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <Label className="flex items-center gap-2"><Tags className="h-4 w-4" /> Tipo de Defeito *</Label>
+                  <Select value={newDefect.defect_type_id} onValueChange={(v) => setNewDefect({ ...newDefect, defect_type_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
                     <SelectContent>
-                      {vehicles.map((v) => <SelectItem key={v.id} value={v.id}>{v.name} — {v.plate}</SelectItem>)}
+                      {defectTypes.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name} <span className="text-xs text-muted-foreground">({categoryLabels[t.category] || t.category})</span>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Motorista *</Label>
-                  <Select value={newDefect.driver_id} onValueChange={(v) => setNewDefect({ ...newDefect, driver_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                    <SelectContent>
-                      {drivers.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <Label>Descrição *</Label>
+                  <Textarea rows={3} value={newDefect.defect_description}
+                    onChange={(e) => setNewDefect({ ...newDefect, defect_description: e.target.value })}
+                    placeholder="Descreva o defeito..." />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancelar</Button>
+                  <Button onClick={handleCreate}>Reportar Defeito</Button>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2"><Tags className="h-4 w-4" /> Tipo de Defeito *</Label>
-                <Select value={newDefect.defect_type_id} onValueChange={(v) => setNewDefect({ ...newDefect, defect_type_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
-                  <SelectContent>
-                    {defectTypes.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>
-                        {t.name} <span className="text-xs text-muted-foreground">({categoryLabels[t.category] || t.category})</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Descrição *</Label>
-                <Textarea rows={3} value={newDefect.defect_description}
-                  onChange={(e) => setNewDefect({ ...newDefect, defect_description: e.target.value })}
-                  placeholder="Descreva o defeito..." />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancelar</Button>
-                <Button onClick={handleCreate}>Reportar Defeito</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+            </DialogContent>
+          </Dialog>
+        }
+      />
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card><CardContent className="p-4">
-          <div className="text-2xl font-bold text-warning">{pendingCount}</div>
-          <p className="text-sm text-muted-foreground">Pendentes</p>
-        </CardContent></Card>
-        <Card><CardContent className="p-4">
-          <div className="text-2xl font-bold text-primary">{inProgressCount}</div>
-          <p className="text-sm text-muted-foreground">Em Andamento</p>
-        </CardContent></Card>
-        <Card><CardContent className="p-4">
-          <div className="text-2xl font-bold text-success">{resolvedCount}</div>
-          <p className="text-sm text-muted-foreground">Resolvidos</p>
-        </CardContent></Card>
-        <Card><CardContent className="p-4">
-          <div className="text-2xl font-bold text-primary">
-            R$ {totalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-          </div>
-          <p className="text-sm text-muted-foreground">Custo Total</p>
-        </CardContent></Card>
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+        <CVKpiCard label="Pendentes" value={pendingCount} icon={Clock} tone="warning" />
+        <CVKpiCard label="Em Andamento" value={inProgressCount} icon={Wrench} tone="info" />
+        <CVKpiCard label="Resolvidos" value={resolvedCount} icon={CheckCircle} tone="success" />
+        <CVKpiCard label="Custo Total" value={`R$ ${totalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={DollarSign} tone="primary" />
       </div>
 
       {/* Filters */}

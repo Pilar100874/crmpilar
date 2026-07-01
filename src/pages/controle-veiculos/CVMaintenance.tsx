@@ -10,6 +10,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, Legend,
 } from "recharts";
+import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
 import type { Vehicle } from "@/types/vehicle";
 
 const COLORS = ["hsl(var(--primary))", "#f59e0b", "#10b981", "#3b82f6", "#ec4899", "#8b5cf6"];
@@ -82,16 +83,18 @@ export default function CVMaintenance() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <BarChart3 className="h-7 w-7 text-primary" />
-        <div>
-          <h2 className="text-xl font-semibold">Análise de Manutenção</h2>
-          <p className="text-sm text-muted-foreground">Custos, tendências e trocas de óleo</p>
-        </div>
-      </div>
+      <CVPageHeader
+        icon={BarChart3}
+        title="Análise de Manutenção"
+        subtitle="Custos, tendências e trocas de óleo"
+      />
 
       <Card>
-        <CardHeader className="pb-3"><CardTitle className="text-sm">Filtrar por veículo</CardTitle></CardHeader>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 text-primary" /> Filtrar por veículo
+          </CardTitle>
+        </CardHeader>
         <CardContent>
           <Select value={vehicleFilter} onValueChange={setVehicleFilter}>
             <SelectTrigger className="max-w-sm"><SelectValue /></SelectTrigger>
@@ -104,23 +107,10 @@ export default function CVMaintenance() {
       </Card>
 
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-        <Card><CardContent className="p-4">
-          <div className="flex items-center justify-between mb-2"><span className="text-sm text-muted-foreground">Gasto Total</span><DollarSign className="h-4 w-4 text-primary" /></div>
-          <div className="text-2xl font-bold text-primary">R$ {totalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4">
-          <div className="flex items-center justify-between mb-2"><span className="text-sm text-muted-foreground">Total de Reparos</span><Wrench className="h-4 w-4 text-amber-500" /></div>
-          <div className="text-2xl font-bold text-amber-500">{total}</div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4">
-          <div className="flex items-center justify-between mb-2"><span className="text-sm text-muted-foreground">Custo Médio</span><TrendingUp className="h-4 w-4 text-emerald-500" /></div>
-          <div className="text-2xl font-bold text-emerald-500">R$ {avg.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4">
-          <div className="flex items-center justify-between mb-2"><span className="text-sm text-muted-foreground">Maior Gasto</span><AlertTriangle className="h-4 w-4 text-destructive" /></div>
-          <div className="text-2xl font-bold text-destructive">R$ {maxVehicle.totalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
-          <p className="text-xs text-muted-foreground mt-1">{maxVehicle.name}</p>
-        </CardContent></Card>
+        <CVKpiCard label="Gasto Total" value={`R$ ${totalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={DollarSign} tone="primary" />
+        <CVKpiCard label="Total de Reparos" value={total} icon={Wrench} tone="warning" />
+        <CVKpiCard label="Custo Médio" value={`R$ ${avg.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={TrendingUp} tone="success" />
+        <CVKpiCard label="Maior Gasto" value={`R$ ${maxVehicle.totalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} sub={maxVehicle.name} icon={AlertTriangle} tone="destructive" />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
