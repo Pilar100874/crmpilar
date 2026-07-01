@@ -11,8 +11,9 @@ import { Camera, Plus, Trash2, Save, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
 
-type AngleSource = "both" | "device" | "ip_camera";
-interface Angle { key: string; label: string; required: boolean; source?: AngleSource; }
+type AngleSource = "device" | "ip_camera";
+interface Angle { key: string; label: string; required: boolean; source?: AngleSource; camera_id?: string | null; }
+interface CameraOption { id: string; nome: string; }
 
 
 export default function CVInspectionConfig() {
