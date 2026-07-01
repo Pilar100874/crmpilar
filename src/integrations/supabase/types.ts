@@ -4000,12 +4000,47 @@ export type Database = {
           },
         ]
       }
+      cv_helpers: {
+        Row: {
+          active: boolean
+          created_at: string
+          document: string | null
+          estabelecimento_id: string | null
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          document?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          document?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cv_inspection_config: {
         Row: {
           active: boolean
           created_at: string
           entry_photos: Json
+          entry_photos_required: boolean
           exit_photos: Json
+          exit_photos_required: boolean
           id: string
           name: string
           updated_at: string
@@ -4014,7 +4049,9 @@ export type Database = {
           active?: boolean
           created_at?: string
           entry_photos?: Json
+          entry_photos_required?: boolean
           exit_photos?: Json
+          exit_photos_required?: boolean
           id?: string
           name?: string
           updated_at?: string
@@ -4023,7 +4060,9 @@ export type Database = {
           active?: boolean
           created_at?: string
           entry_photos?: Json
+          entry_photos_required?: boolean
           exit_photos?: Json
+          exit_photos_required?: boolean
           id?: string
           name?: string
           updated_at?: string
@@ -4083,6 +4122,7 @@ export type Database = {
           exit_notes: string | null
           exit_time: string
           has_helper: boolean
+          helper_id: string | null
           helper_name: string | null
           id: string
           inspected_all_sides: boolean
@@ -4105,6 +4145,7 @@ export type Database = {
           exit_notes?: string | null
           exit_time?: string
           has_helper?: boolean
+          helper_id?: string | null
           helper_name?: string | null
           id?: string
           inspected_all_sides?: boolean
@@ -4127,6 +4168,7 @@ export type Database = {
           exit_notes?: string | null
           exit_time?: string
           has_helper?: boolean
+          helper_id?: string | null
           helper_name?: string | null
           id?: string
           inspected_all_sides?: boolean
@@ -4151,6 +4193,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_vehicle_movements_helper_id_fkey"
+            columns: ["helper_id"]
+            isOneToOne: false
+            referencedRelation: "cv_helpers"
             referencedColumns: ["id"]
           },
           {
