@@ -52,6 +52,26 @@ const platforms: Platform[] = [
 
 export default function PontoColetorDownload() {
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [camerasEnabled, setCamerasEnabled] = useState(false);
+  const [camCfgId, setCamCfgId] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("cv_coletor_config").select("*").maybeSingle();
+      if (data) { setCamerasEnabled(data.cameras_habilitado); setCamCfgId(data.id); }
+    })();
+  }, []);
+
+  const toggleCameras = async (v: boolean) => {
+    setCamerasEnabled(v);
+    if (camCfgId) {
+      await supabase.from("cv_coletor_config").update({ cameras_habilitado: v }).eq("id", camCfgId);
+    } else {
+      const { data } = await supabase.from("cv_coletor_config").insert({ cameras_habilitado: v }).select().single();
+      if (data) setCamCfgId(data.id);
+    }
+    toast.success(v ? "Módulo de câmeras habilitado no Coletor" : "Módulo de câmeras desabilitado");
+  };
 
   const baixar = (file: string, id: string, url: string) => {
     setDownloading(id);
