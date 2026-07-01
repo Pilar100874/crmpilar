@@ -10,7 +10,9 @@ export interface PhotoAngle {
   key: string;
   label: string;
   required?: boolean;
+  source?: "both" | "device" | "ip_camera";
 }
+
 
 export interface CapturedPhoto {
   angle_key: string;
