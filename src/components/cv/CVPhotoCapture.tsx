@@ -317,44 +317,57 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                 onChange={(e) => handleFile(a, e.target.files?.[0])}
               />
               <div className="flex gap-2 flex-wrap">
-                {(a.source ?? "both") !== "ip_camera" && (
-                  <Button
-                    type="button"
-                    variant={captured ? "outline" : "default"}
-                    size="sm"
-                    className="flex-1"
-                    disabled={uploading === a.key || capturingCam === a.key}
-                    onClick={() => captureFor(a)}
-                  >
-                    <Camera className="h-4 w-4 mr-2" />
-                    {captured ? "Refazer foto" : "Tirar foto"}
-                  </Button>
-                )}
-                {(a.source ?? "both") !== "device" &&
-                  ipCams.length > 0 &&
-                  ipCams.map((cam) => (
+                {(() => {
+                  const src = a.source ?? "device";
+                  if (src === "device") {
+                    return (
+                      <Button
+                        type="button"
+                        variant={captured ? "outline" : "default"}
+                        size="sm"
+                        className="flex-1"
+                        disabled={uploading === a.key || capturingCam === a.key}
+                        onClick={() => captureFor(a)}
+                      >
+                        <Camera className="h-4 w-4 mr-2" />
+                        {captured ? "Refazer foto" : "Tirar foto"}
+                      </Button>
+                    );
+                  }
+                  // ip_camera
+                  const cam = ipCams.find((c) => c.id === a.camera_id);
+                  if (!a.camera_id) {
+                    return (
+                      <span className="text-[11px] text-muted-foreground self-center">
+                        Nenhuma câmera vinculada a este ângulo.
+                      </span>
+                    );
+                  }
+                  if (!cam) {
+                    return (
+                      <span className="text-[11px] text-muted-foreground self-center">
+                        Câmera vinculada inativa ou removida.
+                      </span>
+                    );
+                  }
+                  return (
                     <Button
-                      key={cam.id}
                       type="button"
                       size="sm"
-                      variant="secondary"
+                      variant={captured ? "outline" : "default"}
+                      className="flex-1"
                       disabled={capturingCam === a.key || uploading === a.key}
                       onClick={() => captureFromIpCamera(a, cam.id)}
-                      title={`Capturar da câmera ${cam.nome}`}
                     >
                       {capturingCam === a.key ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       ) : (
-                        <Wifi className="h-4 w-4 mr-1" />
+                        <Wifi className="h-4 w-4 mr-2" />
                       )}
-                      {cam.nome}
+                      {captured ? "Recapturar" : "Capturar"} — {cam.nome}
                     </Button>
-                  ))}
-                {(a.source ?? "both") === "ip_camera" && ipCams.length === 0 && (
-                  <span className="text-[11px] text-muted-foreground self-center">
-                    Nenhuma câmera IP cadastrada.
-                  </span>
-                )}
+                  );
+                })()}
 
 
                 {captured && prev && aiCompare && (
