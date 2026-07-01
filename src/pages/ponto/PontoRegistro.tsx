@@ -41,6 +41,8 @@ export default function PontoRegistro() {
   const [funcId, setFuncId] = useState<string>("");
   const [tipo, setTipo] = useState<Tipo>("entrada");
   const [antifraudeAtivo, setAntifraudeAtivo] = useState<boolean>(true);
+  const [exigirGeofence, setExigirGeofence] = useState<boolean>(true);
+  const [geofences, setGeofences] = useState<Array<{ nome: string; lat: number; lng: number; raio_metros: number }>>([]);
   const [gps, setGps] = useState<{ lat: number; lng: number; precisao: number } | null>(null);
   const [gpsErr, setGpsErr] = useState<string>("");
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -55,7 +57,7 @@ export default function PontoRegistro() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Carrega funcionários + flag antifraude
+  // Carrega funcionários + flag antifraude + geofences
   useEffect(() => {
     if (!empresaId) return;
     (async () => {
@@ -68,12 +70,42 @@ export default function PontoRegistro() {
       setFuncionarios((data || []) as Func[]);
       const { data: emp } = await (supabase as any)
         .from("ponto_empresas")
-        .select("antifraude_ativo")
+        .select("antifraude_ativo, geofence_obrigatorio_app")
         .eq("id", empresaId)
         .maybeSingle();
       setAntifraudeAtivo(emp?.antifraude_ativo ?? true);
+      setExigirGeofence(emp?.geofence_obrigatorio_app !== false);
+      const { data: geos } = await (supabase as any)
+        .from("ponto_geofences")
+        .select("nome, lat, lng, raio_metros")
+        .eq("empresa_id", empresaId)
+        .eq("ativo", true);
+      setGeofences((geos || []).map((g: any) => ({ ...g, lat: Number(g.lat), lng: Number(g.lng) })));
     })();
   }, [empresaId]);
+
+  // Avaliação local do geofence
+  function haversine(lat1: number, lng1: number, lat2: number, lng2: number) {
+    const R = 6371000;
+    const toRad = (d: number) => (d * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(a));
+  }
+  const geoStatus = (() => {
+    if (!gps) return { dentro: false, texto: "Aguardando GPS", nome: "" };
+    if (geofences.length === 0) return { dentro: false, texto: "Nenhuma área cadastrada", nome: "" };
+    let melhor = { dist: Infinity, nome: "", raio: 0 };
+    for (const g of geofences) {
+      const d = haversine(gps.lat, gps.lng, g.lat, g.lng);
+      if (d < melhor.dist) melhor = { dist: d, nome: g.nome, raio: g.raio_metros };
+      if (d <= g.raio_metros) return { dentro: true, texto: `Dentro de ${g.nome} (${Math.round(d)}m)`, nome: g.nome };
+    }
+    return { dentro: false, texto: `Fora — ${melhor.nome} a ${Math.round(melhor.dist)}m (raio ${melhor.raio}m)`, nome: melhor.nome };
+  })();
+  const bloqueadoPorGeofence = exigirGeofence && !geoStatus.dentro;
+
 
   // GPS
   useEffect(() => {
