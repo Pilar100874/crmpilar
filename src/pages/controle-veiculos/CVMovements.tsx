@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   List, Search, Filter, Car, LogIn, LogOut, Clock, User, Users, AlertTriangle, CheckCircle,
 } from "lucide-react";
+import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
 
 export default function CVMovements() {
   const [movements, setMovements] = useState<any[]>([]);
@@ -39,35 +40,42 @@ export default function CVMovements() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <List className="h-8 w-8 text-primary" />
-        <h1 className="text-3xl font-bold tracking-tight">Movimentações</h1>
+    <div className="space-y-4">
+      <CVPageHeader
+        icon={List}
+        title="Movimentações"
+        subtitle="Histórico completo de saídas e entradas"
+      />
+
+      <div className="grid gap-3 grid-cols-3">
+        <CVKpiCard label="Total" value={movements.length} icon={List} tone="primary" />
+        <CVKpiCard label="Em Trânsito" value={movements.filter((m) => m.status === "out").length} icon={LogOut} tone="warning" />
+        <CVKpiCard label="Retornados" value={movements.filter((m) => m.status === "returned").length} icon={LogIn} tone="success" />
       </div>
 
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Filter className="h-4 w-4 text-primary" />
             Filtros
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Buscar:</label>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Buscar</label>
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Veículo, placa ou motorista..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-9"
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Status:</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Status</label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -80,25 +88,6 @@ export default function CVMovements() {
           </div>
         </CardContent>
       </Card>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card><CardContent className="p-4">
-          <div className="text-2xl font-bold text-primary">{movements.length}</div>
-          <p className="text-sm text-muted-foreground">Total de Movimentações</p>
-        </CardContent></Card>
-        <Card><CardContent className="p-4">
-          <div className="text-2xl font-bold text-warning">
-            {movements.filter((m) => m.status === "out").length}
-          </div>
-          <p className="text-sm text-muted-foreground">Veículos em Trânsito</p>
-        </CardContent></Card>
-        <Card><CardContent className="p-4">
-          <div className="text-2xl font-bold text-success">
-            {movements.filter((m) => m.status === "returned").length}
-          </div>
-          <p className="text-sm text-muted-foreground">Retornados</p>
-        </CardContent></Card>
-      </div>
 
       {loading ? (
         <Card className="text-center py-12">
