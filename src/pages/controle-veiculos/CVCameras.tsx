@@ -247,10 +247,7 @@ export default function CVCameras() {
               <Input placeholder="Ex.: Vaga 3 — pátio traseiro" value={editing.local_descricao ?? ""} onChange={(e) => setEditing({ ...editing, local_descricao: e.target.value })} />
             </div>
 
-            <div className="sm:col-span-2 space-y-1">
-              <Label>Descrição do local</Label>
-              <Input placeholder="Ex.: Vaga 3 — pátio traseiro" value={editing.local_descricao ?? ""} onChange={(e) => setEditing({ ...editing, local_descricao: e.target.value })} />
-            </div>
+
             <div className="sm:col-span-2 flex items-center gap-2">
               <Switch checked={editing.ativo} onCheckedChange={(v) => setEditing({ ...editing, ativo: v })} />
               <Label>Ativa</Label>
