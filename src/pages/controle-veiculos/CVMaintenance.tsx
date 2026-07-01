@@ -26,6 +26,8 @@ export default function CVMaintenance() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [defects, setDefects] = useState<any[]>([]);
   const [vehicleFilter, setVehicleFilter] = useState("all");
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("30");
+  const [customDate, setCustomDate] = useState<Date | undefined>(undefined);
 
   const load = async () => {
     const [v, d] = await Promise.all([
@@ -36,6 +38,29 @@ export default function CVMaintenance() {
     setDefects(d.data ?? []);
   };
   useEffect(() => { load(); }, []);
+
+  const periodBounds = useMemo(() => {
+    const now = new Date();
+    switch (periodFilter) {
+      case "30": return { start: startOfDay(subDays(now, 30)), end: endOfDay(now) };
+      case "60": return { start: startOfDay(subDays(now, 60)), end: endOfDay(now) };
+      case "90": return { start: startOfDay(subDays(now, 90)), end: endOfDay(now) };
+      case "year": return { start: startOfDay(startOfYear(now)), end: endOfDay(now) };
+      case "all": return { start: null, end: null };
+      case "custom": {
+        if (!customDate) return { start: null, end: null };
+        return { start: startOfDay(customDate), end: endOfDay(customDate) };
+      }
+    }
+  }, [periodFilter, customDate]);
+
+  const isWithinPeriod = (dateStr: string | null) => {
+    if (!dateStr) return false;
+    const dt = new Date(dateStr);
+    if (periodBounds.start && dt < periodBounds.start) return false;
+    if (periodBounds.end && dt > periodBounds.end) return false;
+    return true;
+  };
 
   const registerOilChange = async (v: Vehicle) => {
     if (!confirm(`Registrar troca de óleo com KM atual (${v.current_km.toLocaleString()})?`)) return;
