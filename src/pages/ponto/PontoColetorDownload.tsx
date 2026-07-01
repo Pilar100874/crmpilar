@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Monitor, Apple, Cpu, CheckCircle2, Copy, Check, Database, Key } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Download, Monitor, Apple, Cpu, CheckCircle2, Copy, Check, Database, Key, Camera } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import winAsset from "../../../public/coletor/PontoColetor-Windows.asset.json";
 import linuxAsset from "../../../public/coletor/PontoColetor-Linux.asset.json";
 import macIntelAsset from "../../../public/coletor/PontoColetor-macOS-Intel.asset.json";
