@@ -86,10 +86,6 @@ export default function CVDashboard() {
   return (
     <div className="space-y-5">
       <CVPageHeader
-        icon: undefined as any
-        {...({} as any)}
-      />
-      <CVPageHeader
         icon={TrendingUp}
         title="Painel da Frota"
         subtitle="Visão geral em tempo real"
