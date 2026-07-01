@@ -51,7 +51,7 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
   const [lastPhotos, setLastPhotos] = useState<Record<string, { path: string; url: string; stage: string; when: string } | null>>({});
   const [aiResults, setAiResults] = useState<Record<string, AiFinding | null>>({});
   const [aiLoading, setAiLoading] = useState<Record<string, boolean>>({});
-  const [ipCams, setIpCams] = useState<Record<string, any[]>>({});
+  const [ipCams, setIpCams] = useState<any[]>([]);
   const [capturingCam, setCapturingCam] = useState<string | null>(null);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -60,21 +60,18 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
     return data?.signedUrl ?? "";
   };
 
-  // Carrega câmeras IP disponíveis para cada ângulo
+  // Carrega câmeras IP ativas (disponíveis para qualquer ângulo)
   useEffect(() => {
     (async () => {
       const { data } = await supabase
         .from("cv_cameras")
-        .select("id, nome, marca, tipo_rede, angulo_key, vehicle_id")
-        .eq("ativo", true);
-      const byAngle: Record<string, any[]> = {};
-      for (const c of data ?? []) {
-        if (vehicleId && c.vehicle_id && c.vehicle_id !== vehicleId) continue;
-        (byAngle[c.angulo_key] ||= []).push(c);
-      }
-      setIpCams(byAngle);
+        .select("id, nome, marca, tipo_rede")
+        .eq("ativo", true)
+        .order("nome");
+      setIpCams(data ?? []);
     })();
-  }, [vehicleId]);
+  }, []);
+
 
   // Carrega a última foto disponível por ângulo para o veículo (qualquer stage)
   useEffect(() => {
@@ -333,8 +330,8 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                   </Button>
                 )}
                 {(a.source ?? "both") !== "device" &&
-                  (ipCams[a.key]?.length ?? 0) > 0 &&
-                  ipCams[a.key].map((cam) => (
+                  ipCams.length > 0 &&
+                  ipCams.map((cam) => (
                     <Button
                       key={cam.id}
                       type="button"
@@ -352,11 +349,12 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                       {cam.nome}
                     </Button>
                   ))}
-                {(a.source ?? "both") === "ip_camera" && (ipCams[a.key]?.length ?? 0) === 0 && (
+                {(a.source ?? "both") === "ip_camera" && ipCams.length === 0 && (
                   <span className="text-[11px] text-muted-foreground self-center">
-                    Nenhuma câmera IP cadastrada para este ângulo (chave: {a.key}).
+                    Nenhuma câmera IP cadastrada.
                   </span>
                 )}
+
 
                 {captured && prev && aiCompare && (
                   <Button

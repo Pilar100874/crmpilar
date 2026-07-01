@@ -32,16 +32,13 @@ const emptyCam = {
   usuario: "",
   senha: "",
   snapshot_path: "",
-  angulo_key: "",
-  vehicle_id: null as string | null,
   local_descricao: "",
   ativo: true,
+
 };
 
 export default function CVCameras() {
   const [rows, setRows] = useState<any[]>([]);
-  const [angles, setAngles] = useState<{ key: string; label: string }[]>([]);
-  const [vehicles, setVehicles] = useState<any[]>([]);
   const [collectorEnabled, setCollectorEnabled] = useState(false);
   const [collectorId, setCollectorId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -50,20 +47,17 @@ export default function CVCameras() {
   const [testing, setTesting] = useState<string | null>(null);
 
   const load = async () => {
-    const [{ data: cams }, { data: cfg }, { data: veh }, { data: coletor }] = await Promise.all([
+    const [{ data: cams }, { data: coletor }] = await Promise.all([
       supabase.from("cv_cameras").select("*").order("nome"),
-      supabase.from("cv_inspection_config").select("exit_photos").eq("active", true).maybeSingle(),
-      supabase.from("cv_vehicles").select("id, plate, model").order("plate"),
       supabase.from("cv_coletor_config").select("*").maybeSingle(),
     ]);
     setRows(cams ?? []);
-    setAngles(((cfg?.exit_photos as any) ?? []) as any);
-    setVehicles(veh ?? []);
     if (coletor) {
       setCollectorEnabled(coletor.cameras_habilitado);
       setCollectorId(coletor.id);
     }
   };
+
   useEffect(() => { load(); }, []);
 
   const openNew = () => { setEditing(emptyCam); setDialogOpen(true); };
@@ -167,11 +161,8 @@ export default function CVCameras() {
               <div className="text-muted-foreground">
                 {MARCAS.find((m) => m.value === r.marca)?.label} · {r.protocolo}://{r.host}:{r.porta ?? "auto"}
               </div>
-              <div>Ângulo: <Badge variant="outline">{r.angulo_key || "—"}</Badge></div>
-              {r.vehicle_id && (
-                <div className="text-xs">Veículo: {vehicles.find((v) => v.id === r.vehicle_id)?.plate}</div>
-              )}
               {r.local_descricao && <div className="text-xs">Local: {r.local_descricao}</div>}
+
               <div className="flex gap-2 pt-2">
                 <Button size="sm" variant="outline" onClick={() => openEdit(r)}>
                   <Edit className="h-3 w-3 mr-1" /> Editar
@@ -251,29 +242,12 @@ export default function CVCameras() {
               <Input placeholder="/ISAPI/Streaming/channels/101/picture" value={editing.snapshot_path ?? ""} onChange={(e) => setEditing({ ...editing, snapshot_path: e.target.value })} />
               <p className="text-[11px] text-muted-foreground">Deixe em branco para usar o padrão da marca.</p>
             </div>
-            <div className="space-y-1">
-              <Label>Ângulo fixo</Label>
-              <Select value={editing.angulo_key} onValueChange={(v) => setEditing({ ...editing, angulo_key: v })}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>
-                  {angles.map((a) => <SelectItem key={a.key} value={a.key}>{a.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label>Veículo (opcional)</Label>
-              <Select value={editing.vehicle_id ?? "none"} onValueChange={(v) => setEditing({ ...editing, vehicle_id: v === "none" ? null : v })}>
-                <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhum (vaga fixa)</SelectItem>
-                  {vehicles.map((v) => <SelectItem key={v.id} value={v.id}>{v.plate} — {v.model}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
             <div className="sm:col-span-2 space-y-1">
               <Label>Descrição do local</Label>
               <Input placeholder="Ex.: Vaga 3 — pátio traseiro" value={editing.local_descricao ?? ""} onChange={(e) => setEditing({ ...editing, local_descricao: e.target.value })} />
             </div>
+
+
             <div className="sm:col-span-2 flex items-center gap-2">
               <Switch checked={editing.ativo} onCheckedChange={(v) => setEditing({ ...editing, ativo: v })} />
               <Label>Ativa</Label>
