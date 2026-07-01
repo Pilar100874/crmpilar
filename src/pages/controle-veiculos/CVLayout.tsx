@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useLocation } from "react-router-dom";
+import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Truck,
@@ -11,6 +11,8 @@ import {
   Wrench,
   Settings,
   ChevronDown,
+  Menu,
+  Car,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -20,7 +22,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const mainLinks = [
   { to: "/controle-veiculos", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -47,13 +49,21 @@ export default function CVLayout() {
       <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur">
         <div className="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-3">
           <div className="flex items-center gap-2 min-w-0">
-            <Truck className="h-5 w-5 text-primary shrink-0" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden shrink-0"
+              onClick={() => window.dispatchEvent(new CustomEvent("toggle-sidebar"))}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <Car className="h-5 w-5 text-primary shrink-0" />
             <div className="min-w-0">
               <h1 className="text-base font-semibold truncate sm:text-lg">
                 Controle de Veículos
               </h1>
               <p className="hidden text-xs text-muted-foreground sm:block">
-                Gestão de frota · Saídas · Entradas · Manutenção
+                Frota · Saídas · Entradas · Manutenção
               </p>
             </div>
           </div>
