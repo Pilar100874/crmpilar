@@ -107,6 +107,16 @@ import PontoCompensacaoVotacao from "./pages/ponto/PontoCompensacaoVotacao";
 import PontoBancoHorasExpirar from "./pages/ponto/PontoBancoHorasExpirar";
 import PontoNotificacoes from "./pages/ponto/PontoNotificacoes";
 import PontoManual from "./pages/ponto/PontoManual";
+import CVLayout from "./pages/controle-veiculos/CVLayout";
+import CVDashboard from "./pages/controle-veiculos/CVDashboard";
+import CVVehicles from "./pages/controle-veiculos/CVVehicles";
+import CVDrivers from "./pages/controle-veiculos/CVDrivers";
+import CVVehicleExit from "./pages/controle-veiculos/CVVehicleExit";
+import CVVehicleEntry from "./pages/controle-veiculos/CVVehicleEntry";
+import CVMovements from "./pages/controle-veiculos/CVMovements";
+import CVDefects from "./pages/controle-veiculos/CVDefects";
+import CVDefectTypes from "./pages/controle-veiculos/CVDefectTypes";
+import CVMaintenance from "./pages/controle-veiculos/CVMaintenance";
 import ChatInterno from "./pages/ChatInterno";
 import ConfigSkills from "./pages/ConfigSkills";
 import MonitorarFilas from "./pages/MonitorarFilas";
@@ -434,6 +444,17 @@ const App = () => (
                 <Route path="compensacao-votacao" element={<PontoCompensacaoVotacao />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
                 <Route path="manual" element={<PontoManual />} />
+              </Route>
+              <Route path="/controle-veiculos" element={<CVLayout />}>
+                <Route index element={<CVDashboard />} />
+                <Route path="veiculos" element={<CVVehicles />} />
+                <Route path="motoristas" element={<CVDrivers />} />
+                <Route path="saida" element={<CVVehicleExit />} />
+                <Route path="entrada" element={<CVVehicleEntry />} />
+                <Route path="movimentacoes" element={<CVMovements />} />
+                <Route path="defeitos" element={<CVDefects />} />
+                <Route path="tipos-defeito" element={<CVDefectTypes />} />
+                <Route path="manutencao" element={<CVMaintenance />} />
               </Route>
             </Route>
             {/* Public routes (no layout) */}
