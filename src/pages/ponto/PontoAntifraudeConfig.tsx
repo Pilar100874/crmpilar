@@ -32,6 +32,7 @@ interface Rede {
 export default function PontoAntifraudeConfig() {
   const { empresaId } = usePontoEmpresa();
   const [ativo, setAtivo] = useState<boolean>(true);
+  const [exigirGeoApp, setExigirGeoApp] = useState<boolean>(true);
   const [geos, setGeos] = useState<Geofence[]>([]);
   const [redes, setRedes] = useState<Rede[]>([]);
   const [novoGeo, setNovoGeo] = useState({ nome: "", lat: "", lng: "", raio: "150" });
@@ -45,12 +46,14 @@ export default function PontoAntifraudeConfig() {
     const [{ data: g }, { data: r }, { data: emp }] = await Promise.all([
       sb.from("ponto_geofences").select("*").eq("empresa_id", empresaId).order("nome"),
       sb.from("ponto_redes_autorizadas").select("*").eq("empresa_id", empresaId).order("tipo"),
-      sb.from("ponto_empresas").select("antifraude_ativo").eq("id", empresaId).maybeSingle(),
+      sb.from("ponto_empresas").select("antifraude_ativo, geofence_obrigatorio_app").eq("id", empresaId).maybeSingle(),
     ]);
     setGeos((g || []) as Geofence[]);
     setRedes((r || []) as Rede[]);
     setAtivo(emp?.antifraude_ativo ?? true);
+    setExigirGeoApp(emp?.geofence_obrigatorio_app !== false);
   };
+
 
   useEffect(() => { loadAll(); }, [empresaId]);
 
@@ -136,6 +139,43 @@ export default function PontoAntifraudeConfig() {
           />
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <MapPin className="h-4 w-4" /> Exigir área de GPS no app
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <Label className="text-sm font-medium">
+              {exigirGeoApp ? "Bloqueio ativo" : "Bloqueio desativado"}
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Quando ativo, só é possível bater ponto pelo app/web se o funcionário estiver dentro de uma das geofences cadastradas (matriz, filiais, obras). Marcações via catraca/relógio não são afetadas.
+            </p>
+          </div>
+          <Switch
+            checked={exigirGeoApp}
+            onCheckedChange={async (v) => {
+              if (!empresaId) return;
+              setExigirGeoApp(v);
+              const { error } = await (supabase as any)
+                .from("ponto_empresas")
+                .update({ geofence_obrigatorio_app: v })
+                .eq("id", empresaId);
+              if (error) {
+                toast.error(error.message);
+                setExigirGeoApp(!v);
+              } else {
+                toast.success(v ? "Bloqueio por área ativado" : "Bloqueio por área desativado");
+              }
+            }}
+          />
+        </CardContent>
+      </Card>
+
+
 
       <Tabs defaultValue="geo">
         <TabsList>

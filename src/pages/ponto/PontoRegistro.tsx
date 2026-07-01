@@ -41,6 +41,8 @@ export default function PontoRegistro() {
   const [funcId, setFuncId] = useState<string>("");
   const [tipo, setTipo] = useState<Tipo>("entrada");
   const [antifraudeAtivo, setAntifraudeAtivo] = useState<boolean>(true);
+  const [exigirGeofence, setExigirGeofence] = useState<boolean>(true);
+  const [geofences, setGeofences] = useState<Array<{ nome: string; lat: number; lng: number; raio_metros: number }>>([]);
   const [gps, setGps] = useState<{ lat: number; lng: number; precisao: number } | null>(null);
   const [gpsErr, setGpsErr] = useState<string>("");
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -55,7 +57,7 @@ export default function PontoRegistro() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Carrega funcionários + flag antifraude
+  // Carrega funcionários + flag antifraude + geofences
   useEffect(() => {
     if (!empresaId) return;
     (async () => {
@@ -68,12 +70,42 @@ export default function PontoRegistro() {
       setFuncionarios((data || []) as Func[]);
       const { data: emp } = await (supabase as any)
         .from("ponto_empresas")
-        .select("antifraude_ativo")
+        .select("antifraude_ativo, geofence_obrigatorio_app")
         .eq("id", empresaId)
         .maybeSingle();
       setAntifraudeAtivo(emp?.antifraude_ativo ?? true);
+      setExigirGeofence(emp?.geofence_obrigatorio_app !== false);
+      const { data: geos } = await (supabase as any)
+        .from("ponto_geofences")
+        .select("nome, lat, lng, raio_metros")
+        .eq("empresa_id", empresaId)
+        .eq("ativo", true);
+      setGeofences((geos || []).map((g: any) => ({ ...g, lat: Number(g.lat), lng: Number(g.lng) })));
     })();
   }, [empresaId]);
+
+  // Avaliação local do geofence
+  function haversine(lat1: number, lng1: number, lat2: number, lng2: number) {
+    const R = 6371000;
+    const toRad = (d: number) => (d * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(a));
+  }
+  const geoStatus = (() => {
+    if (!gps) return { dentro: false, texto: "Aguardando GPS", nome: "" };
+    if (geofences.length === 0) return { dentro: false, texto: "Nenhuma área cadastrada", nome: "" };
+    let melhor = { dist: Infinity, nome: "", raio: 0 };
+    for (const g of geofences) {
+      const d = haversine(gps.lat, gps.lng, g.lat, g.lng);
+      if (d < melhor.dist) melhor = { dist: d, nome: g.nome, raio: g.raio_metros };
+      if (d <= g.raio_metros) return { dentro: true, texto: `Dentro de ${g.nome} (${Math.round(d)}m)`, nome: g.nome };
+    }
+    return { dentro: false, texto: `Fora — ${melhor.nome} a ${Math.round(melhor.dist)}m (raio ${melhor.raio}m)`, nome: melhor.nome };
+  })();
+  const bloqueadoPorGeofence = exigirGeofence && !geoStatus.dentro;
+
 
   // GPS
   useEffect(() => {
@@ -153,6 +185,13 @@ export default function PontoRegistro() {
     if (!funcId) return toast.error("Selecione o funcionário");
     if (antifraudeAtivo && !gps) return toast.error("Aguardando GPS");
     if (antifraudeAtivo && !fotoB64) return toast.error("Capture sua selfie");
+    if (bloqueadoPorGeofence) {
+      return toast.error(
+        geofences.length === 0
+          ? "Nenhuma área de GPS cadastrada. Contate o RH."
+          : `Fora da área permitida. ${geoStatus.texto}`,
+      );
+    }
     const payload = {
       funcionario_id: funcId,
       tipo,
@@ -178,8 +217,29 @@ export default function PontoRegistro() {
       const { data, error } = await supabase.functions.invoke("ponto-validar-marcacao", {
         body: payload,
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (error) {
+        // Erro de negócio (403 fora de geofence) vem no context.response
+        const ctxResp: Response | undefined = (error as any)?.context?.response;
+        if (ctxResp) {
+          try {
+            const j = await ctxResp.clone().json();
+            if (j?.codigo === "fora_geofence" || j?.codigo === "gps_ausente" || j?.codigo === "sem_geofence_cadastrada") {
+              toast.error(j.error);
+              setEnviando(false);
+              return;
+            }
+            if (j?.error) throw new Error(j.error);
+          } catch { /* fallthrough */ }
+        }
+        throw error;
+      }
+      if (data?.error) {
+        if (data?.codigo?.startsWith("fora_") || data?.codigo === "gps_ausente" || data?.codigo === "sem_geofence_cadastrada") {
+          toast.error(data.error);
+          return;
+        }
+        throw new Error(data.error);
+      }
       setResultado({ score: data.score_confianca, fatores: data.fatores });
       toast.success(`Ponto registrado · confiança ${data.score_confianca}%`);
       setFotoB64("");
@@ -191,6 +251,7 @@ export default function PontoRegistro() {
     } finally {
       setEnviando(false);
     }
+
   };
 
   return (
@@ -285,6 +346,15 @@ export default function PontoRegistro() {
             )}
           </div>
           <div className="flex items-center justify-between">
+            <span className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Área permitida</span>
+            <Badge
+              variant={geoStatus.dentro ? "secondary" : "destructive"}
+              className="text-xs max-w-[65%] text-right whitespace-normal"
+            >
+              {geoStatus.texto}
+            </Badge>
+          </div>
+          <div className="flex items-center justify-between">
             <span>QR Token</span>
             <Badge variant={qrToken ? "secondary" : "outline"} className="text-xs">
               {qrToken ? "Ativo (15s)" : "Aguardando..."}
@@ -297,10 +367,35 @@ export default function PontoRegistro() {
         </CardContent>
       </Card>
 
-      <Button onClick={enviar} disabled={enviando || !funcId || (antifraudeAtivo && (!gps || !fotoB64))} size="lg" className="w-full">
+      {bloqueadoPorGeofence && (
+        <div className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <div>
+            <div className="font-medium">Marcação bloqueada por localização</div>
+            <div className="text-xs opacity-90">
+              {geofences.length === 0
+                ? "Nenhuma área de GPS foi cadastrada. Peça ao RH para cadastrar em Configurações Antifraude → Geofences."
+                : `Você precisa estar dentro de uma das áreas permitidas: ${geofences.map((g) => g.nome).join(", ")}.`}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Button
+        onClick={enviar}
+        disabled={
+          enviando ||
+          !funcId ||
+          (antifraudeAtivo && (!gps || !fotoB64)) ||
+          bloqueadoPorGeofence
+        }
+        size="lg"
+        className="w-full"
+      >
         {enviando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
         Registrar Ponto
       </Button>
+
 
       {resultado && (
         <Card>
