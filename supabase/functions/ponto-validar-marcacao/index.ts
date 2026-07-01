@@ -64,22 +64,35 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Config empresa (geofence obrigatório para app)
+    const { data: empCfg } = await supabase
+      .from("ponto_empresas")
+      .select("geofence_obrigatorio_app, antifraude_ativo")
+      .eq("id", func.empresa_id)
+      .maybeSingle();
+    const exigirGeofenceApp = empCfg?.geofence_obrigatorio_app !== false;
+    const origemApp = (body.origem || "app").startsWith("app");
+
     const fatores: Record<string, { ok: boolean; peso: number; detalhe?: string }> = {};
     let scoreObtido = 0;
     let scoreMax = 0;
 
-    // 1) GPS + Geofence (peso 30)
+    // 1) GPS + Geofence (peso 30) — BLOQUEANTE para marcações via app
     let geofence_ok = false;
     scoreMax += 30;
+    const { data: geos } = await supabase
+      .from("ponto_geofences")
+      .select("lat, lng, raio_metros, nome")
+      .eq("empresa_id", func.empresa_id)
+      .eq("ativo", true);
+    const temGeofences = !!(geos && geos.length > 0);
+
     if (body.gps) {
-      const { data: geos } = await supabase
-        .from("ponto_geofences")
-        .select("lat, lng, raio_metros, nome")
-        .eq("empresa_id", func.empresa_id)
-        .eq("ativo", true);
-      if (geos && geos.length > 0) {
-        for (const g of geos) {
+      if (temGeofences) {
+        let maisProximo = { nome: "", dist: Infinity, raio: 0 };
+        for (const g of geos!) {
           const d = haversine(body.gps.lat, body.gps.lng, Number(g.lat), Number(g.lng));
+          if (d < maisProximo.dist) maisProximo = { nome: g.nome, dist: d, raio: g.raio_metros };
           if (d <= g.raio_metros) {
             geofence_ok = true;
             fatores.geofence = { ok: true, peso: 30, detalhe: `Dentro de ${g.nome} (${Math.round(d)}m)` };
@@ -87,16 +100,51 @@ Deno.serve(async (req) => {
             break;
           }
         }
-        if (!geofence_ok) fatores.geofence = { ok: false, peso: 30, detalhe: "Fora de qualquer geofence" };
+        if (!geofence_ok) {
+          fatores.geofence = {
+            ok: false,
+            peso: 30,
+            detalhe: `Fora das áreas permitidas — mais próxima: ${maisProximo.nome} a ${Math.round(maisProximo.dist)}m (raio ${maisProximo.raio}m)`,
+          };
+          if (exigirGeofenceApp && origemApp) {
+            return new Response(
+              JSON.stringify({
+                error: `Marcação bloqueada: você está fora da área permitida. Local mais próximo: ${maisProximo.nome} (${Math.round(maisProximo.dist)}m de distância, raio ${maisProximo.raio}m).`,
+                codigo: "fora_geofence",
+                fatores,
+              }),
+              { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+            );
+          }
+        }
       } else {
-        // sem geofence cadastrado: aceita mas reduz peso
+        // sem geofence cadastrado
+        if (exigirGeofenceApp && origemApp) {
+          return new Response(
+            JSON.stringify({
+              error: "Marcação bloqueada: nenhuma área de GPS foi cadastrada para esta empresa. Peça ao RH para cadastrar em Configurações Antifraude → Geofences.",
+              codigo: "sem_geofence_cadastrada",
+            }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
         fatores.geofence = { ok: true, peso: 15, detalhe: "Sem geofence cadastrado" };
         scoreObtido += 15;
         geofence_ok = true;
       }
     } else {
       fatores.geofence = { ok: false, peso: 30, detalhe: "GPS ausente" };
+      if (exigirGeofenceApp && origemApp) {
+        return new Response(
+          JSON.stringify({
+            error: "Marcação bloqueada: GPS não disponível. Ative a localização do dispositivo e tente novamente.",
+            codigo: "gps_ausente",
+          }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     }
+
 
     // 2) Rede autorizada (peso 15)
     scoreMax += 15;
