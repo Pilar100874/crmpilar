@@ -100,6 +100,21 @@ export default function PontoColetorDownload() {
         </p>
       </div>
 
+      <Card className="border-primary/20">
+        <CardContent className="flex items-center justify-between gap-3 p-4">
+          <div className="flex items-start gap-3">
+            <Camera className="mt-0.5 h-5 w-5 text-primary" />
+            <div>
+              <p className="font-medium">Módulo de câmeras IP (Controle de Veículos)</p>
+              <p className="text-xs text-muted-foreground">
+                Habilita o Coletor Desktop a capturar snapshots de câmeras internas cadastradas em Controle de Veículos → Câmeras.
+              </p>
+            </div>
+          </div>
+          <Switch checked={camerasEnabled} onCheckedChange={toggleCameras} />
+        </CardContent>
+      </Card>
+
       <div className="grid gap-3 sm:grid-cols-3">
         {platforms.map((p) => (
           <Card key={p.id}>
