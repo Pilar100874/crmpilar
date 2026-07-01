@@ -334,7 +334,7 @@ export default function CVVehicleEntry() {
                     </div>
                   )}
 
-                  <CVPhotoCapture stage="entry" angles={angles} value={photos} onChange={setPhotos} />
+                  <CVPhotoCapture stage="entry" angles={angles} value={photos} onChange={setPhotos} vehicleId={selected?.vehicle_id} aiCompare />
                 </>
               )}
             </div>
