@@ -53,31 +53,38 @@ class SignalHub {
     this.supabase = createClient(cfg.url, cfg.anonKey, {
       realtime: { params: { eventsPerSecond: 20 } },
     });
-    this.channel = null;
+    this.channels = [];
   }
 
   setCameras(ids) { this.myCameraIds = new Set(ids); }
 
   start() {
-    if (this.channel) return;
-    const chanName = this.cfg.filialId
-      ? `webrtc-signal:${this.cfg.filialId}`
-      : 'webrtc-signal';
-    this.channel = this.supabase.channel(chanName, {
-      config: { broadcast: { self: false, ack: false } },
-    });
-    this.channel.on('broadcast', { event: 'msg' }, ({ payload }) => this._onMsg(payload));
-    this.channel.subscribe((status) => console.log('[webrtc] signaling', chanName, status));
+    if (this.channels.length) return;
+    // Assina ambos os canais para não perder viewers que estejam
+    // broadcastando no canal genérico OU no canal específico da filial.
+    const names = new Set(['webrtc-signal']);
+    if (this.cfg.filialId) names.add(`webrtc-signal:${this.cfg.filialId}`);
+    for (const name of names) {
+      const ch = this.supabase.channel(name, {
+        config: { broadcast: { self: false, ack: false } },
+      });
+      ch.on('broadcast', { event: 'msg' }, ({ payload }) => this._onMsg(payload));
+      ch.subscribe((status) => console.log('[webrtc] signaling', name, status));
+      this.channels.push(ch);
+    }
   }
 
   stop() {
-    if (this.channel) { this.supabase.removeChannel(this.channel); this.channel = null; }
+    for (const ch of this.channels) this.supabase.removeChannel(ch);
+    this.channels = [];
     for (const s of this.sessions.values()) s.close();
     this.sessions.clear();
   }
 
   send(msg) {
-    this.channel?.send({ type: 'broadcast', event: 'msg', payload: msg });
+    for (const ch of this.channels) {
+      try { ch.send({ type: 'broadcast', event: 'msg', payload: msg }); } catch {}
+    }
   }
 
   async _onMsg(m) {
