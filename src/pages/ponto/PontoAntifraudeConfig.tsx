@@ -39,7 +39,7 @@ export default function PontoAntifraudeConfig() {
   const [exigirGeoApp, setExigirGeoApp] = useState<boolean>(true);
   const [geos, setGeos] = useState<Geofence[]>([]);
   const [redes, setRedes] = useState<Rede[]>([]);
-  const [novoGeo, setNovoGeo] = useState({ nome: "", lat: "", lng: "", raio: "150" });
+  
   const [novaRede, setNovaRede] = useState<{ tipo: "ip" | "cidr" | "ssid"; valor: string; descricao: string }>({
     tipo: "ip", valor: "", descricao: "",
   });
