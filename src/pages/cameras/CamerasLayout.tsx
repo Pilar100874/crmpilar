@@ -4,6 +4,7 @@ import {
   Camera,
   LayoutDashboard,
   Layers,
+  Radio,
   Settings,
   PanelLeftClose,
   PanelLeft,
