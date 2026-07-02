@@ -35,7 +35,7 @@ function decodeChunked(buf) {
 // Transporte por socket bruto — o Control iD envia cabeçalhos fora do padrão
 // HTTP/1.1 que o parser do Node rejeita ("Parse Error: Invalid header value char").
 // Falamos HTTP/1.0 direto no socket e parseamos a resposta manualmente.
-function request(opts, body) {
+function requestRaw(opts, body) {
   return new Promise((resolve, reject) => {
     const isHttps = opts.protocol === 'https:';
     const payload = body === undefined || body === null
