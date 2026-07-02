@@ -221,28 +221,47 @@ export default function PontoAntifraudeConfig() {
 
         <TabsContent value="geo" className="space-y-4">
           <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">Nova geofence</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              <div className="sm:col-span-2"><Label>Nome</Label>
-                <Input value={novoGeo.nome} onChange={(e) => setNovoGeo({ ...novoGeo, nome: e.target.value })} placeholder="Matriz" /></div>
-              <div><Label>Latitude</Label>
-                <Input value={novoGeo.lat} onChange={(e) => setNovoGeo({ ...novoGeo, lat: e.target.value })} /></div>
-              <div><Label>Longitude</Label>
-                <Input value={novoGeo.lng} onChange={(e) => setNovoGeo({ ...novoGeo, lng: e.target.value })} /></div>
-              <div><Label>Raio (m)</Label>
-                <Input type="number" value={novoGeo.raio} onChange={(e) => setNovoGeo({ ...novoGeo, raio: e.target.value })} /></div>
-              <div className="sm:col-span-5 flex gap-2">
-                <Button variant="outline" onClick={usarMinhaLoc}>Usar minha localização</Button>
-                <Button onClick={addGeo}><Plus className="mr-2 h-4 w-4" />Adicionar</Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">Cadastradas</CardTitle></CardHeader>
+            <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-base">Áreas permitidas (Geofences)</CardTitle>
+              <Dialog open={dlgOpen} onOpenChange={setDlgOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={abrirNovo}>
+                    <Plus className="mr-2 h-4 w-4" /> Nova área
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editing ? "Editar área permitida" : "Nova área permitida"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Nome</Label>
+                      <Input
+                        value={formNome}
+                        onChange={(e) => setFormNome(e.target.value)}
+                        placeholder="Ex.: Matriz, Filial SP, Obra Alphaville"
+                      />
+                    </div>
+                    <GeofenceMapPicker value={formMap} onChange={setFormMap} />
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setDlgOpen(false)}>
+                      Cancelar
+                    </Button>
+                    <Button onClick={salvarGeo}>
+                      {editing ? "Salvar alterações" : "Criar área"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
             <CardContent>
               {geos.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhuma geofence cadastrada</p>
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma área cadastrada. Clique em "Nova área" para definir o local no mapa.
+                </p>
               ) : (
                 <div className="space-y-2">
                   {geos.map((g) => (
@@ -253,9 +272,14 @@ export default function PontoAntifraudeConfig() {
                           {Number(g.lat).toFixed(5)}, {Number(g.lng).toFixed(5)} · raio {g.raio_metros}m
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => delGeo(g.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => abrirEdicao(g)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => delGeo(g.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
