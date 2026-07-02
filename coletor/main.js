@@ -68,3 +68,11 @@ ipcMain.handle('updater:install', async (evt, downloadUrl) => {
   });
 });
 ipcMain.handle('app:version', () => app.getVersion());
+ipcMain.handle('collector:listarFiliais', () => listarFiliais());
+ipcMain.handle('collector:setFilial', (evt, id, nome) => {
+  saveConfig({ filialId: id, filialNome: nome });
+  // reinicia coletores para aplicar novo filtro
+  try { stopCollector(); } catch {}
+  try { startCollector(); } catch {}
+  return getStatus();
+});
