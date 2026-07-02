@@ -39,11 +39,29 @@ function loadConfig() {
     anonKey: saved.anonKey || DEFAULT_ANON_KEY,
     pontoEnabled: saved.pontoEnabled !== false,
     camerasEnabled: saved.camerasEnabled !== false,
+    filialId: saved.filialId || null,
+    filialNome: saved.filialNome || null,
   };
 }
 function saveConfig(cfg) {
   const cur = loadConfig();
   fs.writeFileSync(CONFIG_PATH, JSON.stringify({ ...cur, ...cfg }, null, 2));
+}
+
+async function listarFiliais() {
+  const cfg = loadConfig();
+  const resp = await fetch(`${cfg.url}/functions/v1/ponto-coletor-filiais`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: cfg.anonKey,
+      Authorization: `Bearer ${cfg.anonKey}`,
+    },
+    body: '{}',
+  });
+  if (!resp.ok) throw new Error(`filiais HTTP ${resp.status}`);
+  const json = await resp.json();
+  return json.filiais || [];
 }
 
 async function callBootstrap(statusUpdates = []) {
@@ -55,7 +73,7 @@ async function callBootstrap(statusUpdates = []) {
       'apikey': cfg.anonKey,
       'Authorization': `Bearer ${cfg.anonKey}`,
     },
-    body: JSON.stringify({ status_updates: statusUpdates }),
+    body: JSON.stringify({ status_updates: statusUpdates, filial_id: cfg.filialId || null }),
   });
   if (!resp.ok) throw new Error(`bootstrap HTTP ${resp.status}`);
   return await resp.json();
@@ -232,6 +250,11 @@ function stopCameras() {
 // Compatibilidade retro
 function startCollector() {
   const cfg = loadConfig();
+  // Não inicia coletores enquanto o usuário não selecionar a filial.
+  if (!cfg.filialId) {
+    console.log('[coletor] aguardando seleção de filial pelo usuário');
+    return STATE;
+  }
   if (cfg.pontoEnabled) startPonto();
   if (cfg.camerasEnabled) startCameras();
   return STATE;
@@ -259,5 +282,5 @@ async function pollNow() {
 
 module.exports = {
   startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow,
-  startPonto, stopPonto, startCameras, stopCameras,
+  startPonto, stopPonto, startCameras, stopCameras, listarFiliais,
 };

@@ -2,7 +2,7 @@ const { app, BrowserWindow, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const {
   startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow,
-  startPonto, stopPonto, startCameras, stopCameras,
+  startPonto, stopPonto, startCameras, stopCameras, listarFiliais,
 } = require('./collector');
 const { checarAtualizacao, baixarEInstalar } = require('./updater');
 
@@ -68,3 +68,11 @@ ipcMain.handle('updater:install', async (evt, downloadUrl) => {
   });
 });
 ipcMain.handle('app:version', () => app.getVersion());
+ipcMain.handle('collector:listarFiliais', () => listarFiliais());
+ipcMain.handle('collector:setFilial', (evt, id, nome) => {
+  saveConfig({ filialId: id, filialNome: nome });
+  // reinicia coletores para aplicar novo filtro
+  try { stopCollector(); } catch {}
+  try { startCollector(); } catch {}
+  return getStatus();
+});

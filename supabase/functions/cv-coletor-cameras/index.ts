@@ -42,10 +42,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { data, error } = await supabase
+    let camQ = supabase
       .from("cv_cameras")
-      .select("id,nome,marca,tipo_rede,host,porta,protocolo,usuario,senha,snapshot_path,angulo_key,grupo_id")
+      .select("id,nome,marca,tipo_rede,host,porta,protocolo,usuario,senha,snapshot_path,angulo_key,grupo_id,filial_id")
       .eq("ativo", true);
+    if (body.filial_id) camQ = camQ.eq("filial_id", body.filial_id);
+    const { data, error } = await camQ;
     if (error) throw error;
     return new Response(JSON.stringify({ cameras: data ?? [] }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

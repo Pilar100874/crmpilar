@@ -41,6 +41,7 @@ const emptyCam = {
   local_descricao: "",
   ativo: true,
   grupo_id: null as string | null,
+  filial_id: null as string | null,
 };
 
 export default function CamerasCameras() {
@@ -53,16 +54,19 @@ export default function CamerasCameras() {
   const [editing, setEditing] = useState<any>(emptyCam);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
-  const [liveCam, setLiveCam] = useState<{ id: string; nome: string } | null>(null);
+  const [liveCam, setLiveCam] = useState<{ id: string; nome: string; filial_id: string | null } | null>(null);
+  const [filiais, setFiliais] = useState<any[]>([]);
 
   const load = async () => {
-    const [{ data: cams }, { data: coletor }, { data: grps }] = await Promise.all([
+    const [{ data: cams }, { data: coletor }, { data: grps }, { data: fils }] = await Promise.all([
       supabase.from("cv_cameras").select("*").order("nome"),
       supabase.from("cv_coletor_config").select("*").maybeSingle(),
       supabase.from("cameras_grupos").select("*").order("ordem").order("nome"),
+      supabase.from("ponto_filiais").select("id,nome,cidade,uf").eq("ativo", true).order("nome"),
     ]);
     setRows(cams ?? []);
     setGrupos(grps ?? []);
+    setFiliais(fils ?? []);
     if (coletor) {
       setCollectorEnabled(coletor.cameras_habilitado);
       setCollectorId(coletor.id);
@@ -241,7 +245,7 @@ export default function CamerasCameras() {
                 <Button
                   size="sm"
                   variant="secondary"
-                  onClick={() => setLiveCam({ id: r.id, nome: r.nome })}
+                  onClick={() => setLiveCam({ id: r.id, nome: r.nome, filial_id: r.filial_id ?? null })}
                 >
                   <Radio className="h-3 w-3 mr-1" /> Ao vivo
                 </Button>
@@ -257,6 +261,7 @@ export default function CamerasCameras() {
       <CameraLiveViewer
         cameraId={liveCam?.id ?? null}
         cameraNome={liveCam?.nome}
+        filialId={liveCam?.filial_id ?? null}
         onClose={() => setLiveCam(null)}
       />
 
@@ -289,6 +294,26 @@ export default function CamerasCameras() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="sm:col-span-2 space-y-1">
+              <Label>Filial</Label>
+              <Select
+                value={editing.filial_id ?? "none"}
+                onValueChange={(v) => setEditing({ ...editing, filial_id: v === "none" ? null : v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione a filial" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem filial (todas)</SelectItem>
+                  {filiais.map((f) => (
+                    <SelectItem key={f.id} value={f.id}>
+                      {f.nome}{f.cidade ? ` — ${f.cidade}/${f.uf}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">
+                Define qual Coletor Desktop irá acessar essa câmera. Necessário quando há IPs iguais em filiais diferentes.
+              </p>
             </div>
             <div className="space-y-1">
               <Label>Marca</Label>

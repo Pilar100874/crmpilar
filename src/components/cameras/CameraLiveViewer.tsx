@@ -9,12 +9,13 @@ import { supabase } from "@/integrations/supabase/client";
 interface Props {
   cameraId: string | null;
   cameraNome?: string;
+  filialId?: string | null;
   onClose: () => void;
 }
 
 const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-export function CameraLiveViewer({ cameraId, cameraNome, onClose }: Props) {
+export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [status, setStatus] = useState<"idle" | "conectando" | "ao-vivo" | "erro">("idle");
   const [erro, setErro] = useState<string | null>(null);
@@ -44,7 +45,8 @@ export function CameraLiveViewer({ cameraId, cameraNome, onClose }: Props) {
         }
       };
 
-      channel = supabase.channel("webrtc-signal", {
+      const chanName = filialId ? `webrtc-signal:${filialId}` : "webrtc-signal";
+      channel = supabase.channel(chanName, {
         config: { broadcast: { self: false, ack: false } },
       });
       channel.on("broadcast", { event: "msg" }, async ({ payload }: any) => {

@@ -14,4 +14,6 @@ contextBridge.exposeInMainWorld('coletor', {
   checarAtualizacao: () => ipcRenderer.invoke('updater:check'),
   instalarAtualizacao: (url) => ipcRenderer.invoke('updater:install', url),
   onUpdateProgress: (cb) => ipcRenderer.on('updater:progress', (_e, pct) => cb(pct)),
+  listarFiliais: () => ipcRenderer.invoke('collector:listarFiliais'),
+  setFilial: (id, nome) => ipcRenderer.invoke('collector:setFilial', id, nome),
 });

@@ -3861,6 +3861,7 @@ export type Database = {
           ativo: boolean
           coletor_id: string | null
           created_at: string
+          filial_id: string | null
           grupo_id: string | null
           host: string
           id: string
@@ -3881,6 +3882,7 @@ export type Database = {
           ativo?: boolean
           coletor_id?: string | null
           created_at?: string
+          filial_id?: string | null
           grupo_id?: string | null
           host: string
           id?: string
@@ -3901,6 +3903,7 @@ export type Database = {
           ativo?: boolean
           coletor_id?: string | null
           created_at?: string
+          filial_id?: string | null
           grupo_id?: string | null
           host?: string
           id?: string
@@ -3917,6 +3920,13 @@ export type Database = {
           vehicle_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "cv_cameras_filial_id_fkey"
+            columns: ["filial_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_filiais"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cv_cameras_grupo_id_fkey"
             columns: ["grupo_id"]
