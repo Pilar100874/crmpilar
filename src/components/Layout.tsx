@@ -248,6 +248,17 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const soloMode =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("solo") === "1";
+  if (soloMode) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <main className="min-h-screen">{children}</main>
+        <OpenInNewTabButton />
+      </div>
+    );
+  }
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [allowedMenus, setAllowedMenus] = useState<Record<string, MenuPermissions>>({});
