@@ -77,15 +77,54 @@ Deno.serve(async (req) => {
     let scoreObtido = 0;
     let scoreMax = 0;
 
+    // 0) Método permitido para o funcionário
+    const { data: metCfg } = await supabase
+      .from("ponto_funcionario_metodos")
+      .select("*")
+      .eq("funcionario_id", func.id)
+      .maybeSingle();
+    const origem = (body.origem || "app").toLowerCase();
+    if (metCfg) {
+      const bloqueios: Record<string, boolean> = {
+        app: metCfg.permite_app === false && origem.startsWith("app"),
+        web: metCfg.permite_web === false && origem.startsWith("web"),
+        kiosk: metCfg.permite_kiosk === false && origem.startsWith("kiosk"),
+        catraca: metCfg.permite_catraca === false && (origem.startsWith("catraca") || origem.startsWith("relogio")),
+        qr: metCfg.permite_qr === false && !!body.qr_token,
+      };
+      const bloqueado = Object.entries(bloqueios).find(([, v]) => v);
+      if (bloqueado) {
+        return new Response(JSON.stringify({
+          error: `Marcação bloqueada: você não está autorizado a bater ponto por ${bloqueado[0]}. Consulte o RH.`,
+          codigo: "metodo_nao_permitido",
+        }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (metCfg.exige_face && !body.foto_base64) {
+        return new Response(JSON.stringify({
+          error: "Marcação bloqueada: reconhecimento facial obrigatório para este funcionário.",
+          codigo: "face_obrigatoria",
+        }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
+
     // 1) GPS + Geofence (peso 30) — BLOQUEANTE para marcações via app
     let geofence_ok = false;
     scoreMax += 30;
-    const { data: geos } = await supabase
+    // Geofences específicos do funcionário (múltiplos endereços). Se nenhum, usa todos da empresa.
+    const { data: geoVinc } = await supabase
+      .from("ponto_funcionario_geofences")
+      .select("geofence_id")
+      .eq("funcionario_id", func.id);
+    const idsPermitidos = (geoVinc || []).map((r: any) => r.geofence_id);
+    let geoQuery = supabase
       .from("ponto_geofences")
       .select("lat, lng, raio_metros, nome")
       .eq("empresa_id", func.empresa_id)
       .eq("ativo", true);
+    if (idsPermitidos.length > 0) geoQuery = geoQuery.in("id", idsPermitidos);
+    const { data: geos } = await geoQuery;
     const temGeofences = !!(geos && geos.length > 0);
+    const origemApp = origem.startsWith("app");
 
     if (body.gps) {
       if (temGeofences) {
