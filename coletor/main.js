@@ -4,6 +4,7 @@ const {
   startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow,
   startPonto, stopPonto, startCameras, stopCameras,
 } = require('./collector');
+const { checarAtualizacao, baixarEInstalar } = require('./updater');
 
 let win;
 let tray;
