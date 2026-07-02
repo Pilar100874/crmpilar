@@ -117,7 +117,7 @@ export default function CVVehicleHistory() {
       <Card>
         <CardContent className="p-4 flex flex-wrap items-end gap-3">
           <div className="flex-1 min-w-[240px]">
-            <label className="text-xs text-muted-foreground">Veículo</label>
+            <Label className="text-xs text-muted-foreground">Veículo</Label>
             <Select value={vehicleId} onValueChange={setVehicleId}>
               <SelectTrigger><SelectValue placeholder="Selecione um veículo" /></SelectTrigger>
               <SelectContent>
@@ -129,10 +129,26 @@ export default function CVVehicleHistory() {
               </SelectContent>
             </Select>
           </div>
+          <div>
+            <Label className="text-xs text-muted-foreground">De</Label>
+            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-[160px]" />
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground">Até</Label>
+            <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-[160px]" />
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setDateFrom(toISO(weekAgo)); setDateTo(toISO(today)); }}
+            title="Últimos 7 dias"
+          >
+            <RotateCcw className="h-4 w-4 mr-1" /> 7 dias
+          </Button>
           {selectedVehicle && (
-            <div className="text-sm text-muted-foreground flex items-center gap-2">
+            <div className="text-sm text-muted-foreground flex items-center gap-2 ml-auto">
               <Car className="h-4 w-4" />
-              <span><strong>{movements.length}</strong> movimentação(ões) · <strong>{photos.length}</strong> foto(s)</span>
+              <span><strong>{movements.length}</strong> mov. · <strong>{photos.length}</strong> foto(s)</span>
             </div>
           )}
         </CardContent>
