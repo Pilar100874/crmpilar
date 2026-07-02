@@ -122,6 +122,7 @@ import CVMaintenance from "./pages/controle-veiculos/CVMaintenance";
 import CVInspectionConfig from "./pages/controle-veiculos/CVInspectionConfig";
 import CVHelpers from "./pages/controle-veiculos/CVHelpers";
 import CVCameras from "./pages/controle-veiculos/CVCameras";
+import CVVehicleHistory from "./pages/controle-veiculos/CVVehicleHistory";
 import CVisLayout from "./pages/controle-visitantes/CVisLayout";
 import CVisDashboard from "./pages/controle-visitantes/CVisDashboard";
 import CVisEntrada from "./pages/controle-visitantes/CVisEntrada";
