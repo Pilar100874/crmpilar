@@ -177,6 +177,40 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
     }
   };
 
+  const ipCameraAngles = angles.filter(
+    (a) => (a.source ?? "device") === "ip_camera" && a.camera_id && ipCams.some((c) => c.id === a.camera_id),
+  );
+
+  const captureAllFromIpCameras = async () => {
+    if (ipCameraAngles.length === 0) return;
+    setCapturingCam("__all__");
+    let ok = 0;
+    let fail = 0;
+    let acc = [...value];
+    for (const angle of ipCameraAngles) {
+      try {
+        const { data, error } = await supabase.functions.invoke("cv-camera-snapshot", {
+          body: { camera_id: angle.camera_id },
+        });
+        if (error) throw error;
+        const path = (data as any)?.photo_path;
+        if (!path) throw new Error((data as any)?.error || "Falha ao capturar");
+        const url = await getUrl(path);
+        setPreviews((p) => ({ ...p, [angle.key]: url }));
+        acc = acc.filter((p) => p.angle_key !== angle.key);
+        acc.push({ angle_key: angle.key, angle_label: angle.label, photo_url: path });
+        onChange(acc);
+        ok++;
+        runAiCompare(angle, path);
+      } catch (e: any) {
+        fail++;
+      }
+    }
+    setCapturingCam(null);
+    if (ok > 0) toast.success(`${ok} foto(s) capturada(s) das câmeras IP`);
+    if (fail > 0) toast.error(`${fail} câmera(s) falharam ao capturar`);
+  };
+
   const remove = (angleKey: string) => {
     onChange(value.filter((p) => p.angle_key !== angleKey));
     setPreviews((p) => {
@@ -188,7 +222,31 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+    <div className="space-y-3">
+      {ipCameraAngles.length > 0 && (
+        <div className="flex items-center justify-between gap-2 p-3 rounded-lg border bg-primary/5">
+          <div className="flex items-center gap-2 text-sm">
+            <Wifi className="h-4 w-4 text-primary" />
+            <span>
+              <strong>{ipCameraAngles.length}</strong> câmera(s) IP vinculada(s) — capture todas de uma vez
+            </span>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            onClick={captureAllFromIpCameras}
+            disabled={capturingCam !== null}
+          >
+            {capturingCam === "__all__" ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <Camera className="h-4 w-4 mr-2" />
+            )}
+            Capturar todas
+          </Button>
+        </div>
+      )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
       {angles.map((a) => {
         const captured = value.find((p) => p.angle_key === a.key);
         const preview = previews[a.key];
@@ -386,6 +444,7 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
           </Card>
         );
       })}
+      </div>
     </div>
   );
 }
