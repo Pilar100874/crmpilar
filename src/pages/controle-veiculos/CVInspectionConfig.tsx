@@ -57,7 +57,7 @@ export default function CVInspectionConfig() {
     s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || `angle_${Date.now()}`;
 
-  const addAngle = () => setPhotos([...photos, { key: `angle_${Date.now()}`, label: "Novo ângulo", required: true, source: "device", camera_id: null }]);
+  const addAngle = () => setPhotos([...photos, { key: `angle_${Date.now()}`, label: "Novo ângulo", required: true, source: "device", camera_id: null, exit_camera_id: null }]);
   const removeAngle = (i: number) => setPhotos(photos.filter((_, idx) => idx !== i));
 
   const updateAngle = (i: number, patch: Partial<Angle>) =>
