@@ -121,14 +121,61 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cameraId, filialId, nonce]);
 
+  const zoomIn = () => setScale((s) => Math.min(5, +(s + 0.5).toFixed(2)));
+  const zoomOut = () => setScale((s) => {
+    const n = Math.max(1, +(s - 0.5).toFixed(2));
+    if (n <= 1) setPos({ x: 0, y: 0 });
+    return n;
+  });
+  const resetZoom = () => { setScale(1); setPos({ x: 0, y: 0 }); };
+  const onWheel = (e: React.WheelEvent) => {
+    if (status !== "ao-vivo") return;
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.3 : 0.3;
+    setScale((s) => {
+      const n = Math.min(5, Math.max(1, +(s + delta).toFixed(2)));
+      if (n <= 1) setPos({ x: 0, y: 0 });
+      return n;
+    });
+  };
+  const onMouseDown = (e: React.MouseEvent) => {
+    if (scale <= 1) return;
+    dragRef.current = { x: e.clientX, y: e.clientY, ox: pos.x, oy: pos.y };
+  };
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!dragRef.current) return;
+    setPos({
+      x: dragRef.current.ox + (e.clientX - dragRef.current.x),
+      y: dragRef.current.oy + (e.clientY - dragRef.current.y),
+    });
+  };
+  const onMouseUp = () => { dragRef.current = null; };
+  const toggleFullscreen = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else el.requestFullscreen().catch(() => {});
+  };
+
   return (
-    <div className={cn("relative bg-black rounded-md overflow-hidden aspect-video group", className)}>
+    <div
+      ref={containerRef}
+      className={cn("relative bg-black rounded-md overflow-hidden aspect-video group", className)}
+      onWheel={onWheel}
+      onMouseDown={onMouseDown}
+      onMouseMove={onMouseMove}
+      onMouseUp={onMouseUp}
+      onMouseLeave={onMouseUp}
+      style={{ cursor: scale > 1 ? (dragRef.current ? "grabbing" : "grab") : "default" }}
+    >
       <video
         ref={videoRef}
         autoPlay
         playsInline
         muted
-        className="w-full h-full object-contain"
+        draggable={false}
+        className="w-full h-full object-contain transition-transform will-change-transform"
+        style={{ transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})` }}
       />
       <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px]">
         {status === "ao-vivo" ? (
@@ -139,7 +186,36 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
           <><Loader2 className="h-2.5 w-2.5 animate-spin" /> ...</>
         )}
       </div>
-      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent px-2 py-1 text-white text-xs flex items-center gap-1">
+      {status === "ao-vivo" && (
+        <div className="absolute top-1.5 right-1.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+          <button
+            onClick={(e) => { e.stopPropagation(); zoomOut(); }}
+            disabled={scale <= 1}
+            className="h-6 w-6 flex items-center justify-center rounded bg-black/60 text-white hover:bg-black/80 disabled:opacity-40"
+            title="Diminuir zoom"
+          ><ZoomOut className="h-3 w-3" /></button>
+          <span className="text-[10px] text-white bg-black/60 px-1 rounded min-w-[32px] text-center">{Math.round(scale * 100)}%</span>
+          <button
+            onClick={(e) => { e.stopPropagation(); zoomIn(); }}
+            disabled={scale >= 5}
+            className="h-6 w-6 flex items-center justify-center rounded bg-black/60 text-white hover:bg-black/80 disabled:opacity-40"
+            title="Aumentar zoom"
+          ><ZoomIn className="h-3 w-3" /></button>
+          {scale > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); resetZoom(); }}
+              className="h-6 w-6 flex items-center justify-center rounded bg-black/60 text-white hover:bg-black/80"
+              title="Redefinir"
+            ><RotateCcw className="h-3 w-3" /></button>
+          )}
+          <button
+            onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
+            className="h-6 w-6 flex items-center justify-center rounded bg-black/60 text-white hover:bg-black/80"
+            title="Tela cheia"
+          ><Maximize2 className="h-3 w-3" /></button>
+        </div>
+      )}
+      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent px-2 py-1 text-white text-xs flex items-center gap-1 pointer-events-none">
         <CameraIcon className="h-3 w-3" /> <span className="truncate">{cameraNome}</span>
       </div>
       {status !== "ao-vivo" && (
