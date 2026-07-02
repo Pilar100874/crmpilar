@@ -35,7 +35,7 @@ function decodeChunked(buf) {
 // Transporte por socket bruto — o Control iD envia cabeçalhos fora do padrão
 // HTTP/1.1 que o parser do Node rejeita ("Parse Error: Invalid header value char").
 // Falamos HTTP/1.0 direto no socket e parseamos a resposta manualmente.
-function request(opts, body) {
+function requestRaw(opts, body) {
   return new Promise((resolve, reject) => {
     const isHttps = opts.protocol === 'https:';
     const payload = body === undefined || body === null
@@ -66,10 +66,12 @@ function request(opts, body) {
       let bodyBuf = raw.slice(splitAt + 4);
       const statusMatch = head.match(/^HTTP\/\d(?:\.\d)?\s+(\d+)/i);
       const status = statusMatch ? Number(statusMatch[1]) : 0;
+      const locMatch = head.match(/\r?\n\s*location:\s*([^\r\n]+)/i);
+      const location = locMatch ? locMatch[1].trim() : null;
       if (/transfer-encoding:\s*chunked/i.test(head)) {
         bodyBuf = decodeChunked(bodyBuf);
       }
-      resolve({ status, body: bodyBuf.toString('utf8'), headers: {} });
+      resolve({ status, body: bodyBuf.toString('utf8'), headers: {}, location });
     };
 
     const tlsOpts = {
@@ -96,6 +98,40 @@ function request(opts, body) {
     socket.once('close', finish);
   });
 }
+
+// Segue redirecionamentos 301/302/307/308 (alguns firmwares Control iD
+// redirecionam HTTP→HTTPS ou para outra porta). Máx. 4 saltos.
+async function request(opts, body) {
+  let cur = { ...opts };
+  for (let hop = 0; hop < 4; hop++) {
+    const res = await requestRaw(cur, body);
+    if (![301, 302, 307, 308].includes(res.status) || !res.location) return res;
+    const loc = res.location;
+    const abs = loc.match(/^(https?):\/\/([^/:?#]+)(?::(\d+))?([^?#]*(?:\?[^#]*)?)?/i);
+    if (abs) {
+      const proto = abs[1].toLowerCase();
+      cur = {
+        ...cur,
+        protocol: `${proto}:`,
+        hostname: abs[2],
+        port: abs[3] ? Number(abs[3]) : (proto === 'https' ? 443 : 80),
+        path: abs[4] && abs[4] !== '' ? abs[4] : cur.path,
+      };
+    } else if (/\.fcgi/i.test(loc)) {
+      // Location relativo apontando para outro recurso .fcgi — mesmo host/porta
+      cur = { ...cur, path: loc.startsWith('/') ? loc : `/${loc}` };
+    } else if (cur.protocol !== 'https:') {
+      // Redirecionamento relativo genérico em HTTP → normalmente upgrade p/ HTTPS
+      cur = { ...cur, protocol: 'https:', port: cur.port === 80 ? 443 : cur.port };
+    } else {
+      // Já em HTTPS e redirecionando para página web (ex.: /login.html) —
+      // não há como seguir; devolve a resposta para o chamador tratar.
+      return res;
+    }
+  }
+  throw new Error('excesso de redirecionamentos (HTTP 301) do relógio');
+}
+
 
 async function login({ host, port = 80, https: useHttps = false, login: user, password }) {
   const res = await request({
@@ -187,7 +223,7 @@ async function tentarLogin(cfg) {
         throw new Error('Credenciais inválidas (usuário/senha do relógio). Verifique o campo Usuário e Chave de Comunicação.');
       }
       // Erros de rede/protocolo → continua tentando
-      if (!/WRONG_VERSION_NUMBER|EPROTO|ECONNRESET|ECONNREFUSED|EHOSTUNREACH|ETIMEDOUT|socket hang up|timeout|HTTP\/1\.1 400|HPE_|Parse Error/i.test(msg)) {
+      if (!/WRONG_VERSION_NUMBER|EPROTO|ECONNRESET|ECONNREFUSED|EHOSTUNREACH|ETIMEDOUT|socket hang up|timeout|HTTP\/1\.1 400|HTTP 30[1278]|redirecionamentos|HPE_|Parse Error/i.test(msg)) {
         // Erro não recuperável
         throw e;
       }

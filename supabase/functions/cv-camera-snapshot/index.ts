@@ -46,8 +46,28 @@ Deno.serve(async (req) => {
     const { data: cam, error } = await sb.from("cv_cameras").select("*").eq("id", camera_id).single();
     if (error || !cam) throw new Error(error?.message || "Câmera não encontrada");
     if (!cam.ativo) throw new Error("Câmera desativada");
-    if (cam.tipo_rede === "interna")
-      throw new Error("Câmera interna — utilize o Coletor Desktop para capturar");
+    if (cam.tipo_rede === "interna") {
+      // Câmera interna: o Coletor Desktop captura na LAN e sobe o snapshot
+      // em cameras/{id}/coletor-latest.jpg — servimos a última imagem recebida.
+      const latestPath = `cameras/${cam.id}/coletor-latest.jpg`;
+      const { data: signedLatest, error: sErr } = await sb.storage
+        .from("cv-vehicle-photos")
+        .createSignedUrl(latestPath, 3600);
+      if (sErr || !signedLatest?.signedUrl) {
+        throw new Error(
+          "Câmera interna — nenhum snapshot recebido do Coletor Desktop ainda. Verifique se o Coletor está aberto com o módulo de câmeras ativado.",
+        );
+      }
+      return new Response(
+        JSON.stringify({
+          photo_path: latestPath,
+          signed_url: `${signedLatest.signedUrl}&t=${Date.now()}`,
+          angle_key: cam.angulo_key,
+          fonte: "coletor",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     const bytes = await fetchSnapshot(cam);
     const path = `cameras/${cam.id}/${Date.now()}-${cam.angulo_key}.jpg`;

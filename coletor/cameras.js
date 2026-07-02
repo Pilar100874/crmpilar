@@ -116,13 +116,38 @@ async function listarCameras(cfg) {
   return json.cameras || [];
 }
 
+// Envia o snapshot capturado ao CRM (para câmeras internas que o servidor não alcança)
+async function enviarSnapshot(cfg, cam, snap) {
+  try {
+    const resp = await fetch(`${cfg.url}/functions/v1/cv-coletor-cameras`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: cfg.anonKey,
+        Authorization: `Bearer ${cfg.anonKey}`,
+      },
+      body: JSON.stringify({
+        action: 'upload_snapshot',
+        camera_id: cam.id,
+        content_type: snap.contentType,
+        image_base64: snap.bytes.toString('base64'),
+      }),
+    });
+    if (!resp.ok) throw new Error(`upload snapshot HTTP ${resp.status}`);
+  } catch (e) {
+    console.error('[cameras] upload snapshot', cam.nome, e.message);
+  }
+}
+
 async function verificarCameras(cfg) {
   const cams = await listarCameras(cfg);
   const resultados = [];
   for (const cam of cams) {
     const inicio = Date.now();
     try {
-      await fetchSnapshot(cam);
+      const snap = await fetchSnapshot(cam);
+      // Sobe a imagem para o CRM exibir (principalmente câmeras internas)
+      await enviarSnapshot(cfg, cam, snap);
       resultados.push({
         id: cam.id, nome: cam.nome, host: cam.host, tipo_rede: cam.tipo_rede,
         status: 'online', latencia_ms: Date.now() - inicio, erro: null,
