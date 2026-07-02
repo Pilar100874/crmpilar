@@ -226,6 +226,7 @@ function stopCameras() {
   if (timerCameras) clearInterval(timerCameras);
   timerCameras = null;
   STATE.running = !!timerPonto;
+  if (webrtcHub) { webrtcHub.stop(); webrtcHub = null; }
 }
 
 // Compatibilidade retro
