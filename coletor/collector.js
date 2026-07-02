@@ -177,6 +177,20 @@ async function pollCamerasOnce() {
     const resultados = await verificarCameras(cfg);
     STATE.cameras = resultados;
     STATE.lastSyncCameras = new Date().toISOString();
+    // Mantém hub de WebRTC atualizado com IDs de câmeras que podemos servir
+    try {
+      if (!webrtcHub) {
+        webrtcHub = new SignalHub(cfg, resultados.map((r) => r.id));
+        // guarda config completa das câmeras (com credenciais) para o hub
+        const camsFull = await listarCameras(cfg);
+        webrtcHub.cameras = camsFull;
+        webrtcHub.start();
+      } else {
+        const camsFull = await listarCameras(cfg);
+        webrtcHub.cameras = camsFull;
+        webrtcHub.setCameras(camsFull.map((c) => c.id));
+      }
+    } catch (e) { console.error('[webrtc-hub]', e.message); }
   } catch (e) {
     STATE.errors++;
     console.error('[coletor-cameras]', e.message);
