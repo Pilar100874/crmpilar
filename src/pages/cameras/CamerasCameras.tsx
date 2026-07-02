@@ -41,6 +41,7 @@ const emptyCam = {
   local_descricao: "",
   ativo: true,
   grupo_id: null as string | null,
+  filial_id: null as string | null,
 };
 
 export default function CamerasCameras() {
