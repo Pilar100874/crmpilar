@@ -256,7 +256,6 @@ export default function Layout({ children }: LayoutProps) {
     return (
       <div className="min-h-screen bg-background text-foreground">
         <main className="min-h-screen">{children}</main>
-        <OpenInNewTabButton />
       </div>
     );
   }
@@ -1561,7 +1560,6 @@ export default function Layout({ children }: LayoutProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <OpenInNewTabButton />
     </LayoutContext.Provider>
   );
 }

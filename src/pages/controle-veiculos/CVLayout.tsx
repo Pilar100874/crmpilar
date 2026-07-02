@@ -30,7 +30,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import OpenInNewTabButton, { isSoloMode } from "@/components/OpenInNewTabButton";
+import { isSoloMode } from "@/components/OpenInNewTabButton";
 
 interface NavItem {
   to: string;
@@ -74,7 +74,6 @@ export default function CVLayout() {
             <Outlet />
           </div>
         </main>
-        <OpenInNewTabButton />
       </div>
     );
   }
@@ -199,7 +198,6 @@ export default function CVLayout() {
           </main>
         </div>
       </div>
-      <OpenInNewTabButton />
     </div>
   );
 }
