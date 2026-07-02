@@ -15,7 +15,7 @@ interface Props {
 
 const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-export function CameraLiveViewer({ cameraId, cameraNome, onClose }: Props) {
+export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [status, setStatus] = useState<"idle" | "conectando" | "ao-vivo" | "erro">("idle");
   const [erro, setErro] = useState<string | null>(null);
