@@ -290,9 +290,10 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                     )}
                   </div>
                   {prev ? (
-                    <a href={prev.url} target="_blank" rel="noreferrer" className="block">
+                    <button type="button" onClick={() => setZoomSrc(prev.url)} className="block w-full group relative">
                       <img src={prev.url} alt="anterior" className="w-full h-32 object-cover rounded border" />
-                    </a>
+                      <span className="absolute bottom-1 right-1 bg-black/60 text-white rounded p-1 opacity-0 group-hover:opacity-100 transition"><ZoomIn className="h-3 w-3" /></span>
+                    </button>
                   ) : (
                     <div className="h-32 border-2 border-dashed rounded flex items-center justify-center bg-muted/20 text-muted-foreground text-[11px]">
                       Sem histórico
