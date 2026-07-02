@@ -1887,6 +1887,42 @@ export type Database = {
           },
         ]
       }
+      cameras_grupos: {
+        Row: {
+          ativo: boolean
+          cor: string | null
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          ordem: number
+          setor: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cor?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+          setor?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cor?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          setor?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       campaign_permissions: {
         Row: {
           allowed_tags: string[] | null
@@ -3825,6 +3861,7 @@ export type Database = {
           ativo: boolean
           coletor_id: string | null
           created_at: string
+          grupo_id: string | null
           host: string
           id: string
           local_descricao: string | null
@@ -3844,6 +3881,7 @@ export type Database = {
           ativo?: boolean
           coletor_id?: string | null
           created_at?: string
+          grupo_id?: string | null
           host: string
           id?: string
           local_descricao?: string | null
@@ -3863,6 +3901,7 @@ export type Database = {
           ativo?: boolean
           coletor_id?: string | null
           created_at?: string
+          grupo_id?: string | null
           host?: string
           id?: string
           local_descricao?: string | null
@@ -3878,6 +3917,13 @@ export type Database = {
           vehicle_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "cv_cameras_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "cameras_grupos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cv_cameras_vehicle_id_fkey"
             columns: ["vehicle_id"]
