@@ -1,5 +1,5 @@
 {
-  "version": "1.2.6",
-  "downloadUrl": "https://crm.pilar.com.br/__l5e/assets-v1/57774897-c5c6-45f3-8246-0395c2edefd0/ColetorPilar-Setup.msi",
-  "notas": "1.2.6: correção do vídeo AO VIVO — o ffmpeg agora é executado fora do pacote (antes falhava silenciosamente) e a sinalização WebRTC escuta o canal geral e o canal da filial simultaneamente. Mantém seletor de filial e fallback HTTPS/HTTP do Control iD."
+  "version": "1.2.7",
+  "downloadUrl": "https://crm.pilar.com.br/__l5e/assets-v1/3a8b9901-e6f3-48fe-b3a0-8de508d05c81/ColetorPilar-Setup.msi",
+  "notas": "1.2.7: relógios Control iD com HTTPS/TLS antigo (certificado autoassinado) agora conectam — reabilitado TLS 1.0/1.1 e cifras legadas bloqueadas pelo OpenSSL moderno. Inclui correções 1.2.6: ffmpeg fora do pacote (vídeo AO VIVO) e sinalização WebRTC dual-canal."
 }
