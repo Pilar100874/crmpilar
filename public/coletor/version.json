@@ -1,5 +1,5 @@
 {
   "version": "1.2.1",
-  "downloadUrl": "https://crmpilar.lovable.app/__l5e/assets-v1/3e566cd0-0b9d-46fc-853a-0e72c278d61c/ColetorPilar-Setup.exe",
-  "notas": "Corrige relógio Control iD offline (parser HTTP tolerante + TLS legado) e lista de câmeras que aparecia vazia no coletor."
+  "downloadUrl": "https://crmpilar.lovable.app/__l5e/assets-v1/87ac961d-8741-4ab6-9d9d-bcce25dda4f5/ColetorPilar-Setup.exe",
+  "notas": "Instalador reempacotado com o binário 1.2.1 real (build anterior ainda continha 1.2.0). Corrige relógio Control iD offline (parser HTTP tolerante + TLS legado) e lista de câmeras vazia."
 }
