@@ -60,11 +60,14 @@ class SignalHub {
 
   start() {
     if (this.channel) return;
-    this.channel = this.supabase.channel('webrtc-signal', {
+    const chanName = this.cfg.filialId
+      ? `webrtc-signal:${this.cfg.filialId}`
+      : 'webrtc-signal';
+    this.channel = this.supabase.channel(chanName, {
       config: { broadcast: { self: false, ack: false } },
     });
     this.channel.on('broadcast', { event: 'msg' }, ({ payload }) => this._onMsg(payload));
-    this.channel.subscribe((status) => console.log('[webrtc] signaling', status));
+    this.channel.subscribe((status) => console.log('[webrtc] signaling', chanName, status));
   }
 
   stop() {
