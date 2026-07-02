@@ -1,5 +1,5 @@
 {
-  "version": "1.2.2",
-  "downloadUrl": "https://crmpilar.lovable.app/__l5e/assets-v1/98791666-57b1-47fb-a0a6-3605555bc47a/ColetorPilar-Setup.msi",
-  "notas": "Nova distribuição em MSI: instala em Program Files, atalho no Menu Iniciar e inicialização automática com o Windows. Auto-update passa a rodar via msiexec."
+  "version": "1.2.3",
+  "downloadUrl": "https://crmpilar.lovable.app/__l5e/assets-v1/471b8ea1-f474-414b-88dd-59cdfdcc736b/ColetorPilar-Setup.msi",
+  "notas": "1.2.3: relógio Control iD agora segue redirecionamentos HTTP 301 (corrige 'login falhou: HTTP 301') e câmeras internas passam a enviar o snapshot ao CRM para exibição na tela de Câmeras."
 }
