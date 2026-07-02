@@ -420,6 +420,7 @@ const App = () => (
                 <Route path="predicoes" element={<PontoPredicoes />} />
                 <Route path="simulador" element={<PontoSimulador />} />
                 <Route path="mapa" element={<PontoMapaEquipes />} />
+                <Route path="fora-geofence" element={<PontoForaGeofence />} />
                 <Route path="qrcode" element={<PontoQrCodeTotem />} />
                 <Route path="atestados-admin" element={<PontoAtestadosAdmin />} />
                 <Route path="fechamento" element={<PontoFechamento />} />
