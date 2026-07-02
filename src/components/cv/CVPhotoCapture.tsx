@@ -186,6 +186,7 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
     setCapturingCam("__all__");
     let ok = 0;
     let fail = 0;
+    let acc = [...value];
     for (const angle of ipCameraAngles) {
       try {
         const { data, error } = await supabase.functions.invoke("cv-camera-snapshot", {
@@ -196,10 +197,9 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
         if (!path) throw new Error((data as any)?.error || "Falha ao capturar");
         const url = await getUrl(path);
         setPreviews((p) => ({ ...p, [angle.key]: url }));
-        const next = value.filter((p) => p.angle_key !== angle.key);
-        next.push({ angle_key: angle.key, angle_label: angle.label, photo_url: path });
-        value = next;
-        onChange(next);
+        acc = acc.filter((p) => p.angle_key !== angle.key);
+        acc.push({ angle_key: angle.key, angle_label: angle.label, photo_url: path });
+        onChange(acc);
         ok++;
         runAiCompare(angle, path);
       } catch (e: any) {
