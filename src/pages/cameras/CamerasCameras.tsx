@@ -146,37 +146,37 @@ export default function CamerasCameras() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <Camera className="h-5 w-5 text-primary" /> Câmeras
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2">
+            <Camera className="h-5 w-5 text-primary shrink-0" /> Câmeras
           </h2>
-          <p className="text-sm text-muted-foreground">
-            TP-Link Tapo, Hikvision, Intelbras · IPs públicos ou locais via Coletor
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Tapo, Hikvision, Intelbras · IPs públicos ou locais via Coletor
           </p>
         </div>
-        <Button onClick={openNew}>
+        <Button size="sm" onClick={openNew} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" /> Nova câmera
         </Button>
       </div>
 
-      <Card className="p-4 flex items-center justify-between gap-3">
+      <Card className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-start gap-3">
-          <Wifi className="h-5 w-5 text-primary mt-0.5" />
-          <div>
-            <p className="font-medium">Módulo de câmeras no Coletor Desktop</p>
+          <Wifi className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+          <div className="min-w-0">
+            <p className="font-medium text-sm">Módulo de câmeras no Coletor Desktop</p>
             <p className="text-xs text-muted-foreground">
-              Necessário para câmeras internas (rede local). Câmeras públicas funcionam sem o Coletor.
+              Necessário para câmeras internas (rede local). Públicas funcionam sem Coletor.
             </p>
           </div>
         </div>
         <Switch checked={collectorEnabled} onCheckedChange={toggleCollector} />
       </Card>
 
-      <div className="flex items-center gap-2">
-        <Label className="text-sm text-muted-foreground">Filtrar por grupo:</Label>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <Label className="text-sm text-muted-foreground shrink-0">Filtrar por grupo:</Label>
         <Select value={filtroGrupo} onValueChange={setFiltroGrupo}>
-          <SelectTrigger className="w-64">
+          <SelectTrigger className="w-full sm:w-64">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -191,7 +191,7 @@ export default function CamerasCameras() {
         </Select>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.length === 0 && (
           <Card className="col-span-full p-8 text-center text-muted-foreground">
             Nenhuma câmera nesta seleção

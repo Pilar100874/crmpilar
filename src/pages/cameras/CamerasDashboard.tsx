@@ -53,20 +53,20 @@ export default function CamerasDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <Camera className="h-5 w-5 text-primary" /> Dashboard de Câmeras
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2">
+            <Camera className="h-5 w-5 text-primary shrink-0" /> Dashboard de Câmeras
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             {grupos.length} grupo(s) · {cams.length} câmera(s) ativa(s)
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate("/cameras/grupos")}>
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={() => navigate("/cameras/grupos")}>
             <Layers className="h-4 w-4 mr-2" /> Grupos
           </Button>
-          <Button onClick={() => navigate("/cameras/cameras")}>
+          <Button size="sm" className="flex-1 sm:flex-none" onClick={() => navigate("/cameras/cameras")}>
             <Plus className="h-4 w-4 mr-2" /> Nova câmera
           </Button>
         </div>
@@ -99,7 +99,7 @@ export default function CamerasDashboard() {
               {list.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Nenhuma câmera neste grupo</p>
               ) : (
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                   {list.map((c) => (
                     <CameraCard
                       key={c.id}
@@ -122,7 +122,7 @@ export default function CamerasDashboard() {
             <CardTitle className="text-base text-muted-foreground">Sem grupo</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {semGrupo.map((c) => (
                 <CameraCard
                   key={c.id}
