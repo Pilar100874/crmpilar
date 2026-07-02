@@ -73,10 +73,16 @@ function baixarArquivo(url, destino, onProgress) {
 
 async function baixarEInstalar(downloadUrl, onProgress) {
   if (!downloadUrl) throw new Error('URL de download não informada');
-  const destino = path.join(os.tmpdir(), `ColetorPilar-Setup-${Date.now()}.exe`);
+  const ext = downloadUrl.toLowerCase().endsWith('.msi') ? '.msi' : '.exe';
+  const destino = path.join(os.tmpdir(), `ColetorPilar-Setup-${Date.now()}${ext}`);
   await baixarArquivo(downloadUrl, destino, onProgress);
   // Lança o instalador e encerra o app atual
-  spawn(destino, [], { detached: true, stdio: 'ignore' }).unref();
+  if (ext === '.msi') {
+    // msiexec instala silencioso com barra de progresso básica
+    spawn('msiexec', ['/i', destino, '/qb', '/norestart'], { detached: true, stdio: 'ignore' }).unref();
+  } else {
+    spawn(destino, [], { detached: true, stdio: 'ignore' }).unref();
+  }
   setTimeout(() => { app.isQuitting = true; app.quit(); }, 800);
   return destino;
 }
