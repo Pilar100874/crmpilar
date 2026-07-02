@@ -53,7 +53,13 @@ export default function CVVehicleExit() {
     setHelpers((h.data ?? []) as any);
     setBusyVehicleIds(new Set((m.data ?? []).map((x: any) => x.vehicle_id)));
     setBusyDriverIds(new Set((m.data ?? []).map((x: any) => x.driver_id)));
-    setAngles(((cfg.data?.exit_photos as any) ?? []) as PhotoAngle[]);
+    const rawExitAngles = ((cfg.data?.exit_photos as any) ?? []) as PhotoAngle[];
+    // Inversão: no estágio de saída, se houver `exit_camera_id`, usa como câmera efetiva.
+    const invertedAngles = rawExitAngles.map((a) => ({
+      ...a,
+      camera_id: a.exit_camera_id ?? a.camera_id ?? null,
+    }));
+    setAngles(invertedAngles);
     setPhotosRequired((cfg.data as any)?.exit_photos_required ?? true);
     setLoading(false);
   };
