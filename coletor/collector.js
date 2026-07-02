@@ -106,11 +106,12 @@ async function pollOnce() {
         STATE.progress.etapa = 'testando';
         let resultado_teste = "";
         try {
-          const { resolverProtocolo, tentarLogin } = require('./controlid');
+          const { resolverProtocolo, tentarLogin, normalizarHost } = require('./controlid');
+          const norm = normalizarHost(eq);
           let testCfg = {
-            host: eq.ip,
-            port: eq.porta || 80,
-            https: resolverProtocolo(eq),
+            host: norm.host,
+            port: norm.porta,
+            https: norm.https,
             login: eq.usuario || 'admin',
             password: eq.senha || eq.chave_comunicacao || 'admin',
           };

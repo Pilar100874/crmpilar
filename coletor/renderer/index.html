@@ -36,7 +36,20 @@
   </style>
 </head>
 <body>
-  <h1>🕒 Coletor Desktop <span class="badge">pré-configurado</span></h1>
+  <h1>🕒 Coletor Desktop <span class="badge" id="verLabel">v—</span> <span class="badge badge-off" id="updBadge" style="display:none">atualização disponível</span></h1>
+
+  <div class="card" id="updCard" style="display:none; border:1px solid #22c55e55">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap">
+      <div>
+        <b>🚀 Nova versão disponível: <span id="updRemote">—</span></b>
+        <div class="muted" id="updNotas"></div>
+      </div>
+      <div>
+        <button onclick="instalarAtualizacao()" id="updBtn" style="background:#22c55e; border-color:#16a34a; color:white">Baixar e instalar</button>
+      </div>
+    </div>
+    <div class="muted" id="updProgress" style="display:none; margin-top:8px">Baixando… <b id="updPct">0</b>%</div>
+  </div>
 
   <div class="grid2">
     <!-- CARD PONTO -->
@@ -92,8 +105,11 @@
   </div>
 
   <div class="card">
-    <h3>Servidor</h3>
-    <div id="server" class="muted">—</div>
+    <div style="display:flex; justify-content:space-between; align-items:center">
+      <h3 style="margin:0">Servidor & Versão</h3>
+      <button onclick="verificarAtualizacao()">🔄 Verificar atualização</button>
+    </div>
+    <div id="server" class="muted" style="margin-top:8px">—</div>
   </div>
 
   <script>
@@ -160,6 +176,39 @@
       return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     }
 
+    let ultimoDownloadUrl = null;
+    async function verificarAtualizacao(silent) {
+      try {
+        const info = await window.coletor.checarAtualizacao();
+        document.getElementById('verLabel').textContent = 'v' + (info.localVersion || '—');
+        if (info.atualizacaoDisponivel && info.downloadUrl) {
+          ultimoDownloadUrl = info.downloadUrl;
+          document.getElementById('updCard').style.display = 'block';
+          document.getElementById('updBadge').style.display = 'inline-block';
+          document.getElementById('updRemote').textContent = 'v' + info.remoteVersion;
+          document.getElementById('updNotas').textContent = info.notas || '';
+        } else if (!silent) {
+          alert('Você já está na versão mais recente (v' + info.localVersion + ')');
+        }
+      } catch (e) { if (!silent) alert('Erro ao verificar: ' + e.message); }
+    }
+    async function instalarAtualizacao() {
+      if (!ultimoDownloadUrl) return;
+      const btn = document.getElementById('updBtn');
+      btn.disabled = true; btn.textContent = 'Baixando…';
+      document.getElementById('updProgress').style.display = 'block';
+      try { await window.coletor.instalarAtualizacao(ultimoDownloadUrl); }
+      catch (e) { alert('Falha: ' + e.message); btn.disabled = false; btn.textContent = 'Baixar e instalar'; }
+    }
+    if (window.coletor.onUpdateProgress) {
+      window.coletor.onUpdateProgress((pct) => { document.getElementById('updPct').textContent = pct; });
+    }
+
+    (async () => {
+      try { document.getElementById('verLabel').textContent = 'v' + await window.coletor.appVersion(); } catch {}
+      verificarAtualizacao(true);
+    })();
+    setInterval(() => verificarAtualizacao(true), 60 * 60 * 1000); // 1x/hora
     setInterval(refresh, 2000);
     refresh();
   </script>

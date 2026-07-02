@@ -210,12 +210,30 @@ async function tentarLogin(cfg) {
   throw ultimoErro;
 }
 
+// Normaliza IP/host — aceita "https://192.168.0.1", "http://x:8080", "x/", etc.
+function normalizarHost(equip) {
+  let host = String(equip.ip || '').trim();
+  let porta = equip.porta;
+  let https = null;
+  const m = host.match(/^(https?):\/\/(.+?)(?::(\d+))?(?:\/.*)?$/i);
+  if (m) {
+    https = m[1].toLowerCase() === 'https';
+    host = m[2];
+    if (m[3]) porta = Number(m[3]);
+  }
+  host = host.replace(/\/+$/, '');
+  if (!porta) porta = https ? 443 : 80;
+  if (https === null) https = resolverProtocolo({ ...equip, porta });
+  return { host, porta, https };
+}
+
 // Lê batidas novas desde lastNSR (filtra após parse)
 async function lerBatidasControlID(equip, lastNSR = 0) {
+  const norm = normalizarHost(equip);
   let cfg = {
-    host: equip.ip,
-    port: equip.porta || 80,
-    https: resolverProtocolo(equip),
+    host: norm.host,
+    port: norm.porta,
+    https: norm.https,
     login: equip.usuario || 'admin',
     // Para login no Control iD use a senha do usuário do relógio.
     // A chave de comunicação fica como fallback para instalações antigas.
@@ -234,4 +252,4 @@ async function lerBatidasControlID(equip, lastNSR = 0) {
   }
 }
 
-module.exports = { lerBatidasControlID, parseAFDPunches, login, getAFD, logout, resolverProtocolo, tentarLogin };
+module.exports = { lerBatidasControlID, parseAFDPunches, login, getAFD, logout, resolverProtocolo, tentarLogin, normalizarHost };
