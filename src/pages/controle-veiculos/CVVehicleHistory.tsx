@@ -32,8 +32,14 @@ interface Photo {
 }
 
 export default function CVVehicleHistory() {
+  const today = new Date();
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const toISO = (d: Date) => d.toISOString().slice(0, 10);
+
   const [vehicles, setVehicles] = useState<VehicleOpt[]>([]);
   const [vehicleId, setVehicleId] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState<string>(toISO(weekAgo));
+  const [dateTo, setDateTo] = useState<string>(toISO(today));
   const [movements, setMovements] = useState<Movement[]>([]);
   const [drivers, setDrivers] = useState<Record<string, string>>({});
   const [photos, setPhotos] = useState<Photo[]>([]);
