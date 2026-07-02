@@ -93,38 +93,24 @@ export default function PontoColetorDownload() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3">
         {platforms.map((p) => (
           <Card key={p.id}>
-            <CardContent className="space-y-3 p-5 text-center">
-              <p.icon className="mx-auto h-10 w-10 text-primary" />
-              <h3 className="font-semibold">{p.label}</h3>
-              <p className="text-xs text-muted-foreground">{p.badge}</p>
-              {p.variants ? (
-                <div className="space-y-2">
-                  {p.variants.map((v) => (
-                    <Button
-                      key={v.file}
-                      className="w-full"
-                      variant="outline"
-                      onClick={() => baixar(v.file, `${p.id}-${v.label}`, v.url)}
-                      disabled={downloading === `${p.id}-${v.label}`}
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      {v.label}
-                    </Button>
-                  ))}
+            <CardContent className="flex items-center justify-between gap-4 p-5">
+              <div className="flex items-center gap-4">
+                <p.icon className="h-10 w-10 text-primary" />
+                <div>
+                  <h3 className="font-semibold">{p.label}</h3>
+                  <p className="text-xs text-muted-foreground">{p.badge}</p>
                 </div>
-              ) : (
-                <Button
-                  className="w-full"
-                  onClick={() => baixar(p.file, p.id, p.url!)}
-                  disabled={downloading === p.id}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  {downloading === p.id ? "Baixando…" : "Baixar"}
-                </Button>
-              )}
+              </div>
+              <Button
+                onClick={() => baixar(p.file, p.id, p.url!)}
+                disabled={downloading === p.id}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {downloading === p.id ? "Baixando…" : "Baixar .exe"}
+              </Button>
             </CardContent>
           </Card>
         ))}
