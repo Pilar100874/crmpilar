@@ -1,5 +1,5 @@
 {
-  "version": "1.2.1",
-  "downloadUrl": "https://crmpilar.lovable.app/__l5e/assets-v1/87ac961d-8741-4ab6-9d9d-bcce25dda4f5/ColetorPilar-Setup.exe",
-  "notas": "Instalador reempacotado com o binário 1.2.1 real (build anterior ainda continha 1.2.0). Corrige relógio Control iD offline (parser HTTP tolerante + TLS legado) e lista de câmeras vazia."
+  "version": "1.2.2",
+  "downloadUrl": "https://crmpilar.lovable.app/__l5e/assets-v1/98791666-57b1-47fb-a0a6-3605555bc47a/ColetorPilar-Setup.msi",
+  "notas": "Nova distribuição em MSI: instala em Program Files, atalho no Menu Iniciar e inicialização automática com o Windows. Auto-update passa a rodar via msiexec."
 }

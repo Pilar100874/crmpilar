@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Download, Monitor, CheckCircle2, Copy, Database, Key, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import winAsset from "../../../public/coletor/ColetorPilar-Setup.asset.json";
+import winAsset from "../../../public/coletor/ColetorPilar-Setup.msi.asset.json";
 
 type Platform = {
   id: string;
@@ -14,16 +14,15 @@ type Platform = {
   icon: any;
   badge: string;
   url?: string;
-  variants?: { label: string; file: string; url: string }[];
 };
 
 const platforms: Platform[] = [
   {
     id: "win",
     label: "Windows",
-    file: "ColetorPilar-Setup.exe",
+    file: "ColetorPilar-Setup.msi",
     icon: Monitor,
-    badge: "Instalador único (.exe) · x64 · sem dependências",
+    badge: "Instalador MSI · x64 · Menu Iniciar + inicialização automática",
     url: winAsset.url,
   },
 ];
@@ -109,7 +108,7 @@ export default function PontoColetorDownload() {
                 disabled={downloading === p.id}
               >
                 <Download className="mr-2 h-4 w-4" />
-                {downloading === p.id ? "Baixando…" : "Baixar .exe"}
+                {downloading === p.id ? "Baixando…" : "Baixar .msi"}
               </Button>
             </CardContent>
           </Card>
@@ -178,21 +177,21 @@ export default function PontoColetorDownload() {
           <h3 className="font-semibold">Como instalar</h3>
           <div className="space-y-3 text-sm text-muted-foreground">
             <div>
-              <p className="font-medium text-foreground text-base">Windows (Instalador único .exe)</p>
+              <p className="font-medium text-foreground text-base">Windows (Instalador MSI)</p>
               <p className="text-xs text-muted-foreground mt-1 mb-2">
-                O download é um <strong>único arquivo executável</strong> (<code>ColetorPilar-Setup.exe</code>). Não precisa descompactar nada.
+                O download é um instalador padrão do Windows (<code>ColetorPilar-Setup.msi</code>). Instala em <code>C:\Program Files\ColetorPilar</code>, cria atalho no Menu Iniciar e configura inicialização automática com o Windows.
               </p>
               <ol className="ml-4 list-decimal space-y-2">
-                <li>Baixe o arquivo <strong>ColetorPilar-Setup.exe</strong> acima.</li>
-                <li>Dê <strong>dois cliques</strong> nele. O instalador extrai automaticamente para <code>%LocalAppData%\ColetorPilar</code> e já abre o programa.</li>
+                <li>Baixe o arquivo <strong>ColetorPilar-Setup.msi</strong> acima.</li>
+                <li>Dê <strong>dois cliques</strong> nele e siga o assistente (Next → Install).</li>
                 <li>
                   <strong className="text-amber-600 dark:text-amber-400">⚠️ Se o Windows SmartScreen bloquear:</strong>
                   <ul className="ml-8 list-disc space-y-1 text-xs mt-1 text-foreground">
                     <li>Clique em <strong>"Mais informações"</strong> → <strong>"Executar assim mesmo"</strong>.</li>
-                    <li>Ou clique com botão direito no <strong>.exe</strong> → <strong>Propriedades</strong> → marque <strong>Desbloquear</strong> → <strong>Aplicar</strong>.</li>
                   </ul>
                 </li>
-                <li>Para abrir novamente: use o atalho no Menu Iniciar ou execute <code>ColetorPilar.exe</code> dentro de <code>%LocalAppData%\ColetorPilar\ColetorPilar-win32-x64</code>.</li>
+                <li>Para abrir: <strong>Menu Iniciar → Coletor Pilar</strong>. Ele também abrirá sozinho no próximo boot.</li>
+                <li>Desinstalação: <strong>Configurações do Windows → Aplicativos → Coletor Pilar → Desinstalar</strong>.</li>
               </ol>
             </div>
             <p>Após abrir o app: faça login com o usuário do CRM, cadastre os relógios em <strong>Equipamentos</strong> e o coletor sincroniza a cada 60s.</p>
