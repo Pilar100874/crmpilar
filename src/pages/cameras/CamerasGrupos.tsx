@@ -81,19 +81,21 @@ export default function CamerasGrupos() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <Layers className="h-5 w-5 text-primary" /> Grupos / Setores
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2">
+            <Layers className="h-5 w-5 text-primary shrink-0" /> Grupos / Setores
           </h2>
-          <p className="text-sm text-muted-foreground">Organize as câmeras por local — expedição, portaria, produção…</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Organize as câmeras por local — expedição, portaria, produção…
+          </p>
         </div>
-        <Button onClick={openNew}>
+        <Button size="sm" onClick={openNew} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" /> Novo grupo
         </Button>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {rows.length === 0 && (
           <Card className="col-span-full p-8 text-center text-muted-foreground">
             Nenhum grupo cadastrado
