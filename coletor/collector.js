@@ -3,7 +3,10 @@
 const fs = require('fs');
 const path = require('path');
 const { lerBatidasControlID } = require('./controlid');
-const { verificarCameras } = require('./cameras');
+const { verificarCameras, listarCameras } = require('./cameras');
+const { SignalHub } = require('./webrtc-stream');
+
+let webrtcHub = null;
 
 // 🔧 Configuração embutida — substitua se republicar para outro tenant
 const DEFAULT_URL = process.env.PONTO_SUPABASE_URL || 'https://ioxugupvxlcdweldocmq.supabase.co';
