@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
 
 type AngleSource = "device" | "ip_camera";
-interface Angle { key: string; label: string; required: boolean; source?: AngleSource; camera_id?: string | null; }
+interface Angle { key: string; label: string; required: boolean; source?: AngleSource; camera_id?: string | null; exit_camera_id?: string | null; }
 interface CameraOption { id: string; nome: string; }
 
 
