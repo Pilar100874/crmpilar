@@ -75,9 +75,23 @@ class SignalHub {
       ch.subscribe((status) => console.log('[webrtc] signaling', name, status));
       this.channels.push(ch);
     }
+    // Heartbeat: avisa aos viewers que o coletor está online e quais câmeras serve.
+    this._sendHeartbeat();
+    this.hbTimer = setInterval(() => this._sendHeartbeat(), 4000);
+  }
+
+  _sendHeartbeat() {
+    this.send({
+      type: 'coletor-online',
+      to: 'viewers',
+      filial_id: this.cfg.filialId || null,
+      cameras: Array.from(this.myCameraIds),
+      ts: Date.now(),
+    });
   }
 
   stop() {
+    if (this.hbTimer) { clearInterval(this.hbTimer); this.hbTimer = null; }
     for (const ch of this.channels) this.supabase.removeChannel(ch);
     this.channels = [];
     for (const s of this.sessions.values()) s.close();

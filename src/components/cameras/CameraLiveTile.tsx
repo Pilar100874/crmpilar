@@ -32,6 +32,8 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
     const viewerId = crypto.randomUUID();
     let closed = false;
     let liveReached = false;
+    let coletorSeenAt = 0;
+    let coletorServesCamera = false;
 
     // Sempre broadcasta em ambos os canais: plain + filial (caso a câmera
     // ou o coletor esteja sem filial atribuída em algum dos lados).
@@ -64,7 +66,16 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
       };
 
       const onMsg = async ({ payload }: any) => {
-        if (!payload || payload.to !== viewerId) return;
+        if (!payload) return;
+        // Heartbeat do coletor
+        if (payload.type === "coletor-online" && payload.to === "viewers") {
+          coletorSeenAt = Date.now();
+          if (Array.isArray(payload.cameras) && payload.cameras.includes(cameraId)) {
+            coletorServesCamera = true;
+          }
+          return;
+        }
+        if (payload.to !== viewerId) return;
         if (payload.type === "offer") {
           try {
             await pc!.setRemoteDescription({ type: "offer", sdp: payload.sdp });
@@ -100,15 +111,35 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
         });
       }
 
+      // Aguarda até 3s por um heartbeat antes de pedir o stream — se o coletor
+      // estiver online já veremos ele nesse intervalo (heartbeat sai a cada 4s).
+      await new Promise((r) => setTimeout(r, 3000));
+
+      if (!coletorSeenAt) {
+        if (!closed) {
+          setErro("Coletor Desktop offline ou sem módulo de câmeras ativado");
+          setStatus("erro");
+        }
+        return;
+      }
+      if (!coletorServesCamera) {
+        if (!closed) {
+          setErro("Câmera não está atribuída à filial deste Coletor");
+          setStatus("erro");
+        }
+        return;
+      }
+
       sendAll({ type: "request", to: "coletor", viewer_id: viewerId, camera_id: cameraId });
 
       setTimeout(() => {
         if (!closed && !liveReached) {
-          setErro("Coletor não respondeu");
+          setErro("Coletor recebeu o pedido mas não conseguiu abrir o stream RTSP da câmera");
           setStatus("erro");
         }
       }, 12_000);
     })();
+
 
     return () => {
       closed = true;

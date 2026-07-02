@@ -1,5 +1,5 @@
 {
-  "version": "1.2.8",
+  "version": "1.2.9",
   "downloadUrl": "https://crm.pilar.com.br/__l5e/assets-v1/3a8b9901-e6f3-48fe-b3a0-8de508d05c81/ColetorPilar-Setup.msi",
-  "notas": "1.2.8: corrigido erro OPENSSL_internal:INVALID_COMMAND nos relógios Control iD com HTTPS legado. Agora o coletor tenta múltiplas variações de TLS e, se o BoringSSL do Electron rejeitar, cai automaticamente para curl.exe do Windows (Schannel) — que aceita TLS 1.0/1.1 e cifras antigas nativamente."
+  "notas": "1.2.9: hub WebRTC agora emite heartbeat (coletor-online) a cada 4s no canal de sinalização. O CRM diferencia se o Coletor está offline, se a câmera não pertence à filial dele, ou se o RTSP falhou — em vez do genérico 'Coletor não respondeu'. Inclui 1.2.8: fallback via curl.exe para relógios Control iD com TLS legado."
 }
