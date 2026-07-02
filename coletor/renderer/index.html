@@ -266,6 +266,7 @@
     (async () => {
       try { document.getElementById('verLabel').textContent = 'v' + await window.coletor.appVersion(); } catch {}
       verificarAtualizacao(true);
+      carregarFiliais();
     })();
     setInterval(() => verificarAtualizacao(true), 60 * 60 * 1000); // 1x/hora
     setInterval(refresh, 2000);
