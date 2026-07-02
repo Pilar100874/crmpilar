@@ -1,7 +1,7 @@
 // Tile inline (sem Dialog) que negocia WebRTC com o Coletor Desktop
 // e exibe o vídeo H.264 recebido. Usado no mosaico ao vivo.
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Radio, X, Camera as CameraIcon } from "lucide-react";
+import { Loader2, Radio, X, Camera as CameraIcon, ZoomIn, ZoomOut, Maximize2, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -17,9 +17,13 @@ const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
 export function CameraLiveTile({ cameraId, cameraNome, filialId, className, autoStart = true }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [status, setStatus] = useState<"idle" | "conectando" | "ao-vivo" | "erro">(autoStart ? "conectando" : "idle");
   const [erro, setErro] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
+  const [scale, setScale] = useState(1);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const dragRef = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
 
   useEffect(() => {
     if (!autoStart && nonce === 0) return;
