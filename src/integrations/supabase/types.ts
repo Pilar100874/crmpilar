@@ -19138,6 +19138,183 @@ export type Database = {
         }
         Relationships: []
       }
+      vis_access_records: {
+        Row: {
+          contact_person_id: string | null
+          contact_person_name: string
+          entry_date: string
+          exit_date: string | null
+          id: string
+          notes: string | null
+          purpose: string | null
+          status: string
+          vehicle_plate: string | null
+          visitor_id: string
+        }
+        Insert: {
+          contact_person_id?: string | null
+          contact_person_name: string
+          entry_date?: string
+          exit_date?: string | null
+          id?: string
+          notes?: string | null
+          purpose?: string | null
+          status?: string
+          vehicle_plate?: string | null
+          visitor_id: string
+        }
+        Update: {
+          contact_person_id?: string | null
+          contact_person_name?: string
+          entry_date?: string
+          exit_date?: string | null
+          id?: string
+          notes?: string | null
+          purpose?: string | null
+          status?: string
+          vehicle_plate?: string | null
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vis_access_records_contact_person_id_fkey"
+            columns: ["contact_person_id"]
+            isOneToOne: false
+            referencedRelation: "vis_contact_persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vis_access_records_visitor_id_fkey"
+            columns: ["visitor_id"]
+            isOneToOne: false
+            referencedRelation: "vis_visitors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vis_contact_persons: {
+        Row: {
+          cpf: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          whatsapp: string
+        }
+        Insert: {
+          cpf: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          whatsapp: string
+        }
+        Update: {
+          cpf?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
+      vis_pending_visitors: {
+        Row: {
+          authorized_at: string | null
+          authorized_by: string | null
+          contact_person_id: string
+          contact_person_name: string
+          created_at: string
+          id: string
+          notes: string | null
+          purpose: string | null
+          status: string
+          vehicle_plate: string | null
+          visitor_id: string
+        }
+        Insert: {
+          authorized_at?: string | null
+          authorized_by?: string | null
+          contact_person_id: string
+          contact_person_name: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          purpose?: string | null
+          status?: string
+          vehicle_plate?: string | null
+          visitor_id: string
+        }
+        Update: {
+          authorized_at?: string | null
+          authorized_by?: string | null
+          contact_person_id?: string
+          contact_person_name?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          purpose?: string | null
+          status?: string
+          vehicle_plate?: string | null
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vis_pending_visitors_contact_person_id_fkey"
+            columns: ["contact_person_id"]
+            isOneToOne: false
+            referencedRelation: "vis_contact_persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vis_pending_visitors_visitor_id_fkey"
+            columns: ["visitor_id"]
+            isOneToOne: false
+            referencedRelation: "vis_visitors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vis_visitors: {
+        Row: {
+          company: string
+          cpf: string
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          photo: string | null
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          company: string
+          cpf: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          photo?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          company?: string
+          cpf?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          photo?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       webhook_chat_messages: {
         Row: {
           content: string
