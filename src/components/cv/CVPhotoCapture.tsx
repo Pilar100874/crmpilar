@@ -222,7 +222,31 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+    <div className="space-y-3">
+      {ipCameraAngles.length > 0 && (
+        <div className="flex items-center justify-between gap-2 p-3 rounded-lg border bg-primary/5">
+          <div className="flex items-center gap-2 text-sm">
+            <Wifi className="h-4 w-4 text-primary" />
+            <span>
+              <strong>{ipCameraAngles.length}</strong> câmera(s) IP vinculada(s) — capture todas de uma vez
+            </span>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            onClick={captureAllFromIpCameras}
+            disabled={capturingCam !== null}
+          >
+            {capturingCam === "__all__" ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <Camera className="h-4 w-4 mr-2" />
+            )}
+            Capturar todas
+          </Button>
+        </div>
+      )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
       {angles.map((a) => {
         const captured = value.find((p) => p.angle_key === a.key);
         const preview = previews[a.key];
