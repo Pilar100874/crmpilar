@@ -245,7 +245,7 @@ export default function CamerasCameras() {
                 <Button
                   size="sm"
                   variant="secondary"
-                  onClick={() => setLiveCam({ id: r.id, nome: r.nome })}
+                  onClick={() => setLiveCam({ id: r.id, nome: r.nome, filial_id: r.filial_id ?? null })}
                 >
                   <Radio className="h-3 w-3 mr-1" /> Ao vivo
                 </Button>
