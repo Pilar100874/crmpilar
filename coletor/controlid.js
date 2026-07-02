@@ -252,4 +252,4 @@ async function lerBatidasControlID(equip, lastNSR = 0) {
   }
 }
 
-module.exports = { lerBatidasControlID, parseAFDPunches, login, getAFD, logout, resolverProtocolo, tentarLogin };
+module.exports = { lerBatidasControlID, parseAFDPunches, login, getAFD, logout, resolverProtocolo, tentarLogin, normalizarHost };
