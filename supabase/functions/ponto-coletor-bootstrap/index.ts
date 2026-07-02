@@ -41,12 +41,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Filtro por filial: se o coletor informar filial_id, retorna só os
-    // equipamentos daquela filial (evita conflito de IPs iguais em várias filiais).
+    // Filtro por filial: se o coletor informar filial_id, retorna equipamentos
+    // daquela filial + equipamentos SEM filial atribuída (fallback).
     let query = sb.from("ponto_equipamentos")
       .select("id, empresa_id, filial_id, nome, modelo, ip, porta, usuario, senha, chave_comunicacao, usa_https, ativo, status, data_inicio_coleta, solicitar_teste")
       .eq("ativo", true);
-    if (body.filial_id) query = query.eq("filial_id", body.filial_id);
+    if (body.filial_id) query = query.or(`filial_id.eq.${body.filial_id},filial_id.is.null`);
     const { data, error } = await query;
     if (error) throw error;
 
