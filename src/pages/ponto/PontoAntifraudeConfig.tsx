@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, MapPin, Wifi, ShieldCheck } from "lucide-react";
+import { Plus, Trash2, MapPin, Wifi, ShieldCheck, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,9 +9,13 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePontoEmpresa } from "./usePontoEmpresa";
+import GeofenceMapPicker, { GeofenceMapPickerValue } from "@/components/ponto/GeofenceMapPicker";
 
 interface Geofence {
   id: string;
