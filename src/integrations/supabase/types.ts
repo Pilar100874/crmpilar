@@ -13316,6 +13316,112 @@ export type Database = {
         }
         Relationships: []
       }
+      ponto_funcionario_geofences: {
+        Row: {
+          created_at: string
+          funcionario_id: string
+          geofence_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          funcionario_id: string
+          geofence_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          funcionario_id?: string
+          geofence_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_funcionario_geofences_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "ponto_funcionario_geofences_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ponto_funcionario_geofences_geofence_id_fkey"
+            columns: ["geofence_id"]
+            isOneToOne: false
+            referencedRelation: "ponto_geofences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ponto_funcionario_metodos: {
+        Row: {
+          created_at: string
+          exige_face: boolean
+          exige_gps: boolean
+          exige_rede_autorizada: boolean
+          funcionario_id: string
+          observacao: string | null
+          permite_app: boolean
+          permite_catraca: boolean
+          permite_kiosk: boolean
+          permite_offline: boolean
+          permite_qr: boolean
+          permite_web: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          exige_face?: boolean
+          exige_gps?: boolean
+          exige_rede_autorizada?: boolean
+          funcionario_id: string
+          observacao?: string | null
+          permite_app?: boolean
+          permite_catraca?: boolean
+          permite_kiosk?: boolean
+          permite_offline?: boolean
+          permite_qr?: boolean
+          permite_web?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          exige_face?: boolean
+          exige_gps?: boolean
+          exige_rede_autorizada?: boolean
+          funcionario_id?: string
+          observacao?: string | null
+          permite_app?: boolean
+          permite_catraca?: boolean
+          permite_kiosk?: boolean
+          permite_offline?: boolean
+          permite_qr?: boolean
+          permite_web?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ponto_funcionario_metodos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: true
+            referencedRelation: "ponto_dsr_detalhado"
+            referencedColumns: ["funcionario_id"]
+          },
+          {
+            foreignKeyName: "ponto_funcionario_metodos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: true
+            referencedRelation: "ponto_funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_funcionario_vinculos: {
         Row: {
           ativo: boolean
