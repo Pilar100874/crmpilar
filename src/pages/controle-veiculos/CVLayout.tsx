@@ -64,6 +64,20 @@ export default function CVLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+  const solo = isSoloMode();
+
+  if (solo) {
+    return (
+      <div className="h-full flex flex-col bg-background text-foreground">
+        <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-3 sm:p-6">
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm min-h-full p-3 sm:p-6">
+            <Outlet />
+          </div>
+        </main>
+        <OpenInNewTabButton />
+      </div>
+    );
+  }
 
   const current =
     [...navItems].reverse().find((i) => isItemActive(pathname, i)) || navItems[0];
