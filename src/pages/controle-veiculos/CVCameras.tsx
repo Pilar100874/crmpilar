@@ -63,9 +63,14 @@ export default function CVCameras() {
   const openNew = () => { setEditing(emptyCam); setDialogOpen(true); };
   const openEdit = (r: any) => { setEditing(r); setDialogOpen(true); };
 
+  const slugify = (s: string) =>
+    (s || "camera").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || `camera_${Date.now()}`;
+
   const save = async () => {
     const payload: any = { ...editing };
     delete payload.id;
+    if (!payload.angulo_key) payload.angulo_key = slugify(payload.nome);
     const q = editing.id
       ? supabase.from("cv_cameras").update(payload).eq("id", editing.id)
       : supabase.from("cv_cameras").insert(payload);
