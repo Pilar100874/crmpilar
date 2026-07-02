@@ -1,6 +1,9 @@
 const { app, BrowserWindow, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
-const { startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow } = require('./collector');
+const {
+  startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow,
+  startPonto, stopPonto, startCameras, stopCameras,
+} = require('./collector');
 
 let win;
 let tray;
@@ -8,9 +11,9 @@ let tray;
 function createWindow() {
   win = new BrowserWindow({
     width: 980,
-    height: 680,
+    height: 720,
     minWidth: 760,
-    minHeight: 540,
+    minHeight: 560,
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -53,3 +56,7 @@ ipcMain.handle('collector:status', () => getStatus());
 ipcMain.handle('collector:start', () => startCollector());
 ipcMain.handle('collector:stop', () => stopCollector());
 ipcMain.handle('collector:pollNow', () => pollNow());
+ipcMain.handle('collector:startPonto', () => { startPonto(); return getStatus(); });
+ipcMain.handle('collector:stopPonto', () => { stopPonto(); return getStatus(); });
+ipcMain.handle('collector:startCameras', () => { startCameras(); return getStatus(); });
+ipcMain.handle('collector:stopCameras', () => { stopCameras(); return getStatus(); });
