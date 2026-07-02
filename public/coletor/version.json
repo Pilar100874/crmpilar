@@ -1,5 +1,5 @@
 {
-  "version": "1.2.4",
-  "downloadUrl": "https://crmpilar.lovable.app/__l5e/assets-v1/c0eaf71c-20a7-4c10-9647-3f28aa5d0e9d/ColetorPilar-Setup.msi",
-  "notas": "1.2.4: streaming ao vivo (WebRTC) das câmeras internas. Botão 'Ao vivo' na tela de Câmeras negocia com o Coletor Desktop via sinalização em nuvem e transmite RTSP→WebRTC (H.264) com baixa latência, mesmo fora da LAN."
+  "version": "1.2.5",
+  "downloadUrl": "https://crm.pilar.com.br/__l5e/assets-v1/0f0d7a1a-1b9a-493e-8f7e-25e84f39a2ed/ColetorPilar-Setup.msi",
+  "notas": "1.2.5: seletor de FILIAL na primeira abertura — cada coletor instalado escolhe sua filial e passa a enxergar apenas os relógios e câmeras dela (resolve conflitos de IPs internos iguais entre filiais). Correção do updater seguindo redirects (domínios custom)."
 }
