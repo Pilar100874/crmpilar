@@ -206,6 +206,7 @@ const menuItems: MenuItem[] = [
     ],
   },
   { id: "Controle de Veículos", title: "Controle de Veículos", url: "/controle-veiculos", icon: LucideIcons.Car },
+  { id: "Câmeras", title: "Câmeras", url: "/cameras", icon: LucideIcons.Camera },
 
 
 

@@ -122,6 +122,10 @@ import CVMaintenance from "./pages/controle-veiculos/CVMaintenance";
 import CVInspectionConfig from "./pages/controle-veiculos/CVInspectionConfig";
 import CVHelpers from "./pages/controle-veiculos/CVHelpers";
 import CVCameras from "./pages/controle-veiculos/CVCameras";
+import CamerasLayout from "./pages/cameras/CamerasLayout";
+import CamerasDashboard from "./pages/cameras/CamerasDashboard";
+import CamerasGrupos from "./pages/cameras/CamerasGrupos";
+import CamerasCameras from "./pages/cameras/CamerasCameras";
 
 import ChatInterno from "./pages/ChatInterno";
 import ConfigSkills from "./pages/ConfigSkills";
@@ -466,7 +470,11 @@ const App = () => (
                 <Route path="vistoria-config" element={<CVInspectionConfig />} />
                 <Route path="ajudantes" element={<CVHelpers />} />
                 <Route path="cameras" element={<CVCameras />} />
-
+              </Route>
+              <Route path="/cameras" element={<CamerasLayout />}>
+                <Route index element={<CamerasDashboard />} />
+                <Route path="grupos" element={<CamerasGrupos />} />
+                <Route path="cameras" element={<CamerasCameras />} />
               </Route>
             </Route>
             {/* Public routes (no layout) */}
