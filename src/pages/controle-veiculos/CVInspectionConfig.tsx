@@ -32,6 +32,7 @@ export default function CVInspectionConfig() {
       required: !!a.required,
       source: a.source === "ip_camera" ? "ip_camera" : "device",
       camera_id: a.camera_id ?? null,
+      exit_camera_id: a.exit_camera_id ?? null,
     }));
 
   const load = async () => {
