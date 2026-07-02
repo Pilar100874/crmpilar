@@ -24,10 +24,21 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
   useEffect(() => {
     if (!autoStart && nonce === 0) return;
     let pc: RTCPeerConnection | null = null;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
+    const channels: ReturnType<typeof supabase.channel>[] = [];
     const viewerId = crypto.randomUUID();
     let closed = false;
     let liveReached = false;
+
+    // Sempre broadcasta em ambos os canais: plain + filial (caso a câmera
+    // ou o coletor esteja sem filial atribuída em algum dos lados).
+    const chanNames = new Set<string>(["webrtc-signal"]);
+    if (filialId) chanNames.add(`webrtc-signal:${filialId}`);
+
+    const sendAll = (payload: any) => {
+      for (const ch of channels) {
+        try { ch.send({ type: "broadcast", event: "msg", payload }); } catch {}
+      }
+    };
 
     (async () => {
       setStatus("conectando");
@@ -48,11 +59,7 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
         }
       };
 
-      const chanName = filialId ? `webrtc-signal:${filialId}` : "webrtc-signal";
-      channel = supabase.channel(chanName, {
-        config: { broadcast: { self: false, ack: false } },
-      });
-      channel.on("broadcast", { event: "msg" }, async ({ payload }: any) => {
+      const onMsg = async ({ payload }: any) => {
         if (!payload || payload.to !== viewerId) return;
         if (payload.type === "offer") {
           try {
@@ -66,33 +73,30 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
                 if (pc!.iceGatheringState === "complete") { clearTimeout(t); resolve(); }
               };
             });
-            channel!.send({
-              type: "broadcast",
-              event: "msg",
-              payload: {
-                type: "answer",
-                to: "coletor",
-                viewer_id: viewerId,
-                camera_id: cameraId,
-                sdp: pc!.localDescription!.sdp,
-              },
+            sendAll({
+              type: "answer",
+              to: "coletor",
+              viewer_id: viewerId,
+              camera_id: cameraId,
+              sdp: pc!.localDescription!.sdp,
             });
           } catch (e: any) {
             setErro(e.message);
             setStatus("erro");
           }
         }
-      });
+      };
 
-      await new Promise<void>((resolve) => {
-        channel!.subscribe((s) => { if (s === "SUBSCRIBED") resolve(); });
-      });
+      for (const name of chanNames) {
+        const ch = supabase.channel(name, { config: { broadcast: { self: false, ack: false } } });
+        ch.on("broadcast", { event: "msg" }, onMsg);
+        channels.push(ch);
+        await new Promise<void>((resolve) => {
+          ch.subscribe((s) => { if (s === "SUBSCRIBED") resolve(); });
+        });
+      }
 
-      channel.send({
-        type: "broadcast",
-        event: "msg",
-        payload: { type: "request", to: "coletor", viewer_id: viewerId, camera_id: cameraId },
-      });
+      sendAll({ type: "request", to: "coletor", viewer_id: viewerId, camera_id: cameraId });
 
       setTimeout(() => {
         if (!closed && !liveReached) {
@@ -105,14 +109,10 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
     return () => {
       closed = true;
       try {
-        channel?.send({
-          type: "broadcast",
-          event: "msg",
-          payload: { type: "stop", to: "coletor", viewer_id: viewerId, camera_id: cameraId },
-        });
+        sendAll({ type: "stop", to: "coletor", viewer_id: viewerId, camera_id: cameraId });
       } catch {}
       try { pc?.close(); } catch {}
-      if (channel) supabase.removeChannel(channel);
+      for (const ch of channels) supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cameraId, filialId, nonce]);
