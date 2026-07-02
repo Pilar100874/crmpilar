@@ -76,6 +76,7 @@ import PontoPortalFuncionario from "./pages/ponto/PontoPortalFuncionario";
 import PontoPredicoes from "./pages/ponto/PontoPredicoes";
 import PontoSimulador from "./pages/ponto/PontoSimulador";
 import PontoMapaEquipes from "./pages/ponto/PontoMapaEquipes";
+import PontoForaGeofence from "./pages/ponto/PontoForaGeofence";
 import PontoQrCodeTotem from "./pages/ponto/PontoQrCodeTotem";
 import PontoAtestadosAdmin from "./pages/ponto/PontoAtestadosAdmin";
 import PontoFechamento from "./pages/ponto/PontoFechamento";
@@ -419,6 +420,7 @@ const App = () => (
                 <Route path="predicoes" element={<PontoPredicoes />} />
                 <Route path="simulador" element={<PontoSimulador />} />
                 <Route path="mapa" element={<PontoMapaEquipes />} />
+                <Route path="fora-geofence" element={<PontoForaGeofence />} />
                 <Route path="qrcode" element={<PontoQrCodeTotem />} />
                 <Route path="atestados-admin" element={<PontoAtestadosAdmin />} />
                 <Route path="fechamento" element={<PontoFechamento />} />

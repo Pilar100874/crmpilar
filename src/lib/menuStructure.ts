@@ -94,6 +94,7 @@ export const menuStructure: MenuCategory[] = [
       { id: "Ponto Atestados Admin", title: "Atestados (RH)", url: "/ponto/atestados-admin", icon: LucideIcons.Stethoscope, group: "Fechamento & Banco" },
       
       { id: "Ponto Alertas", title: "Antifraude (Alertas)", url: "/ponto/alertas", icon: LucideIcons.ShieldAlert, group: "Compliance & Auditoria" },
+      { id: "Ponto Fora Geofence", title: "Fora da Área (GPS)", url: "/ponto/fora-geofence", icon: LucideIcons.MapPinOff, group: "Compliance & Auditoria" },
       { id: "Ponto Auditoria", title: "Auditoria", url: "/ponto/auditoria", icon: LucideIcons.ShieldCheck, group: "Compliance & Auditoria" },
       { id: "Ponto AFD", title: "Arquivos Legais (AFD/AEJ)", url: "/ponto/afd", icon: LucideIcons.FileText, group: "Compliance & Auditoria" },
       { id: "Ponto eSocial", title: "eSocial", url: "/ponto/esocial", icon: LucideIcons.Send, group: "Compliance & Auditoria" },
