@@ -415,6 +415,7 @@ const App = () => (
                 <Route path="config/wizard" element={<PontoConfigWizard />} />
 
                 <Route path="antifraude" element={<PontoAntifraudeConfig />} />
+                <Route path="funcionarios/metodos" element={<PontoFuncionarioMetodos />} />
                 <Route path="assistente" element={<PontoAssistente />} />
                 <Route path="portal" element={<PontoPortalFuncionario />} />
                 <Route path="predicoes" element={<PontoPredicoes />} />
