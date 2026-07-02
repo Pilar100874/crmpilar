@@ -56,6 +56,7 @@ import PontoDepartamentos from "./pages/ponto/PontoDepartamentos";
 import PontoCargos from "./pages/ponto/PontoCargos";
 import PontoEquipes from "./pages/ponto/PontoEquipes";
 import PontoFuncionarios from "./pages/ponto/PontoFuncionarios";
+import PontoFuncionarioMetodos from "./pages/ponto/PontoFuncionarioMetodos";
 import PontoEscalas from "./pages/ponto/PontoEscalas";
 import PontoRegistro from "./pages/ponto/PontoRegistro";
 import PontoTratamento from "./pages/ponto/PontoTratamento";
@@ -415,6 +416,7 @@ const App = () => (
                 <Route path="config/wizard" element={<PontoConfigWizard />} />
 
                 <Route path="antifraude" element={<PontoAntifraudeConfig />} />
+                <Route path="funcionarios/metodos" element={<PontoFuncionarioMetodos />} />
                 <Route path="assistente" element={<PontoAssistente />} />
                 <Route path="portal" element={<PontoPortalFuncionario />} />
                 <Route path="predicoes" element={<PontoPredicoes />} />

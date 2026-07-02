@@ -93,6 +93,7 @@ export const menuStructure: MenuCategory[] = [
       { id: "Ponto Férias", title: "Férias e Afastamentos", url: "/ponto/ferias", icon: LucideIcons.Palmtree, group: "Fechamento & Banco" },
       { id: "Ponto Atestados Admin", title: "Atestados (RH)", url: "/ponto/atestados-admin", icon: LucideIcons.Stethoscope, group: "Fechamento & Banco" },
       
+      { id: "Ponto Metodos Func", title: "Métodos de Marcação (por Funcionário)", url: "/ponto/funcionarios/metodos", icon: LucideIcons.UserCog, group: "Compliance & Auditoria" },
       { id: "Ponto Alertas", title: "Antifraude (Alertas)", url: "/ponto/alertas", icon: LucideIcons.ShieldAlert, group: "Compliance & Auditoria" },
       { id: "Ponto Fora Geofence", title: "Fora da Área (GPS)", url: "/ponto/fora-geofence", icon: LucideIcons.MapPinOff, group: "Compliance & Auditoria" },
       { id: "Ponto Auditoria", title: "Auditoria", url: "/ponto/auditoria", icon: LucideIcons.ShieldCheck, group: "Compliance & Auditoria" },
