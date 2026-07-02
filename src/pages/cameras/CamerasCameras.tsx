@@ -54,16 +54,19 @@ export default function CamerasCameras() {
   const [editing, setEditing] = useState<any>(emptyCam);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
-  const [liveCam, setLiveCam] = useState<{ id: string; nome: string } | null>(null);
+  const [liveCam, setLiveCam] = useState<{ id: string; nome: string; filial_id: string | null } | null>(null);
+  const [filiais, setFiliais] = useState<any[]>([]);
 
   const load = async () => {
-    const [{ data: cams }, { data: coletor }, { data: grps }] = await Promise.all([
+    const [{ data: cams }, { data: coletor }, { data: grps }, { data: fils }] = await Promise.all([
       supabase.from("cv_cameras").select("*").order("nome"),
       supabase.from("cv_coletor_config").select("*").maybeSingle(),
       supabase.from("cameras_grupos").select("*").order("ordem").order("nome"),
+      supabase.from("ponto_filiais").select("id,nome,cidade,uf").eq("ativo", true).order("nome"),
     ]);
     setRows(cams ?? []);
     setGrupos(grps ?? []);
+    setFiliais(fils ?? []);
     if (coletor) {
       setCollectorEnabled(coletor.cameras_habilitado);
       setCollectorId(coletor.id);
