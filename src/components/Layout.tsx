@@ -207,6 +207,7 @@ const menuItems: MenuItem[] = [
     ],
   },
   { id: "Controle de Veículos", title: "Controle de Veículos", url: "/controle-veiculos", icon: LucideIcons.Car },
+  { id: "Controle de Visitantes", title: "Controle de Visitantes", url: "/controle-visitantes", icon: LucideIcons.Users },
   { id: "Câmeras", title: "Câmeras", url: "/cameras", icon: LucideIcons.Camera },
 
 
@@ -639,7 +640,7 @@ export default function Layout({ children }: LayoutProps) {
   const visibleMenus = menuItems
     .filter((item) => {
       // Menus que sempre devem aparecer para usuários autenticados
-      const alwaysVisibleMenus = ["Configurações", "Avisos", "TV", "E-commerce", "Suporte Tickets", "Mapa de Calor", "Controle de Ponto", "Controle de Veículos", "Câmeras"];
+      const alwaysVisibleMenus = ["Configurações", "Avisos", "TV", "E-commerce", "Suporte Tickets", "Mapa de Calor", "Controle de Ponto", "Controle de Veículos", "Controle de Visitantes", "Câmeras"];
       if (alwaysVisibleMenus.includes(item.id)) {
         return true;
       }

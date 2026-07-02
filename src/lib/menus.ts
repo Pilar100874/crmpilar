@@ -69,6 +69,9 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   { id: "Configurações", label: "Configurações", category: "Sistema" },
   { id: "Macros", label: "Macros", category: "Sistema" },
   { id: "Avisos", label: "Avisos", category: "Sistema" },
+
+  // Controle de Visitantes
+  { id: "Controle de Visitantes", label: "Controle de Visitantes (Menu)", category: "Visitantes" },
 ];
 
 // Lista apenas dos IDs dos menus (para compatibilidade com código existente)
@@ -90,4 +93,4 @@ export const getMenusByCategory = () => {
 };
 
 // Ordem das categorias para exibição
-export const CATEGORY_ORDER = ['Dashboards', 'Chats', 'Vendas', 'Assistente', 'Principal', 'TV', 'Ponto', 'Sistema'];
+export const CATEGORY_ORDER = ['Dashboards', 'Chats', 'Vendas', 'Assistente', 'Principal', 'TV', 'Ponto', 'Visitantes', 'Sistema'];

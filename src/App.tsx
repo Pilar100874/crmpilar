@@ -122,6 +122,14 @@ import CVMaintenance from "./pages/controle-veiculos/CVMaintenance";
 import CVInspectionConfig from "./pages/controle-veiculos/CVInspectionConfig";
 import CVHelpers from "./pages/controle-veiculos/CVHelpers";
 import CVCameras from "./pages/controle-veiculos/CVCameras";
+import CVisLayout from "./pages/controle-visitantes/CVisLayout";
+import CVisDashboard from "./pages/controle-visitantes/CVisDashboard";
+import CVisEntrada from "./pages/controle-visitantes/CVisEntrada";
+import CVisPresentes from "./pages/controle-visitantes/CVisPresentes";
+import CVisAutorizacoes from "./pages/controle-visitantes/CVisAutorizacoes";
+import CVisRelatorios from "./pages/controle-visitantes/CVisRelatorios";
+import CVisVisitantes from "./pages/controle-visitantes/CVisVisitantes";
+import CVisContatos from "./pages/controle-visitantes/CVisContatos";
 import CamerasLayout from "./pages/cameras/CamerasLayout";
 import CamerasDashboard from "./pages/cameras/CamerasDashboard";
 import CamerasGrupos from "./pages/cameras/CamerasGrupos";
@@ -471,7 +479,16 @@ const App = () => (
                 <Route path="manutencao" element={<CVMaintenance />} />
                 <Route path="vistoria-config" element={<CVInspectionConfig />} />
                 <Route path="ajudantes" element={<CVHelpers />} />
-                <Route path="cameras" element={<CVCameras />} />
+              <Route path="cameras" element={<CVCameras />} />
+              </Route>
+              <Route path="/controle-visitantes" element={<CVisLayout />}>
+                <Route index element={<CVisDashboard />} />
+                <Route path="entrada" element={<CVisEntrada />} />
+                <Route path="presentes" element={<CVisPresentes />} />
+                <Route path="autorizacoes" element={<CVisAutorizacoes />} />
+                <Route path="relatorios" element={<CVisRelatorios />} />
+                <Route path="visitantes" element={<CVisVisitantes />} />
+                <Route path="contatos" element={<CVisContatos />} />
               </Route>
               <Route path="/cameras" element={<CamerasLayout />}>
                 <Route index element={<CamerasDashboard />} />
