@@ -179,6 +179,7 @@ export default function CamerasLayout() {
           </main>
         </div>
       </div>
+      <OpenInNewTabButton />
     </div>
   );
 }
