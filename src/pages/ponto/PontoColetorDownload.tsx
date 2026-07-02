@@ -2,13 +2,10 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Download, Monitor, Apple, Cpu, CheckCircle2, Copy, Check, Database, Key, Camera } from "lucide-react";
+import { Download, Monitor, CheckCircle2, Copy, Database, Key, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import winAsset from "../../../public/coletor/PontoColetor-Windows.asset.json";
-import linuxAsset from "../../../public/coletor/PontoColetor-Linux.asset.json";
-import macIntelAsset from "../../../public/coletor/PontoColetor-macOS-Intel.asset.json";
-import macArmAsset from "../../../public/coletor/PontoColetor-macOS-AppleSilicon.asset.json";
+import winAsset from "../../../public/coletor/ColetorPilar-Setup.asset.json";
 
 type Platform = {
   id: string;
@@ -24,29 +21,10 @@ const platforms: Platform[] = [
   {
     id: "win",
     label: "Windows",
-    file: "PontoColetor-Windows.zip",
+    file: "ColetorPilar-Setup.exe",
     icon: Monitor,
-    badge: "Pacote portátil (.zip) · x64",
+    badge: "Instalador único (.exe) · x64 · sem dependências",
     url: winAsset.url,
-  },
-  {
-    id: "mac",
-    label: "macOS",
-    file: "PontoColetor-macOS.zip",
-    icon: Apple,
-    badge: "Apple Silicon (M1/M2/M3) ou Intel",
-    variants: [
-      { label: "Apple Silicon (M1/M2/M3)", file: "PontoColetor-macOS-AppleSilicon.zip", url: macArmAsset.url },
-      { label: "Intel", file: "PontoColetor-macOS-Intel.zip", url: macIntelAsset.url },
-    ],
-  },
-  {
-    id: "linux",
-    label: "Linux",
-    file: "PontoColetor-Linux.zip",
-    icon: Cpu,
-    badge: "Debian/Ubuntu/Fedora · x64",
-    url: linuxAsset.url,
   },
 ];
 
