@@ -493,6 +493,7 @@ const App = () => (
               </Route>
               <Route path="/cameras" element={<CamerasLayout />}>
                 <Route index element={<CamerasDashboard />} />
+                <Route path="ao-vivo" element={<CamerasAoVivo />} />
                 <Route path="grupos" element={<CamerasGrupos />} />
                 <Route path="cameras" element={<CamerasCameras />} />
               </Route>
