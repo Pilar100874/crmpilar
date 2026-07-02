@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
+import { CamerasLivePanel } from "@/components/cameras/CamerasLivePanel";
 import type { Vehicle, Driver } from "@/types/vehicle";
 
 const STEPS = ["Veículo", "Motorista", "Detalhes", "Fotos", "Confirmação"] as const;
