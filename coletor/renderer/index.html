@@ -176,6 +176,39 @@
       return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     }
 
+    let ultimoDownloadUrl = null;
+    async function verificarAtualizacao(silent) {
+      try {
+        const info = await window.coletor.checarAtualizacao();
+        document.getElementById('verLabel').textContent = 'v' + (info.localVersion || '—');
+        if (info.atualizacaoDisponivel && info.downloadUrl) {
+          ultimoDownloadUrl = info.downloadUrl;
+          document.getElementById('updCard').style.display = 'block';
+          document.getElementById('updBadge').style.display = 'inline-block';
+          document.getElementById('updRemote').textContent = 'v' + info.remoteVersion;
+          document.getElementById('updNotas').textContent = info.notas || '';
+        } else if (!silent) {
+          alert('Você já está na versão mais recente (v' + info.localVersion + ')');
+        }
+      } catch (e) { if (!silent) alert('Erro ao verificar: ' + e.message); }
+    }
+    async function instalarAtualizacao() {
+      if (!ultimoDownloadUrl) return;
+      const btn = document.getElementById('updBtn');
+      btn.disabled = true; btn.textContent = 'Baixando…';
+      document.getElementById('updProgress').style.display = 'block';
+      try { await window.coletor.instalarAtualizacao(ultimoDownloadUrl); }
+      catch (e) { alert('Falha: ' + e.message); btn.disabled = false; btn.textContent = 'Baixar e instalar'; }
+    }
+    if (window.coletor.onUpdateProgress) {
+      window.coletor.onUpdateProgress((pct) => { document.getElementById('updPct').textContent = pct; });
+    }
+
+    (async () => {
+      try { document.getElementById('verLabel').textContent = 'v' + await window.coletor.appVersion(); } catch {}
+      verificarAtualizacao(true);
+    })();
+    setInterval(() => verificarAtualizacao(true), 60 * 60 * 1000); // 1x/hora
     setInterval(refresh, 2000);
     refresh();
   </script>
