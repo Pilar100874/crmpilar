@@ -91,7 +91,7 @@ export default function CVVehicleHistory() {
       setPhotos(withUrls);
       setLoading(false);
     })();
-  }, [vehicleId]);
+  }, [vehicleId, dateFrom, dateTo]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, Photo[]>();
