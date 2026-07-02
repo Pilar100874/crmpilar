@@ -261,6 +261,7 @@ export default function CamerasCameras() {
       <CameraLiveViewer
         cameraId={liveCam?.id ?? null}
         cameraNome={liveCam?.nome}
+        filialId={liveCam?.filial_id ?? null}
         onClose={() => setLiveCam(null)}
       />
 
