@@ -219,7 +219,7 @@ export function useVisitantesControl() {
       id: data.id, visitor: mapVisitor(data.visitor),
       contactPersonId: data.contact_person_id, contactPerson: data.contact_person_name,
       vehiclePlate: data.vehicle_plate ?? undefined, purpose: data.purpose ?? undefined,
-      notes: data.notes ?? undefined, status: data.status, createdAt: data.created_at,
+      notes: data.notes ?? undefined, status: data.status as "pending" | "authorized" | "denied", createdAt: data.created_at,
       authorizedAt: data.authorized_at ?? undefined, authorizedBy: data.authorized_by ?? undefined,
     };
     setPendingVisitors((p) => [np, ...p]);
