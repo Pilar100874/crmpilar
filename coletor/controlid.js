@@ -117,12 +117,16 @@ async function request(opts, body) {
         port: abs[3] ? Number(abs[3]) : (proto === 'https' ? 443 : 80),
         path: abs[4] && abs[4] !== '' ? abs[4] : cur.path,
       };
+    } else if (/\.fcgi/i.test(loc)) {
+      // Location relativo apontando para outro recurso .fcgi — mesmo host/porta
+      cur = { ...cur, path: loc.startsWith('/') ? loc : `/${loc}` };
+    } else if (cur.protocol !== 'https:') {
+      // Redirecionamento relativo genérico em HTTP → normalmente upgrade p/ HTTPS
+      cur = { ...cur, protocol: 'https:', port: cur.port === 80 ? 443 : cur.port };
     } else {
-      // Location relativo — mantém host/porta, troca apenas o path se apontar
-      // para outro recurso .fcgi; senão preserva o path original.
-      cur = { ...cur, path: /\.fcgi/i.test(loc) ? loc : cur.path, protocol: cur.protocol === 'https:' ? 'https:' : 'https:' };
-      // redirecionamento relativo sem esquema geralmente indica upgrade p/ HTTPS
-      if (cur.protocol === 'https:' && cur.port === 80) cur.port = 443;
+      // Já em HTTPS e redirecionando para página web (ex.: /login.html) —
+      // não há como seguir; devolve a resposta para o chamador tratar.
+      return res;
     }
   }
   throw new Error('excesso de redirecionamentos (HTTP 301) do relógio');
