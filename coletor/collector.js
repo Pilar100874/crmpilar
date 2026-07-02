@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { lerBatidasControlID } = require('./controlid');
+const { verificarCameras } = require('./cameras');
 
 // 🔧 Configuração embutida — substitua se republicar para outro tenant
 const DEFAULT_URL = process.env.PONTO_SUPABASE_URL || 'https://ioxugupvxlcdweldocmq.supabase.co';
@@ -10,17 +11,22 @@ const DEFAULT_ANON_KEY = process.env.PONTO_SUPABASE_ANON || 'eyJhbGciOiJIUzI1NiI
 
 const CONFIG_PATH = path.join(require('os').homedir(), '.ponto-coletor.json');
 const STATE = {
-  running: false,
+  running: false,          // legado — indica se algum coletor está ativo
+  pontoEnabled: true,
+  camerasEnabled: true,
   lastSync: null,
+  lastSyncCameras: null,
   totalSent: 0,
   errors: 0,
   equipamentos: [],
+  cameras: [],
   lastErrors: {},
   progress: { ativo: false, etapa: 'idle', equipNome: '', indice: 0, total: 0, batidasEquip: 0 },
 };
 
 const lastNSRByEquip = {};
-let timer = null;
+let timerPonto = null;
+let timerCameras = null;
 
 function loadConfig() {
   let saved = {};
@@ -28,9 +34,14 @@ function loadConfig() {
   return {
     url: saved.url || DEFAULT_URL,
     anonKey: saved.anonKey || DEFAULT_ANON_KEY,
+    pontoEnabled: saved.pontoEnabled !== false,
+    camerasEnabled: saved.camerasEnabled !== false,
   };
 }
-function saveConfig(cfg) { fs.writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2)); }
+function saveConfig(cfg) {
+  const cur = loadConfig();
+  fs.writeFileSync(CONFIG_PATH, JSON.stringify({ ...cur, ...cfg }, null, 2));
+}
 
 async function callBootstrap(statusUpdates = []) {
   const cfg = loadConfig();
@@ -142,7 +153,6 @@ async function pollOnce() {
       }
     }
 
-    // Envia status em batch
     if (updates.length) {
       try { await callBootstrap(updates); } catch (e) { console.error('[coletor] status', e.message); }
     }
@@ -156,21 +166,78 @@ async function pollOnce() {
   }
 }
 
-function startCollector() {
-  if (STATE.running) return STATE;
+async function pollCamerasOnce() {
+  try {
+    const cfg = loadConfig();
+    const resultados = await verificarCameras(cfg);
+    STATE.cameras = resultados;
+    STATE.lastSyncCameras = new Date().toISOString();
+  } catch (e) {
+    STATE.errors++;
+    console.error('[coletor-cameras]', e.message);
+  }
+}
+
+function startPonto() {
+  if (timerPonto) return;
+  saveConfig({ pontoEnabled: true });
+  STATE.pontoEnabled = true;
   STATE.running = true;
   pollOnce();
-  timer = setInterval(pollOnce, 15_000);
+  timerPonto = setInterval(pollOnce, 15_000);
+}
+function stopPonto() {
+  saveConfig({ pontoEnabled: false });
+  STATE.pontoEnabled = false;
+  if (timerPonto) clearInterval(timerPonto);
+  timerPonto = null;
+  STATE.running = !!timerCameras;
+}
+function startCameras() {
+  if (timerCameras) return;
+  saveConfig({ camerasEnabled: true });
+  STATE.camerasEnabled = true;
+  STATE.running = true;
+  pollCamerasOnce();
+  timerCameras = setInterval(pollCamerasOnce, 30_000);
+}
+function stopCameras() {
+  saveConfig({ camerasEnabled: false });
+  STATE.camerasEnabled = false;
+  if (timerCameras) clearInterval(timerCameras);
+  timerCameras = null;
+  STATE.running = !!timerPonto;
+}
+
+// Compatibilidade retro
+function startCollector() {
+  const cfg = loadConfig();
+  if (cfg.pontoEnabled) startPonto();
+  if (cfg.camerasEnabled) startCameras();
   return STATE;
 }
 function stopCollector() {
-  STATE.running = false;
-  if (timer) clearInterval(timer);
-  timer = null;
+  stopPonto();
+  stopCameras();
   return STATE;
 }
-function getStatus() { return { ...STATE, config: loadConfig() }; }
+function getStatus() {
+  return {
+    ...STATE,
+    pontoRunning: !!timerPonto,
+    camerasRunning: !!timerCameras,
+    config: loadConfig(),
+  };
+}
+async function pollNow() {
+  const tasks = [];
+  if (timerPonto) tasks.push(pollOnce());
+  if (timerCameras) tasks.push(pollCamerasOnce());
+  await Promise.all(tasks);
+  return getStatus();
+}
 
-async function pollNow() { await pollOnce(); return getStatus(); }
-
-module.exports = { startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow };
+module.exports = {
+  startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow,
+  startPonto, stopPonto, startCameras, stopCameras,
+};
