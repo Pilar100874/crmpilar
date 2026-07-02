@@ -134,7 +134,7 @@ export default function CVInspectionConfig() {
                 <Label className="text-xs">Origem da imagem</Label>
                 <Select
                   value={a.source ?? "device"}
-                  onValueChange={(v) => updateAngle(i, { source: v as AngleSource, camera_id: v === "device" ? null : a.camera_id ?? null })}
+                  onValueChange={(v) => updateAngle(i, { source: v as AngleSource, camera_id: v === "device" ? null : a.camera_id ?? null, exit_camera_id: v === "device" ? null : a.exit_camera_id ?? null })}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -144,22 +144,43 @@ export default function CVInspectionConfig() {
                 </Select>
               </div>
               {a.source === "ip_camera" && (
-                <div className="min-w-[200px] space-y-1">
-                  <Label className="text-xs">Câmera</Label>
-                  <Select
-                    value={a.camera_id ?? ""}
-                    onValueChange={(v) => updateAngle(i, { camera_id: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={cameras.length ? "Selecione a câmera" : "Nenhuma câmera cadastrada"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cameras.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <>
+                  <div className="min-w-[200px] space-y-1">
+                    <Label className="text-xs">Câmera (Entrada)</Label>
+                    <Select
+                      value={a.camera_id ?? ""}
+                      onValueChange={(v) => updateAngle(i, { camera_id: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={cameras.length ? "Selecione a câmera" : "Nenhuma câmera cadastrada"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cameras.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="min-w-[200px] space-y-1">
+                    <Label className="text-xs" title="Use quando o veículo entra por um ponto e sai por outro — a comparação usará esta câmera na saída.">
+                      Câmera de saída (inverter)
+                    </Label>
+                    <Select
+                      value={a.exit_camera_id ?? "__same__"}
+                      onValueChange={(v) => updateAngle(i, { exit_camera_id: v === "__same__" ? null : v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Mesma da entrada" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__same__">Mesma da entrada</SelectItem>
+                        {cameras.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
               )}
               <div className="flex items-center gap-2 pb-2">
                 <Switch checked={a.required} onCheckedChange={(v) => updateAngle(i, { required: v })} />
