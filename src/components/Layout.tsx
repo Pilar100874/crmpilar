@@ -77,7 +77,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useActivityTracking } from "@/hooks/useActivityTracking";
-import OpenInNewTabButton from "@/components/OpenInNewTabButton";
+// OpenInNewTabButton agora é montado globalmente em App.tsx via GlobalOpenInNewTabButton
 import { useUsageTracker } from "@/hooks/useUsageTracker";
 import { useInteractionTracker } from "@/hooks/useInteractionTracker";
 
@@ -256,7 +256,6 @@ export default function Layout({ children }: LayoutProps) {
     return (
       <div className="min-h-screen bg-background text-foreground">
         <main className="min-h-screen">{children}</main>
-        <OpenInNewTabButton />
       </div>
     );
   }
@@ -1561,7 +1560,6 @@ export default function Layout({ children }: LayoutProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <OpenInNewTabButton />
     </LayoutContext.Provider>
   );
 }

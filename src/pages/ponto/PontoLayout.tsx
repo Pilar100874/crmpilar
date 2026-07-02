@@ -3,7 +3,7 @@ import { Menu, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePontoEmpresa } from "./usePontoEmpresa";
 import WizardBackBar from "./WizardBackBar";
-import OpenInNewTabButton, { isSoloMode } from "@/components/OpenInNewTabButton";
+import { isSoloMode } from "@/components/OpenInNewTabButton";
 import {
   Select,
   SelectContent,
@@ -80,7 +80,6 @@ export default function PontoLayout() {
         {!solo && <WizardBackBar />}
         <Outlet />
       </main>
-      <OpenInNewTabButton />
     </div>
   );
 }

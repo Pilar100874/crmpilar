@@ -243,6 +243,7 @@ import PWAUpdateNotifier from "./components/PWAUpdateNotifier";
 import StudioBackgroundIndicator from "./components/marketing/StudioBackgroundIndicator";
 
 import WakeLockManager from "./components/WakeLockManager";
+import GlobalOpenInNewTabButton from "./components/GlobalOpenInNewTabButton";
 
 const queryClient = new QueryClient();
 
@@ -269,6 +270,7 @@ const App = () => (
           <PWAUpdateNotifier />
           <StudioBackgroundIndicator />
           <WakeLockManager />
+          <GlobalOpenInNewTabButton />
           <Routes>
             <Route path="/" element={<Splash />} />
             <Route path="/login" element={<Login />} />
