@@ -57,6 +57,7 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
   const [aiLoading, setAiLoading] = useState<Record<string, boolean>>({});
   const [ipCams, setIpCams] = useState<any[]>([]);
   const [capturingCam, setCapturingCam] = useState<string | null>(null);
+  const [zoomSrc, setZoomSrc] = useState<string | null>(null);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const getUrl = async (path: string) => {
