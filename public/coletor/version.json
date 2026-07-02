@@ -1,5 +1,5 @@
 {
-  "version": "1.2.5",
-  "downloadUrl": "https://crm.pilar.com.br/__l5e/assets-v1/0f0d7a1a-1b9a-493e-8f7e-25e84f39a2ed/ColetorPilar-Setup.msi",
-  "notas": "1.2.5: seletor de FILIAL na primeira abertura — cada coletor instalado escolhe sua filial e passa a enxergar apenas os relógios e câmeras dela (resolve conflitos de IPs internos iguais entre filiais). Correção do updater seguindo redirects (domínios custom)."
+  "version": "1.2.6",
+  "downloadUrl": "https://crm.pilar.com.br/__l5e/assets-v1/57774897-c5c6-45f3-8246-0395c2edefd0/ColetorPilar-Setup.msi",
+  "notas": "1.2.6: correção do vídeo AO VIVO — o ffmpeg agora é executado fora do pacote (antes falhava silenciosamente) e a sinalização WebRTC escuta o canal geral e o canal da filial simultaneamente. Mantém seletor de filial e fallback HTTPS/HTTP do Control iD."
 }

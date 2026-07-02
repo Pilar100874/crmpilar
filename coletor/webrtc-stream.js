@@ -14,8 +14,11 @@ const {
 
 let ffmpegPath;
 try { ffmpegPath = require('ffmpeg-static'); } catch { ffmpegPath = 'ffmpeg'; }
-// No pacote instalado, o ffmpeg-static exporta o path do binário do host.
-// No MSI vamos substituir por ffmpeg.exe (win32-x64) antes de empacotar.
+// Empacotado em asar, o binário fica em app.asar.unpacked (não dá para
+// executar de dentro do asar). Ajusta o caminho em runtime.
+if (ffmpegPath && ffmpegPath.includes('app.asar')) {
+  ffmpegPath = ffmpegPath.replace('app.asar', 'app.asar.unpacked');
+}
 
 const H264 = new RTCRtpCodecParameters({
   mimeType: 'video/H264',
