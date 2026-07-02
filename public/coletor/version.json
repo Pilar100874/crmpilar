@@ -1,5 +1,5 @@
 {
-  "version": "1.2.3",
-  "downloadUrl": "https://crmpilar.lovable.app/__l5e/assets-v1/471b8ea1-f474-414b-88dd-59cdfdcc736b/ColetorPilar-Setup.msi",
-  "notas": "1.2.3: relógio Control iD agora segue redirecionamentos HTTP 301 (corrige 'login falhou: HTTP 301') e câmeras internas passam a enviar o snapshot ao CRM para exibição na tela de Câmeras."
+  "version": "1.2.4",
+  "downloadUrl": "https://crmpilar.lovable.app/__l5e/assets-v1/c0eaf71c-20a7-4c10-9647-3f28aa5d0e9d/ColetorPilar-Setup.msi",
+  "notas": "1.2.4: streaming ao vivo (WebRTC) das câmeras internas. Botão 'Ao vivo' na tela de Câmeras negocia com o Coletor Desktop via sinalização em nuvem e transmite RTSP→WebRTC (H.264) com baixa latência, mesmo fora da LAN."
 }

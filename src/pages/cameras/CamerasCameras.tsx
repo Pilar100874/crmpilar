@@ -15,8 +15,9 @@ import {
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { Camera, Plus, Edit, Trash2, Wifi, TestTube } from "lucide-react";
+import { Camera, Plus, Edit, Trash2, Wifi, TestTube, Radio } from "lucide-react";
 import { toast } from "sonner";
+import { CameraLiveViewer } from "@/components/cameras/CameraLiveViewer";
 
 const MARCAS = [
   { value: "tplink_tapo", label: "TP-Link Tapo" },
@@ -52,6 +53,7 @@ export default function CamerasCameras() {
   const [editing, setEditing] = useState<any>(emptyCam);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
+  const [liveCam, setLiveCam] = useState<{ id: string; nome: string } | null>(null);
 
   const load = async () => {
     const [{ data: cams }, { data: coletor }, { data: grps }] = await Promise.all([
@@ -236,6 +238,13 @@ export default function CamerasCameras() {
                     <TestTube className="h-3 w-3 mr-1" /> {testing === r.id ? "..." : "Testar"}
                   </Button>
                 )}
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setLiveCam({ id: r.id, nome: r.nome })}
+                >
+                  <Radio className="h-3 w-3 mr-1" /> Ao vivo
+                </Button>
                 <Button size="sm" variant="ghost" onClick={() => setDeleteId(r.id)}>
                   <Trash2 className="h-3 w-3 text-destructive" />
                 </Button>
@@ -244,6 +253,12 @@ export default function CamerasCameras() {
           </Card>
         ))}
       </div>
+
+      <CameraLiveViewer
+        cameraId={liveCam?.id ?? null}
+        cameraNome={liveCam?.nome}
+        onClose={() => setLiveCam(null)}
+      />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
