@@ -77,6 +77,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useActivityTracking } from "@/hooks/useActivityTracking";
+import OpenInNewTabButton from "@/components/OpenInNewTabButton";
 import { useUsageTracker } from "@/hooks/useUsageTracker";
 import { useInteractionTracker } from "@/hooks/useInteractionTracker";
 
