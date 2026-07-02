@@ -177,6 +177,40 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
     }
   };
 
+  const ipCameraAngles = angles.filter(
+    (a) => (a.source ?? "device") === "ip_camera" && a.camera_id && ipCams.some((c) => c.id === a.camera_id),
+  );
+
+  const captureAllFromIpCameras = async () => {
+    if (ipCameraAngles.length === 0) return;
+    setCapturingCam("__all__");
+    let ok = 0;
+    let fail = 0;
+    for (const angle of ipCameraAngles) {
+      try {
+        const { data, error } = await supabase.functions.invoke("cv-camera-snapshot", {
+          body: { camera_id: angle.camera_id },
+        });
+        if (error) throw error;
+        const path = (data as any)?.photo_path;
+        if (!path) throw new Error((data as any)?.error || "Falha ao capturar");
+        const url = await getUrl(path);
+        setPreviews((p) => ({ ...p, [angle.key]: url }));
+        const next = value.filter((p) => p.angle_key !== angle.key);
+        next.push({ angle_key: angle.key, angle_label: angle.label, photo_url: path });
+        value = next;
+        onChange(next);
+        ok++;
+        runAiCompare(angle, path);
+      } catch (e: any) {
+        fail++;
+      }
+    }
+    setCapturingCam(null);
+    if (ok > 0) toast.success(`${ok} foto(s) capturada(s) das câmeras IP`);
+    if (fail > 0) toast.error(`${fail} câmera(s) falharam ao capturar`);
+  };
+
   const remove = (angleKey: string) => {
     onChange(value.filter((p) => p.angle_key !== angleKey));
     setPreviews((p) => {
