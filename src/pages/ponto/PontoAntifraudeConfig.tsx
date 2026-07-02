@@ -111,30 +111,11 @@ export default function PontoAntifraudeConfig() {
 
   useEffect(() => { loadAll(); }, [empresaId]);
 
-  const addGeo = async () => {
-    if (!empresaId || !novoGeo.nome || !novoGeo.lat || !novoGeo.lng) return;
-    const { error } = await (supabase as any).from("ponto_geofences").insert({
-      empresa_id: empresaId,
-      nome: novoGeo.nome,
-      lat: Number(novoGeo.lat),
-      lng: Number(novoGeo.lng),
-      raio_metros: Number(novoGeo.raio) || 150,
-    });
-    if (error) toast.error(error.message);
-    else { toast.success("Geofence criada"); setNovoGeo({ nome: "", lat: "", lng: "", raio: "150" }); loadAll(); }
-  };
-
   const delGeo = async (id: string) => {
     await (supabase as any).from("ponto_geofences").delete().eq("id", id);
     loadAll();
   };
 
-  const usarMinhaLoc = () => {
-    navigator.geolocation.getCurrentPosition(
-      (p) => setNovoGeo((s) => ({ ...s, lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) })),
-      () => toast.error("Não consegui ler sua localização"),
-    );
-  };
 
   const addRede = async () => {
     if (!empresaId || !novaRede.valor) return;
