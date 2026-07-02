@@ -53,6 +53,7 @@ export default function CamerasCameras() {
   const [editing, setEditing] = useState<any>(emptyCam);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
+  const [liveCam, setLiveCam] = useState<{ id: string; nome: string } | null>(null);
 
   const load = async () => {
     const [{ data: cams }, { data: coletor }, { data: grps }] = await Promise.all([
