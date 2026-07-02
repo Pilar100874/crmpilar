@@ -134,6 +134,7 @@ import CamerasLayout from "./pages/cameras/CamerasLayout";
 import CamerasDashboard from "./pages/cameras/CamerasDashboard";
 import CamerasGrupos from "./pages/cameras/CamerasGrupos";
 import CamerasCameras from "./pages/cameras/CamerasCameras";
+import CamerasAoVivo from "./pages/cameras/CamerasAoVivo";
 
 import ChatInterno from "./pages/ChatInterno";
 import ConfigSkills from "./pages/ConfigSkills";
@@ -492,6 +493,7 @@ const App = () => (
               </Route>
               <Route path="/cameras" element={<CamerasLayout />}>
                 <Route index element={<CamerasDashboard />} />
+                <Route path="ao-vivo" element={<CamerasAoVivo />} />
                 <Route path="grupos" element={<CamerasGrupos />} />
                 <Route path="cameras" element={<CamerasCameras />} />
               </Route>

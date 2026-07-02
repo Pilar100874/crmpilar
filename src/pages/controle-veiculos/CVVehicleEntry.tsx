@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
+import { CamerasLivePanel } from "@/components/cameras/CamerasLivePanel";
 
 const STEPS = ["Veículo", "KM & Defeitos", "Fotos", "Confirmação"] as const;
 
@@ -202,6 +203,8 @@ export default function CVVehicleEntry() {
   return (
     <div className="space-y-4">
       <CVPageHeader icon={LogIn} title="Registrar Entrada" subtitle="Assistente passo a passo para o retorno" />
+
+      <CamerasLivePanel title="Câmeras da portaria (ao vivo)" columns={3} defaultOpen={false} />
 
       <Card className="max-w-4xl mx-auto shadow-sm">
         <CardHeader className="border-b">
