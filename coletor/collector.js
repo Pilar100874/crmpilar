@@ -277,5 +277,5 @@ async function pollNow() {
 
 module.exports = {
   startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow,
-  startPonto, stopPonto, startCameras, stopCameras,
+  startPonto, stopPonto, startCameras, stopCameras, listarFiliais,
 };
