@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface Props {
   cameraId: string | null;
   cameraNome?: string;
+  filialId?: string | null;
   onClose: () => void;
 }
 
