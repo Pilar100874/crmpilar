@@ -199,6 +199,7 @@ export default function CVLayout() {
           </main>
         </div>
       </div>
+      <OpenInNewTabButton />
     </div>
   );
 }
