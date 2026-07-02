@@ -61,3 +61,10 @@ ipcMain.handle('collector:startPonto', () => { startPonto(); return getStatus();
 ipcMain.handle('collector:stopPonto', () => { stopPonto(); return getStatus(); });
 ipcMain.handle('collector:startCameras', () => { startCameras(); return getStatus(); });
 ipcMain.handle('collector:stopCameras', () => { stopCameras(); return getStatus(); });
+ipcMain.handle('updater:check', () => checarAtualizacao());
+ipcMain.handle('updater:install', async (evt, downloadUrl) => {
+  return await baixarEInstalar(downloadUrl, (pct) => {
+    try { BrowserWindow.getAllWindows().forEach(w => w.webContents.send('updater:progress', pct)); } catch {}
+  });
+});
+ipcMain.handle('app:version', () => app.getVersion());
