@@ -32,8 +32,8 @@ async function fetchSnapshot(cam: any): Promise<Uint8Array> {
     const basic = btoa(`${cam.usuario}:${cam.senha ?? ""}`);
     headers["Authorization"] = `Basic ${basic}`;
   }
-  const res = await fetch(url, { headers });
-  if (!res.ok) throw new Error(`HTTP ${res.status} do host ${cam.host}`);
+  const res = await fetch(url, { headers, signal: AbortSignal.timeout(10000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status} do host ${cam.host} (${url})`);
   return new Uint8Array(await res.arrayBuffer());
 }
 
@@ -62,8 +62,9 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
+    console.error("cv-camera-snapshot error:", (e as Error).message, (e as Error).stack);
     return new Response(JSON.stringify({ error: String((e as Error).message ?? e) }), {
-      status: 400,
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
