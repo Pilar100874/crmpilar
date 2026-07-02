@@ -62,8 +62,9 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
+    console.error("cv-camera-snapshot error:", (e as Error).message, (e as Error).stack);
     return new Response(JSON.stringify({ error: String((e as Error).message ?? e) }), {
-      status: 400,
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
