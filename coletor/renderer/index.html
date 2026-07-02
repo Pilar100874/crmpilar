@@ -194,6 +194,41 @@
       }).join('') : '<em class="muted">Nenhuma câmera ativa (ou coletor de câmeras desligado)</em>';
 
       document.getElementById('server').textContent = (s.config?.url || '');
+
+      // Filial: se não estiver definida, força seleção; senão mostra qual é
+      const temFilial = !!s.config?.filialId;
+      document.getElementById('filialCard').style.display = temFilial ? 'none' : 'block';
+      document.getElementById('filialInfo').style.display = temFilial ? 'block' : 'none';
+      if (temFilial) {
+        document.getElementById('filialAtualNome').textContent = s.config.filialNome || s.config.filialId;
+      }
+    }
+
+    async function carregarFiliais() {
+      const sel = document.getElementById('filialSelect');
+      sel.innerHTML = '<option value="">— carregando —</option>';
+      try {
+        const filiais = await window.coletor.listarFiliais();
+        sel.innerHTML = '<option value="">— selecione —</option>' + filiais.map(f =>
+          `<option value="${f.id}" data-nome="${escapeHtml(f.nome)}">${escapeHtml(f.nome)}${f.cidade ? ' — ' + escapeHtml(f.cidade) + '/' + escapeHtml(f.uf || '') : ''}</option>`
+        ).join('');
+      } catch (e) {
+        sel.innerHTML = '<option value="">erro: ' + escapeHtml(e.message) + '</option>';
+      }
+    }
+    async function salvarFilial() {
+      const sel = document.getElementById('filialSelect');
+      const id = sel.value;
+      if (!id) return alert('Selecione uma filial');
+      const nome = sel.options[sel.selectedIndex].getAttribute('data-nome');
+      await window.coletor.setFilial(id, nome);
+      refresh();
+    }
+    async function trocarFilial() {
+      if (!confirm('Trocar a filial deste computador? Os coletores serão reiniciados.')) return;
+      await window.coletor.setFilial(null, null);
+      await carregarFiliais();
+      refresh();
     }
 
     function escapeHtml(s) {
