@@ -250,6 +250,11 @@ function stopCameras() {
 // Compatibilidade retro
 function startCollector() {
   const cfg = loadConfig();
+  // Não inicia coletores enquanto o usuário não selecionar a filial.
+  if (!cfg.filialId) {
+    console.log('[coletor] aguardando seleção de filial pelo usuário');
+    return STATE;
+  }
   if (cfg.pontoEnabled) startPonto();
   if (cfg.camerasEnabled) startCameras();
   return STATE;
