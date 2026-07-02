@@ -14,6 +14,7 @@ import {
   PanelLeft,
   Car,
   Camera,
+  History,
   LucideIcon,
 } from "lucide-react";
 import {
