@@ -99,6 +99,36 @@ function requestRaw(opts, body) {
   });
 }
 
+// Segue redirecionamentos 301/302/307/308 (alguns firmwares Control iD
+// redirecionam HTTP→HTTPS ou para outra porta). Máx. 4 saltos.
+async function request(opts, body) {
+  let cur = { ...opts };
+  for (let hop = 0; hop < 4; hop++) {
+    const res = await requestRaw(cur, body);
+    if (![301, 302, 307, 308].includes(res.status) || !res.location) return res;
+    const loc = res.location;
+    const abs = loc.match(/^(https?):\/\/([^/:?#]+)(?::(\d+))?([^?#]*(?:\?[^#]*)?)?/i);
+    if (abs) {
+      const proto = abs[1].toLowerCase();
+      cur = {
+        ...cur,
+        protocol: `${proto}:`,
+        hostname: abs[2],
+        port: abs[3] ? Number(abs[3]) : (proto === 'https' ? 443 : 80),
+        path: abs[4] && abs[4] !== '' ? abs[4] : cur.path,
+      };
+    } else {
+      // Location relativo — mantém host/porta, troca apenas o path se apontar
+      // para outro recurso .fcgi; senão preserva o path original.
+      cur = { ...cur, path: /\.fcgi/i.test(loc) ? loc : cur.path, protocol: cur.protocol === 'https:' ? 'https:' : 'https:' };
+      // redirecionamento relativo sem esquema geralmente indica upgrade p/ HTTPS
+      if (cur.protocol === 'https:' && cur.port === 80) cur.port = 443;
+    }
+  }
+  throw new Error('excesso de redirecionamentos (HTTP 301) do relógio');
+}
+
+
 async function login({ host, port = 80, https: useHttps = false, login: user, password }) {
   const res = await request({
     protocol: useHttps ? 'https:' : 'http:',
