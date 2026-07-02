@@ -38,6 +38,30 @@
 <body>
   <h1>🕒 Coletor Desktop <span class="badge" id="verLabel">v—</span> <span class="badge badge-off" id="updBadge" style="display:none">atualização disponível</span></h1>
 
+  <!-- Seletor de filial obrigatório -->
+  <div class="card" id="filialCard" style="display:none; border:1px solid #f59e0b55">
+    <h3>🏢 Selecione a filial deste computador</h3>
+    <p class="muted" style="margin-top:0">
+      Cada filial deve ser selecionada aqui — assim o coletor só acessa relógios e câmeras daquela filial,
+      mesmo quando IPs internos se repetem em outras lojas.
+    </p>
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+      <select id="filialSelect" style="background:#0f172a; color:#e2e8f0; border:1px solid #475569; padding:8px 10px; border-radius:6px; min-width:280px">
+        <option value="">— carregando —</option>
+      </select>
+      <button onclick="salvarFilial()" style="background:#22c55e; border-color:#16a34a; color:white">Confirmar filial</button>
+    </div>
+  </div>
+
+  <div class="card" id="filialInfo" style="display:none">
+    <div style="display:flex; justify-content:space-between; align-items:center">
+      <div>
+        <b>🏢 Filial ativa:</b> <span id="filialAtualNome">—</span>
+      </div>
+      <button onclick="trocarFilial()">Trocar filial</button>
+    </div>
+  </div>
+
   <div class="card" id="updCard" style="display:none; border:1px solid #22c55e55">
     <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap">
       <div>
