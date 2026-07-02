@@ -69,9 +69,31 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   { id: "Configurações", label: "Configurações", category: "Sistema" },
   { id: "Macros", label: "Macros", category: "Sistema" },
   { id: "Avisos", label: "Avisos", category: "Sistema" },
+
+  // Controle de Visitantes
+  { id: "Controle de Visitantes", label: "Controle de Visitantes (Menu)", category: "Visitantes" },
 ];
 
 // Lista apenas dos IDs dos menus (para compatibilidade com código existente)
+export const MENUS_DISPONIVEIS = MENU_CONFIG.map(menu => menu.id);
+
+// Agrupar menus por categoria para exibição organizada
+export const getMenusByCategory = () => {
+  const categories: Record<string, MenuConfigItem[]> = {};
+  
+  MENU_CONFIG.forEach(menu => {
+    const category = menu.category || 'Outros';
+    if (!categories[category]) {
+      categories[category] = [];
+    }
+    categories[category].push(menu);
+  });
+  
+  return categories;
+};
+
+// Ordem das categorias para exibição
+export const CATEGORY_ORDER = ['Dashboards', 'Chats', 'Vendas', 'Assistente', 'Principal', 'TV', 'Ponto', 'Visitantes', 'Sistema'];
 export const MENUS_DISPONIVEIS = MENU_CONFIG.map(menu => menu.id);
 
 // Agrupar menus por categoria para exibição organizada

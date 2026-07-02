@@ -479,7 +479,7 @@ const App = () => (
                 <Route path="manutencao" element={<CVMaintenance />} />
                 <Route path="vistoria-config" element={<CVInspectionConfig />} />
                 <Route path="ajudantes" element={<CVHelpers />} />
-              <Route path="/controle-veiculos/cameras" element={<CVCameras />} />
+              <Route path="cameras" element={<CVCameras />} />
               </Route>
               <Route path="/controle-visitantes" element={<CVisLayout />}>
                 <Route index element={<CVisDashboard />} />
