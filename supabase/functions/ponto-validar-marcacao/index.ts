@@ -70,7 +70,8 @@ Deno.serve(async (req) => {
       .select("geofence_obrigatorio_app, antifraude_ativo")
       .eq("id", func.empresa_id)
       .maybeSingle();
-    const origemAppOld = origem.startsWith("app");
+    const exigirGeofenceApp = empCfg?.geofence_obrigatorio_app !== false;
+    const origem = (body.origem || "app").toLowerCase();
 
     const fatores: Record<string, { ok: boolean; peso: number; detalhe?: string }> = {};
     let scoreObtido = 0;
@@ -82,7 +83,6 @@ Deno.serve(async (req) => {
       .select("*")
       .eq("funcionario_id", func.id)
       .maybeSingle();
-    const origem = (body.origem || "app").toLowerCase();
     if (metCfg) {
       const bloqueios: Record<string, boolean> = {
         app: metCfg.permite_app === false && origem.startsWith("app"),
