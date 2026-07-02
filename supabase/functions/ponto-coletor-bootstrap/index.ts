@@ -41,9 +41,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { data, error } = await sb.from("ponto_equipamentos")
-      .select("id, empresa_id, nome, modelo, ip, porta, usuario, senha, chave_comunicacao, usa_https, ativo, status, data_inicio_coleta, solicitar_teste")
+    // Filtro por filial: se o coletor informar filial_id, retorna só os
+    // equipamentos daquela filial (evita conflito de IPs iguais em várias filiais).
+    let query = sb.from("ponto_equipamentos")
+      .select("id, empresa_id, filial_id, nome, modelo, ip, porta, usuario, senha, chave_comunicacao, usa_https, ativo, status, data_inicio_coleta, solicitar_teste")
       .eq("ativo", true);
+    if (body.filial_id) query = query.eq("filial_id", body.filial_id);
+    const { data, error } = await query;
     if (error) throw error;
 
     return new Response(JSON.stringify({ ok: true, equipamentos: data || [] }), {
