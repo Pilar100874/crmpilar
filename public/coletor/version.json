@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
-  "downloadUrl": "https://crmpilar.lovable.app/__l5e/assets-v1/e976215d-d04f-4165-b26b-5345d12b8731/ColetorPilar-Setup.exe",
-  "notas": "Correção do login do Control iD (aceita IP com https://) + verificador de atualização integrado."
+  "version": "1.2.1",
+  "downloadUrl": "https://crmpilar.lovable.app/__l5e/assets-v1/3e566cd0-0b9d-46fc-853a-0e72c278d61c/ColetorPilar-Setup.exe",
+  "notas": "Corrige relógio Control iD offline (parser HTTP tolerante + TLS legado) e lista de câmeras que aparecia vazia no coletor."
 }
