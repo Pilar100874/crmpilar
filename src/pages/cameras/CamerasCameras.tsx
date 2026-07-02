@@ -295,6 +295,26 @@ export default function CamerasCameras() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="sm:col-span-2 space-y-1">
+              <Label>Filial</Label>
+              <Select
+                value={editing.filial_id ?? "none"}
+                onValueChange={(v) => setEditing({ ...editing, filial_id: v === "none" ? null : v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione a filial" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem filial (todas)</SelectItem>
+                  {filiais.map((f) => (
+                    <SelectItem key={f.id} value={f.id}>
+                      {f.nome}{f.cidade ? ` — ${f.cidade}/${f.uf}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">
+                Define qual Coletor Desktop irá acessar essa câmera. Necessário quando há IPs iguais em filiais diferentes.
+              </p>
+            </div>
             <div className="space-y-1">
               <Label>Marca</Label>
               <Select value={editing.marca} onValueChange={(v) => setEditing({ ...editing, marca: v })}>
