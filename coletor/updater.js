@@ -10,10 +10,18 @@ const { app, shell } = require('electron');
 
 const VERSION_URL = 'https://crmpilar.lovable.app/coletor/version.json';
 
-function fetchJson(url) {
+function fetchJson(url, hops = 0) {
   return new Promise((resolve, reject) => {
+    if (hops > 5) return reject(new Error('muitos redirecionamentos'));
     const lib = url.startsWith('https') ? https : http;
     lib.get(url, { timeout: 10000 }, (res) => {
+      // segue redirect (302/301/307/308) — necessário para domínios custom da Lovable
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        const next = res.headers.location.startsWith('http')
+          ? res.headers.location
+          : new URL(res.headers.location, url).toString();
+        return fetchJson(next, hops + 1).then(resolve, reject);
+      }
       if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}`));
       let data = '';
       res.on('data', c => data += c);
