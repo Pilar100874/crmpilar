@@ -27,6 +27,7 @@ export default function PontoLayout() {
 
   return (
     <div className="ponto-shell min-h-screen bg-background text-foreground overflow-x-hidden max-w-[100vw]">
+      {!solo && (
       <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur">
         <div className="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-3">
           <div className="flex items-center gap-2 min-w-0">
@@ -74,10 +75,12 @@ export default function PontoLayout() {
           )}
         </div>
       </header>
+      )}
       <main className="overflow-x-hidden p-3 sm:p-5">
-        <WizardBackBar />
+        {!solo && <WizardBackBar />}
         <Outlet />
       </main>
+      <OpenInNewTabButton />
     </div>
   );
 }
