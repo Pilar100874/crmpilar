@@ -238,6 +238,13 @@ export default function CamerasCameras() {
                     <TestTube className="h-3 w-3 mr-1" /> {testing === r.id ? "..." : "Testar"}
                   </Button>
                 )}
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setLiveCam({ id: r.id, nome: r.nome })}
+                >
+                  <Radio className="h-3 w-3 mr-1" /> Ao vivo
+                </Button>
                 <Button size="sm" variant="ghost" onClick={() => setDeleteId(r.id)}>
                   <Trash2 className="h-3 w-3 text-destructive" />
                 </Button>
@@ -246,6 +253,12 @@ export default function CamerasCameras() {
           </Card>
         ))}
       </div>
+
+      <CameraLiveViewer
+        cameraId={liveCam?.id ?? null}
+        cameraNome={liveCam?.nome}
+        onClose={() => setLiveCam(null)}
+      />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
