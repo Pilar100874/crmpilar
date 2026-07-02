@@ -23,9 +23,19 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Pr
   useEffect(() => {
     if (!cameraId) return;
     let pc: RTCPeerConnection | null = null;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
+    const channels: ReturnType<typeof supabase.channel>[] = [];
     const viewerId = crypto.randomUUID();
     let closed = false;
+    let liveReached = false;
+
+    const chanNames = new Set<string>(["webrtc-signal"]);
+    if (filialId) chanNames.add(`webrtc-signal:${filialId}`);
+
+    const sendAll = (payload: any) => {
+      for (const ch of channels) {
+        try { ch.send({ type: "broadcast", event: "msg", payload }); } catch {}
+      }
+    };
 
     (async () => {
       setStatus("conectando");
@@ -35,6 +45,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Pr
         if (videoRef.current) {
           videoRef.current.srcObject = ev.streams[0] || new MediaStream([ev.track]);
           videoRef.current.play().catch(() => {});
+          liveReached = true;
           setStatus("ao-vivo");
         }
       };
@@ -45,18 +56,13 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Pr
         }
       };
 
-      const chanName = filialId ? `webrtc-signal:${filialId}` : "webrtc-signal";
-      channel = supabase.channel(chanName, {
-        config: { broadcast: { self: false, ack: false } },
-      });
-      channel.on("broadcast", { event: "msg" }, async ({ payload }: any) => {
+      const onMsg = async ({ payload }: any) => {
         if (!payload || payload.to !== viewerId) return;
         if (payload.type === "offer") {
           try {
             await pc!.setRemoteDescription({ type: "offer", sdp: payload.sdp });
             const answer = await pc!.createAnswer();
             await pc!.setLocalDescription(answer);
-            // aguarda ICE completo (non-trickle)
             await new Promise<void>((resolve) => {
               if (pc!.iceGatheringState === "complete") return resolve();
               const t = setTimeout(resolve, 3000);
@@ -64,38 +70,33 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Pr
                 if (pc!.iceGatheringState === "complete") { clearTimeout(t); resolve(); }
               };
             });
-            channel!.send({
-              type: "broadcast",
-              event: "msg",
-              payload: {
-                type: "answer",
-                to: "coletor",
-                viewer_id: viewerId,
-                camera_id: cameraId,
-                sdp: pc!.localDescription!.sdp,
-              },
+            sendAll({
+              type: "answer",
+              to: "coletor",
+              viewer_id: viewerId,
+              camera_id: cameraId,
+              sdp: pc!.localDescription!.sdp,
             });
           } catch (e: any) {
             setErro(e.message);
             setStatus("erro");
           }
         }
-      });
+      };
 
-      await new Promise<void>((resolve) => {
-        channel!.subscribe((s) => { if (s === "SUBSCRIBED") resolve(); });
-      });
+      for (const name of chanNames) {
+        const ch = supabase.channel(name, { config: { broadcast: { self: false, ack: false } } });
+        ch.on("broadcast", { event: "msg" }, onMsg);
+        channels.push(ch);
+        await new Promise<void>((resolve) => {
+          ch.subscribe((s) => { if (s === "SUBSCRIBED") resolve(); });
+        });
+      }
 
-      // envia request ao coletor
-      channel.send({
-        type: "broadcast",
-        event: "msg",
-        payload: { type: "request", to: "coletor", viewer_id: viewerId, camera_id: cameraId },
-      });
+      sendAll({ type: "request", to: "coletor", viewer_id: viewerId, camera_id: cameraId });
 
-      // timeout de aceitação
       setTimeout(() => {
-        if (!closed && status !== "ao-vivo") {
+        if (!closed && !liveReached) {
           setErro("Coletor não respondeu (verifique se o Coletor Desktop está rodando com módulo de câmeras ativado)");
           setStatus("erro");
         }
@@ -105,14 +106,10 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Pr
     return () => {
       closed = true;
       try {
-        channel?.send({
-          type: "broadcast",
-          event: "msg",
-          payload: { type: "stop", to: "coletor", viewer_id: viewerId, camera_id: cameraId },
-        });
+        sendAll({ type: "stop", to: "coletor", viewer_id: viewerId, camera_id: cameraId });
       } catch {}
       try { pc?.close(); } catch {}
-      if (channel) supabase.removeChannel(channel);
+      for (const ch of channels) supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cameraId]);
