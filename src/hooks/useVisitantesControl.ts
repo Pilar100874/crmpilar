@@ -150,7 +150,7 @@ export function useVisitantesControl() {
       contactPerson: data.contact_person_name, contactPersonId: data.contact_person_id ?? undefined,
       vehiclePlate: data.vehicle_plate ?? undefined, purpose: data.purpose ?? undefined,
       notes: data.notes ?? undefined, entryDate: data.entry_date, exitDate: data.exit_date ?? undefined,
-      status: data.status,
+      status: data.status as "inside" | "exited",
     };
     setAccessRecords((p) => [nr, ...p]);
     toast.success("Entrada registrada");
