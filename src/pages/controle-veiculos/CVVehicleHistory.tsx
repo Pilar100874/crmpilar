@@ -204,11 +204,7 @@ export default function CVVehicleHistory() {
         })}
       </div>
 
-      <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
-        <DialogContent className="max-w-4xl p-2">
-          {preview && <img src={preview} alt="Foto" className="w-full h-auto rounded" />}
-        </DialogContent>
-      </Dialog>
+      <ImageZoomDialog src={preview} onClose={() => setPreview(null)} />
     </div>
   );
 }
