@@ -23,6 +23,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import OpenInNewTabButton, { isSoloMode } from "@/components/OpenInNewTabButton";
 
 interface NavItem {
   to: string;
