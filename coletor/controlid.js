@@ -80,6 +80,10 @@ function requestRaw(opts, body) {
       rejectUnauthorized: false,       // certificado autoassinado de fábrica
       servername: opts.hostname,
       minVersion: 'TLSv1',             // firmwares antigos usam TLS 1.0/1.1
+      // OpenSSL 3 (Node/Electron modernos) bloqueia TLS 1.0/1.1 e cifras
+      // antigas mesmo com minVersion — SECLEVEL=0 reabilita (relógios Control iD)
+      ciphers: 'DEFAULT:@SECLEVEL=0',
+      secureOptions: require('crypto').constants.SSL_OP_LEGACY_SERVER_CONNECT,
     };
     let socket;
     try {
