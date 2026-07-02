@@ -628,7 +628,7 @@ export default function Layout({ children }: LayoutProps) {
   const visibleMenus = menuItems
     .filter((item) => {
       // Menus que sempre devem aparecer para usuários autenticados
-      const alwaysVisibleMenus = ["Configurações", "Avisos", "TV", "E-commerce", "Suporte Tickets", "Mapa de Calor", "Controle de Ponto", "Controle de Veículos"];
+      const alwaysVisibleMenus = ["Configurações", "Avisos", "TV", "E-commerce", "Suporte Tickets", "Mapa de Calor", "Controle de Ponto", "Controle de Veículos", "Câmeras"];
       if (alwaysVisibleMenus.includes(item.id)) {
         return true;
       }
