@@ -84,15 +84,36 @@ async function baixarEInstalar(downloadUrl, onProgress) {
   const ext = downloadUrl.toLowerCase().endsWith('.msi') ? '.msi' : '.exe';
   const destino = path.join(os.tmpdir(), `ColetorPilar-Setup-${Date.now()}${ext}`);
   await baixarArquivo(downloadUrl, destino, onProgress);
-  // Lança o instalador e encerra o app atual
+
   if (ext === '.msi') {
-    // msiexec instala silencioso com barra de progresso básica
-    spawn('msiexec', ['/i', destino, '/qb', '/norestart'], { detached: true, stdio: 'ignore' }).unref();
+    // Script PowerShell:
+    //  1) Aguarda o app atual encerrar (2s)
+    //  2) Desinstala silenciosamente qualquer versão anterior do "Coletor Pilar"
+    //     lida no registro do Windows (Add/Remove Programs), tanto x64 quanto x86.
+    //  3) Instala a nova versão sem prompt de reboot e suprimindo o Restart Manager
+    //     (evita que o Windows peça para reiniciar arquivos em uso).
+    const ps = `
+      Start-Sleep -Seconds 2
+      $paths = @(
+        'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
+        'HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*'
+      )
+      Get-ItemProperty $paths -ErrorAction SilentlyContinue |
+        Where-Object { $_.DisplayName -like 'Coletor Pilar*' -or $_.DisplayName -like 'ColetorPilar*' } |
+        ForEach-Object {
+          if ($_.PSChildName -match '^\\{[0-9A-Fa-f-]+\\}$') {
+            Start-Process msiexec.exe -ArgumentList '/x',$_.PSChildName,'/qn','/norestart','REBOOT=ReallySuppress','MSIRESTARTMANAGERCONTROL=Disable' -Wait
+          }
+        }
+      Start-Process msiexec.exe -ArgumentList '/i','"${destino.replace(/\\/g, '\\\\')}"','/qb','/norestart','REBOOT=ReallySuppress','MSIRESTARTMANAGERCONTROL=Disable','MSIDISABLERMRESTART=1','REINSTALLMODE=vomus' -Wait
+    `.trim();
+    spawn('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', ps], { detached: true, stdio: 'ignore' }).unref();
   } else {
-    spawn(destino, [], { detached: true, stdio: 'ignore' }).unref();
+    spawn(destino, ['/S'], { detached: true, stdio: 'ignore' }).unref();
   }
   setTimeout(() => { app.isQuitting = true; app.quit(); }, 800);
   return destino;
 }
+
 
 module.exports = { checarAtualizacao, baixarEInstalar };
