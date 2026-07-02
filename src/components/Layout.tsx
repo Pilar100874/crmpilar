@@ -1561,6 +1561,7 @@ export default function Layout({ children }: LayoutProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <OpenInNewTabButton />
     </LayoutContext.Provider>
   );
 }
