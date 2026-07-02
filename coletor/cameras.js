@@ -100,8 +100,6 @@ async function fetchSnapshot(cam) {
 }
 
 async function listarCameras(cfg) {
-  // A tabela de câmeras tem RLS (somente usuários autenticados); a chave anônima
-  // retorna lista vazia. Usa edge function dedicada que lê com service role.
   const resp = await fetch(`${cfg.url}/functions/v1/cv-coletor-cameras`, {
     method: 'POST',
     headers: {
@@ -109,7 +107,7 @@ async function listarCameras(cfg) {
       apikey: cfg.anonKey,
       Authorization: `Bearer ${cfg.anonKey}`,
     },
-    body: JSON.stringify({}),
+    body: JSON.stringify({ filial_id: cfg.filialId || null }),
   });
   if (!resp.ok) throw new Error(`listar câmeras HTTP ${resp.status}`);
   const json = await resp.json();
