@@ -203,6 +203,7 @@ export default function CVInspectionConfig() {
       <Card className="bg-muted/30">
         <CardContent className="p-4 text-sm text-muted-foreground space-y-1">
           <p className="flex items-center gap-2"><Badge variant="outline">Dica</Badge> A mesma lista de ângulos é usada tanto na entrada quanto na saída, para que a comparação lado a lado funcione corretamente.</p>
+          <p className="flex items-center gap-2"><Badge variant="outline">Inversão</Badge> Para câmeras IP, defina a <strong>Câmera de saída</strong> quando o veículo entra por um lado e sai por outro — o sistema fará a captura pela câmera correspondente ao sentido.</p>
         </CardContent>
       </Card>
     </div>
