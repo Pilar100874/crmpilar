@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
 
 type AngleSource = "device" | "ip_camera";
-interface Angle { key: string; label: string; required: boolean; source?: AngleSource; camera_id?: string | null; }
+interface Angle { key: string; label: string; required: boolean; source?: AngleSource; camera_id?: string | null; exit_camera_id?: string | null; }
 interface CameraOption { id: string; nome: string; }
 
 
@@ -32,6 +32,7 @@ export default function CVInspectionConfig() {
       required: !!a.required,
       source: a.source === "ip_camera" ? "ip_camera" : "device",
       camera_id: a.camera_id ?? null,
+      exit_camera_id: a.exit_camera_id ?? null,
     }));
 
   const load = async () => {
@@ -56,7 +57,7 @@ export default function CVInspectionConfig() {
     s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || `angle_${Date.now()}`;
 
-  const addAngle = () => setPhotos([...photos, { key: `angle_${Date.now()}`, label: "Novo ângulo", required: true, source: "device", camera_id: null }]);
+  const addAngle = () => setPhotos([...photos, { key: `angle_${Date.now()}`, label: "Novo ângulo", required: true, source: "device", camera_id: null, exit_camera_id: null }]);
   const removeAngle = (i: number) => setPhotos(photos.filter((_, idx) => idx !== i));
 
   const updateAngle = (i: number, patch: Partial<Angle>) =>
@@ -133,7 +134,7 @@ export default function CVInspectionConfig() {
                 <Label className="text-xs">Origem da imagem</Label>
                 <Select
                   value={a.source ?? "device"}
-                  onValueChange={(v) => updateAngle(i, { source: v as AngleSource, camera_id: v === "device" ? null : a.camera_id ?? null })}
+                  onValueChange={(v) => updateAngle(i, { source: v as AngleSource, camera_id: v === "device" ? null : a.camera_id ?? null, exit_camera_id: v === "device" ? null : a.exit_camera_id ?? null })}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -143,22 +144,43 @@ export default function CVInspectionConfig() {
                 </Select>
               </div>
               {a.source === "ip_camera" && (
-                <div className="min-w-[200px] space-y-1">
-                  <Label className="text-xs">Câmera</Label>
-                  <Select
-                    value={a.camera_id ?? ""}
-                    onValueChange={(v) => updateAngle(i, { camera_id: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={cameras.length ? "Selecione a câmera" : "Nenhuma câmera cadastrada"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cameras.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <>
+                  <div className="min-w-[200px] space-y-1">
+                    <Label className="text-xs">Câmera (Entrada)</Label>
+                    <Select
+                      value={a.camera_id ?? ""}
+                      onValueChange={(v) => updateAngle(i, { camera_id: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={cameras.length ? "Selecione a câmera" : "Nenhuma câmera cadastrada"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cameras.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="min-w-[200px] space-y-1">
+                    <Label className="text-xs" title="Use quando o veículo entra por um ponto e sai por outro — a comparação usará esta câmera na saída.">
+                      Câmera de saída (inverter)
+                    </Label>
+                    <Select
+                      value={a.exit_camera_id ?? "__same__"}
+                      onValueChange={(v) => updateAngle(i, { exit_camera_id: v === "__same__" ? null : v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Mesma da entrada" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__same__">Mesma da entrada</SelectItem>
+                        {cameras.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
               )}
               <div className="flex items-center gap-2 pb-2">
                 <Switch checked={a.required} onCheckedChange={(v) => updateAngle(i, { required: v })} />
@@ -181,6 +203,7 @@ export default function CVInspectionConfig() {
       <Card className="bg-muted/30">
         <CardContent className="p-4 text-sm text-muted-foreground space-y-1">
           <p className="flex items-center gap-2"><Badge variant="outline">Dica</Badge> A mesma lista de ângulos é usada tanto na entrada quanto na saída, para que a comparação lado a lado funcione corretamente.</p>
+          <p className="flex items-center gap-2"><Badge variant="outline">Inversão</Badge> Para câmeras IP, defina a <strong>Câmera de saída</strong> quando o veículo entra por um lado e sai por outro — o sistema fará a captura pela câmera correspondente ao sentido.</p>
         </CardContent>
       </Card>
     </div>

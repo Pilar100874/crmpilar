@@ -122,6 +122,7 @@ import CVMaintenance from "./pages/controle-veiculos/CVMaintenance";
 import CVInspectionConfig from "./pages/controle-veiculos/CVInspectionConfig";
 import CVHelpers from "./pages/controle-veiculos/CVHelpers";
 import CVCameras from "./pages/controle-veiculos/CVCameras";
+import CVVehicleHistory from "./pages/controle-veiculos/CVVehicleHistory";
 import CVisLayout from "./pages/controle-visitantes/CVisLayout";
 import CVisDashboard from "./pages/controle-visitantes/CVisDashboard";
 import CVisEntrada from "./pages/controle-visitantes/CVisEntrada";
@@ -481,6 +482,7 @@ const App = () => (
                 <Route path="vistoria-config" element={<CVInspectionConfig />} />
                 <Route path="ajudantes" element={<CVHelpers />} />
               <Route path="cameras" element={<CVCameras />} />
+              <Route path="historico-imagens" element={<CVVehicleHistory />} />
               </Route>
               <Route path="/controle-visitantes" element={<CVisLayout />}>
                 <Route index element={<CVisDashboard />} />

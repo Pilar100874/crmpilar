@@ -12,6 +12,8 @@ export interface PhotoAngle {
   required?: boolean;
   source?: "device" | "ip_camera";
   camera_id?: string | null;
+  /** Câmera alternativa usada na SAÍDA quando o veículo passa por outro ponto (inversão). */
+  exit_camera_id?: string | null;
 }
 
 
