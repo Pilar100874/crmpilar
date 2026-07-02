@@ -34,10 +34,77 @@ function decodeChunked(buf) {
   return Buffer.concat(parts);
 }
 
+// Variações de opções TLS aceitas por diferentes builds de OpenSSL/BoringSSL.
+// BoringSSL (Electron/Chromium) rejeita @SECLEVEL=0 e SSL_OP_LEGACY_SERVER_CONNECT
+// com "OPENSSL_internal:INVALID_COMMAND". Tentamos, do mais permissivo ao mais básico.
+function buildTlsVariants(hostname, port) {
+  const base = { host: hostname, port, servername: hostname, rejectUnauthorized: false };
+  const variants = [];
+  // 1) OpenSSL clássico com SECLEVEL=0 (legado total)
+  try {
+    variants.push({
+      ...base,
+      minVersion: 'TLSv1',
+      ciphers: 'DEFAULT:@SECLEVEL=0',
+      secureOptions: require('crypto').constants.SSL_OP_LEGACY_SERVER_CONNECT,
+    });
+  } catch {}
+  // 2) Apenas minVersion baixo
+  variants.push({ ...base, minVersion: 'TLSv1' });
+  // 3) Apenas cifras clássicas sem SECLEVEL
+  variants.push({ ...base, minVersion: 'TLSv1', ciphers: 'ALL:!COMPLEMENTOFDEFAULT:!eNULL' });
+  // 4) Padrão do Node (última tentativa antes de curl)
+  variants.push({ ...base });
+  return variants;
+}
+
+function isInvalidCommandErr(e) {
+  const s = (e && (e.message || e.code || '')) + '';
+  return /INVALID_COMMAND|ERR_TLS|ERR_SSL|unsupported|invalid cipher/i.test(s);
+}
+
+// Fallback: usa curl.exe (Windows 10+) — Schannel aceita TLS 1.0/1.1 legado do Control iD.
+function curlRequest(opts, body) {
+  return new Promise((resolve, reject) => {
+    const proto = opts.protocol === 'https:' ? 'https' : 'http';
+    const url = `${proto}://${opts.hostname}:${opts.port}${opts.path || '/'}`;
+    const payload = body === undefined || body === null
+      ? ''
+      : (typeof body === 'string' ? body : JSON.stringify(body));
+    const args = ['-sk', '-i', '--http1.1', '--max-time', String(Math.ceil((opts.timeout || 15000) / 1000)),
+      '-X', opts.method || 'GET', '-H', 'Content-Type: application/json',
+      '-H', 'Connection: close'];
+    if (payload) { args.push('--data-binary', payload); }
+    args.push(url);
+    // Windows ships curl.exe; on Linux/macOS, usual "curl".
+    const bin = os.platform() === 'win32' ? 'curl.exe' : 'curl';
+    let proc;
+    try { proc = spawn(bin, args, { windowsHide: true }); }
+    catch (e) { return reject(new Error(`curl indisponível: ${e.message}`)); }
+    const out = []; const errBuf = [];
+    proc.stdout.on('data', (c) => out.push(c));
+    proc.stderr.on('data', (c) => errBuf.push(c));
+    proc.on('error', (e) => reject(new Error(`curl falhou: ${e.message}`)));
+    proc.on('close', (code) => {
+      if (code !== 0) return reject(new Error(`curl exit ${code}: ${Buffer.concat(errBuf).toString('utf8').slice(0, 200)}`));
+      const raw = Buffer.concat(out);
+      const splitAt = raw.indexOf('\r\n\r\n');
+      if (splitAt < 0) return reject(new Error('resposta curl inválida'));
+      const head = raw.slice(0, splitAt).toString('utf8');
+      const bodyBuf = raw.slice(splitAt + 4);
+      const statusMatch = head.match(/^HTTP\/\d(?:\.\d)?\s+(\d+)/i);
+      const status = statusMatch ? Number(statusMatch[1]) : 0;
+      const locMatch = head.match(/\r?\n\s*location:\s*([^\r\n]+)/i);
+      const location = locMatch ? locMatch[1].trim() : null;
+      resolve({ status, body: bodyBuf.toString('utf8'), headers: {}, location });
+    });
+  });
+}
+
 // Transporte por socket bruto — o Control iD envia cabeçalhos fora do padrão
 // HTTP/1.1 que o parser do Node rejeita ("Parse Error: Invalid header value char").
 // Falamos HTTP/1.0 direto no socket e parseamos a resposta manualmente.
-function requestRaw(opts, body) {
+function requestRawOnce(opts, body, tlsOpts) {
   return new Promise((resolve, reject) => {
     const isHttps = opts.protocol === 'https:';
     const payload = body === undefined || body === null
@@ -47,7 +114,6 @@ function requestRaw(opts, body) {
       Host: `${opts.hostname}:${opts.port}`,
       Connection: 'close',
       'Content-Type': 'application/json',
-      // Control iD retorna HTTP 400 se houver Content-Type sem Content-Length
       'Content-Length': Buffer.byteLength(payload),
       ...(opts.headers || {}),
     };
@@ -76,17 +142,6 @@ function requestRaw(opts, body) {
       resolve({ status, body: bodyBuf.toString('utf8'), headers: {}, location });
     };
 
-    const tlsOpts = {
-      host: opts.hostname,
-      port: opts.port,
-      rejectUnauthorized: false,       // certificado autoassinado de fábrica
-      servername: opts.hostname,
-      minVersion: 'TLSv1',             // firmwares antigos usam TLS 1.0/1.1
-      // OpenSSL 3 (Node/Electron modernos) bloqueia TLS 1.0/1.1 e cifras
-      // antigas mesmo com minVersion — SECLEVEL=0 reabilita (relógios Control iD)
-      ciphers: 'DEFAULT:@SECLEVEL=0',
-      secureOptions: require('crypto').constants.SSL_OP_LEGACY_SERVER_CONNECT,
-    };
     let socket;
     try {
       socket = isHttps
@@ -104,6 +159,27 @@ function requestRaw(opts, body) {
     socket.once('close', finish);
   });
 }
+
+async function requestRaw(opts, body) {
+  const isHttps = opts.protocol === 'https:';
+  if (!isHttps) return requestRawOnce(opts, body, null);
+  const variants = buildTlsVariants(opts.hostname, opts.port);
+  let lastErr;
+  for (const v of variants) {
+    try { return await requestRawOnce(opts, body, v); }
+    catch (e) {
+      lastErr = e;
+      // Só tenta próxima variante se o erro for de configuração/handshake TLS
+      if (!isInvalidCommandErr(e) && !/handshake|SSL|TLS|EPROTO|wrong version/i.test(e.message || '')) {
+        throw e;
+      }
+    }
+  }
+  // Todas variantes falharam — tenta curl (Schannel no Windows aceita TLS legado)
+  try { return await curlRequest(opts, body); }
+  catch (e2) { throw new Error(`TLS falhou: ${lastErr?.message || 'handshake'} | curl: ${e2.message}`); }
+}
+
 
 // Segue redirecionamentos 301/302/307/308 (alguns firmwares Control iD
 // redirecionam HTTP→HTTPS ou para outra porta). Máx. 4 saltos.
