@@ -3,6 +3,7 @@ import { Menu, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePontoEmpresa } from "./usePontoEmpresa";
 import WizardBackBar from "./WizardBackBar";
+import OpenInNewTabButton, { isSoloMode } from "@/components/OpenInNewTabButton";
 import {
   Select,
   SelectContent,
@@ -14,6 +15,7 @@ import {
 export default function PontoLayout() {
   const { empresas, empresaId, setEmpresaId } = usePontoEmpresa();
   const location = useLocation();
+  const solo = isSoloMode();
 
   // Ocultar o seletor de empresa em telas globais de configuração ou ajuda
   const rotasGlobais = [
