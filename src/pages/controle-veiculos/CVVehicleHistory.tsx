@@ -63,12 +63,15 @@ export default function CVVehicleHistory() {
     if (!vehicleId) { setMovements([]); setPhotos([]); return; }
     (async () => {
       setLoading(true);
-      const { data: movs } = await supabase
+      let q = supabase
         .from("cv_vehicle_movements")
-        .select("id,exit_time,entry_time,status,driver_id,exit_km,entry_km")
+        .select("id,exit_time,entry_time,status,driver_id,exit_km,entry_km,created_at")
         .eq("vehicle_id", vehicleId)
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(200);
+      if (dateFrom) q = q.gte("created_at", `${dateFrom}T00:00:00`);
+      if (dateTo) q = q.lte("created_at", `${dateTo}T23:59:59`);
+      const { data: movs } = await q;
       const ids = (movs ?? []).map((m: any) => m.id);
       setMovements((movs ?? []) as Movement[]);
       if (!ids.length) { setPhotos([]); setLoading(false); return; }
