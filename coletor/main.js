@@ -2,7 +2,7 @@ const { app, BrowserWindow, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const {
   startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow,
-  startPonto, stopPonto, startCameras, stopCameras,
+  startPonto, stopPonto, startCameras, stopCameras, listarFiliais,
 } = require('./collector');
 const { checarAtualizacao, baixarEInstalar } = require('./updater');
 
