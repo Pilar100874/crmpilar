@@ -45,7 +45,8 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Pr
         }
       };
 
-      channel = supabase.channel("webrtc-signal", {
+      const chanName = filialId ? `webrtc-signal:${filialId}` : "webrtc-signal";
+      channel = supabase.channel(chanName, {
         config: { broadcast: { self: false, ack: false } },
       });
       channel.on("broadcast", { event: "msg" }, async ({ payload }: any) => {
