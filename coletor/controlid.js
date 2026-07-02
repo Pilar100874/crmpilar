@@ -66,10 +66,12 @@ function requestRaw(opts, body) {
       let bodyBuf = raw.slice(splitAt + 4);
       const statusMatch = head.match(/^HTTP\/\d(?:\.\d)?\s+(\d+)/i);
       const status = statusMatch ? Number(statusMatch[1]) : 0;
+      const locMatch = head.match(/\r?\n\s*location:\s*([^\r\n]+)/i);
+      const location = locMatch ? locMatch[1].trim() : null;
       if (/transfer-encoding:\s*chunked/i.test(head)) {
         bodyBuf = decodeChunked(bodyBuf);
       }
-      resolve({ status, body: bodyBuf.toString('utf8'), headers: {} });
+      resolve({ status, body: bodyBuf.toString('utf8'), headers: {}, location });
     };
 
     const tlsOpts = {
