@@ -453,6 +453,7 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
         );
       })}
       </div>
+      <ImageZoomDialog src={zoomSrc} onClose={() => setZoomSrc(null)} />
     </div>
   );
 }
