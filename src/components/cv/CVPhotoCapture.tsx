@@ -444,6 +444,7 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
           </Card>
         );
       })}
+      </div>
     </div>
   );
 }
