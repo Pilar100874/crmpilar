@@ -108,7 +108,7 @@ export default function PontoColetorDownload() {
                 disabled={downloading === p.id}
               >
                 <Download className="mr-2 h-4 w-4" />
-                {downloading === p.id ? "Baixando…" : "Baixar .exe"}
+                {downloading === p.id ? "Baixando…" : "Baixar .msi"}
               </Button>
             </CardContent>
           </Card>
