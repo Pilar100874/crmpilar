@@ -15,92 +15,85 @@ const https = require('https');
 const net = require('net');
 const tls = require('tls');
 
-function isHeaderParseError(error) {
-  const msg = String(error?.message || error || '');
-  return /Invalid header value char|Parse Error|HPE_/i.test(msg);
+function decodeChunked(buf) {
+  // Decodificador de Transfer-Encoding: chunked (robusto para múltiplos chunks)
+  const parts = [];
+  let i = 0;
+  while (i < buf.length) {
+    const lineEnd = buf.indexOf('\r\n', i);
+    if (lineEnd < 0) break;
+    const sizeHex = buf.slice(i, lineEnd).toString('ascii').split(';')[0].trim();
+    const size = parseInt(sizeHex, 16);
+    if (!Number.isFinite(size) || size === 0) break;
+    const start = lineEnd + 2;
+    parts.push(buf.slice(start, start + size));
+    i = start + size + 2; // pula \r\n final do chunk
+  }
+  return Buffer.concat(parts);
 }
 
-function rawRequest(opts, body) {
+// Transporte por socket bruto — o Control iD envia cabeçalhos fora do padrão
+// HTTP/1.1 que o parser do Node rejeita ("Parse Error: Invalid header value char").
+// Falamos HTTP/1.0 direto no socket e parseamos a resposta manualmente.
+function request(opts, body) {
   return new Promise((resolve, reject) => {
     const isHttps = opts.protocol === 'https:';
-    const payload = body ? (typeof body === 'string' ? body : JSON.stringify(body)) : '';
+    const payload = body === undefined || body === null
+      ? ''
+      : (typeof body === 'string' ? body : JSON.stringify(body));
     const headers = {
       Host: `${opts.hostname}:${opts.port}`,
       Connection: 'close',
       'Content-Type': 'application/json',
+      // Control iD retorna HTTP 400 se houver Content-Type sem Content-Length
       'Content-Length': Buffer.byteLength(payload),
       ...(opts.headers || {}),
     };
     const headerLines = Object.entries(headers).map(([k, v]) => `${k}: ${v}`).join('\r\n');
     const requestText = `${opts.method || 'GET'} ${opts.path || '/'} HTTP/1.1\r\n${headerLines}\r\n\r\n${payload}`;
     const chunks = [];
-    const socket = isHttps
-      ? tls.connect({ host: opts.hostname, port: opts.port, rejectUnauthorized: false, servername: opts.hostname }, () => socket.write(requestText))
-      : net.connect({ host: opts.hostname, port: opts.port }, () => socket.write(requestText));
+    let finished = false;
 
-    socket.setTimeout(opts.timeout || 10000);
-    socket.on('data', (chunk) => chunks.push(chunk));
-    socket.once('timeout', () => socket.destroy(new Error('timeout')));
-    socket.once('error', reject);
-    socket.once('end', () => {
-      const raw = Buffer.concat(chunks).toString('utf8');
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      const raw = Buffer.concat(chunks);
       const splitAt = raw.indexOf('\r\n\r\n');
-      if (splitAt < 0) return reject(new Error(`resposta inválida do relógio: ${raw.slice(0, 120)}`));
-      const head = raw.slice(0, splitAt);
-      let responseBody = raw.slice(splitAt + 4);
+      if (splitAt < 0) {
+        return reject(new Error(`resposta inválida do relógio: ${raw.toString('utf8').slice(0, 120)}`));
+      }
+      const head = raw.slice(0, splitAt).toString('utf8');
+      let bodyBuf = raw.slice(splitAt + 4);
       const statusMatch = head.match(/^HTTP\/\d(?:\.\d)?\s+(\d+)/i);
       const status = statusMatch ? Number(statusMatch[1]) : 0;
       if (/transfer-encoding:\s*chunked/i.test(head)) {
-        responseBody = responseBody.replace(/^[0-9a-f]+\r\n/i, '').replace(/\r\n0\r\n\r\n$/i, '');
+        bodyBuf = decodeChunked(bodyBuf);
       }
-      resolve({ status, body: responseBody, headers: {} });
-    });
-  });
-}
-
-function request(opts, body) {
-  return new Promise((resolve, reject) => {
-    const isHttps = opts.protocol === 'https:';
-    const lib = isHttps ? https : http;
-    // Control iD usa certificado autoassinado de fábrica — aceitar
-    if (isHttps && opts.rejectUnauthorized === undefined) {
-      opts.rejectUnauthorized = false;
-    }
-    // Control iD envia cabeçalhos fora do padrão HTTP/1.1 (caracteres inválidos);
-    // o parser estrito do Node rejeita com "Parse Error: Invalid header value char".
-    // O parser permissivo aceita esses cabeçalhos.
-    if (opts.insecureHTTPParser === undefined) {
-      opts.insecureHTTPParser = true;
-    }
-    // Control iD rejeita HTTP 400 "Content-Type specified but Content-Length not specified"
-    // quando o Node envia body via chunked transfer. Sempre calcular Content-Length.
-    const payload = body === undefined || body === null
-      ? ''
-      : (typeof body === 'string' ? body : JSON.stringify(body));
-    opts.headers = {
-      ...(opts.headers || {}),
-      'Content-Length': Buffer.byteLength(payload),
+      resolve({ status, body: bodyBuf.toString('utf8'), headers: {} });
     };
-    const req = lib.request(opts, (res) => {
-      let data = '';
-      res.on('data', (chunk) => data += chunk);
-      res.on('end', () => resolve({ status: res.statusCode, body: data, headers: res.headers }));
-    });
-    req.on('error', async (error) => {
-      if (isHeaderParseError(error)) {
-        try {
-          resolve(await rawRequest(opts, payload));
-          return;
-        } catch (fallbackError) {
-          reject(fallbackError);
-          return;
-        }
-      }
-      reject(error);
-    });
-    req.setTimeout(opts.timeout || 10000, () => { req.destroy(new Error('timeout')); });
-    if (payload) req.write(payload);
-    req.end();
+
+    const tlsOpts = {
+      host: opts.hostname,
+      port: opts.port,
+      rejectUnauthorized: false,       // certificado autoassinado de fábrica
+      servername: opts.hostname,
+      minVersion: 'TLSv1',             // firmwares antigos usam TLS 1.0/1.1
+    };
+    let socket;
+    try {
+      socket = isHttps
+        ? tls.connect(tlsOpts, () => socket.write(requestText))
+        : net.connect({ host: opts.hostname, port: opts.port }, () => socket.write(requestText));
+    } catch (e) {
+      return reject(e);
+    }
+
+    socket.setTimeout(opts.timeout || 15000);
+    socket.on('data', (chunk) => chunks.push(chunk));
+    socket.once('timeout', () => { socket.destroy(); if (!finished) { finished = true; reject(new Error('timeout')); } });
+    socket.once('error', (e) => { if (!finished) { finished = true; reject(e); } });
+    socket.once('end', finish);
+    socket.once('close', finish);
   });
 }
 

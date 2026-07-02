@@ -63,7 +63,8 @@ async function lerBatidas(equip) {
   if (modelo.includes('control') || modelo.includes('idclass') || modelo.includes('idx') || modelo.includes('idface')) {
     const lastNSR = lastNSRByEquip[equip.id] || 0;
     const novas = await lerBatidasControlID(equip, lastNSR);
-    if (novas.length) lastNSRByEquip[equip.id] = Math.max(...novas.map(p => p.nsr));
+    // reduce (não Math.max(...spread)) — AFDs grandes estouravam a pilha
+    if (novas.length) lastNSRByEquip[equip.id] = novas.reduce((m, p) => (p.nsr > m ? p.nsr : m), lastNSR);
     return novas;
   }
   return [];
