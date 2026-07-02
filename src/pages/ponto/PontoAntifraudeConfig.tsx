@@ -43,6 +43,56 @@ export default function PontoAntifraudeConfig() {
   const [novaRede, setNovaRede] = useState<{ tipo: "ip" | "cidr" | "ssid"; valor: string; descricao: string }>({
     tipo: "ip", valor: "", descricao: "",
   });
+  const [dlgOpen, setDlgOpen] = useState(false);
+  const [editing, setEditing] = useState<Geofence | null>(null);
+  const [formNome, setFormNome] = useState("");
+  const [formMap, setFormMap] = useState<GeofenceMapPickerValue>({
+    lat: -23.55052,
+    lng: -46.633308,
+    raio: 150,
+  });
+
+  const abrirNovo = () => {
+    setEditing(null);
+    setFormNome("");
+    setFormMap({ lat: -23.55052, lng: -46.633308, raio: 150 });
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (p) => setFormMap((s) => ({ ...s, lat: p.coords.latitude, lng: p.coords.longitude })),
+        () => {}
+      );
+    }
+    setDlgOpen(true);
+  };
+
+  const abrirEdicao = (g: Geofence) => {
+    setEditing(g);
+    setFormNome(g.nome);
+    setFormMap({ lat: Number(g.lat), lng: Number(g.lng), raio: g.raio_metros });
+    setDlgOpen(true);
+  };
+
+  const salvarGeo = async () => {
+    if (!empresaId || !formNome.trim()) {
+      toast.error("Informe o nome da área");
+      return;
+    }
+    const payload = {
+      empresa_id: empresaId,
+      nome: formNome.trim(),
+      lat: formMap.lat,
+      lng: formMap.lng,
+      raio_metros: Math.round(formMap.raio),
+    };
+    const q = editing
+      ? (supabase as any).from("ponto_geofences").update(payload).eq("id", editing.id)
+      : (supabase as any).from("ponto_geofences").insert(payload);
+    const { error } = await q;
+    if (error) return toast.error(error.message);
+    toast.success(editing ? "Área atualizada" : "Área criada");
+    setDlgOpen(false);
+    loadAll();
+  };
 
   const loadAll = async () => {
     if (!empresaId) return;
