@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Camera, CheckCircle, X, Upload, Loader2, AlertTriangle, Sparkles, History, Wifi } from "lucide-react";
+import { Camera, CheckCircle, X, Upload, Loader2, AlertTriangle, Sparkles, History, Wifi, ZoomIn } from "lucide-react";
 import { toast } from "sonner";
+import { ImageZoomDialog } from "@/components/ui/image-zoom-dialog";
 
 export interface PhotoAngle {
   key: string;
@@ -56,6 +57,7 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
   const [aiLoading, setAiLoading] = useState<Record<string, boolean>>({});
   const [ipCams, setIpCams] = useState<any[]>([]);
   const [capturingCam, setCapturingCam] = useState<string | null>(null);
+  const [zoomSrc, setZoomSrc] = useState<string | null>(null);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const getUrl = async (path: string) => {
@@ -288,9 +290,10 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                     )}
                   </div>
                   {prev ? (
-                    <a href={prev.url} target="_blank" rel="noreferrer" className="block">
+                    <button type="button" onClick={() => setZoomSrc(prev.url)} className="block w-full group relative">
                       <img src={prev.url} alt="anterior" className="w-full h-32 object-cover rounded border" />
-                    </a>
+                      <span className="absolute bottom-1 right-1 bg-black/60 text-white rounded p-1 opacity-0 group-hover:opacity-100 transition"><ZoomIn className="h-3 w-3" /></span>
+                    </button>
                   ) : (
                     <div className="h-32 border-2 border-dashed rounded flex items-center justify-center bg-muted/20 text-muted-foreground text-[11px]">
                       Sem histórico
@@ -305,7 +308,10 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                   </div>
                   {preview ? (
                     <div className="relative">
-                      <img src={preview} alt={a.label} className="w-full h-32 object-cover rounded border" />
+                      <button type="button" onClick={() => setZoomSrc(preview)} className="block w-full">
+                        <img src={preview} alt={a.label} className="w-full h-32 object-cover rounded border" />
+                      </button>
+                      <span className="absolute bottom-1 right-1 bg-black/60 text-white rounded p-1 pointer-events-none"><ZoomIn className="h-3 w-3" /></span>
                       <Button
                         type="button"
                         size="icon"
@@ -447,6 +453,7 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
         );
       })}
       </div>
+      <ImageZoomDialog src={zoomSrc} onClose={() => setZoomSrc(null)} />
     </div>
   );
 }

@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { History, LogIn, LogOut, Image as ImageIcon, Calendar, Car } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { History, LogIn, LogOut, Image as ImageIcon, Calendar, Car, RotateCcw } from "lucide-react";
 import { CVPageHeader } from "./CVPageHeader";
+import { ImageZoomDialog } from "@/components/ui/image-zoom-dialog";
 
 interface VehicleOpt { id: string; name: string; plate: string; }
 interface Movement {
@@ -30,8 +32,14 @@ interface Photo {
 }
 
 export default function CVVehicleHistory() {
+  const today = new Date();
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const toISO = (d: Date) => d.toISOString().slice(0, 10);
+
   const [vehicles, setVehicles] = useState<VehicleOpt[]>([]);
   const [vehicleId, setVehicleId] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState<string>(toISO(weekAgo));
+  const [dateTo, setDateTo] = useState<string>(toISO(today));
   const [movements, setMovements] = useState<Movement[]>([]);
   const [drivers, setDrivers] = useState<Record<string, string>>({});
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -55,12 +63,15 @@ export default function CVVehicleHistory() {
     if (!vehicleId) { setMovements([]); setPhotos([]); return; }
     (async () => {
       setLoading(true);
-      const { data: movs } = await supabase
+      let q = supabase
         .from("cv_vehicle_movements")
-        .select("id,exit_time,entry_time,status,driver_id,exit_km,entry_km")
+        .select("id,exit_time,entry_time,status,driver_id,exit_km,entry_km,created_at")
         .eq("vehicle_id", vehicleId)
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(200);
+      if (dateFrom) q = q.gte("created_at", `${dateFrom}T00:00:00`);
+      if (dateTo) q = q.lte("created_at", `${dateTo}T23:59:59`);
+      const { data: movs } = await q;
       const ids = (movs ?? []).map((m: any) => m.id);
       setMovements((movs ?? []) as Movement[]);
       if (!ids.length) { setPhotos([]); setLoading(false); return; }
@@ -80,7 +91,7 @@ export default function CVVehicleHistory() {
       setPhotos(withUrls);
       setLoading(false);
     })();
-  }, [vehicleId]);
+  }, [vehicleId, dateFrom, dateTo]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, Photo[]>();
@@ -106,7 +117,7 @@ export default function CVVehicleHistory() {
       <Card>
         <CardContent className="p-4 flex flex-wrap items-end gap-3">
           <div className="flex-1 min-w-[240px]">
-            <label className="text-xs text-muted-foreground">Veículo</label>
+            <Label className="text-xs text-muted-foreground">Veículo</Label>
             <Select value={vehicleId} onValueChange={setVehicleId}>
               <SelectTrigger><SelectValue placeholder="Selecione um veículo" /></SelectTrigger>
               <SelectContent>
@@ -118,10 +129,26 @@ export default function CVVehicleHistory() {
               </SelectContent>
             </Select>
           </div>
+          <div>
+            <Label className="text-xs text-muted-foreground">De</Label>
+            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-[160px]" />
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground">Até</Label>
+            <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-[160px]" />
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setDateFrom(toISO(weekAgo)); setDateTo(toISO(today)); }}
+            title="Últimos 7 dias"
+          >
+            <RotateCcw className="h-4 w-4 mr-1" /> 7 dias
+          </Button>
           {selectedVehicle && (
-            <div className="text-sm text-muted-foreground flex items-center gap-2">
+            <div className="text-sm text-muted-foreground flex items-center gap-2 ml-auto">
               <Car className="h-4 w-4" />
-              <span><strong>{movements.length}</strong> movimentação(ões) · <strong>{photos.length}</strong> foto(s)</span>
+              <span><strong>{movements.length}</strong> mov. · <strong>{photos.length}</strong> foto(s)</span>
             </div>
           )}
         </CardContent>
@@ -177,11 +204,7 @@ export default function CVVehicleHistory() {
         })}
       </div>
 
-      <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
-        <DialogContent className="max-w-4xl p-2">
-          {preview && <img src={preview} alt="Foto" className="w-full h-auto rounded" />}
-        </DialogContent>
-      </Dialog>
+      <ImageZoomDialog src={preview} onClose={() => setPreview(null)} />
     </div>
   );
 }
