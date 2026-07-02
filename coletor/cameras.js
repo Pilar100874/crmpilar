@@ -1,8 +1,10 @@
 // Coletor de câmeras: testa conectividade (snapshot HTTP) das câmeras cadastradas
 // no CRM e reporta status ao servidor. Suporta câmeras internas (LAN local)
 // que o edge function do CRM não alcança.
+// Suporta Basic e Digest Authentication (Hikvision/Intelbras usam Digest).
 const http = require('http');
 const https = require('https');
+const crypto = require('crypto');
 
 function pathFor(marca, snapshotPath) {
   if (snapshotPath) return snapshotPath;
@@ -14,27 +16,51 @@ function pathFor(marca, snapshotPath) {
   }
 }
 
-function fetchSnapshot(cam) {
+function md5(s) { return crypto.createHash('md5').update(s).digest('hex'); }
+
+function parseDigestChallenge(header) {
+  const out = {};
+  const clean = header.replace(/^Digest\s+/i, '');
+  const re = /(\w+)=(?:"([^"]*)"|([^,]*))/g;
+  let m;
+  while ((m = re.exec(clean))) out[m[1]] = m[2] ?? m[3];
+  return out;
+}
+
+function buildDigestHeader(user, pass, method, uri, challenge) {
+  const realm = challenge.realm || '';
+  const nonce = challenge.nonce || '';
+  const qop = challenge.qop;
+  const algorithm = (challenge.algorithm || 'MD5').toUpperCase();
+  const opaque = challenge.opaque;
+  const nc = '00000001';
+  const cnonce = crypto.randomBytes(8).toString('hex');
+  const ha1 = md5(`${user}:${realm}:${pass}`);
+  const ha2 = md5(`${method}:${uri}`);
+  let response;
+  if (qop) {
+    response = md5(`${ha1}:${nonce}:${nc}:${cnonce}:${qop.split(',')[0].trim()}:${ha2}`);
+  } else {
+    response = md5(`${ha1}:${nonce}:${ha2}`);
+  }
+  const parts = [
+    `username="${user}"`, `realm="${realm}"`, `nonce="${nonce}"`,
+    `uri="${uri}"`, `algorithm=${algorithm}`, `response="${response}"`,
+  ];
+  if (qop) parts.push(`qop=${qop.split(',')[0].trim()}`, `nc=${nc}`, `cnonce="${cnonce}"`);
+  if (opaque) parts.push(`opaque="${opaque}"`);
+  return 'Digest ' + parts.join(', ');
+}
+
+function doRequest(opts, extraHeaders = {}) {
   return new Promise((resolve, reject) => {
-    const isHttps = (cam.protocolo || 'http') === 'https';
-    const port = cam.porta || (isHttps ? 443 : 80);
-    const path = pathFor(cam.marca, cam.snapshot_path);
-    const headers = {};
-    if (cam.usuario) {
-      const basic = Buffer.from(`${cam.usuario}:${cam.senha || ''}`).toString('base64');
-      headers['Authorization'] = `Basic ${basic}`;
-    }
-    const lib = isHttps ? https : http;
-    const req = lib.request({
-      hostname: cam.host, port, path, method: 'GET', headers,
-      rejectUnauthorized: false, timeout: 8000,
-    }, (res) => {
+    const lib = opts.protocol === 'https:' ? https : http;
+    const req = lib.request({ ...opts, headers: { ...(opts.headers || {}), ...extraHeaders } }, (res) => {
       const chunks = [];
       res.on('data', c => chunks.push(c));
-      res.on('end', () => {
-        if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode} de ${cam.host}`));
-        resolve({ bytes: Buffer.concat(chunks), contentType: res.headers['content-type'] || 'image/jpeg' });
-      });
+      res.on('end', () => resolve({
+        status: res.statusCode, headers: res.headers, body: Buffer.concat(chunks),
+      }));
     });
     req.on('error', reject);
     req.on('timeout', () => req.destroy(new Error('timeout')));
@@ -42,8 +68,38 @@ function fetchSnapshot(cam) {
   });
 }
 
+async function fetchSnapshot(cam) {
+  const isHttps = (cam.protocolo || 'http') === 'https';
+  const port = cam.porta || (isHttps ? 443 : 80);
+  const uri = pathFor(cam.marca, cam.snapshot_path);
+  const baseOpts = {
+    hostname: cam.host, port, path: uri, method: 'GET',
+    protocol: isHttps ? 'https:' : 'http:',
+    rejectUnauthorized: false, timeout: 8000, headers: {},
+  };
+
+  // 1ª tentativa: Basic (ou sem auth)
+  if (cam.usuario) {
+    const basic = Buffer.from(`${cam.usuario}:${cam.senha || ''}`).toString('base64');
+    baseOpts.headers['Authorization'] = `Basic ${basic}`;
+  }
+  let resp = await doRequest(baseOpts);
+
+  // Se 401 com Digest challenge, retenta com Digest
+  if (resp.status === 401 && cam.usuario) {
+    const wa = resp.headers['www-authenticate'] || '';
+    if (/^Digest/i.test(wa)) {
+      const challenge = parseDigestChallenge(wa);
+      const digest = buildDigestHeader(cam.usuario, cam.senha || '', 'GET', uri, challenge);
+      resp = await doRequest({ ...baseOpts, headers: {} }, { Authorization: digest });
+    }
+  }
+
+  if (resp.status !== 200) throw new Error(`HTTP ${resp.status} de ${cam.host}`);
+  return { bytes: resp.body, contentType: resp.headers['content-type'] || 'image/jpeg' };
+}
+
 async function listarCameras(cfg) {
-  // Lê câmeras ativas via REST direto do PostgREST usando anon key.
   const url = `${cfg.url}/rest/v1/cv_cameras?ativo=eq.true&select=id,nome,marca,tipo_rede,host,porta,protocolo,usuario,senha,snapshot_path,angulo_key,grupo_id`;
   const resp = await fetch(url, {
     headers: { apikey: cfg.anonKey, Authorization: `Bearer ${cfg.anonKey}` },
