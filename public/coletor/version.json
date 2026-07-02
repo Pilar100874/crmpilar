@@ -1,5 +1,5 @@
 {
-  "version": "1.2.9",
+  "version": "1.3.0",
   "downloadUrl": "https://crm.pilar.com.br/__l5e/assets-v1/3a8b9901-e6f3-48fe-b3a0-8de508d05c81/ColetorPilar-Setup.msi",
-  "notas": "1.2.9: hub WebRTC agora emite heartbeat (coletor-online) a cada 4s no canal de sinalização. O CRM diferencia se o Coletor está offline, se a câmera não pertence à filial dele, ou se o RTSP falhou — em vez do genérico 'Coletor não respondeu'. Inclui 1.2.8: fallback via curl.exe para relógios Control iD com TLS legado."
+  "notas": "1.3.0: atualização automática agora desinstala a versão anterior do 'Coletor Pilar' no Add/Remove Programs (registro do Windows, x64 e x86) antes de instalar a nova, evitando entradas duplicadas. Instalação usa REBOOT=ReallySuppress + MSIRESTARTMANAGERCONTROL=Disable + MSIDISABLERMRESTART=1 + REINSTALLMODE=vomus para não exigir reinício do computador (arquivos em uso são substituídos via Restart Manager sem prompt)."
 }
