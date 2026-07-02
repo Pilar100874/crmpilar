@@ -70,8 +70,7 @@ Deno.serve(async (req) => {
       .select("geofence_obrigatorio_app, antifraude_ativo")
       .eq("id", func.empresa_id)
       .maybeSingle();
-    const exigirGeofenceApp = empCfg?.geofence_obrigatorio_app !== false;
-    const origemApp = (body.origem || "app").startsWith("app");
+    const origemAppOld = origem.startsWith("app");
 
     const fatores: Record<string, { ok: boolean; peso: number; detalhe?: string }> = {};
     let scoreObtido = 0;
