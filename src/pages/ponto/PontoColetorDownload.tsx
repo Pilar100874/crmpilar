@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Download, Monitor, CheckCircle2, Copy, Database, Key, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import winAsset from "../../../public/coletor/ColetorPilar-Setup.asset.json";
+import winAsset from "../../../public/coletor/ColetorPilar-Setup.msi.asset.json";
 
 type Platform = {
   id: string;
@@ -14,16 +14,15 @@ type Platform = {
   icon: any;
   badge: string;
   url?: string;
-  variants?: { label: string; file: string; url: string }[];
 };
 
 const platforms: Platform[] = [
   {
     id: "win",
     label: "Windows",
-    file: "ColetorPilar-Setup.exe",
+    file: "ColetorPilar-Setup.msi",
     icon: Monitor,
-    badge: "Instalador único (.exe) · x64 · sem dependências",
+    badge: "Instalador MSI · x64 · Menu Iniciar + inicialização automática",
     url: winAsset.url,
   },
 ];
