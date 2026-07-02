@@ -72,6 +72,15 @@ function request(opts, body) {
     if (opts.insecureHTTPParser === undefined) {
       opts.insecureHTTPParser = true;
     }
+    // Control iD rejeita HTTP 400 "Content-Type specified but Content-Length not specified"
+    // quando o Node envia body via chunked transfer. Sempre calcular Content-Length.
+    const payload = body === undefined || body === null
+      ? ''
+      : (typeof body === 'string' ? body : JSON.stringify(body));
+    opts.headers = {
+      ...(opts.headers || {}),
+      'Content-Length': Buffer.byteLength(payload),
+    };
     const req = lib.request(opts, (res) => {
       let data = '';
       res.on('data', (chunk) => data += chunk);
@@ -80,7 +89,7 @@ function request(opts, body) {
     req.on('error', async (error) => {
       if (isHeaderParseError(error)) {
         try {
-          resolve(await rawRequest(opts, body));
+          resolve(await rawRequest(opts, payload));
           return;
         } catch (fallbackError) {
           reject(fallbackError);
@@ -90,7 +99,7 @@ function request(opts, body) {
       reject(error);
     });
     req.setTimeout(opts.timeout || 10000, () => { req.destroy(new Error('timeout')); });
-    if (body) req.write(typeof body === 'string' ? body : JSON.stringify(body));
+    if (payload) req.write(payload);
     req.end();
   });
 }
