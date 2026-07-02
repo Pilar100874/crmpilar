@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { History, LogIn, LogOut, Image as ImageIcon, Calendar, Car } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { History, LogIn, LogOut, Image as ImageIcon, Calendar, Car, RotateCcw } from "lucide-react";
 import { CVPageHeader } from "./CVPageHeader";
+import { ImageZoomDialog } from "@/components/ui/image-zoom-dialog";
 
 interface VehicleOpt { id: string; name: string; plate: string; }
 interface Movement {
