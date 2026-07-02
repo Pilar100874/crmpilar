@@ -36,7 +36,20 @@
   </style>
 </head>
 <body>
-  <h1>🕒 Coletor Desktop <span class="badge">pré-configurado</span></h1>
+  <h1>🕒 Coletor Desktop <span class="badge" id="verLabel">v—</span> <span class="badge badge-off" id="updBadge" style="display:none">atualização disponível</span></h1>
+
+  <div class="card" id="updCard" style="display:none; border:1px solid #22c55e55">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap">
+      <div>
+        <b>🚀 Nova versão disponível: <span id="updRemote">—</span></b>
+        <div class="muted" id="updNotas"></div>
+      </div>
+      <div>
+        <button onclick="instalarAtualizacao()" id="updBtn" style="background:#22c55e; border-color:#16a34a; color:white">Baixar e instalar</button>
+      </div>
+    </div>
+    <div class="muted" id="updProgress" style="display:none; margin-top:8px">Baixando… <b id="updPct">0</b>%</div>
+  </div>
 
   <div class="grid2">
     <!-- CARD PONTO -->
