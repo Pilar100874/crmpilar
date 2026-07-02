@@ -178,49 +178,21 @@ export default function PontoColetorDownload() {
           <h3 className="font-semibold">Como instalar</h3>
           <div className="space-y-3 text-sm text-muted-foreground">
             <div>
-              <p className="font-medium text-foreground text-base">Windows (Pacote Portátil - Sem instalação)</p>
+              <p className="font-medium text-foreground text-base">Windows (Instalador único .exe)</p>
               <p className="text-xs text-muted-foreground mt-1 mb-2">
-                O arquivo baixado para Windows é um <strong>Pacote Portátil (.zip)</strong>. Ele não possui um instalador tradicional porque roda diretamente da pasta onde você descompactar.
+                O download é um <strong>único arquivo executável</strong> (<code>ColetorPilar-Setup.exe</code>). Não precisa descompactar nada.
               </p>
               <ol className="ml-4 list-decimal space-y-2">
-                <li>Extraia todo o conteúdo do arquivo <strong>PontoColetor-Windows.zip</strong> para uma pasta permanente de sua preferência (ex: <code>C:\PontoColetor</code> ou dentro da sua pasta de <code>Documentos</code>).</li>
-                <li>Abra essa pasta extraída. Você verá exatamente os arquivos exibidos na imagem (incluindo o executável principal <strong>PontoColetor.exe</strong> com o ícone do aplicativo).</li>
+                <li>Baixe o arquivo <strong>ColetorPilar-Setup.exe</strong> acima.</li>
+                <li>Dê <strong>dois cliques</strong> nele. O instalador extrai automaticamente para <code>%LocalAppData%\ColetorPilar</code> e já abre o programa.</li>
                 <li>
-                  <strong className="text-amber-600 dark:text-amber-400">⚠️ Se aparecer o aviso do Windows toda vez que abrir:</strong>
-                  <p className="text-xs text-muted-foreground pl-4 mt-1">
-                    Essa mensagem não é do coletor; é uma configuração do Windows chamada "Escolher onde obter aplicativos". Ela aparece quando o Windows está configurado para preferir ou permitir apenas aplicativos da Microsoft Store.
-                  </p>
+                  <strong className="text-amber-600 dark:text-amber-400">⚠️ Se o Windows SmartScreen bloquear:</strong>
                   <ul className="ml-8 list-disc space-y-1 text-xs mt-1 text-foreground">
-                    <li>Clique em <strong>"Instalar mesmo assim"</strong> para abrir agora.</li>
-                    <li>Para parar de aparecer: abra <strong>Configurações do Windows</strong> → <strong>Aplicativos</strong> → <strong>Configurações avançadas de aplicativos</strong>.</li>
-                    <li>Em <strong>"Escolher onde obter aplicativos"</strong>, selecione <strong>"Qualquer lugar"</strong>.</li>
-                    <li>Se essa opção estiver bloqueada, peça ao TI/administrador do Windows para liberar apps fora da Microsoft Store.</li>
-                    <li>Opcional: clique com o botão direito no arquivo <strong>PontoColetor.exe</strong> → <strong>Propriedades</strong> → marque <strong>Desbloquear</strong> → <strong>Aplicar</strong>.</li>
+                    <li>Clique em <strong>"Mais informações"</strong> → <strong>"Executar assim mesmo"</strong>.</li>
+                    <li>Ou clique com botão direito no <strong>.exe</strong> → <strong>Propriedades</strong> → marque <strong>Desbloquear</strong> → <strong>Aplicar</strong>.</li>
                   </ul>
                 </li>
-                <li><strong>Para criar um atalho na sua Área de Trabalho:</strong>
-                  <ul className="ml-5 list-disc space-y-1 text-xs mt-1">
-                    <li>Clique com o <strong>botão direito</strong> sobre o arquivo <strong>PontoColetor.exe</strong>.</li>
-                    <li>Posicione o mouse sobre a opção <strong>Enviar para</strong> e depois clique em <strong>Área de trabalho (criar atalho)</strong>.</li>
-                  </ul>
-                </li>
-                <li>Para abrir o sistema, basta dar dois cliques no novo atalho criado na sua Área de Trabalho (ou diretamente no <strong>PontoColetor.exe</strong> dentro da pasta).</li>
-              </ol>
-            </div>
-            <div>
-              <p className="font-medium text-foreground">macOS</p>
-              <ol className="ml-4 list-decimal space-y-1">
-                <li>Descompacte o <strong>.zip</strong> baixado.</li>
-                <li>Arraste <strong>PontoColetor.app</strong> para a pasta <strong>Aplicativos</strong>.</li>
-                <li>Na primeira execução, clique com botão direito → <strong>Abrir</strong> (app não notarizado).</li>
-              </ol>
-            </div>
-            <div>
-              <p className="font-medium text-foreground">Linux</p>
-              <ol className="ml-4 list-decimal space-y-1">
-                <li>Extraia o arquivo <strong>PontoColetor-Linux.zip</strong>.</li>
-                <li>Entre na pasta: <code>cd PontoColetor-linux-x64</code></li>
-                <li>Dê permissão e execute: <code>chmod +x PontoColetor && ./PontoColetor</code></li>
+                <li>Para abrir novamente: use o atalho no Menu Iniciar ou execute <code>ColetorPilar.exe</code> dentro de <code>%LocalAppData%\ColetorPilar\ColetorPilar-win32-x64</code>.</li>
               </ol>
             </div>
             <p>Após abrir o app: faça login com o usuário do CRM, cadastre os relógios em <strong>Equipamentos</strong> e o coletor sincroniza a cada 60s.</p>
