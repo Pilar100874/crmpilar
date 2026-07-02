@@ -46,7 +46,9 @@ Deno.serve(async (req) => {
       .from("cv_cameras")
       .select("id,nome,marca,tipo_rede,host,porta,protocolo,usuario,senha,snapshot_path,angulo_key,grupo_id,filial_id")
       .eq("ativo", true);
-    if (body.filial_id) camQ = camQ.eq("filial_id", body.filial_id);
+    // Quando o coletor informa a filial, inclui também câmeras SEM filial atribuída
+    // (fallback) — evita ficar invisível ao coletor após passar a exigir filial.
+    if (body.filial_id) camQ = camQ.or(`filial_id.eq.${body.filial_id},filial_id.is.null`);
     const { data, error } = await camQ;
     if (error) throw error;
     return new Response(JSON.stringify({ cameras: data ?? [] }), {
