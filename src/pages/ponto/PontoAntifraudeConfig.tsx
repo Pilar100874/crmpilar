@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, MapPin, Wifi, ShieldCheck } from "lucide-react";
+import { Plus, Trash2, MapPin, Wifi, ShieldCheck, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,9 +9,13 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePontoEmpresa } from "./usePontoEmpresa";
+import GeofenceMapPicker, { GeofenceMapPickerValue } from "@/components/ponto/GeofenceMapPicker";
 
 interface Geofence {
   id: string;
@@ -35,10 +39,60 @@ export default function PontoAntifraudeConfig() {
   const [exigirGeoApp, setExigirGeoApp] = useState<boolean>(true);
   const [geos, setGeos] = useState<Geofence[]>([]);
   const [redes, setRedes] = useState<Rede[]>([]);
-  const [novoGeo, setNovoGeo] = useState({ nome: "", lat: "", lng: "", raio: "150" });
+  
   const [novaRede, setNovaRede] = useState<{ tipo: "ip" | "cidr" | "ssid"; valor: string; descricao: string }>({
     tipo: "ip", valor: "", descricao: "",
   });
+  const [dlgOpen, setDlgOpen] = useState(false);
+  const [editing, setEditing] = useState<Geofence | null>(null);
+  const [formNome, setFormNome] = useState("");
+  const [formMap, setFormMap] = useState<GeofenceMapPickerValue>({
+    lat: -23.55052,
+    lng: -46.633308,
+    raio: 150,
+  });
+
+  const abrirNovo = () => {
+    setEditing(null);
+    setFormNome("");
+    setFormMap({ lat: -23.55052, lng: -46.633308, raio: 150 });
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (p) => setFormMap((s) => ({ ...s, lat: p.coords.latitude, lng: p.coords.longitude })),
+        () => {}
+      );
+    }
+    setDlgOpen(true);
+  };
+
+  const abrirEdicao = (g: Geofence) => {
+    setEditing(g);
+    setFormNome(g.nome);
+    setFormMap({ lat: Number(g.lat), lng: Number(g.lng), raio: g.raio_metros });
+    setDlgOpen(true);
+  };
+
+  const salvarGeo = async () => {
+    if (!empresaId || !formNome.trim()) {
+      toast.error("Informe o nome da área");
+      return;
+    }
+    const payload = {
+      empresa_id: empresaId,
+      nome: formNome.trim(),
+      lat: formMap.lat,
+      lng: formMap.lng,
+      raio_metros: Math.round(formMap.raio),
+    };
+    const q = editing
+      ? (supabase as any).from("ponto_geofences").update(payload).eq("id", editing.id)
+      : (supabase as any).from("ponto_geofences").insert(payload);
+    const { error } = await q;
+    if (error) return toast.error(error.message);
+    toast.success(editing ? "Área atualizada" : "Área criada");
+    setDlgOpen(false);
+    loadAll();
+  };
 
   const loadAll = async () => {
     if (!empresaId) return;
@@ -57,30 +111,11 @@ export default function PontoAntifraudeConfig() {
 
   useEffect(() => { loadAll(); }, [empresaId]);
 
-  const addGeo = async () => {
-    if (!empresaId || !novoGeo.nome || !novoGeo.lat || !novoGeo.lng) return;
-    const { error } = await (supabase as any).from("ponto_geofences").insert({
-      empresa_id: empresaId,
-      nome: novoGeo.nome,
-      lat: Number(novoGeo.lat),
-      lng: Number(novoGeo.lng),
-      raio_metros: Number(novoGeo.raio) || 150,
-    });
-    if (error) toast.error(error.message);
-    else { toast.success("Geofence criada"); setNovoGeo({ nome: "", lat: "", lng: "", raio: "150" }); loadAll(); }
-  };
-
   const delGeo = async (id: string) => {
     await (supabase as any).from("ponto_geofences").delete().eq("id", id);
     loadAll();
   };
 
-  const usarMinhaLoc = () => {
-    navigator.geolocation.getCurrentPosition(
-      (p) => setNovoGeo((s) => ({ ...s, lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) })),
-      () => toast.error("Não consegui ler sua localização"),
-    );
-  };
 
   const addRede = async () => {
     if (!empresaId || !novaRede.valor) return;
@@ -186,28 +221,47 @@ export default function PontoAntifraudeConfig() {
 
         <TabsContent value="geo" className="space-y-4">
           <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">Nova geofence</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              <div className="sm:col-span-2"><Label>Nome</Label>
-                <Input value={novoGeo.nome} onChange={(e) => setNovoGeo({ ...novoGeo, nome: e.target.value })} placeholder="Matriz" /></div>
-              <div><Label>Latitude</Label>
-                <Input value={novoGeo.lat} onChange={(e) => setNovoGeo({ ...novoGeo, lat: e.target.value })} /></div>
-              <div><Label>Longitude</Label>
-                <Input value={novoGeo.lng} onChange={(e) => setNovoGeo({ ...novoGeo, lng: e.target.value })} /></div>
-              <div><Label>Raio (m)</Label>
-                <Input type="number" value={novoGeo.raio} onChange={(e) => setNovoGeo({ ...novoGeo, raio: e.target.value })} /></div>
-              <div className="sm:col-span-5 flex gap-2">
-                <Button variant="outline" onClick={usarMinhaLoc}>Usar minha localização</Button>
-                <Button onClick={addGeo}><Plus className="mr-2 h-4 w-4" />Adicionar</Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">Cadastradas</CardTitle></CardHeader>
+            <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-base">Áreas permitidas (Geofences)</CardTitle>
+              <Dialog open={dlgOpen} onOpenChange={setDlgOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={abrirNovo}>
+                    <Plus className="mr-2 h-4 w-4" /> Nova área
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editing ? "Editar área permitida" : "Nova área permitida"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Nome</Label>
+                      <Input
+                        value={formNome}
+                        onChange={(e) => setFormNome(e.target.value)}
+                        placeholder="Ex.: Matriz, Filial SP, Obra Alphaville"
+                      />
+                    </div>
+                    <GeofenceMapPicker value={formMap} onChange={setFormMap} />
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setDlgOpen(false)}>
+                      Cancelar
+                    </Button>
+                    <Button onClick={salvarGeo}>
+                      {editing ? "Salvar alterações" : "Criar área"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
             <CardContent>
               {geos.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhuma geofence cadastrada</p>
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma área cadastrada. Clique em "Nova área" para definir o local no mapa.
+                </p>
               ) : (
                 <div className="space-y-2">
                   {geos.map((g) => (
@@ -218,9 +272,14 @@ export default function PontoAntifraudeConfig() {
                           {Number(g.lat).toFixed(5)}, {Number(g.lng).toFixed(5)} · raio {g.raio_metros}m
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => delGeo(g.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => abrirEdicao(g)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => delGeo(g.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
