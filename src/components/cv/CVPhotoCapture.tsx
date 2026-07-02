@@ -308,7 +308,10 @@ export function CVPhotoCapture({ angles, stage, value, onChange, vehicleId, aiCo
                   </div>
                   {preview ? (
                     <div className="relative">
-                      <img src={preview} alt={a.label} className="w-full h-32 object-cover rounded border" />
+                      <button type="button" onClick={() => setZoomSrc(preview)} className="block w-full">
+                        <img src={preview} alt={a.label} className="w-full h-32 object-cover rounded border" />
+                      </button>
+                      <span className="absolute bottom-1 right-1 bg-black/60 text-white rounded p-1 pointer-events-none"><ZoomIn className="h-3 w-3" /></span>
                       <Button
                         type="button"
                         size="icon"
