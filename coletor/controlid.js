@@ -14,6 +14,8 @@ const http = require('http');
 const https = require('https');
 const net = require('net');
 const tls = require('tls');
+const { spawn } = require('child_process');
+const os = require('os');
 
 function decodeChunked(buf) {
   // Decodificador de Transfer-Encoding: chunked (robusto para múltiplos chunks)
