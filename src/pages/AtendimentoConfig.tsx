@@ -28,7 +28,8 @@ import {
   Shield,
   Activity,
   Bot,
-  HardDrive
+  HardDrive,
+  Smartphone
 } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
