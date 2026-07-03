@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Send, Save, MessageSquare, BookOpen, Smartphone, Globe, Shield, Download } from 'lucide-react';
+import PilarSmsDevices from './PilarSmsDevices';
+
 
 type Provider = 'twilio' | 'zenvia' | 'smsgate' | 'pilar';
 
