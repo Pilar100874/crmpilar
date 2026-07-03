@@ -52,6 +52,7 @@ const tabItems: TabItem[] = [
   { id: 'rotas', label: 'Rotas Salvas', icon: Navigation, description: 'Rotas salvas' },
   { id: 'automacoes', label: 'Automações', icon: Zap, description: 'Regras automáticas' },
   { id: 'pilar-rastreador', label: 'Pilar Rastreador', icon: Smartphone, description: 'Apps de rastreamento GPS' },
+  { id: 'manual', label: 'Manual', icon: BookOpen, description: 'Manual de configuração dos rastreadores' },
   { id: 'config', label: 'Configuração', icon: Settings, description: 'Configurações do sistema' },
 ];
 
