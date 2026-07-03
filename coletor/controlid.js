@@ -151,7 +151,7 @@ function requestRawOnce(opts, body, tlsOpts) {
       return reject(e);
     }
 
-    socket.setTimeout(opts.timeout || 15000);
+    socket.setTimeout(opts.timeout || 8000);
     socket.on('data', (chunk) => chunks.push(chunk));
     socket.once('timeout', () => { socket.destroy(); if (!finished) { finished = true; reject(new Error('timeout')); } });
     socket.once('error', (e) => { if (!finished) { finished = true; reject(e); } });
