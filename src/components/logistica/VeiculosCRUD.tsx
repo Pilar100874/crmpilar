@@ -633,6 +633,111 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               </Tabs>
             </div>
 
+            {/* Novo bloco: Rastreador físico via SMS */}
+            <div className="border rounded-lg p-3 space-y-3 bg-primary/5 border-primary/20">
+              <Label className="flex items-center gap-2 text-sm font-semibold">
+                <Radio className="h-4 w-4 text-primary" />
+                Rastreador físico (SMS)
+              </Label>
+
+              <div>
+                <Label className="text-xs">Modelo do rastreador</Label>
+                <Select
+                  value={formData.tracker_model_id || '__none__'}
+                  onValueChange={(v) => setFormData(prev => ({
+                    ...prev, tracker_model_id: v === '__none__' ? '' : v,
+                  }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o modelo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Nenhum (não usa rastreador físico)</SelectItem>
+                    {trackerModels.map(m => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.nome} — {m.protocolo}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {trackerModels.length === 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Nenhum modelo cadastrado. Vá em Pilar Rastreador → Modelos de Rastreador.
+                  </p>
+                )}
+              </div>
+
+              {formData.tracker_model_id && (() => {
+                const model = trackerModels.find(m => m.id === formData.tracker_model_id);
+                if (!model) return null;
+                const ctx: Record<string, string> = {
+                  host: model.host || '', port: String(model.porta),
+                  password: model.senha_padrao || '', apn: model.apn || '',
+                  apn_user: model.apn_user || '', apn_password: model.apn_password || '',
+                };
+                const cmds = (model.sms_commands || []).filter(c => !/RELAY,\s*[01]\s*#/i.test(c.template));
+                return (
+                  <div className="rounded-md border bg-background p-2 space-y-1 max-h-40 overflow-y-auto">
+                    <p className="text-xs text-muted-foreground mb-1">
+                      SMS que serão enviados ({cmds.length}):
+                    </p>
+                    {cmds.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic">Sem comandos SMS — configure pelo app.</p>
+                    ) : cmds.map((c, i) => (
+                      <div key={i} className="text-xs">
+                        <span className="font-medium">{c.label}:</span>{' '}
+                        <code className="text-[10px]">{renderTemplate(c.template, ctx)}</code>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Configurar automaticamente ao salvar</Label>
+                <Switch
+                  checked={formData.configurar_tracker_ao_salvar}
+                  onCheckedChange={(c) => setFormData(prev => ({ ...prev, configurar_tracker_ao_salvar: c }))}
+                />
+              </div>
+
+              <Button
+                type="button" variant="outline" size="sm" className="w-full"
+                disabled={configurandoTracker || !formData.tracker_model_id || !formData.telefone_sms}
+                onClick={configurarTrackerAgora}
+              >
+                {configurandoTracker
+                  ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Configurando...</>
+                  : <><Radio className="h-4 w-4 mr-2" />Configurar rastreador agora</>}
+              </Button>
+
+              {selectedVeiculo && (selectedVeiculo as any).tracker_config_status && (
+                <div className="rounded-md border bg-background p-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium">Último resultado:</span>
+                    {renderTrackerStatusBadge(selectedVeiculo)}
+                  </div>
+                  {Array.isArray((selectedVeiculo as any).tracker_config_log) &&
+                    (selectedVeiculo as any).tracker_config_log.length > 0 && (
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {((selectedVeiculo as any).tracker_config_log as any[]).map((l, i) => (
+                        <div key={i} className="text-xs flex items-start gap-2">
+                          {l.ok
+                            ? <CheckCircle2 className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
+                            : <AlertCircle className="h-3 w-3 text-destructive mt-0.5 shrink-0" />}
+                          <div className="flex-1">
+                            <span className="font-medium">{l.label}</span>
+                            {l.erro && <div className="text-destructive text-[10px]">{l.erro}</div>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+
             <div className="border rounded-lg p-3 space-y-3 bg-muted/30">
               <Label className="flex items-center gap-2 text-sm font-semibold">
                 <Send className="h-4 w-4" />
