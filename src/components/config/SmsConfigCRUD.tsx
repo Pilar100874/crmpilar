@@ -299,9 +299,9 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                 <p><b>O que é:</b> gateway próprio da Pilar. Um app Android leve que roda no seu celular, escuta requisições HTTP do CRM e envia SMS pelo chip usando o <code>SmsManager</code> nativo. Protocolo simplificado, sem intermediários.</p>
                 <div className="flex flex-wrap items-center gap-2 p-3 rounded-md border border-primary/30 bg-primary/5">
                   <Download className="h-4 w-4 text-primary" />
-                  <span className="text-sm text-foreground"><b>Baixe o app Pilar SMS v1.0.0</b> (Android · 5.6 MB)</span>
+                  <span className="text-sm text-foreground"><b>Baixe o app Pilar SMS v1.0.1</b> (Android · 5.6 MB)</span>
                   <Button asChild size="sm" className="ml-auto">
-                    <a href="/pilar-sms-v1.0.0.apk" download>
+                    <a href="/pilar-sms-v1.0.1.apk" download>
                       <Download className="h-4 w-4 mr-2" /> Baixar APK
                     </a>
                   </Button>
