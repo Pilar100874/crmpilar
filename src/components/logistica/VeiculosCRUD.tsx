@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Car, Search, Smartphone, Fuel } from 'lucide-react';
+import { Plus, Pencil, Trash2, Car, Search, Smartphone, Fuel, Send } from 'lucide-react';
 import { BloqueioCombustivelDialog } from './BloqueioCombustivelDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -50,6 +50,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const [bloqueioOpen, setBloqueioOpen] = useState(false);
   const [veiculoBloqueio, setVeiculoBloqueio] = useState<Veiculo | null>(null);
   const [dispositivoTab, setDispositivoTab] = useState<'selecionar' | 'digitar'>('selecionar');
+  const [enviandoSms, setEnviandoSms] = useState(false);
   const [formData, setFormData] = useState({
     placa: '',
     descricao: '',
@@ -57,6 +58,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     tipo_veiculo: '',
     traccar_device_id: '',
     dispositivo_id: '',
+    telefone_sms: '',
+    enviar_sms_automatico: false,
     ativo: true
   });
 
@@ -113,6 +116,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         tipo_veiculo: veiculo.tipo_veiculo || '',
         traccar_device_id: veiculo.traccar_device_id || '',
         dispositivo_id: linkedDevice?.id || '',
+        telefone_sms: (veiculo as any).telefone_sms || '',
+        enviar_sms_automatico: false,
         ativo: veiculo.ativo
       });
     } else {
@@ -124,6 +129,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         tipo_veiculo: '',
         traccar_device_id: '',
         dispositivo_id: '',
+        telefone_sms: '',
+        enviar_sms_automatico: false,
         ativo: true
       });
     }
@@ -190,6 +197,19 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         }
       }
 
+      // Persist telefone_sms na tabela veiculos (coluna opcional)
+      if (veiculoId && formData.telefone_sms) {
+        await supabase
+          .from('veiculos')
+          .update({ telefone_sms: formData.telefone_sms } as any)
+          .eq('id', veiculoId);
+      }
+
+      // Envio automático de SMS com os dados
+      if (formData.enviar_sms_automatico && formData.telefone_sms && veiculoId) {
+        await enviarDadosPorSms(veiculoId, formData.telefone_sms);
+      }
+
       toast.success(selectedVeiculo ? 'Veículo atualizado' : 'Veículo criado');
       setDialogOpen(false);
       fetchVeiculos();
@@ -199,6 +219,44 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       toast.error(error.message || 'Erro ao salvar veículo');
     }
   };
+
+  const enviarDadosPorSms = async (veiculoId?: string, telefoneOverride?: string) => {
+    const telefone = telefoneOverride || formData.telefone_sms;
+    if (!telefone) {
+      toast.error('Informe o telefone (SIM do equipamento)');
+      return;
+    }
+    const dispositivo = dispositivos.find(d => d.id === formData.dispositivo_id);
+    const linhas = [
+      `Veiculo: ${formData.placa}`,
+      formData.descricao ? `Descricao: ${formData.descricao}` : null,
+      formData.motorista ? `Motorista: ${formData.motorista}` : null,
+      formData.tipo_veiculo ? `Tipo: ${formData.tipo_veiculo}` : null,
+      dispositivo ? `Equipamento: ${dispositivo.nome_dispositivo || dispositivo.device_uuid}` : null,
+      dispositivo ? `ID: ${dispositivo.device_uuid}` : null,
+      formData.traccar_device_id ? `Traccar ID: ${formData.traccar_device_id}` : null,
+    ].filter(Boolean);
+    const mensagem = linhas.join('\n');
+
+    try {
+      setEnviandoSms(true);
+      const { data, error } = await supabase.functions.invoke('send-sms', {
+        body: {
+          estabelecimento_id: estabelecimentoId,
+          destino: telefone,
+          mensagem,
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.success) toast.success('SMS enviado ao equipamento');
+      else toast.error((data as any)?.erro || 'Falha ao enviar SMS');
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao enviar SMS');
+    } finally {
+      setEnviandoSms(false);
+    }
+  };
+
 
   const handleDelete = async () => {
     if (!selectedVeiculo) return;
@@ -425,6 +483,42 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               </Tabs>
             </div>
 
+            <div className="border rounded-lg p-3 space-y-3 bg-muted/30">
+              <Label className="flex items-center gap-2 text-sm font-semibold">
+                <Send className="h-4 w-4" />
+                Envio de dados por SMS
+              </Label>
+              <div>
+                <Label className="text-xs">Telefone do equipamento (SIM)</Label>
+                <Input
+                  value={formData.telefone_sms}
+                  onChange={(e) => setFormData(prev => ({ ...prev, telefone_sms: e.target.value }))}
+                  placeholder="+5511999999999"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Número do chip inserido no rastreador. Configure o provedor em Configurações de Atendimento → Envio de SMS.
+                </p>
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Enviar dados automaticamente ao salvar</Label>
+                <Switch
+                  checked={formData.enviar_sms_automatico}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, enviar_sms_automatico: checked }))}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                disabled={enviandoSms || !formData.telefone_sms}
+                onClick={() => enviarDadosPorSms(selectedVeiculo?.id)}
+              >
+                <Send className="h-4 w-4 mr-2" />
+                {enviandoSms ? 'Enviando...' : 'Enviar dados agora'}
+              </Button>
+            </div>
+
             <div className="flex items-center justify-between">
               <Label>Ativo</Label>
               <Switch
@@ -435,6 +529,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
           </div>
 
           <DialogFooter>
+
+
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
