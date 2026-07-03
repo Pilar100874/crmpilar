@@ -96,8 +96,8 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
           <p className="text-xs text-muted-foreground">Cada celular precisa de um cadastro para receber SMS da fila.</p>
         </div>
         <Button asChild size="sm" variant="outline">
-          <a href="/pilar-sms-v1.1.0.apk" download>
-            <Download className="h-4 w-4 mr-2" /> Baixar APK v1.1.0
+          <a href="/pilar-sms-v1.2.0.apk" download>
+            <Download className="h-4 w-4 mr-2" /> Baixar APK v1.2.0
           </a>
         </Button>
       </div>

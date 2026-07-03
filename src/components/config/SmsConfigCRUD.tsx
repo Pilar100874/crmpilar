@@ -294,7 +294,7 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                   <Download className="h-4 w-4 text-primary" />
                   <span className="text-sm text-foreground"><b>Baixe o app Pilar SMS v1.1.0</b> (Android · Modo Fila)</span>
                   <Button asChild size="sm" className="ml-auto">
-                    <a href="/pilar-sms-v1.1.0.apk" download>
+                    <a href="/pilar-sms-v1.2.0.apk" download>
                       <Download className="h-4 w-4 mr-2" /> Baixar APK
                     </a>
                   </Button>
