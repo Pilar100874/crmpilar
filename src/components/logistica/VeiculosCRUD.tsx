@@ -47,6 +47,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedVeiculo, setSelectedVeiculo] = useState<Veiculo | null>(null);
+  const [bloqueioOpen, setBloqueioOpen] = useState(false);
+  const [veiculoBloqueio, setVeiculoBloqueio] = useState<Veiculo | null>(null);
   const [dispositivoTab, setDispositivoTab] = useState<'selecionar' | 'digitar'>('selecionar');
   const [formData, setFormData] = useState({
     placa: '',
