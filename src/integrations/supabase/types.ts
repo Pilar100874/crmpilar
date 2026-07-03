@@ -17515,6 +17515,96 @@ export type Database = {
           },
         ]
       }
+      sms_config: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          estabelecimento_id: string
+          gatewayapi_token: string | null
+          id: string
+          provider: string
+          sender: string | null
+          twilio_account_sid: string | null
+          twilio_auth_token: string | null
+          twilio_from: string | null
+          updated_at: string
+          zenvia_api_token: string | null
+          zenvia_from: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          estabelecimento_id: string
+          gatewayapi_token?: string | null
+          id?: string
+          provider?: string
+          sender?: string | null
+          twilio_account_sid?: string | null
+          twilio_auth_token?: string | null
+          twilio_from?: string | null
+          updated_at?: string
+          zenvia_api_token?: string | null
+          zenvia_from?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          estabelecimento_id?: string
+          gatewayapi_token?: string | null
+          id?: string
+          provider?: string
+          sender?: string | null
+          twilio_account_sid?: string | null
+          twilio_auth_token?: string | null
+          twilio_from?: string | null
+          updated_at?: string
+          zenvia_api_token?: string | null
+          zenvia_from?: string | null
+        }
+        Relationships: []
+      }
+      sms_envios: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          destino: string
+          erro: string | null
+          estabelecimento_id: string
+          id: string
+          mensagem: string
+          provider: string
+          provider_message_id: string | null
+          response_raw: Json | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          destino: string
+          erro?: string | null
+          estabelecimento_id: string
+          id?: string
+          mensagem: string
+          provider: string
+          provider_message_id?: string | null
+          response_raw?: Json | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          destino?: string
+          erro?: string | null
+          estabelecimento_id?: string
+          id?: string
+          mensagem?: string
+          provider?: string
+          provider_message_id?: string | null
+          response_raw?: Json | null
+          status?: string
+        }
+        Relationships: []
+      }
       social_media_credentials: {
         Row: {
           ativo: boolean
