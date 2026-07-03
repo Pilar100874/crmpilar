@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="br.com.pilar.sms"
-    android:versionCode="3"
-    android:versionName="1.1.0" >
+    android:versionCode="4"
+    android:versionName="1.2.0" >
 
     <uses-sdk
         android:minSdkVersion="24"
@@ -42,6 +42,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="br.com.pilar.sms.SettingsActivity"
+            android:exported="false"
+            android:parentActivityName="br.com.pilar.sms.MainActivity" />
 
         <service
             android:name="br.com.pilar.sms.SmsPollingService"
