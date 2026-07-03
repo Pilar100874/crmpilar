@@ -18896,6 +18896,53 @@ export type Database = {
           },
         ]
       }
+      veiculo_comandos: {
+        Row: {
+          comando: string
+          created_at: string
+          criado_por: string | null
+          estabelecimento_id: string
+          executado_em: string | null
+          id: string
+          resposta: string | null
+          status: string
+          updated_at: string
+          veiculo_id: string
+        }
+        Insert: {
+          comando: string
+          created_at?: string
+          criado_por?: string | null
+          estabelecimento_id: string
+          executado_em?: string | null
+          id?: string
+          resposta?: string | null
+          status?: string
+          updated_at?: string
+          veiculo_id: string
+        }
+        Update: {
+          comando?: string
+          created_at?: string
+          criado_por?: string | null
+          estabelecimento_id?: string
+          executado_em?: string | null
+          id?: string
+          resposta?: string | null
+          status?: string
+          updated_at?: string
+          veiculo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "veiculo_comandos_veiculo_id_fkey"
+            columns: ["veiculo_id"]
+            isOneToOne: false
+            referencedRelation: "veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       veiculo_posicoes: {
         Row: {
           created_at: string

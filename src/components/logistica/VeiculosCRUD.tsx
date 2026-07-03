@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Car, Search, Smartphone } from 'lucide-react';
+import { Plus, Pencil, Trash2, Car, Search, Smartphone, Fuel } from 'lucide-react';
+import { BloqueioCombustivelDialog } from './BloqueioCombustivelDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -46,6 +47,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedVeiculo, setSelectedVeiculo] = useState<Veiculo | null>(null);
+  const [bloqueioOpen, setBloqueioOpen] = useState(false);
+  const [veiculoBloqueio, setVeiculoBloqueio] = useState<Veiculo | null>(null);
   const [dispositivoTab, setDispositivoTab] = useState<'selecionar' | 'digitar'>('selecionar');
   const [formData, setFormData] = useState({
     placa: '',
@@ -250,7 +253,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               <TableHead>Motorista</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-[100px]">Ações</TableHead>
+              <TableHead className="w-[140px]">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -267,6 +270,17 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Bloquear/Liberar combustível"
+                      onClick={() => {
+                        setVeiculoBloqueio(veiculo);
+                        setBloqueioOpen(true);
+                      }}
+                    >
+                      <Fuel className="h-4 w-4 text-amber-600" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -438,6 +452,13 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         onConfirm={handleDelete}
         title="Excluir Veículo"
         description={`Tem certeza que deseja excluir o veículo ${selectedVeiculo?.placa}? Esta ação não pode ser desfeita.`}
+      />
+
+      <BloqueioCombustivelDialog
+        open={bloqueioOpen}
+        onOpenChange={setBloqueioOpen}
+        veiculo={veiculoBloqueio}
+        estabelecimentoId={estabelecimentoId}
       />
     </div>
   );
