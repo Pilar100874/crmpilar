@@ -23,7 +23,6 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    // Autentica o dispositivo pelo token
     const { data: device } = await supabase
       .from('sms_devices')
       .select('*')
@@ -37,7 +36,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Extrai info opcional do body (bateria, sinal)
     let body: any = {};
     try { body = await req.json(); } catch {}
     const bateria = typeof body?.bateria === 'number' ? body.bateria : null;
@@ -45,7 +43,6 @@ Deno.serve(async (req) => {
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null;
     const limit = Math.min(Math.max(Number(body?.limit) || 5, 1), 20);
 
-    // Atualiza ping do dispositivo
     await supabase.from('sms_devices').update({
       ultimo_ping: new Date().toISOString(),
       ultimo_ip: ip,
@@ -53,36 +50,43 @@ Deno.serve(async (req) => {
       sinal,
     }).eq('id', device.id);
 
-    // Busca pendentes do mesmo estabelecimento e faz claim (marca como 'enviando')
-    const { data: pendentes } = await supabase
+    // Busca pendentes do mesmo estabelecimento
+    const query = supabase
       .from('sms_queue')
       .select('id, telefone, mensagem, tentativas, max_tentativas')
       .eq('status', 'pendente')
-      .or(`estabelecimento_id.eq.${device.estabelecimento_id},estabelecimento_id.is.null`)
       .lt('tentativas', 3)
       .order('created_at', { ascending: true })
       .limit(limit);
 
-    const ids = (pendentes || []).map((p) => p.id);
-    if (ids.length > 0) {
-      await supabase
+    // filtra por estabelecimento (aceita null para não-multitenant)
+    if (device.estabelecimento_id) {
+      query.or(`estabelecimento_id.eq.${device.estabelecimento_id},estabelecimento_id.is.null`);
+    }
+
+    const { data: pendentes } = await query;
+
+    const claimed: any[] = [];
+    for (const p of pendentes || []) {
+      // Claim atômico: só marca se ainda estiver pendente
+      const { data: upd } = await supabase
         .from('sms_queue')
         .update({
           status: 'enviando',
           device_id: device.id,
           claimed_at: new Date().toISOString(),
-          tentativas: (undefined as any),
+          tentativas: (p.tentativas || 0) + 1,
         })
-        .in('id', ids);
-      // incrementa tentativas via RPC simples
-      for (const id of ids) {
-        await supabase.rpc('sms_queue_incr_tentativas' as any, { p_id: id }).catch(() => {});
-      }
+        .eq('id', p.id)
+        .eq('status', 'pendente')
+        .select('id')
+        .maybeSingle();
+      if (upd) claimed.push(p);
     }
 
     return new Response(JSON.stringify({
       device: { id: device.id, nome: device.nome },
-      messages: (pendentes || []).map((p) => ({
+      messages: claimed.map((p) => ({
         id: p.id,
         telefone: p.telefone,
         mensagem: p.mensagem,
