@@ -1,8 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="bg_card">#FFFFFF</color>
+    <color name="bg_page">#F5F7FB</color>
+    <color name="black">#000000</color>
+    <color name="brand_accent">#F59E0B</color>
+    <color name="brand_accent_dark">#B45309</color>
+    <color name="brand_primary">#0B1E3F</color>
+    <color name="brand_primary_dark">#061128</color>
+    <color name="danger">#DC2626</color>
+    <color name="danger_bg">#FEE2E2</color>
+    <color name="info">#2563EB</color>
+    <color name="info_bg">#DBEAFE</color>
+    <color name="stroke_soft">#E2E8F0</color>
+    <color name="success">#16A34A</color>
+    <color name="success_bg">#DCFCE7</color>
+    <color name="text_muted">#94A3B8</color>
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#64748B</color>
+    <color name="warning">#D97706</color>
+    <color name="warning_bg">#FEF3C7</color>
+    <color name="white">#FFFFFF</color>
     <string name="app_name">Pilar SMS</string>
-    <style name="Theme.PilarSms" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">#0EA5E9</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
+    <string name="settings_title">Configurações</string>
+    <style name="Theme.PilarSms" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/brand_primary</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/brand_accent</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="android:windowBackground">@color/bg_page</item>
+        <item name="android:statusBarColor">@color/brand_primary_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>
