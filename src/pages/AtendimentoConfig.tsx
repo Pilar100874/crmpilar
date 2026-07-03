@@ -68,6 +68,8 @@ import { CampaignSendMonitor } from '@/components/config/CampaignSendMonitor';
 import ChatAgentsCRUD from '@/components/config/ChatAgentsCRUD';
 import KbLacunasCRUD from '@/components/config/KbLacunasCRUD';
 import ChatRetencaoCRUD from '@/components/config/ChatRetencaoCRUD';
+import SmsConfigCRUD from '@/components/config/SmsConfigCRUD';
+
 
 // Import Bot components
 import BotCreate from './BotCreate';
