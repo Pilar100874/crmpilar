@@ -12,7 +12,7 @@ main.grid-4 { grid-template-columns: repeat(4, 1fr); }
 main { flex:1; display:grid; gap:8px; padding:8px; }
 .cell { background:#000; border:1px solid #334155; border-radius:6px; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; }
 .cell .label { position:absolute; top:6px; left:8px; background:rgba(0,0,0,.6); padding:2px 8px; border-radius:4px; font-size:12px; }
-.cell .preview { color:#64748b; }
+.cell .preview { width:100%; height:100%; object-fit:contain; background:#000; }
 .cell .empty { color:#475569; font-size:14px; }
 .cell .snap { position:absolute; bottom:8px; right:8px; padding:4px 10px; font-size:12px; }
 dialog { border:0; border-radius:12px; padding:24px; min-width:520px; background:#1e293b; color:#e2e8f0; }
