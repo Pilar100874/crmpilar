@@ -17590,6 +17590,48 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_devices: {
+        Row: {
+          ativo: boolean
+          bateria: number | null
+          created_at: string
+          estabelecimento_id: string | null
+          id: string
+          nome: string
+          sinal: string | null
+          token: string
+          ultimo_ip: string | null
+          ultimo_ping: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          bateria?: number | null
+          created_at?: string
+          estabelecimento_id?: string | null
+          id?: string
+          nome: string
+          sinal?: string | null
+          token?: string
+          ultimo_ip?: string | null
+          ultimo_ping?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          bateria?: number | null
+          created_at?: string
+          estabelecimento_id?: string | null
+          id?: string
+          nome?: string
+          sinal?: string | null
+          token?: string
+          ultimo_ip?: string | null
+          ultimo_ping?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sms_envios: {
         Row: {
           created_at: string
@@ -17631,6 +17673,62 @@ export type Database = {
           status?: string
         }
         Relationships: []
+      }
+      sms_queue: {
+        Row: {
+          claimed_at: string | null
+          created_at: string
+          device_id: string | null
+          enviado_at: string | null
+          erro_mensagem: string | null
+          estabelecimento_id: string | null
+          id: string
+          max_tentativas: number
+          mensagem: string
+          status: string
+          telefone: string
+          tentativas: number
+          updated_at: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          created_at?: string
+          device_id?: string | null
+          enviado_at?: string | null
+          erro_mensagem?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          max_tentativas?: number
+          mensagem: string
+          status?: string
+          telefone: string
+          tentativas?: number
+          updated_at?: string
+        }
+        Update: {
+          claimed_at?: string | null
+          created_at?: string
+          device_id?: string | null
+          enviado_at?: string | null
+          erro_mensagem?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          max_tentativas?: number
+          mensagem?: string
+          status?: string
+          telefone?: string
+          tentativas?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_queue_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "sms_devices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       social_media_credentials: {
         Row: {

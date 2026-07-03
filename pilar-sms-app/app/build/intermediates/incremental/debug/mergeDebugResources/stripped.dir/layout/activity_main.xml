@@ -12,58 +12,50 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Pilar SMS Gateway"
+            android:text="Pilar SMS — Modo Fila"
             android:textSize="22sp"
             android:textStyle="bold"
-            android:paddingBottom="12dp"/>
+            android:paddingBottom="8dp"/>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Servidor HTTP local para envio de SMS pelo chip deste aparelho."
+            android:text="Este celular consulta a fila do CRM a cada 5s e envia os SMS pelo chip. Não precisa de IP público nem Cloudflare."
             android:paddingBottom="16dp"/>
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Token (Bearer)">
+            android:hint="Token do dispositivo (gerado no CRM)">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etToken"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:inputType="textVisiblePassword"/>
         </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Porta HTTP (ex.: 8080)">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etPort"
-                android:inputType="number"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <TextView
-            android:id="@+id/tvEndpoint"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingTop="12dp"
-            android:paddingBottom="12dp"
-            android:textStyle="bold"/>
 
         <TextView
             android:id="@+id/tvStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingTop="16dp"
+            android:paddingBottom="4dp"
+            android:textStyle="bold"
+            android:text="parado"/>
+
+        <TextView
+            android:id="@+id/tvStats"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:paddingBottom="16dp"
-            android:text="Servidor parado"/>
+            android:textSize="12sp"
+            android:text="Enviados: 0  ·  Falhas: 0  ·  Último ping: —"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnStart"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Iniciar servidor"/>
+            android:text="Conectar"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnStop"
@@ -71,6 +63,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Parar servidor"/>
+            android:text="Parar"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="24dp"
+            android:textSize="12sp"
+            android:text="Dica: mantenha o app aberto ou desative otimização de bateria para este app."/>
     </LinearLayout>
 </ScrollView>

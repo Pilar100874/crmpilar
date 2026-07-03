@@ -305,3 +305,9 @@ verify_jwt = false
 
 [functions.ponto-coletor-ingest]
 verify_jwt = false
+
+[functions.sms-queue-poll]
+verify_jwt = false
+
+[functions.sms-queue-ack]
+verify_jwt = false

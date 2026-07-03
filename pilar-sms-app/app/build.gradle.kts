@@ -11,8 +11,8 @@ android {
         applicationId = "br.com.pilar.sms"
         minSdk = 24
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.1.0"
     }
 
     buildTypes {
@@ -35,8 +35,9 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    // NanoHTTPD — servidor HTTP embutido, leve e estável
-    implementation("org.nanohttpd:nanohttpd:2.3.1")
+    // Coroutines para o polling em background
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     // JSON
     implementation("org.json:json:20240303")
+
 }

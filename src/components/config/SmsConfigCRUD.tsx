@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Send, Save, MessageSquare, BookOpen, Smartphone, Globe, Shield, Download } from 'lucide-react';
+import PilarSmsDevices from './PilarSmsDevices';
+
 
 type Provider = 'twilio' | 'zenvia' | 'smsgate' | 'pilar';
 
@@ -229,28 +231,19 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
           )}
 
           {cfg.provider === 'pilar' && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
-              <div className="md:col-span-3">
-                <Label>IP e porta do celular (ou URL pública)</Label>
-                <Input
-                  value={cfg.pilar_endpoint || ''}
-                  onChange={(e) => setCfg({ ...cfg, pilar_endpoint: e.target.value })}
-                  placeholder="192.168.0.42:8080"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Digite apenas <code>IP:PORTA</code> (ex.: <code>192.168.0.42:8080</code>). O sistema completa <code>http://…/send</code> automaticamente. Se estiver usando túnel público, pode colar a URL completa.
+            <div className="border-t pt-4 space-y-3">
+              <div className="rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">
+                <p className="font-medium text-foreground mb-1">✅ Modo Fila — sem Cloudflare, sem IP público</p>
+                <p className="text-muted-foreground">
+                  O CRM apenas <b>enfileira</b> as mensagens no banco. O APK Pilar SMS instalado no
+                  celular consulta a fila a cada poucos segundos e envia os SMS pelo chip.
+                  Funciona com Wi-Fi ou 4G, atrás de qualquer roteador, sem configuração de rede.
                 </p>
               </div>
-              <div className="md:col-span-2">
-                <Label>Token de autenticação (Bearer)</Label>
-                <Input type="password" value={cfg.pilar_token || ''} onChange={(e) => setCfg({ ...cfg, pilar_token: e.target.value })} placeholder="token gerado no app Pilar" />
-              </div>
-              <div>
-                <Label>SIM/Remetente (opcional)</Label>
-                <Input value={cfg.pilar_sender || ''} onChange={(e) => setCfg({ ...cfg, pilar_sender: e.target.value })} placeholder="ex: sim1" />
-              </div>
+              <PilarSmsDevices estabelecimentoId={estabelecimentoId} />
             </div>
           )}
+
 
           <div className="flex justify-end">
             <Button onClick={handleSave} disabled={saving}>
@@ -293,33 +286,31 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="pilar">
               <AccordionTrigger className="text-sm">
-                <span className="flex items-center gap-2"><Shield className="h-4 w-4 text-primary" /> Pilar SMS — App próprio · Gratuito</span>
+                <span className="flex items-center gap-2"><Shield className="h-4 w-4 text-primary" /> Pilar SMS — App próprio (Modo Fila) · Gratuito</span>
               </AccordionTrigger>
               <AccordionContent className="text-sm space-y-2 text-muted-foreground">
-                <p><b>O que é:</b> gateway próprio da Pilar. Um app Android leve que roda no seu celular, escuta requisições HTTP do CRM e envia SMS pelo chip usando o <code>SmsManager</code> nativo. Protocolo simplificado, sem intermediários.</p>
+                <p><b>Como funciona:</b> o CRM grava os SMS numa fila. O APK Pilar SMS instalado no seu celular consulta essa fila a cada 5 segundos e envia as mensagens pelo chip usando o <code>SmsManager</code> nativo. <b>Não precisa de IP público, roteador nem Cloudflare</b> — igual ao Coletor de Ponto e ao Coletor de Câmeras.</p>
                 <div className="flex flex-wrap items-center gap-2 p-3 rounded-md border border-primary/30 bg-primary/5">
                   <Download className="h-4 w-4 text-primary" />
-                  <span className="text-sm text-foreground"><b>Baixe o app Pilar SMS v1.0.1</b> (Android · 5.6 MB)</span>
+                  <span className="text-sm text-foreground"><b>Baixe o app Pilar SMS v1.1.0</b> (Android · Modo Fila)</span>
                   <Button asChild size="sm" className="ml-auto">
-                    <a href="/pilar-sms-v1.0.1.apk" download>
+                    <a href="/pilar-sms-v1.1.0.apk" download>
                       <Download className="h-4 w-4 mr-2" /> Baixar APK
                     </a>
                   </Button>
                 </div>
-                <p><b>Protocolo:</b> o CRM faz <code>POST</code> no endpoint configurado com header <code>Authorization: Bearer &lt;token&gt;</code> e body JSON:</p>
-                <pre className="bg-muted p-2 rounded text-xs overflow-x-auto">{`{ "to": "+5511999999999", "message": "texto do SMS", "sender": "0" }`}</pre>
-                <p>Resposta esperada: <code>{`{ "ok": true, "id": "..." }`}</code>.</p>
                 <ol className="list-decimal ml-5 space-y-1">
-                  <li>Baixe o APK <b>Pilar SMS</b> clicando no botão acima e transfira para o Android que ficará ligado com o chip.</li>
-                  <li>Abra o app, conceda permissão de <b>Enviar SMS</b> e desative a otimização de bateria para o app.</li>
-                  <li>Toque em <b>Iniciar servidor</b>. O app mostra a URL local (ex: <code>http://192.168.0.42:8787/send</code>) e gera um <b>Token</b>.</li>
-                  <li><b>⚠️ Obrigatório:</b> o CRM roda na nuvem e <b>não enxerga IPs privados</b> (192.168.x.x, 10.x.x.x). Exponha o celular via túnel — o mais fácil é <a href="https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/" target="_blank" rel="noreferrer" className="underline">Cloudflare Tunnel</a> (<code>cloudflared tunnel --url http://IP_DO_CELULAR:8080</code>) ou <a href="https://ngrok.com/download" target="_blank" rel="noreferrer" className="underline">ngrok</a> (<code>ngrok http IP_DO_CELULAR:8080</code>). Use a URL pública gerada (<code>https://xxx.trycloudflare.com/send</code>) no campo Endpoint abaixo.</li>
-                  <li>Aqui na tela, selecione o provedor <b>Pilar SMS (App próprio)</b>, cole o endpoint e o token.</li>
-                  <li>Salve e faça um envio de teste. O celular envia o SMS pela operadora.</li>
+                  <li>Na seção <b>Celulares autorizados</b> acima, cadastre um nome (ex: "Celular Recepção") e clique em <b>Cadastrar</b>. Um <b>token</b> será gerado.</li>
+                  <li>Copie o token.</li>
+                  <li>Instale o APK <b>Pilar SMS v1.1.0</b> no Android que ficará ligado com o chip.</li>
+                  <li>Abra o app, conceda permissão de <b>Enviar SMS</b> e desative a otimização de bateria.</li>
+                  <li>Cole o token no campo do app e toque em <b>Conectar</b>. Pronto — o app começa a processar a fila.</li>
+                  <li>O status do celular (último ping, bateria) aparece automaticamente na tabela acima.</li>
                 </ol>
-                <p className="text-xs"><b>Dica:</b> mantenha o celular carregando 24h e conectado por Wi-Fi. O app tem watchdog que reinicia o servidor caso o Android o suspenda.</p>
+                <p className="text-xs"><b>Dica:</b> mantenha o celular carregando 24h. Se cair a conexão, os SMS ficam na fila e são reenviados assim que o celular voltar. Pode cadastrar vários celulares — eles dividem a fila automaticamente.</p>
               </AccordionContent>
             </AccordionItem>
+
 
 
             <AccordionItem value="smsgate">
