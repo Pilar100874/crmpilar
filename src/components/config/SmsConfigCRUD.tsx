@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Send, Save, MessageSquare, BookOpen, Smartphone, Globe } from 'lucide-react';
 
-type Provider = 'twilio' | 'zenvia' | 'smsgate' | 'smsgatewayme';
+type Provider = 'twilio' | 'zenvia' | 'smsgate';
 
 interface SmsConfig {
   id?: string;
@@ -37,7 +37,7 @@ const PROVIDERS: { value: Provider; label: string; desc: string; icon: any }[] =
   { value: 'twilio', label: 'Twilio', desc: 'Envio global via Twilio Programmable Messaging (pago)', icon: Globe },
   { value: 'zenvia', label: 'Zenvia', desc: 'Envio via Zenvia (Brasil, créditos grátis para teste)', icon: Globe },
   { value: 'smsgate', label: 'SMS Gateway (Android)', desc: 'App gratuito open-source (sms-gate.app) instalado no celular Android', icon: Smartphone },
-  { value: 'smsgatewayme', label: 'SMSGateway.me (Android)', desc: 'Serviço com app Android para envio via chip do celular', icon: Smartphone },
+  
 ];
 
 export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId: string }) {
@@ -222,23 +222,6 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
             </div>
           )}
 
-          {cfg.provider === 'smsgatewayme' && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
-              <div>
-                <Label>E-mail da conta</Label>
-                <Input value={cfg.smsgatewayme_email || ''} onChange={(e) => setCfg({ ...cfg, smsgatewayme_email: e.target.value })} placeholder="seu@email.com" />
-              </div>
-              <div>
-                <Label>Senha</Label>
-                <Input type="password" value={cfg.smsgatewayme_password || ''} onChange={(e) => setCfg({ ...cfg, smsgatewayme_password: e.target.value })} />
-              </div>
-              <div>
-                <Label>Device ID</Label>
-                <Input value={cfg.smsgatewayme_device_id || ''} onChange={(e) => setCfg({ ...cfg, smsgatewayme_device_id: e.target.value })} placeholder="ID do dispositivo pareado" />
-              </div>
-            </div>
-          )}
-
           <div className="flex justify-end">
             <Button onClick={handleSave} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />{saving ? 'Salvando...' : 'Salvar configuração'}
@@ -297,22 +280,6 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="smsgatewayme">
-              <AccordionTrigger className="text-sm">
-                <span className="flex items-center gap-2"><Smartphone className="h-4 w-4 text-green-600" /> SMSGateway.me — Android</span>
-              </AccordionTrigger>
-              <AccordionContent className="text-sm space-y-2 text-muted-foreground">
-                <p><b>O que é:</b> serviço com app Android que envia SMS pelo chip do celular. Possui plano gratuito limitado.</p>
-                <ol className="list-decimal ml-5 space-y-1">
-                  <li>Crie conta em <a className="underline" href="https://smsgateway.me" target="_blank" rel="noreferrer">smsgateway.me</a>.</li>
-                  <li>Instale o app <b>SMSGateway.me</b> na Play Store.</li>
-                  <li>Faça login no app com o e-mail e senha da conta e conceda as permissões de SMS.</li>
-                  <li>No painel web (menu <i>Devices</i>) você verá o <b>Device ID</b> do celular pareado.</li>
-                  <li>Aqui na tela, selecione o provedor <b>SMSGateway.me</b> e preencha e-mail, senha e Device ID.</li>
-                  <li>Salve e teste o envio. Mantenha o celular ligado e com internet.</li>
-                </ol>
-              </AccordionContent>
-            </AccordionItem>
 
             <AccordionItem value="twilio">
               <AccordionTrigger className="text-sm">
