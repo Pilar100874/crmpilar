@@ -228,6 +228,30 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
             </div>
           )}
 
+          {cfg.provider === 'pilar' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
+              <div className="md:col-span-3">
+                <Label>Endpoint do gateway Pilar</Label>
+                <Input
+                  value={cfg.pilar_endpoint || ''}
+                  onChange={(e) => setCfg({ ...cfg, pilar_endpoint: e.target.value })}
+                  placeholder="http://IP_DO_CELULAR:8787/send  ou  https://seu-dominio/api/send"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  URL onde o app Pilar SMS está escutando. Aceita <code>{"{ to, message }"}</code> via POST JSON.
+                </p>
+              </div>
+              <div className="md:col-span-2">
+                <Label>Token de autenticação (Bearer)</Label>
+                <Input type="password" value={cfg.pilar_token || ''} onChange={(e) => setCfg({ ...cfg, pilar_token: e.target.value })} placeholder="token gerado no app Pilar" />
+              </div>
+              <div>
+                <Label>SIM/Remetente (opcional)</Label>
+                <Input value={cfg.pilar_sender || ''} onChange={(e) => setCfg({ ...cfg, pilar_sender: e.target.value })} placeholder="ex: sim1" />
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-end">
             <Button onClick={handleSave} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />{saving ? 'Salvando...' : 'Salvar configuração'}
