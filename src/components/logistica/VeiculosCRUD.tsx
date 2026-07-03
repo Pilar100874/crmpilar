@@ -197,6 +197,19 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         }
       }
 
+      // Persist telefone_sms na tabela veiculos (coluna opcional)
+      if (veiculoId && formData.telefone_sms) {
+        await supabase
+          .from('veiculos')
+          .update({ telefone_sms: formData.telefone_sms } as any)
+          .eq('id', veiculoId);
+      }
+
+      // Envio automático de SMS com os dados
+      if (formData.enviar_sms_automatico && formData.telefone_sms && veiculoId) {
+        await enviarDadosPorSms(veiculoId, formData.telefone_sms);
+      }
+
       toast.success(selectedVeiculo ? 'Veículo atualizado' : 'Veículo criado');
       setDialogOpen(false);
       fetchVeiculos();
@@ -206,6 +219,44 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       toast.error(error.message || 'Erro ao salvar veículo');
     }
   };
+
+  const enviarDadosPorSms = async (veiculoId?: string, telefoneOverride?: string) => {
+    const telefone = telefoneOverride || formData.telefone_sms;
+    if (!telefone) {
+      toast.error('Informe o telefone (SIM do equipamento)');
+      return;
+    }
+    const dispositivo = dispositivos.find(d => d.id === formData.dispositivo_id);
+    const linhas = [
+      `Veiculo: ${formData.placa}`,
+      formData.descricao ? `Descricao: ${formData.descricao}` : null,
+      formData.motorista ? `Motorista: ${formData.motorista}` : null,
+      formData.tipo_veiculo ? `Tipo: ${formData.tipo_veiculo}` : null,
+      dispositivo ? `Equipamento: ${dispositivo.nome_dispositivo || dispositivo.device_uuid}` : null,
+      dispositivo ? `ID: ${dispositivo.device_uuid}` : null,
+      formData.traccar_device_id ? `Traccar ID: ${formData.traccar_device_id}` : null,
+    ].filter(Boolean);
+    const mensagem = linhas.join('\n');
+
+    try {
+      setEnviandoSms(true);
+      const { data, error } = await supabase.functions.invoke('send-sms', {
+        body: {
+          estabelecimento_id: estabelecimentoId,
+          destino: telefone,
+          mensagem,
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.success) toast.success('SMS enviado ao equipamento');
+      else toast.error((data as any)?.erro || 'Falha ao enviar SMS');
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao enviar SMS');
+    } finally {
+      setEnviandoSms(false);
+    }
+  };
+
 
   const handleDelete = async () => {
     if (!selectedVeiculo) return;
