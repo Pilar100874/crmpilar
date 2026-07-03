@@ -14,7 +14,7 @@ function render() {
     cell.className = 'cell';
     cell.innerHTML = cam
       ? `<div class="label">${cam.nome || 'Câmera ' + (i+1)}</div>
-         <div class="preview">🎥 gravando</div>
+         <img class="preview" id="prev-${cam.id}" alt="aguardando..." />
          <button data-id="${cam.id}" class="snap">📸 Snapshot</button>`
       : `<div class="empty">Vazio</div>`;
     grid.appendChild(cell);
@@ -51,7 +51,7 @@ document.getElementById('btnAddCam').onclick = () => {
   cfg.cameras.push({ id: crypto.randomUUID(), nome:'', rtsp:'' });
   renderCamForm();
 };
-document.getElementById('btnSave').onclick = async (e) => {
+document.getElementById('btnSave').onclick = async () => {
   cfg.token = document.getElementById('cfgToken').value.trim();
   cfg.gridSize = parseInt(document.getElementById('cfgGrid').value);
   cfg.retentionDays = parseInt(document.getElementById('cfgRet').value);
@@ -64,4 +64,8 @@ document.getElementById('btnSave').onclick = async (e) => {
   cfg = await window.pilar.getConfig();
   render();
   window.pilar.onConfigUpdated(next => { cfg = next; render(); });
+  window.pilar.onPreviewFrame(({ id, dataUrl }) => {
+    const img = document.getElementById('prev-' + id);
+    if (img) img.src = dataUrl;
+  });
 })();
