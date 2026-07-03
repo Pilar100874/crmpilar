@@ -483,16 +483,42 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               </Tabs>
             </div>
 
-            <div className="flex items-center justify-between">
-              <Label>Ativo</Label>
-              <Switch
-                checked={formData.ativo}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, ativo: checked }))}
-              />
+            <div className="border rounded-lg p-3 space-y-3 bg-muted/30">
+              <Label className="flex items-center gap-2 text-sm font-semibold">
+                <Send className="h-4 w-4" />
+                Envio de dados por SMS
+              </Label>
+              <div>
+                <Label className="text-xs">Telefone do equipamento (SIM)</Label>
+                <Input
+                  value={formData.telefone_sms}
+                  onChange={(e) => setFormData(prev => ({ ...prev, telefone_sms: e.target.value }))}
+                  placeholder="+5511999999999"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Número do chip inserido no rastreador. Configure o provedor em Configurações de Atendimento → Envio de SMS.
+                </p>
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Enviar dados automaticamente ao salvar</Label>
+                <Switch
+                  checked={formData.enviar_sms_automatico}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, enviar_sms_automatico: checked }))}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                disabled={enviandoSms || !formData.telefone_sms}
+                onClick={() => enviarDadosPorSms(selectedVeiculo?.id)}
+              >
+                <Send className="h-4 w-4 mr-2" />
+                {enviandoSms ? 'Enviando...' : 'Enviar dados agora'}
+              </Button>
             </div>
-          </div>
 
-          <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
