@@ -17522,6 +17522,9 @@ export type Database = {
           estabelecimento_id: string
           gatewayapi_token: string | null
           id: string
+          pilar_endpoint: string | null
+          pilar_sender: string | null
+          pilar_token: string | null
           provider: string
           sender: string | null
           smsgate_base_url: string | null
@@ -17543,6 +17546,9 @@ export type Database = {
           estabelecimento_id: string
           gatewayapi_token?: string | null
           id?: string
+          pilar_endpoint?: string | null
+          pilar_sender?: string | null
+          pilar_token?: string | null
           provider?: string
           sender?: string | null
           smsgate_base_url?: string | null
@@ -17564,6 +17570,9 @@ export type Database = {
           estabelecimento_id?: string
           gatewayapi_token?: string | null
           id?: string
+          pilar_endpoint?: string | null
+          pilar_sender?: string | null
+          pilar_token?: string | null
           provider?: string
           sender?: string | null
           smsgate_base_url?: string | null
