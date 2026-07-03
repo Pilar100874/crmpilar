@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <title>Pilar Cam</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Pilar Cam</h1>
+    <div id="statusBar">Desconectado</div>
+    <button id="btnConfig">⚙ Configurar</button>
+  </header>
+
+  <main id="grid" class="grid-2"></main>
+
+  <dialog id="configDlg">
+    <form method="dialog">
+      <h2>Configuração</h2>
+      <label>Token do dispositivo <input id="cfgToken" type="text" required /></label>
+      <label>Grid
+        <select id="cfgGrid">
+          <option value="2">2 câmeras (2x1)</option>
+          <option value="4" selected>4 câmeras (2x2)</option>
+          <option value="9">9 câmeras (3x3)</option>
+          <option value="16">16 câmeras (4x4)</option>
+        </select>
+      </label>
+      <label>Retenção (dias)
+        <select id="cfgRet">
+          <option>7</option><option>15</option><option>30</option>
+        </select>
+      </label>
+      <label><input type="checkbox" id="cfgMotion" /> Detecção de movimento</label>
+
+      <h3>Câmeras</h3>
+      <div id="cameras"></div>
+      <button type="button" id="btnAddCam">+ Adicionar câmera</button>
+
+      <menu>
+        <button value="cancel">Cancelar</button>
+        <button id="btnSave" value="save">Salvar</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <script src="./renderer.js"></script>
+</body>
+</html>
