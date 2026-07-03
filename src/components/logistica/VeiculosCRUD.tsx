@@ -523,59 +523,60 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+          <DialogHeader className="px-6 py-4 border-b bg-muted/30">
             <DialogTitle className="flex items-center gap-2">
-              <Car className="h-5 w-5" />
+              <Car className="h-5 w-5 text-primary" />
               {selectedVeiculo ? 'Editar Veículo' : 'Novo Veículo'}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div>
-              <Label>Placa *</Label>
-              <Input
-                value={formData.placa}
-                onChange={(e) => setFormData(prev => ({ ...prev, placa: e.target.value.toUpperCase() }))}
-                placeholder="ABC-1234"
-                maxLength={8}
-              />
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
+            {/* Bloco: dados básicos */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label>Placa *</Label>
+                <Input
+                  value={formData.placa}
+                  onChange={(e) => setFormData(prev => ({ ...prev, placa: e.target.value.toUpperCase() }))}
+                  placeholder="ABC-1234"
+                  maxLength={8}
+                />
+              </div>
+              <div>
+                <Label>Tipo</Label>
+                <Select
+                  value={formData.tipo_veiculo}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, tipo_veiculo: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tipos.map(tipo => (
+                      <SelectItem key={tipo} value={tipo}>{tipo}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Descrição</Label>
+                <Input
+                  value={formData.descricao}
+                  onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
+                  placeholder="Ex: Fiorino Branca"
+                />
+              </div>
+              <div>
+                <Label>Motorista</Label>
+                <Input
+                  value={formData.motorista}
+                  onChange={(e) => setFormData(prev => ({ ...prev, motorista: e.target.value }))}
+                  placeholder="Nome do motorista"
+                />
+              </div>
             </div>
 
-            <div>
-              <Label>Descrição</Label>
-              <Input
-                value={formData.descricao}
-                onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
-                placeholder="Ex: Fiorino Branca"
-              />
-            </div>
-
-            <div>
-              <Label>Motorista</Label>
-              <Input
-                value={formData.motorista}
-                onChange={(e) => setFormData(prev => ({ ...prev, motorista: e.target.value }))}
-                placeholder="Nome do motorista"
-              />
-            </div>
-
-            <div>
-              <Label>Tipo</Label>
-              <Select
-                value={formData.tipo_veiculo}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, tipo_veiculo: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {tipos.map(tipo => (
-                    <SelectItem key={tipo} value={tipo}>{tipo}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
 
             <div>
               <Label className="flex items-center gap-2">
