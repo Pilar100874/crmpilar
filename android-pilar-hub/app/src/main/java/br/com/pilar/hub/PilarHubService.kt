@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import br.com.pilar.hub.sms.SmsModule
+import br.com.pilar.hub.ponto.PontoQueue
 import kotlinx.coroutines.*
 import org.json.JSONObject
 
@@ -76,6 +77,7 @@ class PilarHubService : Service() {
                     atualizarNotif()
 
                     if (smsAtivo) SmsModule.processarFila(this@PilarHubService, token)
+                    if (pontoAtivo) PontoQueue.flush(this@PilarHubService)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }

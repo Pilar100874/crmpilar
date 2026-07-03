@@ -89,21 +89,26 @@ class PontoActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("pilar_hub", MODE_PRIVATE)
         val token = prefs.getString("device_token", "") ?: ""
         CoroutineScope(Dispatchers.IO).launch {
+            val body = JSONObject().apply {
+                put("device_token", token); put("pin", pin)
+                if (foto != null && PilarHubService.cameraAtiva) put("foto_base64", foto)
+                if (lat != null) put("lat", lat)
+                if (lng != null) put("lng", lng)
+                put("timestamp", System.currentTimeMillis())
+            }
             try {
-                val body = JSONObject().apply {
-                    put("device_token", token); put("pin", pin)
-                    if (foto != null && PilarHubService.cameraAtiva) put("foto_base64", foto)
-                    if (lat != null) put("lat", lat)
-                    if (lng != null) put("lng", lng)
-                    put("timestamp", System.currentTimeMillis())
-                }.toString()
-                val resp = ApiClient.post("pilar-hub-ponto", body)
+                ApiClient.post("pilar-hub-ponto", body.toString())
                 withContext(Dispatchers.Main) {
                     status.text = "Registrado ✓"
                     findViewById<EditText>(R.id.pin).text.clear()
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) { status.text = "Erro: ${e.message}" }
+                // Sem internet: enfileira para reenvio no próximo heartbeat
+                PontoQueue.enqueue(this@PontoActivity, body)
+                withContext(Dispatchers.Main) {
+                    status.text = "Salvo offline (${PontoQueue.pendentes(this@PontoActivity)} na fila)"
+                    findViewById<EditText>(R.id.pin).text.clear()
+                }
             }
         }
     }
