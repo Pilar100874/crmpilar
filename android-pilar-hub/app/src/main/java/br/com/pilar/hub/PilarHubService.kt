@@ -77,6 +77,7 @@ class PilarHubService : Service() {
                     atualizarNotif()
 
                     if (smsAtivo) SmsModule.processarFila(this@PilarHubService, token)
+                    if (pontoAtivo) PontoQueue.flush(this@PilarHubService)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
