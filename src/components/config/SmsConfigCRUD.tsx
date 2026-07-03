@@ -229,28 +229,19 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
           )}
 
           {cfg.provider === 'pilar' && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
-              <div className="md:col-span-3">
-                <Label>IP e porta do celular (ou URL pública)</Label>
-                <Input
-                  value={cfg.pilar_endpoint || ''}
-                  onChange={(e) => setCfg({ ...cfg, pilar_endpoint: e.target.value })}
-                  placeholder="192.168.0.42:8080"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Digite apenas <code>IP:PORTA</code> (ex.: <code>192.168.0.42:8080</code>). O sistema completa <code>http://…/send</code> automaticamente. Se estiver usando túnel público, pode colar a URL completa.
+            <div className="border-t pt-4 space-y-3">
+              <div className="rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">
+                <p className="font-medium text-foreground mb-1">✅ Modo Fila — sem Cloudflare, sem IP público</p>
+                <p className="text-muted-foreground">
+                  O CRM apenas <b>enfileira</b> as mensagens no banco. O APK Pilar SMS instalado no
+                  celular consulta a fila a cada poucos segundos e envia os SMS pelo chip.
+                  Funciona com Wi-Fi ou 4G, atrás de qualquer roteador, sem configuração de rede.
                 </p>
               </div>
-              <div className="md:col-span-2">
-                <Label>Token de autenticação (Bearer)</Label>
-                <Input type="password" value={cfg.pilar_token || ''} onChange={(e) => setCfg({ ...cfg, pilar_token: e.target.value })} placeholder="token gerado no app Pilar" />
-              </div>
-              <div>
-                <Label>SIM/Remetente (opcional)</Label>
-                <Input value={cfg.pilar_sender || ''} onChange={(e) => setCfg({ ...cfg, pilar_sender: e.target.value })} placeholder="ex: sim1" />
-              </div>
+              <PilarSmsDevices estabelecimentoId={estabelecimentoId} />
             </div>
           )}
+
 
           <div className="flex justify-end">
             <Button onClick={handleSave} disabled={saving}>
