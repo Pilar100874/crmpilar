@@ -291,6 +291,28 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
         </CardHeader>
         <CardContent>
           <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="pilar">
+              <AccordionTrigger className="text-sm">
+                <span className="flex items-center gap-2"><Shield className="h-4 w-4 text-primary" /> Pilar SMS — App próprio · Gratuito</span>
+              </AccordionTrigger>
+              <AccordionContent className="text-sm space-y-2 text-muted-foreground">
+                <p><b>O que é:</b> gateway próprio da Pilar. Um app Android leve que roda no seu celular, escuta requisições HTTP do CRM e envia SMS pelo chip usando o <code>SmsManager</code> nativo. Protocolo simplificado, sem intermediários.</p>
+                <p><b>Protocolo:</b> o CRM faz <code>POST</code> no endpoint configurado com header <code>Authorization: Bearer &lt;token&gt;</code> e body JSON:</p>
+                <pre className="bg-muted p-2 rounded text-xs overflow-x-auto">{`{ "to": "+5511999999999", "message": "texto do SMS", "sender": "sim1" }`}</pre>
+                <p>Resposta esperada: <code>{`{ "success": true, "id": "..." }`}</code>.</p>
+                <ol className="list-decimal ml-5 space-y-1">
+                  <li>Baixe o app <b>Pilar SMS</b> (APK disponibilizado pela equipe) e instale no Android que ficará ligado com chip.</li>
+                  <li>Abra o app, conceda permissão de <b>Enviar SMS</b> e desative a otimização de bateria para o app.</li>
+                  <li>Toque em <b>Iniciar servidor</b>. O app mostra a URL local (ex: <code>http://192.168.0.42:8787/send</code>) e gera um <b>Token</b>.</li>
+                  <li>Se for usar fora da rede local, exponha via túnel (Cloudflare Tunnel, ngrok) ou configure port-forward no roteador — e use essa URL pública.</li>
+                  <li>Aqui na tela, selecione o provedor <b>Pilar SMS (App próprio)</b>, cole o endpoint e o token.</li>
+                  <li>Salve e faça um envio de teste. O celular envia o SMS pela operadora.</li>
+                </ol>
+                <p className="text-xs"><b>Dica:</b> mantenha o celular carregando 24h e conectado por Wi-Fi. O app tem watchdog que reinicia o servidor caso o Android o suspenda.</p>
+              </AccordionContent>
+            </AccordionItem>
+
+
             <AccordionItem value="smsgate">
               <AccordionTrigger className="text-sm">
                 <span className="flex items-center gap-2"><Smartphone className="h-4 w-4 text-green-600" /> SMS Gateway (sms-gate.app) — Android · Gratuito</span>
