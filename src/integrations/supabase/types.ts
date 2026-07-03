@@ -10501,6 +10501,57 @@ export type Database = {
           },
         ]
       }
+      pilar_hub_snapshots: {
+        Row: {
+          created_at: string
+          device_id: string | null
+          estabelecimento_id: string
+          id: string
+          meta: Json
+          origem: string
+          referencia_id: string | null
+          storage_path: string
+          url_publica: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_id?: string | null
+          estabelecimento_id: string
+          id?: string
+          meta?: Json
+          origem?: string
+          referencia_id?: string | null
+          storage_path: string
+          url_publica?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_id?: string | null
+          estabelecimento_id?: string
+          id?: string
+          meta?: Json
+          origem?: string
+          referencia_id?: string | null
+          storage_path?: string
+          url_publica?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilar_hub_snapshots_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "sms_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pilar_hub_snapshots_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_acordos_coletivos: {
         Row: {
           adicional_noturno_percentual: number | null
@@ -17594,41 +17645,65 @@ export type Database = {
         Row: {
           ativo: boolean
           bateria: number | null
+          camera_config: Json
           created_at: string
           estabelecimento_id: string | null
           id: string
+          modulo_camera_ativo: boolean
+          modulo_ponto_ativo: boolean
+          modulo_sms_ativo: boolean
           nome: string
+          ponto_config: Json
           sinal: string | null
+          tipo_dispositivo: string
           token: string
+          ultimo_heartbeat: string | null
           ultimo_ip: string | null
           ultimo_ping: string | null
           updated_at: string
+          versao_app: string | null
         }
         Insert: {
           ativo?: boolean
           bateria?: number | null
+          camera_config?: Json
           created_at?: string
           estabelecimento_id?: string | null
           id?: string
+          modulo_camera_ativo?: boolean
+          modulo_ponto_ativo?: boolean
+          modulo_sms_ativo?: boolean
           nome: string
+          ponto_config?: Json
           sinal?: string | null
+          tipo_dispositivo?: string
           token?: string
+          ultimo_heartbeat?: string | null
           ultimo_ip?: string | null
           ultimo_ping?: string | null
           updated_at?: string
+          versao_app?: string | null
         }
         Update: {
           ativo?: boolean
           bateria?: number | null
+          camera_config?: Json
           created_at?: string
           estabelecimento_id?: string | null
           id?: string
+          modulo_camera_ativo?: boolean
+          modulo_ponto_ativo?: boolean
+          modulo_sms_ativo?: boolean
           nome?: string
+          ponto_config?: Json
           sinal?: string | null
+          tipo_dispositivo?: string
           token?: string
+          ultimo_heartbeat?: string | null
           ultimo_ip?: string | null
           ultimo_ping?: string | null
           updated_at?: string
+          versao_app?: string | null
         }
         Relationships: []
       }
