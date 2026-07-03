@@ -121,9 +121,35 @@ class SmsHttpService : Service() {
         const val NOTIF_ID = 4711
 
         fun localIp(ctx: Context): String {
-            val wm = ctx.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-            val ip = wm.connectionInfo.ipAddress
-            return String.format("%d.%d.%d.%d", ip and 0xff, ip shr 8 and 0xff, ip shr 16 and 0xff, ip shr 24 and 0xff)
+            // 1) tenta enumerar interfaces (funciona em Wi-Fi, hotspot e dados móveis, sem permissão extra)
+            try {
+                val interfaces = java.net.NetworkInterface.getNetworkInterfaces()
+                for (nif in interfaces) {
+                    if (!nif.isUp || nif.isLoopback || nif.isVirtual) continue
+                    val name = nif.name.lowercase()
+                    // prioriza wlan (Wi-Fi) e rmnet/ccmni (dados móveis)
+                    for (addr in nif.inetAddresses) {
+                        if (addr.isLoopbackAddress) continue
+                        val host = addr.hostAddress ?: continue
+                        // apenas IPv4
+                        if (host.contains(":")) continue
+                        if (host == "0.0.0.0") continue
+                        return host
+                    }
+                }
+            } catch (_: Exception) {}
+
+            // 2) fallback pro WifiManager (Android antigo)
+            try {
+                val wm = ctx.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+                @Suppress("DEPRECATION")
+                val ip = wm.connectionInfo.ipAddress
+                if (ip != 0) {
+                    return String.format("%d.%d.%d.%d", ip and 0xff, ip shr 8 and 0xff, ip shr 16 and 0xff, ip shr 24 and 0xff)
+                }
+            } catch (_: Exception) {}
+
+            return "0.0.0.0"
         }
     }
 }
