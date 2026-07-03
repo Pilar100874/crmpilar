@@ -3,10 +3,8 @@ package br.com.pilar.sms
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.Build
 import android.os.IBinder
@@ -24,6 +22,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.ArrayDeque
 
 /**
  * Serviço em segundo plano que consulta a fila do CRM e envia SMS.
@@ -31,23 +30,40 @@ import java.net.URL
  */
 class SmsPollingService : Service() {
 
+    data class SendEvent(
+        val phone: String,
+        val message: String,
+        val success: Boolean,
+        val error: String?,
+        val timeMs: Long
+    )
+
+    enum class ConnState { STOPPED, CONNECTING, ACTIVE, ERROR }
+
     companion object {
         const val CHANNEL = "pilar_sms_poll"
         const val NOTIF_ID = 1
         const val TAG = "PilarSmsPoll"
 
-        // Endpoints do CRM (Lovable Cloud / Supabase Edge Functions)
         const val SUPABASE_URL = "https://ioxugupvxlcdweldocmq.supabase.co"
         const val ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc"
         const val POLL_INTERVAL_MS = 5_000L
+        const val MAX_HISTORY = 30
 
-        @Volatile var status: String = "parado"
+        @Volatile var status: String = "Desconectado"
+        @Volatile var connState: ConnState = ConnState.STOPPED
         @Volatile var enviados: Int = 0
         @Volatile var falhas: Int = 0
-        @Volatile var ultimoPing: String = "—"
+        @Volatile var ultimoPing: Long = 0L
+        @Volatile var bateria: Int = -1
+        @Volatile var startedAt: Long = 0L
+        val historyLock = Any()
+        val history = ArrayDeque<SendEvent>()
 
-        // Callback opcional para a UI observar
-        var onStatus: ((String) -> Unit)? = null
+        fun clearHistory() {
+            synchronized(historyLock) { history.clear() }
+            enviados = 0; falhas = 0
+        }
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -71,24 +87,29 @@ class SmsPollingService : Service() {
         val token = getSharedPreferences("pilar_sms", Context.MODE_PRIVATE)
             .getString("device_token", "") ?: ""
         if (token.isBlank()) {
-            updateStatus("Sem token — cadastre um dispositivo no CRM e cole o token no app")
+            connState = ConnState.ERROR
+            updateStatus("Sem token cadastrado")
             stopSelf()
             return START_NOT_STICKY
         }
+        startedAt = System.currentTimeMillis()
         job?.cancel()
         job = scope.launch { loop(token) }
         return START_STICKY
     }
 
     private suspend fun loop(token: String) {
-        updateStatus("Conectado — aguardando SMS...")
+        connState = ConnState.CONNECTING
+        updateStatus("Conectando...")
         while (true) {
             try {
                 val resp = poll(token)
-                ultimoPing = nowStr()
+                ultimoPing = System.currentTimeMillis()
+                bateria = batteryLevel()
+                connState = ConnState.ACTIVE
                 val messages = resp.optJSONArray("messages") ?: JSONArray()
                 if (messages.length() > 0) {
-                    updateStatus("Processando ${messages.length()} SMS...")
+                    updateStatus("Enviando ${messages.length()} SMS...")
                 }
                 for (i in 0 until messages.length()) {
                     val m = messages.getJSONObject(i)
@@ -98,13 +119,22 @@ class SmsPollingService : Service() {
                     val result = SmsSender.send(this@SmsPollingService, to, msg, null)
                     ack(token, id, result.ok, result.error)
                     if (result.ok) enviados++ else falhas++
+                    addHistory(SendEvent(to, msg, result.ok, result.error, System.currentTimeMillis()))
                 }
-                updateStatus("Ativo · ${enviados} enviados · ${falhas} falhas · último ping ${ultimoPing}")
+                updateStatus("Conectado")
             } catch (e: Exception) {
                 Log.w(TAG, "Erro no polling", e)
-                updateStatus("Sem conexão — tentando de novo... (${e.message})")
+                connState = ConnState.ERROR
+                updateStatus("Sem conexão — tentando novamente")
             }
             delay(POLL_INTERVAL_MS)
+        }
+    }
+
+    private fun addHistory(ev: SendEvent) {
+        synchronized(historyLock) {
+            history.addFirst(ev)
+            while (history.size > MAX_HISTORY) history.removeLast()
         }
     }
 
@@ -152,7 +182,7 @@ class SmsPollingService : Service() {
                 if (error != null) put("erro", error)
             }.toString()
             conn.outputStream.use { it.write(body.toByteArray()) }
-            conn.responseCode // consome
+            conn.responseCode
         } catch (e: Exception) {
             Log.w(TAG, "Falha no ack de $id", e)
         }
@@ -165,22 +195,16 @@ class SmsPollingService : Service() {
         } catch (_: Exception) { -1 }
     }
 
-    private fun nowStr(): String {
-        val d = java.util.Date()
-        return java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(d)
-    }
-
     private fun updateStatus(s: String) {
         status = s
-        onStatus?.invoke(s)
         val nm = getSystemService(NotificationManager::class.java)
         nm?.notify(NOTIF_ID, buildNotification(s))
     }
 
     private fun buildNotification(text: String) =
         NotificationCompat.Builder(this, CHANNEL)
-            .setContentTitle("Pilar SMS — Modo Fila")
-            .setContentText(text)
+            .setContentTitle("Pilar SMS")
+            .setContentText("$text · $enviados enviados · $falhas falhas")
             .setSmallIcon(android.R.drawable.stat_sys_upload)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -197,8 +221,8 @@ class SmsPollingService : Service() {
         job?.cancel()
         scope.cancel()
         try { wakeLock?.release() } catch (_: Exception) {}
-        status = "parado"
-        onStatus?.invoke(status)
+        connState = ConnState.STOPPED
+        status = "Desconectado"
         super.onDestroy()
     }
 }
