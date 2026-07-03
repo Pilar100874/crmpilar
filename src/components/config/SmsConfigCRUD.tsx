@@ -9,9 +9,10 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Send, Save, MessageSquare } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Send, Save, MessageSquare, BookOpen, Smartphone, Globe } from 'lucide-react';
 
-type Provider = 'gatewayapi' | 'twilio' | 'zenvia';
+type Provider = 'twilio' | 'zenvia' | 'smsgate' | 'smsgatewayme';
 
 interface SmsConfig {
   id?: string;
@@ -22,15 +23,21 @@ interface SmsConfig {
   twilio_account_sid: string | null;
   twilio_auth_token: string | null;
   twilio_from: string | null;
-  gatewayapi_token: string | null;
   zenvia_api_token: string | null;
   zenvia_from: string | null;
+  smsgate_base_url: string | null;
+  smsgate_username: string | null;
+  smsgate_password: string | null;
+  smsgatewayme_email: string | null;
+  smsgatewayme_password: string | null;
+  smsgatewayme_device_id: string | null;
 }
 
-const PROVIDERS: { value: Provider; label: string; desc: string }[] = [
-  { value: 'gatewayapi', label: 'GatewayAPI', desc: 'Envio global de SMS via GatewayAPI.com' },
-  { value: 'twilio', label: 'Twilio', desc: 'Envio via Twilio Programmable Messaging' },
-  { value: 'zenvia', label: 'Zenvia', desc: 'Envio via Zenvia (Brasil)' },
+const PROVIDERS: { value: Provider; label: string; desc: string; icon: any }[] = [
+  { value: 'twilio', label: 'Twilio', desc: 'Envio global via Twilio Programmable Messaging (pago)', icon: Globe },
+  { value: 'zenvia', label: 'Zenvia', desc: 'Envio via Zenvia (Brasil, créditos grátis para teste)', icon: Globe },
+  { value: 'smsgate', label: 'SMS Gateway (Android)', desc: 'App gratuito open-source (sms-gate.app) instalado no celular Android', icon: Smartphone },
+  { value: 'smsgatewayme', label: 'SMSGateway.me (Android)', desc: 'Serviço com app Android para envio via chip do celular', icon: Smartphone },
 ];
 
 export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId: string }) {
@@ -43,20 +50,23 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
 
   const [cfg, setCfg] = useState<SmsConfig>({
     estabelecimento_id: estabelecimentoId,
-    provider: 'gatewayapi',
+    provider: 'smsgate',
     sender: '',
     ativo: true,
     twilio_account_sid: '',
     twilio_auth_token: '',
     twilio_from: '',
-    gatewayapi_token: '',
     zenvia_api_token: '',
     zenvia_from: '',
+    smsgate_base_url: 'https://api.sms-gate.app/3rd/v1',
+    smsgate_username: '',
+    smsgate_password: '',
+    smsgatewayme_email: '',
+    smsgatewayme_password: '',
+    smsgatewayme_device_id: '',
   });
 
-  useEffect(() => {
-    void load();
-  }, [estabelecimentoId]);
+  useEffect(() => { void load(); }, [estabelecimentoId]);
 
   const load = async () => {
     setLoading(true);
@@ -105,11 +115,7 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
     setTesting(true);
     try {
       const { data, error } = await supabase.functions.invoke('send-sms', {
-        body: {
-          estabelecimento_id: estabelecimentoId,
-          destino: testDestino,
-          mensagem: testMensagem,
-        },
+        body: { estabelecimento_id: estabelecimentoId, destino: testDestino, mensagem: testMensagem },
       });
       if (error) throw error;
       if ((data as any)?.success) toast.success('SMS enviado com sucesso');
@@ -123,6 +129,8 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
   };
 
   if (loading) return <div className="text-center py-8 text-muted-foreground">Carregando...</div>;
+
+  const currentProvider = PROVIDERS.find(p => p.value === cfg.provider);
 
   return (
     <div className="space-y-6">
@@ -143,9 +151,7 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                {PROVIDERS.find(p => p.value === cfg.provider)?.desc}
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">{currentProvider?.desc}</p>
             </div>
             <div>
               <Label>Remetente (Sender ID)</Label>
@@ -154,27 +160,13 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                 onChange={(e) => setCfg({ ...cfg, sender: e.target.value })}
                 placeholder="Ex: MinhaEmpresa"
               />
-              <p className="text-xs text-muted-foreground mt-1">Usado por GatewayAPI. Twilio/Zenvia usam o número "From".</p>
+              <p className="text-xs text-muted-foreground mt-1">Opcional. Twilio/Zenvia/Android usam o número "From" do próprio provedor.</p>
             </div>
             <div className="flex items-end gap-2">
               <Switch checked={cfg.ativo} onCheckedChange={(v) => setCfg({ ...cfg, ativo: v })} />
               <Label>Envio de SMS ativo</Label>
             </div>
           </div>
-
-          {cfg.provider === 'gatewayapi' && (
-            <div className="grid grid-cols-1 gap-4 border-t pt-4">
-              <div>
-                <Label>Token da API (GatewayAPI)</Label>
-                <Input
-                  type="password"
-                  value={cfg.gatewayapi_token || ''}
-                  onChange={(e) => setCfg({ ...cfg, gatewayapi_token: e.target.value })}
-                  placeholder="Token gerado em gatewayapi.com"
-                />
-              </div>
-            </div>
-          )}
 
           {cfg.provider === 'twilio' && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
@@ -202,6 +194,47 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
               <div>
                 <Label>Número From</Label>
                 <Input value={cfg.zenvia_from || ''} onChange={(e) => setCfg({ ...cfg, zenvia_from: e.target.value })} placeholder="5511999999999" />
+              </div>
+            </div>
+          )}
+
+          {cfg.provider === 'smsgate' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
+              <div className="md:col-span-3">
+                <Label>Base URL da API</Label>
+                <Input
+                  value={cfg.smsgate_base_url || ''}
+                  onChange={(e) => setCfg({ ...cfg, smsgate_base_url: e.target.value })}
+                  placeholder="https://api.sms-gate.app/3rd/v1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Use <code>https://api.sms-gate.app/3rd/v1</code> para o modo Cloud, ou <code>http://IP_DO_CELULAR:8080</code> no modo Local.
+                </p>
+              </div>
+              <div>
+                <Label>Usuário</Label>
+                <Input value={cfg.smsgate_username || ''} onChange={(e) => setCfg({ ...cfg, smsgate_username: e.target.value })} placeholder="usuário gerado pelo app" />
+              </div>
+              <div>
+                <Label>Senha</Label>
+                <Input type="password" value={cfg.smsgate_password || ''} onChange={(e) => setCfg({ ...cfg, smsgate_password: e.target.value })} placeholder="senha gerada pelo app" />
+              </div>
+            </div>
+          )}
+
+          {cfg.provider === 'smsgatewayme' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
+              <div>
+                <Label>E-mail da conta</Label>
+                <Input value={cfg.smsgatewayme_email || ''} onChange={(e) => setCfg({ ...cfg, smsgatewayme_email: e.target.value })} placeholder="seu@email.com" />
+              </div>
+              <div>
+                <Label>Senha</Label>
+                <Input type="password" value={cfg.smsgatewayme_password || ''} onChange={(e) => setCfg({ ...cfg, smsgatewayme_password: e.target.value })} />
+              </div>
+              <div>
+                <Label>Device ID</Label>
+                <Input value={cfg.smsgatewayme_device_id || ''} onChange={(e) => setCfg({ ...cfg, smsgatewayme_device_id: e.target.value })} placeholder="ID do dispositivo pareado" />
               </div>
             </div>
           )}
@@ -235,6 +268,83 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
               <Send className="h-4 w-4 mr-2" />{testing ? 'Enviando...' : 'Enviar teste'}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base"><BookOpen className="h-4 w-4" /> Manual de configuração dos provedores</CardTitle>
+          <CardDescription>Passo a passo para cada um dos 4 provedores suportados</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="smsgate">
+              <AccordionTrigger className="text-sm">
+                <span className="flex items-center gap-2"><Smartphone className="h-4 w-4 text-green-600" /> SMS Gateway (sms-gate.app) — Android · Gratuito</span>
+              </AccordionTrigger>
+              <AccordionContent className="text-sm space-y-2 text-muted-foreground">
+                <p><b>O que é:</b> app open-source instalado no celular Android que transforma o aparelho em gateway de SMS. Envia via chip do celular — sem mensalidade, custo é o do plano da operadora.</p>
+                <ol className="list-decimal ml-5 space-y-1">
+                  <li>Baixe o app <b>SMS Gateway</b> em <a className="underline" href="https://sms-gate.app" target="_blank" rel="noreferrer">sms-gate.app</a> (Play Store ou APK direto do GitHub).</li>
+                  <li>Instale no celular Android que ficará sempre ligado e com chip ativo.</li>
+                  <li>Abra o app, conceda as permissões de SMS.</li>
+                  <li>Escolha o modo: <b>Cloud</b> (padrão, mais fácil — o app se conecta ao servidor sms-gate.app) ou <b>Local</b> (o celular expõe uma API na sua rede).</li>
+                  <li>O app exibirá <b>Usuário</b> e <b>Senha</b> gerados automaticamente. Copie os dois.</li>
+                  <li>Aqui na tela, selecione o provedor <b>SMS Gateway (Android)</b> e cole usuário e senha.</li>
+                  <li>Base URL: mantenha <code>https://api.sms-gate.app/3rd/v1</code> (Cloud) ou coloque <code>http://IP:8080</code> se estiver em modo Local.</li>
+                  <li>Salve e faça um envio de teste.</li>
+                </ol>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="smsgatewayme">
+              <AccordionTrigger className="text-sm">
+                <span className="flex items-center gap-2"><Smartphone className="h-4 w-4 text-green-600" /> SMSGateway.me — Android</span>
+              </AccordionTrigger>
+              <AccordionContent className="text-sm space-y-2 text-muted-foreground">
+                <p><b>O que é:</b> serviço com app Android que envia SMS pelo chip do celular. Possui plano gratuito limitado.</p>
+                <ol className="list-decimal ml-5 space-y-1">
+                  <li>Crie conta em <a className="underline" href="https://smsgateway.me" target="_blank" rel="noreferrer">smsgateway.me</a>.</li>
+                  <li>Instale o app <b>SMSGateway.me</b> na Play Store.</li>
+                  <li>Faça login no app com o e-mail e senha da conta e conceda as permissões de SMS.</li>
+                  <li>No painel web (menu <i>Devices</i>) você verá o <b>Device ID</b> do celular pareado.</li>
+                  <li>Aqui na tela, selecione o provedor <b>SMSGateway.me</b> e preencha e-mail, senha e Device ID.</li>
+                  <li>Salve e teste o envio. Mantenha o celular ligado e com internet.</li>
+                </ol>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="twilio">
+              <AccordionTrigger className="text-sm">
+                <span className="flex items-center gap-2"><Globe className="h-4 w-4 text-blue-600" /> Twilio — Global · Pago (créditos grátis para teste)</span>
+              </AccordionTrigger>
+              <AccordionContent className="text-sm space-y-2 text-muted-foreground">
+                <ol className="list-decimal ml-5 space-y-1">
+                  <li>Crie conta em <a className="underline" href="https://twilio.com" target="_blank" rel="noreferrer">twilio.com</a> (ganha ~US$15 de crédito).</li>
+                  <li>No console Twilio, compre um número em <b>Phone Numbers → Buy a number</b> com capacidade de SMS.</li>
+                  <li>Copie o <b>Account SID</b> e o <b>Auth Token</b> da página inicial do console.</li>
+                  <li>Aqui, selecione provedor <b>Twilio</b> e cole Account SID, Auth Token e o número comprado no formato E.164 (ex: <code>+15558675310</code>).</li>
+                  <li>Ative <i>SMS Pumping Protection</i> e <i>Geo Permissions</i> (Brasil) no console Twilio antes de ir para produção.</li>
+                  <li>Salve e envie um teste. No plano trial, só é possível enviar para números verificados.</li>
+                </ol>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="zenvia">
+              <AccordionTrigger className="text-sm">
+                <span className="flex items-center gap-2"><Globe className="h-4 w-4 text-blue-600" /> Zenvia — Brasil · Pago (créditos grátis para teste)</span>
+              </AccordionTrigger>
+              <AccordionContent className="text-sm space-y-2 text-muted-foreground">
+                <ol className="list-decimal ml-5 space-y-1">
+                  <li>Crie conta em <a className="underline" href="https://zenvia.com" target="_blank" rel="noreferrer">zenvia.com</a>.</li>
+                  <li>No painel, acesse <b>Integrações → API</b> e gere um <b>API Token</b>.</li>
+                  <li>Contrate/registre um <b>número de origem</b> (from) para SMS.</li>
+                  <li>Aqui, selecione provedor <b>Zenvia</b> e cole o API Token e o número From (somente dígitos com DDI, ex: <code>5511999999999</code>).</li>
+                  <li>Salve e envie um teste. Créditos gratuitos são consumidos automaticamente.</li>
+                </ol>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </CardContent>
       </Card>
 
