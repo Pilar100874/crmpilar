@@ -1,0 +1,2 @@
+ALTER TABLE public.sms_config DROP CONSTRAINT IF EXISTS sms_config_provider_check;
+ALTER TABLE public.sms_config ADD CONSTRAINT sms_config_provider_check CHECK (provider IN ('twilio','zenvia','smsgate','pilar'));
