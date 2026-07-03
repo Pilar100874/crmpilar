@@ -10501,6 +10501,56 @@ export type Database = {
           },
         ]
       }
+      pilar_cam_cameras: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          device_id: string
+          estabelecimento_id: string | null
+          id: string
+          nome: string
+          ordem: number
+          rtsp_url: string
+          senha: string | null
+          updated_at: string
+          usuario: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          device_id: string
+          estabelecimento_id?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+          rtsp_url: string
+          senha?: string | null
+          updated_at?: string
+          usuario?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          device_id?: string
+          estabelecimento_id?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          rtsp_url?: string
+          senha?: string | null
+          updated_at?: string
+          usuario?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilar_cam_cameras_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "sms_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pilar_hub_snapshots: {
         Row: {
           created_at: string

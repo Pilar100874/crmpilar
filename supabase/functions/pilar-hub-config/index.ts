@@ -42,6 +42,18 @@ Deno.serve(async (req) => {
       }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // Câmeras vinculadas (só faz sentido pro Pilar Cam Windows)
+    let cameras: any[] = [];
+    if (device.tipo_dispositivo === 'windows' && device.modulo_camera_ativo) {
+      const { data } = await supabase
+        .from('pilar_cam_cameras')
+        .select('id, nome, rtsp_url, usuario, senha, ativo, ordem')
+        .eq('device_id', device.id)
+        .eq('ativo', true)
+        .order('ordem', { ascending: true });
+      cameras = data || [];
+    }
+
     return new Response(JSON.stringify({
       device: {
         id: device.id,
@@ -57,6 +69,7 @@ Deno.serve(async (req) => {
       },
       ponto_config: device.ponto_config || {},
       camera_config: device.camera_config || {},
+      cameras,
     }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
