@@ -33,7 +33,7 @@ import LogisticaRoteirizacao from './LogisticaRoteirizacao';
 import LogisticaRotas from './LogisticaRotas';
 import LogisticaAutomacoes from './LogisticaAutomacoes';
 import LogisticaConfig from './LogisticaConfig';
-import PilarRastreadorApps from '@/components/logistica/PilarRastreadorApps';
+import PilarRastreadorHub from '@/components/logistica/PilarRastreadorHub';
 import ManualRastreadores from '@/components/logistica/ManualRastreadores';
 
 interface TabItem {
@@ -120,7 +120,7 @@ const LogisticaHub: React.FC = () => {
       case 'automacoes':
         return <LogisticaAutomacoes />;
       case 'pilar-rastreador':
-        return <PilarRastreadorApps />;
+        return estabelecimentoId ? <PilarRastreadorHub estabelecimentoId={estabelecimentoId} /> : null;
       case 'manual':
         return <ManualRastreadores />;
       case 'config':
