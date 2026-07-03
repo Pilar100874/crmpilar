@@ -10506,13 +10506,9 @@ export type Database = {
           ativo: boolean
           created_at: string
           device_id: string
-          empresa_ponto_id: string | null
           estabelecimento_id: string | null
-          filial_id: string | null
-          finalidade: string
           id: string
           nome: string
-          obrigatoria: boolean
           ordem: number
           rtsp_url: string
           senha: string | null
@@ -10523,13 +10519,9 @@ export type Database = {
           ativo?: boolean
           created_at?: string
           device_id: string
-          empresa_ponto_id?: string | null
           estabelecimento_id?: string | null
-          filial_id?: string | null
-          finalidade?: string
           id?: string
           nome: string
-          obrigatoria?: boolean
           ordem?: number
           rtsp_url: string
           senha?: string | null
@@ -10540,13 +10532,9 @@ export type Database = {
           ativo?: boolean
           created_at?: string
           device_id?: string
-          empresa_ponto_id?: string | null
           estabelecimento_id?: string | null
-          filial_id?: string | null
-          finalidade?: string
           id?: string
           nome?: string
-          obrigatoria?: boolean
           ordem?: number
           rtsp_url?: string
           senha?: string | null
