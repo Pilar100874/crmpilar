@@ -1,0 +1,15 @@
+R_DEF: Internal format may change without notice
+local
+drawable ic_launcher_bg
+drawable ic_launcher_fg
+id btnStart
+id btnStop
+id etPort
+id etToken
+id tvEndpoint
+id tvStatus
+layout activity_main
+mipmap ic_launcher
+mipmap ic_launcher_round
+string app_name
+style Theme.PilarSms
