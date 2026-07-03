@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="Pilar Hub" android:textSize="28sp" android:textStyle="bold" />
+    <TextView
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="SMS · Ponto · Câmera" android:textSize="14sp"
+        android:layout_marginBottom="24dp" />
+
+    <TextView android:text="Token do dispositivo"
+        android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    <EditText android:id="@+id/tokenInput"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:hint="Cole o token gerado no CRM" />
+
+    <Button android:id="@+id/btnSave" android:text="Salvar e iniciar"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="16dp" />
+
+    <Button android:id="@+id/btnPonto" android:text="Abrir tela de ponto"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" />
+
+    <TextView android:id="@+id/status"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_marginTop="24dp" android:textStyle="italic" />
+</LinearLayout>
