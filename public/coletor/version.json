@@ -1,5 +1,5 @@
 {
-  "version": "1.3.1",
-  "downloadUrl": "https://crm.pilar.com.br/__l5e/assets-v1/c03e9a78-13e3-4f37-8937-b01ff82651f5/ColetorPilar-Setup.msi",
-  "notas": "1.3.1: corrige timeout ao conectar em relógios Control iD com HTTPS na porta 443 (equipamentos que exigem TLS 1.0/1.1 legado e certificado self-signed). No Windows agora usamos curl.exe (Schannel) diretamente para HTTPS, evitando o BoringSSL do Electron que rejeita SECLEVEL=0/TLSv1. Também melhora a detecção do Coletor pelas câmeras ao vivo: heartbeat a cada 2s + resposta imediata a ping do viewer (janela do browser aumentada para 6s). Timeout de socket reduzido para 8s por tentativa."
+  "version": "1.3.2",
+  "downloadUrl": "https://crm.pilar.com.br/__l5e/assets-v1/d84e2208-54c6-4a6f-8ef0-a447a2fc7568/ColetorPilar-Setup.msi",
+  "notas": "1.3.2: após atualizar, o Coletor Pilar agora é reiniciado automaticamente (o updater aguarda o msiexec terminar e relança o ColetorPilar.exe do Program Files). Também limpa o instalador temporário do disco. Mantém as correções da 1.3.1: HTTPS Control iD via curl.exe/Schannel (TLS legado) + heartbeat WebRTC a cada 2s para câmeras ao vivo."
 }

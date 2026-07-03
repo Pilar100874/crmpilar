@@ -106,6 +106,15 @@ async function baixarEInstalar(downloadUrl, onProgress) {
           }
         }
       Start-Process msiexec.exe -ArgumentList '/i','"${destino.replace(/\\/g, '\\\\')}"','/qb','/norestart','REBOOT=ReallySuppress','MSIRESTARTMANAGERCONTROL=Disable','MSIDISABLERMRESTART=1','REINSTALLMODE=vomus' -Wait
+      # Relança o app após instalar — busca em Program Files
+      $candidatos = @(
+        "$env:ProgramFiles\\ColetorPilar\\ColetorPilar.exe",
+        "$env:ProgramFiles(x86)\\ColetorPilar\\ColetorPilar.exe"
+      )
+      foreach ($exe in $candidatos) {
+        if (Test-Path $exe) { Start-Process $exe; break }
+      }
+      Remove-Item -LiteralPath '${destino.replace(/\\/g, '\\\\')}' -ErrorAction SilentlyContinue
     `.trim();
     spawn('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', ps], { detached: true, stdio: 'ignore' }).unref();
   } else {
