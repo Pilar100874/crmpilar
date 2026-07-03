@@ -231,14 +231,14 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
           {cfg.provider === 'pilar' && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
               <div className="md:col-span-3">
-                <Label>Endpoint do gateway Pilar</Label>
+                <Label>IP e porta do celular (ou URL pública)</Label>
                 <Input
                   value={cfg.pilar_endpoint || ''}
                   onChange={(e) => setCfg({ ...cfg, pilar_endpoint: e.target.value })}
-                  placeholder="http://IP_DO_CELULAR:8787/send  ou  https://seu-dominio/api/send"
+                  placeholder="192.168.0.42:8080"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  URL onde o app Pilar SMS está escutando. Aceita <code>{"{ to, message }"}</code> via POST JSON.
+                  Digite apenas <code>IP:PORTA</code> (ex.: <code>192.168.0.42:8080</code>). O sistema completa <code>http://…/send</code> automaticamente. Se estiver usando túnel público, pode colar a URL completa.
                 </p>
               </div>
               <div className="md:col-span-2">
