@@ -19083,6 +19083,7 @@ export type Database = {
           id: string
           motorista: string | null
           placa: string
+          telefone_sms: string | null
           tipo_veiculo: string | null
           traccar_device_id: string | null
           updated_at: string
@@ -19095,6 +19096,7 @@ export type Database = {
           id?: string
           motorista?: string | null
           placa: string
+          telefone_sms?: string | null
           tipo_veiculo?: string | null
           traccar_device_id?: string | null
           updated_at?: string
@@ -19107,6 +19109,7 @@ export type Database = {
           id?: string
           motorista?: string | null
           placa?: string
+          telefone_sms?: string | null
           tipo_veiculo?: string | null
           traccar_device_id?: string | null
           updated_at?: string
