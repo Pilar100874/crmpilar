@@ -310,7 +310,7 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                 <pre className="bg-muted p-2 rounded text-xs overflow-x-auto">{`{ "to": "+5511999999999", "message": "texto do SMS", "sender": "0" }`}</pre>
                 <p>Resposta esperada: <code>{`{ "ok": true, "id": "..." }`}</code>.</p>
                 <ol className="list-decimal ml-5 space-y-1">
-                  <li>Baixe o código-fonte do app <b>Pilar SMS</b> em <code>pilar-sms-app/</code> no repositório do projeto (Kotlin nativo, Android Studio + JDK 17). Rode <code>./gradlew assembleRelease</code> e instale o APK gerado (<code>app/build/outputs/apk/release/</code>) no Android que ficará ligado com o chip.</li>
+                  <li>Baixe o APK <b>Pilar SMS</b> clicando no botão acima e transfira para o Android que ficará ligado com o chip.</li>
                   <li>Abra o app, conceda permissão de <b>Enviar SMS</b> e desative a otimização de bateria para o app.</li>
                   <li>Toque em <b>Iniciar servidor</b>. O app mostra a URL local (ex: <code>http://192.168.0.42:8787/send</code>) e gera um <b>Token</b>.</li>
                   <li>Se for usar fora da rede local, exponha via túnel (Cloudflare Tunnel, ngrok) ou configure port-forward no roteador — e use essa URL pública.</li>
