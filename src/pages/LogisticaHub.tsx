@@ -34,6 +34,7 @@ import LogisticaRotas from './LogisticaRotas';
 import LogisticaAutomacoes from './LogisticaAutomacoes';
 import LogisticaConfig from './LogisticaConfig';
 import PilarRastreadorApps from '@/components/logistica/PilarRastreadorApps';
+import ManualRastreadores from '@/components/logistica/ManualRastreadores';
 
 interface TabItem {
   id: string;
