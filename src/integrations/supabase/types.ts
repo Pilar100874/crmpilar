@@ -17524,6 +17524,12 @@ export type Database = {
           id: string
           provider: string
           sender: string | null
+          smsgate_base_url: string | null
+          smsgate_password: string | null
+          smsgate_username: string | null
+          smsgatewayme_device_id: string | null
+          smsgatewayme_email: string | null
+          smsgatewayme_password: string | null
           twilio_account_sid: string | null
           twilio_auth_token: string | null
           twilio_from: string | null
@@ -17539,6 +17545,12 @@ export type Database = {
           id?: string
           provider?: string
           sender?: string | null
+          smsgate_base_url?: string | null
+          smsgate_password?: string | null
+          smsgate_username?: string | null
+          smsgatewayme_device_id?: string | null
+          smsgatewayme_email?: string | null
+          smsgatewayme_password?: string | null
           twilio_account_sid?: string | null
           twilio_auth_token?: string | null
           twilio_from?: string | null
@@ -17554,6 +17566,12 @@ export type Database = {
           id?: string
           provider?: string
           sender?: string | null
+          smsgate_base_url?: string | null
+          smsgate_password?: string | null
+          smsgate_username?: string | null
+          smsgatewayme_device_id?: string | null
+          smsgatewayme_email?: string | null
+          smsgatewayme_password?: string | null
           twilio_account_sid?: string | null
           twilio_auth_token?: string | null
           twilio_from?: string | null
