@@ -109,6 +109,7 @@ const tabItems: TabItem[] = [
   { id: 'bot-testar', label: 'Testar Bot', icon: TestTube2 },
   { id: 'softphone', label: 'Softphone', icon: Phone },
   { id: 'videochamada', label: 'Videochamada', icon: Video },
+  { id: 'sms', label: 'Envio de SMS', icon: Smartphone },
   { id: 'retencao-dados', label: 'Retenção de Dados', icon: HardDrive },
 ];
 
