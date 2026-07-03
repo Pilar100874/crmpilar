@@ -8,8 +8,10 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Copy, Plus, Trash2, Smartphone, Monitor, Download, RefreshCw, MessageSquare, Clock, Camera } from 'lucide-react';
+import { Copy, Plus, Trash2, Smartphone, Monitor, Download, RefreshCw, MessageSquare, Clock, Camera, ChevronDown, ChevronRight } from 'lucide-react';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
+import PilarCamerasCRUD from './PilarCamerasCRUD';
+import PilarSnapshotsGallery from './PilarSnapshotsGallery';
 
 interface Device {
   id: string;
@@ -34,6 +36,7 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
   const [creating, setCreating] = useState(false);
   const [toDelete, setToDelete] = useState<Device | null>(null);
   const [showToken, setShowToken] = useState<string | null>(null);
+  const [expandido, setExpandido] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -119,7 +122,8 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
           <Label className="text-sm flex items-center gap-2"><Smartphone className="h-4 w-4" /> Dispositivos Pilar Hub</Label>
           <p className="text-xs text-muted-foreground">Celulares (Android) e PCs (Windows) que rodam módulos SMS, Ponto e/ou Câmera.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <PilarSnapshotsGallery estabelecimentoId={estabelecimentoId} />
           <Button asChild size="sm" variant="outline">
             <a href="/pilar-sms-v1.2.0.apk" download>
               <Download className="h-4 w-4 mr-2" /> APK Android
@@ -187,9 +191,19 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
           </TableHeader>
           <TableBody>
             {devices.map((d) => (
+              <>
               <TableRow key={d.id}>
                 <TableCell>
                   <div className="flex items-center gap-2">
+                    {d.tipo_dispositivo === 'windows' && (
+                      <button
+                        onClick={() => setExpandido(expandido === d.id ? null : d.id)}
+                        className="text-muted-foreground hover:text-foreground"
+                        title="Ver câmeras"
+                      >
+                        {expandido === d.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      </button>
+                    )}
                     {tipoIcon(d.tipo_dispositivo)}
                     <div>
                       <div className="font-medium text-sm">{d.nome}</div>
@@ -251,6 +265,14 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
                   </Button>
                 </TableCell>
               </TableRow>
+              {expandido === d.id && d.tipo_dispositivo === 'windows' && (
+                <TableRow>
+                  <TableCell colSpan={7} className="p-2 bg-muted/20">
+                    <PilarCamerasCRUD deviceId={d.id} estabelecimentoId={estabelecimentoId} />
+                  </TableCell>
+                </TableRow>
+              )}
+              </>
             ))}
           </TableBody>
         </Table>
