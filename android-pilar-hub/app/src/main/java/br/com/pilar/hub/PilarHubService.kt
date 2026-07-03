@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import br.com.pilar.hub.sms.SmsModule
+import br.com.pilar.hub.ponto.PontoQueue
 import kotlinx.coroutines.*
 import org.json.JSONObject
 
