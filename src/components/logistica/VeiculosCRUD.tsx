@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Car, Search, Smartphone, Fuel, Send } from 'lucide-react';
+import { Plus, Pencil, Trash2, Car, Search, Smartphone, Fuel, Send, Radio, CheckCircle2, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import { BloqueioCombustivelDialog } from './BloqueioCombustivelDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -13,7 +13,9 @@ import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Veiculo } from '@/types/logistica';
+import { configurarRastreador, renderTemplate, TrackerModelLite } from '@/lib/trackerConfig';
 
 interface VeiculosCRUDProps {
   estabelecimentoId: string;
@@ -42,6 +44,7 @@ const tipos = [
 export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId }) => {
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
   const [dispositivos, setDispositivos] = useState<DispositivoAprovado[]>([]);
+  const [trackerModels, setTrackerModels] = useState<TrackerModelLite[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -51,6 +54,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const [veiculoBloqueio, setVeiculoBloqueio] = useState<Veiculo | null>(null);
   const [dispositivoTab, setDispositivoTab] = useState<'selecionar' | 'digitar'>('selecionar');
   const [enviandoSms, setEnviandoSms] = useState(false);
+  const [configurandoTracker, setConfigurandoTracker] = useState(false);
   const [formData, setFormData] = useState({
     placa: '',
     descricao: '',
@@ -58,15 +62,33 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     tipo_veiculo: '',
     traccar_device_id: '',
     dispositivo_id: '',
+    tracker_model_id: '',
     telefone_sms: '',
     enviar_sms_automatico: false,
+    configurar_tracker_ao_salvar: true,
     ativo: true
   });
 
   useEffect(() => {
     fetchVeiculos();
     fetchDispositivos();
+    fetchTrackerModels();
   }, [estabelecimentoId]);
+
+  const fetchTrackerModels = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tracker_device_models')
+        .select('id,nome,protocolo,porta,host,senha_padrao,apn,apn_user,apn_password,sms_commands')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('ativo', true)
+        .order('ordem', { ascending: true });
+      if (error) throw error;
+      setTrackerModels((data || []) as unknown as TrackerModelLite[]);
+    } catch (e) {
+      console.error('Error fetching tracker models:', e);
+    }
+  };
 
   const fetchVeiculos = async () => {
     try {
@@ -116,8 +138,10 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         tipo_veiculo: veiculo.tipo_veiculo || '',
         traccar_device_id: veiculo.traccar_device_id || '',
         dispositivo_id: linkedDevice?.id || '',
+        tracker_model_id: (veiculo as any).tracker_model_id || '',
         telefone_sms: (veiculo as any).telefone_sms || '',
         enviar_sms_automatico: false,
+        configurar_tracker_ao_salvar: !(veiculo as any).tracker_model_id ? true : false,
         ativo: veiculo.ativo
       });
     } else {
@@ -129,8 +153,10 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         tipo_veiculo: '',
         traccar_device_id: '',
         dispositivo_id: '',
+        tracker_model_id: '',
         telefone_sms: '',
         enviar_sms_automatico: false,
+        configurar_tracker_ao_salvar: true,
         ativo: true
       });
     }
@@ -197,17 +223,42 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         }
       }
 
-      // Persist telefone_sms na tabela veiculos (coluna opcional)
-      if (veiculoId && formData.telefone_sms) {
+      // Persist telefone_sms + tracker_model_id na tabela veiculos
+      if (veiculoId) {
         await supabase
           .from('veiculos')
-          .update({ telefone_sms: formData.telefone_sms } as any)
+          .update({
+            telefone_sms: formData.telefone_sms || null,
+            tracker_model_id: formData.tracker_model_id || null,
+          } as any)
           .eq('id', veiculoId);
       }
 
-      // Envio automático de SMS com os dados
+      // Envio automático de SMS com os dados do veículo (texto livre)
       if (formData.enviar_sms_automatico && formData.telefone_sms && veiculoId) {
         await enviarDadosPorSms(veiculoId, formData.telefone_sms);
+      }
+
+      // Configuração automática do rastreador físico via SMS
+      if (
+        formData.configurar_tracker_ao_salvar &&
+        formData.tracker_model_id &&
+        formData.telefone_sms &&
+        veiculoId
+      ) {
+        const model = trackerModels.find(m => m.id === formData.tracker_model_id);
+        if (model && (model.sms_commands || []).length > 0) {
+          toast.info('Enviando configuração do rastreador por SMS...');
+          const result = await configurarRastreador({
+            estabelecimentoId,
+            veiculoId,
+            telefone: formData.telefone_sms,
+            model,
+          });
+          if (result.status === 'configurado') toast.success('Rastreador configurado com sucesso!');
+          else if (result.status === 'parcial') toast.warning('Configuração parcial — alguns SMS falharam. Veja o histórico.');
+          else if (result.status === 'falhou') toast.error('Falha na configuração do rastreador');
+        }
       }
 
       toast.success(selectedVeiculo ? 'Veículo atualizado' : 'Veículo criado');
@@ -257,6 +308,74 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     }
   };
 
+  const configurarTrackerAgora = async () => {
+    if (!formData.telefone_sms) {
+      toast.error('Informe o telefone do chip do rastreador');
+      return;
+    }
+    if (!formData.tracker_model_id) {
+      toast.error('Selecione o modelo do rastreador');
+      return;
+    }
+    const model = trackerModels.find(m => m.id === formData.tracker_model_id);
+    if (!model) return;
+    if ((model.sms_commands || []).length === 0) {
+      toast.info('Este modelo não tem comandos SMS (é configurado por app).');
+      return;
+    }
+    setConfigurandoTracker(true);
+    try {
+      const result = await configurarRastreador({
+        estabelecimentoId,
+        veiculoId: selectedVeiculo?.id || null,
+        telefone: formData.telefone_sms,
+        model,
+      });
+      if (result.status === 'configurado') toast.success('Rastreador configurado!');
+      else if (result.status === 'parcial') toast.warning('Parcial — alguns SMS falharam');
+      else toast.error('Falha ao configurar');
+      fetchVeiculos();
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao configurar');
+    } finally {
+      setConfigurandoTracker(false);
+    }
+  };
+
+  const reconfigurarVeiculo = async (v: Veiculo) => {
+    const telefone = (v as any).telefone_sms as string | null;
+    const modelId = (v as any).tracker_model_id as string | null;
+    if (!telefone || !modelId) {
+      toast.error('Este veículo não tem modelo ou telefone cadastrado');
+      return;
+    }
+    const model = trackerModels.find(m => m.id === modelId);
+    if (!model) { toast.error('Modelo não encontrado'); return; }
+    toast.info('Reenviando configuração via SMS...');
+    const result = await configurarRastreador({
+      estabelecimentoId, veiculoId: v.id, telefone, model,
+    });
+    if (result.status === 'configurado') toast.success('Rastreador reconfigurado!');
+    else if (result.status === 'parcial') toast.warning('Parcial — alguns SMS falharam');
+    else toast.error('Falha ao reconfigurar');
+    fetchVeiculos();
+  };
+
+  const renderTrackerStatusBadge = (v: Veiculo) => {
+    const status = (v as any).tracker_config_status as string | undefined;
+    const modelId = (v as any).tracker_model_id as string | undefined;
+    if (!modelId) return null;
+    switch (status) {
+      case 'configurado':
+        return <Badge className="bg-green-500 gap-1"><CheckCircle2 className="h-3 w-3" />Configurado</Badge>;
+      case 'falhou':
+        return <Badge variant="destructive" className="gap-1"><AlertCircle className="h-3 w-3" />Falhou</Badge>;
+      case 'enviando':
+        return <Badge variant="secondary" className="gap-1"><Loader2 className="h-3 w-3 animate-spin" />Enviando</Badge>;
+      default:
+        return <Badge variant="outline" className="gap-1"><AlertCircle className="h-3 w-3" />Pendente</Badge>;
+    }
+  };
 
   const handleDelete = async () => {
     if (!selectedVeiculo) return;
@@ -310,17 +429,31 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               <TableHead>Descrição</TableHead>
               <TableHead>Motorista</TableHead>
               <TableHead>Tipo</TableHead>
+              <TableHead>Rastreador</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-[140px]">Ações</TableHead>
+              <TableHead className="w-[180px]">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredVeiculos.map(veiculo => (
+            {filteredVeiculos.map(veiculo => {
+              const modelId = (veiculo as any).tracker_model_id as string | undefined;
+              const model = modelId ? trackerModels.find(m => m.id === modelId) : null;
+              return (
               <TableRow key={veiculo.id}>
                 <TableCell className="font-mono font-medium">{veiculo.placa}</TableCell>
                 <TableCell>{veiculo.descricao || '-'}</TableCell>
                 <TableCell>{veiculo.motorista || '-'}</TableCell>
                 <TableCell>{veiculo.tipo_veiculo || '-'}</TableCell>
+                <TableCell>
+                  {model ? (
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-medium">{model.nome}</span>
+                      {renderTrackerStatusBadge(veiculo)}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </TableCell>
                 <TableCell>
                   <Badge variant={veiculo.ativo ? 'default' : 'secondary'}>
                     {veiculo.ativo ? 'Ativo' : 'Inativo'}
@@ -328,6 +461,22 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
+                    {model && (veiculo as any).telefone_sms && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => reconfigurarVeiculo(veiculo)}
+                            >
+                              <RefreshCw className="h-4 w-4 text-blue-600" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Reenviar configuração SMS</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -359,10 +508,11 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+              );
+            })}
             {filteredVeiculos.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   {loading ? 'Carregando...' : 'Nenhum veículo encontrado'}
                 </TableCell>
               </TableRow>

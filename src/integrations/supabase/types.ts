@@ -18583,6 +18583,69 @@ export type Database = {
           },
         ]
       }
+      tracker_device_models: {
+        Row: {
+          apn: string | null
+          apn_password: string | null
+          apn_user: string | null
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          host: string | null
+          id: string
+          is_default: boolean
+          nome: string
+          ordem: number
+          porta: number
+          protocolo: string
+          senha_padrao: string | null
+          sms_commands: Json
+          supports_bloqueio: boolean
+          updated_at: string
+        }
+        Insert: {
+          apn?: string | null
+          apn_password?: string | null
+          apn_user?: string | null
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          host?: string | null
+          id?: string
+          is_default?: boolean
+          nome: string
+          ordem?: number
+          porta?: number
+          protocolo: string
+          senha_padrao?: string | null
+          sms_commands?: Json
+          supports_bloqueio?: boolean
+          updated_at?: string
+        }
+        Update: {
+          apn?: string | null
+          apn_password?: string | null
+          apn_user?: string | null
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          host?: string | null
+          id?: string
+          is_default?: boolean
+          nome?: string
+          ordem?: number
+          porta?: number
+          protocolo?: string
+          senha_padrao?: string | null
+          sms_commands?: Json
+          supports_bloqueio?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       twilio_config: {
         Row: {
           account_sid: string | null
@@ -19211,6 +19274,11 @@ export type Database = {
           telefone_sms: string | null
           tipo_veiculo: string | null
           traccar_device_id: string | null
+          tracker_config_at: string | null
+          tracker_config_error: string | null
+          tracker_config_log: Json
+          tracker_config_status: string
+          tracker_model_id: string | null
           updated_at: string
         }
         Insert: {
@@ -19224,6 +19292,11 @@ export type Database = {
           telefone_sms?: string | null
           tipo_veiculo?: string | null
           traccar_device_id?: string | null
+          tracker_config_at?: string | null
+          tracker_config_error?: string | null
+          tracker_config_log?: Json
+          tracker_config_status?: string
+          tracker_model_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -19237,6 +19310,11 @@ export type Database = {
           telefone_sms?: string | null
           tipo_veiculo?: string | null
           traccar_device_id?: string | null
+          tracker_config_at?: string | null
+          tracker_config_error?: string | null
+          tracker_config_log?: Json
+          tracker_config_status?: string
+          tracker_model_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -19245,6 +19323,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "veiculos_tracker_model_id_fkey"
+            columns: ["tracker_model_id"]
+            isOneToOne: false
+            referencedRelation: "tracker_device_models"
             referencedColumns: ["id"]
           },
         ]
