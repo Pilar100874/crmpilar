@@ -410,7 +410,17 @@ export const TrackerDeviceModels: React.FC<Props> = ({ estabelecimentoId }) => {
                 </Button>
               </div>
               <div className="space-y-2">
-                {form.sms_commands.map((c, i) => (
+                {form.sms_commands.map((c, i) => {
+                  const ctx: Record<string, string> = {
+                    host: form.host || '',
+                    port: String(form.porta || ''),
+                    password: form.senha_padrao || '',
+                    apn: form.apn || '',
+                    apn_user: form.apn_user || '',
+                    apn_password: form.apn_password || '',
+                  };
+                  const rendered = (c.template || '').replace(/\{(\w+)\}/g, (_m, k) => ctx[k] ?? '');
+                  return (
                   <div key={i} className="border rounded-md p-3 space-y-2 bg-muted/30">
                     <div className="grid grid-cols-[1fr_auto] gap-2 items-start">
                       <div className="space-y-2">
@@ -420,13 +430,23 @@ export const TrackerDeviceModels: React.FC<Props> = ({ estabelecimentoId }) => {
                           value={c.template} onChange={e => updateCommand(i, 'template', e.target.value)} />
                         <Input placeholder="Descrição opcional" value={c.descricao || ''}
                           onChange={e => updateCommand(i, 'descricao', e.target.value)} />
+                        {c.template && (
+                          <div className="flex items-center gap-2 rounded bg-background border px-2 py-1.5">
+                            <span className="text-[10px] uppercase text-muted-foreground shrink-0">SMS final</span>
+                            <code className="text-xs font-mono flex-1 break-all">{rendered}</code>
+                            <Button type="button" variant="ghost" size="icon" className="h-6 w-6"
+                              onClick={() => copyValue(rendered)}>
+                              {copied === rendered ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                            </Button>
+                          </div>
+                        )}
                       </div>
                       <Button variant="ghost" size="icon" onClick={() => removeCommand(i)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
                   </div>
-                ))}
+                );})}
                 {form.sms_commands.length === 0 && (
                   <p className="text-xs text-muted-foreground text-center py-4">
                     Nenhum comando cadastrado — este modelo será tratado como configurável manualmente pelo app.
