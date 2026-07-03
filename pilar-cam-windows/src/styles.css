@@ -1,0 +1,23 @@
+* { box-sizing: border-box; }
+body { margin:0; font-family: system-ui, sans-serif; background:#0f172a; color:#e2e8f0; height:100vh; display:flex; flex-direction:column; }
+header { display:flex; align-items:center; gap:16px; padding:12px 20px; background:#1e293b; border-bottom:1px solid #334155; }
+header h1 { margin:0; font-size:18px; }
+#statusBar { flex:1; opacity:.8; font-size:13px; }
+button { background:#3b82f6; color:white; border:0; padding:8px 14px; border-radius:6px; cursor:pointer; font-size:13px; }
+button:hover { background:#2563eb; }
+main.grid-1 { grid-template-columns: 1fr; }
+main.grid-2 { grid-template-columns: repeat(2, 1fr); }
+main.grid-3 { grid-template-columns: repeat(3, 1fr); }
+main.grid-4 { grid-template-columns: repeat(4, 1fr); }
+main { flex:1; display:grid; gap:8px; padding:8px; }
+.cell { background:#000; border:1px solid #334155; border-radius:6px; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.cell .label { position:absolute; top:6px; left:8px; background:rgba(0,0,0,.6); padding:2px 8px; border-radius:4px; font-size:12px; }
+.cell .preview { color:#64748b; }
+.cell .empty { color:#475569; font-size:14px; }
+.cell .snap { position:absolute; bottom:8px; right:8px; padding:4px 10px; font-size:12px; }
+dialog { border:0; border-radius:12px; padding:24px; min-width:520px; background:#1e293b; color:#e2e8f0; }
+dialog h2 { margin:0 0 16px; } dialog h3 { margin:16px 0 8px; }
+dialog label { display:block; margin-bottom:12px; }
+dialog input, dialog select { display:block; width:100%; padding:8px; margin-top:4px; background:#0f172a; color:#e2e8f0; border:1px solid #334155; border-radius:4px; }
+.cam-row { display:grid; grid-template-columns:1fr 2fr auto; gap:6px; margin-bottom:6px; }
+menu { display:flex; justify-content:flex-end; gap:8px; margin-top:16px; padding:0; }
