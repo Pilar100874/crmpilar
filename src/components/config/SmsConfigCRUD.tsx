@@ -10,9 +10,9 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Send, Save, MessageSquare, BookOpen, Smartphone, Globe } from 'lucide-react';
+import { Send, Save, MessageSquare, BookOpen, Smartphone, Globe, Shield } from 'lucide-react';
 
-type Provider = 'twilio' | 'zenvia' | 'smsgate';
+type Provider = 'twilio' | 'zenvia' | 'smsgate' | 'pilar';
 
 interface SmsConfig {
   id?: string;
@@ -31,13 +31,16 @@ interface SmsConfig {
   smsgatewayme_email: string | null;
   smsgatewayme_password: string | null;
   smsgatewayme_device_id: string | null;
+  pilar_endpoint: string | null;
+  pilar_token: string | null;
+  pilar_sender: string | null;
 }
 
 const PROVIDERS: { value: Provider; label: string; desc: string; icon: any }[] = [
+  { value: 'pilar', label: 'Pilar SMS (App próprio)', desc: 'Gateway próprio Pilar — protocolo simplificado, roda no seu Android', icon: Shield },
   { value: 'twilio', label: 'Twilio', desc: 'Envio global via Twilio Programmable Messaging (pago)', icon: Globe },
   { value: 'zenvia', label: 'Zenvia', desc: 'Envio via Zenvia (Brasil, créditos grátis para teste)', icon: Globe },
   { value: 'smsgate', label: 'SMS Gateway (Android)', desc: 'App gratuito open-source (sms-gate.app) instalado no celular Android', icon: Smartphone },
-  
 ];
 
 export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId: string }) {
@@ -64,6 +67,9 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
     smsgatewayme_email: '',
     smsgatewayme_password: '',
     smsgatewayme_device_id: '',
+    pilar_endpoint: '',
+    pilar_token: '',
+    pilar_sender: '',
   });
 
   useEffect(() => { void load(); }, [estabelecimentoId]);
@@ -222,6 +228,30 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
             </div>
           )}
 
+          {cfg.provider === 'pilar' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
+              <div className="md:col-span-3">
+                <Label>Endpoint do gateway Pilar</Label>
+                <Input
+                  value={cfg.pilar_endpoint || ''}
+                  onChange={(e) => setCfg({ ...cfg, pilar_endpoint: e.target.value })}
+                  placeholder="http://IP_DO_CELULAR:8787/send  ou  https://seu-dominio/api/send"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  URL onde o app Pilar SMS está escutando. Aceita <code>{"{ to, message }"}</code> via POST JSON.
+                </p>
+              </div>
+              <div className="md:col-span-2">
+                <Label>Token de autenticação (Bearer)</Label>
+                <Input type="password" value={cfg.pilar_token || ''} onChange={(e) => setCfg({ ...cfg, pilar_token: e.target.value })} placeholder="token gerado no app Pilar" />
+              </div>
+              <div>
+                <Label>SIM/Remetente (opcional)</Label>
+                <Input value={cfg.pilar_sender || ''} onChange={(e) => setCfg({ ...cfg, pilar_sender: e.target.value })} placeholder="ex: sim1" />
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-end">
             <Button onClick={handleSave} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />{saving ? 'Salvando...' : 'Salvar configuração'}
@@ -261,6 +291,28 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
         </CardHeader>
         <CardContent>
           <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="pilar">
+              <AccordionTrigger className="text-sm">
+                <span className="flex items-center gap-2"><Shield className="h-4 w-4 text-primary" /> Pilar SMS — App próprio · Gratuito</span>
+              </AccordionTrigger>
+              <AccordionContent className="text-sm space-y-2 text-muted-foreground">
+                <p><b>O que é:</b> gateway próprio da Pilar. Um app Android leve que roda no seu celular, escuta requisições HTTP do CRM e envia SMS pelo chip usando o <code>SmsManager</code> nativo. Protocolo simplificado, sem intermediários.</p>
+                <p><b>Protocolo:</b> o CRM faz <code>POST</code> no endpoint configurado com header <code>Authorization: Bearer &lt;token&gt;</code> e body JSON:</p>
+                <pre className="bg-muted p-2 rounded text-xs overflow-x-auto">{`{ "to": "+5511999999999", "message": "texto do SMS", "sender": "sim1" }`}</pre>
+                <p>Resposta esperada: <code>{`{ "success": true, "id": "..." }`}</code>.</p>
+                <ol className="list-decimal ml-5 space-y-1">
+                  <li>Baixe o app <b>Pilar SMS</b> (APK disponibilizado pela equipe) e instale no Android que ficará ligado com chip.</li>
+                  <li>Abra o app, conceda permissão de <b>Enviar SMS</b> e desative a otimização de bateria para o app.</li>
+                  <li>Toque em <b>Iniciar servidor</b>. O app mostra a URL local (ex: <code>http://192.168.0.42:8787/send</code>) e gera um <b>Token</b>.</li>
+                  <li>Se for usar fora da rede local, exponha via túnel (Cloudflare Tunnel, ngrok) ou configure port-forward no roteador — e use essa URL pública.</li>
+                  <li>Aqui na tela, selecione o provedor <b>Pilar SMS (App próprio)</b>, cole o endpoint e o token.</li>
+                  <li>Salve e faça um envio de teste. O celular envia o SMS pela operadora.</li>
+                </ol>
+                <p className="text-xs"><b>Dica:</b> mantenha o celular carregando 24h e conectado por Wi-Fi. O app tem watchdog que reinicia o servidor caso o Android o suspenda.</p>
+              </AccordionContent>
+            </AccordionItem>
+
+
             <AccordionItem value="smsgate">
               <AccordionTrigger className="text-sm">
                 <span className="flex items-center gap-2"><Smartphone className="h-4 w-4 text-green-600" /> SMS Gateway (sms-gate.app) — Android · Gratuito</span>

@@ -116,6 +116,29 @@ Deno.serve(async (req) => {
         responseRaw = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(responseRaw?.message || `SMSGateway.me HTTP ${r.status}`);
         providerMessageId = String(responseRaw?.[0]?.id ?? '');
+      } else if (cfg.provider === 'pilar') {
+        // Pilar SMS — protocolo próprio (app Android da Pilar)
+        if (!cfg.pilar_endpoint || !cfg.pilar_token) {
+          throw new Error('Credenciais Pilar SMS incompletas (endpoint e token são obrigatórios)');
+        }
+        const url = cfg.pilar_endpoint.trim();
+        const r = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${cfg.pilar_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            to,
+            message: mensagem,
+            sender: cfg.pilar_sender || cfg.sender || undefined,
+          }),
+        });
+        responseRaw = await r.json().catch(() => ({}));
+        if (!r.ok || (responseRaw && responseRaw.success === false)) {
+          throw new Error(responseRaw?.error || responseRaw?.message || `Pilar SMS HTTP ${r.status}`);
+        }
+        providerMessageId = responseRaw?.id ?? null;
       } else {
         throw new Error(`Provedor desconhecido: ${cfg.provider}`);
       }
