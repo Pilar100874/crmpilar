@@ -28,7 +28,8 @@ import {
   Shield,
   Activity,
   Bot,
-  HardDrive
+  HardDrive,
+  Smartphone
 } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,6 +68,8 @@ import { CampaignSendMonitor } from '@/components/config/CampaignSendMonitor';
 import ChatAgentsCRUD from '@/components/config/ChatAgentsCRUD';
 import KbLacunasCRUD from '@/components/config/KbLacunasCRUD';
 import ChatRetencaoCRUD from '@/components/config/ChatRetencaoCRUD';
+import SmsConfigCRUD from '@/components/config/SmsConfigCRUD';
+
 
 // Import Bot components
 import BotCreate from './BotCreate';
@@ -106,6 +109,7 @@ const tabItems: TabItem[] = [
   { id: 'bot-testar', label: 'Testar Bot', icon: TestTube2 },
   { id: 'softphone', label: 'Softphone', icon: Phone },
   { id: 'videochamada', label: 'Videochamada', icon: Video },
+  { id: 'sms', label: 'Envio de SMS', icon: Smartphone },
   { id: 'retencao-dados', label: 'Retenção de Dados', icon: HardDrive },
 ];
 
@@ -714,6 +718,16 @@ export default function AtendimentoConfig() {
                   <CardDescription className="text-xs sm:text-sm">Realize videochamadas com clientes</CardDescription>
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6"><VideoCall embedded /></CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="sms" className="mt-0 h-full overflow-y-auto">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><Smartphone className="h-4 w-4 sm:h-5 sm:w-5" />Envio de SMS</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Configure o provedor (GatewayAPI, Twilio ou Zenvia) e envie SMS de teste</CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6">{estabelecimentoId && <SmsConfigCRUD estabelecimentoId={estabelecimentoId} />}</CardContent>
               </Card>
             </TabsContent>
 
