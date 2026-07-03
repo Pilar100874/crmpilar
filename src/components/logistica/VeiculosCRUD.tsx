@@ -634,149 +634,157 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               </Tabs>
             </div>
 
-            {/* Novo bloco: Rastreador físico via SMS */}
-            <div className="border rounded-lg p-3 space-y-3 bg-primary/5 border-primary/20">
-              <Label className="flex items-center gap-2 text-sm font-semibold">
-                <Radio className="h-4 w-4 text-primary" />
-                Rastreador físico (SMS)
-              </Label>
+            {/* Telefone único usado pelos dois blocos */}
+            <div className="border rounded-lg p-3 bg-muted/30">
+              <Label className="text-xs">Telefone do chip / SIM do equipamento</Label>
+              <Input
+                value={formData.telefone_sms}
+                onChange={(e) => setFormData(prev => ({ ...prev, telefone_sms: e.target.value }))}
+                placeholder="+5511999999999"
+                className="mt-1"
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Usado tanto para configurar o rastreador quanto para enviar os dados do veículo por SMS.
+              </p>
+            </div>
 
-              <div>
-                <Label className="text-xs">Modelo do rastreador</Label>
-                <Select
-                  value={formData.tracker_model_id || '__none__'}
-                  onValueChange={(v) => setFormData(prev => ({
-                    ...prev, tracker_model_id: v === '__none__' ? '' : v,
-                  }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o modelo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">Nenhum (não usa rastreador físico)</SelectItem>
-                    {trackerModels.map(m => (
-                      <SelectItem key={m.id} value={m.id}>
-                        {m.nome} — {m.protocolo}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {trackerModels.length === 0 && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Nenhum modelo cadastrado. Vá em Pilar Rastreador → Modelos de Rastreador.
-                  </p>
-                )}
-              </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {/* Bloco Rastreador físico via SMS */}
+              <div className="border rounded-lg p-3 space-y-3 bg-primary/5 border-primary/20">
+                <Label className="flex items-center gap-2 text-sm font-semibold">
+                  <Radio className="h-4 w-4 text-primary" />
+                  Rastreador físico (SMS)
+                </Label>
 
-              {formData.tracker_model_id && (() => {
-                const model = trackerModels.find(m => m.id === formData.tracker_model_id);
-                if (!model) return null;
-                const ctx: Record<string, string> = {
-                  host: model.host || '', port: String(model.porta),
-                  password: model.senha_padrao || '', apn: model.apn || '',
-                  apn_user: model.apn_user || '', apn_password: model.apn_password || '',
-                };
-                const cmds = (model.sms_commands || []).filter(c => !/RELAY,\s*[01]\s*#/i.test(c.template));
-                return (
-                  <div className="rounded-md border bg-background p-2 space-y-1 max-h-40 overflow-y-auto">
-                    <p className="text-xs text-muted-foreground mb-1">
-                      SMS que serão enviados ({cmds.length}):
+                <div>
+                  <Label className="text-xs">Modelo do rastreador</Label>
+                  <Select
+                    value={formData.tracker_model_id || '__none__'}
+                    onValueChange={(v) => setFormData(prev => ({
+                      ...prev, tracker_model_id: v === '__none__' ? '' : v,
+                    }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o modelo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Nenhum</SelectItem>
+                      {trackerModels.map(m => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.nome} — {m.protocolo}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {trackerModels.length === 0 && (
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Nenhum modelo cadastrado. Vá em Pilar Rastreador → Modelos.
                     </p>
-                    {cmds.length === 0 ? (
-                      <p className="text-xs text-muted-foreground italic">Sem comandos SMS — configure pelo app.</p>
-                    ) : cmds.map((c, i) => (
-                      <div key={i} className="text-xs">
-                        <span className="font-medium">{c.label}:</span>{' '}
-                        <code className="text-[10px]">{renderTemplate(c.template, ctx)}</code>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })()}
+                  )}
+                </div>
 
-              <div className="flex items-center justify-between">
-                <Label className="text-xs">Configurar automaticamente ao salvar</Label>
-                <Switch
-                  checked={formData.configurar_tracker_ao_salvar}
-                  onCheckedChange={(c) => setFormData(prev => ({ ...prev, configurar_tracker_ao_salvar: c }))}
-                />
-              </div>
-
-              <Button
-                type="button" variant="outline" size="sm" className="w-full"
-                disabled={configurandoTracker || !formData.tracker_model_id || !formData.telefone_sms}
-                onClick={configurarTrackerAgora}
-              >
-                {configurandoTracker
-                  ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Configurando...</>
-                  : <><Radio className="h-4 w-4 mr-2" />Configurar rastreador agora</>}
-              </Button>
-
-              {selectedVeiculo && (selectedVeiculo as any).tracker_config_status && (
-                <div className="rounded-md border bg-background p-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium">Último resultado:</span>
-                    {renderTrackerStatusBadge(selectedVeiculo)}
-                  </div>
-                  {Array.isArray((selectedVeiculo as any).tracker_config_log) &&
-                    (selectedVeiculo as any).tracker_config_log.length > 0 && (
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {((selectedVeiculo as any).tracker_config_log as any[]).map((l, i) => (
-                        <div key={i} className="text-xs flex items-start gap-2">
-                          {l.ok
-                            ? <CheckCircle2 className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
-                            : <AlertCircle className="h-3 w-3 text-destructive mt-0.5 shrink-0" />}
-                          <div className="flex-1">
-                            <span className="font-medium">{l.label}</span>
-                            {l.erro && <div className="text-destructive text-[10px]">{l.erro}</div>}
-                          </div>
+                {formData.tracker_model_id && (() => {
+                  const model = trackerModels.find(m => m.id === formData.tracker_model_id);
+                  if (!model) return null;
+                  const ctx: Record<string, string> = {
+                    host: model.host || '', port: String(model.porta),
+                    password: model.senha_padrao || '', apn: model.apn || '',
+                    apn_user: model.apn_user || '', apn_password: model.apn_password || '',
+                  };
+                  const cmds = (model.sms_commands || []).filter(c => !/RELAY,\s*[01]\s*#/i.test(c.template));
+                  return (
+                    <div className="rounded-md border bg-background p-2 space-y-1 max-h-32 overflow-y-auto">
+                      <p className="text-[11px] text-muted-foreground mb-1">
+                        SMS que serão enviados ({cmds.length}):
+                      </p>
+                      {cmds.length === 0 ? (
+                        <p className="text-xs text-muted-foreground italic">Sem comandos — configure pelo app.</p>
+                      ) : cmds.map((c, i) => (
+                        <div key={i} className="text-[11px] leading-tight">
+                          <span className="font-medium">{c.label}:</span>{' '}
+                          <code className="text-[10px] break-all">{renderTemplate(c.template, ctx)}</code>
                         </div>
                       ))}
                     </div>
-                  )}
+                  );
+                })()}
+
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Configurar ao salvar</Label>
+                  <Switch
+                    checked={formData.configurar_tracker_ao_salvar}
+                    onCheckedChange={(c) => setFormData(prev => ({ ...prev, configurar_tracker_ao_salvar: c }))}
+                  />
                 </div>
-              )}
-            </div>
 
+                <Button
+                  type="button" variant="outline" size="sm" className="w-full"
+                  disabled={configurandoTracker || !formData.tracker_model_id || !formData.telefone_sms}
+                  onClick={configurarTrackerAgora}
+                >
+                  {configurandoTracker
+                    ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Configurando...</>
+                    : <><Radio className="h-4 w-4 mr-2" />Configurar agora</>}
+                </Button>
 
-            <div className="border rounded-lg p-3 space-y-3 bg-muted/30">
-              <Label className="flex items-center gap-2 text-sm font-semibold">
-                <Send className="h-4 w-4" />
-                Envio de dados por SMS
-              </Label>
-              <div>
-                <Label className="text-xs">Telefone do equipamento (SIM)</Label>
-                <Input
-                  value={formData.telefone_sms}
-                  onChange={(e) => setFormData(prev => ({ ...prev, telefone_sms: e.target.value }))}
-                  placeholder="+5511999999999"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Número do chip inserido no rastreador. Configure o provedor em Configurações de Atendimento → Envio de SMS.
+                {selectedVeiculo && (selectedVeiculo as any).tracker_config_status && (
+                  <div className="rounded-md border bg-background p-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-medium">Último resultado:</span>
+                      {renderTrackerStatusBadge(selectedVeiculo)}
+                    </div>
+                    {Array.isArray((selectedVeiculo as any).tracker_config_log) &&
+                      (selectedVeiculo as any).tracker_config_log.length > 0 && (
+                      <div className="space-y-1 max-h-24 overflow-y-auto">
+                        {((selectedVeiculo as any).tracker_config_log as any[]).map((l, i) => (
+                          <div key={i} className="text-xs flex items-start gap-2">
+                            {l.ok
+                              ? <CheckCircle2 className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
+                              : <AlertCircle className="h-3 w-3 text-destructive mt-0.5 shrink-0" />}
+                            <div className="flex-1 min-w-0">
+                              <span className="font-medium">{l.label}</span>
+                              {l.erro && <div className="text-destructive text-[10px] break-words">{l.erro}</div>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Bloco Envio de dados por SMS */}
+              <div className="border rounded-lg p-3 space-y-3 bg-muted/30">
+                <Label className="flex items-center gap-2 text-sm font-semibold">
+                  <Send className="h-4 w-4" />
+                  Envio de dados por SMS
+                </Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Envia placa, motorista e demais dados do veículo em formato de texto para o telefone acima.
                 </p>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Enviar ao salvar</Label>
+                  <Switch
+                    checked={formData.enviar_sms_automatico}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, enviar_sms_automatico: checked }))}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  disabled={enviandoSms || !formData.telefone_sms}
+                  onClick={() => enviarDadosPorSms(selectedVeiculo?.id)}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  {enviandoSms ? 'Enviando...' : 'Enviar dados agora'}
+                </Button>
               </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-xs">Enviar dados automaticamente ao salvar</Label>
-                <Switch
-                  checked={formData.enviar_sms_automatico}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, enviar_sms_automatico: checked }))}
-                />
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full"
-                disabled={enviandoSms || !formData.telefone_sms}
-                onClick={() => enviarDadosPorSms(selectedVeiculo?.id)}
-              >
-                <Send className="h-4 w-4 mr-2" />
-                {enviandoSms ? 'Enviando...' : 'Enviar dados agora'}
-              </Button>
             </div>
 
-            <div className="flex items-center justify-between">
-              <Label>Ativo</Label>
+            <div className="flex items-center justify-between border-t pt-3">
+              <Label>Veículo ativo</Label>
               <Switch
                 checked={formData.ativo}
                 onCheckedChange={(checked) => setFormData(prev => ({ ...prev, ativo: checked }))}
@@ -784,9 +792,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             </div>
           </div>
 
-          <DialogFooter>
-
-
+          <DialogFooter className="px-6 py-3 border-t bg-muted/30">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
