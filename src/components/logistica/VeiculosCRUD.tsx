@@ -453,6 +453,13 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         title="Excluir Veículo"
         description={`Tem certeza que deseja excluir o veículo ${selectedVeiculo?.placa}? Esta ação não pode ser desfeita.`}
       />
+
+      <BloqueioCombustivelDialog
+        open={bloqueioOpen}
+        onOpenChange={setBloqueioOpen}
+        veiculo={veiculoBloqueio}
+        estabelecimentoId={estabelecimentoId}
+      />
     </div>
   );
 };
