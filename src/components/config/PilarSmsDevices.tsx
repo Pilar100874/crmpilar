@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast-config';
 import { Button } from '@/components/ui/button';
@@ -191,8 +191,8 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
           </TableHeader>
           <TableBody>
             {devices.map((d) => (
-              <>
-              <TableRow key={d.id}>
+              <Fragment key={d.id}>
+              <TableRow>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     {d.tipo_dispositivo === 'windows' && (
