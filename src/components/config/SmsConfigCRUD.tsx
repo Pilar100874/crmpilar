@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Send, Save, MessageSquare, BookOpen, Smartphone, Globe } from 'lucide-react';
 
-type Provider = 'twilio' | 'zenvia' | 'smsgate' | 'smsgatewayme';
+type Provider = 'twilio' | 'zenvia' | 'smsgate';
 
 interface SmsConfig {
   id?: string;
