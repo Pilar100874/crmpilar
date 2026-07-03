@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Copy, Plus, Trash2, Smartphone, Download, RefreshCw } from 'lucide-react';
+import { Copy, Plus, Trash2, Smartphone, Monitor, Download, RefreshCw, MessageSquare, Clock, Camera } from 'lucide-react';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 
 interface Device {
@@ -17,12 +19,18 @@ interface Device {
   ultimo_ping: string | null;
   bateria: number | null;
   sinal: string | null;
+  tipo_dispositivo: 'android' | 'windows' | string;
+  versao_app: string | null;
+  modulo_sms_ativo: boolean;
+  modulo_ponto_ativo: boolean;
+  modulo_camera_ativo: boolean;
 }
 
 export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
   const [novoNome, setNovoNome] = useState('');
+  const [novoTipo, setNovoTipo] = useState<'android' | 'windows'>('android');
   const [creating, setCreating] = useState(false);
   const [toDelete, setToDelete] = useState<Device | null>(null);
   const [showToken, setShowToken] = useState<string | null>(null);
@@ -41,17 +49,24 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
   useEffect(() => { void load(); }, [estabelecimentoId]);
 
   const criar = async () => {
-    if (!novoNome.trim()) { toast.error('Informe um nome para o celular'); return; }
+    if (!novoNome.trim()) { toast.error('Informe um nome'); return; }
     setCreating(true);
     try {
       const { data, error } = await supabase
         .from('sms_devices' as any)
-        .insert({ nome: novoNome.trim(), estabelecimento_id: estabelecimentoId })
+        .insert({
+          nome: novoNome.trim(),
+          estabelecimento_id: estabelecimentoId,
+          tipo_dispositivo: novoTipo,
+          modulo_sms_ativo: novoTipo === 'android',
+          modulo_ponto_ativo: false,
+          modulo_camera_ativo: novoTipo === 'windows',
+        })
         .select('*')
         .single();
       if (error) throw error;
       setNovoNome('');
-      toast.success('Dispositivo cadastrado. Copie o token e cole no APK.');
+      toast.success('Dispositivo cadastrado. Copie o token e cole no app.');
       setShowToken((data as any).token);
       await load();
     } catch (e: any) {
@@ -63,6 +78,11 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
 
   const toggleAtivo = async (d: Device) => {
     await supabase.from('sms_devices' as any).update({ ativo: !d.ativo }).eq('id', d.id);
+    await load();
+  };
+
+  const toggleModulo = async (d: Device, campo: 'modulo_sms_ativo' | 'modulo_ponto_ativo' | 'modulo_camera_ativo') => {
+    await supabase.from('sms_devices' as any).update({ [campo]: !(d as any)[campo] }).eq('id', d.id);
     await load();
   };
 
@@ -88,26 +108,47 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
     return new Date(p).toLocaleString();
   };
 
+  const tipoIcon = (tipo: string) => tipo === 'windows'
+    ? <Monitor className="h-4 w-4 text-blue-500" />
+    : <Smartphone className="h-4 w-4 text-primary" />;
+
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <Label className="text-sm flex items-center gap-2"><Smartphone className="h-4 w-4" /> Celulares autorizados</Label>
-          <p className="text-xs text-muted-foreground">Cada celular precisa de um cadastro para receber SMS da fila.</p>
+          <Label className="text-sm flex items-center gap-2"><Smartphone className="h-4 w-4" /> Dispositivos Pilar Hub</Label>
+          <p className="text-xs text-muted-foreground">Celulares (Android) e PCs (Windows) que rodam módulos SMS, Ponto e/ou Câmera.</p>
         </div>
-        <Button asChild size="sm" variant="outline">
-          <a href="/pilar-sms-v1.2.0.apk" download>
-            <Download className="h-4 w-4 mr-2" /> Baixar APK v1.2.0
-          </a>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild size="sm" variant="outline">
+            <a href="/pilar-sms-v1.2.0.apk" download>
+              <Download className="h-4 w-4 mr-2" /> APK Android
+            </a>
+          </Button>
+          <Button asChild size="sm" variant="outline" disabled>
+            <span title="Em breve">
+              <Download className="h-4 w-4 mr-2" /> Pilar Cam (Windows)
+            </span>
+          </Button>
+        </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
+        <Select value={novoTipo} onValueChange={(v: any) => setNovoTipo(v)}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="android">📱 Android (Hub)</SelectItem>
+            <SelectItem value="windows">🖥️ Windows (Cam)</SelectItem>
+          </SelectContent>
+        </Select>
         <Input
           value={novoNome}
           onChange={(e) => setNovoNome(e.target.value)}
-          placeholder="Ex: Celular Recepção"
+          placeholder={novoTipo === 'windows' ? 'Ex: PC da Portaria' : 'Ex: Celular Recepção'}
           onKeyDown={(e) => e.key === 'Enter' && criar()}
+          className="flex-1 min-w-[200px]"
         />
         <Button onClick={criar} disabled={creating}>
           <Plus className="h-4 w-4 mr-2" />Cadastrar
@@ -117,13 +158,13 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
 
       {showToken && (
         <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-2">
-          <p className="text-sm font-medium">Token do novo dispositivo (guarde agora — só é mostrado uma vez com destaque):</p>
+          <p className="text-sm font-medium">Token do novo dispositivo (guarde agora):</p>
           <div className="flex gap-2">
             <Input readOnly value={showToken} className="font-mono text-xs" />
             <Button size="sm" variant="outline" onClick={() => copiar(showToken)}><Copy className="h-4 w-4" /></Button>
             <Button size="sm" variant="ghost" onClick={() => setShowToken(null)}>Fechar</Button>
           </div>
-          <p className="text-xs text-muted-foreground">Abra o APK Pilar SMS no celular, cole este token e clique em "Conectar".</p>
+          <p className="text-xs text-muted-foreground">Abra o app no dispositivo, cole este token e clique em "Conectar".</p>
         </div>
       )}
 
@@ -135,8 +176,9 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Token</TableHead>
+              <TableHead>Dispositivo</TableHead>
+              <TableHead className="w-[100px]">Token</TableHead>
+              <TableHead>Módulos</TableHead>
               <TableHead>Último ping</TableHead>
               <TableHead>Bateria</TableHead>
               <TableHead>Ativo</TableHead>
@@ -146,14 +188,62 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
           <TableBody>
             {devices.map((d) => (
               <TableRow key={d.id}>
-                <TableCell className="font-medium">{d.nome}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    {tipoIcon(d.tipo_dispositivo)}
+                    <div>
+                      <div className="font-medium text-sm">{d.nome}</div>
+                      <div className="text-[10px] text-muted-foreground uppercase">
+                        {d.tipo_dispositivo}{d.versao_app ? ` · v${d.versao_app}` : ''}
+                      </div>
+                    </div>
+                  </div>
+                </TableCell>
                 <TableCell>
                   <Button size="sm" variant="ghost" onClick={() => copiar(d.token)} className="font-mono text-xs">
-                    {d.token.slice(0, 10)}… <Copy className="h-3 w-3 ml-1" />
+                    {d.token.slice(0, 8)}… <Copy className="h-3 w-3 ml-1" />
                   </Button>
                 </TableCell>
+                <TableCell>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleModulo(d, 'modulo_sms_ativo')}
+                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition ${
+                        d.modulo_sms_ativo ? 'bg-primary/10 border-primary/40 text-primary' : 'bg-muted text-muted-foreground'
+                      }`}
+                      title="Módulo SMS"
+                    >
+                      <MessageSquare className="h-3 w-3" /> SMS
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleModulo(d, 'modulo_ponto_ativo')}
+                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition ${
+                        d.modulo_ponto_ativo ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400' : 'bg-muted text-muted-foreground'
+                      }`}
+                      title="Módulo Ponto"
+                    >
+                      <Clock className="h-3 w-3" /> Ponto
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleModulo(d, 'modulo_camera_ativo')}
+                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition ${
+                        d.modulo_camera_ativo ? 'bg-blue-500/10 border-blue-500/40 text-blue-600 dark:text-blue-400' : 'bg-muted text-muted-foreground'
+                      }`}
+                      title="Módulo Câmera"
+                    >
+                      <Camera className="h-3 w-3" /> Câmera
+                    </button>
+                  </div>
+                </TableCell>
                 <TableCell className="text-xs">{pingLabel(d.ultimo_ping)}</TableCell>
-                <TableCell className="text-xs">{d.bateria != null ? `${d.bateria}%` : '—'}</TableCell>
+                <TableCell className="text-xs">
+                  {d.bateria != null
+                    ? <Badge variant={d.bateria > 20 ? 'default' : 'destructive'}>{d.bateria}%</Badge>
+                    : '—'}
+                </TableCell>
                 <TableCell><Switch checked={d.ativo} onCheckedChange={() => toggleAtivo(d)} /></TableCell>
                 <TableCell>
                   <Button size="icon" variant="ghost" onClick={() => setToDelete(d)}>
@@ -171,7 +261,7 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
         onOpenChange={(v) => !v && setToDelete(null)}
         onConfirm={remover}
         title="Remover dispositivo?"
-        description={`O celular "${toDelete?.nome}" perderá acesso à fila. Não afeta SMS já enviados.`}
+        description={`O dispositivo "${toDelete?.nome}" perderá acesso a todos os módulos. Não afeta registros já enviados.`}
       />
     </div>
   );
