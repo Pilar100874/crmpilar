@@ -117,53 +117,22 @@ Deno.serve(async (req) => {
         if (!r.ok) throw new Error(responseRaw?.message || `SMSGateway.me HTTP ${r.status}`);
         providerMessageId = String(responseRaw?.[0]?.id ?? '');
       } else if (cfg.provider === 'pilar') {
-        // Pilar SMS — protocolo próprio (app Android da Pilar)
-        if (!cfg.pilar_endpoint || !cfg.pilar_token) {
-          throw new Error('Credenciais Pilar SMS incompletas (endpoint e token são obrigatórios)');
-        }
-        // Normaliza: aceita "IP:PORTA", "host:porta", "http://...", com ou sem /send
-        let url = cfg.pilar_endpoint.trim();
-        if (!/^https?:\/\//i.test(url)) url = `http://${url}`;
-        // Remove barras finais e garante /send no path
-        try {
-          const u = new URL(url);
-          if (u.pathname === '/' || u.pathname === '') u.pathname = '/send';
-          url = u.toString();
-        } catch {
-          throw new Error(`Endpoint inválido: "${cfg.pilar_endpoint}"`);
-        }
+        // Pilar SMS — modo FILA (sem Cloudflare/IP público)
+        // O CRM apenas enfileira o SMS. O APK faz polling e envia via SMS nativo do celular.
+        const { data: enq, error: enqErr } = await supabase
+          .from('sms_queue')
+          .insert({
+            estabelecimento_id,
+            telefone: to,
+            mensagem,
+            status: 'pendente',
+          })
+          .select('id')
+          .single();
+        if (enqErr) throw new Error(`Falha ao enfileirar SMS: ${enqErr.message}`);
+        providerMessageId = enq?.id ?? null;
+        responseRaw = { queued: true, id: providerMessageId };
 
-        const isPrivateIp = /^https?:\/\/(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.|127\.|localhost|0\.0\.0\.0)/i.test(url);
-        let r: Response;
-        try {
-          r = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${cfg.pilar_token}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              to,
-              message: mensagem,
-              sender: cfg.pilar_sender || cfg.sender || undefined,
-            }),
-          });
-        } catch (netErr) {
-          const hint = isPrivateIp
-            ? ' O endpoint é um IP privado (LAN). Como o CRM roda na nuvem, ele não alcança sua rede local — exponha o celular via Cloudflare Tunnel ou ngrok e use a URL pública.'
-            : '';
-          throw new Error(`Não foi possível conectar em ${url}.${hint} Detalhe: ${netErr instanceof Error ? netErr.message : String(netErr)}`);
-        }
-        responseRaw = await r.json().catch(() => ({}));
-        if (!r.ok || (responseRaw && responseRaw.success === false)) {
-          throw new Error(responseRaw?.error || responseRaw?.message || `Pilar SMS HTTP ${r.status}`);
-        }
-        providerMessageId = responseRaw?.id ?? null;
-        responseRaw = await r.json().catch(() => ({}));
-        if (!r.ok || (responseRaw && responseRaw.success === false)) {
-          throw new Error(responseRaw?.error || responseRaw?.message || `Pilar SMS HTTP ${r.status}`);
-        }
-        providerMessageId = responseRaw?.id ?? null;
       } else {
         throw new Error(`Provedor desconhecido: ${cfg.provider}`);
       }
