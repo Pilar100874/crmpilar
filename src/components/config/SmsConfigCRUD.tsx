@@ -67,6 +67,9 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
     smsgatewayme_email: '',
     smsgatewayme_password: '',
     smsgatewayme_device_id: '',
+    pilar_endpoint: '',
+    pilar_token: '',
+    pilar_sender: '',
   });
 
   useEffect(() => { void load(); }, [estabelecimentoId]);
