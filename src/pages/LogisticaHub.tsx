@@ -12,6 +12,7 @@ import {
   PanelLeft,
   PanelLeftClose,
   Smartphone,
+  BookOpen,
   LucideIcon
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
