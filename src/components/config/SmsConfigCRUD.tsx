@@ -222,23 +222,6 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
             </div>
           )}
 
-          {cfg.provider === 'smsgatewayme' && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
-              <div>
-                <Label>E-mail da conta</Label>
-                <Input value={cfg.smsgatewayme_email || ''} onChange={(e) => setCfg({ ...cfg, smsgatewayme_email: e.target.value })} placeholder="seu@email.com" />
-              </div>
-              <div>
-                <Label>Senha</Label>
-                <Input type="password" value={cfg.smsgatewayme_password || ''} onChange={(e) => setCfg({ ...cfg, smsgatewayme_password: e.target.value })} />
-              </div>
-              <div>
-                <Label>Device ID</Label>
-                <Input value={cfg.smsgatewayme_device_id || ''} onChange={(e) => setCfg({ ...cfg, smsgatewayme_device_id: e.target.value })} placeholder="ID do dispositivo pareado" />
-              </div>
-            </div>
-          )}
-
           <div className="flex justify-end">
             <Button onClick={handleSave} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />{saving ? 'Salvando...' : 'Salvar configuração'}
