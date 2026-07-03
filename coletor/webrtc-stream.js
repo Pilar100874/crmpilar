@@ -63,21 +63,27 @@ class SignalHub {
 
   start() {
     if (this.channels.length) return;
-    // Assina ambos os canais para não perder viewers que estejam
-    // broadcastando no canal genérico OU no canal específico da filial.
     const names = new Set(['webrtc-signal']);
     if (this.cfg.filialId) names.add(`webrtc-signal:${this.cfg.filialId}`);
     for (const name of names) {
       const ch = this.supabase.channel(name, {
         config: { broadcast: { self: false, ack: false } },
       });
-      ch.on('broadcast', { event: 'msg' }, ({ payload }) => this._onMsg(payload));
-      ch.subscribe((status) => console.log('[webrtc] signaling', name, status));
+      ch.on('broadcast', { event: 'msg' }, ({ payload }) => {
+        this._onMsg(payload);
+        if (payload?.type === 'viewer-ping' && payload?.to === 'coletor') {
+          this._sendHeartbeat();
+        }
+      });
+      ch.subscribe((status) => {
+        console.log('[webrtc] signaling', name, status);
+        if (status === 'SUBSCRIBED') this._sendHeartbeat();
+      });
       this.channels.push(ch);
     }
-    // Heartbeat: avisa aos viewers que o coletor está online e quais câmeras serve.
     this._sendHeartbeat();
-    this.hbTimer = setInterval(() => this._sendHeartbeat(), 4000);
+    // Heartbeat frequente (2s) — browser espera até 6s para detectar
+    this.hbTimer = setInterval(() => this._sendHeartbeat(), 2000);
   }
 
   _sendHeartbeat() {
