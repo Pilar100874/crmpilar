@@ -280,22 +280,6 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="smsgatewayme">
-              <AccordionTrigger className="text-sm">
-                <span className="flex items-center gap-2"><Smartphone className="h-4 w-4 text-green-600" /> SMSGateway.me — Android</span>
-              </AccordionTrigger>
-              <AccordionContent className="text-sm space-y-2 text-muted-foreground">
-                <p><b>O que é:</b> serviço com app Android que envia SMS pelo chip do celular. Possui plano gratuito limitado.</p>
-                <ol className="list-decimal ml-5 space-y-1">
-                  <li>Crie conta em <a className="underline" href="https://smsgateway.me" target="_blank" rel="noreferrer">smsgateway.me</a>.</li>
-                  <li>Instale o app <b>SMSGateway.me</b> na Play Store.</li>
-                  <li>Faça login no app com o e-mail e senha da conta e conceda as permissões de SMS.</li>
-                  <li>No painel web (menu <i>Devices</i>) você verá o <b>Device ID</b> do celular pareado.</li>
-                  <li>Aqui na tela, selecione o provedor <b>SMSGateway.me</b> e preencha e-mail, senha e Device ID.</li>
-                  <li>Salve e teste o envio. Mantenha o celular ligado e com internet.</li>
-                </ol>
-              </AccordionContent>
-            </AccordionItem>
 
             <AccordionItem value="twilio">
               <AccordionTrigger className="text-sm">
