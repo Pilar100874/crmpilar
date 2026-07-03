@@ -313,7 +313,7 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                   <li>Baixe o APK <b>Pilar SMS</b> clicando no botão acima e transfira para o Android que ficará ligado com o chip.</li>
                   <li>Abra o app, conceda permissão de <b>Enviar SMS</b> e desative a otimização de bateria para o app.</li>
                   <li>Toque em <b>Iniciar servidor</b>. O app mostra a URL local (ex: <code>http://192.168.0.42:8787/send</code>) e gera um <b>Token</b>.</li>
-                  <li>Se for usar fora da rede local, exponha via túnel (Cloudflare Tunnel, ngrok) ou configure port-forward no roteador — e use essa URL pública.</li>
+                  <li><b>⚠️ Obrigatório:</b> o CRM roda na nuvem e <b>não enxerga IPs privados</b> (192.168.x.x, 10.x.x.x). Exponha o celular via túnel — o mais fácil é <a href="https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/" target="_blank" rel="noreferrer" className="underline">Cloudflare Tunnel</a> (<code>cloudflared tunnel --url http://IP_DO_CELULAR:8080</code>) ou <a href="https://ngrok.com/download" target="_blank" rel="noreferrer" className="underline">ngrok</a> (<code>ngrok http IP_DO_CELULAR:8080</code>). Use a URL pública gerada (<code>https://xxx.trycloudflare.com/send</code>) no campo Endpoint abaixo.</li>
                   <li>Aqui na tela, selecione o provedor <b>Pilar SMS (App próprio)</b>, cole o endpoint e o token.</li>
                   <li>Salve e faça um envio de teste. O celular envia o SMS pela operadora.</li>
                 </ol>
