@@ -272,7 +272,7 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
                   </TableCell>
                 </TableRow>
               )}
-              </>
+              </Fragment>
             ))}
           </TableBody>
         </Table>
