@@ -103,7 +103,14 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Pr
         });
       }
 
-      await new Promise((r) => setTimeout(r, 3000));
+      // Ping proativo — Coletor responde com heartbeat imediato
+      sendAll({ type: "viewer-ping", to: "coletor", viewer_id: viewerId });
+
+      // Aguarda até 6s por heartbeat (Coletor manda a cada 2s)
+      const deadline = Date.now() + 6000;
+      while (!coletorSeenAt && Date.now() < deadline) {
+        await new Promise((r) => setTimeout(r, 200));
+      }
 
       if (!coletorSeenAt) {
         if (!closed) {
