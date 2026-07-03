@@ -50,6 +50,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const [bloqueioOpen, setBloqueioOpen] = useState(false);
   const [veiculoBloqueio, setVeiculoBloqueio] = useState<Veiculo | null>(null);
   const [dispositivoTab, setDispositivoTab] = useState<'selecionar' | 'digitar'>('selecionar');
+  const [enviandoSms, setEnviandoSms] = useState(false);
   const [formData, setFormData] = useState({
     placa: '',
     descricao: '',
@@ -57,6 +58,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     tipo_veiculo: '',
     traccar_device_id: '',
     dispositivo_id: '',
+    telefone_sms: '',
+    enviar_sms_automatico: false,
     ativo: true
   });
 
