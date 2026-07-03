@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Car, Search, Smartphone, Fuel } from 'lucide-react';
+import { Plus, Pencil, Trash2, Car, Search, Smartphone, Fuel, Send } from 'lucide-react';
 import { BloqueioCombustivelDialog } from './BloqueioCombustivelDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
