@@ -163,19 +163,29 @@ function requestRawOnce(opts, body, tlsOpts) {
 async function requestRaw(opts, body) {
   const isHttps = opts.protocol === 'https:';
   if (!isHttps) return requestRawOnce(opts, body, null);
+
+  // No Windows: prefere curl.exe (Schannel aceita TLS 1.0/1.1/self-signed do Control iD).
+  // BoringSSL (Electron) rejeita SECLEVEL=0/TLSv1 → variantes falham em cascata dando "timeout".
+  if (os.platform() === 'win32') {
+    try { return await curlRequest(opts, body); }
+    catch (e) {
+      // Fallback para tls.connect apenas se curl não estiver disponível
+      if (!/curl indisponível|ENOENT/i.test(e.message || '')) throw e;
+    }
+  }
+
   const variants = buildTlsVariants(opts.hostname, opts.port);
   let lastErr;
   for (const v of variants) {
     try { return await requestRawOnce(opts, body, v); }
     catch (e) {
       lastErr = e;
-      // Só tenta próxima variante se o erro for de configuração/handshake TLS
       if (!isInvalidCommandErr(e) && !/handshake|SSL|TLS|EPROTO|wrong version/i.test(e.message || '')) {
         throw e;
       }
     }
   }
-  // Todas variantes falharam — tenta curl (Schannel no Windows aceita TLS legado)
+  // Última tentativa: curl (Linux/macOS)
   try { return await curlRequest(opts, body); }
   catch (e2) { throw new Error(`TLS falhou: ${lastErr?.message || 'handshake'} | curl: ${e2.message}`); }
 }
