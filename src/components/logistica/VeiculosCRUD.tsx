@@ -116,6 +116,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         tipo_veiculo: veiculo.tipo_veiculo || '',
         traccar_device_id: veiculo.traccar_device_id || '',
         dispositivo_id: linkedDevice?.id || '',
+        telefone_sms: (veiculo as any).telefone_sms || '',
+        enviar_sms_automatico: false,
         ativo: veiculo.ativo
       });
     } else {
@@ -127,6 +129,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         tipo_veiculo: '',
         traccar_device_id: '',
         dispositivo_id: '',
+        telefone_sms: '',
+        enviar_sms_automatico: false,
         ativo: true
       });
     }
