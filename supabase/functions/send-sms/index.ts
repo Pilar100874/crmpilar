@@ -64,25 +64,6 @@ Deno.serve(async (req) => {
         responseRaw = await r.json();
         if (!r.ok) throw new Error(responseRaw?.message || `Twilio HTTP ${r.status}`);
         providerMessageId = responseRaw?.sid ?? null;
-      } else if (cfg.provider === 'gatewayapi') {
-        if (!cfg.gatewayapi_token) throw new Error('Token da GatewayAPI ausente');
-        const sender = cfg.sender || 'SMS';
-        const recipientDigits = to.replace(/\D/g, '');
-        const r = await fetch('https://gatewayapi.com/rest/mtsms', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Token ${cfg.gatewayapi_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            sender,
-            message: mensagem,
-            recipients: [{ msisdn: Number(recipientDigits) }],
-          }),
-        });
-        responseRaw = await r.json().catch(() => ({}));
-        if (!r.ok) throw new Error(responseRaw?.message || `GatewayAPI HTTP ${r.status}`);
-        providerMessageId = String(responseRaw?.ids?.[0] ?? '');
       } else if (cfg.provider === 'zenvia') {
         if (!cfg.zenvia_api_token || !cfg.zenvia_from) throw new Error('Credenciais Zenvia incompletas');
         const r = await fetch('https://api.zenvia.com/v2/channels/sms/messages', {
@@ -100,9 +81,45 @@ Deno.serve(async (req) => {
         responseRaw = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(responseRaw?.message || responseRaw?.title || `Zenvia HTTP ${r.status}`);
         providerMessageId = responseRaw?.id ?? null;
+      } else if (cfg.provider === 'smsgate') {
+        // sms-gate.app (Android open-source) — HTTP Basic Auth
+        if (!cfg.smsgate_username || !cfg.smsgate_password) throw new Error('Credenciais SMS Gateway (Android) incompletas');
+        const base = (cfg.smsgate_base_url || 'https://api.sms-gate.app/3rd/v1').replace(/\/+$/, '');
+        const auth = btoa(`${cfg.smsgate_username}:${cfg.smsgate_password}`);
+        const r = await fetch(`${base}/message`, {
+          method: 'POST',
+          headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: mensagem, phoneNumbers: [to] }),
+        });
+        responseRaw = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(responseRaw?.message || `SMS Gateway HTTP ${r.status}`);
+        providerMessageId = responseRaw?.id ?? null;
+      } else if (cfg.provider === 'smsgatewayme') {
+        // smsgateway.me — REST API v4
+        if (!cfg.smsgatewayme_email || !cfg.smsgatewayme_password || !cfg.smsgatewayme_device_id) {
+          throw new Error('Credenciais SMSGateway.me incompletas');
+        }
+        // Login p/ obter token
+        const loginR = await fetch('https://smsgateway.me/api/v4/user/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: cfg.smsgatewayme_email, password: cfg.smsgatewayme_password }),
+        });
+        const loginJson = await loginR.json().catch(() => ({}));
+        if (!loginR.ok || !loginJson?.token) throw new Error(loginJson?.message || `SMSGateway.me login HTTP ${loginR.status}`);
+        const token = loginJson.token;
+        const r = await fetch('https://smsgateway.me/api/v4/message/send', {
+          method: 'POST',
+          headers: { 'Authorization': token, 'Content-Type': 'application/json' },
+          body: JSON.stringify([{ phone_number: to, message: mensagem, device_id: Number(cfg.smsgatewayme_device_id) || cfg.smsgatewayme_device_id }]),
+        });
+        responseRaw = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(responseRaw?.message || `SMSGateway.me HTTP ${r.status}`);
+        providerMessageId = String(responseRaw?.[0]?.id ?? '');
       } else {
         throw new Error(`Provedor desconhecido: ${cfg.provider}`);
       }
+
     } catch (e) {
       status = 'failed';
       erro = e instanceof Error ? e.message : String(e);
