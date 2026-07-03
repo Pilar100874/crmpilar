@@ -122,18 +122,27 @@ Deno.serve(async (req) => {
           throw new Error('Credenciais Pilar SMS incompletas (endpoint e token são obrigatórios)');
         }
         const url = cfg.pilar_endpoint.trim();
-        const r = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${cfg.pilar_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            to,
-            message: mensagem,
-            sender: cfg.pilar_sender || cfg.sender || undefined,
-          }),
-        });
+        // Bloqueia IPs privados — a edge function roda na nuvem e não alcança LAN
+        if (/^https?:\/\/(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.|127\.|localhost|0\.0\.0\.0)/i.test(url)) {
+          throw new Error('Endpoint aponta para IP privado da LAN. A nuvem não enxerga esse endereço. Exponha o celular via Cloudflare Tunnel ou ngrok e use a URL pública gerada.');
+        }
+        let r: Response;
+        try {
+          r = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${cfg.pilar_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              to,
+              message: mensagem,
+              sender: cfg.pilar_sender || cfg.sender || undefined,
+            }),
+          });
+        } catch (netErr) {
+          throw new Error(`Não foi possível conectar em ${url}. Verifique se o app está com servidor ativo e se a URL é pública/acessível pela internet. Detalhe: ${netErr instanceof Error ? netErr.message : String(netErr)}`);
+        }
         responseRaw = await r.json().catch(() => ({}));
         if (!r.ok || (responseRaw && responseRaw.success === false)) {
           throw new Error(responseRaw?.error || responseRaw?.message || `Pilar SMS HTTP ${r.status}`);
