@@ -4,9 +4,8 @@ drawable ic_launcher_bg
 drawable ic_launcher_fg
 id btnStart
 id btnStop
-id etPort
 id etToken
-id tvEndpoint
+id tvStats
 id tvStatus
 layout activity_main
 mipmap ic_launcher

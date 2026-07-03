@@ -3276,7 +3276,6 @@ id endToStart
 id enterAlways
 id enterAlwaysCollapsed
 id escape
-id etPort
 id etToken
 id exitUntilCollapsed
 id expand_activities_button
@@ -3575,7 +3574,7 @@ id transition_position
 id transition_scene_layoutid_cache
 id transition_transform
 id triangle
-id tvEndpoint
+id tvStats
 id tvStatus
 id unchecked
 id uniform

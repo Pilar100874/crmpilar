@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="br.com.pilar.sms"
-    android:versionCode="1"
-    android:versionName="1.0.0" >
+    android:versionCode="3"
+    android:versionName="1.1.0" >
 
     <uses-sdk
         android:minSdkVersion="24"
@@ -12,7 +12,6 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
@@ -33,7 +32,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/Theme.PilarSms"
-        android:usesCleartextTraffic="true" >
+        android:usesCleartextTraffic="false" >
         <activity
             android:name="br.com.pilar.sms.MainActivity"
             android:exported="true" >
@@ -45,7 +44,7 @@
         </activity>
 
         <service
-            android:name="br.com.pilar.sms.SmsHttpService"
+            android:name="br.com.pilar.sms.SmsPollingService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
