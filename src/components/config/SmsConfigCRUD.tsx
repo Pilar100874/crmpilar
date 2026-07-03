@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Send, Save, MessageSquare, BookOpen, Smartphone, Globe, Shield } from 'lucide-react';
+import { Send, Save, MessageSquare, BookOpen, Smartphone, Globe, Shield, Download } from 'lucide-react';
 
 type Provider = 'twilio' | 'zenvia' | 'smsgate' | 'pilar';
 
@@ -297,11 +297,20 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
               </AccordionTrigger>
               <AccordionContent className="text-sm space-y-2 text-muted-foreground">
                 <p><b>O que é:</b> gateway próprio da Pilar. Um app Android leve que roda no seu celular, escuta requisições HTTP do CRM e envia SMS pelo chip usando o <code>SmsManager</code> nativo. Protocolo simplificado, sem intermediários.</p>
+                <div className="flex flex-wrap items-center gap-2 p-3 rounded-md border border-primary/30 bg-primary/5">
+                  <Download className="h-4 w-4 text-primary" />
+                  <span className="text-sm text-foreground"><b>Baixe o app Pilar SMS v1.0.0</b> (Android · 5.6 MB)</span>
+                  <Button asChild size="sm" className="ml-auto">
+                    <a href="/pilar-sms-v1.0.0.apk" download>
+                      <Download className="h-4 w-4 mr-2" /> Baixar APK
+                    </a>
+                  </Button>
+                </div>
                 <p><b>Protocolo:</b> o CRM faz <code>POST</code> no endpoint configurado com header <code>Authorization: Bearer &lt;token&gt;</code> e body JSON:</p>
-                <pre className="bg-muted p-2 rounded text-xs overflow-x-auto">{`{ "to": "+5511999999999", "message": "texto do SMS", "sender": "sim1" }`}</pre>
-                <p>Resposta esperada: <code>{`{ "success": true, "id": "..." }`}</code>.</p>
+                <pre className="bg-muted p-2 rounded text-xs overflow-x-auto">{`{ "to": "+5511999999999", "message": "texto do SMS", "sender": "0" }`}</pre>
+                <p>Resposta esperada: <code>{`{ "ok": true, "id": "..." }`}</code>.</p>
                 <ol className="list-decimal ml-5 space-y-1">
-                  <li>Baixe o código-fonte do app <b>Pilar SMS</b> em <code>pilar-sms-app/</code> no repositório do projeto (Kotlin nativo, Android Studio + JDK 17). Rode <code>./gradlew assembleRelease</code> e instale o APK gerado (<code>app/build/outputs/apk/release/</code>) no Android que ficará ligado com o chip.</li>
+                  <li>Baixe o APK <b>Pilar SMS</b> clicando no botão acima e transfira para o Android que ficará ligado com o chip.</li>
                   <li>Abra o app, conceda permissão de <b>Enviar SMS</b> e desative a otimização de bateria para o app.</li>
                   <li>Toque em <b>Iniciar servidor</b>. O app mostra a URL local (ex: <code>http://192.168.0.42:8787/send</code>) e gera um <b>Token</b>.</li>
                   <li>Se for usar fora da rede local, exponha via túnel (Cloudflare Tunnel, ngrok) ou configure port-forward no roteador — e use essa URL pública.</li>
