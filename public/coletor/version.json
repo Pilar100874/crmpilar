@@ -1,5 +1,5 @@
 {
   "version": "1.3.0",
-  "downloadUrl": "https://crm.pilar.com.br/__l5e/assets-v1/3a8b9901-e6f3-48fe-b3a0-8de508d05c81/ColetorPilar-Setup.msi",
+  "downloadUrl": "https://crm.pilar.com.br/__l5e/assets-v1/d57aaac8-587a-4e06-a33f-683e7b992b9a/ColetorPilar-Setup.msi",
   "notas": "1.3.0: atualização automática agora desinstala a versão anterior do 'Coletor Pilar' no Add/Remove Programs (registro do Windows, x64 e x86) antes de instalar a nova, evitando entradas duplicadas. Instalação usa REBOOT=ReallySuppress + MSIRESTARTMANAGERCONTROL=Disable + MSIDISABLERMRESTART=1 + REINSTALLMODE=vomus para não exigir reinício do computador (arquivos em uso são substituídos via Restart Manager sem prompt)."
 }
