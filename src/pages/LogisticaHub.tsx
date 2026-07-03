@@ -121,6 +121,8 @@ const LogisticaHub: React.FC = () => {
         return <LogisticaAutomacoes />;
       case 'pilar-rastreador':
         return <PilarRastreadorApps />;
+      case 'manual':
+        return <ManualRastreadores />;
       case 'config':
         return <LogisticaConfig embedded />;
       default:
