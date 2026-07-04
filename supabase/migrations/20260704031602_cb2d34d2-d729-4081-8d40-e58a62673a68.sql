@@ -1,0 +1,1 @@
+ALTER TABLE public.cv_coletor_config ADD COLUMN IF NOT EXISTS ponto_habilitado boolean NOT NULL DEFAULT true;
