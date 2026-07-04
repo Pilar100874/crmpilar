@@ -310,12 +310,12 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
               <AccordionContent className="text-sm space-y-2 text-muted-foreground">
                 <p><b>Como funciona:</b> o CRM grava os SMS numa fila. O APK Pilar SMS instalado no seu celular consulta essa fila a cada 5 segundos e envia as mensagens pelo chip usando o <code>SmsManager</code> nativo. <b>Não precisa de IP público, roteador nem Cloudflare</b> — igual ao Coletor de Ponto e ao Coletor de Câmeras.</p>
                 <div className="flex flex-wrap items-center gap-2 p-3 rounded-md border border-primary/30 bg-primary/5">
-                  <Download className="h-4 w-4 text-primary" />
-                  <span className="text-sm text-foreground"><b>Baixe o app Pilar SMS v1.1.0</b> (Android · Modo Fila)</span>
+                  <AppWindow className="h-4 w-4 text-primary" />
+                  <span className="text-sm text-foreground"><b>Baixe o APK Pilar SMS</b> e veja o passo a passo em Admin → Apps</span>
                   <Button asChild size="sm" className="ml-auto">
-                    <a href="/pilar-sms-v1.2.0.apk" download>
-                      <Download className="h-4 w-4 mr-2" /> Baixar APK
-                    </a>
+                    <Link to="/admin/apps">
+                      <Download className="h-4 w-4 mr-2" /> Ir para Apps
+                    </Link>
                   </Button>
                 </div>
                 <ol className="list-decimal ml-5 space-y-1">
