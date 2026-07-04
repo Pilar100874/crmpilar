@@ -12,6 +12,7 @@ import { Copy, Plus, Trash2, Smartphone, Monitor, Download, RefreshCw, MessageSq
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import PilarCamerasCRUD from './PilarCamerasCRUD';
 import PilarSnapshotsGallery from './PilarSnapshotsGallery';
+import { StatusPingDot } from '@/components/StatusPingDot';
 
 interface Device {
   id: string;
@@ -19,6 +20,7 @@ interface Device {
   token: string;
   ativo: boolean;
   ultimo_ping: string | null;
+  ultimo_heartbeat?: string | null;
   bateria: number | null;
   sinal: string | null;
   tipo_dispositivo: 'android' | 'windows' | string;
@@ -27,6 +29,7 @@ interface Device {
   modulo_ponto_ativo: boolean;
   modulo_camera_ativo: boolean;
 }
+
 
 export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimentoId: string }) {
   const [devices, setDevices] = useState<Device[]>([]);
@@ -253,7 +256,17 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
                     </button>
                   </div>
                 </TableCell>
-                <TableCell className="text-xs">{pingLabel(d.ultimo_ping)}</TableCell>
+                <TableCell className="text-xs">
+                  <div className="flex items-center gap-2">
+                    <StatusPingDot
+                      at={d.ultimo_heartbeat ?? d.ultimo_ping}
+                      label={`Dispositivo ${d.nome} (${d.tipo_dispositivo})`}
+                      dotOnly
+                    />
+                    <span>{pingLabel(d.ultimo_ping)}</span>
+                  </div>
+                </TableCell>
+
                 <TableCell className="text-xs">
                   {d.bateria != null
                     ? <Badge variant={d.bateria > 20 ? 'default' : 'destructive'}>{d.bateria}%</Badge>
