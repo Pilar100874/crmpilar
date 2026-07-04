@@ -1,42 +1,62 @@
 package br.com.pilar.hub.sms
 
 import android.content.Context
+import android.os.BatteryManager
 import android.telephony.SmsManager
 import br.com.pilar.hub.ApiClient
 import org.json.JSONObject
 
 object SmsModule {
+    /**
+     * Polling da fila de SMS do CRM.
+     * Endpoints: sms-queue-poll (busca) e sms-queue-ack (confirma).
+     * Autenticação via header X-Device-Token.
+     */
     fun processarFila(ctx: Context, deviceToken: String) {
         try {
-            val body = JSONObject().apply {
-                put("device_token", deviceToken)
-                put("action", "fetch_queue")
+            val bm = ctx.getSystemService(Context.BATTERY_SERVICE) as? BatteryManager
+            val bateria = bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1
+
+            val pollBody = JSONObject().apply {
+                if (bateria >= 0) put("bateria", bateria)
+                put("limit", 5)
             }.toString()
-            val resp = ApiClient.post("pilar-sms-queue", body)
+
+            val headers = mapOf("X-Device-Token" to deviceToken)
+            val resp = ApiClient.post("sms-queue-poll", pollBody, headers)
             val json = JSONObject(resp)
             val arr = json.optJSONArray("messages") ?: return
+
             val sm = SmsManager.getDefault()
             for (i in 0 until arr.length()) {
                 val msg = arr.getJSONObject(i)
-                val to = msg.getString("phone")
-                val text = msg.getString("message")
                 val id = msg.getString("id")
+                val to = msg.optString("telefone", msg.optString("phone"))
+                val text = msg.optString("mensagem", msg.optString("message"))
                 try {
                     sm.sendTextMessage(to, null, text, null, null)
-                    ApiClient.post("pilar-sms-queue", JSONObject().apply {
-                        put("device_token", deviceToken)
-                        put("action", "mark_sent")
-                        put("message_id", id)
-                    }.toString())
+                    ApiClient.post(
+                        "sms-queue-ack",
+                        JSONObject().apply {
+                            put("id", id)
+                            put("success", true)
+                        }.toString(),
+                        headers
+                    )
                 } catch (e: Exception) {
-                    ApiClient.post("pilar-sms-queue", JSONObject().apply {
-                        put("device_token", deviceToken)
-                        put("action", "mark_failed")
-                        put("message_id", id)
-                        put("error", e.message)
-                    }.toString())
+                    ApiClient.post(
+                        "sms-queue-ack",
+                        JSONObject().apply {
+                            put("id", id)
+                            put("success", false)
+                            put("erro", e.message ?: "erro desconhecido")
+                        }.toString(),
+                        headers
+                    )
                 }
             }
-        } catch (e: Exception) { e.printStackTrace() }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }

@@ -15,11 +15,10 @@ import androidx.core.content.ContextCompat
 
 class MainActivity : AppCompatActivity() {
 
+    // Somente permissões necessárias ao gateway SMS.
     private val PERMS = arrayOf(
         Manifest.permission.SEND_SMS,
         Manifest.permission.READ_PHONE_STATE,
-        Manifest.permission.CAMERA,
-        Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.POST_NOTIFICATIONS
     )
 
@@ -35,15 +34,12 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnSave).setOnClickListener {
             val token = tokenInput.text.toString().trim()
             if (token.isBlank()) {
-                Toast.makeText(this, "Informe o token", Toast.LENGTH_SHORT).show(); return@setOnClickListener
+                Toast.makeText(this, "Informe o token", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
             prefs.edit().putString("device_token", token).apply()
             requestPermsAndStart()
             status.text = "Pilar Hub iniciado. Ver notificação."
-        }
-
-        findViewById<Button>(R.id.btnPonto).setOnClickListener {
-            startActivity(Intent(this, br.com.pilar.hub.ponto.PontoActivity::class.java))
         }
     }
 
@@ -60,6 +56,5 @@ class MainActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(rc: Int, p: Array<out String>, r: IntArray) {
         super.onRequestPermissionsResult(rc, p, r)
-        // Serviço já iniciado; permissões faltantes serão retentadas quando módulo tentar usar.
     }
 }
