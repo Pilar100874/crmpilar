@@ -373,37 +373,39 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
           <CardDescription>Histórico dos 20 SMS mais recentes</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Data</TableHead>
-                <TableHead>Provedor</TableHead>
-                <TableHead>Destino</TableHead>
-                <TableHead>Mensagem</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Erro</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {historico.map((h) => (
-                <TableRow key={h.id}>
-                  <TableCell className="whitespace-nowrap text-xs">{new Date(h.created_at).toLocaleString('pt-BR')}</TableCell>
-                  <TableCell>{h.provider}</TableCell>
-                  <TableCell>{h.destino}</TableCell>
-                  <TableCell className="max-w-[280px] truncate" title={h.mensagem}>{h.mensagem}</TableCell>
-                  <TableCell>
-                    <span className={h.status === 'sent' ? 'text-green-600 font-medium' : 'text-destructive font-medium'}>
-                      {h.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-xs text-destructive max-w-[220px] truncate" title={h.erro || ''}>{h.erro || '-'}</TableCell>
+          <div className="w-full overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Provedor</TableHead>
+                  <TableHead>Destino</TableHead>
+                  <TableHead>Mensagem</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Erro</TableHead>
                 </TableRow>
-              ))}
-              {historico.length === 0 && (
-                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhum SMS enviado ainda</TableCell></TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {historico.map((h) => (
+                  <TableRow key={h.id}>
+                    <TableCell className="whitespace-nowrap text-xs">{new Date(h.created_at).toLocaleString('pt-BR')}</TableCell>
+                    <TableCell>{h.provider}</TableCell>
+                    <TableCell className="whitespace-nowrap">{h.destino}</TableCell>
+                    <TableCell className="max-w-[240px] truncate" title={h.mensagem}>{h.mensagem}</TableCell>
+                    <TableCell>
+                      <span className={h.status === 'sent' ? 'text-green-600 font-medium' : 'text-destructive font-medium'}>
+                        {h.status}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-xs text-destructive max-w-[200px] truncate" title={h.erro || ''}>{h.erro || '-'}</TableCell>
+                  </TableRow>
+                ))}
+                {historico.length === 0 && (
+                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhum SMS enviado ainda</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
