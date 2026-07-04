@@ -50,45 +50,45 @@ function AppTile(props: {
     : "bg-green-600 hover:bg-green-500 text-white";
 
   return (
-    <Card className={`flex flex-col overflow-hidden rounded-3xl border shadow-sm transition-all duration-300 hover:shadow-xl ${accentHover}`}>
-      <CardContent className="flex-1 p-8">
-        <div className="mb-6 flex items-start justify-between">
-          <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${accentBox}`}>
+    <Card className={`flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border shadow-sm transition-all duration-300 hover:shadow-xl ${accentHover}`}>
+      <CardContent className="flex-1 p-5 sm:p-7 md:p-8">
+        <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
+          <div className={`flex h-12 w-12 items-center justify-center rounded-xl sm:h-14 sm:w-14 sm:rounded-2xl ${accentBox}`}>
             {props.icon}
           </div>
-          <span className="rounded-full border bg-muted px-3 py-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="rounded-full border bg-muted px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:px-3 sm:text-xs">
             {props.platform}
           </span>
         </div>
 
-        <h2 className="mb-2 text-2xl font-bold text-foreground">{props.title}</h2>
-        <div className="mb-8 text-sm leading-relaxed text-muted-foreground">{props.description}</div>
+        <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">{props.title}</h2>
+        <div className="mb-6 text-sm leading-relaxed text-muted-foreground sm:mb-8">{props.description}</div>
 
-        {props.modules && <div className="mb-8 space-y-3">{props.modules}</div>}
+        {props.modules && <div className="mb-6 space-y-3 sm:mb-8">{props.modules}</div>}
 
-        <div className="flex items-center justify-between rounded-2xl bg-foreground p-2 pl-4">
+        <div className="flex flex-col gap-3 rounded-2xl bg-foreground p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:p-2 sm:pl-4">
           <div className="flex min-w-0 flex-col">
             <span className="text-[10px] font-bold uppercase tracking-widest text-background/60">
               {props.fileLabelBadge}
             </span>
-            <span className="truncate font-mono text-sm text-background">{props.fileName}</span>
+            <span className="truncate font-mono text-xs text-background sm:text-sm">{props.fileName}</span>
           </div>
           <Button
             onClick={props.onDownload}
-            className={`flex-shrink-0 rounded-xl px-6 py-3 text-sm font-bold transition-colors ${btnColor}`}
+            className={`w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold transition-colors sm:w-auto sm:px-6 ${btnColor}`}
           >
             <Download className="mr-2 h-4 w-4" /> {props.downloadButtonText}
           </Button>
         </div>
       </CardContent>
 
-      <div className="border-t bg-muted/40 p-8">
+      <div className="border-t bg-muted/40 p-5 sm:p-7 md:p-8">
         <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
           Como instalar e usar
         </h3>
         <ol className="space-y-4">
           {props.steps.map((s, i) => (
-            <li key={i} className="flex gap-4">
+            <li key={i} className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">
                 {i + 1}
               </span>
@@ -215,7 +215,7 @@ export default function AdminApps() {
       </Card>
 
       {/* Grid de apps */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 sm:gap-8 xl:grid-cols-2">
         <AppTile
           accent="blue"
           icon={<Monitor className="h-8 w-8" />}
