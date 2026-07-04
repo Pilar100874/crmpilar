@@ -18,6 +18,8 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Camera, Plus, Edit, Trash2, Wifi, TestTube, Radio } from "lucide-react";
 import { toast } from "sonner";
 import { CameraLiveViewer } from "@/components/cameras/CameraLiveViewer";
+import { StatusPingDot } from "@/components/StatusPingDot";
+
 
 const MARCAS = [
   { value: "tplink_tapo", label: "TP-Link Tapo" },
