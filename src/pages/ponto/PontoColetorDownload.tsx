@@ -1,223 +1,58 @@
-import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Download, Monitor, CheckCircle2, Copy, Database, Key, Camera } from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import winAsset from "../../../public/coletor/ColetorPilar-Setup.msi.asset.json";
-
-type Platform = {
-  id: string;
-  label: string;
-  file: string;
-  icon: any;
-  badge: string;
-  url?: string;
-};
-
-const platforms: Platform[] = [
-  {
-    id: "win",
-    label: "Windows",
-    file: "ColetorPilar-Setup.msi",
-    icon: Monitor,
-    badge: "Instalador MSI · x64 · Menu Iniciar + inicialização automática",
-    url: winAsset.url,
-  },
-];
+import { AppWindow, ArrowRight, Camera, Clock, Smartphone } from "lucide-react";
 
 export default function PontoColetorDownload() {
-  const [downloading, setDownloading] = useState<string | null>(null);
-  const [camerasEnabled, setCamerasEnabled] = useState(false);
-  const [camCfgId, setCamCfgId] = useState<string | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase.from("cv_coletor_config").select("*").maybeSingle();
-      if (data) { setCamerasEnabled(data.cameras_habilitado); setCamCfgId(data.id); }
-    })();
-  }, []);
-
-  const toggleCameras = async (v: boolean) => {
-    setCamerasEnabled(v);
-    if (camCfgId) {
-      await supabase.from("cv_coletor_config").update({ cameras_habilitado: v }).eq("id", camCfgId);
-    } else {
-      const { data } = await supabase.from("cv_coletor_config").insert({ cameras_habilitado: v }).select().single();
-      if (data) setCamCfgId(data.id);
-    }
-    toast.success(v ? "Módulo de câmeras habilitado no Coletor" : "Módulo de câmeras desabilitado");
-  };
-
-  const baixar = (file: string, id: string, url: string) => {
-    setDownloading(id);
-    try {
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = file;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      toast.success("Download iniciado");
-    } catch (e: any) {
-      toast.error(e.message);
-    } finally {
-      setTimeout(() => setDownloading(null), 1000);
-    }
-  };
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-3xl mx-auto">
       <div>
-        <h2 className="text-xl font-semibold sm:text-2xl">Coletor Desktop</h2>
+        <h2 className="text-xl font-semibold sm:text-2xl">Coletor Desktop & Apps</h2>
         <p className="text-sm text-muted-foreground">
-          Programa para instalar no computador que fica na rede dos relógios. Coleta as batidas
-          via TCP/IP, valida, e envia para o controle de ponto.
+          Os downloads dos aplicativos auxiliares foram centralizados no menu
+          <b> Admin → Apps</b>.
         </p>
       </div>
 
-      <Card className="border-primary/20">
-        <CardContent className="flex items-center justify-between gap-3 p-4">
-          <div className="flex items-start gap-3">
-            <Camera className="mt-0.5 h-5 w-5 text-primary" />
-            <div>
-              <p className="font-medium">Módulo de câmeras IP (Controle de Veículos)</p>
-              <p className="text-xs text-muted-foreground">
-                Habilita o Coletor Desktop a capturar snapshots de câmeras internas cadastradas em Controle de Veículos → Câmeras.
-              </p>
-            </div>
-          </div>
-          <Switch checked={camerasEnabled} onCheckedChange={toggleCameras} />
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-3">
-        {platforms.map((p) => (
-          <Card key={p.id}>
-            <CardContent className="flex items-center justify-between gap-4 p-5">
-              <div className="flex items-center gap-4">
-                <p.icon className="h-10 w-10 text-primary" />
-                <div>
-                  <h3 className="font-semibold">{p.label}</h3>
-                  <p className="text-xs text-muted-foreground">{p.badge}</p>
-                </div>
-              </div>
-              <Button
-                onClick={() => baixar(p.file, p.id, p.url!)}
-                disabled={downloading === p.id}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                {downloading === p.id ? "Baixando…" : "Baixar .msi"}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Card className="border-primary/20 bg-primary/5 dark:bg-primary/5">
+      <Card className="border-primary/20 bg-primary/5">
         <CardContent className="space-y-4 p-5">
           <div className="flex items-center gap-2">
-            <Database className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold text-foreground">Dados de Conexão (Para colar no Coletor Desktop)</h3>
+            <AppWindow className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold">Central de Apps do CRM Pilar</h3>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Ao configurar o Coletor Desktop, use estes dados exatos para conectá-lo à nuvem:
+          <p className="text-sm text-muted-foreground">
+            Baixe e configure em um único lugar:
           </p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5 rounded-lg border bg-background p-3.5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  <Database className="h-3.5 w-3.5 text-primary" /> URL do Supabase
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => {
-                    navigator.clipboard.writeText("https://ioxugupvxlcdweldocmq.supabase.co");
-                    toast.success("URL copiada!");
-                  }}
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-              <code className="block select-all break-all rounded bg-muted/60 p-2 text-xs font-mono text-foreground font-medium border">
-                https://ioxugupvxlcdweldocmq.supabase.co
-              </code>
-            </div>
-
-            <div className="space-y-1.5 rounded-lg border bg-background p-3.5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  <Key className="h-3.5 w-3.5 text-yellow-500" /> Chave Anon (Anon Key)
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => {
-                    navigator.clipboard.writeText("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc");
-                    toast.success("Chave Anon copiada!");
-                  }}
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-              <code className="block select-all break-all rounded bg-muted/60 p-2 text-xs font-mono text-foreground font-medium border truncate max-w-full" title="Clique para copiar">
-                eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...eFkzWc
-              </code>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="space-y-3 p-5">
-          <h3 className="font-semibold">Como instalar</h3>
-          <div className="space-y-3 text-sm text-muted-foreground">
-            <div>
-              <p className="font-medium text-foreground text-base">Windows (Instalador MSI)</p>
-              <p className="text-xs text-muted-foreground mt-1 mb-2">
-                O download é um instalador padrão do Windows (<code>ColetorPilar-Setup.msi</code>). Instala em <code>C:\Program Files\ColetorPilar</code>, cria atalho no Menu Iniciar e configura inicialização automática com o Windows.
-              </p>
-              <ol className="ml-4 list-decimal space-y-2">
-                <li>Baixe o arquivo <strong>ColetorPilar-Setup.msi</strong> acima.</li>
-                <li>Dê <strong>dois cliques</strong> nele e siga o assistente (Next → Install).</li>
-                <li>
-                  <strong className="text-amber-600 dark:text-amber-400">⚠️ Se o Windows SmartScreen bloquear:</strong>
-                  <ul className="ml-8 list-disc space-y-1 text-xs mt-1 text-foreground">
-                    <li>Clique em <strong>"Mais informações"</strong> → <strong>"Executar assim mesmo"</strong>.</li>
-                  </ul>
-                </li>
-                <li>Para abrir: <strong>Menu Iniciar → Coletor Pilar</strong>. Ele também abrirá sozinho no próximo boot.</li>
-                <li>Desinstalação: <strong>Configurações do Windows → Aplicativos → Coletor Pilar → Desinstalar</strong>.</li>
-              </ol>
-            </div>
-            <p>Após abrir o app: faça login com o usuário do CRM, cadastre os relógios em <strong>Equipamentos</strong> e o coletor sincroniza a cada 60s.</p>
-          </div>
-          <div className="rounded-md bg-muted/50 p-3 text-xs">
-            <p className="font-medium mb-1">Marcas e protocolos suportados</p>
-            <p className="text-muted-foreground">
-              Control iD (REP iDClass, iDFace) · Henry (Prisma, Hexa) · Topdata (Inner Rep) · ZKTeco · Madis · qualquer relógio compatível com Portaria 671/2021.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="space-y-2 p-5">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-success" />
-            <h3 className="font-semibold">Status da integração</h3>
-          </div>
-          <ul className="ml-7 list-disc space-y-1 text-sm text-muted-foreground">
-            <li>Conexão direta com Lovable Cloud via HTTPS</li>
-            <li>Assinatura digital de cada batida (hash SHA-256)</li>
-            <li>NSR (Número Sequencial de Registro) gerado pelo REP</li>
-            <li>Retenção local de 7 dias caso a internet caia</li>
-            <li>Compatível com exportação para Domínio Sistemas Web (folha)</li>
+          <ul className="space-y-2 text-sm">
+            <li className="flex items-start gap-2">
+              <Clock className="mt-0.5 h-4 w-4 text-primary" />
+              <span><b>Sistema de Coleta do Ponto</b> — coleta batidas TCP/IP dos relógios REP (Windows · macOS · Linux).</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Camera className="mt-0.5 h-4 w-4 text-primary" />
+              <span><b>Coletor Desktop (Câmeras)</b> — snapshots das câmeras IP para Controle de Veículos.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Smartphone className="mt-0.5 h-4 w-4 text-primary" />
+              <span><b>Pilar SMS (APK)</b> — envio de SMS pelo chip do celular Android.</span>
+            </li>
           </ul>
+          <Button asChild size="lg" className="w-full sm:w-auto">
+            <Link to="/admin/apps">
+              Ir para Admin → Apps <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="space-y-2 p-5 text-sm text-muted-foreground">
+          <p className="font-medium text-foreground">Por que ficou lá?</p>
+          <p>
+            Reunimos todos os instaladores auxiliares em uma única tela para facilitar a atualização
+            e evitar versões duplicadas. Além do download, a página <b>Admin → Apps</b> traz o passo a passo
+            de instalação e os dados de conexão prontos para copiar.
+          </p>
         </CardContent>
       </Card>
     </div>
