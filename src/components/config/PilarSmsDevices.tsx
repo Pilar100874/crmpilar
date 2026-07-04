@@ -180,7 +180,9 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
       ) : devices.length === 0 ? (
         <div className="text-center text-sm text-muted-foreground py-4 border rounded-md">Nenhum dispositivo cadastrado.</div>
       ) : (
-        <div className="w-full overflow-x-auto">
+        <>
+        {/* Desktop: tabela */}
+        <div className="hidden lg:block w-full overflow-hidden border rounded-md">
         <Table>
           <TableHeader>
             <TableRow>
@@ -224,53 +226,28 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => toggleModulo(d, 'modulo_sms_ativo')}
-                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition ${
-                        d.modulo_sms_ativo ? 'bg-primary/10 border-primary/40 text-primary' : 'bg-muted text-muted-foreground'
-                      }`}
-                      title="Módulo SMS"
-                    >
+                    <button type="button" onClick={() => toggleModulo(d, 'modulo_sms_ativo')}
+                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition ${d.modulo_sms_ativo ? 'bg-primary/10 border-primary/40 text-primary' : 'bg-muted text-muted-foreground'}`}>
                       <MessageSquare className="h-3 w-3" /> SMS
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => toggleModulo(d, 'modulo_ponto_ativo')}
-                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition ${
-                        d.modulo_ponto_ativo ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400' : 'bg-muted text-muted-foreground'
-                      }`}
-                      title="Módulo Ponto"
-                    >
+                    <button type="button" onClick={() => toggleModulo(d, 'modulo_ponto_ativo')}
+                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition ${d.modulo_ponto_ativo ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
                       <Clock className="h-3 w-3" /> Ponto
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => toggleModulo(d, 'modulo_camera_ativo')}
-                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition ${
-                        d.modulo_camera_ativo ? 'bg-blue-500/10 border-blue-500/40 text-blue-600 dark:text-blue-400' : 'bg-muted text-muted-foreground'
-                      }`}
-                      title="Módulo Câmera"
-                    >
+                    <button type="button" onClick={() => toggleModulo(d, 'modulo_camera_ativo')}
+                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition ${d.modulo_camera_ativo ? 'bg-blue-500/10 border-blue-500/40 text-blue-600 dark:text-blue-400' : 'bg-muted text-muted-foreground'}`}>
                       <Camera className="h-3 w-3" /> Câmera
                     </button>
                   </div>
                 </TableCell>
                 <TableCell className="text-xs">
                   <div className="flex items-center gap-2">
-                    <StatusPingDot
-                      at={d.ultimo_heartbeat ?? d.ultimo_ping}
-                      label={`Dispositivo ${d.nome} (${d.tipo_dispositivo})`}
-                      dotOnly
-                    />
+                    <StatusPingDot at={d.ultimo_heartbeat ?? d.ultimo_ping} label={`Dispositivo ${d.nome} (${d.tipo_dispositivo})`} dotOnly />
                     <span>{pingLabel(d.ultimo_ping)}</span>
                   </div>
                 </TableCell>
-
                 <TableCell className="text-xs">
-                  {d.bateria != null
-                    ? <Badge variant={d.bateria > 20 ? 'default' : 'destructive'}>{d.bateria}%</Badge>
-                    : '—'}
+                  {d.bateria != null ? <Badge variant={d.bateria > 20 ? 'default' : 'destructive'}>{d.bateria}%</Badge> : '—'}
                 </TableCell>
                 <TableCell><Switch checked={d.ativo} onCheckedChange={() => toggleAtivo(d)} /></TableCell>
                 <TableCell>
@@ -291,6 +268,76 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
           </TableBody>
         </Table>
         </div>
+
+        {/* Mobile / tablet: cards */}
+        <div className="lg:hidden space-y-3">
+          {devices.map((d) => (
+            <div key={d.id} className="border rounded-lg bg-card">
+              <div className="p-3 space-y-2">
+                <div className="flex items-start justify-between gap-2 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    {d.tipo_dispositivo === 'windows' && (
+                      <button onClick={() => setExpandido(expandido === d.id ? null : d.id)} className="text-muted-foreground shrink-0">
+                        {expandido === d.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      </button>
+                    )}
+                    <span className="shrink-0">{tipoIcon(d.tipo_dispositivo)}</span>
+                    <div className="min-w-0">
+                      <div className="font-medium text-sm truncate">{d.nome}</div>
+                      <div className="text-[10px] text-muted-foreground uppercase truncate">
+                        {d.tipo_dispositivo}{d.versao_app ? ` · v${d.versao_app}` : ''}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Switch checked={d.ativo} onCheckedChange={() => toggleAtivo(d)} />
+                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setToDelete(d)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => toggleModulo(d, 'modulo_sms_ativo')}
+                    className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition ${d.modulo_sms_ativo ? 'bg-primary/10 border-primary/40 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                    <MessageSquare className="h-3 w-3" /> SMS
+                  </button>
+                  <button type="button" onClick={() => toggleModulo(d, 'modulo_ponto_ativo')}
+                    className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition ${d.modulo_ponto_ativo ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
+                    <Clock className="h-3 w-3" /> Ponto
+                  </button>
+                  <button type="button" onClick={() => toggleModulo(d, 'modulo_camera_ativo')}
+                    className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition ${d.modulo_camera_ativo ? 'bg-blue-500/10 border-blue-500/40 text-blue-600 dark:text-blue-400' : 'bg-muted text-muted-foreground'}`}>
+                    <Camera className="h-3 w-3" /> Câmera
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs pt-1 border-t">
+                  <div className="flex items-center gap-1.5">
+                    <StatusPingDot at={d.ultimo_heartbeat ?? d.ultimo_ping} label={`Dispositivo ${d.nome} (${d.tipo_dispositivo})`} dotOnly />
+                    <span className="text-muted-foreground">Ping:</span>
+                    <span>{pingLabel(d.ultimo_ping)}</span>
+                  </div>
+                  {d.bateria != null && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">Bateria:</span>
+                      <Badge variant={d.bateria > 20 ? 'default' : 'destructive'} className="text-[10px]">{d.bateria}%</Badge>
+                    </div>
+                  )}
+                  <Button size="sm" variant="ghost" onClick={() => copiar(d.token)} className="font-mono text-[10px] h-6 px-2 ml-auto">
+                    {d.token.slice(0, 8)}… <Copy className="h-3 w-3 ml-1" />
+                  </Button>
+                </div>
+              </div>
+              {expandido === d.id && d.tipo_dispositivo === 'windows' && (
+                <div className="p-2 bg-muted/20 border-t">
+                  <PilarCamerasCRUD deviceId={d.id} estabelecimentoId={estabelecimentoId} />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        </>
       )}
 
       <DeleteConfirmDialog

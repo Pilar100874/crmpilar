@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Send, Save, MessageSquare, BookOpen, Smartphone, Globe, Shield, Download, AppWindow, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -392,7 +393,8 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
           <CardDescription>Histórico dos 20 SMS mais recentes</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="w-full overflow-x-auto">
+          {/* Desktop: tabela */}
+          <div className="hidden md:block w-full overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -424,6 +426,29 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
                 )}
               </TableBody>
             </Table>
+          </div>
+
+          {/* Mobile: cards */}
+          <div className="md:hidden space-y-2">
+            {historico.length === 0 && (
+              <div className="text-center text-sm text-muted-foreground py-6">Nenhum SMS enviado ainda</div>
+            )}
+            {historico.map((h) => (
+              <div key={h.id} className="border rounded-md p-2.5 text-xs space-y-1">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-muted-foreground">{new Date(h.created_at).toLocaleString('pt-BR')}</span>
+                  <span className={h.status === 'sent' ? 'text-green-600 font-medium' : 'text-destructive font-medium'}>
+                    {h.status}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="outline" className="text-[10px]">{h.provider}</Badge>
+                  <span className="font-mono">{h.destino}</span>
+                </div>
+                <div className="text-foreground break-words line-clamp-2">{h.mensagem}</div>
+                {h.erro && <div className="text-destructive text-[11px] break-words">{h.erro}</div>}
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

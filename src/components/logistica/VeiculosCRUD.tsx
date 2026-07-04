@@ -421,7 +421,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         </Button>
       </div>
 
-      <div className="border rounded-lg overflow-x-auto">
+      {/* Desktop / tablet grande: tabela */}
+      <div className="hidden lg:block border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -519,6 +520,75 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile / tablet: cards */}
+      <div className="lg:hidden space-y-3">
+        {filteredVeiculos.length === 0 && (
+          <div className="border rounded-lg py-8 text-center text-sm text-muted-foreground">
+            {loading ? 'Carregando...' : 'Nenhum veículo encontrado'}
+          </div>
+        )}
+        {filteredVeiculos.map(veiculo => {
+          const modelId = (veiculo as any).tracker_model_id as string | undefined;
+          const model = modelId ? trackerModels.find(m => m.id === modelId) : null;
+          return (
+            <div key={veiculo.id} className="border rounded-lg p-3 space-y-2 bg-card">
+              <div className="flex items-start justify-between gap-2 min-w-0">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono font-semibold text-base">{veiculo.placa}</span>
+                    <Badge variant={veiculo.ativo ? 'default' : 'secondary'} className="text-[10px]">
+                      {veiculo.ativo ? 'Ativo' : 'Inativo'}
+                    </Badge>
+                  </div>
+                  {veiculo.descricao && (
+                    <div className="text-xs text-muted-foreground truncate mt-0.5">{veiculo.descricao}</div>
+                  )}
+                </div>
+                <div className="flex items-center gap-0.5 shrink-0">
+                  {model && (veiculo as any).telefone_sms && (
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => reconfigurarVeiculo(veiculo)} title="Reenviar SMS">
+                      <RefreshCw className="h-4 w-4 text-blue-600" />
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="icon" className="h-8 w-8" title="Combustível"
+                    onClick={() => { setVeiculoBloqueio(veiculo); setBloqueioOpen(true); }}>
+                    <Fuel className="h-4 w-4 text-amber-600" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenDialog(veiculo)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8"
+                    onClick={() => { setSelectedVeiculo(veiculo); setDeleteDialogOpen(true); }}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                {veiculo.motorista && (
+                  <div className="min-w-0">
+                    <span className="text-muted-foreground">Motorista: </span>
+                    <span className="truncate">{veiculo.motorista}</span>
+                  </div>
+                )}
+                {veiculo.tipo_veiculo && (
+                  <div className="min-w-0">
+                    <span className="text-muted-foreground">Tipo: </span>
+                    <span>{veiculo.tipo_veiculo}</span>
+                  </div>
+                )}
+              </div>
+              {model && (
+                <div className="flex items-center gap-2 flex-wrap pt-1 border-t">
+                  <span className="text-[11px] text-muted-foreground">Rastreador:</span>
+                  <span className="text-xs font-medium truncate">{model.nome}</span>
+                  {renderTrackerStatusBadge(veiculo)}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Create/Edit Dialog */}
