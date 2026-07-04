@@ -4723,6 +4723,8 @@ export type Database = {
           cor_primaria: string | null
           cor_secundaria: string | null
           created_at: string
+          denuncias_config: Json
+          denuncias_enabled: boolean
           depoimentos: Json | null
           estabelecimento_id: string
           feat_avaliacoes: boolean | null
@@ -4752,6 +4754,8 @@ export type Database = {
           hero_subtitulo: string | null
           hero_titulo: string | null
           id: string
+          lgpd_config: Json
+          lgpd_enabled: boolean
           logo_url: string | null
           modo_catalogo: boolean
           modo_catalogo_b2b: boolean | null
@@ -4795,6 +4799,8 @@ export type Database = {
           cor_primaria?: string | null
           cor_secundaria?: string | null
           created_at?: string
+          denuncias_config?: Json
+          denuncias_enabled?: boolean
           depoimentos?: Json | null
           estabelecimento_id: string
           feat_avaliacoes?: boolean | null
@@ -4824,6 +4830,8 @@ export type Database = {
           hero_subtitulo?: string | null
           hero_titulo?: string | null
           id?: string
+          lgpd_config?: Json
+          lgpd_enabled?: boolean
           logo_url?: string | null
           modo_catalogo?: boolean
           modo_catalogo_b2b?: boolean | null
@@ -4867,6 +4875,8 @@ export type Database = {
           cor_primaria?: string | null
           cor_secundaria?: string | null
           created_at?: string
+          denuncias_config?: Json
+          denuncias_enabled?: boolean
           depoimentos?: Json | null
           estabelecimento_id?: string
           feat_avaliacoes?: boolean | null
@@ -4896,6 +4906,8 @@ export type Database = {
           hero_subtitulo?: string | null
           hero_titulo?: string | null
           id?: string
+          lgpd_config?: Json
+          lgpd_enabled?: boolean
           logo_url?: string | null
           modo_catalogo?: boolean
           modo_catalogo_b2b?: boolean | null
@@ -4966,6 +4978,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ecommerce_denuncias: {
+        Row: {
+          anonimo: boolean
+          categoria: string | null
+          created_at: string
+          data_ocorrencia: string | null
+          descricao: string
+          email: string | null
+          estabelecimento_id: string
+          id: string
+          local_ocorrencia: string | null
+          nome: string | null
+          respondido_em: string | null
+          resposta_interna: string | null
+          status: string
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          anonimo?: boolean
+          categoria?: string | null
+          created_at?: string
+          data_ocorrencia?: string | null
+          descricao: string
+          email?: string | null
+          estabelecimento_id: string
+          id?: string
+          local_ocorrencia?: string | null
+          nome?: string | null
+          respondido_em?: string | null
+          resposta_interna?: string | null
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          anonimo?: boolean
+          categoria?: string | null
+          created_at?: string
+          data_ocorrencia?: string | null
+          descricao?: string
+          email?: string | null
+          estabelecimento_id?: string
+          id?: string
+          local_ocorrencia?: string | null
+          nome?: string | null
+          respondido_em?: string | null
+          resposta_interna?: string | null
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       ecommerce_rules: {
         Row: {
