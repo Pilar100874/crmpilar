@@ -137,6 +137,25 @@ async function enviarSnapshot(cfg, cam, snap) {
   }
 }
 
+async function reportarStatus(cfg, resultados) {
+  try {
+    await fetch(`${cfg.url}/functions/v1/cv-coletor-cameras`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: cfg.anonKey,
+        Authorization: `Bearer ${cfg.anonKey}`,
+      },
+      body: JSON.stringify({
+        action: 'report_status',
+        reports: resultados.map(r => ({ id: r.id, status: r.status, erro: r.erro })),
+      }),
+    });
+  } catch (e) {
+    console.error('[cameras] report_status', e.message);
+  }
+}
+
 async function verificarCameras(cfg) {
   const cams = await listarCameras(cfg);
   const resultados = [];
@@ -157,7 +176,10 @@ async function verificarCameras(cfg) {
       });
     }
   }
+  // Persiste status no CRM para exibição na tela de câmeras
+  if (resultados.length) await reportarStatus(cfg, resultados);
   return resultados;
 }
 
 module.exports = { verificarCameras, fetchSnapshot, listarCameras };
+
