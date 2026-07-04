@@ -256,7 +256,17 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
                     </button>
                   </div>
                 </TableCell>
-                <TableCell className="text-xs">{pingLabel(d.ultimo_ping)}</TableCell>
+                <TableCell className="text-xs">
+                  <div className="flex items-center gap-2">
+                    <StatusPingDot
+                      at={d.ultimo_heartbeat ?? d.ultimo_ping}
+                      label={`Dispositivo ${d.nome} (${d.tipo_dispositivo})`}
+                      dotOnly
+                    />
+                    <span>{pingLabel(d.ultimo_ping)}</span>
+                  </div>
+                </TableCell>
+
                 <TableCell className="text-xs">
                   {d.bateria != null
                     ? <Badge variant={d.bateria > 20 ? 'default' : 'destructive'}>{d.bateria}%</Badge>
