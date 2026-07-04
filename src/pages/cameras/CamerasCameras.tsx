@@ -186,6 +186,32 @@ export default function CamerasCameras() {
         <Switch checked={collectorEnabled} onCheckedChange={toggleCollector} />
       </Card>
 
+      {/* Legenda de status */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-md border bg-muted/30 px-3 py-2 text-xs">
+        <span className="font-semibold text-muted-foreground uppercase tracking-wider">Legenda:</span>
+        <span className="flex items-center gap-1.5">
+          <Badge variant="secondary" className="h-5">Interna</Badge>
+          <span className="text-muted-foreground">precisa do Coletor Desktop</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Badge variant="default" className="h-5">Pública</Badge>
+          <span className="text-muted-foreground">CRM acessa direto pelo IP</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.9)]" />
+          <span className="text-muted-foreground">comunicando</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-amber-400" />
+          <span className="text-muted-foreground">instável</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+          <span className="text-muted-foreground">sem contato</span>
+        </span>
+      </div>
+
+
       <div className="flex flex-col sm:flex-row sm:items-center gap-2">
         <Label className="text-sm text-muted-foreground shrink-0">Filtrar por grupo:</Label>
         <Select value={filtroGrupo} onValueChange={setFiltroGrupo}>
