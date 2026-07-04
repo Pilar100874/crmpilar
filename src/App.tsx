@@ -277,6 +277,7 @@ const App = () => (
         <Sonner />
         
         <BrowserRouter>
+          <ScrollToTop />
           <UnsavedChangesProvider>
           <SystemThemeLoader />
           <WatchRedirectWrapper />
