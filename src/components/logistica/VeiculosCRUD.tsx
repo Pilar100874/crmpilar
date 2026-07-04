@@ -792,7 +792,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             </div>
           </div>
 
-          <DialogFooter className="px-6 py-3 border-t bg-muted/30">
+          <DialogFooter className="px-4 sm:px-6 py-3 border-t bg-muted/30 gap-2">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
