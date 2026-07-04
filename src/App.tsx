@@ -417,6 +417,7 @@ const App = () => (
               <Route path="/ads/automation/:id" element={<AdsAutomation />} />
               <Route path="/railway-env" element={<RailwayEnvVariables />} />
               <Route path="/admin/support-tickets" element={<SupportTickets />} />
+              <Route path="/admin/apps" element={<AdminApps />} />
               <Route path="/meus-tickets" element={<MeusTickets />} />
               <Route path="/ponto" element={<PontoLayout />}>
                 <Route index element={<PontoDashboard />} />
