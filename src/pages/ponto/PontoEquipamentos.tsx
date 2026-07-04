@@ -275,10 +275,20 @@ export default function PontoEquipamentos() {
                       {e.tipo_relogio} · {e.modelo || e.marca}
                     </p>
                   </div>
-                  <Badge variant={e.status === "online" ? "default" : "secondary"}>
-                    {e.status}
-                  </Badge>
+                  <div className="flex items-center gap-1.5">
+                    <StatusPingDot
+                      at={e.ultima_sync}
+                      status={e.status}
+                      erro={e.ultimo_erro}
+                      label={`Relógio ${e.nome} · via Coletor Desktop`}
+                      dotOnly
+                    />
+                    <Badge variant={e.status === "online" ? "default" : "secondary"}>
+                      {e.status}
+                    </Badge>
+                  </div>
                 </div>
+
                 {e.nome_local && <p className="text-xs">📍 {e.nome_local}</p>}
                 {e.ip && <p className="text-xs">{e.usa_https ? "https" : "http"}://{e.ip}:{e.porta}</p>}
                 {e.numero_fabricacao && (
