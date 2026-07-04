@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Send, Save, MessageSquare, BookOpen, Smartphone, Globe, Shield, Download } from 'lucide-react';
+import { Send, Save, MessageSquare, BookOpen, Smartphone, Globe, Shield, Download, AppWindow, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import PilarSmsDevices from './PilarSmsDevices';
 
 
