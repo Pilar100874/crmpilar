@@ -13,14 +13,14 @@ object ApiClient {
 
     private val JSON = "application/json; charset=utf-8".toMediaType()
 
-    fun post(path: String, jsonBody: String): String {
-        val req = Request.Builder()
+    fun post(path: String, jsonBody: String, extraHeaders: Map<String, String> = emptyMap()): String {
+        val builder = Request.Builder()
             .url("${BuildConfig.SUPABASE_URL}/functions/v1/$path")
             .addHeader("Authorization", "Bearer ${BuildConfig.SUPABASE_ANON_KEY}")
             .addHeader("apikey", BuildConfig.SUPABASE_ANON_KEY)
             .addHeader("Content-Type", "application/json")
-            .post(jsonBody.toRequestBody(JSON))
-            .build()
+        for ((k, v) in extraHeaders) builder.addHeader(k, v)
+        val req = builder.post(jsonBody.toRequestBody(JSON)).build()
         client.newCall(req).execute().use { r ->
             return r.body?.string().orEmpty()
         }
