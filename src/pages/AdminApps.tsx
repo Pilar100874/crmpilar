@@ -215,7 +215,7 @@ export default function AdminApps() {
       </Card>
 
       {/* Grid de apps */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 sm:gap-8 xl:grid-cols-2">
         <AppTile
           accent="blue"
           icon={<Monitor className="h-8 w-8" />}
