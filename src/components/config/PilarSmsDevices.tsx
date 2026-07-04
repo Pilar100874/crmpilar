@@ -277,6 +277,7 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
             ))}
           </TableBody>
         </Table>
+        </div>
       )}
 
       <DeleteConfirmDialog
