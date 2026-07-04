@@ -544,6 +544,8 @@ const App = () => (
               <Route path="trocas-devolucoes" element={<EcommerceInstitutional page="trocas" />} />
               <Route path="politica-privacidade" element={<EcommerceInstitutional page="privacidade" />} />
               <Route path="termos-uso" element={<EcommerceInstitutional page="termos" />} />
+              <Route path="denuncias" element={<EcommerceDenuncias />} />
+              <Route path="lgpd" element={<EcommerceLGPD />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
