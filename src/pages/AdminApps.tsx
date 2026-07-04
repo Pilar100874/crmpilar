@@ -182,35 +182,38 @@ export default function AdminApps() {
             Após instalar qualquer um dos apps abaixo, cole estes dados na tela de configuração inicial:
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5 rounded-lg border bg-background p-3.5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  <Database className="h-3.5 w-3.5 text-primary" /> URL do backend
+            <div className="min-w-0 space-y-1.5 overflow-hidden rounded-lg border bg-background p-3.5 shadow-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex min-w-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Database className="h-3.5 w-3.5 flex-shrink-0 text-primary" />
+                  <span className="truncate">URL do backend</span>
                 </span>
-                <Button variant="ghost" size="icon" className="h-7 w-7"
+                <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0"
                   onClick={() => { navigator.clipboard.writeText(SUPABASE_URL); toast.success("URL copiada!"); }}>
                   <Copy className="h-3.5 w-3.5" />
                 </Button>
               </div>
-              <code className="block select-all break-all rounded border bg-muted/60 p-2 font-mono text-xs">
+              <code className="block w-full select-all break-all rounded border bg-muted/60 p-2 font-mono text-[11px] leading-snug">
                 {SUPABASE_URL}
               </code>
             </div>
-            <div className="space-y-1.5 rounded-lg border bg-background p-3.5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  <Key className="h-3.5 w-3.5 text-yellow-500" /> Chave Anon
+            <div className="min-w-0 space-y-1.5 overflow-hidden rounded-lg border bg-background p-3.5 shadow-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex min-w-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Key className="h-3.5 w-3.5 flex-shrink-0 text-yellow-500" />
+                  <span className="truncate">Chave Anon</span>
                 </span>
-                <Button variant="ghost" size="icon" className="h-7 w-7"
+                <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0"
                   onClick={() => { navigator.clipboard.writeText(SUPABASE_ANON); toast.success("Chave copiada!"); }}>
                   <Copy className="h-3.5 w-3.5" />
                 </Button>
               </div>
-              <code className="block max-w-full select-all truncate rounded border bg-muted/60 p-2 font-mono text-xs" title="Clique em copiar">
-                eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...eFkzWc
+              <code className="block w-full select-all truncate rounded border bg-muted/60 p-2 font-mono text-[11px] leading-snug" title="Clique em copiar">
+                eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…eFkzWc
               </code>
             </div>
           </div>
+
         </CardContent>
       </Card>
 
