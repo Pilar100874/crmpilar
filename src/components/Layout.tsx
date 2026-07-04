@@ -66,6 +66,8 @@ import { MENUS_DISPONIVEIS } from "@/lib/menus";
 import { LayoutContext } from "@/contexts/LayoutContext";
 import { useAtalhos } from "@/hooks/useAtalhos";
 import { useAvisosSistema } from "@/hooks/useAvisosSistema";
+import { AppsHealthIndicator } from "@/components/AppsHealthIndicator";
+
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import {
   AlertDialog,
@@ -1203,8 +1205,14 @@ export default function Layout({ children }: LayoutProps) {
             </div>
           </ScrollArea>
 
+          {/* Indicador discreto do status dos apps (Windows/Android) */}
+          <div className={`border-t border-sidebar-border/40 ${menuLocked ? 'px-1 py-1.5 flex justify-center' : 'px-3 py-1.5'}`}>
+            <AppsHealthIndicator compact={menuLocked} />
+          </div>
+
           {/* Ícones no rodapé */}
           <div className={`border-t border-sidebar-border/50 bg-sidebar py-3 flex flex-col gap-2 ${menuLocked ? 'items-center' : 'px-4'}`}>
+
             {/* Botão de travar/destravar - só aparece em telas maiores que 1024px */}
             {!isSmallScreen && (
               <button
