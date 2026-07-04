@@ -3949,6 +3949,7 @@ export type Database = {
           created_at: string
           id: string
           intervalo_poll_segundos: number
+          ponto_habilitado: boolean
           updated_at: string
         }
         Insert: {
@@ -3956,6 +3957,7 @@ export type Database = {
           created_at?: string
           id?: string
           intervalo_poll_segundos?: number
+          ponto_habilitado?: boolean
           updated_at?: string
         }
         Update: {
@@ -3963,6 +3965,7 @@ export type Database = {
           created_at?: string
           id?: string
           intervalo_poll_segundos?: number
+          ponto_habilitado?: boolean
           updated_at?: string
         }
         Relationships: []
