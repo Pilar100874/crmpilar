@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import {
   Download, Monitor, CheckCircle2, Copy, Database, Key, Camera,
   Smartphone, Clock, Shield, Info,
@@ -23,6 +22,108 @@ const baixar = (file: string, url: string) => {
   document.body.removeChild(a);
   toast.success("Download iniciado");
 };
+
+type Step = { text: React.ReactNode };
+
+function AppTile(props: {
+  accent: "blue" | "green";
+  icon: React.ReactNode;
+  platform: string;
+  title: string;
+  description: React.ReactNode;
+  modules?: React.ReactNode;
+  fileLabelBadge: string;
+  fileName: string;
+  onDownload: () => void;
+  downloadButtonText: string;
+  steps: Step[];
+  footer?: React.ReactNode;
+}) {
+  const accentBox = props.accent === "blue"
+    ? "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300"
+    : "bg-green-50 text-green-600 dark:bg-green-950/40 dark:text-green-300";
+  const accentHover = props.accent === "blue"
+    ? "hover:border-blue-200 dark:hover:border-blue-900"
+    : "hover:border-green-200 dark:hover:border-green-900";
+  const btnColor = props.accent === "blue"
+    ? "bg-blue-500 hover:bg-blue-400 text-white"
+    : "bg-green-600 hover:bg-green-500 text-white";
+
+  return (
+    <Card className={`flex flex-col overflow-hidden rounded-3xl border shadow-sm transition-all duration-300 hover:shadow-xl ${accentHover}`}>
+      <CardContent className="flex-1 p-8">
+        <div className="mb-6 flex items-start justify-between">
+          <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${accentBox}`}>
+            {props.icon}
+          </div>
+          <span className="rounded-full border bg-muted px-3 py-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            {props.platform}
+          </span>
+        </div>
+
+        <h2 className="mb-2 text-2xl font-bold text-foreground">{props.title}</h2>
+        <div className="mb-8 text-sm leading-relaxed text-muted-foreground">{props.description}</div>
+
+        {props.modules && <div className="mb-8 space-y-3">{props.modules}</div>}
+
+        <div className="flex items-center justify-between rounded-2xl bg-foreground p-2 pl-4">
+          <div className="flex min-w-0 flex-col">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-background/60">
+              {props.fileLabelBadge}
+            </span>
+            <span className="truncate font-mono text-sm text-background">{props.fileName}</span>
+          </div>
+          <Button
+            onClick={props.onDownload}
+            className={`flex-shrink-0 rounded-xl px-6 py-3 text-sm font-bold transition-colors ${btnColor}`}
+          >
+            <Download className="mr-2 h-4 w-4" /> {props.downloadButtonText}
+          </Button>
+        </div>
+      </CardContent>
+
+      <div className="border-t bg-muted/40 p-8">
+        <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          Como instalar e usar
+        </h3>
+        <ol className="space-y-4">
+          {props.steps.map((s, i) => (
+            <li key={i} className="flex gap-4">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">
+                {i + 1}
+              </span>
+              <p className="text-sm leading-relaxed text-muted-foreground">{s.text}</p>
+            </li>
+          ))}
+        </ol>
+        {props.footer}
+      </div>
+    </Card>
+  );
+}
+
+function ModuleToggle({ icon: Icon, label, description, checked, onChange, accent }: {
+  icon: any; label: string; description: string; checked: boolean; onChange: (v: boolean) => void; accent: "blue" | "green";
+}) {
+  const dot = accent === "blue" ? "bg-blue-500" : "bg-green-500";
+  return (
+    <div className="flex items-start justify-between gap-3 rounded-xl border bg-muted/40 p-4">
+      <div className="flex items-start gap-3">
+        <div className="mt-1 flex flex-col items-center gap-1">
+          <span className={`h-2 w-2 rounded-full ${dot}`} />
+        </div>
+        <div>
+          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <Icon className="h-4 w-4 text-muted-foreground" />
+            {label}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+        </div>
+      </div>
+      <Switch checked={checked} onCheckedChange={onChange} />
+    </div>
+  );
+}
 
 export default function AdminApps() {
   const [camerasEnabled, setCamerasEnabled] = useState(false);
@@ -62,18 +163,17 @@ export default function AdminApps() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 p-4 sm:p-6">
+    <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6 md:p-8">
       <div>
-        <h1 className="text-2xl font-semibold sm:text-3xl">Apps & Instaladores</h1>
+        <h1 className="text-2xl font-semibold sm:text-3xl">Apps &amp; Instaladores</h1>
         <p className="text-sm text-muted-foreground">
-          Central de downloads dos aplicativos auxiliares do CRM Pilar: Coletor Desktop (Ponto + Câmeras)
-          e APK Pilar SMS.
+          Central de downloads dos aplicativos auxiliares do CRM Pilar: Coletor Desktop (Ponto + Câmeras) e APK Pilar SMS.
         </p>
       </div>
 
-      {/* Dados de conexão comuns */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="space-y-3 p-5">
+      {/* Dados de conexão */}
+      <Card className="rounded-3xl border-primary/20 bg-primary/5">
+        <CardContent className="space-y-3 p-5 sm:p-6">
           <div className="flex items-center gap-2">
             <Database className="h-5 w-5 text-primary" />
             <h3 className="font-semibold">Dados de conexão (para configurar os apps)</h3>
@@ -92,7 +192,7 @@ export default function AdminApps() {
                   <Copy className="h-3.5 w-3.5" />
                 </Button>
               </div>
-              <code className="block select-all break-all rounded border bg-muted/60 p-2 text-xs font-mono">
+              <code className="block select-all break-all rounded border bg-muted/60 p-2 font-mono text-xs">
                 {SUPABASE_URL}
               </code>
             </div>
@@ -106,7 +206,7 @@ export default function AdminApps() {
                   <Copy className="h-3.5 w-3.5" />
                 </Button>
               </div>
-              <code className="block select-all break-all rounded border bg-muted/60 p-2 text-xs font-mono truncate max-w-full" title="Clique em copiar">
+              <code className="block max-w-full select-all truncate rounded border bg-muted/60 p-2 font-mono text-xs" title="Clique em copiar">
                 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...eFkzWc
               </code>
             </div>
@@ -114,151 +214,113 @@ export default function AdminApps() {
         </CardContent>
       </Card>
 
-      {/* Coletor Desktop UNIFICADO */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex flex-wrap items-center gap-2">
-            <Monitor className="h-5 w-5 text-primary" />
-            Coletor Desktop (Ponto + Câmeras)
-            <Badge variant="secondary">Windows · MSI x64</Badge>
-          </CardTitle>
-          <CardDescription>
-            Um único aplicativo instalado no PC da rede. Roda como serviço do Windows e pode
-            operar os dois módulos ao mesmo tempo, cada um ligado/desligado de forma independente
-            direto por esta tela — a configuração é sincronizada com o app em segundos.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Card className="border-primary/20">
-              <CardContent className="flex items-start justify-between gap-3 p-4">
-                <div className="flex items-start gap-3">
-                  <Clock className="mt-0.5 h-5 w-5 text-primary" />
-                  <div>
-                    <p className="font-medium">Módulo de Ponto</p>
-                    <p className="text-xs text-muted-foreground">
-                      Coleta batidas TCP/IP dos relógios REP (Control iD, Henry, Topdata, ZKTeco…),
-                      com assinatura SHA-256, NSR e retenção local de 7 dias.
-                    </p>
-                  </div>
-                </div>
-                <Switch checked={pontoEnabled} onCheckedChange={togglePonto} />
-              </CardContent>
-            </Card>
-
-            <Card className="border-primary/20">
-              <CardContent className="flex items-start justify-between gap-3 p-4">
-                <div className="flex items-start gap-3">
-                  <Camera className="mt-0.5 h-5 w-5 text-primary" />
-                  <div>
-                    <p className="font-medium">Módulo de Câmeras IP</p>
-                    <p className="text-xs text-muted-foreground">
-                      Captura snapshots das câmeras internas cadastradas em Controle de Veículos → Câmeras.
-                    </p>
-                  </div>
-                </div>
-                <Switch checked={camerasEnabled} onCheckedChange={toggleCameras} />
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="flex items-center justify-between gap-4 rounded-md border p-4">
-            <div className="flex items-center gap-3">
-              <Monitor className="h-8 w-8 text-primary" />
-              <div>
-                <p className="font-semibold">Windows 10/11 (Instalador MSI · x64)</p>
-                <p className="text-xs text-muted-foreground">
-                  Instala em <code>C:\Program Files\ColetorPilar</code> · atalho no Menu Iniciar · inicialização automática com o Windows.
-                </p>
-              </div>
+      {/* Grid de apps */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <AppTile
+          accent="blue"
+          icon={<Monitor className="h-8 w-8" />}
+          platform="Windows · MSI"
+          title="Coletor Desktop"
+          description={
+            <>
+              Um único aplicativo instalado no PC da rede. Roda como serviço do Windows e opera os módulos
+              de <b>Ponto</b> e <b>Câmeras</b> ao mesmo tempo. Ative ou desative cada módulo direto por esta tela —
+              a configuração é sincronizada com o app em segundos.
+            </>
+          }
+          modules={
+            <>
+              <ModuleToggle
+                accent="blue"
+                icon={Clock}
+                label="Módulo de Ponto"
+                description="Coleta batidas TCP/IP dos relógios REP (Control iD, Henry, Topdata, ZKTeco…), com assinatura SHA-256, NSR e retenção local de 7 dias."
+                checked={pontoEnabled}
+                onChange={togglePonto}
+              />
+              <ModuleToggle
+                accent="blue"
+                icon={Camera}
+                label="Módulo de Câmeras IP"
+                description="Captura snapshots das câmeras internas cadastradas em Controle de Veículos → Câmeras."
+                checked={camerasEnabled}
+                onChange={toggleCameras}
+              />
+            </>
+          }
+          fileLabelBadge="Instalador"
+          fileName="ColetorPilar-Setup.msi"
+          onDownload={() => baixar("ColetorPilar-Setup.msi", winAsset.url)}
+          downloadButtonText="Baixar .msi"
+          steps={[
+            { text: <>Baixe o <b>ColetorPilar-Setup.msi</b> acima e execute com dois cliques. Se o SmartScreen alertar, clique em <b>Mais informações → Executar assim mesmo</b>.</> },
+            { text: <>Abra o app pelo <b>Menu Iniciar → Coletor Pilar</b> (ele também abre sozinho no próximo boot).</> },
+            { text: <>Cole a <b>URL do backend</b> e a <b>Chave Anon</b> mostradas acima, e faça login com seu usuário do CRM.</> },
+            { text: <>Ative os módulos que você vai usar (Ponto e/ou Câmeras) usando os interruptores acima nesta tela.</> },
+            { text: <>Cadastre os equipamentos: relógios em <b>Controle de Ponto → Equipamentos</b> e câmeras em <b>Controle de Veículos → Câmeras</b>.</> },
+            { text: <>Sincronização automática: batidas a cada 60s (NSR + hash SHA-256) e snapshots conforme configurado por câmera. Compatível com Portaria 671/2021.</> },
+          ]}
+          footer={
+            <div className="mt-4 flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
+              <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+              <p>
+                <b>Dica:</b> se o PC principal cair, o coletor para. Para produção recomendamos um{" "}
+                <b>mini-PC dedicado</b> (ex.: Intel NUC), sempre ligado, na mesma rede dos relógios e câmeras.
+              </p>
             </div>
-            <Button onClick={() => baixar("ColetorPilar-Setup.msi", winAsset.url)}>
-              <Download className="mr-2 h-4 w-4" /> Baixar .msi
-            </Button>
-          </div>
+          }
+        />
 
-          <div className="rounded-md bg-muted/40 p-4 text-sm space-y-2">
-            <p className="font-medium">Como instalar e usar</p>
-            <ol className="ml-5 list-decimal space-y-1 text-muted-foreground">
-              <li>Baixe o <b>ColetorPilar-Setup.msi</b> acima e execute com dois cliques. Se o Windows SmartScreen alertar, clique em <b>Mais informações → Executar assim mesmo</b>.</li>
-              <li>Abra o app pelo <b>Menu Iniciar → Coletor Pilar</b> (ele também abre sozinho no próximo boot).</li>
-              <li>Cole a <b>URL do backend</b> e a <b>Chave Anon</b> mostradas acima, e faça login com seu usuário do CRM.</li>
-              <li>Ative os módulos que você vai usar (Ponto e/ou Câmeras) usando os interruptores acima nesta tela.</li>
-              <li>Cadastre os equipamentos:
-                <ul className="ml-5 list-disc mt-1">
-                  <li><b>Ponto:</b> em <b>Controle de Ponto → Equipamentos</b>, informe IP interno, porta e credenciais de cada REP.</li>
-                  <li><b>Câmeras:</b> em <b>Controle de Veículos → Câmeras</b>, informe URL RTSP/HTTP de cada câmera.</li>
-                </ul>
-              </li>
-              <li>Sincronização automática: batidas a cada 60s (com NSR + hash SHA-256) e snapshots conforme configurado por câmera. Compatível com Portaria 671/2021.</li>
-            </ol>
-            <p className="text-xs text-muted-foreground pt-1">
-              <b>Marcas de relógio suportadas:</b> Control iD (REP iDClass, iDFace) · Henry (Prisma, Hexa) · Topdata (Inner Rep) · ZKTeco · Madis · qualquer REP compatível com a Portaria 671/2021.
-            </p>
-          </div>
-
-          <div className="flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
-            <Info className="mt-0.5 h-4 w-4 text-primary flex-shrink-0" />
-            <p>
-              <b>Dica de infraestrutura:</b> se o PC principal cair, o coletor para. Para produção
-              recomendamos um <b>mini-PC dedicado</b> (ex.: Intel NUC) sempre ligado, na mesma rede
-              dos relógios e das câmeras.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Pilar SMS (APK) */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Smartphone className="h-5 w-5 text-primary" />
-            Pilar SMS (APK Android)
-            <Badge variant="secondary" className="ml-2">Android · Gratuito</Badge>
-          </CardTitle>
-          <CardDescription>
-            App próprio que transforma um celular Android com chip em gateway de SMS do CRM.
-            O CRM enfileira as mensagens e o APK consulta a fila a cada 5s, enviando pelo <code>SmsManager</code> nativo.
-            Não exige IP público, roteador exposto ou Cloudflare — igual ao Coletor Desktop.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between gap-4 rounded-md border p-4">
-            <div className="flex items-center gap-3">
-              <Shield className="h-8 w-8 text-primary" />
-              <div>
-                <p className="font-semibold">Pilar SMS v1.2.0</p>
-                <p className="text-xs text-muted-foreground">Modo Fila · consumo mínimo de bateria</p>
-              </div>
+        <AppTile
+          accent="green"
+          icon={<Smartphone className="h-8 w-8" />}
+          platform="Android · APK"
+          title="Pilar SMS"
+          description={
+            <>
+              App próprio que transforma um celular Android com chip em <b>gateway de SMS</b> do CRM.
+              O CRM enfileira as mensagens e o APK consulta a fila a cada 5s, enviando pelo{" "}
+              <code>SmsManager</code> nativo. Não exige IP público, roteador exposto ou Cloudflare —
+              igual ao Coletor Desktop.
+            </>
+          }
+          modules={
+            <div className="flex items-center gap-3 rounded-xl border border-dashed p-4 text-xs text-muted-foreground">
+              <Shield className="h-4 w-4 text-green-600 dark:text-green-400" />
+              <span>
+                <b className="text-foreground">Modo Fila</b> · consumo mínimo de bateria · vários celulares
+                podem ser cadastrados e dividem a fila automaticamente.
+              </span>
             </div>
-            <Button asChild>
-              <a href="/pilar-sms-v1.2.0.apk" download>
-                <Download className="mr-2 h-4 w-4" /> Baixar APK
-              </a>
-            </Button>
-          </div>
-
-          <div className="rounded-md bg-muted/40 p-4 text-sm space-y-2">
-            <p className="font-medium">Como instalar e usar</p>
-            <ol className="ml-5 list-decimal space-y-1 text-muted-foreground">
-              <li>Em <b>Atendimento → Configurações → SMS</b>, cadastre um celular autorizado (ex.: "Celular Recepção") e copie o <b>token</b> gerado.</li>
-              <li>No Android que ficará ligado 24h com o chip, ative <b>Fontes desconhecidas</b> em Configurações e instale o <b>APK</b> baixado acima.</li>
-              <li>Abra o app, conceda permissão de <b>Enviar SMS</b> e <b>desative a otimização de bateria</b> para o Pilar SMS.</li>
-              <li>Cole o <b>token</b> no app e toque em <b>Conectar</b>. O app já começa a processar a fila.</li>
-              <li>O status do celular (último ping e bateria) aparece automaticamente na lista de celulares autorizados.</li>
-            </ol>
-            <p className="text-xs text-muted-foreground pt-1">
-              <b>Dica:</b> mantenha o celular sempre carregando. Se cair a conexão, os SMS ficam na fila e são reenviados assim que o celular voltar. Vários celulares podem ser cadastrados — eles dividem a fila automaticamente.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+          }
+          fileLabelBadge="Pacote APK"
+          fileName="pilar-sms-v1.2.0.apk"
+          onDownload={() => baixar("pilar-sms-v1.2.0.apk", "/pilar-sms-v1.2.0.apk")}
+          downloadButtonText="Baixar APK"
+          steps={[
+            { text: <>Em <b>Atendimento → Configurações → SMS</b>, cadastre um celular autorizado (ex.: "Celular Recepção") e copie o <b>token</b> gerado.</> },
+            { text: <>No Android que ficará ligado 24h com o chip, ative <b>Fontes desconhecidas</b> nas Configurações e instale o <b>APK</b> baixado acima.</> },
+            { text: <>Abra o app, conceda permissão de <b>Enviar SMS</b> e <b>desative a otimização de bateria</b> para o Pilar SMS.</> },
+            { text: <>Cole o <b>token</b> no app e toque em <b>Conectar</b>. O app já começa a processar a fila.</> },
+            { text: <>O status do celular (último ping e bateria) aparece automaticamente na lista de celulares autorizados.</> },
+          ]}
+          footer={
+            <div className="mt-4 flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
+              <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+              <p>
+                <b>Dica:</b> mantenha o celular sempre carregando. Se cair a conexão, os SMS ficam na fila
+                e são reenviados assim que o celular voltar.
+              </p>
+            </div>
+          }
+        />
+      </div>
 
       <div className="flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
-        <Info className="mt-0.5 h-4 w-4 text-primary flex-shrink-0" />
+        <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
         <p>
-          Todos os apps conectam via HTTPS diretamente ao backend, com assinatura digital das mensagens
-          e retenção local temporária em caso de queda de rede. Compatíveis com Portaria 671/2021 (ponto) e LGPD.
+          Todos os apps conectam via HTTPS diretamente ao backend, com assinatura digital das mensagens e
+          retenção local temporária em caso de queda de rede. Compatíveis com Portaria 671/2021 (ponto) e LGPD.
         </p>
       </div>
 
