@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Palette, CreditCard, Workflow, Truck, FileText, Megaphone, Settings2, PanelBottom, Home, ToggleLeft, Package, Ticket, Building2, Mail, Flame } from "lucide-react";
+import { ArrowLeft, Palette, CreditCard, Workflow, Truck, FileText, Megaphone, Settings2, PanelBottom, Home, ToggleLeft, Package, Ticket, Building2, Mail, Flame, AlertOctagon, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
@@ -131,6 +131,24 @@ const configSections = [
     url: "/ecommerce-config/mapa-calor",
     color: "text-orange-500",
     bg: "bg-orange-500/10",
+  },
+  {
+    id: "denuncias",
+    title: "Canal de Denúncias (NR-1)",
+    description: "Habilite o canal de denúncias na loja e gerencie as ocorrências",
+    icon: AlertOctagon,
+    url: "/ecommerce-config/denuncias",
+    color: "text-red-500",
+    bg: "bg-red-500/10",
+  },
+  {
+    id: "lgpd",
+    title: "LGPD - Privacidade",
+    description: "Habilite e edite a política de privacidade e proteção de dados",
+    icon: Shield,
+    url: "/ecommerce-config/lgpd",
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
   },
 ];
 

@@ -223,6 +223,10 @@ import EcommerceCheckout from "./pages/ecommerce/EcommerceCheckout";
 import EcommerceB2B from "./pages/ecommerce/EcommerceB2B";
 import EcommerceAccount from "./pages/ecommerce/EcommerceAccount";
 import EcommerceInstitutional from "./pages/ecommerce/EcommerceInstitutional";
+import EcommerceDenunciasConfig from "./pages/ecommerce/EcommerceDenunciasConfig";
+import EcommerceLGPDConfig from "./pages/ecommerce/EcommerceLGPDConfig";
+import EcommerceDenuncias from "./pages/ecommerce/EcommerceDenuncias";
+import EcommerceLGPD from "./pages/ecommerce/EcommerceLGPD";
 import EcommerceWishlist from "./pages/ecommerce/EcommerceWishlist";
 import { CartProvider } from "./contexts/CartContext";
 import { WishlistProvider } from "./contexts/WishlistContext";
@@ -327,6 +331,8 @@ const App = () => (
               <Route path="/ecommerce-config/b2b" element={<EcommerceB2BEditor />} />
               <Route path="/ecommerce-config/newsletter" element={<EcommerceNewsletterPage />} />
               <Route path="/ecommerce-config/mapa-calor" element={<EcommerceMapaCalor />} />
+              <Route path="/ecommerce-config/denuncias" element={<EcommerceDenunciasConfig />} />
+              <Route path="/ecommerce-config/lgpd" element={<EcommerceLGPDConfig />} />
               <Route path="/mapa-calor-sistema" element={<MapaCalorSistema />} />
               <Route path="/global-variables" element={<GlobalVariables />} />
               <Route path="/desenho" element={<Desenho />} />
@@ -538,6 +544,8 @@ const App = () => (
               <Route path="trocas-devolucoes" element={<EcommerceInstitutional page="trocas" />} />
               <Route path="politica-privacidade" element={<EcommerceInstitutional page="privacidade" />} />
               <Route path="termos-uso" element={<EcommerceInstitutional page="termos" />} />
+              <Route path="denuncias" element={<EcommerceDenuncias />} />
+              <Route path="lgpd" element={<EcommerceLGPD />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

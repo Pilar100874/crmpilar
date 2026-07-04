@@ -4723,6 +4723,8 @@ export type Database = {
           cor_primaria: string | null
           cor_secundaria: string | null
           created_at: string
+          denuncias_config: Json
+          denuncias_enabled: boolean
           depoimentos: Json | null
           estabelecimento_id: string
           feat_avaliacoes: boolean | null
@@ -4752,6 +4754,8 @@ export type Database = {
           hero_subtitulo: string | null
           hero_titulo: string | null
           id: string
+          lgpd_config: Json
+          lgpd_enabled: boolean
           logo_url: string | null
           modo_catalogo: boolean
           modo_catalogo_b2b: boolean | null
@@ -4795,6 +4799,8 @@ export type Database = {
           cor_primaria?: string | null
           cor_secundaria?: string | null
           created_at?: string
+          denuncias_config?: Json
+          denuncias_enabled?: boolean
           depoimentos?: Json | null
           estabelecimento_id: string
           feat_avaliacoes?: boolean | null
@@ -4824,6 +4830,8 @@ export type Database = {
           hero_subtitulo?: string | null
           hero_titulo?: string | null
           id?: string
+          lgpd_config?: Json
+          lgpd_enabled?: boolean
           logo_url?: string | null
           modo_catalogo?: boolean
           modo_catalogo_b2b?: boolean | null
@@ -4867,6 +4875,8 @@ export type Database = {
           cor_primaria?: string | null
           cor_secundaria?: string | null
           created_at?: string
+          denuncias_config?: Json
+          denuncias_enabled?: boolean
           depoimentos?: Json | null
           estabelecimento_id?: string
           feat_avaliacoes?: boolean | null
@@ -4896,6 +4906,8 @@ export type Database = {
           hero_subtitulo?: string | null
           hero_titulo?: string | null
           id?: string
+          lgpd_config?: Json
+          lgpd_enabled?: boolean
           logo_url?: string | null
           modo_catalogo?: boolean
           modo_catalogo_b2b?: boolean | null
@@ -4966,6 +4978,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ecommerce_denuncias: {
+        Row: {
+          anonimo: boolean
+          categoria: string | null
+          created_at: string
+          data_ocorrencia: string | null
+          descricao: string
+          email: string | null
+          estabelecimento_id: string
+          id: string
+          local_ocorrencia: string | null
+          nome: string | null
+          respondido_em: string | null
+          resposta_interna: string | null
+          status: string
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          anonimo?: boolean
+          categoria?: string | null
+          created_at?: string
+          data_ocorrencia?: string | null
+          descricao: string
+          email?: string | null
+          estabelecimento_id: string
+          id?: string
+          local_ocorrencia?: string | null
+          nome?: string | null
+          respondido_em?: string | null
+          resposta_interna?: string | null
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          anonimo?: boolean
+          categoria?: string | null
+          created_at?: string
+          data_ocorrencia?: string | null
+          descricao?: string
+          email?: string | null
+          estabelecimento_id?: string
+          id?: string
+          local_ocorrencia?: string | null
+          nome?: string | null
+          respondido_em?: string | null
+          resposta_interna?: string | null
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       ecommerce_rules: {
         Row: {
@@ -10506,9 +10572,13 @@ export type Database = {
           ativo: boolean
           created_at: string
           device_id: string
+          empresa_ponto_id: string | null
           estabelecimento_id: string | null
+          filial_id: string | null
+          finalidade: string
           id: string
           nome: string
+          obrigatoria: boolean
           ordem: number
           rtsp_url: string
           senha: string | null
@@ -10519,9 +10589,13 @@ export type Database = {
           ativo?: boolean
           created_at?: string
           device_id: string
+          empresa_ponto_id?: string | null
           estabelecimento_id?: string | null
+          filial_id?: string | null
+          finalidade?: string
           id?: string
           nome: string
+          obrigatoria?: boolean
           ordem?: number
           rtsp_url: string
           senha?: string | null
@@ -10532,9 +10606,13 @@ export type Database = {
           ativo?: boolean
           created_at?: string
           device_id?: string
+          empresa_ponto_id?: string | null
           estabelecimento_id?: string | null
+          filial_id?: string | null
+          finalidade?: string
           id?: string
           nome?: string
+          obrigatoria?: boolean
           ordem?: number
           rtsp_url?: string
           senha?: string | null
