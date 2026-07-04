@@ -523,7 +523,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+        <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 sm:w-full">
           <DialogHeader className="px-6 py-4 border-b bg-muted/30">
             <DialogTitle className="flex items-center gap-2">
               <Car className="h-5 w-5 text-primary" />
