@@ -141,7 +141,7 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
   const currentProvider = PROVIDERS.find(p => p.value === cfg.provider);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-full overflow-x-hidden">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">Provedor de SMS</CardTitle>
