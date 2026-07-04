@@ -483,7 +483,7 @@ const PilarRastreador: React.FC = () => {
             {deviceUuid && (
               <div className="bg-muted/50 rounded-lg p-2 mb-4 border">
                 <p className="text-muted-foreground text-xs">ID do dispositivo:</p>
-                <p className="font-mono text-sm">{deviceUuid}</p>
+                <p className="font-mono text-sm break-all">{deviceUuid}</p>
               </div>
             )}
 
