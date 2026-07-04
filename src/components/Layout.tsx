@@ -46,6 +46,7 @@ import {
   Moon,
   LifeBuoy,
   RefreshCw,
+  AppWindow,
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
