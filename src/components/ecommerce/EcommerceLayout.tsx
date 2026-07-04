@@ -406,6 +406,12 @@ export default function EcommerceLayout() {
                 <li><Link to="/ecommerce/contato" className="hover:text-primary transition-colors">Contato</Link></li>
                 <li><Link to="/ecommerce/faq" className="hover:text-primary transition-colors">FAQ</Link></li>
                 <li><Link to="/ecommerce/politica-privacidade" className="hover:text-primary transition-colors">Privacidade</Link></li>
+                {(branding as any).lgpd_enabled && (
+                  <li><Link to="/ecommerce/lgpd" className="hover:text-primary transition-colors">LGPD</Link></li>
+                )}
+                {(branding as any).denuncias_enabled && (
+                  <li><Link to="/ecommerce/denuncias" className="hover:text-primary transition-colors">Canal de Denúncias</Link></li>
+                )}
                 {branding.footer_links_extras.map((link, i) => (
                   <li key={i}><a href={link.url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">{link.label}</a></li>
                 ))}
