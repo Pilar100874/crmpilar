@@ -240,14 +240,25 @@ export default function CamerasCameras() {
           <Card key={r.id} className={r.ativo ? "" : "opacity-60"}>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center justify-between text-base">
-                <span className="flex items-center gap-2">
-                  <Camera className="h-4 w-4 text-primary" /> {r.nome}
+                <span className="flex items-center gap-2 min-w-0">
+                  <Camera className="h-4 w-4 text-primary flex-shrink-0" />
+                  <span className="truncate">{r.nome}</span>
                 </span>
-                <Badge variant={r.tipo_rede === "publica" ? "default" : "secondary"}>
-                  {r.tipo_rede === "publica" ? "Pública" : "Interna"}
-                </Badge>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <StatusPingDot
+                    at={r.ultima_verificacao}
+                    status={r.ultimo_status}
+                    erro={r.ultimo_erro}
+                    label={r.tipo_rede === "publica" ? "Câmera pública (acesso direto)" : "Câmera interna (via Coletor Desktop)"}
+                    dotOnly
+                  />
+                  <Badge variant={r.tipo_rede === "publica" ? "default" : "secondary"}>
+                    {r.tipo_rede === "publica" ? "Pública" : "Interna"}
+                  </Badge>
+                </div>
               </CardTitle>
             </CardHeader>
+
             <CardContent className="text-sm space-y-1">
               <div className="text-xs">
                 <Badge variant="outline">{grupoNome(r.grupo_id)}</Badge>
