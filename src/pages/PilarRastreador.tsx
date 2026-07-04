@@ -576,9 +576,9 @@ const PilarRastreador: React.FC = () => {
 
                 {currentPosition && (
                   <div className="bg-muted/50 rounded-lg p-3 mb-4 space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="h-4 w-4 text-primary" />
-                      <span className="font-mono text-xs">
+                    <div className="flex items-start gap-2 text-sm">
+                      <MapPin className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                      <span className="font-mono text-xs break-all min-w-0">
                         {currentPosition.coords.latitude.toFixed(6)}, {currentPosition.coords.longitude.toFixed(6)}
                       </span>
                     </div>
