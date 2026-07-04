@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Send, Save, MessageSquare, BookOpen, Smartphone, Globe, Shield, Download } from 'lucide-react';
+import { Send, Save, MessageSquare, BookOpen, Smartphone, Globe, Shield, Download, AppWindow, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import PilarSmsDevices from './PilarSmsDevices';
 
 
@@ -142,6 +143,24 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
 
   return (
     <div className="space-y-6 max-w-full overflow-x-hidden">
+      <Card className="border-primary/30 bg-primary/5">
+        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <AppWindow className="mt-0.5 h-5 w-5 text-primary flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-sm">Baixar APK Pilar SMS e outros apps</p>
+              <p className="text-xs text-muted-foreground">
+                O download do APK <b>Pilar SMS</b>, do <b>Coletor Desktop</b> e do <b>Sistema de Coleta de Ponto</b>, junto com o passo a passo de instalação, agora ficam em <b>Admin → Apps</b>.
+              </p>
+            </div>
+          </div>
+          <Button asChild size="sm" className="w-full sm:w-auto">
+            <Link to="/admin/apps">
+              Ir para Apps <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">Provedor de SMS</CardTitle>
@@ -291,12 +310,12 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
               <AccordionContent className="text-sm space-y-2 text-muted-foreground">
                 <p><b>Como funciona:</b> o CRM grava os SMS numa fila. O APK Pilar SMS instalado no seu celular consulta essa fila a cada 5 segundos e envia as mensagens pelo chip usando o <code>SmsManager</code> nativo. <b>Não precisa de IP público, roteador nem Cloudflare</b> — igual ao Coletor de Ponto e ao Coletor de Câmeras.</p>
                 <div className="flex flex-wrap items-center gap-2 p-3 rounded-md border border-primary/30 bg-primary/5">
-                  <Download className="h-4 w-4 text-primary" />
-                  <span className="text-sm text-foreground"><b>Baixe o app Pilar SMS v1.1.0</b> (Android · Modo Fila)</span>
+                  <AppWindow className="h-4 w-4 text-primary" />
+                  <span className="text-sm text-foreground"><b>Baixe o APK Pilar SMS</b> e veja o passo a passo em Admin → Apps</span>
                   <Button asChild size="sm" className="ml-auto">
-                    <a href="/pilar-sms-v1.2.0.apk" download>
-                      <Download className="h-4 w-4 mr-2" /> Baixar APK
-                    </a>
+                    <Link to="/admin/apps">
+                      <Download className="h-4 w-4 mr-2" /> Ir para Apps
+                    </Link>
                   </Button>
                 </div>
                 <ol className="list-decimal ml-5 space-y-1">

@@ -69,6 +69,7 @@ import PontoLayoutsExportacao from "./pages/ponto/PontoLayoutsExportacao";
 import PontoAlertas from "./pages/ponto/PontoAlertas";
 import PontoAuditoria from "./pages/ponto/PontoAuditoria";
 import PontoColetorDownload from "./pages/ponto/PontoColetorDownload";
+import AdminApps from "./pages/AdminApps";
 import PontoConfig from "./pages/ponto/PontoConfig";
 import PontoConfigWizard from "./pages/ponto/PontoConfigWizard";
 
@@ -416,6 +417,7 @@ const App = () => (
               <Route path="/ads/automation/:id" element={<AdsAutomation />} />
               <Route path="/railway-env" element={<RailwayEnvVariables />} />
               <Route path="/admin/support-tickets" element={<SupportTickets />} />
+              <Route path="/admin/apps" element={<AdminApps />} />
               <Route path="/meus-tickets" element={<MeusTickets />} />
               <Route path="/ponto" element={<PontoLayout />}>
                 <Route index element={<PontoDashboard />} />
