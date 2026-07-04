@@ -69,18 +69,35 @@ Deno.serve(async (req) => {
       );
     }
 
-    const bytes = await fetchSnapshot(cam);
-    const path = `cameras/${cam.id}/${Date.now()}-${cam.angulo_key}.jpg`;
-    const up = await sb.storage.from("cv-vehicle-photos").upload(path, bytes, {
-      contentType: "image/jpeg",
-      upsert: false,
-    });
-    if (up.error) throw up.error;
-    const { data: signed } = await sb.storage.from("cv-vehicle-photos").createSignedUrl(path, 3600);
-    return new Response(
-      JSON.stringify({ photo_path: path, signed_url: signed?.signedUrl, angle_key: cam.angulo_key }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    try {
+      const bytes = await fetchSnapshot(cam);
+      const path = `cameras/${cam.id}/${Date.now()}-${cam.angulo_key}.jpg`;
+      const up = await sb.storage.from("cv-vehicle-photos").upload(path, bytes, {
+        contentType: "image/jpeg",
+        upsert: false,
+      });
+      if (up.error) throw up.error;
+      const { data: signed } = await sb.storage.from("cv-vehicle-photos").createSignedUrl(path, 3600);
+      // Carimba online — snapshot público funcionou
+      await sb.from("cv_cameras").update({
+        ultima_verificacao: new Date().toISOString(),
+        ultimo_status: "online",
+        ultimo_erro: null,
+      }).eq("id", cam.id);
+      return new Response(
+        JSON.stringify({ photo_path: path, signed_url: signed?.signedUrl, angle_key: cam.angulo_key }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    } catch (err) {
+      // Carimba erro — falha ao acessar câmera pública
+      await sb.from("cv_cameras").update({
+        ultima_verificacao: new Date().toISOString(),
+        ultimo_status: "erro",
+        ultimo_erro: String((err as Error).message ?? err).slice(0, 500),
+      }).eq("id", cam.id);
+      throw err;
+    }
+
   } catch (e) {
     console.error("cv-camera-snapshot error:", (e as Error).message, (e as Error).stack);
     return new Response(JSON.stringify({ error: String((e as Error).message ?? e) }), {
