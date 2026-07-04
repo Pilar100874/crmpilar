@@ -69,6 +69,7 @@ import PontoLayoutsExportacao from "./pages/ponto/PontoLayoutsExportacao";
 import PontoAlertas from "./pages/ponto/PontoAlertas";
 import PontoAuditoria from "./pages/ponto/PontoAuditoria";
 import PontoColetorDownload from "./pages/ponto/PontoColetorDownload";
+import AdminApps from "./pages/AdminApps";
 import PontoConfig from "./pages/ponto/PontoConfig";
 import PontoConfigWizard from "./pages/ponto/PontoConfigWizard";
 
