@@ -163,13 +163,14 @@ export default function AdminApps() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6 md:p-8">
+    <div className="mx-auto max-w-6xl space-y-5 p-3 sm:space-y-6 sm:p-6 md:p-8">
       <div>
-        <h1 className="text-2xl font-semibold sm:text-3xl">Apps &amp; Instaladores</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-xl font-semibold sm:text-3xl">Apps &amp; Instaladores</h1>
+        <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
           Central de downloads dos aplicativos auxiliares do CRM Pilar: Coletor Desktop (Ponto + Câmeras) e APK Pilar SMS.
         </p>
       </div>
+
 
       {/* Dados de conexão */}
       <Card className="rounded-3xl border-primary/20 bg-primary/5">
