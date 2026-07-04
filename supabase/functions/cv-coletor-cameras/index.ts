@@ -18,6 +18,21 @@ Deno.serve(async (req) => {
     );
     const body = await req.json().catch(() => ({}));
 
+    // Coletor reporta status por câmera (batch)
+    if (body?.action === "report_status" && Array.isArray(body?.reports)) {
+      for (const r of body.reports) {
+        if (!r?.id) continue;
+        await supabase.from("cv_cameras").update({
+          ultima_verificacao: new Date().toISOString(),
+          ultimo_status: r.status === "online" ? "online" : "erro",
+          ultimo_erro: r.status === "online" ? null : (r.erro || null),
+        }).eq("id", r.id);
+      }
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (body?.action === "upload_snapshot") {
       const { camera_id, image_base64, content_type } = body;
       if (!camera_id || !image_base64) throw new Error("camera_id e image_base64 obrigatórios");
@@ -37,10 +52,17 @@ Deno.serve(async (req) => {
         upsert: true,
       });
       if (up.error) throw up.error;
+      // Também marca online (snapshot chegou = coletor está falando com a câmera)
+      await supabase.from("cv_cameras").update({
+        ultima_verificacao: new Date().toISOString(),
+        ultimo_status: "online",
+        ultimo_erro: null,
+      }).eq("id", camera_id);
       return new Response(JSON.stringify({ ok: true, path }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     let camQ = supabase
       .from("cv_cameras")
