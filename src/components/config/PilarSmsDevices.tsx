@@ -177,6 +177,7 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
       ) : devices.length === 0 ? (
         <div className="text-center text-sm text-muted-foreground py-4 border rounded-md">Nenhum dispositivo cadastrado.</div>
       ) : (
+        <div className="w-full overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -276,6 +277,7 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
             ))}
           </TableBody>
         </Table>
+        </div>
       )}
 
       <DeleteConfirmDialog

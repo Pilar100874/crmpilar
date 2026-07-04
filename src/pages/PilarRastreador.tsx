@@ -447,8 +447,8 @@ const PilarRastreador: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4">
-      <div className="max-w-md mx-auto space-y-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4 overflow-x-hidden">
+      <div className="w-full max-w-md mx-auto space-y-4">
         {/* Header */}
         <div className="text-center pt-4 pb-2">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground mb-3 shadow-lg">
@@ -483,7 +483,7 @@ const PilarRastreador: React.FC = () => {
             {deviceUuid && (
               <div className="bg-muted/50 rounded-lg p-2 mb-4 border">
                 <p className="text-muted-foreground text-xs">ID do dispositivo:</p>
-                <p className="font-mono text-sm">{deviceUuid}</p>
+                <p className="font-mono text-sm break-all">{deviceUuid}</p>
               </div>
             )}
 
@@ -576,9 +576,9 @@ const PilarRastreador: React.FC = () => {
 
                 {currentPosition && (
                   <div className="bg-muted/50 rounded-lg p-3 mb-4 space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="h-4 w-4 text-primary" />
-                      <span className="font-mono text-xs">
+                    <div className="flex items-start gap-2 text-sm">
+                      <MapPin className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                      <span className="font-mono text-xs break-all min-w-0">
                         {currentPosition.coords.latitude.toFixed(6)}, {currentPosition.coords.longitude.toFixed(6)}
                       </span>
                     </div>

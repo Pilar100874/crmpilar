@@ -404,9 +404,9 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   );
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-sm">
+    <div className="space-y-4 max-w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="relative flex-1 sm:max-w-sm w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar veículos..."
@@ -415,13 +415,13 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             className="pl-9"
           />
         </div>
-        <Button onClick={() => handleOpenDialog()}>
+        <Button onClick={() => handleOpenDialog()} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Novo Veículo
         </Button>
       </div>
 
-      <div className="border rounded-lg">
+      <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -523,7 +523,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+        <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 sm:w-full">
           <DialogHeader className="px-6 py-4 border-b bg-muted/30">
             <DialogTitle className="flex items-center gap-2">
               <Car className="h-5 w-5 text-primary" />
@@ -531,7 +531,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             </DialogTitle>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-4 space-y-5">
             {/* Bloco: dados básicos */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -700,7 +700,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                       {cmds.length === 0 ? (
                         <p className="text-xs text-muted-foreground italic">Sem comandos — configure pelo app.</p>
                       ) : cmds.map((c, i) => (
-                        <div key={i} className="text-[11px] leading-tight">
+                        <div key={i} className="text-[11px] leading-tight break-words">
                           <span className="font-medium">{c.label}:</span>{' '}
                           <code className="text-[10px] break-all">{renderTemplate(c.template, ctx)}</code>
                         </div>
@@ -792,7 +792,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             </div>
           </div>
 
-          <DialogFooter className="px-6 py-3 border-t bg-muted/30">
+          <DialogFooter className="px-4 sm:px-6 py-3 border-t bg-muted/30 gap-2">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
