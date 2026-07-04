@@ -203,7 +203,9 @@ export function useEcommerceBranding() {
           mostrar_precos_visitante_b2b: d.mostrar_precos_visitante_b2b ?? true,
           feat_webchat: d.feat_webchat ?? false,
           feat_whatsapp: d.feat_whatsapp ?? false,
-        });
+          denuncias_enabled: d.denuncias_enabled ?? false,
+          lgpd_enabled: d.lgpd_enabled ?? false,
+        } as any);
       }
       setLoading(false);
     };
