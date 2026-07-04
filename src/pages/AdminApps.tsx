@@ -10,10 +10,6 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import winAsset from "../../public/coletor/ColetorPilar-Setup.msi.asset.json";
-import pontoWinAsset from "../../public/coletor/PontoColetor-Windows.asset.json";
-import pontoLinuxAsset from "../../public/coletor/PontoColetor-Linux.asset.json";
-import pontoMacIntelAsset from "../../public/coletor/PontoColetor-macOS-Intel.asset.json";
-import pontoMacArmAsset from "../../public/coletor/PontoColetor-macOS-AppleSilicon.asset.json";
 
 const SUPABASE_URL = "https://ioxugupvxlcdweldocmq.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc";
@@ -30,24 +26,39 @@ const baixar = (file: string, url: string) => {
 
 export default function AdminApps() {
   const [camerasEnabled, setCamerasEnabled] = useState(false);
-  const [camCfgId, setCamCfgId] = useState<string | null>(null);
+  const [pontoEnabled, setPontoEnabled] = useState(true);
+  const [cfgId, setCfgId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       const { data } = await supabase.from("cv_coletor_config").select("*").maybeSingle();
-      if (data) { setCamerasEnabled(data.cameras_habilitado); setCamCfgId(data.id); }
+      if (data) {
+        setCamerasEnabled(data.cameras_habilitado);
+        setPontoEnabled((data as any).ponto_habilitado ?? true);
+        setCfgId(data.id);
+      }
     })();
   }, []);
 
+  const persist = async (patch: { cameras_habilitado?: boolean; ponto_habilitado?: boolean }) => {
+    if (cfgId) {
+      await supabase.from("cv_coletor_config").update(patch).eq("id", cfgId);
+    } else {
+      const { data } = await supabase.from("cv_coletor_config").insert(patch).select().single();
+      if (data) setCfgId(data.id);
+    }
+  };
+
   const toggleCameras = async (v: boolean) => {
     setCamerasEnabled(v);
-    if (camCfgId) {
-      await supabase.from("cv_coletor_config").update({ cameras_habilitado: v }).eq("id", camCfgId);
-    } else {
-      const { data } = await supabase.from("cv_coletor_config").insert({ cameras_habilitado: v }).select().single();
-      if (data) setCamCfgId(data.id);
-    }
-    toast.success(v ? "Módulo de câmeras habilitado no Coletor" : "Módulo de câmeras desabilitado");
+    await persist({ cameras_habilitado: v });
+    toast.success(v ? "Módulo de câmeras habilitado" : "Módulo de câmeras desabilitado");
+  };
+
+  const togglePonto = async (v: boolean) => {
+    setPontoEnabled(v);
+    await persist({ ponto_habilitado: v });
+    toast.success(v ? "Módulo de ponto habilitado" : "Módulo de ponto desabilitado");
   };
 
   return (
@@ -55,8 +66,8 @@ export default function AdminApps() {
       <div>
         <h1 className="text-2xl font-semibold sm:text-3xl">Apps & Instaladores</h1>
         <p className="text-sm text-muted-foreground">
-          Central de downloads dos aplicativos auxiliares do CRM Pilar: Coletor Desktop (câmeras),
-          Sistema de Coleta de Ponto e APK Pilar SMS.
+          Central de downloads dos aplicativos auxiliares do CRM Pilar: Coletor Desktop (Ponto + Câmeras)
+          e APK Pilar SMS.
         </p>
       </div>
 
@@ -103,42 +114,61 @@ export default function AdminApps() {
         </CardContent>
       </Card>
 
-      {/* Coletor Desktop (Câmeras) */}
+      {/* Coletor Desktop UNIFICADO */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Camera className="h-5 w-5 text-primary" />
-            Coletor Desktop (Câmeras)
-            <Badge variant="secondary" className="ml-2">Windows</Badge>
+          <CardTitle className="flex flex-wrap items-center gap-2">
+            <Monitor className="h-5 w-5 text-primary" />
+            Coletor Desktop (Ponto + Câmeras)
+            <Badge variant="secondary">Windows · MSI x64</Badge>
           </CardTitle>
           <CardDescription>
-            Aplicativo desktop que roda na rede local e captura snapshots das câmeras IP cadastradas em
-            Controle de Veículos → Câmeras, enviando os frames para o CRM na nuvem.
+            Um único aplicativo instalado no PC da rede. Roda como serviço do Windows e pode
+            operar os dois módulos ao mesmo tempo, cada um ligado/desligado de forma independente
+            direto por esta tela — a configuração é sincronizada com o app em segundos.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Card className="border-primary/20">
-            <CardContent className="flex items-center justify-between gap-3 p-4">
-              <div className="flex items-start gap-3">
-                <Camera className="mt-0.5 h-5 w-5 text-primary" />
-                <div>
-                  <p className="font-medium">Módulo de câmeras IP habilitado</p>
-                  <p className="text-xs text-muted-foreground">
-                    Ativa a captura de snapshots das câmeras internas cadastradas.
-                  </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Card className="border-primary/20">
+              <CardContent className="flex items-start justify-between gap-3 p-4">
+                <div className="flex items-start gap-3">
+                  <Clock className="mt-0.5 h-5 w-5 text-primary" />
+                  <div>
+                    <p className="font-medium">Módulo de Ponto</p>
+                    <p className="text-xs text-muted-foreground">
+                      Coleta batidas TCP/IP dos relógios REP (Control iD, Henry, Topdata, ZKTeco…),
+                      com assinatura SHA-256, NSR e retenção local de 7 dias.
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <Switch checked={camerasEnabled} onCheckedChange={toggleCameras} />
-            </CardContent>
-          </Card>
+                <Switch checked={pontoEnabled} onCheckedChange={togglePonto} />
+              </CardContent>
+            </Card>
+
+            <Card className="border-primary/20">
+              <CardContent className="flex items-start justify-between gap-3 p-4">
+                <div className="flex items-start gap-3">
+                  <Camera className="mt-0.5 h-5 w-5 text-primary" />
+                  <div>
+                    <p className="font-medium">Módulo de Câmeras IP</p>
+                    <p className="text-xs text-muted-foreground">
+                      Captura snapshots das câmeras internas cadastradas em Controle de Veículos → Câmeras.
+                    </p>
+                  </div>
+                </div>
+                <Switch checked={camerasEnabled} onCheckedChange={toggleCameras} />
+              </CardContent>
+            </Card>
+          </div>
 
           <div className="flex items-center justify-between gap-4 rounded-md border p-4">
             <div className="flex items-center gap-3">
               <Monitor className="h-8 w-8 text-primary" />
               <div>
-                <p className="font-semibold">Windows (Instalador MSI · x64)</p>
+                <p className="font-semibold">Windows 10/11 (Instalador MSI · x64)</p>
                 <p className="text-xs text-muted-foreground">
-                  Instala em C:\Program Files\ColetorPilar · atalho no Menu Iniciar · inicialização automática.
+                  Instala em <code>C:\Program Files\ColetorPilar</code> · atalho no Menu Iniciar · inicialização automática com o Windows.
                 </p>
               </div>
             </div>
@@ -150,61 +180,29 @@ export default function AdminApps() {
           <div className="rounded-md bg-muted/40 p-4 text-sm space-y-2">
             <p className="font-medium">Como instalar e usar</p>
             <ol className="ml-5 list-decimal space-y-1 text-muted-foreground">
-              <li>Baixe o instalador e execute (dois cliques). Se o Windows SmartScreen alertar, clique em <b>Mais informações → Executar assim mesmo</b>.</li>
-              <li>Abra o Coletor no <b>Menu Iniciar → Coletor Pilar</b> (ele também abre sozinho no próximo boot).</li>
-              <li>Cole a <b>URL do backend</b> e a <b>Chave Anon</b> mostradas acima.</li>
-              <li>Faça login com seu usuário do CRM.</li>
-              <li>Cadastre as câmeras em <b>Controle de Veículos → Câmeras</b>. O coletor sincroniza automaticamente.</li>
-            </ol>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Sistema de Coleta do Ponto */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary" />
-            Sistema de Coleta do Ponto (Relógios REP)
-            <Badge variant="secondary" className="ml-2">Windows · macOS · Linux</Badge>
-          </CardTitle>
-          <CardDescription>
-            Programa que roda no computador da rede dos relógios de ponto. Coleta as batidas via TCP/IP,
-            valida a assinatura (SHA-256 · NSR) e envia para o Controle de Ponto do CRM em tempo real.
-            Retém localmente por 7 dias em caso de queda de internet.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="grid gap-3 sm:grid-cols-2">
-            {[
-              { label: "Windows (.zip x64)", file: "PontoColetor-Windows.zip", url: pontoWinAsset.url, icon: Monitor },
-              { label: "Linux (.zip x64)", file: "PontoColetor-Linux.zip", url: pontoLinuxAsset.url, icon: Monitor },
-              { label: "macOS Intel (.zip)", file: "PontoColetor-macOS-Intel.zip", url: pontoMacIntelAsset.url, icon: Monitor },
-              { label: "macOS Apple Silicon (.zip)", file: "PontoColetor-macOS-AppleSilicon.zip", url: pontoMacArmAsset.url, icon: Monitor },
-            ].map((p) => (
-              <div key={p.file} className="flex items-center justify-between rounded-md border p-3">
-                <div className="flex items-center gap-3">
-                  <p.icon className="h-6 w-6 text-primary" />
-                  <span className="text-sm font-medium">{p.label}</span>
-                </div>
-                <Button size="sm" onClick={() => baixar(p.file, p.url)}>
-                  <Download className="mr-2 h-4 w-4" /> Baixar
-                </Button>
-              </div>
-            ))}
-          </div>
-
-          <div className="rounded-md bg-muted/40 p-4 text-sm space-y-2">
-            <p className="font-medium">Como instalar e usar</p>
-            <ol className="ml-5 list-decimal space-y-1 text-muted-foreground">
-              <li>Descompacte o arquivo baixado em uma pasta permanente (ex.: <code>C:\PontoColetor</code>).</li>
-              <li>Execute <b>PontoColetor</b> (Windows: .exe; macOS/Linux: binário). No macOS, autorize em <b>Ajustes → Privacidade e Segurança</b>.</li>
-              <li>Na primeira execução, cole a <b>URL do backend</b> e a <b>Chave Anon</b> acima e faça login.</li>
-              <li>Cadastre os relógios em <b>Controle de Ponto → Equipamentos</b> informando IP interno, porta e credenciais do relógio.</li>
-              <li>O coletor sincroniza a cada 60s. Batidas ficam com assinatura SHA-256 e NSR do REP, compatível com Portaria 671/2021.</li>
+              <li>Baixe o <b>ColetorPilar-Setup.msi</b> acima e execute com dois cliques. Se o Windows SmartScreen alertar, clique em <b>Mais informações → Executar assim mesmo</b>.</li>
+              <li>Abra o app pelo <b>Menu Iniciar → Coletor Pilar</b> (ele também abre sozinho no próximo boot).</li>
+              <li>Cole a <b>URL do backend</b> e a <b>Chave Anon</b> mostradas acima, e faça login com seu usuário do CRM.</li>
+              <li>Ative os módulos que você vai usar (Ponto e/ou Câmeras) usando os interruptores acima nesta tela.</li>
+              <li>Cadastre os equipamentos:
+                <ul className="ml-5 list-disc mt-1">
+                  <li><b>Ponto:</b> em <b>Controle de Ponto → Equipamentos</b>, informe IP interno, porta e credenciais de cada REP.</li>
+                  <li><b>Câmeras:</b> em <b>Controle de Veículos → Câmeras</b>, informe URL RTSP/HTTP de cada câmera.</li>
+                </ul>
+              </li>
+              <li>Sincronização automática: batidas a cada 60s (com NSR + hash SHA-256) e snapshots conforme configurado por câmera. Compatível com Portaria 671/2021.</li>
             </ol>
             <p className="text-xs text-muted-foreground pt-1">
-              <b>Marcas suportadas:</b> Control iD (REP iDClass, iDFace) · Henry (Prisma, Hexa) · Topdata (Inner Rep) · ZKTeco · Madis · qualquer relógio compatível com a Portaria 671/2021.
+              <b>Marcas de relógio suportadas:</b> Control iD (REP iDClass, iDFace) · Henry (Prisma, Hexa) · Topdata (Inner Rep) · ZKTeco · Madis · qualquer REP compatível com a Portaria 671/2021.
+            </p>
+          </div>
+
+          <div className="flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
+            <Info className="mt-0.5 h-4 w-4 text-primary flex-shrink-0" />
+            <p>
+              <b>Dica de infraestrutura:</b> se o PC principal cair, o coletor para. Para produção
+              recomendamos um <b>mini-PC dedicado</b> (ex.: Intel NUC) sempre ligado, na mesma rede
+              dos relógios e das câmeras.
             </p>
           </div>
         </CardContent>
@@ -221,7 +219,7 @@ export default function AdminApps() {
           <CardDescription>
             App próprio que transforma um celular Android com chip em gateway de SMS do CRM.
             O CRM enfileira as mensagens e o APK consulta a fila a cada 5s, enviando pelo <code>SmsManager</code> nativo.
-            Não exige IP público, roteador exposto ou Cloudflare — igual ao Coletor de Ponto e ao Coletor de Câmeras.
+            Não exige IP público, roteador exposto ou Cloudflare — igual ao Coletor Desktop.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
