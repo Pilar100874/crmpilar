@@ -1,3 +1,11 @@
 <resources>
-    <style name="Theme.PilarHub" parent="Theme.MaterialComponents.DayNight.NoActionBar" />
+    <style name="Theme.PilarHub" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="android:windowBackground">@color/bg_page</item>
+        <item name="android:statusBarColor">@color/bg_page</item>
+        <item name="android:navigationBarColor">@color/bg_page</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="colorPrimary">@color/accent_green</item>
+        <item name="colorPrimaryDark">@color/accent_green_dark</item>
+        <item name="colorAccent">@color/accent_green</item>
+    </style>
 </resources>
