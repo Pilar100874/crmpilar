@@ -3873,6 +3873,9 @@ export type Database = {
           senha: string | null
           snapshot_path: string | null
           tipo_rede: string
+          ultima_verificacao: string | null
+          ultimo_erro: string | null
+          ultimo_status: string | null
           updated_at: string
           usuario: string | null
           vehicle_id: string | null
@@ -3894,6 +3897,9 @@ export type Database = {
           senha?: string | null
           snapshot_path?: string | null
           tipo_rede?: string
+          ultima_verificacao?: string | null
+          ultimo_erro?: string | null
+          ultimo_status?: string | null
           updated_at?: string
           usuario?: string | null
           vehicle_id?: string | null
@@ -3915,6 +3921,9 @@ export type Database = {
           senha?: string | null
           snapshot_path?: string | null
           tipo_rede?: string
+          ultima_verificacao?: string | null
+          ultimo_erro?: string | null
+          ultimo_status?: string | null
           updated_at?: string
           usuario?: string | null
           vehicle_id?: string | null
