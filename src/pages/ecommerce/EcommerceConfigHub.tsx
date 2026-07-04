@@ -132,6 +132,24 @@ const configSections = [
     color: "text-orange-500",
     bg: "bg-orange-500/10",
   },
+  {
+    id: "denuncias",
+    title: "Canal de Denúncias (NR-1)",
+    description: "Habilite o canal de denúncias na loja e gerencie as ocorrências",
+    icon: AlertOctagon,
+    url: "/ecommerce-config/denuncias",
+    color: "text-red-500",
+    bg: "bg-red-500/10",
+  },
+  {
+    id: "lgpd",
+    title: "LGPD - Privacidade",
+    description: "Habilite e edite a política de privacidade e proteção de dados",
+    icon: Shield,
+    url: "/ecommerce-config/lgpd",
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
+  },
 ];
 
 export default function EcommerceConfigHub() {
