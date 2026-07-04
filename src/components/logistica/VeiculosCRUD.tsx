@@ -700,7 +700,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                       {cmds.length === 0 ? (
                         <p className="text-xs text-muted-foreground italic">Sem comandos — configure pelo app.</p>
                       ) : cmds.map((c, i) => (
-                        <div key={i} className="text-[11px] leading-tight">
+                        <div key={i} className="text-[11px] leading-tight break-words">
                           <span className="font-medium">{c.label}:</span>{' '}
                           <code className="text-[10px] break-all">{renderTemplate(c.template, ctx)}</code>
                         </div>
