@@ -4,7 +4,10 @@ const supabase = supabaseTyped as any;
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, RefreshCw, BarChart3, CheckCircle2, XCircle, Ban, Clock, Copy } from "lucide-react";
+import { ArrowLeft, RefreshCw, BarChart3, CheckCircle2, XCircle, Ban, Clock, Copy, DollarSign } from "lucide-react";
+
+const CUSTO_SMS_UNIT = 0.08; // R$ por SMS enviado (ajustável)
+const CUSTO_WHATSAPP_UNIT = 0.03; // R$ por mensagem WhatsApp (utility)
 import { Link } from "react-router-dom";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
@@ -41,7 +44,13 @@ export default function PontoNotificacoesEntregabilidade() {
       if (r.status === "falha") acc[r.canal].falha++;
       return acc;
     }, {});
-    return { total, porStatus, porCanal };
+    const smsEnv = (porCanal.sms?.enviado || 0);
+    const waEnv = (porCanal.whatsapp?.enviado || 0);
+    const custoSms = smsEnv * CUSTO_SMS_UNIT;
+    const custoWa = waEnv * CUSTO_WHATSAPP_UNIT;
+    const custoTotal = custoSms + custoWa;
+    // Projeção mensal com base nos últimos 30 dias já cobertos
+    return { total, porStatus, porCanal, smsEnv, waEnv, custoSms, custoWa, custoTotal };
   }, [rows]);
 
   const badgeStatus = (s: string) => {
@@ -85,6 +94,38 @@ export default function PontoNotificacoesEntregabilidade() {
           </Card>
         ))}
       </div>
+
+      {/* Custo estimado */}
+      <Card className="border-primary/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <DollarSign className="w-4 h-4" />Custo estimado (últimos 30 dias)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="p-3 border rounded-lg">
+              <div className="text-xs text-muted-foreground">SMS enviados</div>
+              <div className="text-xl font-bold">{stats.smsEnv}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                R$ {stats.custoSms.toFixed(2)} <span className="opacity-60">({CUSTO_SMS_UNIT.toFixed(2)}/msg)</span>
+              </div>
+            </div>
+            <div className="p-3 border rounded-lg">
+              <div className="text-xs text-muted-foreground">WhatsApp enviados</div>
+              <div className="text-xl font-bold">{stats.waEnv}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                R$ {stats.custoWa.toFixed(2)} <span className="opacity-60">({CUSTO_WHATSAPP_UNIT.toFixed(2)}/msg)</span>
+              </div>
+            </div>
+            <div className="p-3 border rounded-lg bg-primary/5">
+              <div className="text-xs text-muted-foreground">Custo total projetado / mês</div>
+              <div className="text-xl font-bold text-primary">R$ {stats.custoTotal.toFixed(2)}</div>
+              <div className="text-xs text-muted-foreground mt-1">Push e Email não geram custo.</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Por canal */}
       <Card>
