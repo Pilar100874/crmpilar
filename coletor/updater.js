@@ -85,64 +85,88 @@ async function baixarEInstalar(downloadUrl, onProgress) {
   const destino = path.join(os.tmpdir(), `ColetorPilar-Setup-${Date.now()}${ext}`);
   await baixarArquivo(downloadUrl, destino, onProgress);
 
+  // Log de instalação para diagnóstico caso algo falhe silenciosamente.
+  const logPath = path.join(os.tmpdir(), `ColetorPilar-Install-${Date.now()}.log`);
+  // Grava o script em arquivo .ps1 e executa via `-File`.
+  // Motivo: passar scripts multilinha via `-Command` sofre com re-parse do Windows
+  // (aspas, backslashes, `&`, `(` viram problemas). Com `-File` o PowerShell lê
+  // o arquivo cru — sem escape de backslashes, caminhos do Windows funcionam.
+  const scriptPath = path.join(os.tmpdir(), `ColetorPilar-Install-${Date.now()}.ps1`);
+
+  let ps;
   if (ext === '.msi') {
-    // Script PowerShell:
-    //  1) Aguarda o app atual encerrar (2s)
-    //  2) Desinstala silenciosamente qualquer versão anterior do "Coletor Pilar"
-    //     lida no registro do Windows (Add/Remove Programs), tanto x64 quanto x86.
-    //  3) Instala a nova versão sem prompt de reboot e suprimindo o Restart Manager
-    //     (evita que o Windows peça para reiniciar arquivos em uso).
-    const ps = `
-      Start-Sleep -Seconds 2
-      $paths = @(
-        'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
-        'HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*'
-      )
-      Get-ItemProperty $paths -ErrorAction SilentlyContinue |
-        Where-Object { $_.DisplayName -like 'Coletor Pilar*' -or $_.DisplayName -like 'ColetorPilar*' } |
-        ForEach-Object {
-          if ($_.PSChildName -match '^\\{[0-9A-Fa-f-]+\\}$') {
-            Start-Process msiexec.exe -ArgumentList '/x',$_.PSChildName,'/qn','/norestart','REBOOT=ReallySuppress','MSIRESTARTMANAGERCONTROL=Disable' -Wait
-          }
-        }
-      Start-Process msiexec.exe -ArgumentList '/i','"${destino.replace(/\\/g, '\\\\')}"','/qb','/norestart','REBOOT=ReallySuppress','MSIRESTARTMANAGERCONTROL=Disable','MSIDISABLERMRESTART=1','REINSTALLMODE=vomus' -Wait
-      # Relança o app após instalar — busca em Program Files
-      $candidatos = @(
-        "$env:ProgramFiles\\ColetorPilar\\ColetorPilar.exe",
-        "$env:ProgramFiles(x86)\\ColetorPilar\\ColetorPilar.exe"
-      )
-      foreach ($exe in $candidatos) {
-        if (Test-Path $exe) { Start-Process $exe; break }
-      }
-      Remove-Item -LiteralPath '${destino.replace(/\\/g, '\\\\')}' -ErrorAction SilentlyContinue
-      # Notificação visual de conclusão (MessageBox — funciona em todas as edições do Windows)
-      try {
-        Add-Type -AssemblyName PresentationFramework -ErrorAction Stop
-        [System.Windows.MessageBox]::Show('O Coletor Pilar foi instalado/atualizado com sucesso e já está em execução.','Coletor Pilar - Instalação concluída','OK','Information') | Out-Null
-      } catch {
-        try {
-          Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
-          [System.Windows.Forms.MessageBox]::Show('O Coletor Pilar foi instalado/atualizado com sucesso e já está em execução.','Coletor Pilar - Instalação concluída') | Out-Null
-        } catch {}
-      }
-    `.trim();
-    spawn('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', ps], { detached: true, stdio: 'ignore' }).unref();
-  } else {
-    // Instalador NSIS (.exe) — /S = silent. Após concluir, exibe MessageBox de conclusão.
-    const psExe = `
-      Start-Process -FilePath '${destino.replace(/\\/g, '\\\\')}' -ArgumentList '/S' -Wait
-      try {
-        Add-Type -AssemblyName PresentationFramework -ErrorAction Stop
-        [System.Windows.MessageBox]::Show('O Coletor Pilar foi instalado/atualizado com sucesso.','Coletor Pilar - Instalação concluída','OK','Information') | Out-Null
-      } catch {
-        try {
-          Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
-          [System.Windows.Forms.MessageBox]::Show('O Coletor Pilar foi instalado/atualizado com sucesso.','Coletor Pilar - Instalação concluída') | Out-Null
-        } catch {}
-      }
-    `.trim();
-    spawn('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', psExe], { detached: true, stdio: 'ignore' }).unref();
+    ps = `
+$ErrorActionPreference = 'Continue'
+Start-Transcript -Path '${logPath}' -Append | Out-Null
+Start-Sleep -Seconds 2
+Write-Host "Instalando MSI: ${destino}"
+
+$paths = @(
+  'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
+  'HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*'
+)
+Get-ItemProperty $paths -ErrorAction SilentlyContinue |
+  Where-Object { $_.DisplayName -like 'Coletor Pilar*' -or $_.DisplayName -like 'ColetorPilar*' } |
+  ForEach-Object {
+    if ($_.PSChildName -match '^\\{[0-9A-Fa-f-]+\\}$') {
+      Write-Host "Desinstalando versão anterior: $($_.PSChildName)"
+      Start-Process msiexec.exe -ArgumentList '/x',$_.PSChildName,'/qn','/norestart','REBOOT=ReallySuppress','MSIRESTARTMANAGERCONTROL=Disable' -Wait
+    }
   }
+
+$msiArgs = @('/i','${destino}','/qb','/norestart','REBOOT=ReallySuppress','MSIRESTARTMANAGERCONTROL=Disable','MSIDISABLERMRESTART=1','REINSTALLMODE=vomus')
+$proc = Start-Process msiexec.exe -ArgumentList $msiArgs -Wait -PassThru
+Write-Host "msiexec exit code: $($proc.ExitCode)"
+
+$candidatos = @(
+  "$env:ProgramFiles\\ColetorPilar\\ColetorPilar.exe",
+  "\${env:ProgramFiles(x86)}\\ColetorPilar\\ColetorPilar.exe"
+)
+foreach ($exe in $candidatos) {
+  if (Test-Path $exe) { Start-Process $exe; break }
+}
+Remove-Item -LiteralPath '${destino}' -ErrorAction SilentlyContinue
+
+try {
+  Add-Type -AssemblyName PresentationFramework -ErrorAction Stop
+  [System.Windows.MessageBox]::Show('O Coletor Pilar foi instalado/atualizado com sucesso e já está em execução.','Coletor Pilar - Instalação concluída','OK','Information') | Out-Null
+} catch {
+  try {
+    Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
+    [System.Windows.Forms.MessageBox]::Show('O Coletor Pilar foi instalado/atualizado com sucesso e já está em execução.','Coletor Pilar - Instalação concluída') | Out-Null
+  } catch {}
+}
+Stop-Transcript | Out-Null
+`.trim();
+  } else {
+    ps = `
+$ErrorActionPreference = 'Continue'
+Start-Transcript -Path '${logPath}' -Append | Out-Null
+Start-Sleep -Seconds 2
+Write-Host "Instalando EXE: ${destino}"
+$proc = Start-Process -FilePath '${destino}' -ArgumentList '/S' -Wait -PassThru
+Write-Host "Setup exit code: $($proc.ExitCode)"
+try {
+  Add-Type -AssemblyName PresentationFramework -ErrorAction Stop
+  [System.Windows.MessageBox]::Show('O Coletor Pilar foi instalado/atualizado com sucesso.','Coletor Pilar - Instalação concluída','OK','Information') | Out-Null
+} catch {
+  try {
+    Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
+    [System.Windows.Forms.MessageBox]::Show('O Coletor Pilar foi instalado/atualizado com sucesso.','Coletor Pilar - Instalação concluída') | Out-Null
+  } catch {}
+}
+Stop-Transcript | Out-Null
+`.trim();
+  }
+
+  // BOM UTF-8 garante que PowerShell interprete acentos corretamente.
+  fs.writeFileSync(scriptPath, '\ufeff' + ps, { encoding: 'utf8' });
+
+  spawn(
+    'powershell.exe',
+    ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', scriptPath],
+    { detached: true, stdio: 'ignore', windowsHide: true }
+  ).unref();
 
   setTimeout(() => { app.isQuitting = true; app.quit(); }, 800);
   return destino;
