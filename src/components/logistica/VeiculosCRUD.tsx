@@ -764,9 +764,31 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   )}
                 </div>
 
+                <div>
+                  <Label className="text-xs">Operadora do chip (APN automático)</Label>
+                  <Select
+                    value={formData.operadora_id || '__model__'}
+                    onValueChange={(v) => setFormData(prev => ({
+                      ...prev, operadora_id: v === '__model__' ? '' : v,
+                    }))}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Usar APN do modelo" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__model__">Usar APN do modelo</SelectItem>
+                      {OPERADORAS_APN.map(o => (
+                        <SelectItem key={o.id} value={o.id}>{o.nome} — {o.apn}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Sobrescreve APN/usuário/senha do modelo apenas para este chip.
+                  </p>
+                </div>
+
                 {formData.tracker_model_id && (() => {
-                  const model = trackerModels.find(m => m.id === formData.tracker_model_id);
-                  if (!model) return null;
+                  const baseModel = trackerModels.find(m => m.id === formData.tracker_model_id);
+                  if (!baseModel) return null;
+                  const model = modelComOperadora(baseModel);
                   const ctx: Record<string, string> = {
                     host: model.host || '', port: String(model.porta),
                     password: model.senha_padrao || '', apn: model.apn || '',
