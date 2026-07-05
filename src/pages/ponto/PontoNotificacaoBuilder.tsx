@@ -185,11 +185,26 @@ function PontoNotificacaoBuilderContent() {
       if (!data) { toast.error("Workflow não encontrado"); nav("/ponto/notificacoes"); return; }
       setWf(data);
       const flow = data.flow_data || {};
-      setNodes((flow.nodes || []).map((n: any) => ({ ...n, type: "custom" })));
-      setEdges((flow.edges || []).map((e: any) => ({ ...e, markerEnd: { type: MarkerType.ArrowClosed } })));
+      const loadedNodes = (flow.nodes || []).map((n: any) => ({ ...n, type: "custom" }));
+      const loadedEdges = (flow.edges || []).map((e: any) => ({ ...e, markerEnd: { type: MarkerType.ArrowClosed } }));
+      setNodes(loadedNodes);
+      setEdges(loadedEdges);
+      initialHashRef.current = JSON.stringify({ n: flow.nodes || [], e: flow.edges || [], nome: data.nome, evento: data.evento_gatilho, ativo: data.ativo });
+      setDirty(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Marca dirty quando o grafo/config muda
+  useEffect(() => {
+    if (!wf || !initialHashRef.current) return;
+    const cur = JSON.stringify({
+      n: nodes.map(n => ({ ...n, data: stripCallbacks(n.data) })),
+      e: edges.map(({ markerEnd: _m, ...rest }) => rest),
+      nome: wf.nome, evento: wf.evento_gatilho, ativo: wf.ativo,
+    });
+    setDirty(cur !== initialHashRef.current);
+  }, [nodes, edges, wf]);
 
   // ============ Handlers passados para os nodes ============
   const onDuplicate = useCallback((nodeId: string) => {
