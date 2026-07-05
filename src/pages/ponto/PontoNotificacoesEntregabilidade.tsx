@@ -44,7 +44,13 @@ export default function PontoNotificacoesEntregabilidade() {
       if (r.status === "falha") acc[r.canal].falha++;
       return acc;
     }, {});
-    return { total, porStatus, porCanal };
+    const smsEnv = (porCanal.sms?.enviado || 0);
+    const waEnv = (porCanal.whatsapp?.enviado || 0);
+    const custoSms = smsEnv * CUSTO_SMS_UNIT;
+    const custoWa = waEnv * CUSTO_WHATSAPP_UNIT;
+    const custoTotal = custoSms + custoWa;
+    // Projeção mensal com base nos últimos 30 dias já cobertos
+    return { total, porStatus, porCanal, smsEnv, waEnv, custoSms, custoWa, custoTotal };
   }, [rows]);
 
   const badgeStatus = (s: string) => {
