@@ -9,6 +9,9 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import winAsset from "../../public/coletor/ColetorPilar-Setup.msi.asset.json";
+import macAppleAsset from "../../public/coletor/PontoColetor-macOS-AppleSilicon.asset.json";
+import macIntelAsset from "../../public/coletor/PontoColetor-macOS-Intel.asset.json";
+import linuxAsset from "../../public/coletor/PontoColetor-Linux.asset.json";
 
 const SUPABASE_URL = "https://ioxugupvxlcdweldocmq.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc";
