@@ -618,7 +618,7 @@ function PontoNotificacaoBuilderContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </WorkflowBuilderLayout>
   );
 }
 
