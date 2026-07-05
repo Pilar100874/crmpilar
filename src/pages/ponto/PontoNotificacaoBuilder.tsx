@@ -399,14 +399,28 @@ function PontoNotificacaoBuilderContent() {
   }
 
   function exportar() {
-    const clean = nodes.map(n => {
-      const { onDuplicate: _a, onToggleBreakpoint: _b, onToggleSkip: _c, onDelete: _d, onAddNote: _e, onAddNext: _f, ...rest } = n.data as any;
-      return { ...n, data: rest };
-    });
+    const clean = nodes.map(n => ({ ...n, data: stripCallbacks(n.data) }));
     const blob = new Blob([JSON.stringify({ nome: wf.nome, evento_gatilho: wf.evento_gatilho, nodes: clean, edges }, null, 2)], { type: "application/json" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
     a.download = `${(wf.nome || "workflow").replace(/\W+/g, "_")}.json`; a.click();
   }
+
+  async function duplicarWorkflow() {
+    const { data: novo, error } = await supabase.from("ponto_notif_workflows").insert({
+      estabelecimento_id: wf.estabelecimento_id,
+      nome: `${wf.nome} (cópia)`,
+      evento_gatilho: wf.evento_gatilho,
+      ativo: false,
+      flow_data: { nodes: nodes.map(n => ({ ...n, data: stripCallbacks(n.data) })), edges, viewport: { x: 0, y: 0, zoom: 1 } },
+    }).select().single();
+    if (error) return toast.error(error.message);
+    toast.success("Workflow duplicado"); nav(`/ponto/notificacoes/${novo.id}`);
+  }
+
+  // Zoom / lock helpers
+  const zoomIn = () => rfInstance?.zoomIn?.();
+  const zoomOut = () => rfInstance?.zoomOut?.();
+  const fitView = () => rfInstance?.fitView?.({ padding: 0.2, duration: 400 });
 
   function importar(file: File) {
     const r = new FileReader();
