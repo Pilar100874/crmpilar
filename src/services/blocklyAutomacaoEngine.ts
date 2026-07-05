@@ -87,6 +87,16 @@ export async function aplicarRegrasBlockly(
     
     enviarAlerta: (mensagem: string) => {
       resultado.detalhes.push(`ALERTA: ${mensagem}`);
+    },
+
+    dispararPush: (titulo: string, corpo?: string, url?: string, destinatarioTipo: string = 'todos_usuarios') => {
+      import('@/lib/pushExecutor').then(({ executarBlocoPush }) => {
+        executarBlocoPush(
+          { destinatario_tipo: destinatarioTipo as any, titulo, corpo, url },
+          { variaveis: { orcamento, cliente: orcamento.cliente }, workflow_tipo: 'vendas', origem: 'blockly' },
+        ).catch((e) => console.error('[blockly] push falhou:', e));
+      });
+      resultado.detalhes.push(`Push disparado: ${titulo}`);
     }
   };
 
