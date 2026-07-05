@@ -65,10 +65,18 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     dispositivo_id: '',
     tracker_model_id: '',
     telefone_sms: '',
+    operadora_id: '',
     enviar_sms_automatico: false,
     configurar_tracker_ao_salvar: true,
     ativo: true
   });
+
+  // Aplica override de APN da operadora selecionada em uma cópia do modelo
+  const modelComOperadora = (model: TrackerModelLite): TrackerModelLite => {
+    const op = OPERADORAS_APN.find(o => o.id === formData.operadora_id);
+    if (!op) return model;
+    return { ...model, apn: op.apn, apn_user: op.apn_user, apn_password: op.apn_password };
+  };
 
   useEffect(() => {
     fetchVeiculos();
