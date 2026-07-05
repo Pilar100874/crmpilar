@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Veiculo } from '@/types/logistica';
 import { configurarRastreador, renderTemplate, TrackerModelLite } from '@/lib/trackerConfig';
+import { OPERADORAS_APN, findOperadoraByApn } from '@/lib/operadorasSms';
 
 interface VeiculosCRUDProps {
   estabelecimentoId: string;
