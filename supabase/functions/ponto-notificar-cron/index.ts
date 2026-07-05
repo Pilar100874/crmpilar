@@ -1,4 +1,5 @@
 // Cron diário: detecta atrasos, faltas, HE pendentes, atestados pendentes, banco de horas a expirar
+// e dispara notificações multi-canal via ponto-notificar-canal (Push, SMS, WhatsApp, E-mail, Webhook).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -14,61 +15,78 @@ Deno.serve(async (req) => {
 
     let total = 0;
     const hoje = new Date().toISOString().slice(0, 10);
+    const ontem = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+
+    async function dispatch(estabelecimento_id: string, tipo: string, funcionario_id: string | null, dados: any) {
+      await sb.functions.invoke("ponto-notificar-canal", {
+        body: { estabelecimento_id, tipo, funcionario_id, dados },
+      });
+      total++;
+    }
 
     for (const cfg of configs || []) {
-      const alertas: any[] = [];
+      const est = cfg.estabelecimento_id;
 
       if (cfg.notif_falta) {
         const { data: faltas } = await sb.from("ponto_espelho_diario")
-          .select("*, ponto_funcionarios(nome)")
-          .eq("estabelecimento_id", cfg.estabelecimento_id)
-          .eq("data", new Date(Date.now() - 86400000).toISOString().slice(0, 10))
-          .eq("status", "falta");
+          .select("funcionario_id, data, ponto_funcionarios(nome)")
+          .eq("estabelecimento_id", est).eq("data", ontem).eq("status", "falta");
         for (const f of faltas || []) {
-          alertas.push({ tipo: "falta", funcionario: (f as any).ponto_funcionarios?.nome, data: f.data });
+          await dispatch(est, "falta", f.funcionario_id, { data: f.data, funcionario: (f as any).ponto_funcionarios?.nome });
+        }
+      }
+
+      if (cfg.notif_atraso) {
+        const { data: atrasos } = await sb.from("ponto_espelho_diario")
+          .select("funcionario_id, data, ponto_funcionarios(nome)")
+          .eq("estabelecimento_id", est).eq("data", ontem).eq("status", "atraso");
+        for (const a of atrasos || []) {
+          await dispatch(est, "atraso", a.funcionario_id, { data: a.data, funcionario: (a as any).ponto_funcionarios?.nome });
         }
       }
 
       if (cfg.notif_he_pendente) {
         const { data: pend } = await sb.from("ponto_ajustes")
           .select("id, funcionario_id")
-          .eq("estabelecimento_id", cfg.estabelecimento_id)
-          .eq("status", "pendente").eq("tipo", "hora_extra");
-        if ((pend || []).length) alertas.push({ tipo: "he_pendente", quantidade: (pend || []).length });
+          .eq("estabelecimento_id", est).eq("status", "pendente").eq("tipo", "hora_extra");
+        // Agrupa por funcionario
+        const grupo = new Map<string, number>();
+        for (const p of pend || []) grupo.set(p.funcionario_id, (grupo.get(p.funcionario_id) || 0) + 1);
+        for (const [funcId, qtd] of grupo) {
+          await dispatch(est, "he_pendente", funcId, { quantidade: qtd });
+        }
       }
 
       if (cfg.notif_atestado_pendente) {
         const { data: atest } = await sb.from("ponto_atestados")
-          .select("id").eq("estabelecimento_id", cfg.estabelecimento_id).eq("status", "pendente");
-        if ((atest || []).length) alertas.push({ tipo: "atestado_pendente", quantidade: (atest || []).length });
+          .select("id, funcionario_id").eq("estabelecimento_id", est).eq("status", "pendente");
+        if ((atest || []).length) {
+          await dispatch(est, "atestado_pendente", null, { quantidade: (atest || []).length });
+        }
       }
 
       if (cfg.notif_banco_horas_expirar) {
-        const limite = new Date(Date.now() + cfg.dias_aviso_expiracao * 86400000).toISOString().slice(0, 10);
+        const limite = new Date(Date.now() + (cfg.dias_aviso_expiracao || 15) * 86400000).toISOString().slice(0, 10);
         const { data: bh } = await sb.from("ponto_banco_horas_saldos")
           .select("funcionario_id, saldo_minutos, data_expiracao")
-          .eq("estabelecimento_id", cfg.estabelecimento_id).eq("ativo", true)
+          .eq("estabelecimento_id", est).eq("ativo", true)
           .lte("data_expiracao", limite).gt("saldo_minutos", 0);
-        for (const b of bh || []) alertas.push({ tipo: "bh_expirar", ...b });
+        for (const b of bh || []) {
+          await dispatch(est, "bh_expirar", b.funcionario_id, { data_expiracao: b.data_expiracao });
+        }
       }
 
-      if (alertas.length === 0) continue;
-      total += alertas.length;
-
-      await sb.from("ponto_alertas").insert(alertas.map((a) => ({
-        estabelecimento_id: cfg.estabelecimento_id,
-        tipo: a.tipo, severidade: "media",
-        mensagem: JSON.stringify(a), data_referencia: hoje,
-      })));
-
-      // Webhook opcional
-      if (cfg.webhook_url) {
-        try {
-          await fetch(cfg.webhook_url, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ estabelecimento_id: cfg.estabelecimento_id, alertas, data: hoje }),
+      // Fraude: pega anomalias de alta severidade não notificadas ainda
+      if (cfg.notif_fraude) {
+        const { data: fraudes } = await sb.from("ponto_anomalias")
+          .select("id, funcionario_id, tipo, descricao, data")
+          .eq("estabelecimento_id", est).eq("severidade", "alta")
+          .gte("created_at", ontem + "T00:00:00");
+        for (const f of fraudes || []) {
+          await dispatch(est, "fraude", f.funcionario_id, {
+            detalhe: (f as any).descricao || (f as any).tipo, data: (f as any).data || hoje,
           });
-        } catch (_) { /* ignore */ }
+        }
       }
     }
 

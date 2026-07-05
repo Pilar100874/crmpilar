@@ -14220,48 +14220,75 @@ export type Database = {
       ponto_notificacoes_config: {
         Row: {
           canais: Json
+          canais_por_evento: Json
           created_at: string
           destinatarios_emails: Json
+          destinatarios_telefones: Json
           dias_aviso_expiracao: number
+          email_ativo: boolean
           estabelecimento_id: string
           id: string
+          mensagens_template: Json
           notif_atestado_pendente: boolean
           notif_atraso: boolean
           notif_banco_horas_expirar: boolean
           notif_falta: boolean
+          notif_fraude: boolean
           notif_he_pendente: boolean
+          notificar_funcionario: boolean
+          push_ativo: boolean
+          sms_ativo: boolean
           updated_at: string
           webhook_url: string | null
+          whatsapp_ativo: boolean
         }
         Insert: {
           canais?: Json
+          canais_por_evento?: Json
           created_at?: string
           destinatarios_emails?: Json
+          destinatarios_telefones?: Json
           dias_aviso_expiracao?: number
+          email_ativo?: boolean
           estabelecimento_id: string
           id?: string
+          mensagens_template?: Json
           notif_atestado_pendente?: boolean
           notif_atraso?: boolean
           notif_banco_horas_expirar?: boolean
           notif_falta?: boolean
+          notif_fraude?: boolean
           notif_he_pendente?: boolean
+          notificar_funcionario?: boolean
+          push_ativo?: boolean
+          sms_ativo?: boolean
           updated_at?: string
           webhook_url?: string | null
+          whatsapp_ativo?: boolean
         }
         Update: {
           canais?: Json
+          canais_por_evento?: Json
           created_at?: string
           destinatarios_emails?: Json
+          destinatarios_telefones?: Json
           dias_aviso_expiracao?: number
+          email_ativo?: boolean
           estabelecimento_id?: string
           id?: string
+          mensagens_template?: Json
           notif_atestado_pendente?: boolean
           notif_atraso?: boolean
           notif_banco_horas_expirar?: boolean
           notif_falta?: boolean
+          notif_fraude?: boolean
           notif_he_pendente?: boolean
+          notificar_funcionario?: boolean
+          push_ativo?: boolean
+          sms_ativo?: boolean
           updated_at?: string
           webhook_url?: string | null
+          whatsapp_ativo?: boolean
         }
         Relationships: []
       }
