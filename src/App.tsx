@@ -111,6 +111,7 @@ import PontoCompensacao from "./pages/ponto/PontoCompensacao";
 import PontoCompensacaoVotacao from "./pages/ponto/PontoCompensacaoVotacao";
 import PontoBancoHorasExpirar from "./pages/ponto/PontoBancoHorasExpirar";
 import PontoNotificacoes from "./pages/ponto/PontoNotificacoes";
+import PontoNotificacoesEntregabilidade from "./pages/ponto/PontoNotificacoesEntregabilidade";
 import PontoManual from "./pages/ponto/PontoManual";
 import CVLayout from "./pages/controle-veiculos/CVLayout";
 import CVDashboard from "./pages/controle-veiculos/CVDashboard";
