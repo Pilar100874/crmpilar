@@ -511,8 +511,9 @@ function PontoNotificacaoBuilderContent() {
         ))}
       </div>
 
-      {/* Canvas */}
-      <div className="flex-1 relative">
+      {/* Canvas — precisa de h-full/min-h-0 dentro do layout flex para o ReactFlow medir */}
+      <div className="flex-1 relative min-w-0 min-h-0 h-full w-full">
+
         <ReactFlow
           nodes={enhancedNodes} edges={edges}
           onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
