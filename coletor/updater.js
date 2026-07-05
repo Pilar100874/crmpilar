@@ -128,12 +128,20 @@ foreach ($exe in $candidatos) {
 Remove-Item -LiteralPath '${destino}' -ErrorAction SilentlyContinue
 
 try {
-  Add-Type -AssemblyName PresentationFramework -ErrorAction Stop
-  [System.Windows.MessageBox]::Show('O Coletor Pilar foi instalado/atualizado com sucesso e já está em execução.','Coletor Pilar - Instalação concluída','OK','Information') | Out-Null
+  Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
+  $owner = New-Object System.Windows.Forms.Form
+  $owner.TopMost = $true
+  $owner.StartPosition = 'CenterScreen'
+  $owner.Size = New-Object System.Drawing.Size(1,1)
+  $owner.ShowInTaskbar = $false
+  $owner.Opacity = 0
+  $owner.Show()
+  [System.Windows.Forms.MessageBox]::Show($owner,'O Coletor Pilar foi instalado/atualizado com sucesso e já está em execução.','Coletor Pilar - Instalação concluída',[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Information,[System.Windows.Forms.MessageBoxDefaultButton]::Button1,[System.Windows.Forms.MessageBoxOptions]::DefaultDesktopOnly) | Out-Null
+  $owner.Close()
 } catch {
   try {
-    Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
-    [System.Windows.Forms.MessageBox]::Show('O Coletor Pilar foi instalado/atualizado com sucesso e já está em execução.','Coletor Pilar - Instalação concluída') | Out-Null
+    Add-Type -AssemblyName PresentationFramework -ErrorAction Stop
+    [System.Windows.MessageBox]::Show('O Coletor Pilar foi instalado/atualizado com sucesso e já está em execução.','Coletor Pilar - Instalação concluída','OK','Information') | Out-Null
   } catch {}
 }
 Stop-Transcript | Out-Null
@@ -147,12 +155,20 @@ Write-Host "Instalando EXE: ${destino}"
 $proc = Start-Process -FilePath '${destino}' -ArgumentList '/S' -Wait -PassThru
 Write-Host "Setup exit code: $($proc.ExitCode)"
 try {
-  Add-Type -AssemblyName PresentationFramework -ErrorAction Stop
-  [System.Windows.MessageBox]::Show('O Coletor Pilar foi instalado/atualizado com sucesso.','Coletor Pilar - Instalação concluída','OK','Information') | Out-Null
+  Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
+  $owner = New-Object System.Windows.Forms.Form
+  $owner.TopMost = $true
+  $owner.StartPosition = 'CenterScreen'
+  $owner.Size = New-Object System.Drawing.Size(1,1)
+  $owner.ShowInTaskbar = $false
+  $owner.Opacity = 0
+  $owner.Show()
+  [System.Windows.Forms.MessageBox]::Show($owner,'O Coletor Pilar foi instalado/atualizado com sucesso.','Coletor Pilar - Instalação concluída',[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Information,[System.Windows.Forms.MessageBoxDefaultButton]::Button1,[System.Windows.Forms.MessageBoxOptions]::DefaultDesktopOnly) | Out-Null
+  $owner.Close()
 } catch {
   try {
-    Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
-    [System.Windows.Forms.MessageBox]::Show('O Coletor Pilar foi instalado/atualizado com sucesso.','Coletor Pilar - Instalação concluída') | Out-Null
+    Add-Type -AssemblyName PresentationFramework -ErrorAction Stop
+    [System.Windows.MessageBox]::Show('O Coletor Pilar foi instalado/atualizado com sucesso.','Coletor Pilar - Instalação concluída','OK','Information') | Out-Null
   } catch {}
 }
 Stop-Transcript | Out-Null

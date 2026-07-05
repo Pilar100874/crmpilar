@@ -1,5 +1,5 @@
 {
-  "version": "1.4.1",
+  "version": "1.4.2",
   "downloadUrl": "https://crm.pilar.com.br/__l5e/assets-v1/d84e2208-54c6-4a6f-8ef0-a447a2fc7568/ColetorPilar-Setup.msi",
-  "notas": "1.4.1: corrige atualização automática — o instalador MSI baixado agora é executado corretamente (escapes de caminho do Windows quebravam o msiexec silenciosamente). Instalação agora gera log em %TEMP%\\ColetorPilar-Install-*.log para diagnóstico."
+  "notas": "1.4.2: exibe mensagem 'Instalação concluída' em primeiro plano (TopMost + DefaultDesktopOnly) ao finalizar a atualização/instalação do MSI."
 }
