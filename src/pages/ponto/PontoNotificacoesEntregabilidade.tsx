@@ -4,7 +4,10 @@ const supabase = supabaseTyped as any;
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, RefreshCw, BarChart3, CheckCircle2, XCircle, Ban, Clock, Copy } from "lucide-react";
+import { ArrowLeft, RefreshCw, BarChart3, CheckCircle2, XCircle, Ban, Clock, Copy, DollarSign } from "lucide-react";
+
+const CUSTO_SMS_UNIT = 0.08; // R$ por SMS enviado (ajustável)
+const CUSTO_WHATSAPP_UNIT = 0.03; // R$ por mensagem WhatsApp (utility)
 import { Link } from "react-router-dom";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
