@@ -20,12 +20,43 @@ Deno.serve(async (req) => {
 
     // Coletor reporta status por câmera (batch)
     if (body?.action === "report_status" && Array.isArray(body?.reports)) {
+      // Busca protocolo das câmeras reportadas para reinterpretar erros de RTSP.
+      const ids = body.reports.map((r: any) => r?.id).filter(Boolean);
+      const { data: metas } = await supabase
+        .from("cv_cameras")
+        .select("id,protocolo,porta")
+        .in("id", ids);
+      const metaById = new Map<string, any>((metas ?? []).map((m: any) => [m.id, m]));
+
+      // Erros de socket em porta RTSP que na verdade indicam que a câmera ESTÁ online
+      // (TCP handshake completou, mas o Coletor mandou HTTP para um servidor RTSP).
+      const RTSP_ALIVE_HINTS = [
+        "socket hang up",
+        "econnreset",
+        "epipe",
+        "eproto",
+        "parse error",
+        "invalid http",
+        "unexpected end",
+      ];
+
       for (const r of body.reports) {
         if (!r?.id) continue;
+        const meta = metaById.get(r.id);
+        const isRtsp = meta?.protocolo === "rtsp" || meta?.porta === 554;
+        const errLower = String(r.erro || "").toLowerCase();
+        const rtspAlive = isRtsp && r.status !== "online"
+          && RTSP_ALIVE_HINTS.some((h) => errLower.includes(h));
+
+        const finalStatus = (r.status === "online" || rtspAlive) ? "online" : "erro";
+        const finalErro = finalStatus === "online"
+          ? null
+          : (r.erro || null);
+
         await supabase.from("cv_cameras").update({
           ultima_verificacao: new Date().toISOString(),
-          ultimo_status: r.status === "online" ? "online" : "erro",
-          ultimo_erro: r.status === "online" ? null : (r.erro || null),
+          ultimo_status: finalStatus,
+          ultimo_erro: finalErro,
         }).eq("id", r.id);
       }
       return new Response(JSON.stringify({ ok: true }), {
