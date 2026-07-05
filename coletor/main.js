@@ -6,8 +6,25 @@ const {
 } = require('./collector');
 const { checarAtualizacao, baixarEInstalar } = require('./updater');
 
+// ─── Single instance lock ────────────────────────────────────────────────
+// Impede múltiplas instâncias simultâneas do Coletor (evita vários
+// processos "ColetorPilar.exe" acumulando no Gerenciador de Tarefas).
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+  process.exit(0);
+}
+
 let win;
 let tray;
+
+app.on('second-instance', () => {
+  if (win) {
+    if (win.isMinimized()) win.restore();
+    if (!win.isVisible()) win.show();
+    win.focus();
+  }
+});
 
 function createWindow() {
   win = new BrowserWindow({
@@ -40,7 +57,7 @@ function createTray() {
     { type: 'separator' },
     { label: 'Status', click: () => { win.show(); win.webContents.send('show-status'); } },
     { type: 'separator' },
-    { label: 'Sair', click: () => { app.isQuitting = true; app.quit(); } },
+    { label: 'Sair (encerra o serviço)', click: () => { app.isQuitting = true; app.quit(); } },
   ]));
 }
 
@@ -51,6 +68,19 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', (e) => e.preventDefault());
+
+// ─── Shutdown limpo ──────────────────────────────────────────────────────
+// Garante que ao "Sair" (tray, logoff, Alt+F4 após isQuitting) o processo
+// realmente termina — para timers do poll, hub WebRTC e libera o tray.
+function shutdownEverything() {
+  try { stopCollector(); } catch {}
+  try { if (tray) { tray.destroy(); tray = null; } } catch {}
+}
+app.on('before-quit', () => { app.isQuitting = true; shutdownEverything(); });
+app.on('will-quit', shutdownEverything);
+process.on('SIGINT', () => { app.isQuitting = true; app.quit(); });
+process.on('SIGTERM', () => { app.isQuitting = true; app.quit(); });
+
 
 const { ipcMain } = require('electron');
 ipcMain.handle('collector:status', () => getStatus());
