@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { PushBlockConfigEditor } from "@/components/workflows/PushBlockConfig";
 
 interface NovaAutomacaoDialogProps {
   open: boolean;
