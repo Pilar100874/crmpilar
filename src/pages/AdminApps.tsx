@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
   Download, Monitor, CheckCircle2, Copy, Database, Key, Camera,
-  Smartphone, Clock, Shield, Info,
+  Smartphone, Clock, Shield, Info, Apple, Terminal,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
