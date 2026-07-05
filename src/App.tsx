@@ -482,6 +482,7 @@ const App = () => (
                 <Route path="compensacao-votacao" element={<PontoCompensacaoVotacao />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
                 <Route path="notificacoes/entregabilidade" element={<PontoNotificacoesEntregabilidade />} />
+                <Route path="notificacoes/:id" element={<PontoNotificacaoBuilder />} />
                 <Route path="manual" element={<PontoManual />} />
               </Route>
               <Route path="/controle-veiculos" element={<CVLayout />}>
