@@ -151,6 +151,14 @@ function CustomNode({ id, data, selected }: any) {
 const nodeTypes: NodeTypes = { custom: CustomNode as any };
 
 export default function PontoNotificacaoBuilder() {
+  return (
+    <ReactFlowProvider>
+      <PontoNotificacaoBuilderContent />
+    </ReactFlowProvider>
+  );
+}
+
+function PontoNotificacaoBuilderContent() {
   const { id } = useParams();
   const nav = useNavigate();
   const [wf, setWf] = useState<any>(null);
