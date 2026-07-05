@@ -194,4 +194,21 @@ export const LOGISTICA_BLOCKS: LogisticaBlock[] = [
     defaultData: { email_destino: '', assunto_email: '', corpo_email: '' },
     outputs: 1,
   },
+  {
+    type: 'disparar_push',
+    label: 'Disparar Push',
+    category: 'acao',
+    color: '#f97316',
+    icon: 'BellRing',
+    description: 'Envia notificação push para usuário interno ou cliente',
+    defaultData: {
+      destinatario_tipo: 'todos_usuarios',
+      usuario_ids: [],
+      contato_ids: [],
+      titulo: 'Alerta de logística',
+      corpo: '',
+      url: '/logistica-veiculos',
+    },
+    outputs: 1,
+  },
 ];
