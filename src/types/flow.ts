@@ -61,7 +61,8 @@ export type NodeType =
   | "buttons_media"
   | "carousel"
   | "attach_catalog"
-  | "global_redirect";
+  | "global_redirect"
+  | "disparar_push";
 
 
 export interface BlockDefinition {
@@ -746,6 +747,21 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     icon: "GalleryHorizontal",
     color: "text-blue-600",
     defaultData: { title: "", description: "", footer: "", mode: "manual", cards: [], dynamicLimit: 10, dynamicButtonText: "Selecionar", variable: "card_escolhido" },
+  },
+  {
+    type: "disparar_push",
+    label: "Disparar Push",
+    description: "Envia notificação push para app instalado (usuário interno ou cliente)",
+    icon: "BellRing",
+    color: "text-orange-500",
+    defaultData: {
+      destinatario_tipo: "variavel",
+      variavel_tipo: "contato",
+      variavel_destinatario: "contato.id",
+      titulo: "",
+      corpo: "",
+      url: "/",
+    },
   },
 ];
 

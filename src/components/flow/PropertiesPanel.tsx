@@ -18,6 +18,7 @@ import { FlowVariable } from "./VariableManager";
 import { VariableInput, VariableTextarea } from "./VariableInput";
 import { VariablePickerDialog } from "./VariablePickerDialog";
 import * as BlockConfigs from "./block-configs";
+import { PushBlockConfigEditor } from "@/components/workflows/PushBlockConfig";
 // import { LiveBlockPreview, PREVIEW_SUPPORTED_TYPES } from "./block-configs/LiveBlockPreview";
 
 interface PropertiesPanelProps {
@@ -444,6 +445,12 @@ export const PropertiesPanel = ({
         return <BlockConfigs.TriggerWorkflowConfig data={selectedNode.data} onChange={(cfg) => Object.entries(cfg).forEach(([k, v]) => handleConfigChange(k, v))} />;
       case "return_response":
         return <BlockConfigs.ReturnResponseConfig data={selectedNode.data} onChange={(cfg) => Object.entries(cfg).forEach(([k, v]) => handleConfigChange(k, v))} />;
+      case "disparar_push":
+        return <PushBlockConfigEditor
+          value={config as any}
+          onChange={(patch) => Object.entries(patch).forEach(([k, v]) => handleConfigChange(k, v as any))}
+          context="bot"
+        />;
 
 
 

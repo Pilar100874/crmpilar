@@ -248,6 +248,22 @@ async function executarRegra(
         continuar = false;
         break;
 
+      case 'disparar_push':
+        // Dispara push notification (fire-and-forget para não travar o cálculo do orçamento)
+        try {
+          const { executarBlocoPush } = await import('@/lib/pushExecutor');
+          executarBlocoPush(configBloco as any, {
+            variaveis: { orcamento, cliente: orcamento.cliente, regra: regra.nome },
+            workflow_id: regra.id,
+            workflow_tipo: 'vendas',
+            origem: 'automacao_vendas',
+          }).catch((e) => console.error('[vendas] push falhou:', e));
+          resultado.detalhes.push(`${regra.nome}: push disparado`);
+        } catch (e) {
+          console.error('[vendas] push erro', e);
+        }
+        break;
+
       default:
         console.warn(`Tipo de bloco não implementado: ${tipoBlo}`);
     }

@@ -38,7 +38,8 @@ export type AdsBlockType =
   | 'action_create_report'
   | 'action_aviso_sistema'
   | 'action_mensagem_interna'
-  | 'return_response';
+  | 'return_response'
+  | 'disparar_push';
 
 export interface AdsBlockDefinition {
   type: AdsBlockType;
@@ -411,7 +412,7 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
   {
     type: 'return_response',
     label: 'Retornar Resposta',
-    description: 'Devolve payload ao workflow chamador (modo síncrono) e encerra esta automação.',
+    description: 'Devolve payload ao workflow chamador',
     icon: 'Reply',
     category: 'action',
     color: '#14b8a6',
@@ -422,6 +423,22 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
       payloadJson: '',
       includeAllVariables: false,
       stopFlow: true,
+    },
+  },
+  {
+    type: 'disparar_push',
+    label: 'Disparar Push',
+    description: 'Envia notificação push para usuário interno ou cliente',
+    icon: 'BellRing',
+    category: 'action',
+    color: '#f97316',
+    defaultData: {
+      destinatario_tipo: 'todos_usuarios',
+      usuario_ids: [],
+      contato_ids: [],
+      titulo: 'Alerta de anúncio',
+      corpo: 'Verifique os detalhes da campanha',
+      url: '/ads',
     },
   },
 ];

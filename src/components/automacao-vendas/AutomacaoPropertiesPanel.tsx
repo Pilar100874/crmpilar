@@ -8,6 +8,7 @@ import { X, Search, Check, ChevronsUpDown, Plus, Trash2 } from "lucide-react";
 import { Node } from "@xyflow/react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { PushBlockConfigEditor } from "@/components/workflows/PushBlockConfig";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -481,6 +482,18 @@ export const AutomacaoPropertiesPanel = ({
               </p>
             </div>
           )}
+
+          {/* Bloco Disparar Push */}
+          {(node.data as any).type === "disparar_push" && (
+            <PushBlockConfigEditor
+              value={((node.data as any).config || {}) as any}
+              onChange={(patch) => onUpdate(node.id, {
+                config: { ...((node.data as any).config || {}), ...patch },
+              })}
+              context="vendas"
+            />
+          )}
+
 
           {/* Campos específicos para valida_faixa_faturamento */}
           {(node.data as any).type === "valida_faixa_faturamento" && (

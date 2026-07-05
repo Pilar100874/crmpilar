@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { VeiculoComStatus } from '@/types/logistica';
 import { differenceInMinutes } from 'date-fns';
+import { executarBlocoPush, PushBlockConfig } from '@/lib/pushExecutor';
 
 interface AutomacaoFlowNode {
   id: string;
@@ -124,9 +125,24 @@ export async function executarAutomacoesLogistica(
                 automacao_nome: automacao.nome
               });
             }
+        }
+
+        // Handle "disparar_push" - dispara push notification
+        if ((nodeType as string) === 'disparar_push') {
+          try {
+            const pushCfg = config as unknown as PushBlockConfig;
+            await executarBlocoPush(pushCfg, {
+              variaveis: { veiculos, automacao: { id: automacao.id, nome: automacao.nome } },
+              workflow_id: automacao.id,
+              workflow_tipo: 'logistica',
+              origem: 'logistica_automacao',
+            });
+          } catch (e) {
+            console.error('[logistica] falha ao disparar push', e);
           }
         }
       }
+    }
     }
 
     // Save markers to database (upsert to avoid duplicates)

@@ -12,6 +12,7 @@ import { AddressAutocomplete } from '@/components/logistica/AddressAutocomplete'
 import { IconePicker } from './IconePicker';
 import { Plus, Trash2, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { PushBlockConfigEditor } from '@/components/workflows/PushBlockConfig';
 
 interface Usuario {
   id: string;
@@ -449,6 +450,13 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
             </div>
           </div>
         );
+
+      case 'disparar_push':
+        return <PushBlockConfigEditor
+          value={config as any}
+          onChange={(patch) => Object.entries(patch).forEach(([k, v]) => updateConfig(k, v))}
+          context="logistica"
+        />;
 
       default:
         return (

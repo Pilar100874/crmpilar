@@ -25,7 +25,8 @@ export type AutomacaoVendasBlockType =
   | "acao_adicionar_frete"
   | "acao_enviar_alerta"
   | "aplicar_desconto"
-  | "return_response";
+  | "return_response"
+  | "disparar_push";
 
 // Operadores de comparação
 export type OperadorComparacao = ">" | ">=" | "=" | "<" | "<=" | "!=";
@@ -296,6 +297,22 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
       payloadJson: "",
       includeAllVariables: false,
       stopFlow: true,
+    },
+  },
+  {
+    type: "disparar_push",
+    label: "Disparar Push",
+    description: "Envia notificação push para app instalado (usuário interno ou cliente)",
+    icon: "BellRing",
+    color: "#f97316",
+    category: "acao",
+    defaultData: {
+      destinatario_tipo: "usuario",
+      usuario_ids: [],
+      contato_ids: [],
+      titulo: "",
+      corpo: "",
+      url: "/",
     },
   },
 ];

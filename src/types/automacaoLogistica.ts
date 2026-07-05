@@ -9,6 +9,7 @@ export type LogisticaBlockType =
   | 'acao_whatsapp'
   | 'acao_notificacao'
   | 'acao_email'
+  | 'disparar_push'
   | 'return_response';
 
 export interface CondicaoTempoParado {
@@ -49,6 +50,16 @@ export interface LogisticaBlockConfig {
   email_destino?: string;
   assunto_email?: string;
   corpo_email?: string;
+  // Para disparar_push
+  destinatario_tipo?: 'usuario' | 'contato' | 'todos_usuarios' | 'todos_contatos' | 'variavel';
+  usuario_ids?: string[];
+  contato_ids?: string[];
+  variavel_destinatario?: string;
+  variavel_tipo?: 'usuario' | 'contato';
+  titulo?: string;
+  corpo?: string;
+  url?: string;
+  icone?: string;
 }
 
 export interface LogisticaBlock {
@@ -192,6 +203,23 @@ export const LOGISTICA_BLOCKS: LogisticaBlock[] = [
     icon: 'Mail',
     description: 'Envia um e-mail',
     defaultData: { email_destino: '', assunto_email: '', corpo_email: '' },
+    outputs: 1,
+  },
+  {
+    type: 'disparar_push',
+    label: 'Disparar Push',
+    category: 'acao',
+    color: '#f97316',
+    icon: 'BellRing',
+    description: 'Envia notificação push para usuário interno ou cliente',
+    defaultData: {
+      destinatario_tipo: 'todos_usuarios',
+      usuario_ids: [],
+      contato_ids: [],
+      titulo: 'Alerta de logística',
+      corpo: '',
+      url: '/logistica-veiculos',
+    },
     outputs: 1,
   },
 ];

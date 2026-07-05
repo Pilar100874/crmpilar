@@ -12,6 +12,7 @@ import winAsset from "../../public/coletor/ColetorPilar-Setup.msi.asset.json";
 import macAppleAsset from "../../public/coletor/PontoColetor-macOS-AppleSilicon.asset.json";
 import macIntelAsset from "../../public/coletor/PontoColetor-macOS-Intel.asset.json";
 import linuxAsset from "../../public/coletor/PontoColetor-Linux.asset.json";
+import { MobileAppCard } from "@/components/mobile/MobileAppCard";
 
 const SUPABASE_URL = "https://ioxugupvxlcdweldocmq.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc";
@@ -170,9 +171,14 @@ export default function AdminApps() {
       <div>
         <h1 className="text-xl font-semibold sm:text-3xl">Apps &amp; Instaladores</h1>
         <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-          Central de downloads dos aplicativos auxiliares do CRM Pilar: Coletor Desktop (Windows · macOS · Linux) e APK Pilar SMS.
+          Central de downloads do CRM Pilar: App Mobile (iOS/Android), Coletor Desktop e APK Pilar SMS.
         </p>
       </div>
+
+      {/* App Mobile - PWA + Nativo */}
+      <MobileAppCard />
+
+
 
 
       {/* Dados de conexão */}
