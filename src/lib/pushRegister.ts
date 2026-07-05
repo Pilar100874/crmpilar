@@ -85,7 +85,7 @@ export async function subscribeToPush(opts: {
   if (!sub) {
     sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY),
+      applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY).buffer as ArrayBuffer,
     });
   }
 
