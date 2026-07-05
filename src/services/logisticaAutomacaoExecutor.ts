@@ -128,7 +128,7 @@ export async function executarAutomacoesLogistica(
         }
 
         // Handle "disparar_push" - dispara push notification
-        if (nodeType === 'disparar_push') {
+        if ((nodeType as string) === 'disparar_push') {
           try {
             const pushCfg = config as unknown as PushBlockConfig;
             await executarBlocoPush(pushCfg, {
