@@ -1,109 +1,85 @@
 
-# Plano: Pilar Hub (Android) + Pilar Cam (Windows)
+# App Mobile + Push Notifications + Blocos de Workflow
 
-Vou entregar **dois aplicativos** que se conversam pelo mesmo backend do CRM.
+Vou entregar em 3 blocos independentes para você validar cada etapa.
 
----
+## Bloco 1 — Duas versões instaláveis do sistema
 
-## 1. Pilar Hub — APK Android único (evolução do Pilar SMS v1.2)
+### 1a. PWA instalável (funciona hoje, iOS + Android)
+- Adicionar `manifest.webmanifest` com ícones, cores e `display: standalone`
+- Registrar Service Worker **guardado** (nunca ativa em preview/dev — segue a skill PWA do Lovable)
+- Estratégia `NetworkFirst` para HTML → **atualização automática** a cada abertura, sem reinstalar
+- Botão "Instalar App" na tela `Apps & Instaladores` (usa `beforeinstallprompt` no Android; guia visual "Compartilhar → Adicionar à Tela de Início" no iOS)
 
-Um só APK com **3 módulos independentes** que o próprio usuário liga/desliga pela tela de configuração.
+### 1b. App nativo Capacitor (APK Android + IPA iOS) baixável da tela Apps
+- Configurar Capacitor com `server.url` apontando para `https://crmpilar.lovable.app` → o app é uma casca que carrega o site
+- **Consequência boa**: toda atualização do sistema aparece automaticamente no app, sem reinstalar (só reinstala se mudar plugin nativo ou push)
+- Workflow GitHub Actions para gerar:
+  - `pilar-app.apk` (Android) — assinado com keystore de debug
+  - `pilar-app.ipa` (iOS) — **só compila via macOS+Xcode**; vou entregar o projeto pronto e as instruções, mas o `.ipa` final você gera no seu Mac (ou serviço de build tipo Codemagic/EAS). Sem conta Apple Developer, o `.ipa` só instala em dispositivos registrados via sideload (AltStore/Sideloadly) — deixo isso claro na tela.
+- Nova aba na página `AdminApps.tsx`: "App Mobile" com 2 cards (Android APK direto / iOS instruções sideload) + QR code para instalação rápida
+- Endpoint público servindo o APK a partir de `public/mobile/pilar-app.apk`
 
-### Módulos
+## Bloco 2 — Push Notifications (funciona nas 2 versões)
 
-| Módulo | O que faz | Peso no celular |
-|---|---|---|
-| 📱 **SMS Gateway** | O que já existe hoje (fila `sms_queue` + polling) | Muito baixo |
-| 🕐 **Ponto Coletor** | Bate ponto por PIN/QR/NFC, tira foto do funcionário no momento, envia geoloc, funciona offline (fila local) e sincroniza | Baixo |
-| 📸 **Câmera de Evento** | Tira snapshot quando bate ponto ou quando o backend pedir (não faz streaming), sobe pro Storage | Baixo |
+### Backend
+- Nova tabela `push_subscriptions` (usuario_id nullable, contato_id nullable, endpoint, p256dh, auth, plataforma: 'web'|'android'|'ios', ativo)
+- Nova tabela `push_notifications_log` (destinatario, titulo, corpo, url, status, tentativas, workflow_id)
+- Edge function `push-subscribe` — cliente registra endpoint
+- Edge function `push-send` — envia via Web Push (VAPID) para PWA/Android Chrome/iOS 16.4+ Safari instalado
+- Segredos: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (gero automaticamente)
+- Para Capacitor nativo: usa o mesmo Service Worker do PWA (o Capacitor carrega o site, então o SW já funciona) — **sem Firebase/APNs necessário nessa arquitetura**
 
-### Tela principal (nova)
-Header Pilar + 3 cards de status (SMS / Ponto / Câmera) — cada card mostra:
-- Switch liga/desliga
-- Bolinha de status (verde ativo, cinza desligado, vermelho erro)
-- Contadores rápidos (SMS enviados hoje, pontos batidos hoje, últimas fotos)
+### Frontend
+- Hook `usePushNotifications` — pede permissão, registra subscription, salva no banco
+- Toggle "Ativar notificações push" em Configurações do usuário e na área do cliente do e-commerce
+- Service Worker `push-sw.js` escuta evento `push` e mostra notificação nativa
 
-### Tela de configurações (menu ⚙️)
-- **Geral**: token do estabelecimento, servidor, intervalo de polling
-- **SMS**: (já existe)
-- **Ponto**: modo (PIN / QR / NFC), exigir foto, exigir GPS, cerca virtual (lat/long + raio), câmera frontal/traseira
-- **Câmera**: qualidade do snapshot, salvar cópia local, apagar após X dias
+## Bloco 3 — Bloco "Disparar Push" nos 4 workflows
 
-### Backend (Lovable Cloud)
-Tabelas novas / edge functions:
-- `ponto_registros` → já existe, usar
-- `ponto_dispositivo_config` (token, módulos ativos, cerca virtual)
-- `ponto_snapshots` (URL storage + registro_id)
-- Edge function `ponto-registrar` (recebe batida + foto base64 → storage → grava)
-- Edge function `pilar-hub-config` (celular baixa configuração)
-- Bucket `pilar-hub-snapshots`
+Bloco unificado adicionado a:
+1. **Criar/Editar Bot** (omnichannel flow)
+2. **Logística e-commerce** (`automacaoFlowEngine`)
+3. **Regras de Automação de Vendas** (`blocklyAutomacaoEngine`)
+4. **Automações de Anúncios**
 
-### Tela no CRM (nova)
-`/logistica → Pilar Hub` ou `/ponto → Dispositivos Coletores`:
-- Lista de celulares aprovados
-- Ver últimas batidas + fotos
-- Ativar/desativar módulos remotamente
-- Ver saúde (última conexão, bateria, versão do app)
+### Configuração do bloco (mesma UI nos 4 editores)
+- **Destinatário**: seletor com 3 modos
+  - `Usuário interno` → dropdown de funcionários (`usuarios`)
+  - `Cliente final` → dropdown de contatos/segmentos (`contatos` ou variável do fluxo tipo `{{contato.id}}`)
+  - `Segmento` → grupo pré-definido (ex: "todos vendedores", "clientes com pedido aberto")
+- **Título** (com variáveis `{{nome}}`, `{{pedido.numero}}`)
+- **Mensagem** (com variáveis)
+- **URL de destino ao clicar** (opcional — deep link dentro do app)
+- **Ícone/imagem** (opcional)
 
----
+### Execução
+- Cada engine chama o mesmo executor: `executarBlocoPush(config, contexto)` → resolve destinatários → chama edge function `push-send` → grava em `push_notifications_log`
+- Se destinatário não tem subscription ativa, marca no log como "sem dispositivo" e continua o fluxo
 
-## 2. Pilar Cam — App desktop Windows (Electron) para streaming contínuo
+## Detalhes técnicos
 
-App leve pra rodar num PC velho de portaria/escritório, fazendo o trabalho pesado que não cabe no celular.
+**Arquivos novos principais:**
+- `public/manifest.webmanifest`, `public/push-sw.js`, `src/lib/pwaRegister.ts`
+- `capacitor.config.ts` (atualizar), workflow `.github/workflows/build-mobile-app.yml`
+- `supabase/functions/push-subscribe/index.ts`, `push-send/index.ts`
+- Migração: `push_subscriptions`, `push_notifications_log` + GRANTs + RLS
+- `src/hooks/usePushNotifications.ts`
+- `src/components/workflows/PushBlockConfig.tsx` (UI compartilhada)
+- Adicionar tipo de bloco `push_notification` em cada engine
+- `src/lib/pushExecutor.ts` (executor unificado)
 
-### O que faz
-- Conecta em **N câmeras IP RTSP/ONVIF** (as que já estão em `cv_cameras`)
-- Mostra grid ao vivo (2x2, 3x3, 4x4)
-- Grava contínuo em disco local com rotação (7/15/30 dias)
-- Recorta clipes quando o CRM pede (ex: "quero os 30s ao redor de tal evento")
-- Detecção de movimento por câmera → cria evento no CRM
-- Sobe apenas eventos/clipes pro Storage (não streaming inteiro — economiza banda)
+**Segredos necessários:** `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (gero automático), `VAPID_SUBJECT` (seu email de contato — vou pedir).
 
-### Configuração
-- Login com o token do estabelecimento
-- Escolhe quais câmeras da lista puxar
-- Escolhe pasta de gravação e limite de disco
-- Auto-start com Windows
+**Limitações honestas:**
+- iOS PWA push só funciona no iOS 16.4+ e **só depois** que o usuário instalar na tela inicial
+- APK Android sem Play Store precisa habilitar "Fontes desconhecidas" no celular
+- IPA iOS sem App Store precisa de Mac para compilar e sideload para instalar (sem conta Apple Developer, só dura 7 dias por instalação)
 
-### Empacotamento
-- Electron + `@electron/packager` → gera `.zip` pra Windows (instalador via zip por enquanto)
-- Player usa `ffmpeg` embutido (RTSP → HLS local)
-- Comunica com o backend via as mesmas edge functions
+## Ordem de entrega
+1. Bloco 1a (PWA) — pronto na hora
+2. Bloco 2 (push backend + toggle usuário) — mesmo turno
+3. Bloco 3 (blocos nos 4 workflows) — mesmo turno
+4. Bloco 1b (Capacitor + workflow GitHub Actions APK) — separado, avisar quando começar
 
----
-
-## Ordem de entrega proposta (em fases)
-
-**Fase 1 — Backend compartilhado** (rápido)
-- Tabela `pilar_hub_dispositivos` (módulos ativos, tipo Android/Windows, saúde)
-- Edge functions `pilar-hub-config` (GET config) e `pilar-hub-heartbeat` (POST status)
-- Tela CRM básica listando dispositivos
-
-**Fase 2 — Pilar Hub Android (evolução do APK atual)**
-- Adicionar tela de módulos com switches
-- Adicionar módulo Ponto (bater ponto + foto + geoloc + fila offline)
-- Manter SMS funcionando exatamente como está
-- Compilar APK v1.3.0
-
-**Fase 3 — Pilar Cam Windows**
-- App Electron com grid de câmeras RTSP
-- Gravação local + upload de eventos
-- Empacotamento `.zip` pra Windows
-
----
-
-## Guardrails / riscos
-
-- **Não** vou tocar no fluxo SMS que já funciona — só empacoto ele como "módulo" dentro do Hub.
-- **Não** vou fazer o celular tentar streaming contínuo de câmera IP (isso vai pro Windows).
-- Se um módulo quebrar, os outros continuam funcionando (serviços independentes).
-- Toggle no CRM = mudança na config baixada pelo celular no próximo heartbeat (30s).
-
----
-
-## Perguntas pra confirmar antes de começar
-
-1. **Ponto Coletor**: pode ficar em quem bate por **PIN** (mais simples) na v1, e depois adicionamos QR/NFC/facial? Ou já quer QR desde o começo?
-2. **Câmera do celular**: você quer usar pra tirar foto no ponto **do funcionário** (frontal), foto **do que ele viu** (traseira), ou as duas opções configuráveis?
-3. **Pilar Cam Windows**: prefere começar já com **gravação contínua + eventos**, ou versão inicial só com **visualização ao vivo + snapshots sob demanda** (menos complexa)?
-4. Posso começar pela **Fase 1 (backend)** agora?
+Aprovando, começo pelos blocos 1a + 2 + 3 (que já cobrem 90% do uso) e depois faço o Capacitor nativo.
