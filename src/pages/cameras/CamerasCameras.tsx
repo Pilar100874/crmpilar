@@ -29,6 +29,17 @@ const MARCAS = [
   { value: "generica_rtsp", label: "Genérica RTSP" },
 ];
 
+// Defaults corretos por marca (porta / protocolo / snapshot_path).
+// Tapo (C100/C110/C200/C210/C310/C320WS) NÃO responde em HTTP:80 — usa RTSP:554
+// com uma "Conta de Câmera" criada no app Tapo (Config. Avançadas).
+const MARCA_DEFAULTS: Record<string, { porta: number; protocolo: string; snapshot_path: string }> = {
+  tplink_tapo:   { porta: 554, protocolo: "rtsp", snapshot_path: "/stream1" },
+  hikvision:     { porta: 80,  protocolo: "http", snapshot_path: "/ISAPI/Streaming/channels/101/picture" },
+  intelbras:     { porta: 80,  protocolo: "http", snapshot_path: "/cgi-bin/snapshot.cgi" },
+  generica_http: { porta: 80,  protocolo: "http", snapshot_path: "" },
+  generica_rtsp: { porta: 554, protocolo: "rtsp", snapshot_path: "/stream1" },
+};
+
 const emptyCam = {
   id: null as string | null,
   nome: "",
