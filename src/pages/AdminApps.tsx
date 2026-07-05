@@ -12,6 +12,7 @@ import winAsset from "../../public/coletor/ColetorPilar-Setup.msi.asset.json";
 import macAppleAsset from "../../public/coletor/PontoColetor-macOS-AppleSilicon.asset.json";
 import macIntelAsset from "../../public/coletor/PontoColetor-macOS-Intel.asset.json";
 import linuxAsset from "../../public/coletor/PontoColetor-Linux.asset.json";
+import crmApkAsset from "../../public/coletor/crm-pilar-v1.0.0.apk.asset.json";
 import { MobileAppCard } from "@/components/mobile/MobileAppCard";
 
 const SUPABASE_URL = "https://ioxugupvxlcdweldocmq.supabase.co";
@@ -431,6 +432,50 @@ export default function AdminApps() {
               <p>
                 <b>Dica:</b> mantenha o celular sempre carregando. Se cair a conexão, os SMS ficam na fila
                 e são reenviados assim que o celular voltar.
+              </p>
+            </div>
+          }
+        />
+
+        <AppTile
+          accent="blue"
+          icon={<Smartphone className="h-8 w-8" />}
+          platform="Android · APK"
+          title="CRM Pilar (App Android)"
+          description={
+            <>
+              Aplicativo nativo do <b>CRM Pilar</b> para celulares e tablets Android. Abre em tela cheia,
+              com ícone próprio na Home. Toda vez que o CRM é atualizado, o app <b>atualiza automaticamente</b>{" "}
+              sem precisar reinstalar. Suporta <b>notificações push</b> configuradas nos workflows.
+            </>
+          }
+          modules={
+            <div className="flex items-center gap-3 rounded-xl border border-dashed p-4 text-xs text-muted-foreground">
+              <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <span>
+                <b className="text-foreground">Auto-update</b> · sem necessidade de Play Store · push habilitado ·
+                mesma conta e permissões do CRM web.
+              </span>
+            </div>
+          }
+          fileLabelBadge="Pacote APK"
+          fileName="crm-pilar-v1.0.0.apk"
+          onDownload={() => baixar("crm-pilar-v1.0.0.apk", crmApkAsset.url)}
+          downloadButtonText="Baixar APK"
+          steps={[
+            { text: <>No Android, ative <b>Fontes desconhecidas</b> em <b>Configurações → Segurança</b> (ou permita a instalação quando o navegador perguntar).</> },
+            { text: <>Baixe o <b>crm-pilar-v1.0.0.apk</b> acima e toque no arquivo para instalar.</> },
+            { text: <>Abra o app <b>CRM Pilar</b> na Home. Faça login com sua conta habitual do CRM.</> },
+            { text: <>Nas primeiras notificações, autorize <b>Notificações</b> quando o Android pedir — é o que habilita os push dos workflows.</> },
+            { text: <>Pronto. A cada atualização do CRM, o app carrega a versão nova automaticamente ao abrir.</> },
+          ]}
+          footer={
+            <div className="mt-4 flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
+              <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+              <p>
+                <b>iOS:</b> a versão iPhone/iPad exige compilação em Mac + Xcode e não pode ser gerada aqui.
+                No iPhone, use a <b>PWA</b> — abra <code>crmpilar.lovable.app</code> no Safari, toque em{" "}
+                <b>Compartilhar → Adicionar à Tela de Início</b>. Funciona igual ao APK, com push a partir do iOS 16.4.
               </p>
             </div>
           }
