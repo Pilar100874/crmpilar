@@ -61,7 +61,8 @@ export default function NovaAutomacaoDialog({
   const [horario, setHorario] = useState("");
   
   // Método de disparo
-  const [metodoDisparo, setMetodoDisparo] = useState<"webhook" | "bot">("webhook");
+  const [metodoDisparo, setMetodoDisparo] = useState<"webhook" | "bot" | "push">("webhook");
+  const [pushConfig, setPushConfig] = useState<any>({ destinatario_tipo: "todos_contatos", titulo: "", corpo: "" });
   
   // Webhook
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
@@ -267,6 +268,11 @@ export default function NovaAutomacaoDialog({
       return;
     }
 
+    if (metodoDisparo === "push" && !pushConfig?.titulo?.trim()) {
+      toast.error("Informe pelo menos o título do push");
+      return;
+    }
+
     setIsCreating(true);
 
     try {
@@ -337,6 +343,8 @@ export default function NovaAutomacaoDialog({
 
         config.webhook_id = finalWebhookId;
         config.variaveis = variaveisWebhook;
+      } else if (metodoDisparo === "push") {
+        config.push_config = pushConfig;
       } else {
         config.bot_id = botSelecionado;
       }
