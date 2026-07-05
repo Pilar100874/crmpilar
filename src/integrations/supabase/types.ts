@@ -16001,6 +16001,116 @@ export type Database = {
           },
         ]
       }
+      push_notifications_log: {
+        Row: {
+          corpo: string | null
+          created_at: string
+          destinatario_id: string | null
+          destinatario_tipo: string
+          erro: string | null
+          icone: string | null
+          id: string
+          origem: string | null
+          payload: Json | null
+          status: string
+          titulo: string
+          total_enviado: number | null
+          total_falhou: number | null
+          url: string | null
+          workflow_id: string | null
+          workflow_tipo: string | null
+        }
+        Insert: {
+          corpo?: string | null
+          created_at?: string
+          destinatario_id?: string | null
+          destinatario_tipo: string
+          erro?: string | null
+          icone?: string | null
+          id?: string
+          origem?: string | null
+          payload?: Json | null
+          status?: string
+          titulo: string
+          total_enviado?: number | null
+          total_falhou?: number | null
+          url?: string | null
+          workflow_id?: string | null
+          workflow_tipo?: string | null
+        }
+        Update: {
+          corpo?: string | null
+          created_at?: string
+          destinatario_id?: string | null
+          destinatario_tipo?: string
+          erro?: string | null
+          icone?: string | null
+          id?: string
+          origem?: string | null
+          payload?: Json | null
+          status?: string
+          titulo?: string
+          total_enviado?: number | null
+          total_falhou?: number | null
+          url?: string | null
+          workflow_id?: string | null
+          workflow_tipo?: string | null
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          ativo: boolean
+          auth: string
+          contato_id: string | null
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          plataforma: string
+          ultimo_uso: string | null
+          updated_at: string
+          user_agent: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          auth: string
+          contato_id?: string | null
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          plataforma?: string
+          ultimo_uso?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          auth?: string
+          contato_id?: string | null
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          plataforma?: string
+          ultimo_uso?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       qa_avaliacoes: {
         Row: {
           atendente_id: string
