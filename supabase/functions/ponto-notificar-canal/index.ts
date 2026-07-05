@@ -112,6 +112,22 @@ Deno.serve(async (req) => {
     }
 
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    // 1) Se houver workflow visual ativo para este evento, delega tudo para o executor de workflow.
+    try {
+      const { data: wf } = await sb.from("ponto_notif_workflows")
+        .select("id").eq("estabelecimento_id", estabelecimento_id)
+        .eq("evento_gatilho", tipo).eq("ativo", true).limit(1).maybeSingle();
+      if (wf?.id) {
+        const { data: r } = await sb.functions.invoke("ponto-notif-workflow-exec", {
+          body: { workflow_id: wf.id, funcionario_id, dados, forcar },
+        });
+        return new Response(JSON.stringify({ ok: true, via: "workflow", workflow_id: wf.id, resultado: r }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } catch (_e) { /* fallback legacy */ }
+
     const { data: cfg } = await sb.from("ponto_notificacoes_config")
       .select("*").eq("estabelecimento_id", estabelecimento_id).maybeSingle();
     if (!cfg) {
