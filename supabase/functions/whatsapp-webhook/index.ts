@@ -284,6 +284,14 @@ serve(async (req) => {
 
     console.log("Processed message:", { from, body, phoneNumberId, transport });
 
+    // ====== Ponto: confirmação de notificações (fire-and-forget) ======
+    if (from && body && /^(ok|ciente|aprovar|aprovado|confirmar|confirmado|👍|✅)\b/i.test(String(body).trim())) {
+      supabase.functions.invoke("ponto-confirmar-recebimento", {
+        body: { telefone: from, texto: body },
+      }).catch((e) => console.log("[PONTO-CONFIRM] falhou:", e?.message));
+    }
+
+
     // ====== Busca configuração do WAHA SEMPRE DO BANCO (nunca de secrets) ======
     let WAHA_URL = "";
     let WAHA_API_KEY = "";
