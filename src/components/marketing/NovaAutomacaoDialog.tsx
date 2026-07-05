@@ -147,6 +147,7 @@ export default function NovaAutomacaoDialog({
       setWebhookSelecionado(cfg.webhook_id || "");
       setVariaveisWebhook(cfg.variaveis || {});
       setBotSelecionado(cfg.bot_id || "");
+      setPushConfig(cfg.push_config || { destinatario_tipo: "todos_contatos", titulo: "", corpo: "" });
       const vc = cfg.variaveis_custom;
       if (Array.isArray(vc)) {
         setVariaveisCustom(vc);
@@ -734,8 +735,23 @@ export default function NovaAutomacaoDialog({
                 <RadioGroupItem value="bot" id="metodo-bot" />
                 <Label htmlFor="metodo-bot" className="font-normal cursor-pointer">Bot</Label>
               </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="push" id="metodo-push" />
+                <Label htmlFor="metodo-push" className="font-normal cursor-pointer">🔔 Push Notification</Label>
+              </div>
             </RadioGroup>
           </div>
+
+          {metodoDisparo === "push" && (
+            <div className="space-y-3 p-4 bg-muted/30 border rounded-lg">
+              <Label className="text-sm font-semibold">Configuração do Push</Label>
+              <PushBlockConfigEditor
+                value={pushConfig}
+                onChange={(patch) => setPushConfig({ ...pushConfig, ...patch })}
+                context="marketing"
+              />
+            </div>
+          )}
 
           {/* Configuração de Webhook (criar novo ou reutilizar) */}
           {metodoDisparo === "webhook" && (
