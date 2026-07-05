@@ -437,6 +437,19 @@ export default function CamerasCameras() {
                 onChange={(e) => setEditing({ ...editing, senha: e.target.value })}
               />
             </div>
+            {editing.marca === "tplink_tapo" && (
+              <div className="sm:col-span-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs space-y-1">
+                <p className="font-semibold text-amber-600 dark:text-amber-400">
+                  ⚠️ Requisitos do TP-Link Tapo (C100/C110/C200/C210/C310/C320)
+                </p>
+                <ul className="list-disc pl-4 space-y-0.5 text-muted-foreground">
+                  <li>Abra o app <b>Tapo</b> → sua câmera → <b>Configurações da Câmera</b> → <b>Configurações Avançadas</b> → <b>Conta da Câmera</b> e crie usuário/senha (essas credenciais vão nos campos acima — <u>não</u> use a senha da sua conta Tapo).</li>
+                  <li>A Tapo <b>não</b> responde em HTTP:80. Use <b>RTSP na porta 554</b> (já preenchido).</li>
+                  <li>Snapshot path: <code>/stream1</code> (HD) ou <code>/stream2</code> (SD).</li>
+                  <li>Reserve IP fixo no roteador — a Tapo troca de IP com frequência via DHCP.</li>
+                </ul>
+              </div>
+            )}
             <div className="sm:col-span-2 space-y-1">
               <Label>Snapshot path (opcional)</Label>
               <Input
