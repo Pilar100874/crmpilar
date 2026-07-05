@@ -61,7 +61,8 @@ export type NodeType =
   | "buttons_media"
   | "carousel"
   | "attach_catalog"
-  | "global_redirect";
+  | "global_redirect"
+  | "disparar_push";
 
 
 export interface BlockDefinition {

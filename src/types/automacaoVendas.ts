@@ -25,7 +25,8 @@ export type AutomacaoVendasBlockType =
   | "acao_adicionar_frete"
   | "acao_enviar_alerta"
   | "aplicar_desconto"
-  | "return_response";
+  | "return_response"
+  | "disparar_push";
 
 // Operadores de comparação
 export type OperadorComparacao = ">" | ">=" | "=" | "<" | "<=" | "!=";

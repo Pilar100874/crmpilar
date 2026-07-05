@@ -38,7 +38,8 @@ export type AdsBlockType =
   | 'action_create_report'
   | 'action_aviso_sistema'
   | 'action_mensagem_interna'
-  | 'return_response';
+  | 'return_response'
+  | 'disparar_push';
 
 export interface AdsBlockDefinition {
   type: AdsBlockType;
