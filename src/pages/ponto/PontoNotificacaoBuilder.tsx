@@ -526,6 +526,9 @@ function PontoNotificacaoBuilderContent() {
           nodesDraggable={!isLocked}
           nodesConnectable={!isLocked}
           elementsSelectable={!isLocked}
+          panOnDrag
+          zoomOnScroll
+          style={{ width: "100%", height: "100%" }}
           defaultEdgeOptions={{ animated: true, style: { strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed } as any }}
         >
           <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
