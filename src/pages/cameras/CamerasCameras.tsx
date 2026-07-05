@@ -29,6 +29,17 @@ const MARCAS = [
   { value: "generica_rtsp", label: "Genérica RTSP" },
 ];
 
+// Defaults corretos por marca (porta / protocolo / snapshot_path).
+// Tapo (C100/C110/C200/C210/C310/C320WS) NÃO responde em HTTP:80 — usa RTSP:554
+// com uma "Conta de Câmera" criada no app Tapo (Config. Avançadas).
+const MARCA_DEFAULTS: Record<string, { porta: number; protocolo: string; snapshot_path: string }> = {
+  tplink_tapo:   { porta: 554, protocolo: "rtsp", snapshot_path: "/stream1" },
+  hikvision:     { porta: 80,  protocolo: "http", snapshot_path: "/ISAPI/Streaming/channels/101/picture" },
+  intelbras:     { porta: 80,  protocolo: "http", snapshot_path: "/cgi-bin/snapshot.cgi" },
+  generica_http: { porta: 80,  protocolo: "http", snapshot_path: "" },
+  generica_rtsp: { porta: 554, protocolo: "rtsp", snapshot_path: "/stream1" },
+};
+
 const emptyCam = {
   id: null as string | null,
   nome: "",
@@ -356,7 +367,23 @@ export default function CamerasCameras() {
             </div>
             <div className="space-y-1">
               <Label>Marca</Label>
-              <Select value={editing.marca} onValueChange={(v) => setEditing({ ...editing, marca: v })}>
+              <Select
+                value={editing.marca}
+                onValueChange={(v) => {
+                  const d = MARCA_DEFAULTS[v];
+                  setEditing((prev: any) => ({
+                    ...prev,
+                    marca: v,
+                    // só sobrescreve porta/protocolo se ainda estiverem no default anterior
+                    // (evita sobrepor ajustes manuais do usuário)
+                    porta: d?.porta ?? prev.porta,
+                    protocolo: d?.protocolo ?? prev.protocolo,
+                    snapshot_path: prev.snapshot_path && prev.snapshot_path.length > 0
+                      ? prev.snapshot_path
+                      : (d?.snapshot_path ?? ""),
+                  }));
+                }}
+              >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {MARCAS.map((m) => (
@@ -410,6 +437,19 @@ export default function CamerasCameras() {
                 onChange={(e) => setEditing({ ...editing, senha: e.target.value })}
               />
             </div>
+            {editing.marca === "tplink_tapo" && (
+              <div className="sm:col-span-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs space-y-1">
+                <p className="font-semibold text-amber-600 dark:text-amber-400">
+                  ⚠️ Requisitos do TP-Link Tapo (C100/C110/C200/C210/C310/C320)
+                </p>
+                <ul className="list-disc pl-4 space-y-0.5 text-muted-foreground">
+                  <li>Abra o app <b>Tapo</b> → sua câmera → <b>Configurações da Câmera</b> → <b>Configurações Avançadas</b> → <b>Conta da Câmera</b> e crie usuário/senha (essas credenciais vão nos campos acima — <u>não</u> use a senha da sua conta Tapo).</li>
+                  <li>A Tapo <b>não</b> responde em HTTP:80. Use <b>RTSP na porta 554</b> (já preenchido).</li>
+                  <li>Snapshot path: <code>/stream1</code> (HD) ou <code>/stream2</code> (SD).</li>
+                  <li>Reserve IP fixo no roteador — a Tapo troca de IP com frequência via DHCP.</li>
+                </ul>
+              </div>
+            )}
             <div className="sm:col-span-2 space-y-1">
               <Label>Snapshot path (opcional)</Label>
               <Input
