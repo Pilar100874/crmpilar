@@ -6,7 +6,8 @@
   "author": "Pilar",
   "license": "Proprietary",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dist:msi": "electron-builder --win msi --x64"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.0",
@@ -15,6 +16,35 @@
   },
   "devDependencies": {
     "@electron/packager": "^20.0.1",
-    "electron": "^31.7.7"
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "br.com.pilar.coletor",
+    "productName": "ColetorPilar",
+    "artifactName": "ColetorPilar-Setup.msi",
+    "directories": {
+      "output": "dist-installer"
+    },
+    "files": [
+      "**/*",
+      "!dist-installer${/*}"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "msi",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "msi": {
+      "oneClick": false,
+      "perMachine": true,
+      "runAfterFinish": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Coletor Pilar"
+    }
   }
 }

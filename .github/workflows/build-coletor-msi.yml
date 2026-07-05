@@ -1,0 +1,85 @@
+name: Build Coletor Pilar MSI
+
+on:
+  push:
+    paths:
+      - 'coletor/**'
+      - '.github/workflows/build-coletor-msi.yml'
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: coletor
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Read version
+        id: pkg
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build MSI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --win msi --x64 --publish never
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ColetorPilar-Setup-msi
+          path: coletor/dist-installer/ColetorPilar-Setup.msi
+
+      - name: Create / update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: coletor-v${{ steps.pkg.outputs.version }}
+          name: Coletor Pilar v${{ steps.pkg.outputs.version }}
+          files: coletor/dist-installer/ColetorPilar-Setup.msi
+          fail_on_unmatched_files: true
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update public/coletor/version.json
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
+        run: |
+          $version = "${{ steps.pkg.outputs.version }}"
+          $repo = "${{ github.repository }}"
+          $url = "https://github.com/$repo/releases/download/coletor-v$version/ColetorPilar-Setup.msi"
+          $json = Get-Content public/coletor/version.json -Raw | ConvertFrom-Json
+          $json.version = $version
+          $json.downloadUrl = $url
+          ($json | ConvertTo-Json -Depth 10) | Set-Content public/coletor/version.json -Encoding UTF8
+
+      - name: Commit version.json bump
+        working-directory: ${{ github.workspace }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet public/coletor/version.json; then
+            echo "version.json unchanged"
+          else
+            git add public/coletor/version.json
+            git commit -m "chore(coletor): publish MSI v${{ steps.pkg.outputs.version }} [skip ci]"
+            git push
+          fi
