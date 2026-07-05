@@ -115,11 +115,35 @@ async function baixarEInstalar(downloadUrl, onProgress) {
         if (Test-Path $exe) { Start-Process $exe; break }
       }
       Remove-Item -LiteralPath '${destino.replace(/\\/g, '\\\\')}' -ErrorAction SilentlyContinue
+      # Notificação visual de conclusão (MessageBox — funciona em todas as edições do Windows)
+      try {
+        Add-Type -AssemblyName PresentationFramework -ErrorAction Stop
+        [System.Windows.MessageBox]::Show('O Coletor Pilar foi instalado/atualizado com sucesso e já está em execução.','Coletor Pilar - Instalação concluída','OK','Information') | Out-Null
+      } catch {
+        try {
+          Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
+          [System.Windows.Forms.MessageBox]::Show('O Coletor Pilar foi instalado/atualizado com sucesso e já está em execução.','Coletor Pilar - Instalação concluída') | Out-Null
+        } catch {}
+      }
     `.trim();
     spawn('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', ps], { detached: true, stdio: 'ignore' }).unref();
   } else {
-    spawn(destino, ['/S'], { detached: true, stdio: 'ignore' }).unref();
+    // Instalador NSIS (.exe) — /S = silent. Após concluir, exibe MessageBox de conclusão.
+    const psExe = `
+      Start-Process -FilePath '${destino.replace(/\\/g, '\\\\')}' -ArgumentList '/S' -Wait
+      try {
+        Add-Type -AssemblyName PresentationFramework -ErrorAction Stop
+        [System.Windows.MessageBox]::Show('O Coletor Pilar foi instalado/atualizado com sucesso.','Coletor Pilar - Instalação concluída','OK','Information') | Out-Null
+      } catch {
+        try {
+          Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
+          [System.Windows.Forms.MessageBox]::Show('O Coletor Pilar foi instalado/atualizado com sucesso.','Coletor Pilar - Instalação concluída') | Out-Null
+        } catch {}
+      }
+    `.trim();
+    spawn('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', psExe], { detached: true, stdio: 'ignore' }).unref();
   }
+
   setTimeout(() => { app.isQuitting = true; app.quit(); }, 800);
   return destino;
 }
