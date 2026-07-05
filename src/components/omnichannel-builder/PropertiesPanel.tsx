@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
+import { PushBlockConfigEditor } from "@/components/workflows/PushBlockConfig";
 
 
 interface PropertiesPanelProps {
@@ -889,6 +890,16 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
                 />
               </div>
             </>
+          )}
+
+          {data.type === 'disparar_push' && (
+            <PushBlockConfigEditor
+              value={data.config || {}}
+              onChange={(patch) => {
+                Object.entries(patch).forEach(([k, v]) => updateConfig(k, v));
+              }}
+              context="omnichannel"
+            />
           )}
         </div>
       </ScrollArea>

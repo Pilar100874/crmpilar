@@ -8,7 +8,8 @@ export type OmnichannelBlockType =
   | 'aguardar'
   | 'analytics'
   | 'inicio'
-  | 'return_response';
+  | 'return_response'
+  | 'disparar_push';
 
 export interface OmnichannelNode {
   id: string;

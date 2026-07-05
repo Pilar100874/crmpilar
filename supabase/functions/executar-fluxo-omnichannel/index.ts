@@ -138,6 +138,22 @@ async function executeFlow(
     case "aguardar":
       return await executeAguardar(supabase, flowData, currentNode, context);
 
+    case "disparar_push": {
+      try {
+        await supabase.functions.invoke("push-send", {
+          body: {
+            ...currentNode.data.config,
+            workflow_id: context?.flowId,
+            workflow_tipo: "omnichannel",
+            origem: "omnichannel_flow",
+          },
+        });
+      } catch (e) {
+        console.error("[omnichannel] disparar_push falhou:", e);
+      }
+      return await executeNextNode(supabase, flowData, currentNode, context);
+    }
+
     default:
       console.log("Tipo de nó não implementado:", currentNode.data.type);
       return { success: true, message: "Nó não implementado" };

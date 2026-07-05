@@ -35,6 +35,7 @@ const blocks: BlockItem[] = [
   { type: "aguardar", label: "Aguardar", description: "Adiciona delay no fluxo", category: "Fluxo", icon: "Timer" },
   { type: "analytics", label: "Analytics", description: "Visualiza métricas do fluxo", category: "Fluxo", icon: "BarChart3" },
   { type: "return_response", label: "Retornar Resposta", description: "Devolve payload ao workflow chamador", category: "Integrações", icon: "ArrowLeft" },
+  { type: "disparar_push", label: "Disparar Push", description: "Envia notificação push para usuários ou clientes", category: "Integrações", icon: "Bell" },
 ];
 
 const blockCategories = [

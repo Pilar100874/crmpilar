@@ -26,7 +26,7 @@ export interface PushBlockConfig {
 export interface PushExecContext {
   variaveis?: Record<string, any>;
   workflow_id?: string;
-  workflow_tipo?: "bot" | "logistica" | "vendas" | "ads";
+  workflow_tipo?: "bot" | "logistica" | "vendas" | "ads" | "omnichannel" | "marketing";
   origem?: string;
 }
 
