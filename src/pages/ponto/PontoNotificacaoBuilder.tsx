@@ -560,13 +560,10 @@ function PontoNotificacaoBuilderContent() {
           </div>
         )}
       </div>
-    </WorkflowBuilderLayout>
-  );
 
-  // ============ Dialogs abaixo do layout ============
-}
+      {/* ============ Dialogs ============ */}
+      <></>
 
-function BuilderDialogs() { return null; }
 
       {/* Nota dialog */}
       <Dialog open={!!noteFor} onOpenChange={(v) => !v && setNoteFor(null)}>
