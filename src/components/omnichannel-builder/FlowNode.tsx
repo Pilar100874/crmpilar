@@ -23,6 +23,7 @@ import {
   StickyNote,
   HelpCircle,
   Reply,
+  Bell,
 } from "lucide-react";
 import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
 import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
