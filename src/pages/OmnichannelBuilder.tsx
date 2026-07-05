@@ -247,7 +247,8 @@ export default function OmnichannelBuilder() {
         aguardar: "Aguardar",
         analytics: "Analytics",
         inicio: "Início",
-        return_response: "Retornar Resposta"
+        return_response: "Retornar Resposta",
+        disparar_push: "Disparar Push"
       };
 
       const newNode: OmnichannelNode = {
@@ -281,7 +282,8 @@ export default function OmnichannelBuilder() {
         aguardar: "Aguardar",
         analytics: "Analytics",
         inicio: "Início",
-        return_response: "Retornar Resposta"
+        return_response: "Retornar Resposta",
+        disparar_push: "Disparar Push"
       };
       const bounds = reactFlowWrapper.current.getBoundingClientRect();
       const position = reactFlowInstance

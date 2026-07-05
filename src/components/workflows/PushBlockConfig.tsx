@@ -10,7 +10,7 @@ import { PushBlockConfig } from "@/lib/pushExecutor";
 interface Props {
   value: Partial<PushBlockConfig>;
   onChange: (patch: Partial<PushBlockConfig>) => void;
-  context?: "bot" | "logistica" | "vendas" | "ads";
+  context?: "bot" | "logistica" | "vendas" | "ads" | "omnichannel" | "marketing";
 }
 
 export function PushBlockConfigEditor({ value, onChange, context }: Props) {
