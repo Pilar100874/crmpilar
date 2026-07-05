@@ -14250,6 +14250,42 @@ export type Database = {
           },
         ]
       }
+      ponto_notif_workflows: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          evento_gatilho: string
+          flow_data: Json
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          evento_gatilho: string
+          flow_data?: Json
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          evento_gatilho?: string
+          flow_data?: Json
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ponto_notificacoes_config: {
         Row: {
           bypass_quiet_hours_tipos: Json

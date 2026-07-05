@@ -111,6 +111,7 @@ import PontoCompensacao from "./pages/ponto/PontoCompensacao";
 import PontoCompensacaoVotacao from "./pages/ponto/PontoCompensacaoVotacao";
 import PontoBancoHorasExpirar from "./pages/ponto/PontoBancoHorasExpirar";
 import PontoNotificacoes from "./pages/ponto/PontoNotificacoes";
+import PontoNotificacaoBuilder from "./pages/ponto/PontoNotificacaoBuilder";
 import PontoNotificacoesEntregabilidade from "./pages/ponto/PontoNotificacoesEntregabilidade";
 import PontoManual from "./pages/ponto/PontoManual";
 import CVLayout from "./pages/controle-veiculos/CVLayout";
@@ -481,6 +482,7 @@ const App = () => (
                 <Route path="compensacao-votacao" element={<PontoCompensacaoVotacao />} />
                 <Route path="notificacoes" element={<PontoNotificacoes />} />
                 <Route path="notificacoes/entregabilidade" element={<PontoNotificacoesEntregabilidade />} />
+                <Route path="notificacoes/:id" element={<PontoNotificacaoBuilder />} />
                 <Route path="manual" element={<PontoManual />} />
               </Route>
               <Route path="/controle-veiculos" element={<CVLayout />}>
