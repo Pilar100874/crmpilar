@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  ReactFlow, Background, BackgroundVariant, Controls, MiniMap,
+  ReactFlow, ReactFlowProvider, Background, BackgroundVariant, Controls, MiniMap,
   addEdge, useEdgesState, useNodesState, Handle, Position,
   type Connection, type Edge, type Node, type NodeTypes, MarkerType,
 } from "@xyflow/react";
@@ -22,10 +22,13 @@ import {
   ArrowLeft, Save, Play, Zap, Bell, MessageSquare, Mail, Smartphone, Webhook,
   GitBranch, MoonStar, FileText, TrendingUp, Timer, ScrollText, Trash2,
   MoreVertical, Copy, Pause, SkipForward, StickyNote, Plus, Download, Upload, Wand2, X,
+  FolderOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
+import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const EVENTOS = [
   { key: "atraso", label: "Atrasos" },
@@ -147,7 +150,20 @@ function CustomNode({ id, data, selected }: any) {
 
 const nodeTypes: NodeTypes = { custom: CustomNode as any };
 
+function stripCallbacks(data: any) {
+  const { onDuplicate: _a, onToggleBreakpoint: _b, onToggleSkip: _c, onDelete: _d, onAddNote: _e, onAddNext: _f, isHighlighted: _h, ...rest } = data || {};
+  return rest;
+}
+
 export default function PontoNotificacaoBuilder() {
+  return (
+    <ReactFlowProvider>
+      <PontoNotificacaoBuilderContent />
+    </ReactFlowProvider>
+  );
+}
+
+function PontoNotificacaoBuilderContent() {
   const { id } = useParams();
   const nav = useNavigate();
   const [wf, setWf] = useState<any>(null);
@@ -163,6 +179,10 @@ export default function PontoNotificacaoBuilder() {
   const [noteFor, setNoteFor] = useState<string | null>(null);
   const [noteText, setNoteText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [rfInstance, setRfInstance] = useState<any>(null);
+  const [isLocked, setIsLocked] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const initialHashRef = useRef<string>("");
 
   useEffect(() => {
     (async () => {
@@ -170,11 +190,26 @@ export default function PontoNotificacaoBuilder() {
       if (!data) { toast.error("Workflow não encontrado"); nav("/ponto/notificacoes"); return; }
       setWf(data);
       const flow = data.flow_data || {};
-      setNodes((flow.nodes || []).map((n: any) => ({ ...n, type: "custom" })));
-      setEdges((flow.edges || []).map((e: any) => ({ ...e, markerEnd: { type: MarkerType.ArrowClosed } })));
+      const loadedNodes = (flow.nodes || []).map((n: any) => ({ ...n, type: "custom" }));
+      const loadedEdges = (flow.edges || []).map((e: any) => ({ ...e, markerEnd: { type: MarkerType.ArrowClosed } }));
+      setNodes(loadedNodes);
+      setEdges(loadedEdges);
+      initialHashRef.current = JSON.stringify({ n: flow.nodes || [], e: flow.edges || [], nome: data.nome, evento: data.evento_gatilho, ativo: data.ativo });
+      setDirty(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Marca dirty quando o grafo/config muda
+  useEffect(() => {
+    if (!wf || !initialHashRef.current) return;
+    const cur = JSON.stringify({
+      n: nodes.map(n => ({ ...n, data: stripCallbacks(n.data) })),
+      e: edges.map(({ markerEnd: _m, ...rest }) => rest),
+      nome: wf.nome, evento: wf.evento_gatilho, ativo: wf.ativo,
+    });
+    setDirty(cur !== initialHashRef.current);
+  }, [nodes, edges, wf]);
 
   // ============ Handlers passados para os nodes ============
   const onDuplicate = useCallback((nodeId: string) => {
@@ -281,15 +316,13 @@ export default function PontoNotificacaoBuilder() {
 
   async function salvar() {
     setSaving(true);
-    // Limpar callbacks antes de salvar
-    const cleanNodes = nodes.map(n => {
-      const { onDuplicate: _a, onToggleBreakpoint: _b, onToggleSkip: _c, onDelete: _d, onAddNote: _e, onAddNext: _f, isHighlighted: _h, ...rest } = n.data as any;
-      return { ...n, data: rest };
-    });
-    const flow_data = { nodes: cleanNodes, edges, viewport: { x: 0, y: 0, zoom: 1 } };
+    const cleanNodes = nodes.map(n => ({ ...n, data: stripCallbacks(n.data) }));
+    const flow_data = { nodes: cleanNodes, edges: edges.map(({ markerEnd: _m, ...rest }) => rest), viewport: { x: 0, y: 0, zoom: 1 } };
     const { error } = await supabase.from("ponto_notif_workflows").update({ flow_data, nome: wf.nome, ativo: wf.ativo, evento_gatilho: wf.evento_gatilho }).eq("id", id);
     setSaving(false);
     if (error) return toast.error(error.message);
+    initialHashRef.current = JSON.stringify({ n: cleanNodes, e: flow_data.edges, nome: wf.nome, evento: wf.evento_gatilho, ativo: wf.ativo });
+    setDirty(false);
     toast.success("Workflow salvo");
   }
 
@@ -366,14 +399,28 @@ export default function PontoNotificacaoBuilder() {
   }
 
   function exportar() {
-    const clean = nodes.map(n => {
-      const { onDuplicate: _a, onToggleBreakpoint: _b, onToggleSkip: _c, onDelete: _d, onAddNote: _e, onAddNext: _f, ...rest } = n.data as any;
-      return { ...n, data: rest };
-    });
+    const clean = nodes.map(n => ({ ...n, data: stripCallbacks(n.data) }));
     const blob = new Blob([JSON.stringify({ nome: wf.nome, evento_gatilho: wf.evento_gatilho, nodes: clean, edges }, null, 2)], { type: "application/json" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
     a.download = `${(wf.nome || "workflow").replace(/\W+/g, "_")}.json`; a.click();
   }
+
+  async function duplicarWorkflow() {
+    const { data: novo, error } = await supabase.from("ponto_notif_workflows").insert({
+      estabelecimento_id: wf.estabelecimento_id,
+      nome: `${wf.nome} (cópia)`,
+      evento_gatilho: wf.evento_gatilho,
+      ativo: false,
+      flow_data: { nodes: nodes.map(n => ({ ...n, data: stripCallbacks(n.data) })), edges, viewport: { x: 0, y: 0, zoom: 1 } },
+    }).select().single();
+    if (error) return toast.error(error.message);
+    toast.success("Workflow duplicado"); nav(`/ponto/notificacoes/${novo.id}`);
+  }
+
+  // Zoom / lock helpers
+  const zoomIn = () => rfInstance?.zoomIn?.();
+  const zoomOut = () => rfInstance?.zoomOut?.();
+  const fitView = () => rfInstance?.fitView?.({ padding: 0.2, duration: 400 });
 
   function importar(file: File) {
     const r = new FileReader();
@@ -397,96 +444,126 @@ export default function PontoNotificacaoBuilder() {
   if (!wf) return <div className="p-6">Carregando...</div>;
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col">
-      {/* Header */}
-      <div className="border-b px-4 py-2 flex items-center gap-2 flex-wrap">
-        <Button variant="ghost" size="sm" onClick={() => nav("/ponto/notificacoes")}><ArrowLeft className="w-4 h-4 mr-1" /> Voltar</Button>
-        <Input value={wf.nome} onChange={e => setWf({ ...wf, nome: e.target.value })} className="max-w-xs" />
-        <Select value={wf.evento_gatilho} onValueChange={v => setWf({ ...wf, evento_gatilho: v })}>
-          <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
-          <SelectContent>{EVENTOS.map(e => <SelectItem key={e.key} value={e.key}>Gatilho: {e.label}</SelectItem>)}</SelectContent>
-        </Select>
-        <div className="flex items-center gap-2 ml-2">
-          <Switch checked={wf.ativo} onCheckedChange={v => setWf({ ...wf, ativo: v })} />
-          <span className="text-xs">{wf.ativo ? "Ativo" : "Inativo"}</span>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={exportar}><Download className="w-4 h-4 mr-1" /> Exportar</Button>
-          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}><Upload className="w-4 h-4 mr-1" /> Importar</Button>
-          <input ref={fileInputRef} type="file" accept="application/json" className="hidden" onChange={e => e.target.files?.[0] && importar(e.target.files[0])} />
-          <Button variant="outline" size="sm" onClick={() => setSimOpen(true)}><Wand2 className="w-4 h-4 mr-1" /> Simular</Button>
-          <Button variant="outline" size="sm" onClick={testarReal}><Play className="w-4 h-4 mr-1" /> Disparar real</Button>
-          <Button size="sm" onClick={salvar} disabled={saving}><Save className="w-4 h-4 mr-1" /> {saving ? "Salvando..." : "Salvar"}</Button>
-        </div>
+    <WorkflowBuilderLayout
+      title="Notificações do Ponto"
+      subtitle={`Gatilho: ${EVENTOS.find(e => e.key === wf.evento_gatilho)?.label || wf.evento_gatilho}`}
+      flowName={wf.nome}
+      onFlowNameChange={(v) => setWf({ ...wf, nome: v })}
+      onSave={salvar}
+      isSaving={saving}
+      onTest={() => setSimOpen(true)}
+      showTest={simOpen}
+      testLabel="Simular"
+      onZoomIn={zoomIn}
+      onZoomOut={zoomOut}
+      onFitView={fitView}
+      isLocked={isLocked}
+      onToggleLock={() => setIsLocked(v => !v)}
+      hasUnsavedChanges={dirty}
+      defaultReturnUrl="/ponto/notificacoes"
+      centerContent={
+        <>
+          <Select value={wf.evento_gatilho} onValueChange={v => setWf({ ...wf, evento_gatilho: v })}>
+            <SelectTrigger className="h-8 w-48 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>{EVENTOS.map(e => <SelectItem key={e.key} value={e.key}>Gatilho: {e.label}</SelectItem>)}</SelectContent>
+          </Select>
+          <div className="flex items-center gap-1.5 px-2 h-8 rounded-md border bg-muted/40">
+            <Switch checked={wf.ativo} onCheckedChange={v => setWf({ ...wf, ativo: v })} />
+            <span className="text-xs font-medium">{wf.ativo ? "Ativo" : "Inativo"}</span>
+          </div>
+        </>
+      }
+      rightContent={
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8 px-2"><FolderOpen className="w-4 h-4 sm:mr-1" /><span className="hidden sm:inline text-xs">Arquivo</span></Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-52 p-1 z-[60]">
+            <button onClick={exportar} className="w-full text-left text-sm px-2 py-1.5 rounded hover:bg-muted flex items-center gap-2"><Download className="w-4 h-4" /> Exportar JSON</button>
+            <button onClick={() => fileInputRef.current?.click()} className="w-full text-left text-sm px-2 py-1.5 rounded hover:bg-muted flex items-center gap-2"><Upload className="w-4 h-4" /> Importar JSON</button>
+            <button onClick={duplicarWorkflow} className="w-full text-left text-sm px-2 py-1.5 rounded hover:bg-muted flex items-center gap-2"><Copy className="w-4 h-4" /> Duplicar workflow</button>
+            <div className="h-px bg-border my-1" />
+            <button onClick={testarReal} className="w-full text-left text-sm px-2 py-1.5 rounded hover:bg-muted flex items-center gap-2"><Play className="w-4 h-4" /> Disparar real agora</button>
+          </PopoverContent>
+        </Popover>
+      }
+    >
+      <input ref={fileInputRef} type="file" accept="application/json" className="hidden" onChange={e => e.target.files?.[0] && importar(e.target.files[0])} />
+
+      {/* Library */}
+      <div className="w-56 border-r overflow-y-auto p-3 space-y-3 bg-muted/20 flex-shrink-0">
+        <div className="text-xs font-semibold text-foreground mb-1">Biblioteca de blocos</div>
+        {Object.entries(grupos).map(([g, items]) => (
+          <div key={g}>
+            <div className="text-[11px] font-semibold uppercase text-muted-foreground mb-1">{g}</div>
+            <div className="space-y-1">
+              {items.map(b => {
+                const Icon = b.icon;
+                return (
+                  <button key={b.type} onClick={() => addBlockAt(b.type)}
+                    className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md border text-left text-xs hover:shadow-sm transition-all", b.color)}>
+                    <Icon className="w-3.5 h-3.5" /> {b.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* Library */}
-        <div className="w-56 border-r overflow-y-auto p-3 space-y-3 bg-muted/20">
-          {Object.entries(grupos).map(([g, items]) => (
-            <div key={g}>
-              <div className="text-[11px] font-semibold uppercase text-muted-foreground mb-1">{g}</div>
-              <div className="space-y-1">
-                {items.map(b => {
-                  const Icon = b.icon;
-                  return (
-                    <button key={b.type} onClick={() => addBlockAt(b.type)}
-                      className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md border text-left text-xs hover:shadow-sm transition-all", b.color)}>
-                      <Icon className="w-3.5 h-3.5" /> {b.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* Canvas */}
+      <div className="flex-1 relative">
+        <ReactFlow
+          nodes={enhancedNodes} edges={edges}
+          onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onInit={setRfInstance}
+          onNodeClick={(_, n) => setSelected(n)}
+          onPaneClick={() => { setSelected(null); setSmartMenu(null); }}
+          nodeTypes={nodeTypes}
+          fitView
+          nodesDraggable={!isLocked}
+          nodesConnectable={!isLocked}
+          elementsSelectable={!isLocked}
+          defaultEdgeOptions={{ animated: true, style: { strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed } as any }}
+        >
+          <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
+          <Controls showInteractive={false} />
+          <MiniMap pannable className="!bg-card" />
+        </ReactFlow>
 
-        {/* Canvas */}
-        <div className="flex-1 relative">
-          <ReactFlow
-            nodes={enhancedNodes} edges={edges}
-            onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onNodeClick={(_, n) => setSelected(n)}
-            onPaneClick={() => { setSelected(null); setSmartMenu(null); }}
-            nodeTypes={nodeTypes}
-            fitView
-            defaultEdgeOptions={{ animated: true, style: { strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed } as any }}
-          >
-            <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-            <Controls />
-            <MiniMap pannable />
-          </ReactFlow>
-
-          {smartMenu && (
-            <SmartConnectMenu x={smartMenu.x} y={smartMenu.y}
-              title={smartMenu.handle ? `Próximo bloco (${smartMenu.handle.toUpperCase()})` : "Escolha o próximo bloco"}
-              blocks={smartOptions} onPick={onSmartPick} onClose={() => setSmartMenu(null)} />
-          )}
-        </div>
-
-        {/* Properties */}
-        <div className="w-80 border-l overflow-y-auto bg-muted/10">
-          {selected ? (
-            <PropsPanel node={enhancedNodes.find(n => n.id === selected.id) || selected} onChange={updateNode}
-              onDelete={() => onDeleteNode(selected.id)}
-              onDuplicate={() => onDuplicate(selected.id)}
-              onToggleBreakpoint={() => onToggleBreakpoint(selected.id)}
-              onToggleSkip={() => onToggleSkip(selected.id)} />
-          ) : (
-            <div className="p-4 text-sm text-muted-foreground">
-              <div className="font-semibold mb-2">Como funciona</div>
-              <ul className="list-disc pl-4 space-y-1.5">
-                <li>Passe o mouse sobre um bloco e clique no <b>+</b> abaixo para escolher o próximo bloco permitido.</li>
-                <li>Clique no <b>⋮</b> do bloco para: duplicar, pausar (breakpoint), pular na execução, adicionar nota ou excluir.</li>
-                <li>Use <b>Simular</b> para rodar o fluxo passo a passo com dados de teste (destaca cada bloco em verde).</li>
-                <li>Use <b>Disparar real</b> para executar o workflow contra os canais reais (Push/WhatsApp/SMS/E-mail).</li>
-                <li>Variáveis nos templates: <code>{`{funcionario}`}</code>, <code>{`{data}`}</code>, <code>{`{link_aprovacao}`}</code>, <code>{`{severidade}`}</code>.</li>
-              </ul>
-            </div>
-          )}
-        </div>
+        {smartMenu && (
+          <SmartConnectMenu x={smartMenu.x} y={smartMenu.y}
+            title={smartMenu.handle ? `Próximo bloco (${smartMenu.handle.toUpperCase()})` : "Escolha o próximo bloco"}
+            blocks={smartOptions} onPick={onSmartPick} onClose={() => setSmartMenu(null)} />
+        )}
       </div>
+
+      {/* Properties */}
+      <div className="w-80 border-l overflow-y-auto bg-muted/10 flex-shrink-0">
+        {selected ? (
+          <PropsPanel node={enhancedNodes.find(n => n.id === selected.id) || selected} onChange={updateNode}
+            onDelete={() => onDeleteNode(selected.id)}
+            onDuplicate={() => onDuplicate(selected.id)}
+            onToggleBreakpoint={() => onToggleBreakpoint(selected.id)}
+            onToggleSkip={() => onToggleSkip(selected.id)} />
+        ) : (
+          <div className="p-4 text-sm text-muted-foreground">
+            <div className="font-semibold text-foreground mb-2">Como funciona</div>
+            <ul className="list-disc pl-4 space-y-1.5">
+              <li>Arraste blocos da esquerda ou clique no <b>+</b> abaixo de qualquer bloco para escolher o próximo permitido.</li>
+              <li>Menu <b>⋮</b> do bloco: duplicar, pausar (breakpoint), pular, adicionar nota, excluir.</li>
+              <li><b>Simular</b> executa passo a passo com destaque verde; <b>Arquivo → Disparar real</b> executa nos canais reais.</li>
+              <li>Cadeado no topo bloqueia edições acidentais do canvas.</li>
+              <li>Variáveis: <code>{`{funcionario} {data} {link_aprovacao} {severidade}`}</code>.</li>
+            </ul>
+          </div>
+        )}
+      </div>
+
+      {/* ============ Dialogs ============ */}
+      <></>
+
 
       {/* Nota dialog */}
       <Dialog open={!!noteFor} onOpenChange={(v) => !v && setNoteFor(null)}>
@@ -541,7 +618,7 @@ export default function PontoNotificacaoBuilder() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </WorkflowBuilderLayout>
   );
 }
 
