@@ -125,6 +125,22 @@ export class FlowEngine {
       case "crm_agenda_rapida":
         await this.handleCRMAgendaRapida(node);
         break;
+      case "disparar_push": {
+        try {
+          const { executarBlocoPush } = await import("@/lib/pushExecutor");
+          await executarBlocoPush(data as any, {
+            variaveis: (this as any).variables || (this as any).contexto || {},
+            workflow_id: (this as any).flowId,
+            workflow_tipo: "bot",
+            origem: "bot_flow",
+          });
+        } catch (e) {
+          console.error("[flowEngine] disparar_push falhou:", e);
+        }
+        const pushNext = this.getNextNodes(node.id);
+        for (const next of pushNext) await this.executeNode(next);
+        break;
+      }
       default:
         console.log(`Node type ${data.type} not implemented yet`);
         const nextNodes = this.getNextNodes(node.id);
