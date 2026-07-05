@@ -16,6 +16,10 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Plus, Pencil, Trash2, Radio, Zap, Copy, Check, RotateCcw } from 'lucide-react';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import { OPERADORAS_APN, findOperadoraByApn } from '@/lib/operadorasSms';
 
 interface SmsCommand {
   label: string;
