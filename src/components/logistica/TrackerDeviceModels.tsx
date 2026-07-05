@@ -16,6 +16,10 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Plus, Pencil, Trash2, Radio, Zap, Copy, Check, RotateCcw } from 'lucide-react';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import { OPERADORAS_APN, findOperadoraByApn } from '@/lib/operadorasSms';
 
 interface SmsCommand {
   label: string;
@@ -366,6 +370,27 @@ export const TrackerDeviceModels: React.FC<Props> = ({ estabelecimentoId }) => {
               <div><Label>Senha padrão</Label>
                 <Input value={form.senha_padrao || ''}
                   onChange={e => setForm(p => ({ ...p, senha_padrao: e.target.value }))} />
+              </div>
+              <div className="col-span-2">
+                <Label>Operadora do chip (preenche APN automaticamente)</Label>
+                <Select
+                  value={findOperadoraByApn(form.apn)?.id || '__custom__'}
+                  onValueChange={(v) => {
+                    if (v === '__custom__') return;
+                    const op = OPERADORAS_APN.find(o => o.id === v);
+                    if (op) setForm(p => ({
+                      ...p, apn: op.apn, apn_user: op.apn_user, apn_password: op.apn_password,
+                    }));
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Selecione a operadora" /></SelectTrigger>
+                  <SelectContent>
+                    {OPERADORAS_APN.map(o => (
+                      <SelectItem key={o.id} value={o.id}>{o.nome} — {o.apn}</SelectItem>
+                    ))}
+                    <SelectItem value="__custom__">Personalizado (digitar abaixo)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div><Label>APN</Label>
                 <Input value={form.apn || ''} onChange={e => setForm(p => ({ ...p, apn: e.target.value }))} />

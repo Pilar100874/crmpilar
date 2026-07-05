@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Veiculo } from '@/types/logistica';
 import { configurarRastreador, renderTemplate, TrackerModelLite } from '@/lib/trackerConfig';
+import { OPERADORAS_APN, findOperadoraByApn } from '@/lib/operadorasSms';
 
 interface VeiculosCRUDProps {
   estabelecimentoId: string;
@@ -64,10 +65,18 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     dispositivo_id: '',
     tracker_model_id: '',
     telefone_sms: '',
+    operadora_id: '',
     enviar_sms_automatico: false,
     configurar_tracker_ao_salvar: true,
     ativo: true
   });
+
+  // Aplica override de APN da operadora selecionada em uma cópia do modelo
+  const modelComOperadora = (model: TrackerModelLite): TrackerModelLite => {
+    const op = OPERADORAS_APN.find(o => o.id === formData.operadora_id);
+    if (!op) return model;
+    return { ...model, apn: op.apn, apn_user: op.apn_user, apn_password: op.apn_password };
+  };
 
   useEffect(() => {
     fetchVeiculos();
@@ -140,6 +149,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         dispositivo_id: linkedDevice?.id || '',
         tracker_model_id: (veiculo as any).tracker_model_id || '',
         telefone_sms: (veiculo as any).telefone_sms || '',
+        operadora_id: findOperadoraByApn((veiculo as any).apn_operadora)?.id || '',
         enviar_sms_automatico: false,
         configurar_tracker_ao_salvar: !(veiculo as any).tracker_model_id ? true : false,
         ativo: veiculo.ativo
@@ -155,6 +165,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         dispositivo_id: '',
         tracker_model_id: '',
         telefone_sms: '',
+        operadora_id: '',
         enviar_sms_automatico: false,
         configurar_tracker_ao_salvar: true,
         ativo: true
@@ -253,7 +264,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             estabelecimentoId,
             veiculoId,
             telefone: formData.telefone_sms,
-            model,
+            model: modelComOperadora(model),
           });
           if (result.status === 'configurado') toast.success('Rastreador configurado com sucesso!');
           else if (result.status === 'parcial') toast.warning('Configuração parcial — alguns SMS falharam. Veja o histórico.');
@@ -329,7 +340,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         estabelecimentoId,
         veiculoId: selectedVeiculo?.id || null,
         telefone: formData.telefone_sms,
-        model,
+        model: modelComOperadora(model),
       });
       if (result.status === 'configurado') toast.success('Rastreador configurado!');
       else if (result.status === 'parcial') toast.warning('Parcial — alguns SMS falharam');
@@ -753,9 +764,31 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   )}
                 </div>
 
+                <div>
+                  <Label className="text-xs">Operadora do chip (APN automático)</Label>
+                  <Select
+                    value={formData.operadora_id || '__model__'}
+                    onValueChange={(v) => setFormData(prev => ({
+                      ...prev, operadora_id: v === '__model__' ? '' : v,
+                    }))}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Usar APN do modelo" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__model__">Usar APN do modelo</SelectItem>
+                      {OPERADORAS_APN.map(o => (
+                        <SelectItem key={o.id} value={o.id}>{o.nome} — {o.apn}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Sobrescreve APN/usuário/senha do modelo apenas para este chip.
+                  </p>
+                </div>
+
                 {formData.tracker_model_id && (() => {
-                  const model = trackerModels.find(m => m.id === formData.tracker_model_id);
-                  if (!model) return null;
+                  const baseModel = trackerModels.find(m => m.id === formData.tracker_model_id);
+                  if (!baseModel) return null;
+                  const model = modelComOperadora(baseModel);
                   const ctx: Record<string, string> = {
                     host: model.host || '', port: String(model.porta),
                     password: model.senha_padrao || '', apn: model.apn || '',
