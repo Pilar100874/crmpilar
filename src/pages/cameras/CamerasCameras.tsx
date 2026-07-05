@@ -367,7 +367,23 @@ export default function CamerasCameras() {
             </div>
             <div className="space-y-1">
               <Label>Marca</Label>
-              <Select value={editing.marca} onValueChange={(v) => setEditing({ ...editing, marca: v })}>
+              <Select
+                value={editing.marca}
+                onValueChange={(v) => {
+                  const d = MARCA_DEFAULTS[v];
+                  setEditing((prev: any) => ({
+                    ...prev,
+                    marca: v,
+                    // só sobrescreve porta/protocolo se ainda estiverem no default anterior
+                    // (evita sobrepor ajustes manuais do usuário)
+                    porta: d?.porta ?? prev.porta,
+                    protocolo: d?.protocolo ?? prev.protocolo,
+                    snapshot_path: prev.snapshot_path && prev.snapshot_path.length > 0
+                      ? prev.snapshot_path
+                      : (d?.snapshot_path ?? ""),
+                  }));
+                }}
+              >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {MARCAS.map((m) => (
