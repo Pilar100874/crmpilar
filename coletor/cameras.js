@@ -1,17 +1,22 @@
-// Coletor de câmeras: testa conectividade (snapshot HTTP) das câmeras cadastradas
-// no CRM e reporta status ao servidor. Suporta câmeras internas (LAN local)
-// que o edge function do CRM não alcança.
-// Suporta Basic e Digest Authentication (Hikvision/Intelbras usam Digest).
+// Coletor de câmeras: testa conectividade e captura snapshot das câmeras
+// cadastradas no CRM e reporta ao servidor. Suporta:
+//   - HTTP/HTTPS snapshot (Hikvision, Intelbras, genéricas) com Basic + Digest
+//   - RTSP: status via handshake OPTIONS TCP + snapshot via ffmpeg (se disponível)
 const http = require('http');
 const https = require('https');
+const net = require('net');
 const crypto = require('crypto');
+const { spawn } = require('child_process');
+const os = require('os');
+const path = require('path');
+const fs = require('fs');
 
 function pathFor(marca, snapshotPath) {
   if (snapshotPath) return snapshotPath;
   switch ((marca || '').toLowerCase()) {
     case 'hikvision': return '/ISAPI/Streaming/channels/101/picture';
     case 'intelbras': return '/cgi-bin/snapshot.cgi';
-    case 'tplink_tapo': return '/stream/snapshot.jpg';
+    case 'tplink_tapo': return '/stream1'; // caminho RTSP padrão Tapo
     default: return '/snapshot.jpg';
   }
 }
@@ -68,7 +73,99 @@ function doRequest(opts, extraHeaders = {}) {
   });
 }
 
-async function fetchSnapshot(cam) {
+// ============ RTSP ============
+// Handshake mínimo: envia OPTIONS via TCP. Se recebermos "RTSP/1.0" na resposta
+// (mesmo que 401 Unauthorized), a câmera está viva.
+function rtspOptions(host, port, timeoutMs = 5000) {
+  return new Promise((resolve, reject) => {
+    const sock = new net.Socket();
+    let buf = '';
+    const done = (err, ok, status) => {
+      try { sock.destroy(); } catch (_) {}
+      if (err) return reject(err);
+      resolve({ ok, status });
+    };
+    sock.setTimeout(timeoutMs);
+    sock.once('timeout', () => done(new Error('timeout')));
+    sock.once('error', (e) => done(e));
+    sock.once('connect', () => {
+      const req =
+        `OPTIONS rtsp://${host}:${port}/ RTSP/1.0\r\n` +
+        `CSeq: 1\r\n` +
+        `User-Agent: PilarColetor\r\n\r\n`;
+      sock.write(req);
+    });
+    sock.on('data', (chunk) => {
+      buf += chunk.toString('utf8');
+      const m = /^RTSP\/1\.0\s+(\d{3})/m.exec(buf);
+      if (m) {
+        // Qualquer resposta RTSP (200, 401, 403...) prova que a câmera está viva
+        done(null, true, parseInt(m[1], 10));
+      }
+      if (buf.length > 4096) done(null, false, 0);
+    });
+    sock.connect(port, host);
+  });
+}
+
+// Localiza binário do ffmpeg (verifica $FFMPEG_PATH, PATH, e caminhos comuns)
+let _ffmpegPath = null;
+function findFfmpeg() {
+  if (_ffmpegPath !== null) return _ffmpegPath;
+  const candidates = [
+    process.env.FFMPEG_PATH,
+    'ffmpeg',
+    '/usr/bin/ffmpeg',
+    '/usr/local/bin/ffmpeg',
+    '/opt/homebrew/bin/ffmpeg',
+    'C:\\ffmpeg\\bin\\ffmpeg.exe',
+    'C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe',
+  ].filter(Boolean);
+  for (const c of candidates) {
+    try {
+      if (c === 'ffmpeg' || (c.includes('/') || c.includes('\\'))) {
+        if (c === 'ffmpeg' || fs.existsSync(c)) { _ffmpegPath = c; return c; }
+      }
+    } catch (_) {}
+  }
+  _ffmpegPath = false;
+  return false;
+}
+
+function fetchRtspSnapshot(cam) {
+  return new Promise((resolve, reject) => {
+    const ff = findFfmpeg();
+    if (!ff) return reject(new Error('ffmpeg não encontrado — instale ffmpeg no PC do Coletor para snapshot RTSP'));
+    const host = cam.host;
+    const port = cam.porta || 554;
+    const streamPath = cam.snapshot_path || '/stream1';
+    const auth = cam.usuario ? `${encodeURIComponent(cam.usuario)}:${encodeURIComponent(cam.senha || '')}@` : '';
+    const url = `rtsp://${auth}${host}:${port}${streamPath.startsWith('/') ? streamPath : '/' + streamPath}`;
+    const tmp = path.join(os.tmpdir(), `pilar-snap-${cam.id || Date.now()}.jpg`);
+    // -rtsp_transport tcp: mais confiável em LAN, evita perda UDP
+    const args = ['-y', '-rtsp_transport', 'tcp', '-i', url, '-frames:v', '1', '-q:v', '3', tmp];
+    const proc = spawn(ff, args, { stdio: ['ignore', 'ignore', 'pipe'] });
+    let err = '';
+    proc.stderr.on('data', d => { err += d.toString(); });
+    const killTimer = setTimeout(() => { try { proc.kill('SIGKILL'); } catch (_) {} }, 15000);
+    proc.on('close', (code) => {
+      clearTimeout(killTimer);
+      if (code === 0 && fs.existsSync(tmp)) {
+        try {
+          const bytes = fs.readFileSync(tmp);
+          fs.unlink(tmp, () => {});
+          resolve({ bytes, contentType: 'image/jpeg' });
+        } catch (e) { reject(e); }
+      } else {
+        reject(new Error(`ffmpeg falhou (code=${code}) ${err.split('\n').slice(-3).join(' ').slice(0, 200)}`));
+      }
+    });
+    proc.on('error', reject);
+  });
+}
+
+// ============ HTTP snapshot (Hikvision/Intelbras/genéricas) ============
+async function fetchHttpSnapshot(cam) {
   const isHttps = (cam.protocolo || 'http') === 'https';
   const port = cam.porta || (isHttps ? 443 : 80);
   const uri = pathFor(cam.marca, cam.snapshot_path);
@@ -77,15 +174,11 @@ async function fetchSnapshot(cam) {
     protocol: isHttps ? 'https:' : 'http:',
     rejectUnauthorized: false, timeout: 8000, headers: {},
   };
-
-  // 1ª tentativa: Basic (ou sem auth)
   if (cam.usuario) {
     const basic = Buffer.from(`${cam.usuario}:${cam.senha || ''}`).toString('base64');
     baseOpts.headers['Authorization'] = `Basic ${basic}`;
   }
   let resp = await doRequest(baseOpts);
-
-  // Se 401 com Digest challenge, retenta com Digest
   if (resp.status === 401 && cam.usuario) {
     const wa = resp.headers['www-authenticate'] || '';
     if (/^Digest/i.test(wa)) {
@@ -94,9 +187,27 @@ async function fetchSnapshot(cam) {
       resp = await doRequest({ ...baseOpts, headers: {} }, { Authorization: digest });
     }
   }
-
   if (resp.status !== 200) throw new Error(`HTTP ${resp.status} de ${cam.host}`);
   return { bytes: resp.body, contentType: resp.headers['content-type'] || 'image/jpeg' };
+}
+
+// Snapshot unificado — roteia por protocolo/porta
+async function fetchSnapshot(cam) {
+  const isRtsp = (cam.protocolo || '').toLowerCase() === 'rtsp' || cam.porta === 554;
+  if (isRtsp) return await fetchRtspSnapshot(cam);
+  return await fetchHttpSnapshot(cam);
+}
+
+// Status probe — para RTSP faz apenas OPTIONS; para HTTP tenta snapshot
+async function probeStatus(cam) {
+  const isRtsp = (cam.protocolo || '').toLowerCase() === 'rtsp' || cam.porta === 554;
+  if (isRtsp) {
+    const r = await rtspOptions(cam.host, cam.porta || 554);
+    return { online: r.ok, extra: `RTSP OPTIONS ${r.status}` };
+  }
+  // HTTP: se snapshot funcionar, online
+  await fetchHttpSnapshot(cam);
+  return { online: true, extra: 'HTTP 200' };
 }
 
 async function listarCameras(cfg) {
@@ -114,7 +225,6 @@ async function listarCameras(cfg) {
   return json.cameras || [];
 }
 
-// Envia o snapshot capturado ao CRM (para câmeras internas que o servidor não alcança)
 async function enviarSnapshot(cfg, cam, snap) {
   try {
     const resp = await fetch(`${cfg.url}/functions/v1/cv-coletor-cameras`, {
@@ -159,12 +269,29 @@ async function reportarStatus(cfg, resultados) {
 async function verificarCameras(cfg) {
   const cams = await listarCameras(cfg);
   const resultados = [];
+  const ffAvailable = !!findFfmpeg();
   for (const cam of cams) {
     const inicio = Date.now();
+    const isRtsp = (cam.protocolo || '').toLowerCase() === 'rtsp' || cam.porta === 554;
     try {
-      const snap = await fetchSnapshot(cam);
-      // Sobe a imagem para o CRM exibir (principalmente câmeras internas)
-      await enviarSnapshot(cfg, cam, snap);
+      // 1) Confirma que a câmera está viva (OPTIONS para RTSP, snapshot HTTP p/ resto)
+      const probe = await probeStatus(cam);
+      // 2) Snapshot: HTTP sempre; RTSP só se ffmpeg presente (não derruba o status)
+      if (isRtsp) {
+        if (ffAvailable) {
+          try {
+            const snap = await fetchRtspSnapshot(cam);
+            await enviarSnapshot(cfg, cam, snap);
+          } catch (e) {
+            console.warn('[cameras] snapshot RTSP falhou (status permanece online):', cam.nome, e.message);
+          }
+        }
+      } else {
+        try {
+          const snap = await fetchHttpSnapshot(cam);
+          await enviarSnapshot(cfg, cam, snap);
+        } catch (_) {}
+      }
       resultados.push({
         id: cam.id, nome: cam.nome, host: cam.host, tipo_rede: cam.tipo_rede,
         status: 'online', latencia_ms: Date.now() - inicio, erro: null,
@@ -176,10 +303,8 @@ async function verificarCameras(cfg) {
       });
     }
   }
-  // Persiste status no CRM para exibição na tela de câmeras
   if (resultados.length) await reportarStatus(cfg, resultados);
   return resultados;
 }
 
-module.exports = { verificarCameras, fetchSnapshot, listarCameras };
-
+module.exports = { verificarCameras, fetchSnapshot, listarCameras, findFfmpeg };

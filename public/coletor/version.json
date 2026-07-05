@@ -1,5 +1,5 @@
 {
-  "version": "1.3.2",
+  "version": "1.4.0",
   "downloadUrl": "https://crm.pilar.com.br/__l5e/assets-v1/d84e2208-54c6-4a6f-8ef0-a447a2fc7568/ColetorPilar-Setup.msi",
-  "notas": "1.3.2: após atualizar, o Coletor Pilar agora é reiniciado automaticamente (o updater aguarda o msiexec terminar e relança o ColetorPilar.exe do Program Files). Também limpa o instalador temporário do disco. Mantém as correções da 1.3.1: HTTPS Control iD via curl.exe/Schannel (TLS legado) + heartbeat WebRTC a cada 2s para câmeras ao vivo."
+  "notas": "1.4.0: suporte completo a câmeras RTSP (TP-Link Tapo, genéricas RTSP). Status via handshake OPTIONS TCP na porta 554 — não depende mais de HTTP. Snapshot RTSP via ffmpeg (instale ffmpeg no PC para ativar; sem ffmpeg a câmera ainda aparece online, apenas sem thumbnail). Compatível com todos os modelos anteriores (Hikvision/Intelbras/HTTP genérico via Basic+Digest)."
 }
