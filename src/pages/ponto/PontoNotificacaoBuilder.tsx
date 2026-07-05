@@ -150,6 +150,11 @@ function CustomNode({ id, data, selected }: any) {
 
 const nodeTypes: NodeTypes = { custom: CustomNode as any };
 
+function stripCallbacks(data: any) {
+  const { onDuplicate: _a, onToggleBreakpoint: _b, onToggleSkip: _c, onDelete: _d, onAddNote: _e, onAddNext: _f, isHighlighted: _h, ...rest } = data || {};
+  return rest;
+}
+
 export default function PontoNotificacaoBuilder() {
   return (
     <ReactFlowProvider>
