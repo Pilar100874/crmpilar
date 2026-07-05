@@ -299,4 +299,20 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
       stopFlow: true,
     },
   },
+  {
+    type: "disparar_push",
+    label: "Disparar Push",
+    description: "Envia notificação push para app instalado (usuário interno ou cliente)",
+    icon: "BellRing",
+    color: "#f97316",
+    category: "acao",
+    defaultData: {
+      destinatario_tipo: "usuario",
+      usuario_ids: [],
+      contato_ids: [],
+      titulo: "",
+      corpo: "",
+      url: "/",
+    },
+  },
 ];

@@ -748,5 +748,20 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     color: "text-blue-600",
     defaultData: { title: "", description: "", footer: "", mode: "manual", cards: [], dynamicLimit: 10, dynamicButtonText: "Selecionar", variable: "card_escolhido" },
   },
+  {
+    type: "disparar_push",
+    label: "Disparar Push",
+    description: "Envia notificação push para app instalado (usuário interno ou cliente)",
+    icon: "BellRing",
+    color: "text-orange-500",
+    defaultData: {
+      destinatario_tipo: "variavel",
+      variavel_tipo: "contato",
+      variavel_destinatario: "contato.id",
+      titulo: "",
+      corpo: "",
+      url: "/",
+    },
+  },
 ];
 
