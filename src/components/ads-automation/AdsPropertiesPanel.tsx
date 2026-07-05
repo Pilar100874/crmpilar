@@ -11,6 +11,7 @@ import { X, Settings, AlertCircle, AlertTriangle, CheckCircle, Info } from "luci
 import * as Icons from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { UserSelector, MultiUserSelector } from "@/components/flow/block-configs/UserSelector";
+import { PushBlockConfigEditor } from "@/components/workflows/PushBlockConfig";
 
 interface AdsPropertiesPanelProps {
   selectedNode: Node | null;
@@ -610,6 +611,15 @@ export const AdsPropertiesPanel = ({ selectedNode, onUpdateNode, onClose }: AdsP
             </div>
           </div>
         );
+
+      case 'disparar_push':
+        return <PushBlockConfigEditor
+          value={(selectedNode.data as any).config || {}}
+          onChange={(patch) => onUpdateNode(selectedNode.id, {
+            config: { ...((selectedNode.data as any).config || {}), ...patch },
+          })}
+          context="ads"
+        />;
 
       default:
         return (
