@@ -9,6 +9,7 @@ export type LogisticaBlockType =
   | 'acao_whatsapp'
   | 'acao_notificacao'
   | 'acao_email'
+  | 'disparar_push'
   | 'return_response';
 
 export interface CondicaoTempoParado {
@@ -49,6 +50,16 @@ export interface LogisticaBlockConfig {
   email_destino?: string;
   assunto_email?: string;
   corpo_email?: string;
+  // Para disparar_push
+  destinatario_tipo?: 'usuario' | 'contato' | 'todos_usuarios' | 'todos_contatos' | 'variavel';
+  usuario_ids?: string[];
+  contato_ids?: string[];
+  variavel_destinatario?: string;
+  variavel_tipo?: 'usuario' | 'contato';
+  titulo?: string;
+  corpo?: string;
+  url?: string;
+  icone?: string;
 }
 
 export interface LogisticaBlock {
