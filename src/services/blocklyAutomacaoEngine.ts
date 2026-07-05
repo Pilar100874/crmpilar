@@ -111,6 +111,7 @@ export async function aplicarRegrasBlockly(
         'aplicarDescontoFixo',
         'adicionarFrete',
         'enviarAlerta',
+        'dispararPush',
         regra.code
       );
 
@@ -120,7 +121,8 @@ export async function aplicarRegrasBlockly(
         contexto.aplicarDescontoPercentual,
         contexto.aplicarDescontoFixo,
         contexto.adicionarFrete,
-        contexto.enviarAlerta
+        contexto.enviarAlerta,
+        contexto.dispararPush
       );
 
       resultado.regrasAplicadas.push(regra.name);
