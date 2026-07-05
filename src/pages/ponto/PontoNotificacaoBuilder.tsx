@@ -316,15 +316,13 @@ function PontoNotificacaoBuilderContent() {
 
   async function salvar() {
     setSaving(true);
-    // Limpar callbacks antes de salvar
-    const cleanNodes = nodes.map(n => {
-      const { onDuplicate: _a, onToggleBreakpoint: _b, onToggleSkip: _c, onDelete: _d, onAddNote: _e, onAddNext: _f, isHighlighted: _h, ...rest } = n.data as any;
-      return { ...n, data: rest };
-    });
-    const flow_data = { nodes: cleanNodes, edges, viewport: { x: 0, y: 0, zoom: 1 } };
+    const cleanNodes = nodes.map(n => ({ ...n, data: stripCallbacks(n.data) }));
+    const flow_data = { nodes: cleanNodes, edges: edges.map(({ markerEnd: _m, ...rest }) => rest), viewport: { x: 0, y: 0, zoom: 1 } };
     const { error } = await supabase.from("ponto_notif_workflows").update({ flow_data, nome: wf.nome, ativo: wf.ativo, evento_gatilho: wf.evento_gatilho }).eq("id", id);
     setSaving(false);
     if (error) return toast.error(error.message);
+    initialHashRef.current = JSON.stringify({ n: cleanNodes, e: flow_data.edges, nome: wf.nome, evento: wf.evento_gatilho, ativo: wf.ativo });
+    setDirty(false);
     toast.success("Workflow salvo");
   }
 
