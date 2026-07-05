@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
       if (cfg.notificar_funcionario && funcionario?.email) emails.add(funcionario.email);
       if (emails.size) {
         try {
-          await sb.functions.invoke("send-email-notification", {
+          await sb.functions.invoke("send-email", {
             body: { to: Array.from(emails), subject: titulo, html: `<p>${mensagem}</p>` },
           });
           resultados.push({ canal: "email", ok: true, total: emails.size });
