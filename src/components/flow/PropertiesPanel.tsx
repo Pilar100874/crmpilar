@@ -444,6 +444,12 @@ export const PropertiesPanel = ({
         return <BlockConfigs.TriggerWorkflowConfig data={selectedNode.data} onChange={(cfg) => Object.entries(cfg).forEach(([k, v]) => handleConfigChange(k, v))} />;
       case "return_response":
         return <BlockConfigs.ReturnResponseConfig data={selectedNode.data} onChange={(cfg) => Object.entries(cfg).forEach(([k, v]) => handleConfigChange(k, v))} />;
+      case "disparar_push":
+        return <PushBlockConfigEditor
+          value={config as any}
+          onChange={(patch) => Object.entries(patch).forEach(([k, v]) => handleConfigChange(k, v as any))}
+          context="bot"
+        />;
 
 
 
