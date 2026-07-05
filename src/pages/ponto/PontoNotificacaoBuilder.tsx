@@ -444,96 +444,129 @@ function PontoNotificacaoBuilderContent() {
   if (!wf) return <div className="p-6">Carregando...</div>;
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col">
-      {/* Header */}
-      <div className="border-b px-4 py-2 flex items-center gap-2 flex-wrap">
-        <Button variant="ghost" size="sm" onClick={() => nav("/ponto/notificacoes")}><ArrowLeft className="w-4 h-4 mr-1" /> Voltar</Button>
-        <Input value={wf.nome} onChange={e => setWf({ ...wf, nome: e.target.value })} className="max-w-xs" />
-        <Select value={wf.evento_gatilho} onValueChange={v => setWf({ ...wf, evento_gatilho: v })}>
-          <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
-          <SelectContent>{EVENTOS.map(e => <SelectItem key={e.key} value={e.key}>Gatilho: {e.label}</SelectItem>)}</SelectContent>
-        </Select>
-        <div className="flex items-center gap-2 ml-2">
-          <Switch checked={wf.ativo} onCheckedChange={v => setWf({ ...wf, ativo: v })} />
-          <span className="text-xs">{wf.ativo ? "Ativo" : "Inativo"}</span>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={exportar}><Download className="w-4 h-4 mr-1" /> Exportar</Button>
-          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}><Upload className="w-4 h-4 mr-1" /> Importar</Button>
-          <input ref={fileInputRef} type="file" accept="application/json" className="hidden" onChange={e => e.target.files?.[0] && importar(e.target.files[0])} />
-          <Button variant="outline" size="sm" onClick={() => setSimOpen(true)}><Wand2 className="w-4 h-4 mr-1" /> Simular</Button>
-          <Button variant="outline" size="sm" onClick={testarReal}><Play className="w-4 h-4 mr-1" /> Disparar real</Button>
-          <Button size="sm" onClick={salvar} disabled={saving}><Save className="w-4 h-4 mr-1" /> {saving ? "Salvando..." : "Salvar"}</Button>
-        </div>
+    <WorkflowBuilderLayout
+      title="Notificações do Ponto"
+      subtitle={`Gatilho: ${EVENTOS.find(e => e.key === wf.evento_gatilho)?.label || wf.evento_gatilho}`}
+      flowName={wf.nome}
+      onFlowNameChange={(v) => setWf({ ...wf, nome: v })}
+      onSave={salvar}
+      isSaving={saving}
+      onTest={() => setSimOpen(true)}
+      showTest={simOpen}
+      testLabel="Simular"
+      onZoomIn={zoomIn}
+      onZoomOut={zoomOut}
+      onFitView={fitView}
+      isLocked={isLocked}
+      onToggleLock={() => setIsLocked(v => !v)}
+      hasUnsavedChanges={dirty}
+      defaultReturnUrl="/ponto/notificacoes"
+      centerContent={
+        <>
+          <Select value={wf.evento_gatilho} onValueChange={v => setWf({ ...wf, evento_gatilho: v })}>
+            <SelectTrigger className="h-8 w-48 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>{EVENTOS.map(e => <SelectItem key={e.key} value={e.key}>Gatilho: {e.label}</SelectItem>)}</SelectContent>
+          </Select>
+          <div className="flex items-center gap-1.5 px-2 h-8 rounded-md border bg-muted/40">
+            <Switch checked={wf.ativo} onCheckedChange={v => setWf({ ...wf, ativo: v })} />
+            <span className="text-xs font-medium">{wf.ativo ? "Ativo" : "Inativo"}</span>
+          </div>
+        </>
+      }
+      rightContent={
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8 px-2"><FolderOpen className="w-4 h-4 sm:mr-1" /><span className="hidden sm:inline text-xs">Arquivo</span></Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-52 p-1 z-[60]">
+            <button onClick={exportar} className="w-full text-left text-sm px-2 py-1.5 rounded hover:bg-muted flex items-center gap-2"><Download className="w-4 h-4" /> Exportar JSON</button>
+            <button onClick={() => fileInputRef.current?.click()} className="w-full text-left text-sm px-2 py-1.5 rounded hover:bg-muted flex items-center gap-2"><Upload className="w-4 h-4" /> Importar JSON</button>
+            <button onClick={duplicarWorkflow} className="w-full text-left text-sm px-2 py-1.5 rounded hover:bg-muted flex items-center gap-2"><Copy className="w-4 h-4" /> Duplicar workflow</button>
+            <div className="h-px bg-border my-1" />
+            <button onClick={testarReal} className="w-full text-left text-sm px-2 py-1.5 rounded hover:bg-muted flex items-center gap-2"><Play className="w-4 h-4" /> Disparar real agora</button>
+          </PopoverContent>
+        </Popover>
+      }
+    >
+      <input ref={fileInputRef} type="file" accept="application/json" className="hidden" onChange={e => e.target.files?.[0] && importar(e.target.files[0])} />
+
+      {/* Library */}
+      <div className="w-56 border-r overflow-y-auto p-3 space-y-3 bg-muted/20 flex-shrink-0">
+        <div className="text-xs font-semibold text-foreground mb-1">Biblioteca de blocos</div>
+        {Object.entries(grupos).map(([g, items]) => (
+          <div key={g}>
+            <div className="text-[11px] font-semibold uppercase text-muted-foreground mb-1">{g}</div>
+            <div className="space-y-1">
+              {items.map(b => {
+                const Icon = b.icon;
+                return (
+                  <button key={b.type} onClick={() => addBlockAt(b.type)}
+                    className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md border text-left text-xs hover:shadow-sm transition-all", b.color)}>
+                    <Icon className="w-3.5 h-3.5" /> {b.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* Library */}
-        <div className="w-56 border-r overflow-y-auto p-3 space-y-3 bg-muted/20">
-          {Object.entries(grupos).map(([g, items]) => (
-            <div key={g}>
-              <div className="text-[11px] font-semibold uppercase text-muted-foreground mb-1">{g}</div>
-              <div className="space-y-1">
-                {items.map(b => {
-                  const Icon = b.icon;
-                  return (
-                    <button key={b.type} onClick={() => addBlockAt(b.type)}
-                      className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md border text-left text-xs hover:shadow-sm transition-all", b.color)}>
-                      <Icon className="w-3.5 h-3.5" /> {b.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* Canvas */}
+      <div className="flex-1 relative">
+        <ReactFlow
+          nodes={enhancedNodes} edges={edges}
+          onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onInit={setRfInstance}
+          onNodeClick={(_, n) => setSelected(n)}
+          onPaneClick={() => { setSelected(null); setSmartMenu(null); }}
+          nodeTypes={nodeTypes}
+          fitView
+          nodesDraggable={!isLocked}
+          nodesConnectable={!isLocked}
+          elementsSelectable={!isLocked}
+          defaultEdgeOptions={{ animated: true, style: { strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed } as any }}
+        >
+          <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
+          <Controls showInteractive={false} />
+          <MiniMap pannable className="!bg-card" />
+        </ReactFlow>
 
-        {/* Canvas */}
-        <div className="flex-1 relative">
-          <ReactFlow
-            nodes={enhancedNodes} edges={edges}
-            onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onNodeClick={(_, n) => setSelected(n)}
-            onPaneClick={() => { setSelected(null); setSmartMenu(null); }}
-            nodeTypes={nodeTypes}
-            fitView
-            defaultEdgeOptions={{ animated: true, style: { strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed } as any }}
-          >
-            <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-            <Controls />
-            <MiniMap pannable />
-          </ReactFlow>
-
-          {smartMenu && (
-            <SmartConnectMenu x={smartMenu.x} y={smartMenu.y}
-              title={smartMenu.handle ? `Próximo bloco (${smartMenu.handle.toUpperCase()})` : "Escolha o próximo bloco"}
-              blocks={smartOptions} onPick={onSmartPick} onClose={() => setSmartMenu(null)} />
-          )}
-        </div>
-
-        {/* Properties */}
-        <div className="w-80 border-l overflow-y-auto bg-muted/10">
-          {selected ? (
-            <PropsPanel node={enhancedNodes.find(n => n.id === selected.id) || selected} onChange={updateNode}
-              onDelete={() => onDeleteNode(selected.id)}
-              onDuplicate={() => onDuplicate(selected.id)}
-              onToggleBreakpoint={() => onToggleBreakpoint(selected.id)}
-              onToggleSkip={() => onToggleSkip(selected.id)} />
-          ) : (
-            <div className="p-4 text-sm text-muted-foreground">
-              <div className="font-semibold mb-2">Como funciona</div>
-              <ul className="list-disc pl-4 space-y-1.5">
-                <li>Passe o mouse sobre um bloco e clique no <b>+</b> abaixo para escolher o próximo bloco permitido.</li>
-                <li>Clique no <b>⋮</b> do bloco para: duplicar, pausar (breakpoint), pular na execução, adicionar nota ou excluir.</li>
-                <li>Use <b>Simular</b> para rodar o fluxo passo a passo com dados de teste (destaca cada bloco em verde).</li>
-                <li>Use <b>Disparar real</b> para executar o workflow contra os canais reais (Push/WhatsApp/SMS/E-mail).</li>
-                <li>Variáveis nos templates: <code>{`{funcionario}`}</code>, <code>{`{data}`}</code>, <code>{`{link_aprovacao}`}</code>, <code>{`{severidade}`}</code>.</li>
-              </ul>
-            </div>
-          )}
-        </div>
+        {smartMenu && (
+          <SmartConnectMenu x={smartMenu.x} y={smartMenu.y}
+            title={smartMenu.handle ? `Próximo bloco (${smartMenu.handle.toUpperCase()})` : "Escolha o próximo bloco"}
+            blocks={smartOptions} onPick={onSmartPick} onClose={() => setSmartMenu(null)} />
+        )}
       </div>
+
+      {/* Properties */}
+      <div className="w-80 border-l overflow-y-auto bg-muted/10 flex-shrink-0">
+        {selected ? (
+          <PropsPanel node={enhancedNodes.find(n => n.id === selected.id) || selected} onChange={updateNode}
+            onDelete={() => onDeleteNode(selected.id)}
+            onDuplicate={() => onDuplicate(selected.id)}
+            onToggleBreakpoint={() => onToggleBreakpoint(selected.id)}
+            onToggleSkip={() => onToggleSkip(selected.id)} />
+        ) : (
+          <div className="p-4 text-sm text-muted-foreground">
+            <div className="font-semibold text-foreground mb-2">Como funciona</div>
+            <ul className="list-disc pl-4 space-y-1.5">
+              <li>Arraste blocos da esquerda ou clique no <b>+</b> abaixo de qualquer bloco para escolher o próximo permitido.</li>
+              <li>Menu <b>⋮</b> do bloco: duplicar, pausar (breakpoint), pular, adicionar nota, excluir.</li>
+              <li><b>Simular</b> executa passo a passo com destaque verde; <b>Arquivo → Disparar real</b> executa nos canais reais.</li>
+              <li>Cadeado no topo bloqueia edições acidentais do canvas.</li>
+              <li>Variáveis: <code>{`{funcionario} {data} {link_aprovacao} {severidade}`}</code>.</li>
+            </ul>
+          </div>
+        )}
+      </div>
+    </WorkflowBuilderLayout>
+  );
+
+  // ============ Dialogs abaixo do layout ============
+}
+
+function BuilderDialogs() { return null; }
 
       {/* Nota dialog */}
       <Dialog open={!!noteFor} onOpenChange={(v) => !v && setNoteFor(null)}>
