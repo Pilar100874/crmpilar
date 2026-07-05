@@ -170,7 +170,7 @@ export default function AdminApps() {
       <div>
         <h1 className="text-xl font-semibold sm:text-3xl">Apps &amp; Instaladores</h1>
         <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-          Central de downloads dos aplicativos auxiliares do CRM Pilar: Coletor Desktop (Ponto + Câmeras) e APK Pilar SMS.
+          Central de downloads dos aplicativos auxiliares do CRM Pilar: Coletor Desktop (Windows · macOS · Linux) e APK Pilar SMS.
         </p>
       </div>
 
