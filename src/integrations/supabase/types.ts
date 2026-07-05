@@ -13669,6 +13669,39 @@ export type Database = {
           },
         ]
       }
+      ponto_funcionario_notif_prefs: {
+        Row: {
+          aceita_email: boolean
+          aceita_push: boolean
+          aceita_sms: boolean
+          aceita_whatsapp: boolean
+          canais_preferidos: string[]
+          estabelecimento_id: string
+          funcionario_id: string
+          updated_at: string
+        }
+        Insert: {
+          aceita_email?: boolean
+          aceita_push?: boolean
+          aceita_sms?: boolean
+          aceita_whatsapp?: boolean
+          canais_preferidos?: string[]
+          estabelecimento_id: string
+          funcionario_id: string
+          updated_at?: string
+        }
+        Update: {
+          aceita_email?: boolean
+          aceita_push?: boolean
+          aceita_sms?: boolean
+          aceita_whatsapp?: boolean
+          canais_preferidos?: string[]
+          estabelecimento_id?: string
+          funcionario_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ponto_funcionario_vinculos: {
         Row: {
           ativo: boolean
@@ -14219,16 +14252,24 @@ export type Database = {
       }
       ponto_notificacoes_config: {
         Row: {
+          bypass_quiet_hours_tipos: Json
           canais: Json
           canais_por_evento: Json
           created_at: string
+          dedupe_janela_horas: number
           destinatarios_emails: Json
           destinatarios_telefones: Json
           dias_aviso_expiracao: number
           email_ativo: boolean
+          enviar_fins_de_semana: boolean
+          escalonamento_ativo: boolean
+          escalonamento_emails: Json
+          escalonamento_horas: number
+          escalonamento_telefones: Json
           estabelecimento_id: string
           id: string
           mensagens_template: Json
+          mensagens_template_lider: Json
           notif_atestado_pendente: boolean
           notif_atraso: boolean
           notif_banco_horas_expirar: boolean
@@ -14237,22 +14278,37 @@ export type Database = {
           notif_he_pendente: boolean
           notificar_funcionario: boolean
           push_ativo: boolean
+          quiet_hours_fim: string | null
+          quiet_hours_inicio: string | null
+          rate_limit_por_hora: number
+          resumo_canal: string | null
+          resumo_diario_ativo: boolean
+          resumo_diario_hora: string | null
           sms_ativo: boolean
           updated_at: string
           webhook_url: string | null
           whatsapp_ativo: boolean
+          whatsapp_permite_confirmacao: boolean
         }
         Insert: {
+          bypass_quiet_hours_tipos?: Json
           canais?: Json
           canais_por_evento?: Json
           created_at?: string
+          dedupe_janela_horas?: number
           destinatarios_emails?: Json
           destinatarios_telefones?: Json
           dias_aviso_expiracao?: number
           email_ativo?: boolean
+          enviar_fins_de_semana?: boolean
+          escalonamento_ativo?: boolean
+          escalonamento_emails?: Json
+          escalonamento_horas?: number
+          escalonamento_telefones?: Json
           estabelecimento_id: string
           id?: string
           mensagens_template?: Json
+          mensagens_template_lider?: Json
           notif_atestado_pendente?: boolean
           notif_atraso?: boolean
           notif_banco_horas_expirar?: boolean
@@ -14261,22 +14317,37 @@ export type Database = {
           notif_he_pendente?: boolean
           notificar_funcionario?: boolean
           push_ativo?: boolean
+          quiet_hours_fim?: string | null
+          quiet_hours_inicio?: string | null
+          rate_limit_por_hora?: number
+          resumo_canal?: string | null
+          resumo_diario_ativo?: boolean
+          resumo_diario_hora?: string | null
           sms_ativo?: boolean
           updated_at?: string
           webhook_url?: string | null
           whatsapp_ativo?: boolean
+          whatsapp_permite_confirmacao?: boolean
         }
         Update: {
+          bypass_quiet_hours_tipos?: Json
           canais?: Json
           canais_por_evento?: Json
           created_at?: string
+          dedupe_janela_horas?: number
           destinatarios_emails?: Json
           destinatarios_telefones?: Json
           dias_aviso_expiracao?: number
           email_ativo?: boolean
+          enviar_fins_de_semana?: boolean
+          escalonamento_ativo?: boolean
+          escalonamento_emails?: Json
+          escalonamento_horas?: number
+          escalonamento_telefones?: Json
           estabelecimento_id?: string
           id?: string
           mensagens_template?: Json
+          mensagens_template_lider?: Json
           notif_atestado_pendente?: boolean
           notif_atraso?: boolean
           notif_banco_horas_expirar?: boolean
@@ -14285,10 +14356,71 @@ export type Database = {
           notif_he_pendente?: boolean
           notificar_funcionario?: boolean
           push_ativo?: boolean
+          quiet_hours_fim?: string | null
+          quiet_hours_inicio?: string | null
+          rate_limit_por_hora?: number
+          resumo_canal?: string | null
+          resumo_diario_ativo?: boolean
+          resumo_diario_hora?: string | null
           sms_ativo?: boolean
           updated_at?: string
           webhook_url?: string | null
           whatsapp_ativo?: boolean
+          whatsapp_permite_confirmacao?: boolean
+        }
+        Relationships: []
+      }
+      ponto_notificacoes_envios: {
+        Row: {
+          canal: string
+          confirmado_em: string | null
+          confirmado_via: string | null
+          created_at: string
+          custo_estimado: number | null
+          dedupe_hash: string | null
+          destinatario: string | null
+          erro: string | null
+          estabelecimento_id: string
+          funcionario_id: string | null
+          id: string
+          mensagem: string | null
+          status: string
+          tipo: string
+          titulo: string | null
+        }
+        Insert: {
+          canal: string
+          confirmado_em?: string | null
+          confirmado_via?: string | null
+          created_at?: string
+          custo_estimado?: number | null
+          dedupe_hash?: string | null
+          destinatario?: string | null
+          erro?: string | null
+          estabelecimento_id: string
+          funcionario_id?: string | null
+          id?: string
+          mensagem?: string | null
+          status: string
+          tipo: string
+          titulo?: string | null
+        }
+        Update: {
+          canal?: string
+          confirmado_em?: string | null
+          confirmado_via?: string | null
+          created_at?: string
+          custo_estimado?: number | null
+          dedupe_hash?: string | null
+          destinatario?: string | null
+          erro?: string | null
+          estabelecimento_id?: string
+          funcionario_id?: string | null
+          id?: string
+          mensagem?: string | null
+          status?: string
+          tipo?: string
+          titulo?: string | null
         }
         Relationships: []
       }
