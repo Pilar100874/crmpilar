@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info, Monitor, Camera } from "lucide-react";
+import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info, Monitor, Camera, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import crmApkAsset from "../../public/coletor/crm-pilar-v1.0.0.apk.asset.json";
@@ -247,17 +247,18 @@ export default function AdminApps() {
 
           <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Coletor Desktop (Windows)</h2>
           <div className="mb-6 text-sm leading-relaxed text-muted-foreground sm:mb-8">
-            Instale em <b>um PC da mesma rede local</b> das câmeras IP para habilitar{" "}
-            <b>snapshot</b> e <b>câmera ao vivo (WebRTC)</b> das câmeras internas (Hikvision, Intelbras, Tapo, etc.)
-            que não estão expostas na internet. Sem o Coletor rodando na LAN, a nuvem não consegue acessar
-            câmeras com IP privado.
+            Instale em <b>um PC da mesma rede local</b> para habilitar duas funções:
+            <b> câmeras IP</b> (snapshot e ao vivo de Hikvision, Intelbras, Tapo etc. que não estão na internet) e
+            <b> relógios de ponto</b> (coleta automática de batidas de Control iD, Henry, ZKTeco, Topdata e Madis na LAN).
+            Sem o Coletor rodando, a nuvem não consegue acessar equipamentos com IP privado.
           </div>
 
           <div className="flex items-center gap-3 rounded-xl border border-dashed p-4 text-xs text-muted-foreground mb-6 sm:mb-8">
             <Camera className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            <Clock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
             <span>
-              <b className="text-foreground">Necessário apenas</b> para câmeras internas (LAN). Câmeras públicas
-              (com IP externo / port-forward) funcionam direto pela nuvem, sem Coletor.
+              <b className="text-foreground">Necessário para</b> câmeras internas (LAN) e relógios de ponto na rede local.
+              Câmeras públicas (com IP externo / port-forward) funcionam direto pela nuvem, sem Coletor.
             </span>
           </div>
 
@@ -284,7 +285,7 @@ export default function AdminApps() {
           <ol className="space-y-4">
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">1</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">Baixe e execute o <b>ColetorPilar-Setup.msi</b> em um PC Windows que fique <b>ligado 24/7</b> na mesma rede das câmeras.</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">Baixe e execute o <b>ColetorPilar-Setup.msi</b> em um PC Windows que fique <b>ligado 24/7</b> na mesma rede das câmeras e relógios de ponto.</p>
             </li>
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">2</span>
@@ -292,7 +293,7 @@ export default function AdminApps() {
             </li>
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">3</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">Ative o módulo <b>Câmeras</b> na tela principal. O ícone deve ficar verde (online) — a nuvem passa a enviar comandos de snapshot e streaming.</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">Ative os módulos <b>Câmeras</b> e/ou <b>Ponto</b> na tela principal. O ícone deve ficar verde (online) — a nuvem passa a enviar comandos de snapshot, streaming e coleta de batidas.</p>
             </li>
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">4</span>
