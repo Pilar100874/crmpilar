@@ -4,7 +4,21 @@ const fs = require('fs');
 const path = require('path');
 const { lerBatidasControlID } = require('./controlid');
 const { verificarCameras, listarCameras } = require('./cameras');
-const { SignalHub } = require('./webrtc-stream');
+// Carregamento preguiçoso do módulo de streaming (werift). Se a dependência
+// estiver quebrada no pacote instalado, o app NÃO deve travar na abertura —
+// apenas o streaming ao vivo das câmeras fica indisponível.
+let SignalHub = null;
+let webrtcLoadError = null;
+function getSignalHub() {
+  if (SignalHub || webrtcLoadError) return SignalHub;
+  try {
+    SignalHub = require('./webrtc-stream').SignalHub;
+  } catch (e) {
+    webrtcLoadError = e.message;
+    console.error('[webrtc-stream] indisponível (streaming ao vivo desativado):', e.message);
+  }
+  return SignalHub;
+}
 
 let webrtcHub = null;
 
@@ -197,8 +211,11 @@ async function pollCamerasOnce() {
     STATE.lastSyncCameras = new Date().toISOString();
     // Mantém hub de WebRTC atualizado com IDs de câmeras que podemos servir
     try {
-      if (!webrtcHub) {
-        webrtcHub = new SignalHub(cfg, resultados.map((r) => r.id));
+      const Hub = getSignalHub();
+      if (!Hub) {
+        // werift indisponível — snapshots continuam funcionando, sem live stream
+      } else if (!webrtcHub) {
+        webrtcHub = new Hub(cfg, resultados.map((r) => r.id));
         // guarda config completa das câmeras (com credenciais) para o hub
         const camsFull = await listarCameras(cfg);
         webrtcHub.cameras = camsFull;
