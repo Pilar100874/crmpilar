@@ -592,6 +592,17 @@
       document.getElementById('discoverStep1').style.display = 'block';
       document.getElementById('discoverStep2').style.display = 'none';
       document.getElementById('discoverStep3').style.display = 'none';
+      // Mostra a filial que será usada na criação
+      try{
+        const st = await window.coletor.getStatus();
+        const nome = st?.config?.filialNome || st?.config?.filialId || null;
+        const el = document.getElementById('discFilialInfo');
+        if (el){
+          if (nome) el.innerHTML = `🏢 As câmeras serão criadas na filial: <b>${nome}</b>`;
+          else el.innerHTML = `⚠ Nenhuma filial definida neste coletor. <b>Selecione a filial na tela principal antes de continuar</b> — o CRM exige filial para vincular as câmeras.`;
+          el.style.color = nome ? 'var(--text-2)' : 'var(--danger)';
+        }
+      }catch{}
       try{
         const info = await window.coletor.discoverSubnet();
         const hint = document.getElementById('discSubnetHint');
