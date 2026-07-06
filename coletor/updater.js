@@ -152,8 +152,22 @@ $ErrorActionPreference = 'Continue'
 Start-Transcript -Path '${logPath}' -Append | Out-Null
 Start-Sleep -Seconds 2
 Write-Host "Instalando EXE: ${destino}"
-$proc = Start-Process -FilePath '${destino}' -ArgumentList '/S' -Wait -PassThru
-Write-Host "Setup exit code: $($proc.ExitCode)"
+# NSIS foi construído com perMachine=true → exige elevação (UAC).
+# Sem -Verb RunAs o /S falha silenciosamente e nada é instalado.
+# Tenta silencioso elevado; se o usuário recusar UAC, cai para modo interativo.
+try {
+  $proc = Start-Process -FilePath '${destino}' -ArgumentList '/S' -Verb RunAs -Wait -PassThru -ErrorAction Stop
+  Write-Host "Setup exit code (silent): $($proc.ExitCode)"
+} catch {
+  Write-Host "Elevacao recusada ou falhou no modo silent: $($_.Exception.Message)"
+  Write-Host "Tentando instalacao interativa (com UAC visivel)..."
+  try {
+    $proc = Start-Process -FilePath '${destino}' -Verb RunAs -Wait -PassThru -ErrorAction Stop
+    Write-Host "Setup exit code (interactive): $($proc.ExitCode)"
+  } catch {
+    Write-Host "Instalacao cancelada pelo usuario: $($_.Exception.Message)"
+  }
+}
 try {
   Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
   $owner = New-Object System.Windows.Forms.Form
