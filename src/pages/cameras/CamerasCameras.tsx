@@ -349,10 +349,16 @@ export default function CamerasCameras() {
           <Card key={r.id} className={`${r.ativo ? "" : "opacity-60"} ${selected.has(r.id) ? "ring-2 ring-primary" : ""}`}>
 
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center justify-between text-base">
+              <CardTitle className="flex items-center justify-between text-base gap-2">
                 <span className="flex items-center gap-2 min-w-0">
+                  <Checkbox
+                    checked={selected.has(r.id)}
+                    onCheckedChange={() => toggleSel(r.id)}
+                    aria-label="Selecionar câmera"
+                  />
                   <Camera className="h-4 w-4 text-primary flex-shrink-0" />
                   <span className="truncate">{r.nome}</span>
+
                 </span>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <StatusPingDot
