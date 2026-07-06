@@ -158,6 +158,9 @@ const menuItems: MenuItem[] = [
       { id: "Orçamento", title: "Orçamento", url: "/orcamentos", icon: FileBarChart },
       { id: "Pedidos Recebidos", title: "Pedidos Recebidos", url: "/pedidos-recebidos", icon: LucideIcons.Package },
       { id: "Roteirizador Visitas", title: "Roteirizador de Visitas", url: "/roteirizador-visitas", icon: LucideIcons.MapPin },
+      { id: "Programação Visitas", title: "Programação de Visitas", url: "/vendas/programacao-visitas", icon: LucideIcons.CalendarClock },
+      { id: "Acompanhamento Visitas", title: "Acompanhamento de Visitas", url: "/vendas/acompanhamento-visitas", icon: LucideIcons.CalendarCheck },
+      { id: "Regras Monitoramento Visita", title: "Regras de Monitoramento", url: "/config/regras-monitoramento-visita", icon: Settings },
       { id: "Config Vendas", title: "Configuração de Vendas", url: "/vendas-config", icon: Settings },
     ]
   },
