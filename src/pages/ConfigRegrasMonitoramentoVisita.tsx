@@ -69,7 +69,7 @@ const ConfigRegrasMonitoramentoVisita: React.FC = () => {
 
   async function save() {
     if (!form.nome?.trim()) { toast.error("Informe o nome da regra"); return; }
-    const payload = { ...form, estabelecimento_id: estabId };
+    const payload: any = { ...form, estabelecimento_id: estabId };
     const { error } = form.id
       ? await supabase.from("visita_regras_monitoramento").update(payload).eq("id", form.id)
       : await supabase.from("visita_regras_monitoramento").insert(payload);
