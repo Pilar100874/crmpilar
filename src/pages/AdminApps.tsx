@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info } from "lucide-react";
+import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info, Monitor, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import crmApkAsset from "../../public/coletor/crm-pilar-v1.0.0.apk.asset.json";
+import coletorMsiAsset from "../../public/coletor/ColetorPilar-Setup.msi.asset.json";
 
 interface BIPEvent extends Event {
   prompt: () => Promise<void>;
@@ -230,6 +231,74 @@ export default function AdminApps() {
               <b>Compartilhar → Adicionar à Tela de Início</b>. Funciona igual ao APK, com push a partir do iOS 16.4.
             </p>
           </div>
+        </div>
+      </Card>
+
+      <Card className="flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
+        <CardContent className="flex-1 p-5 sm:p-7 md:p-8">
+          <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-300 sm:h-14 sm:w-14 sm:rounded-2xl">
+              <Monitor className="h-8 w-8" />
+            </div>
+            <span className="rounded-full border bg-muted px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:px-3 sm:text-xs">
+              Windows · MSI
+            </span>
+          </div>
+
+          <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Coletor Desktop (Windows)</h2>
+          <div className="mb-6 text-sm leading-relaxed text-muted-foreground sm:mb-8">
+            Instale em <b>um PC da mesma rede local</b> das câmeras IP para habilitar{" "}
+            <b>snapshot</b> e <b>câmera ao vivo (WebRTC)</b> das câmeras internas (Hikvision, Intelbras, Tapo, etc.)
+            que não estão expostas na internet. Sem o Coletor rodando na LAN, a nuvem não consegue acessar
+            câmeras com IP privado.
+          </div>
+
+          <div className="flex items-center gap-3 rounded-xl border border-dashed p-4 text-xs text-muted-foreground mb-6 sm:mb-8">
+            <Camera className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            <span>
+              <b className="text-foreground">Necessário apenas</b> para câmeras internas (LAN). Câmeras públicas
+              (com IP externo / port-forward) funcionam direto pela nuvem, sem Coletor.
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-3 rounded-2xl bg-foreground p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:p-2 sm:pl-4">
+            <div className="flex min-w-0 flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-background/60">
+                Instalador Windows
+              </span>
+              <span className="truncate font-mono text-xs text-background sm:text-sm">ColetorPilar-Setup.msi</span>
+            </div>
+            <Button
+              onClick={() => baixar("ColetorPilar-Setup.msi", coletorMsiAsset.url)}
+              className="w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold transition-colors sm:w-auto sm:px-6 bg-purple-500 hover:bg-purple-400 text-white"
+            >
+              <Download className="mr-2 h-4 w-4" /> Baixar Coletor
+            </Button>
+          </div>
+        </CardContent>
+
+        <div className="border-t bg-muted/40 p-5 sm:p-7 md:p-8">
+          <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            Como instalar e usar
+          </h3>
+          <ol className="space-y-4">
+            <li className="flex gap-3 sm:gap-4">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">1</span>
+              <p className="text-sm leading-relaxed text-muted-foreground">Baixe e execute o <b>ColetorPilar-Setup.msi</b> em um PC Windows que fique <b>ligado 24/7</b> na mesma rede das câmeras.</p>
+            </li>
+            <li className="flex gap-3 sm:gap-4">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">2</span>
+              <p className="text-sm leading-relaxed text-muted-foreground">Faça login com sua conta do CRM Pilar. O Coletor vincula ao seu tenant automaticamente.</p>
+            </li>
+            <li className="flex gap-3 sm:gap-4">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">3</span>
+              <p className="text-sm leading-relaxed text-muted-foreground">Ative o módulo <b>Câmeras</b> na tela principal. O ícone deve ficar verde (online) — a nuvem passa a enviar comandos de snapshot e streaming.</p>
+            </li>
+            <li className="flex gap-3 sm:gap-4">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">4</span>
+              <p className="text-sm leading-relaxed text-muted-foreground">Deixe rodar em segundo plano. O Coletor auto-atualiza e reinicia sozinho quando há nova versão.</p>
+            </li>
+          </ol>
         </div>
       </Card>
     </div>
