@@ -201,7 +201,7 @@ const ProgramacaoVisitas: React.FC = () => {
               <Select value={form.customer_id || ""} onValueChange={selectCustomer}>
                 <SelectTrigger><SelectValue placeholder="Selecionar cliente" /></SelectTrigger>
                 <SelectContent>
-                  {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
