@@ -54,6 +54,8 @@ const AcompanhamentoVisitas: React.FC = () => {
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [verificando, setVerificando] = useState(false);
+  const [detectando, setDetectando] = useState(false);
+  const [formOcorrencia, setFormOcorrencia] = useState<string | null>(null);
 
   useEffect(() => { (async () => setEstabId(await getEstabelecimentoId()))(); }, []);
   useEffect(() => { if (estabId) { loadStatics(); load(); } }, [estabId]);
