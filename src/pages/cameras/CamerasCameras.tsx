@@ -72,7 +72,34 @@ export default function CamerasCameras() {
   const [filiais, setFiliais] = useState<any[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [snapshots, setSnapshots] = useState<Record<string, string>>({});
+  const [snapLoading, setSnapLoading] = useState<Set<string>>(new Set());
 
+  const fetchSnapshots = async (list: any[]) => {
+    const queue = list.filter((c) => c.ativo);
+    setSnapLoading(new Set(queue.map((c) => c.id)));
+    const workers = Array.from({ length: 4 }, async () => {
+      while (queue.length) {
+        const cam = queue.shift();
+        if (!cam) break;
+        try {
+          const { data, error } = await supabase.functions.invoke("cv-camera-snapshot", {
+            body: { camera_id: cam.id },
+          });
+          if (!error) {
+            const url = (data as any)?.signed_url;
+            if (url) setSnapshots((s) => ({ ...s, [cam.id]: url }));
+          }
+        } catch {}
+        setSnapLoading((s) => {
+          const n = new Set(s);
+          n.delete(cam.id);
+          return n;
+        });
+      }
+    });
+    await Promise.all(workers);
+  };
 
   const load = async () => {
     const [{ data: cams }, { data: coletor }, { data: grps }, { data: fils }] = await Promise.all([
@@ -88,10 +115,14 @@ export default function CamerasCameras() {
       setCollectorEnabled(coletor.cameras_habilitado);
       setCollectorId(coletor.id);
     }
+    return cams ?? [];
   };
 
   useEffect(() => {
-    load();
+    (async () => {
+      const cams = await load();
+      fetchSnapshots(cams);
+    })();
   }, []);
 
   const openNew = () => {
@@ -112,14 +143,18 @@ export default function CamerasCameras() {
     delete payload.id;
     if (!payload.angulo_key) payload.angulo_key = slugify(payload.nome);
     const q = editing.id
-      ? supabase.from("cv_cameras").update(payload).eq("id", editing.id)
-      : supabase.from("cv_cameras").insert(payload);
-    const { error } = await q;
+      ? supabase.from("cv_cameras").update(payload).eq("id", editing.id).select().single()
+      : supabase.from("cv_cameras").insert(payload).select().single();
+    const { error, data: saved } = await q;
     if (error) return toast.error(error.message);
     toast.success("Câmera salva");
     setDialogOpen(false);
-    load();
+    const cams = await load();
+    // Snapshot imediato da câmera salva
+    const target = saved || cams.find((c: any) => c.nome === payload.nome);
+    if (target) fetchSnapshots([target]);
   };
+
 
   const remove = async () => {
     if (!deleteId) return;
@@ -375,7 +410,17 @@ export default function CamerasCameras() {
               </CardTitle>
             </CardHeader>
 
-            <CardContent className="text-sm space-y-1">
+            <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden border-y">
+              {snapshots[r.id] ? (
+                <img src={snapshots[r.id]} alt={r.nome} className="w-full h-full object-cover" />
+              ) : snapLoading.has(r.id) ? (
+                <span className="text-xs text-muted-foreground animate-pulse">Capturando snapshot...</span>
+              ) : (
+                <Camera className="h-8 w-8 text-muted-foreground/40" />
+              )}
+            </div>
+
+            <CardContent className="text-sm space-y-1 pt-3">
               <div className="text-xs">
                 <Badge variant="outline">{grupoNome(r.grupo_id)}</Badge>
               </div>
