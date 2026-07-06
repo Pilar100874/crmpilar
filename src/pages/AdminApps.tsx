@@ -295,10 +295,6 @@ export default function AdminApps() {
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">3</span>
               <p className="text-sm leading-relaxed text-muted-foreground">Ative os módulos <b>Câmeras</b> e/ou <b>Ponto</b> na tela principal. O ícone deve ficar verde (online) — a nuvem passa a enviar comandos de snapshot, streaming e coleta de batidas.</p>
             </li>
-            <li className="flex gap-3 sm:gap-4">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">4</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">Deixe rodar em segundo plano. O Coletor auto-atualiza e reinicia sozinho quando há nova versão.</p>
-            </li>
           </ol>
         </div>
       </Card>
