@@ -253,7 +253,7 @@ export default function AdminApps() {
               <Monitor className="h-8 w-8" />
             </div>
             <span className="rounded-full border bg-muted px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:px-3 sm:text-xs">
-              Windows · MSI
+              Windows · Instalador
             </span>
           </div>
 
