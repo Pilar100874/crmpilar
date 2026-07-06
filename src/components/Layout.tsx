@@ -161,6 +161,8 @@ const menuItems: MenuItem[] = [
       { id: "Programação Visitas", title: "Programação de Visitas", url: "/vendas/programacao-visitas", icon: LucideIcons.CalendarClock },
       { id: "Acompanhamento Visitas", title: "Acompanhamento de Visitas", url: "/vendas/acompanhamento-visitas", icon: LucideIcons.CalendarCheck },
       { id: "Regras Monitoramento Visita", title: "Regras de Monitoramento", url: "/config/regras-monitoramento-visita", icon: Settings },
+      { id: "Formulários de Visita", title: "Formulários de Visita", url: "/config/formularios-visita", icon: LucideIcons.ClipboardList },
+      { id: "Regras de Formulário", title: "Regras de Formulário", url: "/config/regras-formulario-visita", icon: LucideIcons.ListChecks },
       { id: "Config Vendas", title: "Configuração de Vendas", url: "/vendas-config", icon: Settings },
     ]
   },
