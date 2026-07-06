@@ -264,7 +264,7 @@ export default function AdminApps() {
           }
           fileLabelBadge="Instalador"
           fileName="ColetorPilar-Setup.msi"
-          onDownload={() => baixar("ColetorPilar-Setup.msi", winAsset.url)}
+          onDownload={() => baixar("ColetorPilar-Setup.msi", coletorVersion.downloadUrl)}
           downloadButtonText="Baixar .msi"
           steps={[
             { text: <>Baixe o <b>ColetorPilar-Setup.msi</b> acima e execute com dois cliques. Se o SmartScreen alertar, clique em <b>Mais informações → Executar assim mesmo</b>.</> },
