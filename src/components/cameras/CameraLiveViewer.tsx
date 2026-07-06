@@ -143,10 +143,11 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Pr
 
       setTimeout(() => {
         if (!closed && !liveReached) {
-          setErro("Coletor recebeu o pedido mas não conseguiu abrir o stream RTSP da câmera");
+          setErro("Coletor não respondeu ao pedido de stream. Verifique se está na versão 1.6.3+ (módulo WebRTC ativo) e se a câmera tem RTSP habilitado.");
           setStatus("erro");
         }
       }, 12_000);
+
     })();
 
 
