@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { CalendarCheck, Download, RefreshCw } from "lucide-react";
+import { CalendarCheck, Download, RefreshCw, ClipboardEdit, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { VisitaFormularioSheet } from "@/components/visitas/VisitaFormularioSheet";
 
 interface Ocor {
   id: string;
@@ -23,6 +24,9 @@ interface Ocor {
   distancia_metros: number | null;
   fonte_deteccao: string | null;
   programacao_id: string;
+  origem?: string;
+  formulario_status?: string;
+  customer_id?: string | null;
 }
 
 const statusBadge = (s: string) => {
