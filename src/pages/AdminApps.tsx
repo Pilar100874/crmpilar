@@ -247,17 +247,18 @@ export default function AdminApps() {
 
           <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Coletor Desktop (Windows)</h2>
           <div className="mb-6 text-sm leading-relaxed text-muted-foreground sm:mb-8">
-            Instale em <b>um PC da mesma rede local</b> das câmeras IP para habilitar{" "}
-            <b>snapshot</b> e <b>câmera ao vivo (WebRTC)</b> das câmeras internas (Hikvision, Intelbras, Tapo, etc.)
-            que não estão expostas na internet. Sem o Coletor rodando na LAN, a nuvem não consegue acessar
-            câmeras com IP privado.
+            Instale em <b>um PC da mesma rede local</b> para habilitar duas funções:
+            <b> câmeras IP</b> (snapshot e ao vivo de Hikvision, Intelbras, Tapo etc. que não estão na internet) e
+            <b> relógios de ponto</b> (coleta automática de batidas de Control iD, Henry, ZKTeco, Topdata e Madis na LAN).
+            Sem o Coletor rodando, a nuvem não consegue acessar equipamentos com IP privado.
           </div>
 
           <div className="flex items-center gap-3 rounded-xl border border-dashed p-4 text-xs text-muted-foreground mb-6 sm:mb-8">
             <Camera className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            <Clock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
             <span>
-              <b className="text-foreground">Necessário apenas</b> para câmeras internas (LAN). Câmeras públicas
-              (com IP externo / port-forward) funcionam direto pela nuvem, sem Coletor.
+              <b className="text-foreground">Necessário para</b> câmeras internas (LAN) e relógios de ponto na rede local.
+              Câmeras públicas (com IP externo / port-forward) funcionam direto pela nuvem, sem Coletor.
             </span>
           </div>
 
