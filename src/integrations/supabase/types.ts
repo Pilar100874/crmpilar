@@ -19535,6 +19535,53 @@ export type Database = {
           },
         ]
       }
+      usuario_posicoes: {
+        Row: {
+          accuracy: number | null
+          bateria: number | null
+          created_at: string
+          data_hora: string
+          estabelecimento_id: string
+          id: string
+          lat: number
+          lng: number
+          origem: string | null
+          usuario_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          bateria?: number | null
+          created_at?: string
+          data_hora?: string
+          estabelecimento_id: string
+          id?: string
+          lat: number
+          lng: number
+          origem?: string | null
+          usuario_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          bateria?: number | null
+          created_at?: string
+          data_hora?: string
+          estabelecimento_id?: string
+          id?: string
+          lat?: number
+          lng?: number
+          origem?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuario_posicoes_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usuario_segmentos: {
         Row: {
           id: string
@@ -20194,6 +20241,246 @@ export type Database = {
           whatsapp?: string | null
         }
         Relationships: []
+      }
+      visita_ocorrencias: {
+        Row: {
+          created_at: string
+          data_prevista: string
+          distancia_metros: number | null
+          duracao_min: number | null
+          estabelecimento_id: string
+          fonte_deteccao: string | null
+          hora_chegada: string | null
+          hora_saida: string | null
+          id: string
+          janela_fim: string
+          janela_inicio: string
+          lat_registro: number | null
+          lng_registro: number | null
+          observacao_auto: string | null
+          programacao_id: string
+          status: string
+          updated_at: string
+          usuario_id: string | null
+          veiculo_id: string | null
+          verificada_em: string | null
+        }
+        Insert: {
+          created_at?: string
+          data_prevista: string
+          distancia_metros?: number | null
+          duracao_min?: number | null
+          estabelecimento_id: string
+          fonte_deteccao?: string | null
+          hora_chegada?: string | null
+          hora_saida?: string | null
+          id?: string
+          janela_fim: string
+          janela_inicio: string
+          lat_registro?: number | null
+          lng_registro?: number | null
+          observacao_auto?: string | null
+          programacao_id: string
+          status?: string
+          updated_at?: string
+          usuario_id?: string | null
+          veiculo_id?: string | null
+          verificada_em?: string | null
+        }
+        Update: {
+          created_at?: string
+          data_prevista?: string
+          distancia_metros?: number | null
+          duracao_min?: number | null
+          estabelecimento_id?: string
+          fonte_deteccao?: string | null
+          hora_chegada?: string | null
+          hora_saida?: string | null
+          id?: string
+          janela_fim?: string
+          janela_inicio?: string
+          lat_registro?: number | null
+          lng_registro?: number | null
+          observacao_auto?: string | null
+          programacao_id?: string
+          status?: string
+          updated_at?: string
+          usuario_id?: string | null
+          veiculo_id?: string | null
+          verificada_em?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visita_ocorrencias_programacao_id_fkey"
+            columns: ["programacao_id"]
+            isOneToOne: false
+            referencedRelation: "visita_programacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visita_ocorrencias_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visita_programacoes: {
+        Row: {
+          ativa: boolean
+          cliente_nome: string
+          created_at: string
+          customer_id: string | null
+          data_fim: string | null
+          data_inicio: string
+          dias_semana: number[]
+          endereco: string
+          estabelecimento_id: string
+          filial_id: string | null
+          frequencia_qtd: number
+          frequencia_tipo: string
+          hora_fim: string
+          hora_inicio: string
+          id: string
+          intervalo_dias: number | null
+          lat: number | null
+          lng: number | null
+          observacao: string | null
+          regra_monitoramento_id: string | null
+          responsavel_tipo: string
+          responsavel_usuario_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativa?: boolean
+          cliente_nome: string
+          created_at?: string
+          customer_id?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          dias_semana?: number[]
+          endereco: string
+          estabelecimento_id: string
+          filial_id?: string | null
+          frequencia_qtd?: number
+          frequencia_tipo: string
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          intervalo_dias?: number | null
+          lat?: number | null
+          lng?: number | null
+          observacao?: string | null
+          regra_monitoramento_id?: string | null
+          responsavel_tipo?: string
+          responsavel_usuario_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativa?: boolean
+          cliente_nome?: string
+          created_at?: string
+          customer_id?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          dias_semana?: number[]
+          endereco?: string
+          estabelecimento_id?: string
+          filial_id?: string | null
+          frequencia_qtd?: number
+          frequencia_tipo?: string
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          intervalo_dias?: number | null
+          lat?: number | null
+          lng?: number | null
+          observacao?: string | null
+          regra_monitoramento_id?: string | null
+          responsavel_tipo?: string
+          responsavel_usuario_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visita_programacoes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visita_programacoes_regra_monitoramento_id_fkey"
+            columns: ["regra_monitoramento_id"]
+            isOneToOne: false
+            referencedRelation: "visita_regras_monitoramento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visita_programacoes_responsavel_usuario_id_fkey"
+            columns: ["responsavel_usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visita_regras_monitoramento: {
+        Row: {
+          ativa: boolean
+          created_at: string
+          escopo: string
+          estabelecimento_id: string
+          exigir_janela_horario: boolean
+          filial_id: string | null
+          fonte_localizacao: string
+          id: string
+          nome: string
+          raio_metros: number
+          tempo_minimo_min: number
+          updated_at: string
+          usuario_id: string | null
+        }
+        Insert: {
+          ativa?: boolean
+          created_at?: string
+          escopo?: string
+          estabelecimento_id: string
+          exigir_janela_horario?: boolean
+          filial_id?: string | null
+          fonte_localizacao?: string
+          id?: string
+          nome: string
+          raio_metros?: number
+          tempo_minimo_min?: number
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          ativa?: boolean
+          created_at?: string
+          escopo?: string
+          estabelecimento_id?: string
+          exigir_janela_horario?: boolean
+          filial_id?: string | null
+          fonte_localizacao?: string
+          id?: string
+          nome?: string
+          raio_metros?: number
+          tempo_minimo_min?: number
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visita_regras_monitoramento_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       webhook_chat_messages: {
         Row: {
@@ -21013,6 +21300,10 @@ export type Database = {
       }
       roles_present: { Args: never; Returns: boolean }
       user_in_estabelecimento: { Args: { estab_id: string }; Returns: boolean }
+      visita_haversine_metros: {
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number }
+        Returns: number
+      }
     }
     Enums: {
       app_role: "admin" | "gestor" | "agente"
