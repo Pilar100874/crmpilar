@@ -1,85 +1,138 @@
 
-# App Mobile + Push Notifications + Blocos de Workflow
+# Programação de Visitas a Clientes
 
-Vou entregar em 3 blocos independentes para você validar cada etapa.
+Novo módulo dentro de **Vendas** que permite programar visitas cíclicas a clientes e verificar automaticamente se o funcionário/veículo esteve no endereço definido, usando o rastreamento já existente (veículo) ou a localização enviada pelo próprio CRM (PWA/APK) do funcionário.
 
-## Bloco 1 — Duas versões instaláveis do sistema
+Fluxo geral:
 
-### 1a. PWA instalável (funciona hoje, iOS + Android)
-- Adicionar `manifest.webmanifest` com ícones, cores e `display: standalone`
-- Registrar Service Worker **guardado** (nunca ativa em preview/dev — segue a skill PWA do Lovable)
-- Estratégia `NetworkFirst` para HTML → **atualização automática** a cada abertura, sem reinstalar
-- Botão "Instalar App" na tela `Apps & Instaladores` (usa `beforeinstallprompt` no Android; guia visual "Compartilhar → Adicionar à Tela de Início" no iOS)
+```text
+[Regra de frequência]  →  [Gera visitas planejadas]
+        ↓
+[Job diário verifica posições]
+        ↓
+[Localização dentro do raio + tempo mínimo?]
+   sim → marca "Realizada" (com hora, fonte, distância)
+   não → mantém "Pendente" / "Não realizada"
+        ↓
+[Telas de acompanhamento por Usuário / Filial]
+```
 
-### 1b. App nativo Capacitor (APK Android + IPA iOS) baixável da tela Apps
-- Configurar Capacitor com `server.url` apontando para `https://crmpilar.lovable.app` → o app é uma casca que carrega o site
-- **Consequência boa**: toda atualização do sistema aparece automaticamente no app, sem reinstalar (só reinstala se mudar plugin nativo ou push)
-- Workflow GitHub Actions para gerar:
-  - `pilar-app.apk` (Android) — assinado com keystore de debug
-  - `pilar-app.ipa` (iOS) — **só compila via macOS+Xcode**; vou entregar o projeto pronto e as instruções, mas o `.ipa` final você gera no seu Mac (ou serviço de build tipo Codemagic/EAS). Sem conta Apple Developer, o `.ipa` só instala em dispositivos registrados via sideload (AltStore/Sideloadly) — deixo isso claro na tela.
-- Nova aba na página `AdminApps.tsx`: "App Mobile" com 2 cards (Android APK direto / iOS instruções sideload) + QR code para instalação rápida
-- Endpoint público servindo o APK a partir de `public/mobile/pilar-app.apk`
+## 1. Telas novas
 
-## Bloco 2 — Push Notifications (funciona nas 2 versões)
+Todas em português, seguindo o padrão visual atual (tokens semânticos, dark mode).
 
-### Backend
-- Nova tabela `push_subscriptions` (usuario_id nullable, contato_id nullable, endpoint, p256dh, auth, plataforma: 'web'|'android'|'ios', ativo)
-- Nova tabela `push_notifications_log` (destinatario, titulo, corpo, url, status, tentativas, workflow_id)
-- Edge function `push-subscribe` — cliente registra endpoint
-- Edge function `push-send` — envia via Web Push (VAPID) para PWA/Android Chrome/iOS 16.4+ Safari instalado
-- Segredos: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (gero automaticamente)
-- Para Capacitor nativo: usa o mesmo Service Worker do PWA (o Capacitor carrega o site, então o SW já funciona) — **sem Firebase/APNs necessário nessa arquitetura**
+1. **Vendas → Programação de Visitas** (`/vendas/programacao-visitas`)
+   - Lista de programações (cliente, responsável, frequência, próxima visita, status).
+   - Botão "Nova Programação" abre modal:
+     - Cliente (busca em `customers`)
+     - Endereço (auto-preenchido do cliente; permite ajustar lat/lng via Google Maps)
+     - Responsável: usuário OU "toda a filial" OU "todos"
+     - Frequência: `X vezes por dia | semana | mês` OU `1 vez a cada N dias`
+     - Janela de horário permitida (ex.: 08:00–18:00)
+     - Dias da semana permitidos
+     - Data de início / fim (opcional)
+     - Regra de monitoramento a aplicar (ver item 3)
+     - Observação
+   - Ações: editar, pausar, excluir (com `DeleteConfirmDialog`).
 
-### Frontend
-- Hook `usePushNotifications` — pede permissão, registra subscription, salva no banco
-- Toggle "Ativar notificações push" em Configurações do usuário e na área do cliente do e-commerce
-- Service Worker `push-sw.js` escuta evento `push` e mostra notificação nativa
+2. **Vendas → Acompanhamento de Visitas** (`/vendas/acompanhamento-visitas`)
+   - Filtros: período, filial, usuário, cliente, status (realizada/pendente/atrasada).
+   - KPIs: % de cumprimento, visitas no período, atrasadas, realizadas fora do horário.
+   - Tabela por usuário/filial com drill-down por dia.
+   - Mapa opcional mostrando pontos das visitas realizadas x planejadas.
+   - Exportação CSV.
 
-## Bloco 3 — Bloco "Disparar Push" nos 4 workflows
+3. **Configurações → Regras de Monitoramento de Visita** (`/config/regras-monitoramento-visita`)
+   - Regras globais e por usuário (herança: usuário > global).
+   - Campos:
+     - Nome
+     - Escopo: global | usuário específico | filial
+     - Fonte de localização: `veículo vinculado` | `celular do funcionário (CRM)` | `qualquer uma das duas`
+     - Raio de aceitação (metros)
+     - Tempo mínimo de permanência (minutos)
+     - Exigir que o horário esteja dentro da janela definida na programação (sim/não)
+     - Ativa (sim/não)
 
-Bloco unificado adicionado a:
-1. **Criar/Editar Bot** (omnichannel flow)
-2. **Logística e-commerce** (`automacaoFlowEngine`)
-3. **Regras de Automação de Vendas** (`blocklyAutomacaoEngine`)
-4. **Automações de Anúncios**
+4. **Menu Vendas** (`src/components/Layout.tsx`) recebe os dois novos itens; Configurações recebe o link para Regras de Monitoramento.
 
-### Configuração do bloco (mesma UI nos 4 editores)
-- **Destinatário**: seletor com 3 modos
-  - `Usuário interno` → dropdown de funcionários (`usuarios`)
-  - `Cliente final` → dropdown de contatos/segmentos (`contatos` ou variável do fluxo tipo `{{contato.id}}`)
-  - `Segmento` → grupo pré-definido (ex: "todos vendedores", "clientes com pedido aberto")
-- **Título** (com variáveis `{{nome}}`, `{{pedido.numero}}`)
-- **Mensagem** (com variáveis)
-- **URL de destino ao clicar** (opcional — deep link dentro do app)
-- **Ícone/imagem** (opcional)
+## 2. Modelo de dados (Lovable Cloud)
 
-### Execução
-- Cada engine chama o mesmo executor: `executarBlocoPush(config, contexto)` → resolve destinatários → chama edge function `push-send` → grava em `push_notifications_log`
-- Se destinatário não tem subscription ativa, marca no log como "sem dispositivo" e continua o fluxo
+Tabelas novas (todas com RLS por `estabelecimento_id`, GRANT para `authenticated`/`service_role`, triggers `updated_at`):
 
-## Detalhes técnicos
+- `visita_regras_monitoramento`
+  - `nome`, `escopo` (`global|usuario|filial`), `usuario_id?`, `filial_id?`
+  - `fonte_localizacao` (`veiculo|celular|ambos`)
+  - `raio_metros` (int), `tempo_minimo_min` (int)
+  - `exigir_janela_horario` (bool), `ativa` (bool)
 
-**Arquivos novos principais:**
-- `public/manifest.webmanifest`, `public/push-sw.js`, `src/lib/pwaRegister.ts`
-- `capacitor.config.ts` (atualizar), workflow `.github/workflows/build-mobile-app.yml`
-- `supabase/functions/push-subscribe/index.ts`, `push-send/index.ts`
-- Migração: `push_subscriptions`, `push_notifications_log` + GRANTs + RLS
-- `src/hooks/usePushNotifications.ts`
-- `src/components/workflows/PushBlockConfig.tsx` (UI compartilhada)
-- Adicionar tipo de bloco `push_notification` em cada engine
-- `src/lib/pushExecutor.ts` (executor unificado)
+- `visita_programacoes`
+  - `customer_id`, `endereco`, `lat`, `lng`
+  - `responsavel_tipo` (`usuario|filial|todos`), `responsavel_usuario_id?`, `filial_id?`
+  - `frequencia_tipo` (`dia|semana|mes|intervalo_dias`)
+  - `frequencia_qtd` (int), `intervalo_dias?` (int)
+  - `dias_semana` (int[] 0–6), `hora_inicio`, `hora_fim`
+  - `data_inicio`, `data_fim?`
+  - `regra_monitoramento_id?` (fallback: regra global)
+  - `observacao`, `ativa` (bool)
 
-**Segredos necessários:** `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (gero automático), `VAPID_SUBJECT` (seu email de contato — vou pedir).
+- `visita_ocorrencias` (uma linha por visita esperada/executada)
+  - `programacao_id`, `usuario_id?`, `data_prevista` (date), `janela_inicio`, `janela_fim`
+  - `status` (`pendente|realizada|nao_realizada|fora_horario|atrasada`)
+  - `verificada_em?`, `hora_chegada?`, `hora_saida?`, `duracao_min?`
+  - `fonte_deteccao?` (`veiculo|celular`), `veiculo_id?`, `distancia_metros?`
+  - `lat_registro?`, `lng_registro?`, `observacao_auto?`
 
-**Limitações honestas:**
-- iOS PWA push só funciona no iOS 16.4+ e **só depois** que o usuário instalar na tela inicial
-- APK Android sem Play Store precisa habilitar "Fontes desconhecidas" no celular
-- IPA iOS sem App Store precisa de Mac para compilar e sideload para instalar (sem conta Apple Developer, só dura 7 dias por instalação)
+- `usuario_posicoes` (localização do celular via CRM)
+  - `usuario_id`, `lat`, `lng`, `accuracy?`, `bateria?`, `data_hora`
+  - RLS: usuário grava a própria; supervisão lê da mesma filial.
+  - Índices em `(usuario_id, data_hora desc)`.
 
-## Ordem de entrega
-1. Bloco 1a (PWA) — pronto na hora
-2. Bloco 2 (push backend + toggle usuário) — mesmo turno
-3. Bloco 3 (blocos nos 4 workflows) — mesmo turno
-4. Bloco 1b (Capacitor + workflow GitHub Actions APK) — separado, avisar quando começar
+Realtime habilitado em `visita_ocorrencias` para atualização ao vivo do acompanhamento.
 
-Aprovando, começo pelos blocos 1a + 2 + 3 (que já cobrem 90% do uso) e depois faço o Capacitor nativo.
+## 3. Verificação automática (Edge Functions + Cron)
+
+- **`gerar-visitas-planejadas`** — roda todo dia 00:05.
+  Para cada programação ativa, gera as `visita_ocorrencias` do dia conforme a frequência (respeita `dias_semana`, `data_fim`, feriados básicos opcionais).
+
+- **`verificar-visitas`** — roda a cada 15 min (e 1 hora após a janela fechar).
+  Para cada ocorrência pendente do dia:
+  1. Resolve a regra de monitoramento (usuário > filial > global).
+  2. Se `fonte = veiculo|ambos`: procura em `veiculo_posicoes` do veículo vinculado ao usuário, pontos dentro do `raio_metros` por `tempo_minimo_min` contínuos.
+  3. Se `fonte = celular|ambos`: mesma checagem em `usuario_posicoes`.
+  4. Se atender → `status=realizada`, grava `fonte_deteccao`, hora chegada/saída, distância mínima.
+  5. Se janela já terminou e nada bateu → `nao_realizada` (ou `fora_horario` se detectou fora da janela).
+
+- Cron via `pg_cron` + `pg_net` chamando as functions (padrão já usado no projeto).
+
+## 4. Envio de localização pelo CRM (PWA / APK)
+
+- **PWA (web/mobile)**: hook `useBackgroundLocation` — ativa `navigator.geolocation.watchPosition` em background enquanto a aba está aberta e envia posições a cada 60s ao endpoint `POST /functions/v1/registrar-posicao-usuario`. Aviso claro de consentimento LGPD antes do primeiro envio.
+- **APK (Capacitor)**: já existe `capacitor.config.ts` com `BackgroundRunner`. Reaproveitar o `background.js` do Pilar Rastreador para enviar posição do usuário logado (não só do veículo) a cada 15 min.
+- Toggle em **Configurações → Meu Perfil** para ligar/desligar o envio de localização (obrigatório para regras que usam `celular`).
+
+## 5. Aproveitamento do que já existe
+
+- `veiculo_posicoes` já é populado pelo rastreador de veículos → reutilizado direto.
+- `RoteirizadorVisitas.tsx` continua como está (é a tela de roteirização diária, complementa e não sobrepõe).
+- `getEstabelecimentoId`, `DeleteConfirmDialog`, padrão de menus e RLS seguem os já usados no projeto.
+
+## 6. Detalhes técnicos
+
+- Cálculo de distância: fórmula de Haversine em SQL (função `visita_dentro_do_raio(lat,lng,lat2,lng2,raio)`).
+- Índices espaciais simples via `(lat,lng,data_hora)`; não vamos adicionar PostGIS.
+- Toda escrita usa `usuarios.id` resolvido a partir de `auth.uid()` (regra global do projeto).
+- Todas as exclusões passam por `DeleteConfirmDialog`.
+- Textos e labels 100% em português.
+
+## Entrega em ordem
+
+1. Migração das 4 tabelas + RLS + GRANTs + índices + função Haversine.
+2. Edge Functions `gerar-visitas-planejadas` e `verificar-visitas` + cron.
+3. Edge Function `registrar-posicao-usuario` + hook `useBackgroundLocation` (PWA).
+4. Tela **Regras de Monitoramento**.
+5. Tela **Programação de Visitas**.
+6. Tela **Acompanhamento de Visitas** (com filtros, KPIs e mapa).
+7. Ajuste no `background.js` do Capacitor para enviar posição do usuário.
+8. Itens de menu em Vendas e Configurações.
+
+Aprova este plano para eu começar pela migração?
