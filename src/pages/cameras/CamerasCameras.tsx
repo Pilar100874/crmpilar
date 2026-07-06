@@ -70,6 +70,9 @@ export default function CamerasCameras() {
   const [testing, setTesting] = useState<string | null>(null);
   const [liveCam, setLiveCam] = useState<{ id: string; nome: string; filial_id: string | null } | null>(null);
   const [filiais, setFiliais] = useState<any[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+
 
   const load = async () => {
     const [{ data: cams }, { data: coletor }, { data: grps }, { data: fils }] = await Promise.all([
