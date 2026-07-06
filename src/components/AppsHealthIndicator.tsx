@@ -143,6 +143,18 @@ export function AppsHealthIndicator({ compact = false }: { compact?: boolean }) 
               <div className="text-muted-foreground">{label(andState, and.at)}</div>
             </TooltipContent>
           </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="relative inline-flex items-center gap-1">
+                <Bell className="h-3.5 w-3.5 text-sidebar-foreground/60 group-hover:text-sidebar-foreground/80" />
+                <span className={`h-1.5 w-1.5 rounded-full ${pushDotClass(push)}`} />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-xs">
+              <div className="font-semibold">Notificações Push</div>
+              <div className="text-muted-foreground">{pushLabel(push)}</div>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </NavLink>
     </TooltipProvider>
