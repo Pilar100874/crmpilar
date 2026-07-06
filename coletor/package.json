@@ -1,6 +1,6 @@
 {
   "name": "ponto-coletor",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "Coletor de batidas de relógios de ponto - CRM Pilar (pré-configurado)",
   "main": "main.js",
   "author": "Pilar",
@@ -11,6 +11,7 @@
   },
   "scripts": {
     "start": "electron .",
+    "postinstall": "node scripts/patch-binary-data.js",
     "dist": "electron-builder --win nsis --x64"
   },
   "dependencies": {
