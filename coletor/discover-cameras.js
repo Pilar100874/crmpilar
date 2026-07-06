@@ -139,19 +139,20 @@ async function probeHikvision(ip, user, pass) {
       if (r.status === 200 && /hikvision|deviceInfo/i.test(r.body)) {
         const modelo = (r.body.match(/<model>([^<]+)<\/model>/i) || [])[1] || 'Hikvision';
         return {
-          marca: 'hikvision', modelo, porta: 554, protocolo: 'rtsp',
-          snapshot_path: '/Streaming/Channels/101',
+          marca: 'hikvision', modelo, porta: port, protocolo: port === 443 ? 'https' : 'http',
+          snapshot_path: '/ISAPI/Streaming/channels/101/picture',
           rtsp_template: `rtsp://{user}:{pass}@${ip}:554/Streaming/Channels/101`,
           auth_ok: true, http_port: port,
         };
       }
       if (r.status === 401) {
         // câmera existe mas credencial errada
-        return { marca: 'hikvision', modelo: 'Hikvision', porta: 554, protocolo: 'rtsp',
-          snapshot_path: '/Streaming/Channels/101',
+        return { marca: 'hikvision', modelo: 'Hikvision', porta: port, protocolo: 'http',
+          snapshot_path: '/ISAPI/Streaming/channels/101/picture',
           rtsp_template: `rtsp://{user}:{pass}@${ip}:554/Streaming/Channels/101`,
           auth_ok: false, http_port: port };
       }
+
     } catch {}
   }
   return null;
