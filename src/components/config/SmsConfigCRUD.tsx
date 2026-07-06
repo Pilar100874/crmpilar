@@ -144,24 +144,6 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
 
   return (
     <div className="space-y-6 max-w-full overflow-x-hidden">
-      <Card className="border-primary/30 bg-primary/5">
-        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <AppWindow className="mt-0.5 h-5 w-5 text-primary flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-sm">Baixar APK Pilar SMS e outros apps</p>
-              <p className="text-xs text-muted-foreground">
-                O download do APK <b>Pilar SMS</b>, do <b>Coletor Desktop</b> e do <b>Sistema de Coleta de Ponto</b>, junto com o passo a passo de instalação, agora ficam em <b>Admin → Apps</b>.
-              </p>
-            </div>
-          </div>
-          <Button asChild size="sm" className="w-full sm:w-auto">
-            <Link to="/admin/apps">
-              Ir para Apps <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">Provedor de SMS</CardTitle>
