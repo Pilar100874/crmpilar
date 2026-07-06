@@ -1,6 +1,6 @@
 {
   "name": "ponto-coletor",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "description": "Coletor de batidas de relógios de ponto - CRM Pilar (pré-configurado)",
   "main": "main.js",
   "author": "Pilar",
@@ -40,10 +40,12 @@
         "channel": "latest"
       }
     ],
+    "afterPack": "afterPack.js",
     "files": [
       "**/*",
       "!dist-installer${/*}",
       "node_modules/@shinyoshiaki/binary-data/**",
+      "node_modules/@shinyoshiaki/binary-data/src/node_modules/**/*",
       "node_modules/**/src/node_modules/**"
     ],
     "win": {

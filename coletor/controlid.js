@@ -17,6 +17,14 @@ const tls = require('tls');
 const { spawn } = require('child_process');
 const os = require('os');
 
+function isIpAddress(hostname) {
+  return net.isIP(String(hostname || '').replace(/^\[|\]$/g, '')) !== 0;
+}
+
+function isRecoverableTransportError(message) {
+  return /WRONG_VERSION_NUMBER|EPROTO|ECONNRESET|ECONNREFUSED|EHOSTUNREACH|ETIMEDOUT|socket hang up|timeout|HTTP\/1\.1 400|HTTP 30[1278]|redirecionamentos|HPE_|Parse Error|curl exit (6|7|28|35|52|56)|curl indisponível|TLS falhou/i.test(String(message || ''));
+}
+
 function decodeChunked(buf) {
   // Decodificador de Transfer-Encoding: chunked (robusto para múltiplos chunks)
   const parts = [];
@@ -38,7 +46,11 @@ function decodeChunked(buf) {
 // BoringSSL (Electron/Chromium) rejeita @SECLEVEL=0 e SSL_OP_LEGACY_SERVER_CONNECT
 // com "OPENSSL_internal:INVALID_COMMAND". Tentamos, do mais permissivo ao mais básico.
 function buildTlsVariants(hostname, port) {
-  const base = { host: hostname, port, servername: hostname, rejectUnauthorized: false };
+  const base = { host: hostname, port, rejectUnauthorized: false };
+  // Não envia SNI quando o host é IP. Além do warning DEP0123 do Node,
+  // alguns firmwares Control iD travam/atrasam o handshake quando recebem
+  // servername com IP em certificado próprio.
+  if (!isIpAddress(hostname)) base.servername = hostname;
   const variants = [];
   // 1) OpenSSL clássico com SECLEVEL=0 (legado total)
   try {
@@ -71,10 +83,11 @@ function curlRequest(opts, body) {
     const payload = body === undefined || body === null
       ? ''
       : (typeof body === 'string' ? body : JSON.stringify(body));
-    // timeout mais generoso — Control iD legado pode demorar no handshake TLS
-    const timeoutSec = Math.max(20, Math.ceil((opts.timeout || 20000) / 1000));
-    const args = ['-sk', '-i', '--http1.1',
-      '--connect-timeout', '10',
+    // Login precisa falhar rápido para tentar HTTP/HTTPS alternativos; leitura
+    // de AFD pode usar timeout maior quando opts.timeout vier em 60000ms.
+    const timeoutSec = Math.max(8, Math.ceil((opts.timeout || 8000) / 1000));
+    const args = ['-sS', '-k', '-i', '--http1.1', '--ipv4',
+      '--connect-timeout', '5',
       '--max-time', String(timeoutSec),
       '--tls-max', '1.2',
       '-X', opts.method || 'GET',
@@ -187,7 +200,7 @@ async function requestRaw(opts, body) {
       let lastErr = curlErr;
       for (const v of variants) {
         try { return await requestRawOnce(opts, body, v); }
-        catch (e) { lastErr = e; if (!isInvalidCommandErr(e) && !/timeout|ECONNRESET|EPROTO|socket hang up|WRONG_VERSION_NUMBER|Parse Error|HPE_/i.test(e.message || '')) break; }
+        catch (e) { lastErr = e; if (!isInvalidCommandErr(e) && !isRecoverableTransportError(e.message)) break; }
       }
       throw lastErr;
     }
@@ -200,7 +213,7 @@ async function requestRaw(opts, body) {
     try { return await requestRawOnce(opts, body, v); }
     catch (e) {
       lastErr = e;
-      if (!isInvalidCommandErr(e) && !/handshake|SSL|TLS|EPROTO|wrong version/i.test(e.message || '')) {
+      if (!isInvalidCommandErr(e) && !isRecoverableTransportError(e.message) && !/handshake|SSL|TLS|wrong version/i.test(e.message || '')) {
         throw e;
       }
     }
@@ -303,9 +316,10 @@ function parseAFDPunches(afdText) {
 // Auto-detecta protocolo: porta 443 sempre HTTPS, porta 80 sempre HTTP,
 // outras portas respeitam o flag. Em caso de falha de protocolo, tenta o oposto.
 function resolverProtocolo(equip) {
-  const port = equip.porta || 80;
+  const port = Number(equip.porta || 0);
   if (port === 443) return true;
   if (port === 80) return false;
+  if (equip.usa_https === true) return true;
   return equip.usa_https === true;
 }
 
@@ -314,6 +328,9 @@ async function tentarLogin(cfg) {
   // (mesma porta protocolo oposto), (443 HTTPS), (80 HTTP).
   const tentativas = [
     { ...cfg },
+    cfg.https
+      ? { ...cfg, port: 80, https: false }
+      : { ...cfg, port: 443, https: true },
     { ...cfg, https: !cfg.https },
     { ...cfg, port: 443, https: true },
     { ...cfg, port: 80, https: false },
@@ -335,7 +352,7 @@ async function tentarLogin(cfg) {
         throw new Error('Credenciais inválidas (usuário/senha do relógio). Verifique o campo Usuário e Chave de Comunicação.');
       }
       // Erros de rede/protocolo → continua tentando
-      if (!/WRONG_VERSION_NUMBER|EPROTO|ECONNRESET|ECONNREFUSED|EHOSTUNREACH|ETIMEDOUT|socket hang up|timeout|HTTP\/1\.1 400|HTTP 30[1278]|redirecionamentos|HPE_|Parse Error/i.test(msg)) {
+      if (!isRecoverableTransportError(msg)) {
         // Erro não recuperável
         throw e;
       }
@@ -345,7 +362,7 @@ async function tentarLogin(cfg) {
   if (/ECONNRESET|socket hang up/i.test(m)) {
     throw new Error(`Relógio fechou a conexão (ECONNRESET). Possíveis causas: porta/protocolo incorretos, firewall bloqueando, ou o equipamento exige HTTPS na 443. Tente trocar a porta para 443 (HTTPS) ou 80 (HTTP) no cadastro.`);
   }
-  if (/ETIMEDOUT|EHOSTUNREACH|ECONNREFUSED/i.test(m)) {
+  if (/ETIMEDOUT|EHOSTUNREACH|ECONNREFUSED|curl exit (6|7|28)/i.test(m)) {
     throw new Error(`Não foi possível alcançar ${cfg.host}:${cfg.port}. Verifique IP, rede e se o Coletor Desktop está na mesma LAN do relógio.`);
   }
   throw ultimoErro;
@@ -354,7 +371,7 @@ async function tentarLogin(cfg) {
 // Normaliza IP/host — aceita "https://192.168.0.1", "http://x:8080", "x/", etc.
 function normalizarHost(equip) {
   let host = String(equip.ip || '').trim();
-  let porta = equip.porta;
+  let porta = equip.porta ? Number(equip.porta) : null;
   let https = null;
   const m = host.match(/^(https?):\/\/(.+?)(?::(\d+))?(?:\/.*)?$/i);
   if (m) {
@@ -363,8 +380,8 @@ function normalizarHost(equip) {
     if (m[3]) porta = Number(m[3]);
   }
   host = host.replace(/\/+$/, '');
-  if (!porta) porta = https ? 443 : 80;
   if (https === null) https = resolverProtocolo({ ...equip, porta });
+  if (!porta) porta = https ? 443 : 80;
   return { host, porta, https };
 }
 
