@@ -1,5 +1,5 @@
 {
-  "version": "1.5.0",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.5.0/ColetorPilar-Setup.exe",
-  "notas": "1.5.0: snapshot on-demand — botão 'Atualizar snapshot' agora dispara captura imediata via Realtime (não precisa mais aguardar o ciclo de 30s). Requer atualização do Coletor Desktop."
+  "version": "1.5.1",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.5.1/ColetorPilar-Setup.exe",
+  "notas": "1.5.1: corrige a atualização automática no Windows — após baixar, abre o pedido de permissão do Windows, aguarda o Coletor fechar e executa o instalador."
 }

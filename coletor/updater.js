@@ -79,6 +79,10 @@ function baixarArquivo(url, destino, onProgress) {
   });
 }
 
+function psQuote(value) {
+  return `'${String(value).replace(/'/g, "''")}'`;
+}
+
 async function baixarEInstalar(downloadUrl, onProgress) {
   if (!downloadUrl) throw new Error('URL de download não informada');
   const ext = downloadUrl.toLowerCase().endsWith('.msi') ? '.msi' : '.exe';
@@ -92,14 +96,54 @@ async function baixarEInstalar(downloadUrl, onProgress) {
   // (aspas, backslashes, `&`, `(` viram problemas). Com `-File` o PowerShell lê
   // o arquivo cru — sem escape de backslashes, caminhos do Windows funcionam.
   const scriptPath = path.join(os.tmpdir(), `ColetorPilar-Install-${Date.now()}.ps1`);
+  const appPid = process.pid;
+  const installerPathPs = psQuote(destino);
+  const logPathPs = psQuote(logPath);
+  const scriptPathPs = psQuote(scriptPath);
+  const commonPsHeader = `
+$ErrorActionPreference = 'Continue'
+$InstallerPath = ${installerPathPs}
+$LogPath = ${logPathPs}
+$AppPid = ${appPid}
+
+function Test-ColetorAdmin {
+  try {
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object Security.Principal.WindowsPrincipal($identity)
+    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+  } catch { return $false }
+}
+
+if (-not (Test-ColetorAdmin)) {
+  try {
+    Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',${scriptPathPs}) -Verb RunAs -ErrorAction Stop
+  } catch {
+    try {
+      Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
+      [System.Windows.Forms.MessageBox]::Show('A atualização precisa de permissão do Windows (UAC). Clique em Sim quando o Windows solicitar permissão para instalar.','Coletor Pilar - Atualização',[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Warning,[System.Windows.Forms.MessageBoxDefaultButton]::Button1,[System.Windows.Forms.MessageBoxOptions]::DefaultDesktopOnly) | Out-Null
+    } catch {}
+  }
+  exit
+}
+
+Start-Transcript -Path $LogPath -Append | Out-Null
+Write-Host "Log: $LogPath"
+Write-Host "Aguardando o Coletor fechar. PID: $AppPid"
+try { Wait-Process -Id $AppPid -Timeout 30 -ErrorAction SilentlyContinue } catch {}
+Start-Sleep -Seconds 2
+try {
+  Get-Process ColetorPilar,ponto-coletor -ErrorAction SilentlyContinue |
+    Where-Object { $_.Id -ne $PID } |
+    Stop-Process -Force -ErrorAction SilentlyContinue
+} catch {}
+Start-Sleep -Seconds 1
+`.trim();
 
   let ps;
   if (ext === '.msi') {
     ps = `
-$ErrorActionPreference = 'Continue'
-Start-Transcript -Path '${logPath}' -Append | Out-Null
-Start-Sleep -Seconds 2
-Write-Host "Instalando MSI: ${destino}"
+${commonPsHeader}
+Write-Host "Instalando MSI: $InstallerPath"
 
 $paths = @(
   'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
@@ -114,7 +158,7 @@ Get-ItemProperty $paths -ErrorAction SilentlyContinue |
     }
   }
 
-$msiArgs = @('/i','${destino}','/qb','/norestart','REBOOT=ReallySuppress','MSIRESTARTMANAGERCONTROL=Disable','MSIDISABLERMRESTART=1','REINSTALLMODE=vomus')
+$msiArgs = @('/i',$InstallerPath,'/qb','/norestart','REBOOT=ReallySuppress','MSIRESTARTMANAGERCONTROL=Disable','MSIDISABLERMRESTART=1','REINSTALLMODE=vomus')
 $proc = Start-Process msiexec.exe -ArgumentList $msiArgs -Wait -PassThru
 Write-Host "msiexec exit code: $($proc.ExitCode)"
 
@@ -125,7 +169,7 @@ $candidatos = @(
 foreach ($exe in $candidatos) {
   if (Test-Path $exe) { Start-Process $exe; break }
 }
-Remove-Item -LiteralPath '${destino}' -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath $InstallerPath -ErrorAction SilentlyContinue
 
 try {
   Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
@@ -148,26 +192,34 @@ Stop-Transcript | Out-Null
 `.trim();
   } else {
     ps = `
-$ErrorActionPreference = 'Continue'
-Start-Transcript -Path '${logPath}' -Append | Out-Null
-Start-Sleep -Seconds 2
-Write-Host "Instalando EXE: ${destino}"
-# NSIS foi construído com perMachine=true → exige elevação (UAC).
-# Sem -Verb RunAs o /S falha silenciosamente e nada é instalado.
-# Tenta silencioso elevado; se o usuário recusar UAC, cai para modo interativo.
+${commonPsHeader}
+Write-Host "Instalando EXE: $InstallerPath"
+# O script inteiro já foi elevado via UAC antes de chegar aqui.
+# Assim o /S do NSIS perMachine consegue instalar de verdade.
 try {
-  $proc = Start-Process -FilePath '${destino}' -ArgumentList '/S' -Verb RunAs -Wait -PassThru -ErrorAction Stop
+  $proc = Start-Process -FilePath $InstallerPath -ArgumentList '/S' -Wait -PassThru -ErrorAction Stop
   Write-Host "Setup exit code (silent): $($proc.ExitCode)"
+  if ($proc.ExitCode -ne 0) { throw "Setup silent retornou codigo $($proc.ExitCode)" }
 } catch {
-  Write-Host "Elevacao recusada ou falhou no modo silent: $($_.Exception.Message)"
-  Write-Host "Tentando instalacao interativa (com UAC visivel)..."
+  Write-Host "Modo silencioso falhou: $($_.Exception.Message)"
+  Write-Host "Abrindo instalador interativo..."
   try {
-    $proc = Start-Process -FilePath '${destino}' -Verb RunAs -Wait -PassThru -ErrorAction Stop
+    $proc = Start-Process -FilePath $InstallerPath -Wait -PassThru -ErrorAction Stop
     Write-Host "Setup exit code (interactive): $($proc.ExitCode)"
   } catch {
     Write-Host "Instalacao cancelada pelo usuario: $($_.Exception.Message)"
   }
 }
+
+$candidatos = @(
+  "$env:ProgramFiles\\ColetorPilar\\ColetorPilar.exe",
+  "\${env:ProgramFiles(x86)}\\ColetorPilar\\ColetorPilar.exe"
+)
+foreach ($exe in $candidatos) {
+  if (Test-Path $exe) { Start-Process $exe; break }
+}
+Remove-Item -LiteralPath $InstallerPath -ErrorAction SilentlyContinue
+
 try {
   Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
   $owner = New-Object System.Windows.Forms.Form
@@ -194,8 +246,8 @@ Stop-Transcript | Out-Null
 
   spawn(
     'powershell.exe',
-    ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', scriptPath],
-    { detached: true, stdio: 'ignore', windowsHide: true }
+    ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath],
+    { detached: true, stdio: 'ignore', windowsHide: false }
   ).unref();
 
   setTimeout(() => { app.isQuitting = true; app.quit(); }, 800);
