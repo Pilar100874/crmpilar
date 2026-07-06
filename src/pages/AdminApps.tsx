@@ -4,14 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
   Download, Monitor, CheckCircle2, Copy, Database, Key, Camera,
-  Smartphone, Clock, Shield, Info, Apple, Terminal,
+  Smartphone, Clock, Shield, Info,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import coletorVersion from "../../public/coletor/version.json";
-import macAppleAsset from "../../public/coletor/PontoColetor-macOS-AppleSilicon.asset.json";
-import macIntelAsset from "../../public/coletor/PontoColetor-macOS-Intel.asset.json";
-import linuxAsset from "../../public/coletor/PontoColetor-Linux.asset.json";
 import crmApkAsset from "../../public/coletor/crm-pilar-v1.0.0.apk.asset.json";
 import { MobileAppCard } from "@/components/mobile/MobileAppCard";
 
