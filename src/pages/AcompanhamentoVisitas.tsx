@@ -94,6 +94,15 @@ const AcompanhamentoVisitas: React.FC = () => {
     load();
   }
 
+  async function detectarEspontaneas() {
+    setDetectando(true);
+    const { data, error } = await supabase.functions.invoke("detectar-visitas-espontaneas", { body: {} });
+    setDetectando(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Detecção concluída: ${data?.criadas ?? 0} visita(s)`);
+    load();
+  }
+
   const progMap = useMemo(() => new Map(programacoes.map((p: any) => [p.id, p])), [programacoes]);
   const userMap = useMemo(() => new Map(usuarios.map((u: any) => [u.id, u])), [usuarios]);
 
