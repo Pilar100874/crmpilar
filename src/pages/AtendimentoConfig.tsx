@@ -725,7 +725,7 @@ export default function AtendimentoConfig() {
               <Card className="h-full">
                 <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><Smartphone className="h-4 w-4 sm:h-5 sm:w-5" />Envio de SMS</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">Configure o provedor (GatewayAPI, Twilio ou Zenvia) e envie SMS de teste</CardDescription>
+                  <CardDescription className="text-xs sm:text-sm">Configure o provedor (Pilar SMS, Twilio ou Zenvia) e envie SMS de teste</CardDescription>
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6">{estabelecimentoId && <SmsConfigCRUD estabelecimentoId={estabelecimentoId} />}</CardContent>
               </Card>

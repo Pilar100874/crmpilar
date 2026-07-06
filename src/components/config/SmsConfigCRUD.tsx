@@ -16,7 +16,7 @@ import { Link } from 'react-router-dom';
 import PilarSmsDevices from './PilarSmsDevices';
 
 
-type Provider = 'twilio' | 'zenvia' | 'smsgate' | 'pilar';
+type Provider = 'twilio' | 'zenvia' | 'pilar';
 
 interface SmsConfig {
   id?: string;
@@ -44,7 +44,6 @@ const PROVIDERS: { value: Provider; label: string; desc: string; icon: any }[] =
   { value: 'pilar', label: 'Pilar SMS (App próprio)', desc: 'Gateway próprio Pilar — protocolo simplificado, roda no seu Android', icon: Shield },
   { value: 'twilio', label: 'Twilio', desc: 'Envio global via Twilio Programmable Messaging (pago)', icon: Globe },
   { value: 'zenvia', label: 'Zenvia', desc: 'Envio via Zenvia (Brasil, créditos grátis para teste)', icon: Globe },
-  { value: 'smsgate', label: 'SMS Gateway (Android)', desc: 'App gratuito open-source (sms-gate.app) instalado no celular Android', icon: Smartphone },
 ];
 
 export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId: string }) {
@@ -57,7 +56,7 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
 
   const [cfg, setCfg] = useState<SmsConfig>({
     estabelecimento_id: estabelecimentoId,
-    provider: 'smsgate',
+    provider: 'pilar',
     sender: '',
     ativo: true,
     twilio_account_sid: '',
@@ -144,24 +143,6 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
 
   return (
     <div className="space-y-6 max-w-full overflow-x-hidden">
-      <Card className="border-primary/30 bg-primary/5">
-        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <AppWindow className="mt-0.5 h-5 w-5 text-primary flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-sm">Baixar APK Pilar SMS e outros apps</p>
-              <p className="text-xs text-muted-foreground">
-                O download do APK <b>Pilar SMS</b>, do <b>Coletor Desktop</b> e do <b>Sistema de Coleta de Ponto</b>, junto com o passo a passo de instalação, agora ficam em <b>Admin → Apps</b>.
-              </p>
-            </div>
-          </div>
-          <Button asChild size="sm" className="w-full sm:w-auto">
-            <Link to="/admin/apps">
-              Ir para Apps <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">Provedor de SMS</CardTitle>
@@ -226,29 +207,6 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
             </div>
           )}
 
-          {cfg.provider === 'smsgate' && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
-              <div className="md:col-span-3">
-                <Label>Base URL da API</Label>
-                <Input
-                  value={cfg.smsgate_base_url || ''}
-                  onChange={(e) => setCfg({ ...cfg, smsgate_base_url: e.target.value })}
-                  placeholder="https://api.sms-gate.app/3rd/v1"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Use <code>https://api.sms-gate.app/3rd/v1</code> para o modo Cloud, ou <code>http://IP_DO_CELULAR:8080</code> no modo Local.
-                </p>
-              </div>
-              <div>
-                <Label>Usuário</Label>
-                <Input value={cfg.smsgate_username || ''} onChange={(e) => setCfg({ ...cfg, smsgate_username: e.target.value })} placeholder="usuário gerado pelo app" />
-              </div>
-              <div>
-                <Label>Senha</Label>
-                <Input type="password" value={cfg.smsgate_password || ''} onChange={(e) => setCfg({ ...cfg, smsgate_password: e.target.value })} placeholder="senha gerada pelo app" />
-              </div>
-            </div>
-          )}
 
           {cfg.provider === 'pilar' && (
             <div className="border-t pt-4 space-y-3">
@@ -300,7 +258,7 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base"><BookOpen className="h-4 w-4" /> Manual de configuração dos provedores</CardTitle>
-          <CardDescription>Passo a passo para cada um dos 4 provedores suportados</CardDescription>
+          <CardDescription>Passo a passo para cada um dos 3 provedores suportados</CardDescription>
         </CardHeader>
         <CardContent>
           <Accordion type="single" collapsible className="w-full">
@@ -333,24 +291,6 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
 
 
 
-            <AccordionItem value="smsgate">
-              <AccordionTrigger className="text-sm">
-                <span className="flex items-center gap-2"><Smartphone className="h-4 w-4 text-green-600" /> SMS Gateway (sms-gate.app) — Android · Gratuito</span>
-              </AccordionTrigger>
-              <AccordionContent className="text-sm space-y-2 text-muted-foreground">
-                <p><b>O que é:</b> app open-source instalado no celular Android que transforma o aparelho em gateway de SMS. Envia via chip do celular — sem mensalidade, custo é o do plano da operadora.</p>
-                <ol className="list-decimal ml-5 space-y-1">
-                  <li>Baixe o app <b>SMS Gateway</b> em <a className="underline" href="https://sms-gate.app" target="_blank" rel="noreferrer">sms-gate.app</a> (Play Store ou APK direto do GitHub).</li>
-                  <li>Instale no celular Android que ficará sempre ligado e com chip ativo.</li>
-                  <li>Abra o app, conceda as permissões de SMS.</li>
-                  <li>Escolha o modo: <b>Cloud</b> (padrão, mais fácil — o app se conecta ao servidor sms-gate.app) ou <b>Local</b> (o celular expõe uma API na sua rede).</li>
-                  <li>O app exibirá <b>Usuário</b> e <b>Senha</b> gerados automaticamente. Copie os dois.</li>
-                  <li>Aqui na tela, selecione o provedor <b>SMS Gateway (Android)</b> e cole usuário e senha.</li>
-                  <li>Base URL: mantenha <code>https://api.sms-gate.app/3rd/v1</code> (Cloud) ou coloque <code>http://IP:8080</code> se estiver em modo Local.</li>
-                  <li>Salve e faça um envio de teste.</li>
-                </ol>
-              </AccordionContent>
-            </AccordionItem>
 
 
             <AccordionItem value="twilio">
