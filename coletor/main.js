@@ -99,6 +99,17 @@ function createWindow() {
     },
   });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  // Atalhos para abrir DevTools: F12 e Ctrl+Shift+I já são default, mas
+  // registramos explicitamente para garantir mesmo com menu oculto.
+  win.webContents.on('before-input-event', (event, input) => {
+    const isF12 = input.key === 'F12';
+    const isCtrlShiftI = input.control && input.shift && (input.key === 'I' || input.key === 'i');
+    if (isF12 || isCtrlShiftI) {
+      if (win.webContents.isDevToolsOpened()) win.webContents.closeDevTools();
+      else win.webContents.openDevTools({ mode: 'detach' });
+      event.preventDefault();
+    }
+  });
   win.on('close', (e) => {
     if (!app.isQuitting) {
       e.preventDefault();
