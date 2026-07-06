@@ -202,6 +202,7 @@ ipcMain.handle('discover:create', async (evt, items) => {
   try {
     const cfg = loadConfig();
     console.log('[discover:create] recebido', Array.isArray(items) ? items.length : 0, 'itens; filial=', cfg.filialId);
+    if (!cfg.filialId) return { ok: false, error: 'Nenhuma filial definida no coletor. Selecione a filial na tela principal antes de cadastrar câmeras.' };
     if (!Array.isArray(items) || !items.length) return { ok: false, error: 'nenhuma câmera selecionada' };
     const url = `${cfg.url}/functions/v1/cv-coletor-cameras`;
     console.log('[discover:create] POST', url);
