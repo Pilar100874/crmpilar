@@ -76,6 +76,31 @@ export default function CamerasCameras() {
   const [snapshots, setSnapshots] = useState<Record<string, string>>({});
   const [snapLoading, setSnapLoading] = useState<Set<string>>(new Set());
   const [snapErrors, setSnapErrors] = useState<Record<string, string>>({});
+  const [editingNameId, setEditingNameId] = useState<string | null>(null);
+  const [editingNameValue, setEditingNameValue] = useState("");
+
+  const startRename = (id: string, currentName: string) => {
+    setEditingNameId(id);
+    setEditingNameValue(currentName);
+  };
+
+  const commitRename = async (id: string) => {
+    const trimmed = editingNameValue.trim();
+    if (!trimmed) {
+      setEditingNameId(null);
+      return;
+    }
+    const { error } = await supabase.from("cv_cameras").update({ nome: trimmed }).eq("id", id);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setRows((prev) => prev.map((r) => (r.id === id ? { ...r, nome: trimmed } : r)));
+      toast.success("Nome atualizado");
+    }
+    setEditingNameId(null);
+  };
+
+  const cancelRename = () => setEditingNameId(null);
 
   const fetchSnapshots = async (list: any[]) => {
     const queue = list.filter((c) => c.ativo);
@@ -393,7 +418,7 @@ export default function CamerasCameras() {
           </Card>
         )}
         {filtered.map((r) => (
-          <Card key={r.id} className={`${r.ativo ? "" : "opacity-60"} ${selected.has(r.id) ? "ring-2 ring-primary" : ""}`}>
+          <Card key={r.id} className={`group ${r.ativo ? "" : "opacity-60"} ${selected.has(r.id) ? "ring-2 ring-primary" : ""}`}>
 
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center justify-between text-base gap-2">
@@ -404,8 +429,35 @@ export default function CamerasCameras() {
                     aria-label="Selecionar câmera"
                   />
                   <Camera className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span className="truncate">{r.nome}</span>
-
+                  {editingNameId === r.id ? (
+                    <Input
+                      autoFocus
+                      className="h-7 text-sm px-2 py-0 min-w-0 flex-1"
+                      value={editingNameValue}
+                      onChange={(e) => setEditingNameValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") commitRename(r.id);
+                        if (e.key === "Escape") cancelRename();
+                      }}
+                      onBlur={() => commitRename(r.id)}
+                    />
+                  ) : (
+                    <span className="truncate">{r.nome}</span>
+                  )}
+                  {editingNameId !== r.id && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startRename(r.id, r.nome);
+                      }}
+                      aria-label="Renomear"
+                    >
+                      <Edit className="h-3 w-3 text-muted-foreground" />
+                    </Button>
+                  )}
                 </span>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <StatusPingDot
