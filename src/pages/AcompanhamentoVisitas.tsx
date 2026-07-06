@@ -207,11 +207,13 @@ const AcompanhamentoVisitas: React.FC = () => {
                   <TableHead>Data</TableHead>
                   <TableHead>Cliente</TableHead>
                   <TableHead>Usuário</TableHead>
+                  <TableHead>Origem</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Chegada</TableHead>
                   <TableHead>Duração</TableHead>
-                  <TableHead>Distância</TableHead>
                   <TableHead>Fonte</TableHead>
+                  <TableHead>Formulário</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -220,15 +222,29 @@ const AcompanhamentoVisitas: React.FC = () => {
                     <TableCell>{o.data_prevista}</TableCell>
                     <TableCell>{progMap.get(o.programacao_id)?.cliente_nome || "—"}</TableCell>
                     <TableCell>{userMap.get(o.usuario_id ?? "")?.nome || "—"}</TableCell>
+                    <TableCell>
+                      {o.origem === "espontanea"
+                        ? <Badge variant="outline"><Zap className="h-3 w-3 mr-1" />Espontânea</Badge>
+                        : <Badge variant="secondary">Programada</Badge>}
+                    </TableCell>
                     <TableCell>{statusBadge(o.status)}</TableCell>
                     <TableCell>{o.hora_chegada ? new Date(o.hora_chegada).toLocaleTimeString("pt-BR") : "—"}</TableCell>
                     <TableCell>{o.duracao_min ? `${o.duracao_min} min` : "—"}</TableCell>
-                    <TableCell>{o.distancia_metros != null ? `${o.distancia_metros.toFixed(0)} m` : "—"}</TableCell>
                     <TableCell>{o.fonte_deteccao || "—"}</TableCell>
+                    <TableCell>
+                      {o.formulario_status === "preenchido" && <Badge>Preenchido</Badge>}
+                      {o.formulario_status === "pendente" && <Badge variant="destructive">Pendente</Badge>}
+                      {(!o.formulario_status || o.formulario_status === "nao_aplicavel") && <span className="text-muted-foreground text-xs">—</span>}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" variant="ghost" onClick={() => setFormOcorrencia(o.id)}>
+                        <ClipboardEdit className="h-4 w-4 mr-1" /> Formulário
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
                 {ocorrencias.length === 0 && (
-                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">
+                  <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground">
                     Nenhuma visita no período
                   </TableCell></TableRow>
                 )}
@@ -237,6 +253,13 @@ const AcompanhamentoVisitas: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      <VisitaFormularioSheet
+        ocorrenciaId={formOcorrencia}
+        open={!!formOcorrencia}
+        onOpenChange={(o) => !o && setFormOcorrencia(null)}
+        onSaved={load}
+      />
     </div>
   );
 };
