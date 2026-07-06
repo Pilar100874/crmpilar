@@ -282,6 +282,63 @@ export default function CamerasCameras() {
         </Select>
       </div>
 
+      {/* Barra de seleção + ações em lote */}
+      <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 px-3 py-2">
+        <Button size="sm" variant="ghost" onClick={toggleAllVisible} className="h-8">
+          {allSelected ? <CheckSquare className="h-4 w-4 mr-1" /> : <Square className="h-4 w-4 mr-1" />}
+          {allSelected ? "Desmarcar todas" : "Selecionar todas"}
+        </Button>
+        <span className="text-xs text-muted-foreground">
+          {selected.size > 0 ? `${selected.size} selecionada${selected.size > 1 ? "s" : ""}` : "Nenhuma selecionada"}
+        </span>
+        {selected.size > 0 && (
+          <>
+            <div className="h-5 w-px bg-border mx-1" />
+            <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => bulkUpdate({ ativo: true }, "Ativadas")}>
+              Ativar
+            </Button>
+            <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => bulkUpdate({ ativo: false }, "Desativadas")}>
+              Desativar
+            </Button>
+            <Select
+              onValueChange={(v) =>
+                bulkUpdate({ grupo_id: v === "none" ? null : v }, "Setor atualizado")
+              }
+            >
+              <SelectTrigger className="h-8 w-[180px]">
+                <SelectValue placeholder="Mover para setor..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem setor</SelectItem>
+                {grupos.map((g) => (
+                  <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              onValueChange={(v) =>
+                bulkUpdate({ filial_id: v === "none" ? null : v }, "Filial atualizada")
+              }
+            >
+              <SelectTrigger className="h-8 w-[200px]">
+                <SelectValue placeholder="Mover para filial..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem filial</SelectItem>
+                {filiais.map((f) => (
+                  <SelectItem key={f.id} value={f.id}>
+                    {f.nome}{f.cidade ? ` — ${f.cidade}/${f.uf}` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="ghost" onClick={clearSel} className="h-8 ml-auto">
+              <X className="h-4 w-4 mr-1" /> Limpar
+            </Button>
+          </>
+        )}
+      </div>
+
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.length === 0 && (
           <Card className="col-span-full p-8 text-center text-muted-foreground">
@@ -289,7 +346,8 @@ export default function CamerasCameras() {
           </Card>
         )}
         {filtered.map((r) => (
-          <Card key={r.id} className={r.ativo ? "" : "opacity-60"}>
+          <Card key={r.id} className={`${r.ativo ? "" : "opacity-60"} ${selected.has(r.id) ? "ring-2 ring-primary" : ""}`}>
+
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center justify-between text-base">
                 <span className="flex items-center gap-2 min-w-0">
