@@ -1,6 +1,6 @@
 {
   "name": "ponto-coletor",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Coletor de batidas de relógios de ponto - CRM Pilar (pré-configurado)",
   "main": "main.js",
   "author": "Pilar",
