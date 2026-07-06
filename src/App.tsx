@@ -169,6 +169,8 @@ import AutomacoesVendas from "./pages/AutomacoesVendas";
 import RoteirizadorVisitas from "./pages/RoteirizadorVisitas";
 import ProgramacaoVisitas from "./pages/ProgramacaoVisitas";
 import AcompanhamentoVisitas from "./pages/AcompanhamentoVisitas";
+import FormulariosVisita from "./pages/FormulariosVisita";
+import RegrasFormularioVisita from "./pages/RegrasFormularioVisita";
 import ConfigRegrasMonitoramentoVisita from "./pages/ConfigRegrasMonitoramentoVisita";
 import VendasConfig from "./pages/VendasConfig";
 import MeusConjuntos from "./pages/MeusConjuntos";
