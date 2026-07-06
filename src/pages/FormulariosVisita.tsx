@@ -131,7 +131,7 @@ const FormulariosVisita: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
             <ClipboardList className="h-5 w-5" /> Formulários de Visita
@@ -140,50 +140,52 @@ const FormulariosVisita: React.FC = () => {
             Crie formulários preenchidos pelos vendedores ao encerrar cada visita.
           </p>
         </div>
-        <Button onClick={() => openEdit()}><Plus className="h-4 w-4 mr-2" /> Novo Formulário</Button>
+        <Button onClick={() => openEdit()} className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-2" /> Novo Formulário</Button>
       </div>
 
       <Card>
         <CardHeader><CardTitle>Formulários</CardTitle></CardHeader>
         <CardContent>
           {loading ? <div className="text-muted-foreground">Carregando...</div> : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map(r => (
-                  <TableRow key={r.id}>
-                    <TableCell>{r.nome}</TableCell>
-                    <TableCell className="text-muted-foreground">{r.descricao || "—"}</TableCell>
-                    <TableCell>{r.ativo ? <Badge>Ativo</Badge> : <Badge variant="secondary">Inativo</Badge>}</TableCell>
-                    <TableCell className="text-right">
-                      <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
-                      <Button size="icon" variant="ghost" onClick={() => setToDelete(r)}><Trash2 className="h-4 w-4" /></Button>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead className="hidden sm:table-cell">Descrição</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-                {rows.length === 0 && (
-                  <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Nenhum formulário</TableCell></TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {rows.map(r => (
+                    <TableRow key={r.id}>
+                      <TableCell className="font-medium">{r.nome}</TableCell>
+                      <TableCell className="hidden sm:table-cell text-muted-foreground">{r.descricao || "—"}</TableCell>
+                      <TableCell>{r.ativo ? <Badge>Ativo</Badge> : <Badge variant="secondary">Inativo</Badge>}</TableCell>
+                      <TableCell className="text-right whitespace-nowrap">
+                        <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => setToDelete(r)}><Trash2 className="h-4 w-4" /></Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {rows.length === 0 && (
+                    <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Nenhum formulário</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader><DialogTitle>{form.id ? "Editar Formulário" : "Novo Formulário"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><Label>Nome</Label><Input value={form.nome || ""} onChange={e => setForm({ ...form, nome: e.target.value })} /></div>
-              <div className="flex items-center justify-between pt-6">
+              <div className="flex items-center justify-between sm:pt-6">
                 <Label>Ativo</Label>
                 <Switch checked={form.ativo ?? true} onCheckedChange={v => setForm({ ...form, ativo: v })} />
               </div>
@@ -202,30 +204,30 @@ const FormulariosVisita: React.FC = () => {
               {campos.map((c, i) => (
                 <Card key={i}>
                   <CardContent className="p-3 space-y-2">
-                    <div className="grid grid-cols-12 gap-2 items-end">
-                      <div className="col-span-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-end">
+                      <div className="sm:col-span-6">
                         <Label>Rótulo</Label>
                         <Input value={c.rotulo} onChange={e => {
-                          const arr = [...campos]; arr[i].rotulo = e.target.value; if (!arr[i].chave) arr[i].chave = slug(e.target.value); setCampos(arr);
+                          const arr = [...campos]; arr[i].rotulo = e.target.value; setCampos(arr);
                         }} />
                       </div>
-                      <div className="col-span-3">
+                      <div className="sm:col-span-4">
                         <Label>Tipo</Label>
                         <Select value={c.tipo} onValueChange={v => { const arr = [...campos]; arr[i].tipo = v; setCampos(arr); }}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>{TIPOS.map(t => <SelectItem key={t.v} value={t.v}>{t.l}</SelectItem>)}</SelectContent>
                         </Select>
                       </div>
-                      <div className="col-span-3">
-                        <Label>Chave</Label>
-                        <Input value={c.chave} onChange={e => { const arr = [...campos]; arr[i].chave = e.target.value; setCampos(arr); }} />
-                      </div>
-                      <div className="col-span-2 flex items-center gap-1 justify-end">
-                        <Switch checked={c.obrigatorio} onCheckedChange={v => { const arr = [...campos]; arr[i].obrigatorio = v; setCampos(arr); }} />
-                        <span className="text-xs">Obrig.</span>
-                        <Button size="icon" variant="ghost" onClick={() => moveCampo(i, -1)}><ArrowUp className="h-3 w-3" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => moveCampo(i, 1)}><ArrowDown className="h-3 w-3" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => setCampos(campos.filter((_, j) => j !== i))}><Trash2 className="h-3 w-3" /></Button>
+                      <div className="sm:col-span-2 flex items-center gap-1 justify-between sm:justify-end flex-wrap">
+                        <div className="flex items-center gap-1">
+                          <Switch checked={c.obrigatorio} onCheckedChange={v => { const arr = [...campos]; arr[i].obrigatorio = v; setCampos(arr); }} />
+                          <span className="text-xs">Obrig.</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Button size="icon" variant="ghost" onClick={() => moveCampo(i, -1)}><ArrowUp className="h-3 w-3" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => moveCampo(i, 1)}><ArrowDown className="h-3 w-3" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => setCampos(campos.filter((_, j) => j !== i))}><Trash2 className="h-3 w-3" /></Button>
+                        </div>
                       </div>
                     </div>
                     {(c.tipo === "selecao" || c.tipo === "multi") && (
