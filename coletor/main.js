@@ -126,6 +126,8 @@ function createTray() {
     { label: 'Abrir', click: () => win.show() },
     { type: 'separator' },
     { label: 'Status', click: () => { win.show(); win.webContents.send('show-status'); } },
+    { label: 'Abrir DevTools (logs)', click: () => { win.show(); try { win.webContents.openDevTools({ mode: 'detach' }); } catch {} } },
+    { label: 'Abrir pasta de logs', click: () => { try { shell.openPath(path.join(app.getPath('userData'), 'logs')); } catch {} } },
     { type: 'separator' },
     { label: 'Sair (encerra o serviço)', click: () => { app.isQuitting = true; app.quit(); } },
   ]));
