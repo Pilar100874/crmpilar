@@ -15,6 +15,10 @@ import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { EmpresaFormulariosTab } from "@/components/empresas/EmpresaFormulariosTab";
+import { EmpresaVisitasTab, fetchUltimaVisitaEmpresa } from "@/components/empresas/EmpresaVisitasTab";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface EmpresaFormSheetEditProps {
   open: boolean;
@@ -28,6 +32,7 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
   const [loading, setLoading] = useState(true);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("empresa");
+  const [ultimaVisita, setUltimaVisita] = useState<Date | null>(null);
   
   // Hooks para busca automática
   const { lookupCNPJ, loading: cnpjLoading } = useCNPJLookup();
@@ -72,6 +77,7 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
         ]);
         if (empresaId) {
           await loadEmpresaData(empresaId);
+          fetchUltimaVisitaEmpresa(empresaId).then(setUltimaVisita).catch(() => setUltimaVisita(null));
         }
       }
       setLoading(false);
@@ -367,10 +373,11 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid grid-cols-4 mb-4">
+                <TabsList className="grid grid-cols-5 mb-4">
                   <TabsTrigger value="empresa">Empresa</TabsTrigger>
                   <TabsTrigger value="segmentos">Segmentos *</TabsTrigger>
                   <TabsTrigger value="contatos">Contatos</TabsTrigger>
+                  <TabsTrigger value="visitas">Visitas</TabsTrigger>
                   <TabsTrigger value="formularios">Formulários</TabsTrigger>
                 </TabsList>
 
@@ -467,6 +474,19 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
                       value={formData.telefone}
                       onChange={(e) => setFormData({ ...formData, telefone: maskPhone(e.target.value) })}
                       placeholder="(00) 0000-0000"
+                    />
+                  </div>
+
+                  {/* Última visita (somente leitura) */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                      Última visita
+                    </Label>
+                    <Input
+                      readOnly
+                      value={ultimaVisita ? format(ultimaVisita, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "Nenhuma visita registrada"}
+                      className="bg-muted/40 cursor-not-allowed"
                     />
                   </div>
 
@@ -638,6 +658,10 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
                       </div>
                     </Card>
                   )}
+                </TabsContent>
+
+                <TabsContent value="visitas" className="space-y-4">
+                  <EmpresaVisitasTab empresaId={empresaId} />
                 </TabsContent>
 
                 <TabsContent value="formularios" className="space-y-4">
