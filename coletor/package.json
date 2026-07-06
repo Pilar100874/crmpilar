@@ -11,6 +11,7 @@
   },
   "scripts": {
     "start": "electron .",
+    "postinstall": "node scripts/patch-binary-data.js",
     "dist": "electron-builder --win nsis --x64"
   },
   "dependencies": {
