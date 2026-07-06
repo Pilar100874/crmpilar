@@ -386,6 +386,8 @@ const App = () => (
               <Route path="/vendas/programacao-visitas" element={<ProgramacaoVisitas />} />
               <Route path="/vendas/acompanhamento-visitas" element={<AcompanhamentoVisitas />} />
               <Route path="/config/regras-monitoramento-visita" element={<ConfigRegrasMonitoramentoVisita />} />
+              <Route path="/config/formularios-visita" element={<FormulariosVisita />} />
+              <Route path="/config/regras-formulario-visita" element={<RegrasFormularioVisita />} />
               <Route path="/editor-regras" element={<EditorRegras />} />
               <Route path="/editor-regras/:id" element={<EditorRegras />} />
               <Route path="/vendas-config" element={<VendasConfig />} />
