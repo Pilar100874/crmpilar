@@ -50,22 +50,39 @@ Deno.serve(async (req) => {
       // Câmera interna: o Coletor Desktop captura na LAN e sobe o snapshot
       // em cameras/{id}/coletor-latest.jpg — servimos a última imagem recebida.
       const latestPath = `cameras/${cam.id}/coletor-latest.jpg`;
-      const { data: signedLatest, error: sErr } = await sb.storage
+      const { data: signedLatest } = await sb.storage
         .from("cv-vehicle-photos")
         .createSignedUrl(latestPath, 3600);
-      if (sErr || !signedLatest?.signedUrl) {
-        throw new Error(
-          "Câmera interna — nenhum snapshot recebido do Coletor Desktop ainda. Verifique se o Coletor está aberto com o módulo de câmeras ativado.",
+      if (signedLatest?.signedUrl) {
+        return new Response(
+          JSON.stringify({
+            photo_path: latestPath,
+            signed_url: `${signedLatest.signedUrl}&t=${Date.now()}`,
+            angle_key: cam.angulo_key,
+            fonte: "coletor",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
-      return new Response(
-        JSON.stringify({
-          photo_path: latestPath,
-          signed_url: `${signedLatest.signedUrl}&t=${Date.now()}`,
-          angle_key: cam.angulo_key,
-          fonte: "coletor",
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      // Sem snapshot armazenado — verifica se o Coletor está online para dar
+      // uma mensagem mais precisa (RTSP sem ffmpeg é o caso mais comum).
+      const seenMs = cam.ultima_verificacao
+        ? Date.now() - new Date(cam.ultima_verificacao).getTime()
+        : Infinity;
+      const coletorOnline = cam.ultimo_status === "online" && seenMs < 120_000;
+      const isRtsp = (cam.protocolo || "").toLowerCase() === "rtsp" || cam.porta === 554;
+      if (coletorOnline && isRtsp) {
+        throw new Error(
+          "Câmera RTSP online no Coletor, mas nenhum snapshot foi gerado ainda. Instale o ffmpeg no PC do Coletor (necessário para capturar snapshot de RTSP) e aguarde o próximo ciclo (~30s).",
+        );
+      }
+      if (coletorOnline) {
+        throw new Error(
+          "Coletor está online, mas ainda não enviou o primeiro snapshot desta câmera. Aguarde o próximo ciclo do Coletor (~30s) e tente de novo.",
+        );
+      }
+      throw new Error(
+        "Câmera interna — nenhum snapshot recebido do Coletor Desktop ainda. Verifique se o Coletor está aberto com o módulo de câmeras ativado.",
       );
     }
 
