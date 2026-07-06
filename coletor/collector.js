@@ -38,7 +38,9 @@ const STATE = {
   equipamentos: [],
   cameras: [],
   lastErrors: {},
+  failStreak: {},   // { [equipId]: n } — histerese: só marca offline após N falhas seguidas
   progress: { ativo: false, etapa: 'idle', equipNome: '', indice: 0, total: 0, batidasEquip: 0 },
+
 };
 
 const lastNSRByEquip = {};
@@ -125,18 +127,30 @@ async function pollOnce() {
       let batidas = [];
       let statusNovo = 'online';
       let erroMsg = null;
+      let sucessoLeitura = false;
       try {
         batidas = await lerBatidas(eq);
         STATE.progress.batidasEquip = batidas.length;
         delete STATE.lastErrors[eq.id];
+        STATE.failStreak[eq.id] = 0;
+        sucessoLeitura = true;
       } catch (e) {
-        statusNovo = 'offline';
-        erroMsg = e.message;
+        STATE.failStreak[eq.id] = (STATE.failStreak[eq.id] || 0) + 1;
+        // Histerese: só considera offline após 3 falhas consecutivas.
+        // Antes disso mantém 'online' para não piscar por timeouts esporádicos.
+        if (STATE.failStreak[eq.id] >= 3) {
+          statusNovo = 'offline';
+          erroMsg = e.message;
+        } else {
+          statusNovo = 'online';
+          erroMsg = null;
+        }
         STATE.lastErrors[eq.id] = e.message;
         STATE.errors++;
       }
 
       const updateObj = { id: eq.id, status: statusNovo, ultimo_erro: erroMsg, ultima_sync: new Date().toISOString() };
+
 
       if (eq.solicitar_teste) {
         STATE.progress.etapa = 'testando';
