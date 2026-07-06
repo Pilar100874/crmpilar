@@ -227,8 +227,9 @@ const FormulariosVisita: React.FC = () => {
                       <TableCell className="hidden sm:table-cell text-muted-foreground">{r.descricao || "—"}</TableCell>
                       <TableCell>{r.ativo ? <Badge>Ativo</Badge> : <Badge variant="secondary">Inativo</Badge>}</TableCell>
                       <TableCell className="text-right whitespace-nowrap">
-                        <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => setToDelete(r)}><Trash2 className="h-4 w-4" /></Button>
+                        <Button size="icon" variant="ghost" title="Simular" onClick={() => openPreviewFromRow(r)}><Eye className="h-4 w-4" /></Button>
+                        <Button size="icon" variant="ghost" title="Editar" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
+                        <Button size="icon" variant="ghost" title="Excluir" onClick={() => setToDelete(r)}><Trash2 className="h-4 w-4" /></Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -309,12 +310,23 @@ const FormulariosVisita: React.FC = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button variant="secondary" onClick={() => setPreview({ nome: form.nome || "Formulário", descricao: form.descricao, campos })}>
+              <Eye className="h-4 w-4 mr-1" /> Simular
+            </Button>
             <Button onClick={save}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <DeleteConfirmDialog open={!!toDelete} onOpenChange={o => !o && setToDelete(null)} onConfirm={remove} itemName={toDelete?.nome} />
+
+      <FormularioPreviewSheet
+        open={!!preview}
+        onOpenChange={(o) => !o && setPreview(null)}
+        nome={preview?.nome || ""}
+        descricao={preview?.descricao}
+        campos={preview?.campos || []}
+      />
     </div>
   );
 };
