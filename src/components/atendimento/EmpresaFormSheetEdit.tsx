@@ -32,6 +32,7 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
   const [loading, setLoading] = useState(true);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("empresa");
+  const [ultimaVisita, setUltimaVisita] = useState<Date | null>(null);
   
   // Hooks para busca automática
   const { lookupCNPJ, loading: cnpjLoading } = useCNPJLookup();
