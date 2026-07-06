@@ -652,7 +652,7 @@
         <div style="max-height:340px; overflow:auto;">
         ${_discResults.map((c,i)=>`
           <div class="disc-row ${c.auth_ok ? '' : 'bad'}">
-            <input type="checkbox" ${c.auth_ok ? 'checked' : ''} data-i="${i}" class="disc-check">
+            <input type="checkbox" checked data-i="${i}" class="disc-check">
             <div>
               <div style="font-weight:600;">${c.modelo} · ${c.ip}</div>
               <div style="font-size:11px; color:var(--muted); font-family:monospace;">${c.rtsp_template.replace('{user}', c.auth_ok ? '****':'?').replace('{pass}','****')}</div>
