@@ -181,9 +181,9 @@ const FormulariosVisita: React.FC = () => {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{form.id ? "Editar Formulário" : "Novo Formulário"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><Label>Nome</Label><Input value={form.nome || ""} onChange={e => setForm({ ...form, nome: e.target.value })} /></div>
-              <div className="flex items-center justify-between pt-6">
+              <div className="flex items-center justify-between sm:pt-6">
                 <Label>Ativo</Label>
                 <Switch checked={form.ativo ?? true} onCheckedChange={v => setForm({ ...form, ativo: v })} />
               </div>
@@ -202,30 +202,30 @@ const FormulariosVisita: React.FC = () => {
               {campos.map((c, i) => (
                 <Card key={i}>
                   <CardContent className="p-3 space-y-2">
-                    <div className="grid grid-cols-12 gap-2 items-end">
-                      <div className="col-span-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-end">
+                      <div className="sm:col-span-6">
                         <Label>Rótulo</Label>
                         <Input value={c.rotulo} onChange={e => {
-                          const arr = [...campos]; arr[i].rotulo = e.target.value; if (!arr[i].chave) arr[i].chave = slug(e.target.value); setCampos(arr);
+                          const arr = [...campos]; arr[i].rotulo = e.target.value; setCampos(arr);
                         }} />
                       </div>
-                      <div className="col-span-3">
+                      <div className="sm:col-span-4">
                         <Label>Tipo</Label>
                         <Select value={c.tipo} onValueChange={v => { const arr = [...campos]; arr[i].tipo = v; setCampos(arr); }}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>{TIPOS.map(t => <SelectItem key={t.v} value={t.v}>{t.l}</SelectItem>)}</SelectContent>
                         </Select>
                       </div>
-                      <div className="col-span-3">
-                        <Label>Chave</Label>
-                        <Input value={c.chave} onChange={e => { const arr = [...campos]; arr[i].chave = e.target.value; setCampos(arr); }} />
-                      </div>
-                      <div className="col-span-2 flex items-center gap-1 justify-end">
-                        <Switch checked={c.obrigatorio} onCheckedChange={v => { const arr = [...campos]; arr[i].obrigatorio = v; setCampos(arr); }} />
-                        <span className="text-xs">Obrig.</span>
-                        <Button size="icon" variant="ghost" onClick={() => moveCampo(i, -1)}><ArrowUp className="h-3 w-3" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => moveCampo(i, 1)}><ArrowDown className="h-3 w-3" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => setCampos(campos.filter((_, j) => j !== i))}><Trash2 className="h-3 w-3" /></Button>
+                      <div className="sm:col-span-2 flex items-center gap-1 justify-between sm:justify-end flex-wrap">
+                        <div className="flex items-center gap-1">
+                          <Switch checked={c.obrigatorio} onCheckedChange={v => { const arr = [...campos]; arr[i].obrigatorio = v; setCampos(arr); }} />
+                          <span className="text-xs">Obrig.</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Button size="icon" variant="ghost" onClick={() => moveCampo(i, -1)}><ArrowUp className="h-3 w-3" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => moveCampo(i, 1)}><ArrowDown className="h-3 w-3" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => setCampos(campos.filter((_, j) => j !== i))}><Trash2 className="h-3 w-3" /></Button>
+                        </div>
                       </div>
                     </div>
                     {(c.tipo === "selecao" || c.tipo === "multi") && (
