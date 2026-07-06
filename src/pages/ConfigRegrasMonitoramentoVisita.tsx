@@ -25,6 +25,8 @@ interface Regra {
   tempo_minimo_min: number;
   exigir_janela_horario: boolean;
   ativa: boolean;
+  detectar_espontanea?: boolean;
+  espontanea_ignorar_propria_filial?: boolean;
 }
 
 const empty: Partial<Regra> = {
@@ -35,6 +37,8 @@ const empty: Partial<Regra> = {
   tempo_minimo_min: 5,
   exigir_janela_horario: false,
   ativa: true,
+  detectar_espontanea: false,
+  espontanea_ignorar_propria_filial: true,
 };
 
 const ConfigRegrasMonitoramentoVisita: React.FC = () => {
