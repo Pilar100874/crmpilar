@@ -584,6 +584,119 @@
       setTimeout(refreshLoop, 5000);
     }
     refreshLoop();
+
+    // ─── Descoberta de câmeras ───────────────────────────────────
+    let _discResults = [];
+    async function abrirDescoberta(){
+      document.getElementById('discoverModal').style.display = 'flex';
+      document.getElementById('discoverStep1').style.display = 'block';
+      document.getElementById('discoverStep2').style.display = 'none';
+      document.getElementById('discoverStep3').style.display = 'none';
+      try{
+        const info = await window.coletor.discoverSubnet();
+        const hint = document.getElementById('discSubnetHint');
+        if (info && info.subnets && info.subnets.length){
+          const s = info.subnets[0];
+          hint.innerHTML = `<b>${s.ip.split('.').slice(0,3).join('.')}.0/24</b> · interface <code>${s.iface}</code> (varredura de .1 até .254)`;
+        } else {
+          hint.textContent = 'Nenhuma sub-rede IPv4 privada encontrada nesta máquina.';
+        }
+      }catch(e){ document.getElementById('discSubnetHint').textContent = 'Erro ao detectar rede: ' + e.message; }
+    }
+    function fecharDescoberta(){ document.getElementById('discoverModal').style.display='none'; }
+    function voltarDescoberta(){
+      document.getElementById('discoverStep1').style.display='block';
+      document.getElementById('discoverStep2').style.display='none';
+      document.getElementById('discoverStep3').style.display='none';
+    }
+
+    async function iniciarDescoberta(){
+      const marcas = Array.from(document.querySelectorAll('.chk-marca input:checked')).map(x=>x.value);
+      const user = document.getElementById('discUser').value.trim();
+      const senha = document.getElementById('discPass').value;
+      if (!marcas.length){ alert('Selecione ao menos um fabricante'); return; }
+      if (!user){ alert('Informe o usuário'); return; }
+      document.getElementById('discoverStep1').style.display='none';
+      document.getElementById('discoverStep2').style.display='block';
+      document.getElementById('discProgressBar').style.width='0%';
+      document.getElementById('discProgressText').textContent = 'Iniciando…';
+      window.coletor.onDiscoverProgress((p) => {
+        const pct = p.total ? Math.round(100 * p.done / p.total) : 0;
+        document.getElementById('discProgressBar').style.width = pct + '%';
+        document.getElementById('discProgressText').textContent = `${p.done} de ${p.total} IPs`;
+      });
+      try{
+        const res = await window.coletor.discoverCameras({ marcas, user, senha });
+        _discResults = res.cameras || [];
+        renderResultados(res);
+      }catch(e){
+        alert('Erro na varredura: ' + e.message);
+        voltarDescoberta();
+      }
+    }
+
+    function renderResultados(res){
+      document.getElementById('discoverStep2').style.display='none';
+      document.getElementById('discoverStep3').style.display='block';
+      const el = document.getElementById('discResults');
+      if (!_discResults.length){
+        el.innerHTML = `<div class="empty">Nenhuma câmera encontrada em ${res.total_scanned} IPs varridos.<br><small>Verifique se as câmeras estão ligadas, na mesma rede e se o firewall do PC permite conexões TCP.</small></div>`;
+        document.getElementById('discCreateBtn').style.display='none';
+        return;
+      }
+      document.getElementById('discCreateBtn').style.display='inline-block';
+      el.innerHTML = `
+        <div style="margin-bottom:10px; font-size:13px; color:var(--text-2);">
+          Encontrada(s) <b>${_discResults.length}</b> câmera(s) em ${res.total_scanned} IPs. Marque as que deseja adicionar:
+        </div>
+        <div style="max-height:340px; overflow:auto;">
+        ${_discResults.map((c,i)=>`
+          <div class="disc-row ${c.auth_ok ? '' : 'bad'}">
+            <input type="checkbox" ${c.auth_ok ? 'checked' : ''} data-i="${i}" class="disc-check">
+            <div>
+              <div style="font-weight:600;">${c.modelo} · ${c.ip}</div>
+              <div style="font-size:11px; color:var(--muted); font-family:monospace;">${c.rtsp_template.replace('{user}', c.auth_ok ? '****':'?').replace('{pass}','****')}</div>
+            </div>
+            <div style="font-size:11px; padding:3px 8px; border-radius:99px; background:#EEF2F7;">${c.marca}</div>
+            <div style="font-size:11px; padding:3px 8px; border-radius:99px; ${c.auth_ok ? 'background:var(--success-bg);color:var(--success);' : 'background:var(--danger-bg);color:var(--danger);'}">
+              ${c.auth_ok ? '✓ autenticada' : '⚠ credencial'}
+            </div>
+          </div>`).join('')}
+        </div>
+        <div style="margin-top:8px; font-size:12px; color:var(--muted);">
+          Câmeras marcadas em vermelho responderam, mas o usuário/senha informados foram rejeitados. Corrija a credencial ou desmarque.
+        </div>`;
+    }
+
+    async function criarSelecionadas(){
+      const idxs = Array.from(document.querySelectorAll('.disc-check:checked')).map(x=>parseInt(x.dataset.i,10));
+      if (!idxs.length){ alert('Selecione ao menos uma câmera'); return; }
+      const user = document.getElementById('discUser').value.trim();
+      const senha = document.getElementById('discPass').value;
+      const items = idxs.map(i => {
+        const c = _discResults[i];
+        return {
+          nome: `${c.modelo} ${c.ip}`,
+          marca: c.marca, host: c.ip, porta: c.porta,
+          protocolo: c.protocolo, usuario: user, senha,
+          snapshot_path: c.snapshot_path, tipo_rede: 'interna',
+          angulo_key: 'frente',
+        };
+      });
+      const btn = document.getElementById('discCreateBtn');
+      btn.disabled = true; btn.textContent = 'Enviando…';
+      try{
+        const r = await window.coletor.createCameras(items);
+        if (r && r.ok){
+          alert(`✓ ${r.created} câmera(s) criada(s) no CRM.\nAcesse o CRM para posicionar/ativar.`);
+          fecharDescoberta();
+          refreshNow();
+        } else {
+          alert('Erro: ' + (r && r.error || 'desconhecido'));
+        }
+      }catch(e){ alert('Erro: ' + e.message); }
+      finally{ btn.disabled = false; btn.textContent = '➕ Adicionar selecionadas'; }
+    }
   </script>
 </body>
 </html>
