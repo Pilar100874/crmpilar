@@ -50,7 +50,8 @@ function buildTlsVariants(hostname, port) {
   // Não envia SNI quando o host é IP. Além do warning DEP0123 do Node,
   // alguns firmwares Control iD travam/atrasam o handshake quando recebem
   // servername com IP em certificado próprio.
-  if (!isIpAddress(hostname)) base.servername = hostname;
+  if (isIpAddress(hostname)) base.servername = '';
+  else base.servername = hostname;
   const variants = [];
   // 1) OpenSSL clássico com SECLEVEL=0 (legado total)
   try {
@@ -75,6 +76,11 @@ function isInvalidCommandErr(e) {
   return /INVALID_COMMAND|ERR_TLS|ERR_SSL|unsupported|invalid cipher/i.test(s);
 }
 
+function isTlsVariantErr(e) {
+  const s = (e && (e.message || e.code || '')) + '';
+  return isInvalidCommandErr(e) || /handshake|SSL|TLS|EPROTO|WRONG_VERSION_NUMBER|wrong version|protocol version|alert/i.test(s);
+}
+
 // Fallback: usa curl.exe (Windows 10+) — Schannel aceita TLS 1.0/1.1 legado do Control iD.
 function curlRequest(opts, body) {
   return new Promise((resolve, reject) => {
@@ -89,11 +95,11 @@ function curlRequest(opts, body) {
     const args = ['-sS', '-k', '-i', '--http1.1', '--ipv4',
       '--connect-timeout', '5',
       '--max-time', String(timeoutSec),
-      '--tls-max', '1.2',
       '-X', opts.method || 'GET',
       '-H', 'Content-Type: application/json',
       '-H', 'Connection: close',
       '-H', 'User-Agent: ColetorPilar/1.5'];
+    if (os.platform() === 'win32') args.splice(5, 0, '--ssl-no-revoke');
     if (payload) { args.push('--data-binary', payload); }
     args.push(url);
     const bin = os.platform() === 'win32' ? 'curl.exe' : 'curl';
@@ -188,21 +194,20 @@ async function requestRaw(opts, body) {
   const isHttps = opts.protocol === 'https:';
   if (!isHttps) return requestRawOnce(opts, body, null);
 
-  // No Windows: prefere curl.exe (Schannel aceita TLS 1.0/1.1/self-signed do Control iD).
-  // Se curl falhar por QUALQUER motivo (timeout, handshake, exit não-zero), cai para
-  // tls.connect com variantes de OpenSSL — o Control iD às vezes só responde por um
-  // dos transportes, dependendo do firmware.
+  // No Windows, tenta primeiro tls.connect sem SNI quando o host é IP.
+  // Isso evita o warning DEP0123 e costuma passar melhor em certificados
+  // próprios do Control iD. curl fica como fallback Schannel.
   if (os.platform() === 'win32') {
+    const variants = buildTlsVariants(opts.hostname, opts.port);
+    let lastErr;
+    for (const v of variants) {
+      try { return await requestRawOnce(opts, body, v); }
+      catch (e) { lastErr = e; if (!isTlsVariantErr(e)) break; }
+    }
     try { return await curlRequest(opts, body); }
     catch (curlErr) {
-      console.log('[controlid] curl falhou, tentando tls.connect:', curlErr.message);
-      const variants = buildTlsVariants(opts.hostname, opts.port);
-      let lastErr = curlErr;
-      for (const v of variants) {
-        try { return await requestRawOnce(opts, body, v); }
-        catch (e) { lastErr = e; if (!isInvalidCommandErr(e) && !isRecoverableTransportError(e.message)) break; }
-      }
-      throw lastErr;
+      console.log('[controlid] tls/curl falharam:', lastErr?.message || 'tls', '|', curlErr.message);
+      throw curlErr;
     }
   }
 
@@ -213,7 +218,7 @@ async function requestRaw(opts, body) {
     try { return await requestRawOnce(opts, body, v); }
     catch (e) {
       lastErr = e;
-      if (!isInvalidCommandErr(e) && !isRecoverableTransportError(e.message) && !/handshake|SSL|TLS|wrong version/i.test(e.message || '')) {
+      if (!isTlsVariantErr(e)) {
         throw e;
       }
     }
