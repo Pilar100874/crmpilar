@@ -131,7 +131,7 @@ const FormulariosVisita: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
             <ClipboardList className="h-5 w-5" /> Formulários de Visita
@@ -140,7 +140,7 @@ const FormulariosVisita: React.FC = () => {
             Crie formulários preenchidos pelos vendedores ao encerrar cada visita.
           </p>
         </div>
-        <Button onClick={() => openEdit()}><Plus className="h-4 w-4 mr-2" /> Novo Formulário</Button>
+        <Button onClick={() => openEdit()} className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-2" /> Novo Formulário</Button>
       </div>
 
       <Card>
