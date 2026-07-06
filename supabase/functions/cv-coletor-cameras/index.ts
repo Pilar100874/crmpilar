@@ -94,6 +94,40 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Criação em lote a partir da tela de descoberta do Coletor Desktop.
+    // Cria as câmeras já DESATIVADAS (ativo=false) para o operador revisar
+    // no CRM antes de habilitar.
+    if (body?.action === "bulk_create_cameras" && Array.isArray(body?.cameras)) {
+      const filial = body.filial_id || null;
+      const ALLOWED_MARCA = new Set(["tplink_tapo", "hikvision", "intelbras", "generica_http", "generica_rtsp"]);
+      const ALLOWED_PROTO = new Set(["http", "https", "rtsp"]);
+      const rows = body.cameras
+        .filter((c: any) => c && c.host && c.marca)
+        .map((c: any) => ({
+          nome: String(c.nome || `${c.marca} ${c.host}`).slice(0, 120),
+          marca: ALLOWED_MARCA.has(c.marca) ? c.marca : "generica_rtsp",
+          host: String(c.host),
+          porta: c.porta ? Number(c.porta) : null,
+          protocolo: ALLOWED_PROTO.has(c.protocolo) ? c.protocolo : "rtsp",
+          usuario: c.usuario || null,
+          senha: c.senha || null,
+          snapshot_path: c.snapshot_path || null,
+          angulo_key: c.angulo_key || "frente",
+          tipo_rede: c.tipo_rede === "publica" ? "publica" : "interna",
+          filial_id: filial,
+          ativo: false,
+        }));
+      if (!rows.length) throw new Error("nenhuma câmera válida no lote");
+      const { error: insErr, data: ins } = await supabase
+        .from("cv_cameras").insert(rows).select("id");
+      if (insErr) throw insErr;
+      return new Response(JSON.stringify({ ok: true, created: ins?.length || 0 }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+
+
 
     let camQ = supabase
       .from("cv_cameras")

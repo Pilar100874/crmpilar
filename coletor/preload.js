@@ -34,4 +34,9 @@ contextBridge.exposeInMainWorld('coletor', {
   setFilial: (id, nome) => ipcRenderer.invoke('collector:setFilial', id, nome),
   openLogsFolder: () => ipcRenderer.invoke('app:openLogsFolder'),
   openDevTools: () => ipcRenderer.invoke('app:openDevTools'),
+  // Descoberta de câmeras
+  discoverSubnet: () => ipcRenderer.invoke('discover:subnet'),
+  discoverCameras: (opts) => ipcRenderer.invoke('discover:cameras', opts),
+  onDiscoverProgress: (cb) => ipcRenderer.on('discover:progress', (_e, p) => cb(p)),
+  createCameras: (items) => ipcRenderer.invoke('discover:create', items),
 });
