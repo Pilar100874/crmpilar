@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Monitor, Smartphone } from "lucide-react";
+import { Monitor, Smartphone, Bell } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -54,9 +54,30 @@ async function fetchHealth(): Promise<{ win: Health; and: Health }> {
   };
 }
 
+type PushState = "granted" | "denied" | "default" | "unsupported";
+
+function pushDotClass(state: PushState) {
+  if (state === "granted") return "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.9)]";
+  if (state === "denied") return "bg-red-500";
+  return "bg-muted-foreground/40";
+}
+
+function pushLabel(state: PushState) {
+  if (state === "granted") return "Push ativo neste dispositivo";
+  if (state === "denied") return "Push bloqueado neste dispositivo";
+  if (state === "unsupported") return "Push não suportado neste navegador";
+  return "Push não ativado neste dispositivo";
+}
+
+function getPushState(): PushState {
+  if (!("Notification" in window)) return "unsupported";
+  return Notification.permission as PushState;
+}
+
 export function AppsHealthIndicator({ compact = false }: { compact?: boolean }) {
   const [win, setWin] = useState<Health>({ at: null, ago: null });
   const [and, setAnd] = useState<Health>({ at: null, ago: null });
+  const [push, setPush] = useState<PushState>(getPushState());
 
   useEffect(() => {
     let alive = true;
@@ -71,6 +92,13 @@ export function AppsHealthIndicator({ compact = false }: { compact?: boolean }) 
     load();
     const t = setInterval(load, 30_000);
     return () => { alive = false; clearInterval(t); };
+  }, []);
+
+  useEffect(() => {
+    setPush(getPushState());
+    const handler = () => setPush(getPushState());
+    window.addEventListener("focus", handler);
+    return () => window.removeEventListener("focus", handler);
   }, []);
 
   const winState = classify(win.ago);
@@ -113,6 +141,18 @@ export function AppsHealthIndicator({ compact = false }: { compact?: boolean }) 
             <TooltipContent side="right" className="text-xs">
               <div className="font-semibold">Pilar Hub (Android)</div>
               <div className="text-muted-foreground">{label(andState, and.at)}</div>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="relative inline-flex items-center gap-1">
+                <Bell className="h-3.5 w-3.5 text-sidebar-foreground/60 group-hover:text-sidebar-foreground/80" />
+                <span className={`h-1.5 w-1.5 rounded-full ${pushDotClass(push)}`} />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-xs">
+              <div className="font-semibold">Notificações Push</div>
+              <div className="text-muted-foreground">{pushLabel(push)}</div>
             </TooltipContent>
           </Tooltip>
         </div>
