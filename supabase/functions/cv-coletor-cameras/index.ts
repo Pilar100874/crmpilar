@@ -115,13 +115,13 @@ Deno.serve(async (req) => {
           angulo_key: c.angulo_key || "frente",
           tipo_rede: c.tipo_rede === "publica" ? "publica" : "interna",
           filial_id: filial,
-          ativo: false,
+          ativo: true,
         }));
       if (!rows.length) throw new Error("nenhuma câmera válida no lote");
       const { error: insErr, data: ins } = await supabase
         .from("cv_cameras").insert(rows).select("id");
       if (insErr) throw insErr;
-      return new Response(JSON.stringify({ ok: true, created: ins?.length || 0 }), {
+      return new Response(JSON.stringify({ ok: true, created: ins?.length || 0, ids: (ins ?? []).map((r: any) => r.id) }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

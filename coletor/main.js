@@ -224,7 +224,16 @@ ipcMain.handle('discover:create', async (evt, items) => {
     try { j = JSON.parse(text); } catch {}
     console.log('[discover:create] resp', resp.status, text.slice(0, 400));
     if (!resp.ok) return { ok: false, error: j?.error || `HTTP ${resp.status}: ${text.slice(0,200)}` };
-    return { ok: true, created: j.created || items.length };
+    // Dispara verificação/snapshot imediato pras câmeras recém criadas
+    try {
+      const { verificarCameras } = require('./cameras');
+      verificarCameras(cfg).then((rs) => {
+        console.log('[discover:create] snapshot inicial:', rs.length, 'câmera(s)');
+      }).catch((e) => console.error('[discover:create] snapshot inicial falhou', e.message));
+    } catch (e) {
+      console.error('[discover:create] verificarCameras indisponível', e.message);
+    }
+    return { ok: true, created: j.created || items.length, ids: j.ids || [] };
   } catch (e) {
     console.error('[discover:create] erro', e);
     return { ok: false, error: String(e.message || e) };
