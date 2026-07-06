@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import winAsset from "../../public/coletor/ColetorPilar-Setup.msi.asset.json";
+import coletorVersion from "../../public/coletor/version.json";
 import macAppleAsset from "../../public/coletor/PontoColetor-macOS-AppleSilicon.asset.json";
 import macIntelAsset from "../../public/coletor/PontoColetor-macOS-Intel.asset.json";
 import linuxAsset from "../../public/coletor/PontoColetor-Linux.asset.json";
