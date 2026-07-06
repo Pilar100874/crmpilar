@@ -1,4 +1,4 @@
-name: Build Coletor Pilar MSI
+name: Build Coletor Pilar Installer
 
 on:
   push:
@@ -45,23 +45,23 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Build MSI
+      - name: Build NSIS Installer (pt-BR)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder --win msi --x64 --publish never
+        run: npx electron-builder --win nsis --x64 --publish never
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ColetorPilar-Setup-msi
-          path: coletor/dist-installer/ColetorPilar-Setup.msi
+          name: ColetorPilar-Setup-exe
+          path: coletor/dist-installer/ColetorPilar-Setup.exe
 
       - name: Create / update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: coletor-v${{ steps.pkg.outputs.version }}
           name: Coletor Pilar v${{ steps.pkg.outputs.version }}
-          files: coletor/dist-installer/ColetorPilar-Setup.msi
+          files: coletor/dist-installer/ColetorPilar-Setup.exe
           fail_on_unmatched_files: true
           make_latest: true
         env:
@@ -73,7 +73,7 @@ jobs:
         run: |
           $version = "${{ steps.pkg.outputs.version }}"
           $repo = "${{ github.repository }}"
-          $url = "https://github.com/$repo/releases/download/coletor-v$version/ColetorPilar-Setup.msi"
+          $url = "https://github.com/$repo/releases/download/coletor-v$version/ColetorPilar-Setup.exe"
           $json = Get-Content public/coletor/version.json -Raw | ConvertFrom-Json
           $json.version = $version
           $json.downloadUrl = $url
@@ -88,6 +88,6 @@ jobs:
             echo "version.json unchanged"
           else
             git add public/coletor/version.json
-            git commit -m "chore(coletor): publish MSI v${{ steps.pkg.outputs.version }} [skip ci]"
+            git commit -m "chore(coletor): publish installer v${{ steps.pkg.outputs.version }} [skip ci]"
             git push
           fi
