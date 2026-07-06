@@ -168,6 +168,10 @@ class StreamSession {
     this.ffmpeg = null;
     this.udp = null;
     this.udpPort = 40000 + Math.floor(Math.random() * 20000);
+    this.rtpReceived = 0;
+    this.offerSent = false;
+    this.mode = 'copy'; // tenta copy primeiro; se falhar, reencoda
+    this.closed = false;
   }
 
   async start() {
@@ -181,38 +185,84 @@ class StreamSession {
     // UDP receiver para RTP do ffmpeg
     this.udp = dgram.createSocket('udp4');
     this.udp.on('message', (buf) => {
+      this.rtpReceived++;
       try { this.track.writeRtp(buf); } catch {}
+      if (!this.offerSent && this.rtpReceived > 3) {
+        this.offerSent = true;
+        this._sendOffer().catch((e) => console.error('[webrtc] offer err', e.message));
+      }
     });
     await new Promise((r) => this.udp.bind(this.udpPort, '127.0.0.1', r));
 
-    // Spawn ffmpeg
+    this._spawnFfmpeg();
+
+    // Fallback: 4s sem RTP em copy → reencoda
+    setTimeout(() => {
+      if (!this.closed && this.rtpReceived === 0 && this.mode === 'copy') {
+        console.log('[webrtc] sem RTP em copy, caindo para libx264', this.cam.nome);
+        this.mode = 'encode';
+        try { this.ffmpeg?.kill('SIGKILL'); } catch {}
+        this._spawnFfmpeg();
+      }
+    }, 4000);
+
+    // 10s sem nada → fecha
+    setTimeout(() => {
+      if (!this.closed && !this.offerSent) {
+        console.log('[webrtc] timeout sem RTP, fechando', this.cam.nome);
+        this.close();
+      }
+    }, 10000);
+  }
+
+  _spawnFfmpeg() {
     const rtsp = rtspUrlFor(this.cam);
-    console.log('[webrtc] start', this.cam.nome, '→ viewer', this.viewerId, 'udp', this.udpPort);
-    const args = [
+    console.log('[webrtc] start', this.cam.nome, 'mode=', this.mode, '→ viewer', this.viewerId, 'udp', this.udpPort);
+    const common = [
       '-rtsp_transport', 'tcp',
       '-fflags', 'nobuffer',
       '-flags', 'low_delay',
       '-i', rtsp,
       '-an',
-      '-c:v', 'libx264',
-      '-preset', 'ultrafast',
-      '-tune', 'zerolatency',
-      '-profile:v', 'baseline',
-      '-level', '3.1',
-      '-pix_fmt', 'yuv420p',
-      '-g', '30',
+    ];
+    const encArgs = this.mode === 'copy'
+      ? ['-c:v', 'copy', '-bsf:v', 'h264_mp4toannexb']
+      : [
+          '-c:v', 'libx264',
+          '-preset', 'ultrafast',
+          '-tune', 'zerolatency',
+          '-profile:v', 'baseline',
+          '-level', '3.1',
+          '-pix_fmt', 'yuv420p',
+          '-g', '30',
+          '-force_key_frames', 'expr:gte(t,n_forced*2)',
+        ];
+    const args = [
+      ...common,
+      ...encArgs,
       '-f', 'rtp',
       '-payload_type', '96',
       `rtp://127.0.0.1:${this.udpPort}?pkt_size=1200`,
     ];
     this.ffmpeg = spawn(ffmpegPath, args, { stdio: ['ignore', 'ignore', 'pipe'] });
-    this.ffmpeg.stderr.on('data', () => {});
+    this.ffmpeg.stderr.on('data', (d) => {
+      const s = d.toString();
+      if (/error|failed|unable|invalid|denied|refused|timeout|non-monotonous|codec|not.*found/i.test(s)) {
+        console.log('[ffmpeg]', this.cam.nome, s.trim());
+      }
+    });
     this.ffmpeg.on('exit', (code) => {
-      console.log('[webrtc] ffmpeg exit', code, this.cam.nome);
+      console.log('[webrtc] ffmpeg exit', code, this.cam.nome, 'mode=', this.mode, 'rtp=', this.rtpReceived);
+      if (!this.closed && this.mode === 'copy' && this.rtpReceived === 0) {
+        this.mode = 'encode';
+        this._spawnFfmpeg();
+        return;
+      }
       this.close();
     });
+  }
 
-    // Cria oferta e aguarda ICE gathering completo (non-trickle)
+  async _sendOffer() {
     const offer = await this.pc.createOffer();
     await this.pc.setLocalDescription(offer);
     await this._waitIce();
@@ -224,13 +274,14 @@ class StreamSession {
       camera_id: this.cam.id,
       sdp: this.pc.localDescription.sdp,
     });
+    console.log('[webrtc] oferta enviada', this.cam.nome);
   }
 
   _waitIce() {
     return new Promise((resolve) => {
       if (this.pc.iceGatheringState === 'complete') return resolve();
       this.pc.iceGatheringStateChange.subscribe((s) => { if (s === 'complete') resolve(); });
-      setTimeout(resolve, 3000); // fallback
+      setTimeout(resolve, 3000);
     });
   }
 
@@ -245,6 +296,8 @@ class StreamSession {
   }
 
   close() {
+    if (this.closed) return;
+    this.closed = true;
     try { this.ffmpeg?.kill('SIGKILL'); } catch {}
     try { this.udp?.close(); } catch {}
     try { this.pc?.close(); } catch {}
