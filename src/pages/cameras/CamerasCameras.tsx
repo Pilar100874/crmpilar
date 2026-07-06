@@ -75,10 +75,16 @@ export default function CamerasCameras() {
   const [bulkBusy, setBulkBusy] = useState(false);
   const [snapshots, setSnapshots] = useState<Record<string, string>>({});
   const [snapLoading, setSnapLoading] = useState<Set<string>>(new Set());
+  const [snapErrors, setSnapErrors] = useState<Record<string, string>>({});
 
   const fetchSnapshots = async (list: any[]) => {
     const queue = list.filter((c) => c.ativo);
     setSnapLoading(new Set(queue.map((c) => c.id)));
+    setSnapErrors((prev) => {
+      const n = { ...prev };
+      for (const c of queue) delete n[c.id];
+      return n;
+    });
     const workers = Array.from({ length: 4 }, async () => {
       while (queue.length) {
         const cam = queue.shift();
@@ -87,11 +93,16 @@ export default function CamerasCameras() {
           const { data, error } = await supabase.functions.invoke("cv-camera-snapshot", {
             body: { camera_id: cam.id },
           });
-          if (!error) {
-            const url = (data as any)?.signed_url;
-            if (url) setSnapshots((s) => ({ ...s, [cam.id]: url }));
+          const url = (data as any)?.signed_url;
+          const errMsg = error?.message || (data as any)?.error;
+          if (url) {
+            setSnapshots((s) => ({ ...s, [cam.id]: url }));
+          } else if (errMsg) {
+            setSnapErrors((s) => ({ ...s, [cam.id]: String(errMsg) }));
           }
-        } catch {}
+        } catch (e: any) {
+          setSnapErrors((s) => ({ ...s, [cam.id]: e?.message || "Falha ao capturar snapshot" }));
+        }
         setSnapLoading((s) => {
           const n = new Set(s);
           n.delete(cam.id);
