@@ -144,6 +144,18 @@ const baixar = (file: string, url: string) => {
 };
 
 export default function AdminApps() {
+  const [coletorInfo, setColetorInfo] = useState<{ version: string; downloadUrl: string; notas?: string } | null>(null);
+
+  useEffect(() => {
+    fetch("/coletor/version.json", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => data && setColetorInfo(data))
+      .catch(() => {});
+  }, []);
+
+  const coletorFileName = coletorInfo?.downloadUrl?.split("/").pop() || "ColetorPilar-Setup.msi";
+  const coletorUrl = coletorInfo?.downloadUrl || coletorMsiAsset.url;
+
   return (
     <div className="mx-auto max-w-6xl space-y-5 p-3 sm:space-y-6 sm:p-6 md:p-8">
       <div>
@@ -241,7 +253,7 @@ export default function AdminApps() {
               <Monitor className="h-8 w-8" />
             </div>
             <span className="rounded-full border bg-muted px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:px-3 sm:text-xs">
-              Windows · MSI
+              Windows · Instalador
             </span>
           </div>
 
@@ -265,17 +277,22 @@ export default function AdminApps() {
           <div className="flex flex-col gap-3 rounded-2xl bg-foreground p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:p-2 sm:pl-4">
             <div className="flex min-w-0 flex-col">
               <span className="text-[10px] font-bold uppercase tracking-widest text-background/60">
-                Instalador Windows
+                Instalador Windows {coletorInfo?.version ? `· v${coletorInfo.version}` : ""}
               </span>
-              <span className="truncate font-mono text-xs text-background sm:text-sm">ColetorPilar-Setup.msi</span>
+              <span className="truncate font-mono text-xs text-background sm:text-sm">{coletorFileName}</span>
             </div>
             <Button
-              onClick={() => baixar("ColetorPilar-Setup.msi", coletorMsiAsset.url)}
+              onClick={() => baixar(coletorFileName, coletorUrl)}
               className="w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold transition-colors sm:w-auto sm:px-6 bg-purple-500 hover:bg-purple-400 text-white"
             >
               <Download className="mr-2 h-4 w-4" /> Baixar Coletor
             </Button>
           </div>
+          {coletorInfo?.notas && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              <b>Novidades:</b> {coletorInfo.notas}
+            </p>
+          )}
         </CardContent>
 
         <div className="border-t bg-muted/40 p-5 sm:p-7 md:p-8">
@@ -285,7 +302,7 @@ export default function AdminApps() {
           <ol className="space-y-4">
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">1</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">Baixe e execute o <b>ColetorPilar-Setup.msi</b> em um PC Windows que fique <b>ligado 24/7</b> na mesma rede das câmeras e relógios de ponto.</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">Baixe e execute o <b>{coletorFileName}</b> em um PC Windows que fique <b>ligado 24/7</b> na mesma rede das câmeras e relógios de ponto.</p>
             </li>
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">2</span>
