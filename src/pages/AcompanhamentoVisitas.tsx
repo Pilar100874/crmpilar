@@ -143,7 +143,10 @@ const AcompanhamentoVisitas: React.FC = () => {
           </h1>
           <p className="text-sm text-muted-foreground">Verifique visitas planejadas, realizadas e não realizadas.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={detectarEspontaneas} disabled={detectando}>
+            <Zap className={`h-4 w-4 mr-2 ${detectando ? "animate-pulse" : ""}`} /> Detectar espontâneas
+          </Button>
           <Button variant="outline" onClick={verificarAgora} disabled={verificando}>
             <RefreshCw className={`h-4 w-4 mr-2 ${verificando ? "animate-spin" : ""}`} /> Verificar agora
           </Button>
