@@ -180,4 +180,46 @@ ipcMain.handle('collector:setFilial', (evt, id, nome) => {
   try { startCollector(); } catch {}
   return getStatus();
 });
+
+// ─── Descoberta de câmeras na rede local ──────────────────────────
+const { discover, detectLocalSubnets } = require('./discover-cameras');
+ipcMain.handle('discover:subnet', () => {
+  try { return { subnets: detectLocalSubnets() }; }
+  catch (e) { return { subnets: [], error: String(e.message || e) }; }
+});
+ipcMain.handle('discover:cameras', async (evt, opts) => {
+  const marcas = Array.isArray(opts?.marcas) ? opts.marcas : [];
+  const user = String(opts?.user || '');
+  const senha = String(opts?.senha || '');
+  return await discover({
+    marcas, user, senha,
+    onProgress: (done, total) => {
+      try { evt.sender.send('discover:progress', { done, total }); } catch {}
+    },
+  });
+});
+ipcMain.handle('discover:create', async (evt, items) => {
+  try {
+    const cfg = loadConfig();
+    if (!Array.isArray(items) || !items.length) return { ok: false, error: 'nenhuma câmera' };
+    const resp = await fetch(`${cfg.url}/functions/v1/cv-coletor-cameras`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: cfg.anonKey,
+        Authorization: `Bearer ${cfg.anonKey}`,
+      },
+      body: JSON.stringify({
+        action: 'bulk_create_cameras',
+        filial_id: cfg.filialId || null,
+        cameras: items,
+      }),
+    });
+    const j = await resp.json().catch(() => ({}));
+    if (!resp.ok) return { ok: false, error: j?.error || `HTTP ${resp.status}` };
+    return { ok: true, created: j.created || items.length };
+  } catch (e) {
+    return { ok: false, error: String(e.message || e) };
+  }
+});
 // trigger build
