@@ -357,6 +357,7 @@
           </div>
           <div style="padding:20px 22px;">
             <div id="discoverStep1">
+              <div id="discFilialInfo" style="padding:10px 12px; background:#F1F5F9; border-radius:8px; font-size:13px; color:var(--text-2); margin-bottom:14px;">🏢 Carregando filial…</div>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
                 <div style="grid-column:1/-1;">
                   <label style="font-size:12px; color:var(--text-2); font-weight:600;">Fabricantes a procurar</label>
@@ -592,6 +593,17 @@
       document.getElementById('discoverStep1').style.display = 'block';
       document.getElementById('discoverStep2').style.display = 'none';
       document.getElementById('discoverStep3').style.display = 'none';
+      // Mostra a filial que será usada na criação
+      try{
+        const st = await window.coletor.getStatus();
+        const nome = st?.config?.filialNome || st?.config?.filialId || null;
+        const el = document.getElementById('discFilialInfo');
+        if (el){
+          if (nome) el.innerHTML = `🏢 As câmeras serão criadas na filial: <b>${nome}</b>`;
+          else el.innerHTML = `⚠ Nenhuma filial definida neste coletor. <b>Selecione a filial na tela principal antes de continuar</b> — o CRM exige filial para vincular as câmeras.`;
+          el.style.color = nome ? 'var(--text-2)' : 'var(--danger)';
+        }
+      }catch{}
       try{
         const info = await window.coletor.discoverSubnet();
         const hint = document.getElementById('discSubnetHint');
@@ -616,6 +628,13 @@
       const senha = document.getElementById('discPass').value;
       if (!marcas.length){ alert('Selecione ao menos um fabricante'); return; }
       if (!user){ alert('Informe o usuário'); return; }
+      try{
+        const st = await window.coletor.getStatus();
+        if (!st?.config?.filialId){
+          alert('Selecione a filial deste coletor na tela principal antes de descobrir câmeras. As câmeras encontradas serão criadas vinculadas a essa filial.');
+          return;
+        }
+      }catch{}
       document.getElementById('discoverStep1').style.display='none';
       document.getElementById('discoverStep2').style.display='block';
       document.getElementById('discProgressBar').style.width='0%';
