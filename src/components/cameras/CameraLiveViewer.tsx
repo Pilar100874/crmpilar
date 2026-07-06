@@ -112,6 +112,23 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Pr
         await new Promise((r) => setTimeout(r, 200));
       }
 
+      // Fallback: se o heartbeat via Realtime não chegou, consulta o status
+      // que o Coletor reporta ao servidor via cv-coletor-cameras/report_status.
+      if (!coletorSeenAt) {
+        try {
+          const { data: cam } = await supabase
+            .from("cv_cameras")
+            .select("ultimo_status,ultima_verificacao")
+            .eq("id", cameraId)
+            .maybeSingle();
+          const seenMs = cam?.ultima_verificacao ? Date.now() - new Date(cam.ultima_verificacao).getTime() : Infinity;
+          if (cam?.ultimo_status === "online" && seenMs < 120_000) {
+            coletorSeenAt = Date.now();
+            coletorServesCamera = true;
+          }
+        } catch {}
+      }
+
       if (!coletorSeenAt) {
         if (!closed) {
           setErro("Coletor Desktop offline ou sem módulo de câmeras ativado");
@@ -119,13 +136,8 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Pr
         }
         return;
       }
-      if (!coletorServesCamera) {
-        if (!closed) {
-          setErro("Câmera não está atribuída à filial deste Coletor");
-          setStatus("erro");
-        }
-        return;
-      }
+      // Se heartbeat chegou mas a câmera não estava na lista, ainda tenta:
+      // pode ser diferença momentânea de filial; o Coletor ignora se não servir.
 
       sendAll({ type: "request", to: "coletor", viewer_id: viewerId, camera_id: cameraId });
 
