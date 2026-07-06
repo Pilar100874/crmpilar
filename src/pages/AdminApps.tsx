@@ -263,11 +263,11 @@ export default function AdminApps() {
             </>
           }
           fileLabelBadge="Instalador"
-          fileName="ColetorPilar-Setup.msi"
-          onDownload={() => baixar("ColetorPilar-Setup.msi", coletorVersion.downloadUrl)}
-          downloadButtonText="Baixar .msi"
+          fileName="ColetorPilar-Setup.exe"
+          onDownload={() => baixar("ColetorPilar-Setup.exe", coletorVersion.downloadUrl)}
+          downloadButtonText="Baixar instalador"
           steps={[
-            { text: <>Baixe o <b>ColetorPilar-Setup.msi</b> acima e execute com dois cliques. Se o SmartScreen alertar, clique em <b>Mais informações → Executar assim mesmo</b>.</> },
+            { text: <>Baixe o <b>ColetorPilar-Setup.exe</b> acima e execute com dois cliques. Se o SmartScreen alertar, clique em <b>Mais informações → Executar assim mesmo</b>.</> },
             { text: <>Abra o app pelo <b>Menu Iniciar → Coletor Pilar</b> (ele também abre sozinho no próximo boot).</> },
             { text: <>Cole a <b>URL do backend</b> e a <b>Chave Anon</b> mostradas acima, e faça login com seu usuário do CRM.</> },
             { text: <>Ative os módulos que você vai usar (Ponto e/ou Câmeras) usando os interruptores acima nesta tela.</> },
