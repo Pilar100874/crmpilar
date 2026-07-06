@@ -37,8 +37,8 @@ Deno.serve(async (req) => {
     let segmentoId: string | null = null;
     if (customerId) {
       const { data: cli } = await supabase
-        .from("customers").select("segmento_id").eq("id", customerId).maybeSingle();
-      segmentoId = cli?.segmento_id ?? null;
+        .from("customers").select("empresa_id, empresas(segmento_id)").eq("id", customerId).maybeSingle();
+      segmentoId = (cli as any)?.empresas?.segmento_id ?? null;
     }
 
     const { data: regras } = await supabase
