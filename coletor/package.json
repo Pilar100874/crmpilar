@@ -27,6 +27,12 @@
       "output": "dist-installer",
       "buildResources": "build"
     },
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/werift/**/*",
+      "node_modules/@shinyoshiaki/**/*",
+      "node_modules/ffmpeg-static/**/*"
+    ],
     "files": [
       "**/*",
       "!dist-installer${/*}"
