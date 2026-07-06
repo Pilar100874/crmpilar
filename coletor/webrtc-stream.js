@@ -6,6 +6,11 @@ const dgram = require('dgram');
 const { spawn } = require('child_process');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
+let WebSocketTransport = null;
+try {
+  const ws = require('ws');
+  WebSocketTransport = ws.WebSocket || ws;
+} catch {}
 const {
   RTCPeerConnection,
   MediaStreamTrack,
@@ -54,7 +59,10 @@ class SignalHub {
     this.myCameraIds = new Set(myCameraIds);
     this.sessions = new Map(); // key: `${camera_id}:${viewer_id}` → session
     this.supabase = createClient(cfg.url, cfg.anonKey, {
-      realtime: { params: { eventsPerSecond: 20 } },
+      realtime: {
+        params: { eventsPerSecond: 20 },
+        ...(WebSocketTransport ? { transport: WebSocketTransport } : {}),
+      },
     });
     this.channels = [];
   }
