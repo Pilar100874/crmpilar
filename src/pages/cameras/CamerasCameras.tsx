@@ -429,8 +429,35 @@ export default function CamerasCameras() {
                     aria-label="Selecionar câmera"
                   />
                   <Camera className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span className="truncate">{r.nome}</span>
-
+                  {editingNameId === r.id ? (
+                    <Input
+                      autoFocus
+                      className="h-7 text-sm px-2 py-0 min-w-0 flex-1"
+                      value={editingNameValue}
+                      onChange={(e) => setEditingNameValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") commitRename(r.id);
+                        if (e.key === "Escape") cancelRename();
+                      }}
+                      onBlur={() => commitRename(r.id)}
+                    />
+                  ) : (
+                    <span className="truncate">{r.nome}</span>
+                  )}
+                  {editingNameId !== r.id && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startRename(r.id, r.nome);
+                      }}
+                      aria-label="Renomear"
+                    >
+                      <Edit className="h-3 w-3 text-muted-foreground" />
+                    </Button>
+                  )}
                 </span>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <StatusPingDot
