@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import winAsset from "../../public/coletor/ColetorPilar-Setup.msi.asset.json";
+import coletorVersion from "../../public/coletor/version.json";
 import macAppleAsset from "../../public/coletor/PontoColetor-macOS-AppleSilicon.asset.json";
 import macIntelAsset from "../../public/coletor/PontoColetor-macOS-Intel.asset.json";
 import linuxAsset from "../../public/coletor/PontoColetor-Linux.asset.json";
@@ -264,7 +264,7 @@ export default function AdminApps() {
           }
           fileLabelBadge="Instalador"
           fileName="ColetorPilar-Setup.msi"
-          onDownload={() => baixar("ColetorPilar-Setup.msi", winAsset.url)}
+          onDownload={() => baixar("ColetorPilar-Setup.msi", coletorVersion.downloadUrl)}
           downloadButtonText="Baixar .msi"
           steps={[
             { text: <>Baixe o <b>ColetorPilar-Setup.msi</b> acima e execute com dois cliques. Se o SmartScreen alertar, clique em <b>Mais informações → Executar assim mesmo</b>.</> },
