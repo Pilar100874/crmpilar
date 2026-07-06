@@ -20352,12 +20352,14 @@ export type Database = {
         Row: {
           anexos: Json | null
           created_at: string
+          empresa_id: string | null
           estabelecimento_id: string
           formulario_id: string
           id: string
           lat: number | null
           lng: number | null
-          ocorrencia_id: string
+          ocorrencia_id: string | null
+          origem_preenchimento: string
           preenchido_em: string
           preenchido_por: string | null
           respostas: Json
@@ -20366,12 +20368,14 @@ export type Database = {
         Insert: {
           anexos?: Json | null
           created_at?: string
+          empresa_id?: string | null
           estabelecimento_id: string
           formulario_id: string
           id?: string
           lat?: number | null
           lng?: number | null
-          ocorrencia_id: string
+          ocorrencia_id?: string | null
+          origem_preenchimento?: string
           preenchido_em?: string
           preenchido_por?: string | null
           respostas?: Json
@@ -20380,18 +20384,27 @@ export type Database = {
         Update: {
           anexos?: Json | null
           created_at?: string
+          empresa_id?: string | null
           estabelecimento_id?: string
           formulario_id?: string
           id?: string
           lat?: number | null
           lng?: number | null
-          ocorrencia_id?: string
+          ocorrencia_id?: string | null
+          origem_preenchimento?: string
           preenchido_em?: string
           preenchido_por?: string | null
           respostas?: Json
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "visita_formulario_respostas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "visita_formulario_respostas_formulario_id_fkey"
             columns: ["formulario_id"]

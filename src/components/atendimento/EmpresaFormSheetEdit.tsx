@@ -14,6 +14,7 @@ import { maskCNPJ, maskCPF, maskCEP, maskPhone, maskWhatsApp } from "@/lib/masks
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { useAddressLookup } from "@/hooks/useAddressLookup";
+import { EmpresaFormulariosTab } from "@/components/empresas/EmpresaFormulariosTab";
 
 interface EmpresaFormSheetEditProps {
   open: boolean;
@@ -366,10 +367,11 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid grid-cols-3 mb-4">
+                <TabsList className="grid grid-cols-4 mb-4">
                   <TabsTrigger value="empresa">Empresa</TabsTrigger>
                   <TabsTrigger value="segmentos">Segmentos *</TabsTrigger>
                   <TabsTrigger value="contatos">Contatos</TabsTrigger>
+                  <TabsTrigger value="formularios">Formulários</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="empresa" className="space-y-4">
@@ -636,6 +638,10 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
                       </div>
                     </Card>
                   )}
+                </TabsContent>
+
+                <TabsContent value="formularios" className="space-y-4">
+                  <EmpresaFormulariosTab empresaId={empresaId} />
                 </TabsContent>
               </Tabs>
             </div>
