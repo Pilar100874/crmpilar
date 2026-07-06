@@ -2,265 +2,489 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <title>Ponto Coletor</title>
+  <title>Coletor Pilar</title>
   <style>
-    * { box-sizing: border-box; }
-    body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; padding: 24px; background:#0f172a; color:#e2e8f0; }
-    h1 { font-size: 20px; margin: 0 0 16px; }
-    h3 { margin: 0 0 10px; font-size:15px; }
-    .card { background:#1e293b; border-radius:12px; padding:18px; margin-bottom:14px; }
-    .grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; }
-    .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
-    .stat { background:#0f172a; padding:14px; border-radius:8px; }
-    .stat .label { font-size:11px; color:#94a3b8; text-transform:uppercase; }
-    .stat .value { font-size:22px; font-weight:700; margin-top:4px; }
-    button { background:#334155; color:#e2e8f0; border:1px solid #475569; padding:8px 14px; border-radius:6px; cursor:pointer; margin-right:6px; transition:all .15s; font-weight:500; }
-    button:hover { background:#475569; }
-    .switch { position:relative; display:inline-flex; align-items:center; gap:10px; cursor:pointer; user-select:none; }
-    .switch input { position:absolute; opacity:0; pointer-events:none; }
-    .track { width:42px; height:22px; background:#475569; border-radius:999px; position:relative; transition:.2s; }
-    .track::after { content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; background:white; border-radius:50%; transition:.2s; }
-    .switch input:checked + .track { background:#22c55e; }
-    .switch input:checked + .track::after { transform:translateX(20px); }
-    .ok { color:#22c55e; } .err { color:#ef4444; } .warn { color:#f59e0b; }
-    .badge { display:inline-block; padding:2px 8px; border-radius:999px; background:#22c55e22; color:#22c55e; font-size:11px; margin-left:6px; }
-    .badge-off { background:#64748b22; color:#94a3b8; }
-    .muted { color:#94a3b8; font-size:12px; margin-top:8px; }
-    .row { display:flex; align-items:center; justify-content:space-between; padding:8px 10px; border-radius:6px; background:#0f172a; margin-bottom:6px; font-size:13px; }
-    .row .meta { color:#94a3b8; font-size:11px; }
-    .pill { padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600; }
-    .pill-on { background:#22c55e22; color:#22c55e; }
-    .pill-off { background:#ef444422; color:#ef4444; }
-    .pill-lan { background:#3b82f622; color:#3b82f6; }
-    .pill-pub { background:#a855f722; color:#a855f7; }
+    /* ─── Paleta importada do APK Pilar SMS ─────────────────────────── */
+    :root{
+      --brand:        #0B1E3F;
+      --brand-dark:   #061128;
+      --brand-soft:   #1a3057;
+      --accent:       #F59E0B;
+      --accent-dark:  #B45309;
+      --page:         #F5F7FB;
+      --card:         #FFFFFF;
+      --text:         #0F172A;
+      --text-2:       #64748B;
+      --muted:        #94A3B8;
+      --stroke:       #E2E8F0;
+      --success:      #16A34A; --success-bg:#DCFCE7;
+      --danger:       #DC2626; --danger-bg:#FEE2E2;
+      --warning:      #D97706; --warning-bg:#FEF3C7;
+      --info:         #2563EB; --info-bg:#DBEAFE;
+      --header-h:     220px;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ margin:0; padding:0; background:var(--page); color:var(--text); }
+    body{ font-family:-apple-system,'Segoe UI',Roboto,Inter,sans-serif; font-size:14px; line-height:1.4; padding-bottom:32px; }
+
+    /* ─── HEADER estilo APK ─────────────────────────────────────────── */
+    .app-header{
+      position:relative;
+      background:linear-gradient(160deg, var(--brand) 0%, var(--brand-dark) 100%);
+      color:#fff;
+      padding:26px 24px 56px;
+      border-bottom-left-radius:0;
+    }
+    .app-header::after{
+      /* faixa decorativa âmbar sutil */
+      content:''; position:absolute; left:0; right:0; bottom:36px; height:2px;
+      background:linear-gradient(90deg, transparent, rgba(245,158,11,.55), transparent);
+    }
+    .hdr-top{ display:flex; align-items:center; justify-content:space-between; }
+    .hdr-brand{ display:flex; align-items:center; gap:12px; }
+    .hdr-brand img{ height:38px; width:auto; display:block; filter:brightness(0) invert(1); }
+    .hdr-brand .divider{ width:1px; height:26px; background:rgba(255,255,255,.25); }
+    .hdr-brand .product{
+      font-size:13px; letter-spacing:.18em; text-transform:uppercase;
+      color:#B8C7E0; font-weight:600;
+    }
+    .hdr-actions button.icon-btn{
+      background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
+      color:#fff; width:36px; height:36px; border-radius:10px; cursor:pointer;
+      display:inline-flex; align-items:center; justify-content:center; margin-left:6px;
+      transition:.15s;
+    }
+    .hdr-actions button.icon-btn:hover{ background:rgba(255,255,255,.16); }
+    .hdr-actions button.icon-btn svg{ width:16px; height:16px; }
+
+    .hdr-subtitle{
+      margin-top:14px; font-size:13px; letter-spacing:.15em;
+      text-transform:uppercase; color:#B8C7E0; font-weight:500;
+    }
+    .status-pill{
+      display:inline-flex; align-items:center; gap:8px;
+      margin-top:14px; padding:8px 14px;
+      background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.14);
+      border-radius:999px; color:#fff; font-weight:700; font-size:13px;
+    }
+    .status-pill .dot{
+      width:10px; height:10px; border-radius:50%; background:var(--muted);
+      box-shadow:0 0 0 4px rgba(255,255,255,.06);
+    }
+    .status-pill.on  .dot{ background:#22c55e; box-shadow:0 0 0 4px rgba(34,197,94,.18); }
+    .status-pill.off .dot{ background:#ef4444; box-shadow:0 0 0 4px rgba(239,68,68,.18); }
+    .hdr-hint{ margin-top:10px; font-size:12px; color:#B8C7E0; }
+    .hdr-version{
+      position:absolute; right:24px; bottom:14px;
+      font-size:11px; color:#B8C7E0; letter-spacing:.05em;
+    }
+
+    /* ─── LAYOUT ────────────────────────────────────────────────────── */
+    .container{ max-width:960px; margin:0 auto; padding:0 16px; }
+    .stack{ margin-top:-32px; display:flex; flex-direction:column; gap:14px; }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--stroke);
+      border-radius:14px;
+      padding:18px;
+      box-shadow:0 6px 20px -12px rgba(11,30,63,.18);
+    }
+    .card-title{
+      display:flex; align-items:center; gap:8px;
+      font-size:14px; font-weight:700; color:var(--text); margin:0 0 12px;
+    }
+    .card-title .ico{
+      width:28px; height:28px; border-radius:8px;
+      background:var(--info-bg); color:var(--info);
+      display:inline-flex; align-items:center; justify-content:center;
+      font-size:14px;
+    }
+    .card-title .ico.amber{ background:#FEF3C7; color:var(--accent-dark); }
+    .card-title .ico.green{ background:var(--success-bg); color:var(--success); }
+    .card-title .ico.red  { background:var(--danger-bg);  color:var(--danger); }
+
+    /* Stat cards flutuantes (2 colunas) */
+    .stat-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .stat{
+      background:var(--card); border:1px solid var(--stroke); border-radius:14px;
+      padding:16px; box-shadow:0 6px 20px -12px rgba(11,30,63,.18);
+    }
+    .stat .label{
+      font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:600;
+    }
+    .stat .value{ font-size:26px; font-weight:800; margin-top:4px; color:var(--text); }
+    .stat .value.ok  { color:var(--success); }
+    .stat .value.bad { color:var(--danger); }
+    .stat .sub{ font-size:12px; color:var(--text-2); margin-top:4px; }
+
+    /* Módulos on/off */
+    .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .module{
+      background:var(--card); border:1px solid var(--stroke); border-radius:14px;
+      padding:18px; box-shadow:0 6px 20px -12px rgba(11,30,63,.18);
+    }
+    .module-head{ display:flex; align-items:center; justify-content:space-between; }
+    .module-head .t{ display:flex; align-items:center; gap:10px; font-weight:700; }
+    .module .status-line{
+      margin-top:12px; padding:10px 12px; background:var(--page);
+      border:1px solid var(--stroke); border-radius:10px;
+      font-size:13px; display:flex; align-items:center; gap:8px;
+    }
+    .module .meta{ margin-top:10px; font-size:12px; color:var(--text-2); line-height:1.6; }
+
+    /* Switch */
+    .switch{ position:relative; display:inline-flex; align-items:center; cursor:pointer; }
+    .switch input{ position:absolute; opacity:0; pointer-events:none; }
+    .track{ width:42px; height:24px; background:#CBD5E1; border-radius:999px; position:relative; transition:.2s; }
+    .track::after{ content:''; position:absolute; top:2px; left:2px; width:20px; height:20px; background:#fff; border-radius:50%; transition:.2s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+    .switch input:checked + .track{ background:var(--success); }
+    .switch input:checked + .track::after{ transform:translateX(18px); }
+
+    /* Botões */
+    button.btn{
+      background:var(--brand); color:#fff; border:0; padding:9px 14px;
+      border-radius:10px; cursor:pointer; font-weight:600; font-size:13px;
+      transition:.15s; display:inline-flex; align-items:center; gap:6px;
+    }
+    button.btn:hover{ background:var(--brand-soft); }
+    button.btn.ghost{ background:#fff; color:var(--brand); border:1px solid var(--stroke); }
+    button.btn.ghost:hover{ background:var(--page); }
+    button.btn.accent{ background:var(--accent); color:#fff; }
+    button.btn.accent:hover{ background:var(--accent-dark); }
+    button.btn.success{ background:var(--success); }
+    button.btn.success:hover{ background:#15803D; }
+    button.btn:disabled{ opacity:.6; cursor:default; }
+
+    /* Rows equipamentos / câmeras */
+    .row{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 14px; border:1px solid var(--stroke); border-radius:10px;
+      background:#fff; margin-bottom:8px;
+    }
+    .row .title{ font-weight:600; color:var(--text); font-size:13px; }
+    .row .meta { color:var(--text-2); font-size:11px; margin-top:2px; }
+    .pill{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:4px 10px; border-radius:999px; font-size:11px; font-weight:700;
+      text-transform:uppercase; letter-spacing:.06em;
+    }
+    .pill::before{ content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
+    .pill-on { background:var(--success-bg); color:var(--success); }
+    .pill-off{ background:var(--danger-bg);  color:var(--danger); }
+    .pill-lan{ background:var(--info-bg);    color:var(--info); }
+    .pill-pub{ background:#F3E8FF;           color:#7C3AED; }
+    .pill-warn{ background:var(--warning-bg); color:var(--warning); }
+
+    .muted{ color:var(--text-2); font-size:12px; }
+    .err  { color:var(--danger); }
+    .ok   { color:var(--success); }
+    .empty{
+      padding:24px; text-align:center; color:var(--muted); font-style:italic;
+      border:1px dashed var(--stroke); border-radius:10px; background:var(--page);
+    }
+
+    /* Filial cards */
+    .filial-select{
+      background:#fff; color:var(--text); border:1px solid var(--stroke);
+      padding:10px 12px; border-radius:10px; min-width:280px; font-size:13px;
+    }
+    .banner{ border-left:4px solid var(--accent); }
+    .banner-update{ border-left:4px solid var(--success); }
+
+    /* Update progress */
+    .progress{ margin-top:10px; height:6px; background:var(--stroke); border-radius:999px; overflow:hidden; }
+    .progress > span{ display:block; height:100%; background:linear-gradient(90deg, var(--success), #4ade80); width:0%; transition:.3s; }
+
+    /* Divider dentro do card */
+    .divider-h{ height:1px; background:var(--stroke); margin:12px 0; }
   </style>
 </head>
 <body>
-  <h1>🕒 Coletor Desktop <span class="badge" id="verLabel">v—</span> <span class="badge badge-off" id="updBadge" style="display:none">atualização disponível</span></h1>
 
-  <!-- Seletor de filial obrigatório -->
-  <div class="card" id="filialCard" style="display:none; border:1px solid #f59e0b55">
-    <h3>🏢 Selecione a filial deste computador</h3>
-    <p class="muted" style="margin-top:0">
-      Cada filial deve ser selecionada aqui — assim o coletor só acessa relógios e câmeras daquela filial,
-      mesmo quando IPs internos se repetem em outras lojas.
-    </p>
-    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
-      <select id="filialSelect" style="background:#0f172a; color:#e2e8f0; border:1px solid #475569; padding:8px 10px; border-radius:6px; min-width:280px">
-        <option value="">— carregando —</option>
-      </select>
-      <button onclick="salvarFilial()" style="background:#22c55e; border-color:#16a34a; color:white">Confirmar filial</button>
-    </div>
-  </div>
+  <!-- ─── HEADER ─────────────────────────────────────────────────────── -->
+  <header class="app-header">
+    <div class="container" style="padding:0 8px;">
+      <div class="hdr-top">
+        <div class="hdr-brand">
+          <img src="logo_pilar.png" alt="Pilar" />
+          <span class="divider"></span>
+          <span class="product">Coletor</span>
+        </div>
+        <div class="hdr-actions">
+          <button class="icon-btn" title="Abrir DevTools (logs)" onclick="window.coletor.openDevTools && window.coletor.openDevTools()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </button>
+          <button class="icon-btn" title="Abrir pasta de logs" onclick="window.coletor.openLogsFolder && window.coletor.openLogsFolder()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          </button>
+          <button class="icon-btn" title="Verificar atualização" onclick="verificarAtualizacao()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
+        </div>
+      </div>
 
-  <div class="card" id="filialInfo" style="display:none">
-    <div style="display:flex; justify-content:space-between; align-items:center">
-      <div>
-        <b>🏢 Filial ativa:</b> <span id="filialAtualNome">—</span>
-      </div>
-      <button onclick="trocarFilial()">Trocar filial</button>
-    </div>
-  </div>
+      <div class="hdr-subtitle">Coletor Desktop · Ponto & Câmeras</div>
 
-  <div class="card" id="updCard" style="display:none; border:1px solid #22c55e55">
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap">
-      <div>
-        <b>🚀 Nova versão disponível: <span id="updRemote">—</span></b>
-        <div class="muted" id="updNotas"></div>
+      <div id="globalStatusPill" class="status-pill">
+        <span class="dot"></span>
+        <span id="globalStatusText">Iniciando…</span>
       </div>
-      <div>
-        <button onclick="instalarAtualizacao()" id="updBtn" style="background:#22c55e; border-color:#16a34a; color:white">Baixar e instalar</button>
-      </div>
-    </div>
-    <div class="muted" id="updProgress" style="display:none; margin-top:8px">Baixando… <b id="updPct">0</b>%</div>
-  </div>
 
-  <div class="grid2">
-    <!-- CARD PONTO -->
-    <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center">
-        <h3>⏱️ Coletor de Ponto</h3>
-        <label class="switch">
-          <input type="checkbox" id="togglePonto" onchange="togglePonto(this.checked)">
-          <span class="track"></span>
-        </label>
-      </div>
-      <div class="stat" style="margin-top:10px">
-        <div class="label">Status</div>
-        <div class="value" id="pontoStatus" style="font-size:16px">—</div>
-      </div>
-      <div class="muted">
-        Última sync: <span id="lastSync">—</span><br/>
-        Batidas enviadas: <b id="totalSent">0</b>
+      <div class="hdr-hint" id="globalHint">Aguardando serviços…</div>
+
+      <div class="hdr-version">
+        <span id="verLabel">v—</span>
       </div>
     </div>
+  </header>
 
-    <!-- CARD CAMERAS -->
-    <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center">
-        <h3>📷 Coletor de Câmeras</h3>
-        <label class="switch">
-          <input type="checkbox" id="toggleCameras" onchange="toggleCameras(this.checked)">
-          <span class="track"></span>
-        </label>
+  <!-- ─── CONTEÚDO ───────────────────────────────────────────────────── -->
+  <div class="container">
+    <div class="stack">
+
+      <!-- Filial obrigatória -->
+      <div class="card banner" id="filialCard" style="display:none;">
+        <div class="card-title"><span class="ico amber">🏢</span> Selecione a filial deste computador</div>
+        <p class="muted" style="margin:0 0 10px">
+          Cada filial precisa ser vinculada aqui — assim o coletor só acessa relógios e câmeras daquela filial,
+          mesmo quando IPs internos se repetem em outras lojas.
+        </p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <select id="filialSelect" class="filial-select"><option value="">— carregando —</option></select>
+          <button class="btn success" onclick="salvarFilial()">Confirmar filial</button>
+        </div>
       </div>
-      <div class="stat" style="margin-top:10px">
-        <div class="label">Status</div>
-        <div class="value" id="camerasStatus" style="font-size:16px">—</div>
+
+      <!-- Filial ativa -->
+      <div class="card" id="filialInfo" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="ico" style="width:32px;height:32px;border-radius:10px;background:var(--info-bg);color:var(--info);display:inline-flex;align-items:center;justify-content:center;">🏢</span>
+            <div>
+              <div class="muted" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;">Filial ativa</div>
+              <div style="font-weight:700;font-size:15px;" id="filialAtualNome">—</div>
+            </div>
+          </div>
+          <button class="btn ghost" onclick="trocarFilial()">Trocar filial</button>
+        </div>
       </div>
-      <div class="muted">
-        Última verificação: <span id="lastSyncCameras">—</span><br/>
-        Verifica conectividade das câmeras LAN a cada 30s.
+
+      <!-- Update disponível -->
+      <div class="card banner-update" id="updCard" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+          <div>
+            <div style="font-weight:700;">🚀 Nova versão disponível: <span id="updRemote">—</span></div>
+            <div class="muted" id="updNotas" style="margin-top:2px;"></div>
+          </div>
+          <button class="btn success" onclick="instalarAtualizacao()" id="updBtn">Baixar e instalar</button>
+        </div>
+        <div id="updProgress" style="display:none;">
+          <div class="muted" style="margin-top:10px;">Baixando… <b id="updPct">0</b>%</div>
+          <div class="progress"><span id="updBar"></span></div>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
-      <h3 style="margin:0">🖥️ Equipamentos de ponto</h3>
-      <button onclick="refreshNow()">↻ Verificar agora</button>
-    </div>
-    <div id="equips">—</div>
-  </div>
+      <!-- Stat cards flutuantes -->
+      <div class="stat-row">
+        <div class="stat">
+          <div class="label">Batidas enviadas</div>
+          <div class="value ok" id="totalSent">0</div>
+          <div class="sub">Última sync: <span id="lastSync">—</span></div>
+        </div>
+        <div class="stat">
+          <div class="label">Câmeras online</div>
+          <div class="value" id="camsOnline">0<span style="color:var(--muted);font-weight:600;font-size:14px;" id="camsTotalWrap"> / <span id="camsTotal">0</span></span></div>
+          <div class="sub">Última verificação: <span id="lastSyncCameras">—</span></div>
+        </div>
+      </div>
 
-  <div class="card">
-    <h3>📹 Câmeras cadastradas</h3>
-    <div id="cameras">—</div>
-  </div>
+      <!-- Módulos on/off -->
+      <div class="grid2">
+        <div class="module">
+          <div class="module-head">
+            <div class="t"><span class="ico amber" style="width:28px;height:28px;border-radius:8px;background:#FEF3C7;color:var(--accent-dark);display:inline-flex;align-items:center;justify-content:center;">⏱️</span> Coletor de Ponto</div>
+            <label class="switch"><input type="checkbox" id="togglePonto" onchange="togglePonto(this.checked)"><span class="track"></span></label>
+          </div>
+          <div class="status-line" id="pontoStatus">—</div>
+          <div class="meta">Sincroniza batidas dos relógios da filial a cada ciclo.</div>
+        </div>
+        <div class="module">
+          <div class="module-head">
+            <div class="t"><span class="ico" style="width:28px;height:28px;border-radius:8px;background:var(--info-bg);color:var(--info);display:inline-flex;align-items:center;justify-content:center;">📷</span> Coletor de Câmeras</div>
+            <label class="switch"><input type="checkbox" id="toggleCameras" onchange="toggleCameras(this.checked)"><span class="track"></span></label>
+          </div>
+          <div class="status-line" id="camerasStatus">—</div>
+          <div class="meta">Verifica conectividade das câmeras LAN a cada 30s e serve stream ao vivo via WebRTC.</div>
+        </div>
+      </div>
 
-  <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center">
-      <h3 style="margin:0">Servidor & Versão</h3>
-      <button onclick="verificarAtualizacao()">🔄 Verificar atualização</button>
+      <!-- Equipamentos -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <div class="card-title" style="margin:0"><span class="ico">🖥️</span> Equipamentos de ponto</div>
+          <button class="btn ghost" onclick="refreshNow()">↻ Verificar agora</button>
+        </div>
+        <div id="equips"><div class="empty">Carregando…</div></div>
+      </div>
+
+      <!-- Câmeras -->
+      <div class="card">
+        <div class="card-title"><span class="ico">📹</span> Câmeras cadastradas</div>
+        <div id="cameras"><div class="empty">Carregando…</div></div>
+      </div>
+
+      <!-- Rodapé servidor -->
+      <div class="card" style="background:#fff;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div>
+            <div class="muted" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;">Servidor</div>
+            <div id="server" style="font-size:13px;font-weight:500;">—</div>
+          </div>
+          <button class="btn ghost" onclick="verificarAtualizacao()">🔄 Verificar atualização</button>
+        </div>
+      </div>
+
     </div>
-    <div id="server" class="muted" style="margin-top:8px">—</div>
   </div>
 
   <script>
-    async function togglePonto(v) {
-      if (v) await window.coletor.startPonto();
-      else await window.coletor.stopPonto();
-      refresh();
-    }
-    async function toggleCameras(v) {
-      if (v) await window.coletor.startCameras();
-      else await window.coletor.stopCameras();
-      refresh();
-    }
-    async function refreshNow() { await window.coletor.pollNow(); refresh(); }
+    async function togglePonto(v){ if(v) await window.coletor.startPonto(); else await window.coletor.stopPonto(); refresh(); }
+    async function toggleCameras(v){ if(v) await window.coletor.startCameras(); else await window.coletor.stopCameras(); refresh(); }
+    async function refreshNow(){ await window.coletor.pollNow(); refresh(); }
 
-    async function refresh() {
+    function pillStatus(state, label){
+      const pill = document.getElementById('globalStatusPill');
+      pill.classList.remove('on','off');
+      if (state === 'on')  pill.classList.add('on');
+      if (state === 'off') pill.classList.add('off');
+      document.getElementById('globalStatusText').textContent = label;
+    }
+
+    async function refresh(){
       const s = await window.coletor.getStatus();
-      document.getElementById('togglePonto').checked = !!s.pontoRunning;
+
+      document.getElementById('togglePonto').checked   = !!s.pontoRunning;
       document.getElementById('toggleCameras').checked = !!s.camerasRunning;
 
       document.getElementById('pontoStatus').innerHTML = s.pontoRunning
-        ? '<span class="ok">🟢 Rodando</span>' : '<span class="err">⚫ Parado</span>';
+        ? '<span class="pill pill-on">Rodando</span>'
+        : '<span class="pill pill-off">Parado</span>';
       document.getElementById('camerasStatus').innerHTML = s.camerasRunning
-        ? '<span class="ok">🟢 Rodando</span>' : '<span class="err">⚫ Parado</span>';
+        ? '<span class="pill pill-on">Rodando</span>'
+        : '<span class="pill pill-off">Parado</span>';
 
-      document.getElementById('lastSync').textContent = s.lastSync ? new Date(s.lastSync).toLocaleString('pt-BR') : '—';
-      document.getElementById('lastSyncCameras').textContent = s.lastSyncCameras ? new Date(s.lastSyncCameras).toLocaleString('pt-BR') : '—';
-      document.getElementById('totalSent').textContent = s.totalSent || 0;
+      document.getElementById('lastSync').textContent         = s.lastSync         ? new Date(s.lastSync).toLocaleString('pt-BR')         : '—';
+      document.getElementById('lastSyncCameras').textContent  = s.lastSyncCameras  ? new Date(s.lastSyncCameras).toLocaleString('pt-BR')  : '—';
+      document.getElementById('totalSent').textContent        = s.totalSent || 0;
+
+      const cams = s.cameras || [];
+      document.getElementById('camsOnline').firstChild.data = String(cams.filter(c => c.status === 'online').length);
+      document.getElementById('camsTotal').textContent = cams.length;
+
+      // Status global consolidado
+      if (s.pontoRunning || s.camerasRunning){
+        pillStatus('on', 'Coletor ativo');
+        document.getElementById('globalHint').textContent =
+          `${s.pontoRunning ? 'Ponto rodando' : 'Ponto parado'} · ${s.camerasRunning ? 'Câmeras rodando' : 'Câmeras paradas'}`;
+      } else {
+        pillStatus('off', 'Parado');
+        document.getElementById('globalHint').textContent = 'Ative um dos módulos abaixo para começar.';
+      }
 
       // Equipamentos
-      document.getElementById('equips').innerHTML = (s.equipamentos || []).length ? (s.equipamentos || []).map(e => {
+      const eqEl = document.getElementById('equips');
+      const eqs = s.equipamentos || [];
+      eqEl.innerHTML = eqs.length ? eqs.map(e => {
         const err = s.lastErrors?.[e.id];
         const pillCls = e.status === 'online' ? 'pill-on' : 'pill-off';
         return `<div class="row">
           <div>
-            <div><b>📟 ${e.nome}</b> — ${e.ip}:${e.porta || 80}</div>
-            <div class="meta">${e.modelo || 'modelo desconhecido'}${err ? ' · <span class="err">' + escapeHtml(err) + '</span>' : ''}</div>
+            <div class="title">📟 ${escapeHtml(e.nome)} <span class="muted">— ${escapeHtml(e.ip)}:${e.porta || 80}</span></div>
+            <div class="meta">${escapeHtml(e.modelo || 'modelo desconhecido')}${err ? ' · <span class="err">' + escapeHtml(err) + '</span>' : ''}</div>
           </div>
-          <span class="pill ${pillCls}">${e.status || 'desconhecido'}</span>
+          <span class="pill ${pillCls}">${escapeHtml(e.status || 'desconhecido')}</span>
         </div>`;
-      }).join('') : '<em class="muted">Nenhum equipamento ativo cadastrado no CRM</em>';
+      }).join('') : '<div class="empty">Nenhum equipamento ativo cadastrado no CRM</div>';
 
       // Câmeras
-      document.getElementById('cameras').innerHTML = (s.cameras || []).length ? (s.cameras || []).map(c => {
+      const camEl = document.getElementById('cameras');
+      camEl.innerHTML = cams.length ? cams.map(c => {
         const pillCls = c.status === 'online' ? 'pill-on' : 'pill-off';
         const redeCls = c.tipo_rede === 'publica' ? 'pill-pub' : 'pill-lan';
         return `<div class="row">
           <div>
-            <div><b>📷 ${c.nome}</b> — ${c.host}</div>
+            <div class="title">📷 ${escapeHtml(c.nome)} <span class="muted">— ${escapeHtml(c.host)}</span></div>
             <div class="meta">
-              <span class="pill ${redeCls}">${c.tipo_rede || 'lan'}</span>
+              <span class="pill ${redeCls}">${escapeHtml(c.tipo_rede || 'lan')}</span>
               ${c.latencia_ms != null ? ' · ' + c.latencia_ms + 'ms' : ''}
               ${c.erro ? ' · <span class="err">' + escapeHtml(c.erro) + '</span>' : ''}
             </div>
           </div>
-          <span class="pill ${pillCls}">${c.status}</span>
+          <span class="pill ${pillCls}">${escapeHtml(c.status)}</span>
         </div>`;
-      }).join('') : '<em class="muted">Nenhuma câmera ativa (ou coletor de câmeras desligado)</em>';
+      }).join('') : '<div class="empty">Nenhuma câmera ativa (ou coletor de câmeras desligado)</div>';
 
-      document.getElementById('server').textContent = (s.config?.url || '');
+      document.getElementById('server').textContent = (s.config?.url || '—');
 
-      // Filial: se não estiver definida, força seleção; senão mostra qual é
       const temFilial = !!s.config?.filialId;
       document.getElementById('filialCard').style.display = temFilial ? 'none' : 'block';
       document.getElementById('filialInfo').style.display = temFilial ? 'block' : 'none';
-      if (temFilial) {
-        document.getElementById('filialAtualNome').textContent = s.config.filialNome || s.config.filialId;
-      }
+      if (temFilial) document.getElementById('filialAtualNome').textContent = s.config.filialNome || s.config.filialId;
     }
 
-    async function carregarFiliais() {
+    async function carregarFiliais(){
       const sel = document.getElementById('filialSelect');
       sel.innerHTML = '<option value="">— carregando —</option>';
-      try {
+      try{
         const filiais = await window.coletor.listarFiliais();
         sel.innerHTML = '<option value="">— selecione —</option>' + filiais.map(f =>
           `<option value="${f.id}" data-nome="${escapeHtml(f.nome)}">${escapeHtml(f.nome)}${f.cidade ? ' — ' + escapeHtml(f.cidade) + '/' + escapeHtml(f.uf || '') : ''}</option>`
         ).join('');
-      } catch (e) {
-        sel.innerHTML = '<option value="">erro: ' + escapeHtml(e.message) + '</option>';
-      }
+      } catch(e){ sel.innerHTML = '<option value="">erro: ' + escapeHtml(e.message) + '</option>'; }
     }
-    async function salvarFilial() {
+    async function salvarFilial(){
       const sel = document.getElementById('filialSelect');
-      const id = sel.value;
-      if (!id) return alert('Selecione uma filial');
+      const id = sel.value; if (!id) return alert('Selecione uma filial');
       const nome = sel.options[sel.selectedIndex].getAttribute('data-nome');
-      await window.coletor.setFilial(id, nome);
-      refresh();
+      await window.coletor.setFilial(id, nome); refresh();
     }
-    async function trocarFilial() {
+    async function trocarFilial(){
       if (!confirm('Trocar a filial deste computador? Os coletores serão reiniciados.')) return;
-      await window.coletor.setFilial(null, null);
-      await carregarFiliais();
-      refresh();
+      await window.coletor.setFilial(null, null); await carregarFiliais(); refresh();
     }
 
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    }
+    function escapeHtml(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
     let ultimoDownloadUrl = null;
-    async function verificarAtualizacao(silent) {
-      try {
+    async function verificarAtualizacao(silent){
+      try{
         const info = await window.coletor.checarAtualizacao();
         document.getElementById('verLabel').textContent = 'v' + (info.localVersion || '—');
-        if (info.atualizacaoDisponivel && info.downloadUrl) {
+        if (info.atualizacaoDisponivel && info.downloadUrl){
           ultimoDownloadUrl = info.downloadUrl;
           document.getElementById('updCard').style.display = 'block';
-          document.getElementById('updBadge').style.display = 'inline-block';
           document.getElementById('updRemote').textContent = 'v' + info.remoteVersion;
-          document.getElementById('updNotas').textContent = info.notas || '';
-        } else if (!silent) {
+          document.getElementById('updNotas').textContent  = info.notas || '';
+        } else if (!silent){
           alert('Você já está na versão mais recente (v' + info.localVersion + ')');
         }
-      } catch (e) { if (!silent) alert('Erro ao verificar: ' + e.message); }
+      } catch(e){ if (!silent) alert('Erro ao verificar: ' + e.message); }
     }
-    async function instalarAtualizacao() {
+    async function instalarAtualizacao(){
       if (!ultimoDownloadUrl) return;
       const btn = document.getElementById('updBtn');
       btn.disabled = true; btn.textContent = 'Baixando…';
       document.getElementById('updProgress').style.display = 'block';
-      try { await window.coletor.instalarAtualizacao(ultimoDownloadUrl); }
-      catch (e) { alert('Falha: ' + e.message); btn.disabled = false; btn.textContent = 'Baixar e instalar'; }
+      try{ await window.coletor.instalarAtualizacao(ultimoDownloadUrl); }
+      catch(e){ alert('Falha: ' + e.message); btn.disabled = false; btn.textContent = 'Baixar e instalar'; }
     }
-    if (window.coletor.onUpdateProgress) {
-      window.coletor.onUpdateProgress((pct) => { document.getElementById('updPct').textContent = pct; });
+    if (window.coletor.onUpdateProgress){
+      window.coletor.onUpdateProgress((pct) => {
+        document.getElementById('updPct').textContent = pct;
+        const bar = document.getElementById('updBar'); if (bar) bar.style.width = pct + '%';
+      });
     }
 
     (async () => {
@@ -268,7 +492,7 @@
       verificarAtualizacao(true);
       carregarFiliais();
     })();
-    setInterval(() => verificarAtualizacao(true), 60 * 60 * 1000); // 1x/hora
+    setInterval(() => verificarAtualizacao(true), 60 * 60 * 1000);
     setInterval(refresh, 2000);
     refresh();
   </script>
