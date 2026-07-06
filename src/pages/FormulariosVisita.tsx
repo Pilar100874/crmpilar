@@ -45,6 +45,62 @@ function slug(s: string) {
   return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
 }
 
+function OpcoesEditor({ opcoes, onChange }: { opcoes: string[]; onChange: (v: string[]) => void }) {
+  const [input, setInput] = React.useState("");
+  function addTokens(raw: string) {
+    const tokens = raw.split(/[,\n;]/).map(s => s.trim()).filter(Boolean);
+    if (!tokens.length) return;
+    const set = new Set(opcoes);
+    tokens.forEach(t => set.add(t));
+    onChange(Array.from(set));
+    setInput("");
+  }
+  function onKey(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addTokens(input);
+    } else if (e.key === "Backspace" && !input && opcoes.length) {
+      onChange(opcoes.slice(0, -1));
+    }
+  }
+  return (
+    <div>
+      <Label>Opções</Label>
+      <div className="flex flex-wrap gap-1 border rounded-md p-2 bg-background min-h-10">
+        {opcoes.map((o, idx) => (
+          <Badge key={idx} variant="secondary" className="gap-1 pr-1">
+            {o}
+            <button
+              type="button"
+              onClick={() => onChange(opcoes.filter((_, j) => j !== idx))}
+              className="hover:text-destructive"
+              aria-label={`Remover ${o}`}
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
+          </Badge>
+        ))}
+        <Input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={onKey}
+          onBlur={() => input && addTokens(input)}
+          onPaste={e => {
+            const text = e.clipboardData.getData("text");
+            if (/[,\n;]/.test(text)) {
+              e.preventDefault();
+              addTokens(text);
+            }
+          }}
+          placeholder={opcoes.length ? "Adicionar mais..." : "Digite e pressione Enter (ou cole vírgulas)"}
+          className="flex-1 min-w-[140px] border-0 shadow-none focus-visible:ring-0 h-7 px-1"
+        />
+      </div>
+      <p className="text-xs text-muted-foreground mt-1">Enter, vírgula ou ponto-e-vírgula adiciona. Backspace remove a última.</p>
+    </div>
+  );
+}
+
 const FormulariosVisita: React.FC = () => {
   const [estabId, setEstabId] = useState<string | null>(null);
   const [rows, setRows] = useState<any[]>([]);
@@ -231,12 +287,12 @@ const FormulariosVisita: React.FC = () => {
                       </div>
                     </div>
                     {(c.tipo === "selecao" || c.tipo === "multi") && (
-                      <div>
-                        <Label>Opções (uma por linha)</Label>
-                        <Textarea rows={2} value={(c.opcoes || []).join("\n")} onChange={e => {
-                          const arr = [...campos]; arr[i].opcoes = e.target.value.split("\n").map(s => s.trim()).filter(Boolean); setCampos(arr);
-                        }} />
-                      </div>
+                      <OpcoesEditor
+                        opcoes={c.opcoes || []}
+                        onChange={(novas) => {
+                          const arr = [...campos]; arr[i].opcoes = novas; setCampos(arr);
+                        }}
+                      />
                     )}
                   </CardContent>
                 </Card>
