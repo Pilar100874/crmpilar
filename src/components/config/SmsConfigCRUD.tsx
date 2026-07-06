@@ -258,7 +258,7 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base"><BookOpen className="h-4 w-4" /> Manual de configuração dos provedores</CardTitle>
-          <CardDescription>Passo a passo para cada um dos 4 provedores suportados</CardDescription>
+          <CardDescription>Passo a passo para cada um dos 3 provedores suportados</CardDescription>
         </CardHeader>
         <CardContent>
           <Accordion type="single" collapsible className="w-full">
