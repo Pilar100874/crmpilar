@@ -418,7 +418,7 @@ export default function CamerasCameras() {
           </Card>
         )}
         {filtered.map((r) => (
-          <Card key={r.id} className={`${r.ativo ? "" : "opacity-60"} ${selected.has(r.id) ? "ring-2 ring-primary" : ""}`}>
+          <Card key={r.id} className={`group ${r.ativo ? "" : "opacity-60"} ${selected.has(r.id) ? "ring-2 ring-primary" : ""}`}>
 
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center justify-between text-base gap-2">
