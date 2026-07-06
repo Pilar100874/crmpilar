@@ -110,6 +110,12 @@ const FormulariosVisita: React.FC = () => {
   const [form, setForm] = useState<any>({ nome: "", descricao: "", ativo: true });
   const [campos, setCampos] = useState<Campo[]>([]);
   const [toDelete, setToDelete] = useState<any>(null);
+  const [preview, setPreview] = useState<{ nome: string; descricao?: string; campos: Campo[] } | null>(null);
+
+  async function openPreviewFromRow(r: any) {
+    const { data } = await supabase.from("visita_formulario_campos").select("*").eq("formulario_id", r.id).order("ordem");
+    setPreview({ nome: r.nome, descricao: r.descricao, campos: (data as any) || [] });
+  }
 
   useEffect(() => { (async () => setEstabId(await getEstabelecimentoId()))(); }, []);
   useEffect(() => { if (estabId) load(); }, [estabId]);
