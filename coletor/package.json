@@ -1,13 +1,13 @@
 {
   "name": "ponto-coletor",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "Coletor de batidas de relógios de ponto - CRM Pilar (pré-configurado)",
   "main": "main.js",
   "author": "Pilar",
   "license": "Proprietary",
   "scripts": {
     "start": "electron .",
-    "dist:msi": "electron-builder --win msi --x64"
+    "dist": "electron-builder --win nsis --x64"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.0",
@@ -22,7 +22,7 @@
   "build": {
     "appId": "br.com.pilar.coletor",
     "productName": "ColetorPilar",
-    "artifactName": "ColetorPilar-Setup.msi",
+    "artifactName": "ColetorPilar-Setup.exe",
     "directories": {
       "output": "dist-installer",
       "buildResources": "build"
@@ -36,18 +36,25 @@
       "icon": "build/icon.ico",
       "target": [
         {
-          "target": "msi",
+          "target": "nsis",
           "arch": ["x64"]
         }
       ]
     },
-    "msi": {
+    "nsis": {
       "oneClick": false,
       "perMachine": true,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": false,
       "runAfterFinish": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Coletor Pilar"
+      "shortcutName": "Coletor Pilar",
+      "installerLanguages": ["pt_BR"],
+      "language": "1046",
+      "deleteAppDataOnUninstall": false,
+      "displayLanguageSelector": false,
+      "menuCategory": false
     }
   }
 }

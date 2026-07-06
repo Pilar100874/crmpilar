@@ -1,5 +1,5 @@
 {
-  "version": "1.4.4",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.4.4/ColetorPilar-Setup.msi",
-  "notas": "1.4.2: exibe mensagem 'Instalação concluída' em primeiro plano (TopMost + DefaultDesktopOnly) ao finalizar a atualização/instalação do MSI."
+  "version": "1.4.5",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.4.5/ColetorPilar-Setup.exe",
+  "notas": "1.4.5: instalador migrado para NSIS em Português (pt-BR). Corrige travamento na tela 'Computing space requirements' do MSI."
 }
