@@ -71,7 +71,7 @@ const ProgramacaoVisitas: React.FC = () => {
     setLoading(true);
     const [{ data: progs }, { data: cs }, { data: us }, { data: rg }] = await Promise.all([
       supabase.from("visita_programacoes").select("*").order("created_at", { ascending: false }),
-      supabase.from("customers").select("id, name, address").order("name").limit(500),
+      supabase.from("customers").select("id, nome").order("nome").limit(500),
       supabase.from("usuarios").select("id, nome").order("nome"),
       supabase.from("visita_regras_monitoramento").select("id, nome").eq("ativa", true),
     ]);
@@ -120,8 +120,7 @@ const ProgramacaoVisitas: React.FC = () => {
     setForm({
       ...form,
       customer_id: id,
-      cliente_nome: c?.name || form.cliente_nome || "",
-      endereco: c?.address || form.endereco || "",
+      cliente_nome: c?.nome || form.cliente_nome || "",
     });
   }
 
