@@ -1,6 +1,6 @@
 {
   "name": "ponto-coletor",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Coletor de batidas de relógios de ponto - CRM Pilar (pré-configurado)",
   "main": "main.js",
   "author": "Pilar",
@@ -27,6 +27,12 @@
       "output": "dist-installer",
       "buildResources": "build"
     },
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/werift/**/*",
+      "node_modules/@shinyoshiaki/**/*",
+      "node_modules/ffmpeg-static/**/*"
+    ],
     "files": [
       "**/*",
       "!dist-installer${/*}"
