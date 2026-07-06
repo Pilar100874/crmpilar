@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ClipboardList, Plus, Pencil, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import { ClipboardList, Plus, Pencil, Trash2, ArrowUp, ArrowDown, Eye } from "lucide-react";
+import { FormularioPreviewSheet } from "@/components/visitas/FormularioPreviewSheet";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
