@@ -108,10 +108,25 @@ function rtspOptions(host, port, timeoutMs = 5000) {
   });
 }
 
-// Localiza binário do ffmpeg (verifica $FFMPEG_PATH, PATH, e caminhos comuns)
+// Localiza binário do ffmpeg — prioriza o ffmpeg-static embutido no instalador
+// (dependência do coletor), caindo para $FFMPEG_PATH / PATH / caminhos comuns.
 let _ffmpegPath = null;
 function findFfmpeg() {
   if (_ffmpegPath !== null) return _ffmpegPath;
+
+  // 1) ffmpeg-static embutido no app (funciona sem nenhuma instalação manual)
+  try {
+    let bundled = require('ffmpeg-static');
+    if (bundled) {
+      // Em empacotamento Electron (asar), o binário é desempacotado em app.asar.unpacked
+      if (bundled.includes('app.asar') && !bundled.includes('app.asar.unpacked')) {
+        bundled = bundled.replace('app.asar', 'app.asar.unpacked');
+      }
+      if (fs.existsSync(bundled)) { _ffmpegPath = bundled; return bundled; }
+    }
+  } catch (_) {}
+
+  // 2) Fallbacks — ffmpeg já instalado no sistema
   const candidates = [
     process.env.FFMPEG_PATH,
     'ffmpeg',
