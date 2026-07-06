@@ -77,6 +77,7 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
         ]);
         if (empresaId) {
           await loadEmpresaData(empresaId);
+          fetchUltimaVisitaEmpresa(empresaId).then(setUltimaVisita).catch(() => setUltimaVisita(null));
         }
       }
       setLoading(false);
@@ -372,10 +373,11 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid grid-cols-4 mb-4">
+                <TabsList className="grid grid-cols-5 mb-4">
                   <TabsTrigger value="empresa">Empresa</TabsTrigger>
                   <TabsTrigger value="segmentos">Segmentos *</TabsTrigger>
                   <TabsTrigger value="contatos">Contatos</TabsTrigger>
+                  <TabsTrigger value="visitas">Visitas</TabsTrigger>
                   <TabsTrigger value="formularios">Formulários</TabsTrigger>
                 </TabsList>
 
