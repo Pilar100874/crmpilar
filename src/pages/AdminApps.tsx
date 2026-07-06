@@ -285,7 +285,7 @@ export default function AdminApps() {
           <ol className="space-y-4">
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">1</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">Baixe e execute o <b>ColetorPilar-Setup.msi</b> em um PC Windows que fique <b>ligado 24/7</b> na mesma rede das câmeras.</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">Baixe e execute o <b>ColetorPilar-Setup.msi</b> em um PC Windows que fique <b>ligado 24/7</b> na mesma rede das câmeras e relógios de ponto.</p>
             </li>
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">2</span>
@@ -293,7 +293,7 @@ export default function AdminApps() {
             </li>
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">3</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">Ative o módulo <b>Câmeras</b> na tela principal. O ícone deve ficar verde (online) — a nuvem passa a enviar comandos de snapshot e streaming.</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">Ative os módulos <b>Câmeras</b> e/ou <b>Ponto</b> na tela principal. O ícone deve ficar verde (online) — a nuvem passa a enviar comandos de snapshot, streaming e coleta de batidas.</p>
             </li>
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">4</span>
