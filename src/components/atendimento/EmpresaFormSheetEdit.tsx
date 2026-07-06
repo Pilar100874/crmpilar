@@ -660,6 +660,10 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
                   )}
                 </TabsContent>
 
+                <TabsContent value="visitas" className="space-y-4">
+                  <EmpresaVisitasTab empresaId={empresaId} />
+                </TabsContent>
+
                 <TabsContent value="formularios" className="space-y-4">
                   <EmpresaFormulariosTab empresaId={empresaId} />
                 </TabsContent>
