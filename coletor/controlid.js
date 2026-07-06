@@ -316,9 +316,10 @@ function parseAFDPunches(afdText) {
 // Auto-detecta protocolo: porta 443 sempre HTTPS, porta 80 sempre HTTP,
 // outras portas respeitam o flag. Em caso de falha de protocolo, tenta o oposto.
 function resolverProtocolo(equip) {
-  const port = equip.porta || 80;
+  const port = Number(equip.porta || 0);
   if (port === 443) return true;
   if (port === 80) return false;
+  if (equip.usa_https === true) return true;
   return equip.usa_https === true;
 }
 
@@ -327,6 +328,9 @@ async function tentarLogin(cfg) {
   // (mesma porta protocolo oposto), (443 HTTPS), (80 HTTP).
   const tentativas = [
     { ...cfg },
+    cfg.https
+      ? { ...cfg, port: 80, https: false }
+      : { ...cfg, port: 443, https: true },
     { ...cfg, https: !cfg.https },
     { ...cfg, port: 443, https: true },
     { ...cfg, port: 80, https: false },
@@ -367,7 +371,7 @@ async function tentarLogin(cfg) {
 // Normaliza IP/host — aceita "https://192.168.0.1", "http://x:8080", "x/", etc.
 function normalizarHost(equip) {
   let host = String(equip.ip || '').trim();
-  let porta = equip.porta;
+  let porta = equip.porta ? Number(equip.porta) : null;
   let https = null;
   const m = host.match(/^(https?):\/\/(.+?)(?::(\d+))?(?:\/.*)?$/i);
   if (m) {
@@ -376,8 +380,8 @@ function normalizarHost(equip) {
     if (m[3]) porta = Number(m[3]);
   }
   host = host.replace(/\/+$/, '');
-  if (!porta) porta = https ? 443 : 80;
   if (https === null) https = resolverProtocolo({ ...equip, porta });
+  if (!porta) porta = https ? 443 : 80;
   return { host, porta, https };
 }
 
