@@ -76,6 +76,31 @@ export default function CamerasCameras() {
   const [snapshots, setSnapshots] = useState<Record<string, string>>({});
   const [snapLoading, setSnapLoading] = useState<Set<string>>(new Set());
   const [snapErrors, setSnapErrors] = useState<Record<string, string>>({});
+  const [editingNameId, setEditingNameId] = useState<string | null>(null);
+  const [editingNameValue, setEditingNameValue] = useState("");
+
+  const startRename = (id: string, currentName: string) => {
+    setEditingNameId(id);
+    setEditingNameValue(currentName);
+  };
+
+  const commitRename = async (id: string) => {
+    const trimmed = editingNameValue.trim();
+    if (!trimmed) {
+      setEditingNameId(null);
+      return;
+    }
+    const { error } = await supabase.from("cv_cameras").update({ nome: trimmed }).eq("id", id);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setRows((prev) => prev.map((r) => (r.id === id ? { ...r, nome: trimmed } : r)));
+      toast.success("Nome atualizado");
+    }
+    setEditingNameId(null);
+  };
+
+  const cancelRename = () => setEditingNameId(null);
 
   const fetchSnapshots = async (list: any[]) => {
     const queue = list.filter((c) => c.ativo);
