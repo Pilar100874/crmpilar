@@ -1,138 +1,111 @@
 
-# Programação de Visitas a Clientes
+# Extensão do Módulo de Visitas
 
-Novo módulo dentro de **Vendas** que permite programar visitas cíclicas a clientes e verificar automaticamente se o funcionário/veículo esteve no endereço definido, usando o rastreamento já existente (veículo) ou a localização enviada pelo próprio CRM (PWA/APK) do funcionário.
+Duas evoluções em cima do que já foi entregue:
 
-Fluxo geral:
+**A. Modo "Visita Espontânea"** — sem programação prévia. O sistema detecta sozinho quando um funcionário chegou em um cliente (via localização do celular ou do veículo) e registra automaticamente.
+
+**B. Formulários de pós-visita** — construtor de formulários no próprio CRM, com regra de qual formulário cada funcionário/filial/tipo de cliente deve preencher ao encerrar a visita.
+
+Além dessas duas, sugestões extras no fim que você aprova ou descarta.
+
+---
+
+## A. Visita Espontânea (auto-detecção)
+
+Objetivo: não precisar cadastrar visita nenhuma. Se o funcionário parar no endereço de um cliente por X minutos → o sistema cria a ocorrência de visita sozinho.
+
+Como funciona:
 
 ```text
-[Regra de frequência]  →  [Gera visitas planejadas]
+[Posição chega]  →  [Match com endereço de cliente < raio]
         ↓
-[Job diário verifica posições]
+[Ficou parado ≥ tempo mínimo?]
+        sim ↓
+[Cria visita_ocorrencias com origem=espontanea]
         ↓
-[Localização dentro do raio + tempo mínimo?]
-   sim → marca "Realizada" (com hora, fonte, distância)
-   não → mantém "Pendente" / "Não realizada"
+[Notifica funcionário: "Registrar visita?" + link do formulário]
         ↓
-[Telas de acompanhamento por Usuário / Filial]
+[Ao sair da área: fecha hora_saida e duração]
 ```
 
-## 1. Telas novas
+Regras:
+- Nova aba na tela **Regras de Monitoramento**: "Detectar visitas espontâneas" (on/off, raio, tempo mínimo, janela de horário permitida, ignorar endereços do próprio funcionário/filial).
+- Cliente considerado "visitável" se tiver `lat/lng` (usa o geocoding automático que já existe).
+- Se já existir uma programação pra aquele cliente/dia → conta como cumprimento dela (não duplica).
+- Notificação push no CRM avisando o funcionário que a visita foi detectada e pedindo pra preencher o formulário.
 
-Todas em português, seguindo o padrão visual atual (tokens semânticos, dark mode).
+## B. Formulários pós-visita
 
-1. **Vendas → Programação de Visitas** (`/vendas/programacao-visitas`)
-   - Lista de programações (cliente, responsável, frequência, próxima visita, status).
-   - Botão "Nova Programação" abre modal:
-     - Cliente (busca em `customers`)
-     - Endereço (auto-preenchido do cliente; permite ajustar lat/lng via Google Maps)
-     - Responsável: usuário OU "toda a filial" OU "todos"
-     - Frequência: `X vezes por dia | semana | mês` OU `1 vez a cada N dias`
-     - Janela de horário permitida (ex.: 08:00–18:00)
-     - Dias da semana permitidos
-     - Data de início / fim (opcional)
-     - Regra de monitoramento a aplicar (ver item 3)
-     - Observação
-   - Ações: editar, pausar, excluir (com `DeleteConfirmDialog`).
+Construtor simples de formulários, no estilo do `DynamicProductFields` que já existe no projeto.
 
-2. **Vendas → Acompanhamento de Visitas** (`/vendas/acompanhamento-visitas`)
-   - Filtros: período, filial, usuário, cliente, status (realizada/pendente/atrasada).
-   - KPIs: % de cumprimento, visitas no período, atrasadas, realizadas fora do horário.
-   - Tabela por usuário/filial com drill-down por dia.
-   - Mapa opcional mostrando pontos das visitas realizadas x planejadas.
-   - Exportação CSV.
+Telas novas:
 
-3. **Configurações → Regras de Monitoramento de Visita** (`/config/regras-monitoramento-visita`)
-   - Regras globais e por usuário (herança: usuário > global).
-   - Campos:
-     - Nome
-     - Escopo: global | usuário específico | filial
-     - Fonte de localização: `veículo vinculado` | `celular do funcionário (CRM)` | `qualquer uma das duas`
-     - Raio de aceitação (metros)
-     - Tempo mínimo de permanência (minutos)
-     - Exigir que o horário esteja dentro da janela definida na programação (sim/não)
-     - Ativa (sim/não)
+1. **Configurações → Formulários de Visita** (`/config/formularios-visita`)
+   - Listar / criar / editar / duplicar formulários.
+   - Campos suportados: texto curto, texto longo, número, sim/não, seleção única, seleção múltipla, data, hora, nota (0–10), foto (upload), assinatura (canvas), localização (auto).
+   - Cada campo: rótulo, obrigatório, ordem, condicional ("mostrar se X = Y").
+   - Preview do formulário.
 
-4. **Menu Vendas** (`src/components/Layout.tsx`) recebe os dois novos itens; Configurações recebe o link para Regras de Monitoramento.
+2. **Configurações → Regras de Formulário** (`/config/regras-formulario-visita`)
+   - Diz qual formulário aparece em qual visita. Escopo em ordem de precedência:
+     1. Funcionário específico
+     2. Filial
+     3. Segmento/tipo do cliente
+     4. Global (padrão)
+   - Campo "obrigatório para encerrar a visita" (bloqueia fechamento sem preencher).
 
-## 2. Modelo de dados (Lovable Cloud)
+3. **Preenchimento** — botão "Encerrar visita" em **Acompanhamento de Visitas** e no push da visita espontânea abre um `Sheet` com o formulário resolvido pelas regras. Salva vinculado à `visita_ocorrencias`.
 
-Tabelas novas (todas com RLS por `estabelecimento_id`, GRANT para `authenticated`/`service_role`, triggers `updated_at`):
+4. **Acompanhamento** ganha coluna "Formulário" com status: `pendente | preenchido | não aplicável` e link pra ver as respostas.
 
-- `visita_regras_monitoramento`
-  - `nome`, `escopo` (`global|usuario|filial`), `usuario_id?`, `filial_id?`
-  - `fonte_localizacao` (`veiculo|celular|ambos`)
-  - `raio_metros` (int), `tempo_minimo_min` (int)
-  - `exigir_janela_horario` (bool), `ativa` (bool)
+---
 
-- `visita_programacoes`
-  - `customer_id`, `endereco`, `lat`, `lng`
-  - `responsavel_tipo` (`usuario|filial|todos`), `responsavel_usuario_id?`, `filial_id?`
-  - `frequencia_tipo` (`dia|semana|mes|intervalo_dias`)
-  - `frequencia_qtd` (int), `intervalo_dias?` (int)
-  - `dias_semana` (int[] 0–6), `hora_inicio`, `hora_fim`
-  - `data_inicio`, `data_fim?`
-  - `regra_monitoramento_id?` (fallback: regra global)
-  - `observacao`, `ativa` (bool)
+## Modelo de dados novo
 
-- `visita_ocorrencias` (uma linha por visita esperada/executada)
-  - `programacao_id`, `usuario_id?`, `data_prevista` (date), `janela_inicio`, `janela_fim`
-  - `status` (`pendente|realizada|nao_realizada|fora_horario|atrasada`)
-  - `verificada_em?`, `hora_chegada?`, `hora_saida?`, `duracao_min?`
-  - `fonte_deteccao?` (`veiculo|celular`), `veiculo_id?`, `distancia_metros?`
-  - `lat_registro?`, `lng_registro?`, `observacao_auto?`
+- `visita_formularios` — `nome`, `descricao`, `ativo`, `estabelecimento_id`.
+- `visita_formulario_campos` — `formulario_id`, `tipo`, `rotulo`, `chave`, `obrigatorio`, `ordem`, `opcoes` (jsonb), `condicional` (jsonb).
+- `visita_formulario_regras` — `formulario_id`, `escopo` (`usuario|filial|segmento|global`), `usuario_id?`, `filial_id?`, `segmento_id?`, `obrigatorio_encerrar` (bool), `prioridade` (int).
+- `visita_formulario_respostas` — `ocorrencia_id`, `formulario_id`, `respostas` (jsonb), `preenchido_em`, `preenchido_por`, `lat/lng`, `anexos` (jsonb).
 
-- `usuario_posicoes` (localização do celular via CRM)
-  - `usuario_id`, `lat`, `lng`, `accuracy?`, `bateria?`, `data_hora`
-  - RLS: usuário grava a própria; supervisão lê da mesma filial.
-  - Índices em `(usuario_id, data_hora desc)`.
+Extensão em `visita_ocorrencias`:
+- `origem` (`programada|espontanea`)
+- `formulario_id?` resolvido no momento da detecção
+- `formulario_status` (`nao_aplicavel|pendente|preenchido`)
 
-Realtime habilitado em `visita_ocorrencias` para atualização ao vivo do acompanhamento.
+RLS por `estabelecimento_id`, GRANTs pra `authenticated`/`service_role`, seguindo o padrão do projeto.
 
-## 3. Verificação automática (Edge Functions + Cron)
+## Backend / automação
 
-- **`gerar-visitas-planejadas`** — roda todo dia 00:05.
-  Para cada programação ativa, gera as `visita_ocorrencias` do dia conforme a frequência (respeita `dias_semana`, `data_fim`, feriados básicos opcionais).
+- Nova edge function **`detectar-visitas-espontaneas`** (cron a cada 5 min): varre `usuario_posicoes` e `veiculo_posicoes` recentes, cruza com clientes que têm `lat/lng`, aplica regra de raio+tempo, cria/atualiza `visita_ocorrencias` com `origem=espontanea`.
+- Ajuste em **`verificar-visitas`**: quando fecha uma ocorrência, resolve `formulario_id` pelas regras e marca `formulario_status`.
+- Nova edge function **`resolver-formulario-visita`**: dado `ocorrencia_id`, devolve o formulário aplicável (usada pelo front ao abrir o preenchimento).
+- Push/notificação ao funcionário quando visita espontânea é criada e quando formulário fica pendente > 1h após sair do local.
 
-- **`verificar-visitas`** — roda a cada 15 min (e 1 hora após a janela fechar).
-  Para cada ocorrência pendente do dia:
-  1. Resolve a regra de monitoramento (usuário > filial > global).
-  2. Se `fonte = veiculo|ambos`: procura em `veiculo_posicoes` do veículo vinculado ao usuário, pontos dentro do `raio_metros` por `tempo_minimo_min` contínuos.
-  3. Se `fonte = celular|ambos`: mesma checagem em `usuario_posicoes`.
-  4. Se atender → `status=realizada`, grava `fonte_deteccao`, hora chegada/saída, distância mínima.
-  5. Se janela já terminou e nada bateu → `nao_realizada` (ou `fora_horario` se detectou fora da janela).
+## Reaproveitamento
+- `usuario_posicoes`, `veiculo_posicoes`, `visita_haversine_metros`, `useBackgroundLocation`, `DeleteConfirmDialog`, padrão de menus e RLS já existentes.
+- Componente de renderização de campos segue o mesmo estilo do `DynamicProductFields`.
 
-- Cron via `pg_cron` + `pg_net` chamando as functions (padrão já usado no projeto).
+## Ordem de entrega
 
-## 4. Envio de localização pelo CRM (PWA / APK)
+1. Migração: novas tabelas + colunas em `visita_ocorrencias` + RLS + GRANTs.
+2. Edge functions: `detectar-visitas-espontaneas`, `resolver-formulario-visita`; ajuste em `verificar-visitas`.
+3. Tela **Formulários de Visita** (construtor + preview).
+4. Tela **Regras de Formulário**.
+5. Aba "Visitas Espontâneas" nas Regras de Monitoramento.
+6. Encerramento de visita com formulário no **Acompanhamento** + coluna de status.
+7. Notificações (push CRM) de visita detectada e formulário pendente.
 
-- **PWA (web/mobile)**: hook `useBackgroundLocation` — ativa `navigator.geolocation.watchPosition` em background enquanto a aba está aberta e envia posições a cada 60s ao endpoint `POST /functions/v1/registrar-posicao-usuario`. Aviso claro de consentimento LGPD antes do primeiro envio.
-- **APK (Capacitor)**: já existe `capacitor.config.ts` com `BackgroundRunner`. Reaproveitar o `background.js` do Pilar Rastreador para enviar posição do usuário logado (não só do veículo) a cada 15 min.
-- Toggle em **Configurações → Meu Perfil** para ligar/desligar o envio de localização (obrigatório para regras que usam `celular`).
+---
 
-## 5. Aproveitamento do que já existe
+## Sugestões extras (opcionais — me diz quais entram)
 
-- `veiculo_posicoes` já é populado pelo rastreador de veículos → reutilizado direto.
-- `RoteirizadorVisitas.tsx` continua como está (é a tela de roteirização diária, complementa e não sobrepõe).
-- `getEstabelecimentoId`, `DeleteConfirmDialog`, padrão de menus e RLS seguem os já usados no projeto.
+1. **Check-in / check-out manual** — botão no app pro funcionário abrir a visita mesmo antes da auto-detecção (útil quando GPS falha).
+2. **Assinatura do cliente** no formulário (canvas) + envio automático de PDF por e-mail pro cliente ao encerrar.
+3. **Motivo de "não realizada"** — se passar do horário sem detecção, pedir justificativa (dropdown: cliente ausente, trânsito, remarcado, etc.).
+4. **Alerta ao supervisor** em tempo real quando um funcionário fica > N min sem enviar posição ou pula uma visita obrigatória.
+5. **Heatmap** de visitas por região/filial na tela de Acompanhamento.
+6. **Meta de visitas por funcionário** (dia/semana/mês) com barra de progresso no dashboard.
+7. **Integração com o Funil de Vendas** — encerrar visita move o deal do cliente pra próxima etapa, ou cria tarefa de follow-up automática.
 
-## 6. Detalhes técnicos
-
-- Cálculo de distância: fórmula de Haversine em SQL (função `visita_dentro_do_raio(lat,lng,lat2,lng2,raio)`).
-- Índices espaciais simples via `(lat,lng,data_hora)`; não vamos adicionar PostGIS.
-- Toda escrita usa `usuarios.id` resolvido a partir de `auth.uid()` (regra global do projeto).
-- Todas as exclusões passam por `DeleteConfirmDialog`.
-- Textos e labels 100% em português.
-
-## Entrega em ordem
-
-1. Migração das 4 tabelas + RLS + GRANTs + índices + função Haversine.
-2. Edge Functions `gerar-visitas-planejadas` e `verificar-visitas` + cron.
-3. Edge Function `registrar-posicao-usuario` + hook `useBackgroundLocation` (PWA).
-4. Tela **Regras de Monitoramento**.
-5. Tela **Programação de Visitas**.
-6. Tela **Acompanhamento de Visitas** (com filtros, KPIs e mapa).
-7. Ajuste no `background.js` do Capacitor para enviar posição do usuário.
-8. Itens de menu em Vendas e Configurações.
-
-Aprova este plano para eu começar pela migração?
+Aprova o escopo A + B e me diz quais extras entram nesta leva?
