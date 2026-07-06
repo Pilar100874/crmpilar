@@ -1,0 +1,1 @@
+DELETE FROM public.cv_cameras WHERE angulo_key = 'probe_test_9999';
