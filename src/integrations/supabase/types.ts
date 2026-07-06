@@ -20242,14 +20242,213 @@ export type Database = {
         }
         Relationships: []
       }
+      visita_formulario_campos: {
+        Row: {
+          chave: string
+          condicional: Json | null
+          created_at: string
+          formulario_id: string
+          id: string
+          obrigatorio: boolean
+          opcoes: Json | null
+          ordem: number
+          placeholder: string | null
+          rotulo: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          chave: string
+          condicional?: Json | null
+          created_at?: string
+          formulario_id: string
+          id?: string
+          obrigatorio?: boolean
+          opcoes?: Json | null
+          ordem?: number
+          placeholder?: string | null
+          rotulo: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          chave?: string
+          condicional?: Json | null
+          created_at?: string
+          formulario_id?: string
+          id?: string
+          obrigatorio?: boolean
+          opcoes?: Json | null
+          ordem?: number
+          placeholder?: string | null
+          rotulo?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visita_formulario_campos_formulario_id_fkey"
+            columns: ["formulario_id"]
+            isOneToOne: false
+            referencedRelation: "visita_formularios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visita_formulario_regras: {
+        Row: {
+          ativa: boolean
+          created_at: string
+          escopo: string
+          estabelecimento_id: string
+          filial_id: string | null
+          formulario_id: string
+          id: string
+          obrigatorio_encerrar: boolean
+          prioridade: number
+          segmento_id: string | null
+          updated_at: string
+          usuario_id: string | null
+        }
+        Insert: {
+          ativa?: boolean
+          created_at?: string
+          escopo: string
+          estabelecimento_id: string
+          filial_id?: string | null
+          formulario_id: string
+          id?: string
+          obrigatorio_encerrar?: boolean
+          prioridade?: number
+          segmento_id?: string | null
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          ativa?: boolean
+          created_at?: string
+          escopo?: string
+          estabelecimento_id?: string
+          filial_id?: string | null
+          formulario_id?: string
+          id?: string
+          obrigatorio_encerrar?: boolean
+          prioridade?: number
+          segmento_id?: string | null
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visita_formulario_regras_formulario_id_fkey"
+            columns: ["formulario_id"]
+            isOneToOne: false
+            referencedRelation: "visita_formularios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visita_formulario_respostas: {
+        Row: {
+          anexos: Json | null
+          created_at: string
+          estabelecimento_id: string
+          formulario_id: string
+          id: string
+          lat: number | null
+          lng: number | null
+          ocorrencia_id: string
+          preenchido_em: string
+          preenchido_por: string | null
+          respostas: Json
+          updated_at: string
+        }
+        Insert: {
+          anexos?: Json | null
+          created_at?: string
+          estabelecimento_id: string
+          formulario_id: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          ocorrencia_id: string
+          preenchido_em?: string
+          preenchido_por?: string | null
+          respostas?: Json
+          updated_at?: string
+        }
+        Update: {
+          anexos?: Json | null
+          created_at?: string
+          estabelecimento_id?: string
+          formulario_id?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          ocorrencia_id?: string
+          preenchido_em?: string
+          preenchido_por?: string | null
+          respostas?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visita_formulario_respostas_formulario_id_fkey"
+            columns: ["formulario_id"]
+            isOneToOne: false
+            referencedRelation: "visita_formularios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visita_formulario_respostas_ocorrencia_id_fkey"
+            columns: ["ocorrencia_id"]
+            isOneToOne: false
+            referencedRelation: "visita_ocorrencias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visita_formularios: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       visita_ocorrencias: {
         Row: {
           created_at: string
+          customer_id: string | null
           data_prevista: string
           distancia_metros: number | null
           duracao_min: number | null
           estabelecimento_id: string
           fonte_deteccao: string | null
+          formulario_id: string | null
+          formulario_status: string
           hora_chegada: string | null
           hora_saida: string | null
           id: string
@@ -20258,6 +20457,7 @@ export type Database = {
           lat_registro: number | null
           lng_registro: number | null
           observacao_auto: string | null
+          origem: string
           programacao_id: string
           status: string
           updated_at: string
@@ -20267,11 +20467,14 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          customer_id?: string | null
           data_prevista: string
           distancia_metros?: number | null
           duracao_min?: number | null
           estabelecimento_id: string
           fonte_deteccao?: string | null
+          formulario_id?: string | null
+          formulario_status?: string
           hora_chegada?: string | null
           hora_saida?: string | null
           id?: string
@@ -20280,6 +20483,7 @@ export type Database = {
           lat_registro?: number | null
           lng_registro?: number | null
           observacao_auto?: string | null
+          origem?: string
           programacao_id: string
           status?: string
           updated_at?: string
@@ -20289,11 +20493,14 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          customer_id?: string | null
           data_prevista?: string
           distancia_metros?: number | null
           duracao_min?: number | null
           estabelecimento_id?: string
           fonte_deteccao?: string | null
+          formulario_id?: string | null
+          formulario_status?: string
           hora_chegada?: string | null
           hora_saida?: string | null
           id?: string
@@ -20302,6 +20509,7 @@ export type Database = {
           lat_registro?: number | null
           lng_registro?: number | null
           observacao_auto?: string | null
+          origem?: string
           programacao_id?: string
           status?: string
           updated_at?: string
@@ -20310,6 +20518,13 @@ export type Database = {
           verificada_em?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "visita_ocorrencias_formulario_id_fkey"
+            columns: ["formulario_id"]
+            isOneToOne: false
+            referencedRelation: "visita_formularios"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "visita_ocorrencias_programacao_id_fkey"
             columns: ["programacao_id"]
@@ -20430,7 +20645,9 @@ export type Database = {
         Row: {
           ativa: boolean
           created_at: string
+          detectar_espontanea: boolean
           escopo: string
+          espontanea_ignorar_propria_filial: boolean
           estabelecimento_id: string
           exigir_janela_horario: boolean
           filial_id: string | null
@@ -20445,7 +20662,9 @@ export type Database = {
         Insert: {
           ativa?: boolean
           created_at?: string
+          detectar_espontanea?: boolean
           escopo?: string
+          espontanea_ignorar_propria_filial?: boolean
           estabelecimento_id: string
           exigir_janela_horario?: boolean
           filial_id?: string | null
@@ -20460,7 +20679,9 @@ export type Database = {
         Update: {
           ativa?: boolean
           created_at?: string
+          detectar_espontanea?: boolean
           escopo?: string
+          espontanea_ignorar_propria_filial?: boolean
           estabelecimento_id?: string
           exigir_janela_horario?: boolean
           filial_id?: string | null
