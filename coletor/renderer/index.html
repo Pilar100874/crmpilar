@@ -628,6 +628,13 @@
       const senha = document.getElementById('discPass').value;
       if (!marcas.length){ alert('Selecione ao menos um fabricante'); return; }
       if (!user){ alert('Informe o usuário'); return; }
+      try{
+        const st = await window.coletor.getStatus();
+        if (!st?.config?.filialId){
+          alert('Selecione a filial deste coletor na tela principal antes de descobrir câmeras. As câmeras encontradas serão criadas vinculadas a essa filial.');
+          return;
+        }
+      }catch{}
       document.getElementById('discoverStep1').style.display='none';
       document.getElementById('discoverStep2').style.display='block';
       document.getElementById('discProgressBar').style.width='0%';
