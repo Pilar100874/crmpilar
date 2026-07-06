@@ -33,12 +33,12 @@
       position:relative;
       background:linear-gradient(160deg, var(--brand) 0%, var(--brand-dark) 100%);
       color:#fff;
-      padding:26px 24px 56px;
+      padding:26px 24px 42px;
       border-bottom-left-radius:0;
     }
     .app-header::after{
       /* faixa decorativa âmbar sutil */
-      content:''; position:absolute; left:0; right:0; bottom:36px; height:2px;
+      content:''; position:absolute; left:0; right:0; bottom:28px; height:2px;
       background:linear-gradient(90deg, transparent, rgba(245,158,11,.55), transparent);
     }
     .hdr-top{ display:flex; align-items:center; justify-content:space-between; }
@@ -76,13 +76,13 @@
     .status-pill.off .dot{ background:#ef4444; box-shadow:0 0 0 4px rgba(239,68,68,.18); }
     .hdr-hint{ margin-top:10px; font-size:12px; color:#B8C7E0; }
     .hdr-version{
-      position:absolute; right:24px; bottom:14px;
+      position:absolute; right:24px; bottom:10px;
       font-size:11px; color:#B8C7E0; letter-spacing:.05em;
     }
 
     /* ─── LAYOUT ────────────────────────────────────────────────────── */
     .container{ max-width:960px; margin:0 auto; padding:0 16px; }
-    .stack{ margin-top:-32px; display:flex; flex-direction:column; gap:14px; }
+    .stack{ margin-top:0; padding-top:14px; display:flex; flex-direction:column; gap:14px; }
 
     .card{
       background:var(--card);
@@ -190,6 +190,10 @@
       background:#fff; color:var(--text); border:1px solid var(--stroke);
       padding:10px 12px; border-radius:10px; min-width:280px; font-size:13px;
     }
+    .filial-info-card{ padding:14px 18px; overflow:visible; }
+    .filial-info-row{ display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:nowrap; min-width:0; }
+    .filial-main{ display:flex; align-items:center; gap:10px; min-width:0; flex:1; }
+    .filial-name{ font-weight:800; font-size:15px; white-space:normal; overflow-wrap:anywhere; line-height:1.25; }
     .banner{ border-left:4px solid var(--accent); }
     .banner-update{ border-left:4px solid var(--success); }
 
@@ -199,6 +203,12 @@
 
     /* Divider dentro do card */
     .divider-h{ height:1px; background:var(--stroke); margin:12px 0; }
+    @media (max-width: 720px){
+      .stat-row,.grid2{ grid-template-columns:1fr; }
+      .filial-info-row{ align-items:flex-start; flex-direction:column; }
+      .filial-info-row .btn{ align-self:stretch; justify-content:center; }
+      .hdr-actions{ white-space:nowrap; }
+    }
   </style>
 </head>
 <body>
@@ -258,13 +268,13 @@
       </div>
 
       <!-- Filial ativa -->
-      <div class="card" id="filialInfo" style="display:none;">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
-          <div style="display:flex; align-items:center; gap:10px;">
+      <div class="card filial-info-card" id="filialInfo" style="display:none;">
+        <div class="filial-info-row">
+          <div class="filial-main">
             <span class="ico" style="width:32px;height:32px;border-radius:10px;background:var(--info-bg);color:var(--info);display:inline-flex;align-items:center;justify-content:center;">🏢</span>
-            <div>
+            <div style="min-width:0;">
               <div class="muted" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;">Filial ativa</div>
-              <div style="font-weight:700;font-size:15px;" id="filialAtualNome">—</div>
+              <div class="filial-name" id="filialAtualNome">—</div>
             </div>
           </div>
           <button class="btn ghost" onclick="trocarFilial()">Trocar filial</button>
@@ -493,8 +503,15 @@
       carregarFiliais();
     })();
     setInterval(() => verificarAtualizacao(true), 60 * 60 * 1000);
-    setInterval(refresh, 2000);
-    refresh();
+    let refreshRunning = false;
+    async function refreshLoop(){
+      if (!refreshRunning) {
+        refreshRunning = true;
+        try { await refresh(); } finally { refreshRunning = false; }
+      }
+      setTimeout(refreshLoop, 5000);
+    }
+    refreshLoop();
   </script>
 </body>
 </html>
