@@ -21,10 +21,31 @@ export default function CamerasDashboard() {
     ]);
     setGrupos(g ?? []);
     setCams(c ?? []);
+    return c ?? [];
   };
 
   useEffect(() => {
-    load();
+    (async () => {
+      const list = await load();
+      // Dispara snapshot automático de todas as câmeras (limite de 4 em paralelo)
+      const queue = [...list];
+      const workers = Array.from({ length: 4 }, async () => {
+        while (queue.length) {
+          const cam = queue.shift();
+          if (!cam) break;
+          try {
+            const { data, error } = await supabase.functions.invoke("cv-camera-snapshot", {
+              body: { camera_id: cam.id },
+            });
+            if (!error) {
+              const url = (data as any)?.signed_url;
+              if (url) setSnapshots((s) => ({ ...s, [cam.id]: url }));
+            }
+          } catch {}
+        }
+      });
+      await Promise.all(workers);
+    })();
   }, []);
 
   const snapshot = async (cam: any) => {
