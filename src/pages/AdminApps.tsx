@@ -144,6 +144,18 @@ const baixar = (file: string, url: string) => {
 };
 
 export default function AdminApps() {
+  const [coletorInfo, setColetorInfo] = useState<{ version: string; downloadUrl: string; notas?: string } | null>(null);
+
+  useEffect(() => {
+    fetch("/coletor/version.json", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => data && setColetorInfo(data))
+      .catch(() => {});
+  }, []);
+
+  const coletorFileName = coletorInfo?.downloadUrl?.split("/").pop() || "ColetorPilar-Setup.msi";
+  const coletorUrl = coletorInfo?.downloadUrl || coletorMsiAsset.url;
+
   return (
     <div className="mx-auto max-w-6xl space-y-5 p-3 sm:space-y-6 sm:p-6 md:p-8">
       <div>
