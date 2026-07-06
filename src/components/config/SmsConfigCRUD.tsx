@@ -207,29 +207,6 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
             </div>
           )}
 
-          {cfg.provider === 'smsgate' && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
-              <div className="md:col-span-3">
-                <Label>Base URL da API</Label>
-                <Input
-                  value={cfg.smsgate_base_url || ''}
-                  onChange={(e) => setCfg({ ...cfg, smsgate_base_url: e.target.value })}
-                  placeholder="https://api.sms-gate.app/3rd/v1"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Use <code>https://api.sms-gate.app/3rd/v1</code> para o modo Cloud, ou <code>http://IP_DO_CELULAR:8080</code> no modo Local.
-                </p>
-              </div>
-              <div>
-                <Label>Usuário</Label>
-                <Input value={cfg.smsgate_username || ''} onChange={(e) => setCfg({ ...cfg, smsgate_username: e.target.value })} placeholder="usuário gerado pelo app" />
-              </div>
-              <div>
-                <Label>Senha</Label>
-                <Input type="password" value={cfg.smsgate_password || ''} onChange={(e) => setCfg({ ...cfg, smsgate_password: e.target.value })} placeholder="senha gerada pelo app" />
-              </div>
-            </div>
-          )}
 
           {cfg.provider === 'pilar' && (
             <div className="border-t pt-4 space-y-3">
