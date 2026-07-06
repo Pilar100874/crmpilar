@@ -112,6 +112,34 @@ class SignalHub {
 
   async _onMsg(m) {
     if (!m || m.to !== 'coletor') return;
+    // Snapshot on-demand: força captura+upload imediato (sem esperar ciclo 30s)
+    if (m.type === 'snapshot-now') {
+      if (!this.myCameraIds.has(m.camera_id)) return;
+      try {
+        const cam = (this.cameras || []).find((c) => c.id === m.camera_id);
+        if (!cam) return;
+        const { fetchSnapshot } = require('./cameras');
+        const snap = await fetchSnapshot(cam);
+        const resp = await fetch(`${this.cfg.url}/functions/v1/cv-coletor-cameras`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: this.cfg.anonKey,
+            Authorization: `Bearer ${this.cfg.anonKey}`,
+          },
+          body: JSON.stringify({
+            action: 'upload_snapshot',
+            camera_id: cam.id,
+            content_type: snap.contentType,
+            image_base64: snap.bytes.toString('base64'),
+          }),
+        });
+        console.log('[webrtc] snapshot-now', cam.nome, resp.status);
+      } catch (e) {
+        console.error('[webrtc] snapshot-now err', e.message);
+      }
+      return;
+    }
     if (!this.myCameraIds.has(m.camera_id)) return;
     const key = `${m.camera_id}:${m.viewer_id}`;
     if (m.type === 'request') {
