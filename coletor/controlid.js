@@ -17,6 +17,14 @@ const tls = require('tls');
 const { spawn } = require('child_process');
 const os = require('os');
 
+function isIpAddress(hostname) {
+  return net.isIP(String(hostname || '').replace(/^\[|\]$/g, '')) !== 0;
+}
+
+function isRecoverableTransportError(message) {
+  return /WRONG_VERSION_NUMBER|EPROTO|ECONNRESET|ECONNREFUSED|EHOSTUNREACH|ETIMEDOUT|socket hang up|timeout|HTTP\/1\.1 400|HTTP 30[1278]|redirecionamentos|HPE_|Parse Error|curl exit (6|7|28|35|52|56)|curl indisponível|TLS falhou/i.test(String(message || ''));
+}
+
 function decodeChunked(buf) {
   // Decodificador de Transfer-Encoding: chunked (robusto para múltiplos chunks)
   const parts = [];
@@ -38,7 +46,11 @@ function decodeChunked(buf) {
 // BoringSSL (Electron/Chromium) rejeita @SECLEVEL=0 e SSL_OP_LEGACY_SERVER_CONNECT
 // com "OPENSSL_internal:INVALID_COMMAND". Tentamos, do mais permissivo ao mais básico.
 function buildTlsVariants(hostname, port) {
-  const base = { host: hostname, port, servername: hostname, rejectUnauthorized: false };
+  const base = { host: hostname, port, rejectUnauthorized: false };
+  // Não envia SNI quando o host é IP. Além do warning DEP0123 do Node,
+  // alguns firmwares Control iD travam/atrasam o handshake quando recebem
+  // servername com IP em certificado próprio.
+  if (!isIpAddress(hostname)) base.servername = hostname;
   const variants = [];
   // 1) OpenSSL clássico com SECLEVEL=0 (legado total)
   try {
@@ -73,7 +85,7 @@ function curlRequest(opts, body) {
       : (typeof body === 'string' ? body : JSON.stringify(body));
     // timeout mais generoso — Control iD legado pode demorar no handshake TLS
     const timeoutSec = Math.max(20, Math.ceil((opts.timeout || 20000) / 1000));
-    const args = ['-sk', '-i', '--http1.1',
+    const args = ['-sS', '-k', '-i', '--http1.1', '--ipv4',
       '--connect-timeout', '10',
       '--max-time', String(timeoutSec),
       '--tls-max', '1.2',
@@ -187,7 +199,7 @@ async function requestRaw(opts, body) {
       let lastErr = curlErr;
       for (const v of variants) {
         try { return await requestRawOnce(opts, body, v); }
-        catch (e) { lastErr = e; if (!isInvalidCommandErr(e) && !/timeout|ECONNRESET|EPROTO|socket hang up|WRONG_VERSION_NUMBER|Parse Error|HPE_/i.test(e.message || '')) break; }
+        catch (e) { lastErr = e; if (!isInvalidCommandErr(e) && !isRecoverableTransportError(e.message)) break; }
       }
       throw lastErr;
     }
@@ -200,7 +212,7 @@ async function requestRaw(opts, body) {
     try { return await requestRawOnce(opts, body, v); }
     catch (e) {
       lastErr = e;
-      if (!isInvalidCommandErr(e) && !/handshake|SSL|TLS|EPROTO|wrong version/i.test(e.message || '')) {
+      if (!isInvalidCommandErr(e) && !isRecoverableTransportError(e.message) && !/handshake|SSL|TLS|wrong version/i.test(e.message || '')) {
         throw e;
       }
     }
@@ -335,7 +347,7 @@ async function tentarLogin(cfg) {
         throw new Error('Credenciais inválidas (usuário/senha do relógio). Verifique o campo Usuário e Chave de Comunicação.');
       }
       // Erros de rede/protocolo → continua tentando
-      if (!/WRONG_VERSION_NUMBER|EPROTO|ECONNRESET|ECONNREFUSED|EHOSTUNREACH|ETIMEDOUT|socket hang up|timeout|HTTP\/1\.1 400|HTTP 30[1278]|redirecionamentos|HPE_|Parse Error/i.test(msg)) {
+      if (!isRecoverableTransportError(msg)) {
         // Erro não recuperável
         throw e;
       }
@@ -345,7 +357,7 @@ async function tentarLogin(cfg) {
   if (/ECONNRESET|socket hang up/i.test(m)) {
     throw new Error(`Relógio fechou a conexão (ECONNRESET). Possíveis causas: porta/protocolo incorretos, firewall bloqueando, ou o equipamento exige HTTPS na 443. Tente trocar a porta para 443 (HTTPS) ou 80 (HTTP) no cadastro.`);
   }
-  if (/ETIMEDOUT|EHOSTUNREACH|ECONNREFUSED/i.test(m)) {
+  if (/ETIMEDOUT|EHOSTUNREACH|ECONNREFUSED|curl exit (6|7|28)/i.test(m)) {
     throw new Error(`Não foi possível alcançar ${cfg.host}:${cfg.port}. Verifique IP, rede e se o Coletor Desktop está na mesma LAN do relógio.`);
   }
   throw ultimoErro;
