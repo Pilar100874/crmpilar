@@ -125,19 +125,6 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
           <Label className="text-sm flex items-center gap-2"><Smartphone className="h-4 w-4" /> Dispositivos Pilar Hub</Label>
           <p className="text-xs text-muted-foreground">Celulares (Android) e PCs (Windows) que rodam módulos SMS, Ponto e/ou Câmera.</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <PilarSnapshotsGallery estabelecimentoId={estabelecimentoId} />
-          <Button asChild size="sm" variant="outline">
-            <a href="/pilar-sms-v1.2.0.apk" download>
-              <Download className="h-4 w-4 mr-2" /> APK Android
-            </a>
-          </Button>
-          <Button asChild size="sm" variant="outline" disabled>
-            <span title="Em breve">
-              <Download className="h-4 w-4 mr-2" /> Pilar Cam (Windows)
-            </span>
-          </Button>
-        </div>
       </div>
 
       <div className="flex gap-2 flex-wrap">
