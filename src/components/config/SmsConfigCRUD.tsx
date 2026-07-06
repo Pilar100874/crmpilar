@@ -56,7 +56,7 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
 
   const [cfg, setCfg] = useState<SmsConfig>({
     estabelecimento_id: estabelecimentoId,
-    provider: 'smsgate',
+    provider: 'pilar',
     sender: '',
     ativo: true,
     twilio_account_sid: '',
