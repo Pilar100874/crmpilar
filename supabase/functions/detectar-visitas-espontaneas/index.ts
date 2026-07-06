@@ -41,15 +41,24 @@ Deno.serve(async (req) => {
 
   const estabIds = [...new Set(regras.map((r: any) => r.estabelecimento_id))];
 
-  // Clientes com lat/lng por estabelecimento
-  const { data: clientes } = await supabase
+  // Clientes com coordenadas via empresa vinculada
+  const { data: clientesRaw } = await supabase
     .from("customers")
-    .select("id, nome, lat, lng, estabelecimento_id")
+    .select("id, nome, estabelecimento_id, empresa_id, empresas!inner(latitude, longitude)")
     .in("estabelecimento_id", estabIds)
-    .not("lat", "is", null)
-    .not("lng", "is", null);
+    .not("empresa_id", "is", null);
 
-  if (!clientes || clientes.length === 0) {
+  const clientes = (clientesRaw || [])
+    .map((c: any) => ({
+      id: c.id,
+      nome: c.nome,
+      estabelecimento_id: c.estabelecimento_id,
+      lat: c.empresas?.latitude,
+      lng: c.empresas?.longitude,
+    }))
+    .filter((c: any) => c.lat != null && c.lng != null);
+
+  if (clientes.length === 0) {
     return new Response(JSON.stringify({ ok: true, criadas: 0, motivo: "sem clientes com coordenadas" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
