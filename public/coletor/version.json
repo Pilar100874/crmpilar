@@ -1,5 +1,5 @@
 {
-  "version": "1.4.8",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.4.8/ColetorPilar-Setup.exe",
-  "notas": "1.4.8: ffmpeg agora vem embutido no instalador — snapshot de câmeras RTSP funciona sem instalação manual."
+  "version": "1.4.9",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.4.9/ColetorPilar-Setup.exe",
+  "notas": "1.4.9: correção do auto-update — instalador agora roda com elevação (UAC) via Start-Process -Verb RunAs. Sem isso, o /S do NSIS perMachine falhava silenciosamente após o download."
 }
