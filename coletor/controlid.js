@@ -176,18 +176,27 @@ async function requestRaw(opts, body) {
   if (!isHttps) return requestRawOnce(opts, body, null);
 
   // No Windows: prefere curl.exe (Schannel aceita TLS 1.0/1.1/self-signed do Control iD).
-  // BoringSSL (Electron) rejeita SECLEVEL=0/TLSv1 → variantes falham em cascata dando "timeout".
+  // Se curl falhar por QUALQUER motivo (timeout, handshake, exit não-zero), cai para
+  // tls.connect com variantes de OpenSSL — o Control iD às vezes só responde por um
+  // dos transportes, dependendo do firmware.
   if (os.platform() === 'win32') {
     try { return await curlRequest(opts, body); }
-    catch (e) {
-      // Fallback para tls.connect apenas se curl não estiver disponível
-      if (!/curl indisponível|ENOENT/i.test(e.message || '')) throw e;
+    catch (curlErr) {
+      console.log('[controlid] curl falhou, tentando tls.connect:', curlErr.message);
+      const variants = buildTlsVariants(opts.hostname, opts.port);
+      let lastErr = curlErr;
+      for (const v of variants) {
+        try { return await requestRawOnce(opts, body, v); }
+        catch (e) { lastErr = e; if (!isInvalidCommandErr(e) && !/timeout|ECONNRESET|EPROTO|socket hang up|WRONG_VERSION_NUMBER|Parse Error|HPE_/i.test(e.message || '')) break; }
+      }
+      throw lastErr;
     }
   }
 
   const variants = buildTlsVariants(opts.hostname, opts.port);
   let lastErr;
   for (const v of variants) {
+
     try { return await requestRawOnce(opts, body, v); }
     catch (e) {
       lastErr = e;
