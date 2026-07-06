@@ -106,3 +106,4 @@ ipcMain.handle('collector:setFilial', (evt, id, nome) => {
   try { startCollector(); } catch {}
   return getStatus();
 });
+// trigger build
