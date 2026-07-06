@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { Camera, Plus, Edit, Trash2, Wifi, TestTube, Radio } from "lucide-react";
+import { Camera, Plus, Edit, Trash2, Wifi, TestTube, Radio, CheckSquare, Square, X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { CameraLiveViewer } from "@/components/cameras/CameraLiveViewer";
 import { StatusPingDot } from "@/components/StatusPingDot";
