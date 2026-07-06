@@ -1,5 +1,5 @@
 {
-  "version": "1.4.6",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.4.6/ColetorPilar-Setup.exe",
-  "notas": "1.4.6: corrige erro 'Cannot find module lib/binary-stream' ao abrir o aplicativo. O streaming de câmeras agora é carregado sob demanda e não trava mais o app."
+  "version": "1.4.7",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.4.7/ColetorPilar-Setup.exe",
+  "notas": "1.4.7: corrige a compilação do instalador NSIS no GitHub Actions e mantém o instalador em português."
 }
