@@ -24,7 +24,8 @@
     "productName": "ColetorPilar",
     "artifactName": "ColetorPilar-Setup.msi",
     "directories": {
-      "output": "dist-installer"
+      "output": "dist-installer",
+      "buildResources": "build"
     },
     "files": [
       "**/*",
