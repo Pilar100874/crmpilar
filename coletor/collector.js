@@ -38,7 +38,9 @@ const STATE = {
   equipamentos: [],
   cameras: [],
   lastErrors: {},
+  failStreak: {},   // { [equipId]: n } — histerese: só marca offline após N falhas seguidas
   progress: { ativo: false, etapa: 'idle', equipNome: '', indice: 0, total: 0, batidasEquip: 0 },
+
 };
 
 const lastNSRByEquip = {};
