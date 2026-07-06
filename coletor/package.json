@@ -31,6 +31,7 @@
       "!dist-installer${/*}"
     ],
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         {
           "target": "msi",
