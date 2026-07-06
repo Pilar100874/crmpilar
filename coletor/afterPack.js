@@ -14,8 +14,16 @@ module.exports = async function afterPack(context) {
   // require('lib/binary-stream') e guarda esses arquivos dentro de
   // src/node_modules. Alguns passos do electron-builder podam esse diretório
   // aninhado; sem ele, o live stream WebRTC não carrega no Windows instalado.
+  //
+  // Em electron-builder 24 o campo `context.appDir` foi removido —
+  // usamos o projectDir do packager (raiz do projeto) como fallback.
+  const projectDir =
+    context.packager?.info?.projectDir ||
+    context.packager?.projectDir ||
+    process.cwd();
+
   const src = path.join(
-    context.appDir,
+    projectDir,
     'node_modules',
     '@shinyoshiaki',
     'binary-data',
@@ -34,7 +42,7 @@ module.exports = async function afterPack(context) {
   );
 
   if (copyDirIfExists(src, dest)) {
-    console.log('[afterPack] binary-data src/node_modules preservado');
+    console.log('[afterPack] binary-data src/node_modules preservado a partir de', src);
   } else {
     console.warn('[afterPack] binary-data src/node_modules não encontrado em', src);
   }
