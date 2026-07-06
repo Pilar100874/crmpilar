@@ -291,24 +291,6 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
 
 
 
-            <AccordionItem value="smsgate">
-              <AccordionTrigger className="text-sm">
-                <span className="flex items-center gap-2"><Smartphone className="h-4 w-4 text-green-600" /> SMS Gateway (sms-gate.app) — Android · Gratuito</span>
-              </AccordionTrigger>
-              <AccordionContent className="text-sm space-y-2 text-muted-foreground">
-                <p><b>O que é:</b> app open-source instalado no celular Android que transforma o aparelho em gateway de SMS. Envia via chip do celular — sem mensalidade, custo é o do plano da operadora.</p>
-                <ol className="list-decimal ml-5 space-y-1">
-                  <li>Baixe o app <b>SMS Gateway</b> em <a className="underline" href="https://sms-gate.app" target="_blank" rel="noreferrer">sms-gate.app</a> (Play Store ou APK direto do GitHub).</li>
-                  <li>Instale no celular Android que ficará sempre ligado e com chip ativo.</li>
-                  <li>Abra o app, conceda as permissões de SMS.</li>
-                  <li>Escolha o modo: <b>Cloud</b> (padrão, mais fácil — o app se conecta ao servidor sms-gate.app) ou <b>Local</b> (o celular expõe uma API na sua rede).</li>
-                  <li>O app exibirá <b>Usuário</b> e <b>Senha</b> gerados automaticamente. Copie os dois.</li>
-                  <li>Aqui na tela, selecione o provedor <b>SMS Gateway (Android)</b> e cole usuário e senha.</li>
-                  <li>Base URL: mantenha <code>https://api.sms-gate.app/3rd/v1</code> (Cloud) ou coloque <code>http://IP:8080</code> se estiver em modo Local.</li>
-                  <li>Salve e faça um envio de teste.</li>
-                </ol>
-              </AccordionContent>
-            </AccordionItem>
 
 
             <AccordionItem value="twilio">
