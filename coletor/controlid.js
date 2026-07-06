@@ -71,12 +71,18 @@ function curlRequest(opts, body) {
     const payload = body === undefined || body === null
       ? ''
       : (typeof body === 'string' ? body : JSON.stringify(body));
-    const args = ['-sk', '-i', '--http1.1', '--max-time', String(Math.ceil((opts.timeout || 15000) / 1000)),
-      '-X', opts.method || 'GET', '-H', 'Content-Type: application/json',
-      '-H', 'Connection: close'];
+    // timeout mais generoso — Control iD legado pode demorar no handshake TLS
+    const timeoutSec = Math.max(20, Math.ceil((opts.timeout || 20000) / 1000));
+    const args = ['-sk', '-i', '--http1.1',
+      '--connect-timeout', '10',
+      '--max-time', String(timeoutSec),
+      '--tls-max', '1.2',
+      '-X', opts.method || 'GET',
+      '-H', 'Content-Type: application/json',
+      '-H', 'Connection: close',
+      '-H', 'User-Agent: ColetorPilar/1.5'];
     if (payload) { args.push('--data-binary', payload); }
     args.push(url);
-    // Windows ships curl.exe; on Linux/macOS, usual "curl".
     const bin = os.platform() === 'win32' ? 'curl.exe' : 'curl';
     let proc;
     try { proc = spawn(bin, args, { windowsHide: true }); }
@@ -84,9 +90,13 @@ function curlRequest(opts, body) {
     const out = []; const errBuf = [];
     proc.stdout.on('data', (c) => out.push(c));
     proc.stderr.on('data', (c) => errBuf.push(c));
-    proc.on('error', (e) => reject(new Error(`curl falhou: ${e.message}`)));
+    proc.on('error', (e) => reject(new Error(`curl indisponível: ${e.message}`)));
     proc.on('close', (code) => {
-      if (code !== 0) return reject(new Error(`curl exit ${code}: ${Buffer.concat(errBuf).toString('utf8').slice(0, 200)}`));
+      if (code !== 0) {
+        const errText = Buffer.concat(errBuf).toString('utf8').slice(0, 200);
+        // exit 28 = timeout, 7 = connect refused, 6 = host desconhecido, 35 = TLS handshake
+        return reject(new Error(`curl exit ${code}: ${errText}`));
+      }
       const raw = Buffer.concat(out);
       const splitAt = raw.indexOf('\r\n\r\n');
       if (splitAt < 0) return reject(new Error('resposta curl inválida'));
@@ -100,6 +110,7 @@ function curlRequest(opts, body) {
     });
   });
 }
+
 
 // Transporte por socket bruto — o Control iD envia cabeçalhos fora do padrão
 // HTTP/1.1 que o parser do Node rejeita ("Parse Error: Invalid header value char").
@@ -165,18 +176,27 @@ async function requestRaw(opts, body) {
   if (!isHttps) return requestRawOnce(opts, body, null);
 
   // No Windows: prefere curl.exe (Schannel aceita TLS 1.0/1.1/self-signed do Control iD).
-  // BoringSSL (Electron) rejeita SECLEVEL=0/TLSv1 → variantes falham em cascata dando "timeout".
+  // Se curl falhar por QUALQUER motivo (timeout, handshake, exit não-zero), cai para
+  // tls.connect com variantes de OpenSSL — o Control iD às vezes só responde por um
+  // dos transportes, dependendo do firmware.
   if (os.platform() === 'win32') {
     try { return await curlRequest(opts, body); }
-    catch (e) {
-      // Fallback para tls.connect apenas se curl não estiver disponível
-      if (!/curl indisponível|ENOENT/i.test(e.message || '')) throw e;
+    catch (curlErr) {
+      console.log('[controlid] curl falhou, tentando tls.connect:', curlErr.message);
+      const variants = buildTlsVariants(opts.hostname, opts.port);
+      let lastErr = curlErr;
+      for (const v of variants) {
+        try { return await requestRawOnce(opts, body, v); }
+        catch (e) { lastErr = e; if (!isInvalidCommandErr(e) && !/timeout|ECONNRESET|EPROTO|socket hang up|WRONG_VERSION_NUMBER|Parse Error|HPE_/i.test(e.message || '')) break; }
+      }
+      throw lastErr;
     }
   }
 
   const variants = buildTlsVariants(opts.hostname, opts.port);
   let lastErr;
   for (const v of variants) {
+
     try { return await requestRawOnce(opts, body, v); }
     catch (e) {
       lastErr = e;
