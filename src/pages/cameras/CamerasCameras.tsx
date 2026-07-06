@@ -422,13 +422,40 @@ export default function CamerasCameras() {
               </CardTitle>
             </CardHeader>
 
-            <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden border-y">
+            <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden border-y relative">
               {snapshots[r.id] ? (
                 <img src={snapshots[r.id]} alt={r.nome} className="w-full h-full object-cover" />
               ) : snapLoading.has(r.id) ? (
                 <span className="text-xs text-muted-foreground animate-pulse">Capturando snapshot...</span>
+              ) : snapErrors[r.id] ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex flex-col items-center gap-1 text-center px-3 cursor-help">
+                        <AlertTriangle className="h-8 w-8 text-destructive/70" />
+                        <span className="text-[11px] text-destructive/90 line-clamp-2 max-w-[90%]">
+                          {snapErrors[r.id]}
+                        </span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      <p className="text-xs whitespace-pre-wrap">{snapErrors[r.id]}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               ) : (
                 <Camera className="h-8 w-8 text-muted-foreground/40" />
+              )}
+              {!snapLoading.has(r.id) && (snapErrors[r.id] || snapshots[r.id]) && (
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="absolute top-2 right-2 h-7 w-7 opacity-80 hover:opacity-100"
+                  onClick={(e) => { e.stopPropagation(); fetchSnapshots([r]); }}
+                  title="Tentar novamente"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                </Button>
               )}
             </div>
 
