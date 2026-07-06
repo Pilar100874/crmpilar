@@ -68,9 +68,19 @@ export const FormularioPreviewSheet: React.FC<Props> = ({ open, onOpenChange, no
           </div>
         );
       case "data":
-        return <Input type="date" value={v || ""} onChange={e => setV(key, e.target.value)} />;
+        return (
+          <div className="flex gap-2">
+            <Input type="date" value={v || ""} onChange={e => setV(key, e.target.value)} />
+            <Button type="button" variant="outline" size="sm" onClick={() => setV(key, new Date().toISOString().slice(0, 10))}>Hoje</Button>
+          </div>
+        );
       case "hora":
-        return <Input type="time" value={v || ""} onChange={e => setV(key, e.target.value)} />;
+        return (
+          <div className="flex gap-2">
+            <Input type="time" value={v || ""} onChange={e => setV(key, e.target.value)} />
+            <Button type="button" variant="outline" size="sm" onClick={() => { const d = new Date(); setV(key, `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`); }}>Agora</Button>
+          </div>
+        );
       case "selecao":
         return (
           <Select value={v || ""} onValueChange={val => setV(key, val)}>
