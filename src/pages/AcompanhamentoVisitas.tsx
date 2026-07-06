@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { CalendarCheck, Download, RefreshCw } from "lucide-react";
+import { CalendarCheck, Download, RefreshCw, ClipboardEdit, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { VisitaFormularioSheet } from "@/components/visitas/VisitaFormularioSheet";
 
 interface Ocor {
   id: string;
@@ -23,6 +24,9 @@ interface Ocor {
   distancia_metros: number | null;
   fonte_deteccao: string | null;
   programacao_id: string;
+  origem?: string;
+  formulario_status?: string;
+  customer_id?: string | null;
 }
 
 const statusBadge = (s: string) => {
@@ -50,6 +54,8 @@ const AcompanhamentoVisitas: React.FC = () => {
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [verificando, setVerificando] = useState(false);
+  const [detectando, setDetectando] = useState(false);
+  const [formOcorrencia, setFormOcorrencia] = useState<string | null>(null);
 
   useEffect(() => { (async () => setEstabId(await getEstabelecimentoId()))(); }, []);
   useEffect(() => { if (estabId) { loadStatics(); load(); } }, [estabId]);
@@ -85,6 +91,15 @@ const AcompanhamentoVisitas: React.FC = () => {
     setVerificando(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Verificação concluída");
+    load();
+  }
+
+  async function detectarEspontaneas() {
+    setDetectando(true);
+    const { data, error } = await supabase.functions.invoke("detectar-visitas-espontaneas", { body: {} });
+    setDetectando(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Detecção concluída: ${data?.criadas ?? 0} visita(s)`);
     load();
   }
 
@@ -128,7 +143,10 @@ const AcompanhamentoVisitas: React.FC = () => {
           </h1>
           <p className="text-sm text-muted-foreground">Verifique visitas planejadas, realizadas e não realizadas.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={detectarEspontaneas} disabled={detectando}>
+            <Zap className={`h-4 w-4 mr-2 ${detectando ? "animate-pulse" : ""}`} /> Detectar espontâneas
+          </Button>
           <Button variant="outline" onClick={verificarAgora} disabled={verificando}>
             <RefreshCw className={`h-4 w-4 mr-2 ${verificando ? "animate-spin" : ""}`} /> Verificar agora
           </Button>
@@ -189,11 +207,13 @@ const AcompanhamentoVisitas: React.FC = () => {
                   <TableHead>Data</TableHead>
                   <TableHead>Cliente</TableHead>
                   <TableHead>Usuário</TableHead>
+                  <TableHead>Origem</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Chegada</TableHead>
                   <TableHead>Duração</TableHead>
-                  <TableHead>Distância</TableHead>
                   <TableHead>Fonte</TableHead>
+                  <TableHead>Formulário</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -202,15 +222,29 @@ const AcompanhamentoVisitas: React.FC = () => {
                     <TableCell>{o.data_prevista}</TableCell>
                     <TableCell>{progMap.get(o.programacao_id)?.cliente_nome || "—"}</TableCell>
                     <TableCell>{userMap.get(o.usuario_id ?? "")?.nome || "—"}</TableCell>
+                    <TableCell>
+                      {o.origem === "espontanea"
+                        ? <Badge variant="outline"><Zap className="h-3 w-3 mr-1" />Espontânea</Badge>
+                        : <Badge variant="secondary">Programada</Badge>}
+                    </TableCell>
                     <TableCell>{statusBadge(o.status)}</TableCell>
                     <TableCell>{o.hora_chegada ? new Date(o.hora_chegada).toLocaleTimeString("pt-BR") : "—"}</TableCell>
                     <TableCell>{o.duracao_min ? `${o.duracao_min} min` : "—"}</TableCell>
-                    <TableCell>{o.distancia_metros != null ? `${o.distancia_metros.toFixed(0)} m` : "—"}</TableCell>
                     <TableCell>{o.fonte_deteccao || "—"}</TableCell>
+                    <TableCell>
+                      {o.formulario_status === "preenchido" && <Badge>Preenchido</Badge>}
+                      {o.formulario_status === "pendente" && <Badge variant="destructive">Pendente</Badge>}
+                      {(!o.formulario_status || o.formulario_status === "nao_aplicavel") && <span className="text-muted-foreground text-xs">—</span>}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" variant="ghost" onClick={() => setFormOcorrencia(o.id)}>
+                        <ClipboardEdit className="h-4 w-4 mr-1" /> Formulário
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
                 {ocorrencias.length === 0 && (
-                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">
+                  <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground">
                     Nenhuma visita no período
                   </TableCell></TableRow>
                 )}
@@ -219,6 +253,13 @@ const AcompanhamentoVisitas: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      <VisitaFormularioSheet
+        ocorrenciaId={formOcorrencia}
+        open={!!formOcorrencia}
+        onOpenChange={(o) => !o && setFormOcorrencia(null)}
+        onSaved={load}
+      />
     </div>
   );
 };

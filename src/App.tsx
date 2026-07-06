@@ -169,6 +169,8 @@ import AutomacoesVendas from "./pages/AutomacoesVendas";
 import RoteirizadorVisitas from "./pages/RoteirizadorVisitas";
 import ProgramacaoVisitas from "./pages/ProgramacaoVisitas";
 import AcompanhamentoVisitas from "./pages/AcompanhamentoVisitas";
+import FormulariosVisita from "./pages/FormulariosVisita";
+import RegrasFormularioVisita from "./pages/RegrasFormularioVisita";
 import ConfigRegrasMonitoramentoVisita from "./pages/ConfigRegrasMonitoramentoVisita";
 import VendasConfig from "./pages/VendasConfig";
 import MeusConjuntos from "./pages/MeusConjuntos";
@@ -384,6 +386,8 @@ const App = () => (
               <Route path="/vendas/programacao-visitas" element={<ProgramacaoVisitas />} />
               <Route path="/vendas/acompanhamento-visitas" element={<AcompanhamentoVisitas />} />
               <Route path="/config/regras-monitoramento-visita" element={<ConfigRegrasMonitoramentoVisita />} />
+              <Route path="/config/formularios-visita" element={<FormulariosVisita />} />
+              <Route path="/config/regras-formulario-visita" element={<RegrasFormularioVisita />} />
               <Route path="/editor-regras" element={<EditorRegras />} />
               <Route path="/editor-regras/:id" element={<EditorRegras />} />
               <Route path="/vendas-config" element={<VendasConfig />} />

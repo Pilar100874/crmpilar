@@ -25,6 +25,8 @@ interface Regra {
   tempo_minimo_min: number;
   exigir_janela_horario: boolean;
   ativa: boolean;
+  detectar_espontanea?: boolean;
+  espontanea_ignorar_propria_filial?: boolean;
 }
 
 const empty: Partial<Regra> = {
@@ -35,6 +37,8 @@ const empty: Partial<Regra> = {
   tempo_minimo_min: 5,
   exigir_janela_horario: false,
   ativa: true,
+  detectar_espontanea: false,
+  espontanea_ignorar_propria_filial: true,
 };
 
 const ConfigRegrasMonitoramentoVisita: React.FC = () => {
@@ -195,6 +199,21 @@ const ConfigRegrasMonitoramentoVisita: React.FC = () => {
             <div className="flex items-center justify-between">
               <Label>Exigir janela de horário</Label>
               <Switch checked={!!form.exigir_janela_horario} onCheckedChange={v => setForm({ ...form, exigir_janela_horario: v })} />
+            </div>
+            <div className="border-t pt-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Detectar visitas espontâneas</Label>
+                  <p className="text-xs text-muted-foreground">Cria a visita automaticamente ao parar no endereço de um cliente.</p>
+                </div>
+                <Switch checked={!!form.detectar_espontanea} onCheckedChange={v => setForm({ ...form, detectar_espontanea: v })} />
+              </div>
+              {form.detectar_espontanea && (
+                <div className="flex items-center justify-between">
+                  <Label>Ignorar endereço da própria filial</Label>
+                  <Switch checked={form.espontanea_ignorar_propria_filial ?? true} onCheckedChange={v => setForm({ ...form, espontanea_ignorar_propria_filial: v })} />
+                </div>
+              )}
             </div>
             <div className="flex items-center justify-between">
               <Label>Ativa</Label>
