@@ -1,10 +1,69 @@
-const { app, BrowserWindow, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, shell } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const {
   startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow,
   startPonto, stopPonto, startCameras, stopCameras, listarFiliais,
 } = require('./collector');
 const { checarAtualizacao, baixarEInstalar } = require('./updater');
+
+// ─── Log forwarding ──────────────────────────────────────────────────────
+// Intercepta console.* do processo principal (onde rodam cameras.js,
+// controlid.js, collector.js) e:
+//  1) grava num arquivo em userData/logs/coletor.log
+//  2) reenvia para o renderer, para aparecer no DevTools (F12)
+let logFilePath = null;
+let logStream = null;
+function initLogging() {
+  try {
+    const dir = path.join(app.getPath('userData'), 'logs');
+    fs.mkdirSync(dir, { recursive: true });
+    logFilePath = path.join(dir, 'coletor.log');
+    // rotação simples: se >5MB, renomeia como .1
+    try {
+      const st = fs.statSync(logFilePath);
+      if (st.size > 5 * 1024 * 1024) {
+        try { fs.renameSync(logFilePath, logFilePath + '.1'); } catch {}
+      }
+    } catch {}
+    logStream = fs.createWriteStream(logFilePath, { flags: 'a' });
+  } catch (e) {
+    // sem log em arquivo, segue só stdout
+  }
+
+  const orig = {
+    log: console.log.bind(console),
+    info: console.info ? console.info.bind(console) : console.log.bind(console),
+    warn: console.warn ? console.warn.bind(console) : console.log.bind(console),
+    error: console.error ? console.error.bind(console) : console.log.bind(console),
+  };
+  const fmt = (args) => args.map(a => {
+    if (typeof a === 'string') return a;
+    try { return JSON.stringify(a); } catch { return String(a); }
+  }).join(' ');
+  const emit = (level, args) => {
+    const line = `[${new Date().toISOString()}] [${level}] ${fmt(args)}`;
+    try { orig[level](...args); } catch {}
+    try { if (logStream) logStream.write(line + '\n'); } catch {}
+    try {
+      BrowserWindow.getAllWindows().forEach(w => {
+        if (!w.isDestroyed()) w.webContents.send('main-log', { level, text: fmt(args) });
+      });
+    } catch {}
+  };
+  console.log = (...a) => emit('log', a);
+  console.info = (...a) => emit('info', a);
+  console.warn = (...a) => emit('warn', a);
+  console.error = (...a) => emit('error', a);
+
+  process.on('uncaughtException', (err) => {
+    try { console.error('[uncaughtException]', err && err.stack || String(err)); } catch {}
+  });
+  process.on('unhandledRejection', (err) => {
+    try { console.error('[unhandledRejection]', err && err.stack || String(err)); } catch {}
+  });
+}
+initLogging();
 
 // ─── Single instance lock ────────────────────────────────────────────────
 // Impede múltiplas instâncias simultâneas do Coletor (evita vários
