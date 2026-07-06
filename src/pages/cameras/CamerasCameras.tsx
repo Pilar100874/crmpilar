@@ -143,14 +143,18 @@ export default function CamerasCameras() {
     delete payload.id;
     if (!payload.angulo_key) payload.angulo_key = slugify(payload.nome);
     const q = editing.id
-      ? supabase.from("cv_cameras").update(payload).eq("id", editing.id)
-      : supabase.from("cv_cameras").insert(payload);
-    const { error } = await q;
+      ? supabase.from("cv_cameras").update(payload).eq("id", editing.id).select().single()
+      : supabase.from("cv_cameras").insert(payload).select().single();
+    const { error, data: saved } = await q;
     if (error) return toast.error(error.message);
     toast.success("Câmera salva");
     setDialogOpen(false);
-    load();
+    const cams = await load();
+    // Snapshot imediato da câmera salva
+    const target = saved || cams.find((c: any) => c.nome === payload.nome);
+    if (target) fetchSnapshots([target]);
   };
+
 
   const remove = async () => {
     if (!deleteId) return;
