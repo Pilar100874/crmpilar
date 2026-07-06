@@ -477,6 +477,19 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
                     />
                   </div>
 
+                  {/* Última visita (somente leitura) */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                      Última visita
+                    </Label>
+                    <Input
+                      readOnly
+                      value={ultimaVisita ? format(ultimaVisita, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "Nenhuma visita registrada"}
+                      className="bg-muted/40 cursor-not-allowed"
+                    />
+                  </div>
+
                   {/* CEP com busca automática */}
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
