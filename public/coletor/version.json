@@ -1,5 +1,5 @@
 {
-  "version": "1.5.8",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.5.8/ColetorPilar-Setup.exe",
+  "version": "1.5.9",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.5.9/ColetorPilar-Setup.exe",
   "notas": "1.5.1: corrige a atualização automática no Windows — após baixar, abre o pedido de permissão do Windows, aguarda o Coletor fechar e executa o instalador."
 }
