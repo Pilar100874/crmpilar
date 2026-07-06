@@ -16,7 +16,7 @@ import { Link } from 'react-router-dom';
 import PilarSmsDevices from './PilarSmsDevices';
 
 
-type Provider = 'twilio' | 'zenvia' | 'smsgate' | 'pilar';
+type Provider = 'twilio' | 'zenvia' | 'pilar';
 
 interface SmsConfig {
   id?: string;
