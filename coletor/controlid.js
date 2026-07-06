@@ -83,10 +83,11 @@ function curlRequest(opts, body) {
     const payload = body === undefined || body === null
       ? ''
       : (typeof body === 'string' ? body : JSON.stringify(body));
-    // timeout mais generoso — Control iD legado pode demorar no handshake TLS
-    const timeoutSec = Math.max(20, Math.ceil((opts.timeout || 20000) / 1000));
+    // Login precisa falhar rápido para tentar HTTP/HTTPS alternativos; leitura
+    // de AFD pode usar timeout maior quando opts.timeout vier em 60000ms.
+    const timeoutSec = Math.max(8, Math.ceil((opts.timeout || 8000) / 1000));
     const args = ['-sS', '-k', '-i', '--http1.1', '--ipv4',
-      '--connect-timeout', '10',
+      '--connect-timeout', '5',
       '--max-time', String(timeoutSec),
       '--tls-max', '1.2',
       '-X', opts.method || 'GET',
