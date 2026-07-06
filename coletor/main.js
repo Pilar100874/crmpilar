@@ -201,8 +201,11 @@ ipcMain.handle('discover:cameras', async (evt, opts) => {
 ipcMain.handle('discover:create', async (evt, items) => {
   try {
     const cfg = loadConfig();
-    if (!Array.isArray(items) || !items.length) return { ok: false, error: 'nenhuma câmera' };
-    const resp = await fetch(`${cfg.url}/functions/v1/cv-coletor-cameras`, {
+    console.log('[discover:create] recebido', Array.isArray(items) ? items.length : 0, 'itens; filial=', cfg.filialId);
+    if (!Array.isArray(items) || !items.length) return { ok: false, error: 'nenhuma câmera selecionada' };
+    const url = `${cfg.url}/functions/v1/cv-coletor-cameras`;
+    console.log('[discover:create] POST', url);
+    const resp = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -215,10 +218,14 @@ ipcMain.handle('discover:create', async (evt, items) => {
         cameras: items,
       }),
     });
-    const j = await resp.json().catch(() => ({}));
-    if (!resp.ok) return { ok: false, error: j?.error || `HTTP ${resp.status}` };
+    const text = await resp.text();
+    let j = {};
+    try { j = JSON.parse(text); } catch {}
+    console.log('[discover:create] resp', resp.status, text.slice(0, 400));
+    if (!resp.ok) return { ok: false, error: j?.error || `HTTP ${resp.status}: ${text.slice(0,200)}` };
     return { ok: true, created: j.created || items.length };
   } catch (e) {
+    console.error('[discover:create] erro', e);
     return { ok: false, error: String(e.message || e) };
   }
 });

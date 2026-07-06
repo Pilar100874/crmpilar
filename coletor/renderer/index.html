@@ -652,7 +652,7 @@
         <div style="max-height:340px; overflow:auto;">
         ${_discResults.map((c,i)=>`
           <div class="disc-row ${c.auth_ok ? '' : 'bad'}">
-            <input type="checkbox" ${c.auth_ok ? 'checked' : ''} data-i="${i}" class="disc-check">
+            <input type="checkbox" checked data-i="${i}" class="disc-check">
             <div>
               <div style="font-weight:600;">${c.modelo} · ${c.ip}</div>
               <div style="font-size:11px; color:var(--muted); font-family:monospace;">${c.rtsp_template.replace('{user}', c.auth_ok ? '****':'?').replace('{pass}','****')}</div>
@@ -670,7 +670,8 @@
 
     async function criarSelecionadas(){
       const idxs = Array.from(document.querySelectorAll('.disc-check:checked')).map(x=>parseInt(x.dataset.i,10));
-      if (!idxs.length){ alert('Selecione ao menos uma câmera'); return; }
+      console.log('[discover] criarSelecionadas idxs=', idxs);
+      if (!idxs.length){ alert('Selecione ao menos uma câmera (marque o checkbox à esquerda).'); return; }
       const user = document.getElementById('discUser').value.trim();
       const senha = document.getElementById('discPass').value;
       const items = idxs.map(i => {
@@ -679,22 +680,24 @@
           nome: `${c.modelo} ${c.ip}`,
           marca: c.marca, host: c.ip, porta: c.porta,
           protocolo: c.protocolo, usuario: user, senha,
-          snapshot_path: c.snapshot_path, tipo_rede: 'interna',
+          snapshot_path: c.snapshot_path || null, tipo_rede: 'interna',
           angulo_key: 'frente',
         };
       });
+      console.log('[discover] enviando', items);
       const btn = document.getElementById('discCreateBtn');
       btn.disabled = true; btn.textContent = 'Enviando…';
       try{
         const r = await window.coletor.createCameras(items);
+        console.log('[discover] resposta', r);
         if (r && r.ok){
-          alert(`✓ ${r.created} câmera(s) criada(s) no CRM.\nAcesse o CRM para posicionar/ativar.`);
+          alert(`✓ ${r.created} câmera(s) criada(s) no CRM (desativadas).\nAcesse o CRM em Câmeras para ativar.`);
           fecharDescoberta();
           refreshNow();
         } else {
-          alert('Erro: ' + (r && r.error || 'desconhecido'));
+          alert('Erro ao criar câmeras: ' + (r && r.error || 'desconhecido'));
         }
-      }catch(e){ alert('Erro: ' + e.message); }
+      }catch(e){ console.error('[discover] exception', e); alert('Erro: ' + e.message); }
       finally{ btn.disabled = false; btn.textContent = '➕ Adicionar selecionadas'; }
     }
   </script>
