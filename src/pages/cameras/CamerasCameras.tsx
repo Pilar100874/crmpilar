@@ -172,6 +172,43 @@ export default function CamerasCameras() {
   const grupoNome = (id: string | null) =>
     id ? grupos.find((g) => g.id === id)?.nome ?? "—" : "Sem grupo";
 
+  // ── Seleção em lote ───────────────────────────────────────────────
+  const toggleSel = (id: string) => {
+    setSelected((prev) => {
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
+  };
+  const allVisibleIds = filtered.map((r) => r.id);
+  const allSelected = allVisibleIds.length > 0 && allVisibleIds.every((id) => selected.has(id));
+  const toggleAllVisible = () => {
+    setSelected((prev) => {
+      if (allSelected) {
+        const n = new Set(prev);
+        allVisibleIds.forEach((id) => n.delete(id));
+        return n;
+      }
+      const n = new Set(prev);
+      allVisibleIds.forEach((id) => n.add(id));
+      return n;
+    });
+  };
+  const clearSel = () => setSelected(new Set());
+
+  const bulkUpdate = async (patch: Record<string, any>, msg: string) => {
+    if (!selected.size) return;
+    setBulkBusy(true);
+    const ids = Array.from(selected);
+    const { error } = await supabase.from("cv_cameras").update(patch).in("id", ids);
+    setBulkBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success(`${msg} (${ids.length} câmera${ids.length > 1 ? "s" : ""})`);
+    clearSel();
+    load();
+  };
+
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
