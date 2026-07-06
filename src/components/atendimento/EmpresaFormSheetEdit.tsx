@@ -15,6 +15,10 @@ import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { EmpresaFormulariosTab } from "@/components/empresas/EmpresaFormulariosTab";
+import { EmpresaVisitasTab, fetchUltimaVisitaEmpresa } from "@/components/empresas/EmpresaVisitasTab";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface EmpresaFormSheetEditProps {
   open: boolean;
