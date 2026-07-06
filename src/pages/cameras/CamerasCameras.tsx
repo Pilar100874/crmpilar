@@ -410,7 +410,17 @@ export default function CamerasCameras() {
               </CardTitle>
             </CardHeader>
 
-            <CardContent className="text-sm space-y-1">
+            <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden border-y">
+              {snapshots[r.id] ? (
+                <img src={snapshots[r.id]} alt={r.nome} className="w-full h-full object-cover" />
+              ) : snapLoading.has(r.id) ? (
+                <span className="text-xs text-muted-foreground animate-pulse">Capturando snapshot...</span>
+              ) : (
+                <Camera className="h-8 w-8 text-muted-foreground/40" />
+              )}
+            </div>
+
+            <CardContent className="text-sm space-y-1 pt-3">
               <div className="text-xs">
                 <Badge variant="outline">{grupoNome(r.grupo_id)}</Badge>
               </div>
