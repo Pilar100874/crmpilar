@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { Camera, Plus, Edit, Trash2, Wifi, TestTube, Radio, CheckSquare, Square, X } from "lucide-react";
+import { Camera, Plus, Edit, Trash2, Wifi, TestTube, Radio, CheckSquare, Square, X, AlertTriangle, RefreshCw } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { CameraLiveViewer } from "@/components/cameras/CameraLiveViewer";
@@ -74,10 +75,16 @@ export default function CamerasCameras() {
   const [bulkBusy, setBulkBusy] = useState(false);
   const [snapshots, setSnapshots] = useState<Record<string, string>>({});
   const [snapLoading, setSnapLoading] = useState<Set<string>>(new Set());
+  const [snapErrors, setSnapErrors] = useState<Record<string, string>>({});
 
   const fetchSnapshots = async (list: any[]) => {
     const queue = list.filter((c) => c.ativo);
     setSnapLoading(new Set(queue.map((c) => c.id)));
+    setSnapErrors((prev) => {
+      const n = { ...prev };
+      for (const c of queue) delete n[c.id];
+      return n;
+    });
     const workers = Array.from({ length: 4 }, async () => {
       while (queue.length) {
         const cam = queue.shift();
@@ -86,11 +93,16 @@ export default function CamerasCameras() {
           const { data, error } = await supabase.functions.invoke("cv-camera-snapshot", {
             body: { camera_id: cam.id },
           });
-          if (!error) {
-            const url = (data as any)?.signed_url;
-            if (url) setSnapshots((s) => ({ ...s, [cam.id]: url }));
+          const url = (data as any)?.signed_url;
+          const errMsg = error?.message || (data as any)?.error;
+          if (url) {
+            setSnapshots((s) => ({ ...s, [cam.id]: url }));
+          } else if (errMsg) {
+            setSnapErrors((s) => ({ ...s, [cam.id]: String(errMsg) }));
           }
-        } catch {}
+        } catch (e: any) {
+          setSnapErrors((s) => ({ ...s, [cam.id]: e?.message || "Falha ao capturar snapshot" }));
+        }
         setSnapLoading((s) => {
           const n = new Set(s);
           n.delete(cam.id);
@@ -410,13 +422,40 @@ export default function CamerasCameras() {
               </CardTitle>
             </CardHeader>
 
-            <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden border-y">
+            <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden border-y relative">
               {snapshots[r.id] ? (
                 <img src={snapshots[r.id]} alt={r.nome} className="w-full h-full object-cover" />
               ) : snapLoading.has(r.id) ? (
                 <span className="text-xs text-muted-foreground animate-pulse">Capturando snapshot...</span>
+              ) : snapErrors[r.id] ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex flex-col items-center gap-1 text-center px-3 cursor-help">
+                        <AlertTriangle className="h-8 w-8 text-destructive/70" />
+                        <span className="text-[11px] text-destructive/90 line-clamp-2 max-w-[90%]">
+                          {snapErrors[r.id]}
+                        </span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      <p className="text-xs whitespace-pre-wrap">{snapErrors[r.id]}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               ) : (
                 <Camera className="h-8 w-8 text-muted-foreground/40" />
+              )}
+              {!snapLoading.has(r.id) && (snapErrors[r.id] || snapshots[r.id]) && (
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="absolute top-2 right-2 h-7 w-7 opacity-80 hover:opacity-100"
+                  onClick={(e) => { e.stopPropagation(); fetchSnapshots([r]); }}
+                  title="Tentar novamente"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                </Button>
               )}
             </div>
 
