@@ -27,6 +27,7 @@ import ListasHub from "./pages/ListasHub";
 import Config from "./pages/Config";
 import SystemVisualConfig from "./pages/SystemVisualConfig";
 import SystemThemeLoader from "./components/SystemThemeLoader";
+import BackgroundLocationManager from "./components/BackgroundLocationManager";
 import GlobalVariables from "./pages/GlobalVariables";
 import Desenho from "./pages/Desenho";
 import MarketingHub from "./pages/MarketingHub";
@@ -288,6 +289,7 @@ const App = () => (
           <ScrollToTop />
           <UnsavedChangesProvider>
           <SystemThemeLoader />
+          <BackgroundLocationManager />
           <WatchRedirectWrapper />
           <PWAInstallPrompt />
           <PWAUpdateNotifier />

@@ -11,6 +11,7 @@ import { User, Mail, Phone, Building2, Users, Monitor, Download, ExternalLink, C
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { useExtensionDownload } from "@/hooks/useExtensionDownload";
 import { ExtensionInstallManual } from "@/components/ExtensionInstallManual";
+import LocationConsentCard from "@/components/perfil/LocationConsentCard";
 
 export default function Perfil() {
   const navigate = useNavigate();
@@ -377,6 +378,8 @@ export default function Perfil() {
             </div>
           </CardContent>
         </Card>
+
+        <LocationConsentCard />
       </div>
     </div>
   );
