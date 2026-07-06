@@ -47,25 +47,73 @@ Deno.serve(async (req) => {
     if (error || !cam) throw new Error(error?.message || "Câmera não encontrada");
     if (!cam.ativo) throw new Error("Câmera desativada");
     if (cam.tipo_rede === "interna") {
-      // Câmera interna: o Coletor Desktop captura na LAN e sobe o snapshot
-      // em cameras/{id}/coletor-latest.jpg — servimos a última imagem recebida.
       const latestPath = `cameras/${cam.id}/coletor-latest.jpg`;
-      const { data: signedLatest } = await sb.storage
-        .from("cv-vehicle-photos")
-        .createSignedUrl(latestPath, 3600);
-      if (signedLatest?.signedUrl) {
-        return new Response(
-          JSON.stringify({
-            photo_path: latestPath,
-            signed_url: `${signedLatest.signedUrl}&t=${Date.now()}`,
-            angle_key: cam.angulo_key,
-            fonte: "coletor",
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
+
+      // Metadata anterior — para detectar quando o Coletor sobe um novo snapshot
+      let prevUpdated: string | null = null;
+      try {
+        const { data: list } = await sb.storage
+          .from("cv-vehicle-photos")
+          .list(`cameras/${cam.id}`, { search: "coletor-latest.jpg", limit: 1 });
+        prevUpdated = list?.[0]?.updated_at ?? null;
+      } catch {}
+
+      // Dispara snapshot on-demand via Realtime — o Coletor Desktop escuta
+      // "snapshot-now" no canal webrtc-signal e captura+upload imediato.
+      try {
+        const chanNames = ["webrtc-signal"];
+        if (cam.filial_id) chanNames.push(`webrtc-signal:${cam.filial_id}`);
+        for (const name of chanNames) {
+          const ch = sb.channel(name, { config: { broadcast: { self: false, ack: false } } });
+          await new Promise<void>((resolve) => {
+            ch.subscribe((s) => { if (s === "SUBSCRIBED") resolve(); });
+            setTimeout(resolve, 1500);
+          });
+          await ch.send({
+            type: "broadcast",
+            event: "msg",
+            payload: { type: "snapshot-now", to: "coletor", camera_id: cam.id },
+          });
+          setTimeout(() => { try { sb.removeChannel(ch); } catch {} }, 500);
+        }
+      } catch (e) {
+        console.error("broadcast snapshot-now:", (e as Error).message);
       }
-      // Sem snapshot armazenado — verifica se o Coletor está online para dar
-      // uma mensagem mais precisa (RTSP sem ffmpeg é o caso mais comum).
+
+      // Aguarda até 10s pelo novo snapshot do Coletor
+      const deadline = Date.now() + 10_000;
+      let currentUpdated: string | null = prevUpdated;
+      while (Date.now() < deadline) {
+        await new Promise((r) => setTimeout(r, 800));
+        try {
+          const { data: list } = await sb.storage
+            .from("cv-vehicle-photos")
+            .list(`cameras/${cam.id}`, { search: "coletor-latest.jpg", limit: 1 });
+          const nowUpd = list?.[0]?.updated_at ?? null;
+          if (nowUpd && nowUpd !== prevUpdated) { currentUpdated = nowUpd; break; }
+        } catch {}
+      }
+
+      // Se temos qualquer snapshot armazenado (novo ou antigo), retorna
+      if (currentUpdated) {
+        const { data: signedLatest } = await sb.storage
+          .from("cv-vehicle-photos")
+          .createSignedUrl(latestPath, 3600);
+        if (signedLatest?.signedUrl) {
+          return new Response(
+            JSON.stringify({
+              photo_path: latestPath,
+              signed_url: `${signedLatest.signedUrl}&t=${Date.now()}`,
+              angle_key: cam.angulo_key,
+              fonte: "coletor",
+              atualizado: currentUpdated !== prevUpdated,
+            }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+      }
+
+      // Sem snapshot — mensagem específica
       const seenMs = cam.ultima_verificacao
         ? Date.now() - new Date(cam.ultima_verificacao).getTime()
         : Infinity;
@@ -73,18 +121,19 @@ Deno.serve(async (req) => {
       const isRtsp = (cam.protocolo || "").toLowerCase() === "rtsp" || cam.porta === 554;
       if (coletorOnline && isRtsp) {
         throw new Error(
-          "Câmera RTSP online no Coletor, mas nenhum snapshot foi gerado ainda. Instale o ffmpeg no PC do Coletor (necessário para capturar snapshot de RTSP) e aguarde o próximo ciclo (~30s).",
+          "Coletor online, mas não conseguiu capturar snapshot RTSP. Verifique se o ffmpeg está disponível (o Coletor v1.4.9+ traz embutido — atualize) e se as credenciais/porta RTSP da câmera estão corretas.",
         );
       }
       if (coletorOnline) {
         throw new Error(
-          "Coletor está online, mas ainda não enviou o primeiro snapshot desta câmera. Aguarde o próximo ciclo do Coletor (~30s) e tente de novo.",
+          "Coletor online mas snapshot ainda não disponível. Verifique credenciais e conectividade da câmera na LAN.",
         );
       }
       throw new Error(
-        "Câmera interna — nenhum snapshot recebido do Coletor Desktop ainda. Verifique se o Coletor está aberto com o módulo de câmeras ativado.",
+        "Câmera interna — Coletor Desktop offline. Abra o Coletor no PC da LAN e ative o módulo de câmeras.",
       );
     }
+
 
     try {
       const bytes = await fetchSnapshot(cam);

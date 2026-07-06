@@ -1,5 +1,5 @@
 {
-  "version": "1.4.9",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.4.9/ColetorPilar-Setup.exe",
-  "notas": "1.4.9: correção do auto-update — instalador agora roda com elevação (UAC) via Start-Process -Verb RunAs. Sem isso, o /S do NSIS perMachine falhava silenciosamente após o download."
+  "version": "1.5.0",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.5.0/ColetorPilar-Setup.exe",
+  "notas": "1.5.0: snapshot on-demand — botão 'Atualizar snapshot' agora dispara captura imediata via Realtime (não precisa mais aguardar o ciclo de 30s). Requer atualização do Coletor Desktop."
 }
