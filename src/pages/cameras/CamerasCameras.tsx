@@ -72,7 +72,34 @@ export default function CamerasCameras() {
   const [filiais, setFiliais] = useState<any[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [snapshots, setSnapshots] = useState<Record<string, string>>({});
+  const [snapLoading, setSnapLoading] = useState<Set<string>>(new Set());
 
+  const fetchSnapshots = async (list: any[]) => {
+    const queue = list.filter((c) => c.ativo);
+    setSnapLoading(new Set(queue.map((c) => c.id)));
+    const workers = Array.from({ length: 4 }, async () => {
+      while (queue.length) {
+        const cam = queue.shift();
+        if (!cam) break;
+        try {
+          const { data, error } = await supabase.functions.invoke("cv-camera-snapshot", {
+            body: { camera_id: cam.id },
+          });
+          if (!error) {
+            const url = (data as any)?.signed_url;
+            if (url) setSnapshots((s) => ({ ...s, [cam.id]: url }));
+          }
+        } catch {}
+        setSnapLoading((s) => {
+          const n = new Set(s);
+          n.delete(cam.id);
+          return n;
+        });
+      }
+    });
+    await Promise.all(workers);
+  };
 
   const load = async () => {
     const [{ data: cams }, { data: coletor }, { data: grps }, { data: fils }] = await Promise.all([
@@ -88,10 +115,14 @@ export default function CamerasCameras() {
       setCollectorEnabled(coletor.cameras_habilitado);
       setCollectorId(coletor.id);
     }
+    return cams ?? [];
   };
 
   useEffect(() => {
-    load();
+    (async () => {
+      const cams = await load();
+      fetchSnapshots(cams);
+    })();
   }, []);
 
   const openNew = () => {
