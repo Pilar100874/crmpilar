@@ -1,10 +1,14 @@
 {
   "name": "ponto-coletor",
-  "version": "1.4.6",
+  "version": "1.4.7",
   "description": "Coletor de batidas de relógios de ponto - CRM Pilar (pré-configurado)",
   "main": "main.js",
   "author": "Pilar",
   "license": "Proprietary",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Pilar100874/crmpilar.git"
+  },
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder --win nsis --x64"
@@ -28,6 +32,14 @@
       "buildResources": "build"
     },
     "asar": false,
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Pilar100874",
+        "repo": "crmpilar",
+        "channel": "latest"
+      }
+    ],
     "files": [
       "**/*",
       "!dist-installer${/*}",
