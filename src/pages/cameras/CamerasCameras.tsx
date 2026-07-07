@@ -166,6 +166,18 @@ export default function CamerasCameras() {
       const cams = await load();
       fetchSnapshots(cams);
     })();
+
+    // Realtime: recarrega quando o Coletor (ou outro usuário) adiciona/edita/remove câmeras
+    const ch = supabase
+      .channel("cv_cameras-cameras-page")
+      .on("postgres_changes", { event: "*", schema: "public", table: "cv_cameras" }, async () => {
+        const cams = await load();
+        fetchSnapshots(cams);
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
   }, []);
 
   const openNew = () => {
