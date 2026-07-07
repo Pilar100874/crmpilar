@@ -32,6 +32,7 @@ import { FloatingAddBlockButton } from "@/components/workflow/FloatingAddBlockBu
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 const EVENTOS = [
   { key: "atraso", label: "Atrasos" },
