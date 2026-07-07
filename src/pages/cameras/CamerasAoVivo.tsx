@@ -182,19 +182,29 @@ export default function CamerasAoVivo() {
                         <span>· {list.length}</span>
                       </div>
                       <div className={cn("grid gap-3", colClass)}>
-                        {list.map((c) => (
-                          <div
-                            key={c.id}
-                            className="rounded-lg overflow-hidden border bg-card shadow-sm hover:shadow-md transition-shadow"
-                          >
-                            <CameraLiveTile
-                              cameraId={c.id}
-                              cameraNome={c.nome}
-                              filialId={c.filial_id ?? null}
-                              onMaximize={() => setMaximized(c)}
-                            />
-                          </div>
-                        ))}
+                        {list.map((c) => {
+                          const isMax = maximized?.id === c.id;
+                          return (
+                            <div
+                              key={c.id}
+                              className="rounded-lg overflow-hidden border bg-card shadow-sm hover:shadow-md transition-shadow relative aspect-video"
+                            >
+                              {isMax ? (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/40 text-muted-foreground text-xs gap-1">
+                                  <CameraIcon className="h-6 w-6 opacity-40" />
+                                  <span>Aberta em tela ampliada</span>
+                                </div>
+                              ) : (
+                                <CameraLiveTile
+                                  cameraId={c.id}
+                                  cameraNome={c.nome}
+                                  filialId={c.filial_id ?? null}
+                                  onMaximize={() => setMaximized(c)}
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   );
