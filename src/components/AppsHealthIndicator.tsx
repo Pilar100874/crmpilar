@@ -4,38 +4,43 @@ import { Monitor, Smartphone, Bell } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
+type State = "online" | "warn" | "offline";
 type Health = { at: string | null; ago: number | null };
+type FilialHealth = { id: string; nome: string; at: string | null; ago: number | null; state: State; equipamentos: number };
 
-function classify(ago: number | null): "online" | "warn" | "offline" {
+function classify(ago: number | null): State {
   if (ago == null) return "offline";
   if (ago < 3 * 60_000) return "online";
   if (ago < 15 * 60_000) return "warn";
   return "offline";
 }
 
-function dotClass(state: "online" | "warn" | "offline") {
+function dotClass(state: State) {
   if (state === "online") return "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.9)]";
   if (state === "warn") return "bg-amber-400";
   return "bg-muted-foreground/40";
 }
 
-function label(state: "online" | "warn" | "offline", at: string | null) {
+function label(state: State, at: string | null) {
   const when = at ? new Date(at).toLocaleString("pt-BR") : "nunca";
   if (state === "online") return `Online · último ping ${when}`;
   if (state === "warn") return `Instável · último ping ${when}`;
   return at ? `Offline · último ping ${when}` : "Offline · nunca comunicou";
 }
 
-async function fetchHealth(): Promise<{ win: Health; and: Health }> {
-  const [{ data: eq }, { data: dv }] = await Promise.all([
+function aggregate(states: State[]): State {
+  if (states.some((s) => s === "online")) return "online";
+  if (states.some((s) => s === "warn")) return "warn";
+  return "offline";
+}
+
+async function fetchHealth(): Promise<{ win: Health; and: Health; filiais: FilialHealth[] }> {
+  const [{ data: filiaisRaw }, { data: equipRaw }, { data: dv }] = await Promise.all([
+    supabase.from("ponto_filiais").select("id, nome").order("nome", { ascending: true }),
     supabase
       .from("ponto_equipamentos")
-      .select("ultima_sync")
-      .eq("ativo", true)
-      .not("ultima_sync", "is", null)
-      .order("ultima_sync", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+      .select("filial_id, ultima_sync")
+      .eq("ativo", true),
     supabase
       .from("sms_devices")
       .select("ultimo_heartbeat, ultimo_ping")
@@ -45,12 +50,58 @@ async function fetchHealth(): Promise<{ win: Health; and: Health }> {
       .maybeSingle(),
   ]);
 
-  const winAt = (eq as any)?.ultima_sync ?? null;
-  const andAt = (dv as any)?.ultimo_heartbeat ?? (dv as any)?.ultimo_ping ?? null;
   const now = Date.now();
+  const filiais: FilialHealth[] = (filiaisRaw || []).map((f: any) => {
+    const equips = (equipRaw || []).filter((e: any) => e.filial_id === f.id);
+    const latest = equips
+      .map((e: any) => e.ultima_sync)
+      .filter(Boolean)
+      .sort()
+      .pop() as string | undefined;
+    const at = latest || null;
+    const ago = at ? now - new Date(at).getTime() : null;
+    return {
+      id: f.id,
+      nome: f.nome,
+      at,
+      ago,
+      state: equips.length === 0 ? "offline" : classify(ago),
+      equipamentos: equips.length,
+    };
+  });
+
+  // Equipamentos sem filial atribuída (fallback)
+  const semFilial = (equipRaw || []).filter((e: any) => !e.filial_id);
+  if (semFilial.length) {
+    const latest = semFilial
+      .map((e: any) => e.ultima_sync)
+      .filter(Boolean)
+      .sort()
+      .pop() as string | undefined;
+    const at = latest || null;
+    const ago = at ? now - new Date(at).getTime() : null;
+    filiais.push({
+      id: "__sem_filial__",
+      nome: "Sem filial atribuída",
+      at,
+      ago,
+      state: classify(ago),
+      equipamentos: semFilial.length,
+    });
+  }
+
+  const winLatest = (equipRaw || [])
+    .map((e: any) => e.ultima_sync)
+    .filter(Boolean)
+    .sort()
+    .pop() as string | undefined;
+  const winAt = winLatest || null;
+  const andAt = (dv as any)?.ultimo_heartbeat ?? (dv as any)?.ultimo_ping ?? null;
+
   return {
     win: { at: winAt, ago: winAt ? now - new Date(winAt).getTime() : null },
     and: { at: andAt, ago: andAt ? now - new Date(andAt).getTime() : null },
+    filiais,
   };
 }
 
