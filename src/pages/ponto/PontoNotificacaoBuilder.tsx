@@ -148,15 +148,16 @@ function CustomNode({ id, data, selected }: any) {
           <Handle type="source" id="sim" position={Position.Bottom} style={{ left: "30%" }} className="!bg-green-500 !w-3 !h-3 !border-2 !border-background" />
           <Handle type="source" id="nao" position={Position.Bottom} style={{ left: "70%" }} className="!bg-red-500 !w-3 !h-3 !border-2 !border-background" />
           <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, "sim", e.clientX, e.clientY); }}
-            className="absolute -bottom-3 left-[30%] -translate-x-1/2 w-5 h-5 rounded-full bg-green-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
+            className="absolute -bottom-7 left-[30%] -translate-x-1/2 w-5 h-5 rounded-full bg-green-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
           <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, "nao", e.clientX, e.clientY); }}
-            className="absolute -bottom-3 left-[70%] -translate-x-1/2 w-5 h-5 rounded-full bg-red-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
+            className="absolute -bottom-7 left-[70%] -translate-x-1/2 w-5 h-5 rounded-full bg-red-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
         </>
       ) : (
         <>
           <Handle type="source" position={Position.Bottom} className="!bg-primary !w-3 !h-3 !border-2 !border-background" />
           <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, null, e.clientX, e.clientY); }}
-            className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-primary text-primary-foreground shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
+            className="absolute -bottom-7 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-primary text-primary-foreground shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
+
         </>
       )}
     </div>
@@ -293,39 +294,43 @@ function PontoNotificacaoBuilderContent() {
   }), [onDuplicate, onToggleBreakpoint, onToggleSkip, onDeleteNode, onAddNote, onAddNext]);
 
   // ============ Conexões ============
+  // Ref sempre atualizada com os nós — evita usar `nodes` como dep e recriar onConnect a cada render
+  const nodesRef = useRef<Node[]>([]);
+  useEffect(() => { nodesRef.current = nodes; }, [nodes]);
+
   const onConnect = useCallback((c: Connection) => {
     if (!c.source || !c.target || c.source === c.target) return;
-    setNodes((currNodes) => {
-      const src = currNodes.find(n => n.id === c.source);
-      const tgt = currNodes.find(n => n.id === c.target);
-      if (src && tgt) {
-        const allowed = NEXT_ALLOWED[(src.data as any).type] || [];
-        if (allowed.length && !allowed.includes((tgt.data as any).type)) {
-          toast.error(`"${BLOCO_MAP[(tgt.data as any).type]?.label}" não pode vir depois de "${BLOCO_MAP[(src.data as any).type]?.label}"`);
-          return currNodes;
-        }
+    const curr = nodesRef.current;
+    const src = curr.find(n => n.id === c.source);
+    const tgt = curr.find(n => n.id === c.target);
+    if (src && tgt) {
+      const allowed = NEXT_ALLOWED[(src.data as any).type] || [];
+      if (allowed.length && !allowed.includes((tgt.data as any).type)) {
+        toast.error(`"${BLOCO_MAP[(tgt.data as any).type]?.label}" não pode vir depois de "${BLOCO_MAP[(src.data as any).type]?.label}"`);
+        return;
       }
-      setEdges(eds => addEdge({
-        ...c,
-        id: `e-${c.source}-${c.sourceHandle || "o"}-${c.target}`,
-        markerEnd: { type: MarkerType.ArrowClosed },
-        animated: true,
-        label: c.sourceHandle || undefined,
-      }, eds));
-      return currNodes;
-    });
-  }, [setNodes, setEdges]);
+    }
+    setEdges(eds => addEdge({
+      ...c,
+      id: `e-${c.source}-${c.sourceHandle || "o"}-${c.target}-${c.targetHandle || "t"}`,
+      markerEnd: { type: MarkerType.ArrowClosed },
+      animated: true,
+      label: c.sourceHandle || undefined,
+    }, eds));
+  }, [setEdges]);
 
   // Validação visual (feedback durante o arrasto do handle)
   const isValidConnection = useCallback((c: Connection) => {
     if (!c.source || !c.target || c.source === c.target) return false;
-    const src = nodes.find(n => n.id === c.source);
-    const tgt = nodes.find(n => n.id === c.target);
+    const curr = nodesRef.current;
+    const src = curr.find(n => n.id === c.source);
+    const tgt = curr.find(n => n.id === c.target);
     if (!src || !tgt) return true;
     const allowed = NEXT_ALLOWED[(src.data as any).type] || [];
     if (!allowed.length) return true;
     return allowed.includes((tgt.data as any).type);
-  }, [nodes]);
+  }, []);
+
 
   function addBlockAt(type: string, pos?: { x: number; y: number }, connectFrom?: { id: string; handle: string | null }) {
     const b = BLOCO_MAP[type];
