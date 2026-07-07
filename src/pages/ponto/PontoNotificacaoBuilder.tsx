@@ -417,8 +417,20 @@ function PontoNotificacaoBuilderContent() {
 
   useEffect(() => {
     const start = (event: any) => {
+      const point = getPointerPoint(event);
       const target = event.target as HTMLElement | null;
-      const handle = target?.closest?.(".react-flow__handle") as HTMLElement | null;
+      let handle = target?.closest?.(".react-flow__handle") as HTMLElement | null;
+      if (!handle && point && reactFlowWrapper.current) {
+        let nearest: { el: HTMLElement; distance: number } | null = null;
+        reactFlowWrapper.current.querySelectorAll<HTMLElement>(".react-flow__handle").forEach((el) => {
+          const rect = el.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          const distance = Math.hypot(point.x - cx, point.y - cy);
+          if (distance <= 56 && (!nearest || distance < nearest.distance)) nearest = { el, distance };
+        });
+        handle = nearest?.el ?? null;
+      }
       const nodeEl = handle?.closest?.(".react-flow__node") as HTMLElement | null;
       const nodeId = nodeEl?.getAttribute("data-id");
       if (!handle || !nodeId || !reactFlowWrapper.current?.contains(handle)) return;
