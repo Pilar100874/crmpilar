@@ -195,31 +195,41 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
   const toggleFullscreen = async () => {
     const doc: any = document;
     const fsEl = doc.fullscreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement;
-    try {
-      if (fsEl) {
+    if (fsEl) {
+      try {
         if (doc.exitFullscreen) await doc.exitFullscreen();
         else if (doc.webkitExitFullscreen) await doc.webkitExitFullscreen();
         else if (doc.msExitFullscreen) await doc.msExitFullscreen();
-        return;
-      }
-      // Tenta o container; se falhar (Dialog em portal pode bloquear em alguns navegadores),
-      // cai para o <video> — que sempre aceita fullscreen.
-      const container: any = containerRef.current;
-      const video: any = videoRef.current;
-      const req = (el: any) =>
-        el?.requestFullscreen?.() ||
-        el?.webkitRequestFullscreen?.() ||
-        el?.msRequestFullscreen?.() ||
-        el?.webkitEnterFullscreen?.(); // iOS Safari
-      try {
-        await req(container);
-      } catch {
-        await req(video);
-      }
-    } catch (e) {
-      console.error("[CameraLiveViewer] fullscreen falhou:", e);
+      } catch {}
+      return;
     }
+    const video: any = videoRef.current;
+    const container: any = containerRef.current;
+    const tryOn = async (el: any) => {
+      if (!el) return false;
+      const fn =
+        el.requestFullscreen ||
+        el.webkitRequestFullscreen ||
+        el.msRequestFullscreen ||
+        el.webkitEnterFullscreen;
+      if (!fn) return false;
+      try {
+        const r = fn.call(el);
+        if (r && typeof r.then === "function") await r;
+        return true;
+      } catch (e) {
+        console.warn("[CameraLiveViewer] fullscreen falhou em", el?.tagName, e);
+        return false;
+      }
+    };
+    // Vídeo primeiro (funciona mesmo em iframes sem allow=fullscreen no iOS).
+    if (await tryOn(video)) return;
+    if (await tryOn(container)) return;
+    // Último recurso: abrir a página numa nova janela em tela cheia.
+    toast.error("Tela cheia bloqueada pelo navegador. Verifique se o site tem permissão de fullscreen.");
   };
+
+
 
   // ============ CONTROLES PTZ (ONVIF via Coletor) ============
   const sendControl = useCallback((payload: any) => {
