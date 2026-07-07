@@ -46,6 +46,20 @@ export default function CamerasDashboard() {
       });
       await Promise.all(workers);
     })();
+
+    // Realtime: atualiza a tela quando o Coletor adiciona/edita/remove câmeras
+    const ch = supabase
+      .channel("cv_cameras-dashboard")
+      .on("postgres_changes", { event: "*", schema: "public", table: "cv_cameras" }, () => {
+        void load();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "cameras_grupos" }, () => {
+        void load();
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
   }, []);
 
   const snapshot = async (cam: any) => {

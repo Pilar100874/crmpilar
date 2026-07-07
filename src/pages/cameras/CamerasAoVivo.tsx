@@ -30,7 +30,7 @@ export default function CamerasAoVivo() {
   const [maximized, setMaximized] = useState<Cam | null>(null);
 
   useEffect(() => {
-    (async () => {
+    const loadAll = async () => {
       const [g, f, c] = await Promise.all([
         supabase.from("cameras_grupos").select("id,nome").eq("ativo", true).order("nome"),
         supabase.from("ponto_filiais").select("id,nome").eq("ativo", true).order("nome"),
@@ -39,7 +39,19 @@ export default function CamerasAoVivo() {
       setGrupos(g.data ?? []);
       setFiliais(f.data ?? []);
       setCams((c.data ?? []) as Cam[]);
-    })();
+    };
+    void loadAll();
+
+    // Realtime: atualiza ao adicionar/editar/remover câmeras (ex: via Coletor)
+    const ch = supabase
+      .channel("cv_cameras-aovivo")
+      .on("postgres_changes", { event: "*", schema: "public", table: "cv_cameras" }, () => {
+        void loadAll();
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
   }, []);
 
   const filialMap = useMemo(() => Object.fromEntries(filiais.map((f) => [f.id, f.nome])), [filiais]);
