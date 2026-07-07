@@ -55,6 +55,13 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
       setStatus("conectando");
       setErro(null);
       pc = new RTCPeerConnection(ICE);
+      pcRef.current = pc;
+      // Prepara recepção de áudio (para escutar a câmera) e transmissor de áudio (falar).
+      if (temAudio) {
+        try {
+          pc.addTransceiver("audio", { direction: "sendrecv" });
+        } catch {}
+      }
       pc.ontrack = (ev) => {
         if (videoRef.current) {
           videoRef.current.srcObject = ev.streams[0] || new MediaStream([ev.track]);
