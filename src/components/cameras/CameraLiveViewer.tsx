@@ -168,7 +168,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
 
       setTimeout(() => {
         if (!closed && !liveReached) {
-          setErro("Coletor não respondeu ao pedido de stream. Atualize para a versão 1.6.10+ do Coletor, mantenha o módulo de câmeras ativo e confirme se a câmera tem RTSP habilitado.");
+          setErro("Coletor não respondeu ao pedido de stream. Atualize o Coletor para a versão mais recente, mantenha o módulo de câmeras ativo e confirme se a câmera tem RTSP habilitado.");
           setStatus("erro");
         }
       }, 12_000);
