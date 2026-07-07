@@ -14,6 +14,7 @@ if (!fs.existsSync(ROOT)) {
 
 const SRC = path.join(ROOT, 'src');
 const NESTED = path.join(SRC, 'node_modules');
+const ALIAS_ROOT = SRC;
 const RE = /require\((['"])((?:lib|types|internal)\/[^'"]+)\1\)/g;
 let patched = 0;
 
@@ -26,9 +27,9 @@ function copyDirIfExists(src, dest) {
 }
 
 function ensureCompatibilityAliases() {
-  // Garante compatibilidade com instaladores antigos que ficaram com
-  // require('./lib/...') após o patch anterior, enquanto mantém o layout real
-  // em src/node_modules para os requires bare originais.
+  // Tira lib/types/internal de dentro de src/node_modules. O electron-builder
+  // pode podar node_modules aninhado no pacote final; mantendo os arquivos em
+  // src/lib, src/types e src/internal o WebRTC continua carregando no Windows.
   for (const name of ['lib', 'types', 'internal']) {
     if (copyDirIfExists(path.join(NESTED, name), path.join(SRC, name))) {
       console.log(`[patch-binary-data] alias src/${name} sincronizado`);
@@ -45,7 +46,7 @@ function walk(dir) {
     const src = fs.readFileSync(full, 'utf8');
     const from = path.dirname(full);
     const out = src.replace(RE, (_m, q, p) => {
-      const target = path.join(NESTED, p);
+      const target = path.join(ALIAS_ROOT, p);
       let rel = path.relative(from, target).replace(/\\/g, '/');
       if (!rel.startsWith('.')) rel = `./${rel}`;
       return `require(${q}${rel}${q})`;
