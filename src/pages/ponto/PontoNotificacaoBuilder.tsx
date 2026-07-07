@@ -630,17 +630,19 @@ function PontoNotificacaoBuilderContent() {
                             {category.blocks.map((b) => {
                               const Icon = b.icon;
                               return (
-                                <button
+                                <div
                                   key={b.type}
-                                  onClick={() => addBlockAt(b.type)}
-                                  title="Clique para adicionar"
-                                  className="w-full px-3 py-2 cursor-pointer bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-colors duration-100 select-none text-left"
+                                  draggable
+                                  onDragStart={(e) => onDragStartBlock(e, b.type)}
+                                  onDoubleClick={() => window.dispatchEvent(new CustomEvent("ponto-notif:add-block", { detail: { type: b.type } }))}
+                                  title="Arraste para o canvas ou clique 2x para adicionar"
+                                  className="w-full px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-colors duration-100 select-none text-left"
                                 >
                                   <div className="flex items-center gap-2">
                                     <Icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                                     <h4 className="text-xs font-normal text-foreground truncate">{b.label}</h4>
                                   </div>
-                                </button>
+                                </div>
                               );
                             })}
                           </div>
