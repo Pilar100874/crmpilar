@@ -22,16 +22,17 @@ function walkJs(dir, visitor) {
 function normalizeBinaryData(root) {
   const src = path.join(root, 'src');
   const nested = path.join(src, 'node_modules');
+  const aliasRoot = src;
   for (const name of ['lib', 'types', 'internal']) {
     copyDirIfExists(path.join(nested, name), path.join(src, name));
   }
 
-  const re = /require\((['"])((?:lib|types|internal)\/[^'"]+)\1\)/g;
+  const re = /require\((['"])(?:(?:\.\/)?node_modules\/)?((?:lib|types|internal)\/[^'"]+)\1\)/g;
   let patched = 0;
   walkJs(root, (file) => {
     const input = fs.readFileSync(file, 'utf8');
     const output = input.replace(re, (_m, q, p) => {
-      const target = path.join(nested, p);
+      const target = path.join(aliasRoot, p);
       let rel = path.relative(path.dirname(file), target).replace(/\\/g, '/');
       if (!rel.startsWith('.')) rel = `./${rel}`;
       return `require(${q}${rel}${q})`;
@@ -48,7 +49,8 @@ module.exports = async function afterPack(context) {
   // O pacote @shinyoshiaki/binary-data usa requires absolutos como
   // require('lib/binary-stream') e guarda esses arquivos dentro de
   // src/node_modules. Alguns passos do electron-builder podam esse diretório
-  // aninhado; sem ele, o live stream WebRTC não carrega no Windows instalado.
+  // aninhado; por isso também normalizamos para src/lib, src/types e
+  // src/internal, que não são podados.
   //
   // Em electron-builder 24 o campo `context.appDir` foi removido —
   // usamos o projectDir do packager (raiz do projeto) como fallback.
