@@ -221,6 +221,8 @@ export default function CamerasAoVivo() {
         cameraId={maximized?.id ?? null}
         cameraNome={maximized?.nome}
         filialId={maximized?.filial_id ?? null}
+        temPtz={maximized?.tem_ptz ?? false}
+        temAudio={maximized?.tem_audio ?? false}
         onClose={() => setMaximized(null)}
       />
     </div>
