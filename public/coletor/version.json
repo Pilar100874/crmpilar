@@ -1,5 +1,5 @@
 {
-  "version": "1.7.2",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.7.2/ColetorPilar-Setup.exe",
-  "notas": "1.7.2: corrige falha ao abrir câmera quando áudio está habilitado (colisão de porta UDP e erro na criação do PeerConnection). O vídeo agora sobe mesmo se o áudio falhar."
+  "version": "1.6.10",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.6.10/ColetorPilar-Setup.exe",
+  "notas": "1.6.10: versão estável atual."
 }
