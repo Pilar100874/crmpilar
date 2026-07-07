@@ -657,7 +657,7 @@ function PontoNotificacaoBuilderContent() {
       )}
 
       {/* Canvas — precisa de h-full/min-h-0 dentro do layout flex para o ReactFlow medir */}
-      <div className="flex-1 relative min-w-0 min-h-0 h-full w-full">
+      <div ref={reactFlowWrapper} onDrop={onDropCanvas} onDragOver={onDragOverCanvas} className="flex-1 relative min-w-0 min-h-0 h-full w-full" style={{ touchAction: 'none' }}>
         {!isLibExpanded && (
           <FloatingAddBlockButton onClick={() => setIsLibExpanded(true)} />
         )}
