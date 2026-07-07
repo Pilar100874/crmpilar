@@ -22,13 +22,16 @@ import {
   ArrowLeft, Save, Play, Zap, Bell, MessageSquare, Mail, Smartphone, Webhook,
   GitBranch, MoonStar, FileText, TrendingUp, Timer, ScrollText, Trash2,
   MoreVertical, Copy, Pause, SkipForward, StickyNote, Plus, Download, Upload, Wand2, X,
-  FolderOpen,
+  FolderOpen, Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
+import { FloatingAddBlockButton } from "@/components/workflow/FloatingAddBlockButton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const EVENTOS = [
   { key: "atraso", label: "Atrasos" },
