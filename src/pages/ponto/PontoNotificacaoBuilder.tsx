@@ -22,13 +22,16 @@ import {
   ArrowLeft, Save, Play, Zap, Bell, MessageSquare, Mail, Smartphone, Webhook,
   GitBranch, MoonStar, FileText, TrendingUp, Timer, ScrollText, Trash2,
   MoreVertical, Copy, Pause, SkipForward, StickyNote, Plus, Download, Upload, Wand2, X,
-  FolderOpen,
+  FolderOpen, Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
+import { FloatingAddBlockButton } from "@/components/workflow/FloatingAddBlockButton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const EVENTOS = [
   { key: "atraso", label: "Atrasos" },
@@ -182,6 +185,9 @@ function PontoNotificacaoBuilderContent() {
   const [rfInstance, setRfInstance] = useState<any>(null);
   const [isLocked, setIsLocked] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [isLibExpanded, setIsLibExpanded] = useState(false);
+  const [librarySearch, setLibrarySearch] = useState("");
+  const [openCategories, setOpenCategories] = useState<string[]>(["Início", "Lógica", "Conteúdo", "Canais", "Ações"]);
   const initialHashRef = useRef<string>("");
 
   useEffect(() => {
@@ -490,29 +496,103 @@ function PontoNotificacaoBuilderContent() {
     >
       <input ref={fileInputRef} type="file" accept="application/json" className="hidden" onChange={e => e.target.files?.[0] && importar(e.target.files[0])} />
 
-      {/* Library */}
-      <div className="w-56 border-r overflow-y-auto p-3 space-y-3 bg-muted/20 flex-shrink-0">
-        <div className="text-xs font-semibold text-foreground mb-1">Biblioteca de blocos</div>
-        {Object.entries(grupos).map(([g, items]) => (
-          <div key={g}>
-            <div className="text-[11px] font-semibold uppercase text-muted-foreground mb-1">{g}</div>
-            <div className="space-y-1">
-              {items.map(b => {
-                const Icon = b.icon;
-                return (
-                  <button key={b.type} onClick={() => addBlockAt(b.type)}
-                    className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md border text-left text-xs hover:shadow-sm transition-all", b.color)}>
-                    <Icon className="w-3.5 h-3.5" /> {b.label}
-                  </button>
-                );
-              })}
+      {/* Library — visual idêntico ao BotBuilder */}
+      {isLibExpanded && (
+        <div className="w-60 flex flex-col h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border relative overflow-hidden animate-slide-in flex-shrink-0 z-40 fixed inset-y-0 left-0 lg:static lg:inset-auto">
+          <div className="p-4 pb-2">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded-lg bg-foreground text-background flex items-center justify-center">
+                  <Sparkles className="h-3.5 w-3.5" />
+                </div>
+                <h3 className="font-bold text-base text-foreground tracking-tight">Menu</h3>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setIsLibExpanded(false)} className="h-7 w-7 rounded-md hover:bg-black/5">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="relative">
+              <Input
+                placeholder="Buscar..."
+                value={librarySearch}
+                onChange={(e) => setLibrarySearch(e.target.value)}
+                className="h-8 text-xs bg-muted/40 border-0 shadow-sm"
+              />
             </div>
           </div>
-        ))}
-      </div>
+
+          <ScrollArea className="flex-1">
+            <div className="w-[240px] max-w-full px-2 pb-4 space-y-0.5">
+              {Object.entries(grupos)
+                .map(([g, items]) => ({
+                  name: g,
+                  blocks: items.filter(b => b.label.toLowerCase().includes(librarySearch.toLowerCase())),
+                }))
+                .filter(cat => cat.blocks.length > 0)
+                .map((category) => {
+                  const isOpen = openCategories.includes(category.name);
+                  return (
+                    <Collapsible
+                      key={category.name}
+                      open={isOpen}
+                      onOpenChange={() =>
+                        setOpenCategories(prev => prev.includes(category.name) ? prev.filter(c => c !== category.name) : [...prev, category.name])
+                      }
+                    >
+                      <CollapsibleTrigger
+                        className={`flex items-center justify-between w-full px-3 py-2 rounded-xl transition-colors duration-100 text-left ${
+                          isOpen ? "bg-foreground text-background" : "hover:bg-black/5 text-foreground"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs font-medium">{category.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-semibold flex items-center justify-center ${isOpen ? "bg-background/20 text-background" : "bg-foreground text-background"}`}>
+                            {category.blocks.length}
+                          </span>
+                          <span className={`text-xs ${isOpen ? "text-background/70" : "text-muted-foreground"}`}>
+                            {isOpen ? "−" : "+"}
+                          </span>
+                        </div>
+                      </CollapsibleTrigger>
+
+                      <CollapsibleContent className="animate-accordion-down">
+                        <div className="relative ml-5 pl-4 pt-1 pb-1">
+                          <div className="absolute left-0 top-0 bottom-0 w-px bg-foreground/40" />
+                          <div className="space-y-0.5">
+                            {category.blocks.map((b) => {
+                              const Icon = b.icon;
+                              return (
+                                <button
+                                  key={b.type}
+                                  onClick={() => addBlockAt(b.type)}
+                                  title="Clique para adicionar"
+                                  className="w-full px-3 py-2 cursor-pointer bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-colors duration-100 select-none text-left"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <Icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                                    <h4 className="text-xs font-normal text-foreground truncate">{b.label}</h4>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  );
+                })}
+            </div>
+          </ScrollArea>
+        </div>
+      )}
 
       {/* Canvas — precisa de h-full/min-h-0 dentro do layout flex para o ReactFlow medir */}
       <div className="flex-1 relative min-w-0 min-h-0 h-full w-full">
+        {!isLibExpanded && (
+          <FloatingAddBlockButton onClick={() => setIsLibExpanded(true)} />
+        )}
 
         <ReactFlow
           nodes={enhancedNodes} edges={edges}
@@ -543,27 +623,40 @@ function PontoNotificacaoBuilderContent() {
         )}
       </div>
 
-      {/* Properties */}
-      <div className="w-80 border-l overflow-y-auto bg-muted/10 flex-shrink-0">
-        {selected ? (
-          <PropsPanel node={enhancedNodes.find(n => n.id === selected.id) || selected} onChange={updateNode}
-            onDelete={() => onDeleteNode(selected.id)}
-            onDuplicate={() => onDuplicate(selected.id)}
-            onToggleBreakpoint={() => onToggleBreakpoint(selected.id)}
-            onToggleSkip={() => onToggleSkip(selected.id)} />
-        ) : (
-          <div className="p-4 text-sm text-muted-foreground">
+      {/* Properties — visual idêntico ao BotBuilder (drawer mobile / card desktop) */}
+      {selected ? (
+        <div className="workflow-props animate-slide-in-right fixed inset-y-0 right-0 z-40 w-full sm:w-96 lg:static lg:inset-auto lg:z-auto lg:h-[calc(100%-1rem)] lg:w-96 lg:m-2 lg:rounded-2xl lg:border-2 lg:border-white dark:lg:border-white/10 lg:bg-gradient-to-b lg:from-background lg:to-border lg:shadow-lg bg-background border-l border-border flex flex-col h-full shadow-2xl overflow-x-hidden">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-border lg:border-b-0 lg:pt-4">
+            <span className="text-sm font-semibold text-foreground">Propriedades</span>
+            <Button variant="ghost" size="icon" onClick={() => setSelected(null)} className="h-7 w-7 rounded-md hover:bg-black/5">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <ScrollArea className="flex-1">
+            <PropsPanel node={enhancedNodes.find(n => n.id === selected.id) || selected} onChange={updateNode}
+              onDelete={() => onDeleteNode(selected.id)}
+              onDuplicate={() => onDuplicate(selected.id)}
+              onToggleBreakpoint={() => onToggleBreakpoint(selected.id)}
+              onToggleSkip={() => onToggleSkip(selected.id)} />
+          </ScrollArea>
+        </div>
+      ) : (
+        <div className="hidden lg:flex w-96 flex-col h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border p-6 animate-slide-in-right flex-shrink-0">
+          <div className="text-sm text-muted-foreground">
             <div className="font-semibold text-foreground mb-2">Como funciona</div>
             <ul className="list-disc pl-4 space-y-1.5">
-              <li>Arraste blocos da esquerda ou clique no <b>+</b> abaixo de qualquer bloco para escolher o próximo permitido.</li>
+              <li>Abra o <b>Menu</b> (canto superior esquerdo) e clique num bloco para adicioná-lo.</li>
+              <li>Clique no <b>+</b> abaixo de qualquer bloco para escolher o próximo permitido.</li>
               <li>Menu <b>⋮</b> do bloco: duplicar, pausar (breakpoint), pular, adicionar nota, excluir.</li>
               <li><b>Simular</b> executa passo a passo com destaque verde; <b>Arquivo → Disparar real</b> executa nos canais reais.</li>
               <li>Cadeado no topo bloqueia edições acidentais do canvas.</li>
               <li>Variáveis: <code>{`{funcionario} {data} {link_aprovacao} {severidade}`}</code>.</li>
             </ul>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+
 
       {/* ============ Dialogs ============ */}
       <></>
