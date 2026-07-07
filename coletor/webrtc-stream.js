@@ -325,6 +325,37 @@ class StreamSession {
     });
   }
 
+  _spawnFfmpegAudio() {
+    const rtsp = rtspUrlFor(this.cam);
+    console.log('[webrtc] audio start', this.cam.nome, 'udp', this.audioUdpPort);
+    const args = [
+      '-rtsp_transport', 'tcp',
+      '-fflags', 'nobuffer',
+      '-flags', 'low_delay',
+      '-i', rtsp,
+      '-vn',
+      '-c:a', 'libopus',
+      '-ar', '48000',
+      '-ac', '2',
+      '-b:a', '64k',
+      '-application', 'lowdelay',
+      '-f', 'rtp',
+      '-payload_type', '111',
+      `rtp://127.0.0.1:${this.audioUdpPort}?pkt_size=1200`,
+    ];
+    this.audioFfmpeg = spawn(ffmpegPath, args, { stdio: ['ignore', 'ignore', 'pipe'] });
+    this.audioFfmpeg.stderr.on('data', (d) => {
+      const s = d.toString();
+      if (/error|failed|unable|invalid|denied|refused|timeout|no audio|does not contain any stream/i.test(s)) {
+        console.log('[ffmpeg-audio]', this.cam.nome, s.trim());
+      }
+    });
+    this.audioFfmpeg.on('exit', (code) => {
+      console.log('[webrtc] audio ffmpeg exit', code, this.cam.nome, 'rtp=', this.audioRtpReceived);
+    });
+  }
+
+
   async _sendOffer() {
     const offer = await this.pc.createOffer();
     await this.pc.setLocalDescription(offer);
