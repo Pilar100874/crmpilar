@@ -828,6 +828,14 @@ function PontoNotificacaoBuilderContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm(prev => ({ open, nodeId: open ? prev.nodeId : null }))}
+        onConfirm={confirmDeleteNode}
+        title="Excluir bloco?"
+        description="Esta ação removerá o bloco e todas as suas conexões. Não pode ser desfeita."
+      />
     </WorkflowBuilderLayout>
   );
 }
