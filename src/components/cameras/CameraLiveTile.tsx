@@ -11,6 +11,7 @@ interface Props {
   filialId?: string | null;
   className?: string;
   autoStart?: boolean;
+  onMaximize?: () => void;
 }
 
 const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
