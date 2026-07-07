@@ -248,11 +248,31 @@ function PontoNotificacaoBuilderContent() {
     setNodes(ns => ns.map(n => n.id === nodeId ? { ...n, data: { ...n.data, isSkipped: !(n.data as any).isSkipped } } : n));
   }, [setNodes]);
 
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; nodeId: string | null }>({ open: false, nodeId: null });
+
+  const isTriggerNode = useCallback((nodeId: string | null | undefined) => {
+    if (!nodeId) return false;
+    const n = nodes.find(x => x.id === nodeId);
+    return (n?.data as any)?.type === "trigger";
+  }, [nodes]);
+
   const onDeleteNode = useCallback((nodeId: string) => {
+    if (isTriggerNode(nodeId)) {
+      toast.error("O bloco Gatilho não pode ser excluído.");
+      return;
+    }
+    setDeleteConfirm({ open: true, nodeId });
+  }, [isTriggerNode]);
+
+  const confirmDeleteNode = useCallback(() => {
+    const nodeId = deleteConfirm.nodeId;
+    if (!nodeId) return;
     setNodes(ns => ns.filter(n => n.id !== nodeId));
     setEdges(es => es.filter(e => e.source !== nodeId && e.target !== nodeId));
     setSelected(s => s?.id === nodeId ? null : s);
-  }, [setNodes, setEdges]);
+    setDeleteConfirm({ open: false, nodeId: null });
+    toast.success("Bloco excluído");
+  }, [deleteConfirm.nodeId, setNodes, setEdges]);
 
   const onAddNote = useCallback((nodeId: string) => {
     setNodes(ns => {
