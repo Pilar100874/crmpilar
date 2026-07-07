@@ -265,11 +265,10 @@ function PontoNotificacaoBuilderContent() {
     setSmartMenu({ x, y, fromId, handle });
   }, []);
 
-  // Aplica callbacks a todos os nodes sempre que mudam
-  const enhancedNodes = useMemo(() => nodes.map(n => ({
-    ...n,
-    data: { ...n.data, onDuplicate, onToggleBreakpoint, onToggleSkip, onDelete: onDeleteNode, onAddNote, onAddNext } as any,
-  })), [nodes, onDuplicate, onToggleBreakpoint, onToggleSkip, onDeleteNode, onAddNote, onAddNext]);
+  // Callbacks estáveis para os nodes (evita recriar data em cada render e cancelar conexões)
+  const nodeCallbacks = useMemo<NodeCallbacks>(() => ({
+    onDuplicate, onToggleBreakpoint, onToggleSkip, onDelete: onDeleteNode, onAddNote, onAddNext,
+  }), [onDuplicate, onToggleBreakpoint, onToggleSkip, onDeleteNode, onAddNote, onAddNext]);
 
   // ============ Conexões ============
   const onConnect = useCallback((c: Connection) => {
