@@ -57,6 +57,12 @@ const emptyCam = {
   ativo: true,
   grupo_id: null as string | null,
   filial_id: null as string | null,
+  tem_ptz: false,
+  tem_audio: false,
+  onvif_user: "",
+  onvif_pass: "",
+  onvif_porta: 80,
+  ptz_velocidade_padrao: 0.5,
 };
 
 export default function CamerasCameras() {
