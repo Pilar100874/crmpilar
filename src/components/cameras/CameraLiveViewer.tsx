@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Radio, X } from "lucide-react";
+import { Loader2, Radio, X, Maximize2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
