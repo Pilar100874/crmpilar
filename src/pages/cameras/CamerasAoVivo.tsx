@@ -13,6 +13,8 @@ interface Cam {
   filial_id: string | null;
   grupo_id: string | null;
   ativo: boolean;
+  tem_ptz?: boolean;
+  tem_audio?: boolean;
 }
 
 const SEM_FILIAL = "__sem_filial__";
