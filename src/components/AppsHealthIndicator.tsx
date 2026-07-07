@@ -188,7 +188,7 @@ export function AppsHealthIndicator({ compact = false }: { compact?: boolean }) 
               {filiais.length > 0 ? (
                 <>
                   <div className="text-muted-foreground mb-1.5">
-                    {filiaisOnline} de {filiaisComEquip || filiais.length} filiais com coletor ativo
+                    {filiaisAtivas} de {filiaisComEquip || filiais.length} filiais com coletor ativo
                   </div>
                   <div className="flex flex-col gap-1 max-h-56 overflow-auto">
                     {filiais.map((f) => (
