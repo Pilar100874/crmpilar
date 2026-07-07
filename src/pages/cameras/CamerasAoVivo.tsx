@@ -25,6 +25,7 @@ export default function CamerasAoVivo() {
   const [grupoId, setGrupoId] = useState<string>("all");
   const [filialId, setFilialId] = useState<string>("all");
   const [cols, setCols] = useState<string>("3");
+  const [maximized, setMaximized] = useState<Cam | null>(null);
 
   useEffect(() => {
     (async () => {
