@@ -1,5 +1,5 @@
 {
-  "version": "1.7.0",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.7.0/ColetorPilar-Setup.exe",
-  "notas": "1.7.0: adiciona controle PTZ (mover câmera) e áudio bidirecional via ONVIF no popup de Ao vivo."
+  "version": "1.7.1",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.7.1/ColetorPilar-Setup.exe",
+  "notas": "1.7.1: corrige áudio de escuta (RTSP → Opus). Requer câmera com áudio habilitado no stream principal."
 }

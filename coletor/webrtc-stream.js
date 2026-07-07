@@ -37,6 +37,13 @@ const H264 = new RTCRtpCodecParameters({
   parameters: 'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f',
 });
 
+const OPUS = new RTCRtpCodecParameters({
+  mimeType: 'audio/opus',
+  clockRate: 48000,
+  channels: 2,
+  payloadType: 111,
+});
+
 function rtspUrlFor(cam) {
   const user = cam.usuario ? encodeURIComponent(cam.usuario) : '';
   const pass = cam.senha ? encodeURIComponent(cam.senha) : '';
@@ -204,17 +211,30 @@ class StreamSession {
     this.offerSent = false;
     this.mode = 'copy'; // tenta copy primeiro; se falhar, reencoda
     this.closed = false;
+    this.audioFfmpeg = null;
+    this.audioUdp = null;
+    this.audioUdpPort = 40000 + Math.floor(Math.random() * 20000);
+    this.audioRtpReceived = 0;
   }
 
   async start() {
+    const wantAudio = !!this.cam.tem_audio;
     this.pc = new RTCPeerConnection({
       iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
-      codecs: { video: [H264] },
+      codecs: {
+        video: [H264],
+        ...(wantAudio ? { audio: [OPUS] } : {}),
+      },
     });
     this.track = new MediaStreamTrack({ kind: 'video' });
     this.pc.addTransceiver(this.track, { direction: 'sendonly' });
+    if (wantAudio) {
+      this.audioTrack = new MediaStreamTrack({ kind: 'audio' });
+      // sendrecv para também poder receber áudio do viewer (falar na câmera)
+      this.pc.addTransceiver(this.audioTrack, { direction: 'sendrecv' });
+    }
 
-    // UDP receiver para RTP do ffmpeg
+    // UDP receiver para RTP do ffmpeg (vídeo)
     this.udp = dgram.createSocket('udp4');
     this.udp.on('message', (buf) => {
       this.rtpReceived++;
@@ -225,6 +245,16 @@ class StreamSession {
       }
     });
     await new Promise((r) => this.udp.bind(this.udpPort, '127.0.0.1', r));
+
+    if (wantAudio) {
+      this.audioUdp = dgram.createSocket('udp4');
+      this.audioUdp.on('message', (buf) => {
+        this.audioRtpReceived++;
+        try { this.audioTrack.writeRtp(buf); } catch {}
+      });
+      await new Promise((r) => this.audioUdp.bind(this.audioUdpPort, '127.0.0.1', r));
+      this._spawnFfmpegAudio();
+    }
 
     this._spawnFfmpeg();
 
@@ -237,6 +267,7 @@ class StreamSession {
         this._spawnFfmpeg();
       }
     }, 4000);
+
 
     // 10s sem nada → fecha
     setTimeout(() => {
@@ -294,6 +325,37 @@ class StreamSession {
     });
   }
 
+  _spawnFfmpegAudio() {
+    const rtsp = rtspUrlFor(this.cam);
+    console.log('[webrtc] audio start', this.cam.nome, 'udp', this.audioUdpPort);
+    const args = [
+      '-rtsp_transport', 'tcp',
+      '-fflags', 'nobuffer',
+      '-flags', 'low_delay',
+      '-i', rtsp,
+      '-vn',
+      '-c:a', 'libopus',
+      '-ar', '48000',
+      '-ac', '2',
+      '-b:a', '64k',
+      '-application', 'lowdelay',
+      '-f', 'rtp',
+      '-payload_type', '111',
+      `rtp://127.0.0.1:${this.audioUdpPort}?pkt_size=1200`,
+    ];
+    this.audioFfmpeg = spawn(ffmpegPath, args, { stdio: ['ignore', 'ignore', 'pipe'] });
+    this.audioFfmpeg.stderr.on('data', (d) => {
+      const s = d.toString();
+      if (/error|failed|unable|invalid|denied|refused|timeout|no audio|does not contain any stream/i.test(s)) {
+        console.log('[ffmpeg-audio]', this.cam.nome, s.trim());
+      }
+    });
+    this.audioFfmpeg.on('exit', (code) => {
+      console.log('[webrtc] audio ffmpeg exit', code, this.cam.nome, 'rtp=', this.audioRtpReceived);
+    });
+  }
+
+
   async _sendOffer() {
     const offer = await this.pc.createOffer();
     await this.pc.setLocalDescription(offer);
@@ -331,7 +393,9 @@ class StreamSession {
     if (this.closed) return;
     this.closed = true;
     try { this.ffmpeg?.kill('SIGKILL'); } catch {}
+    try { this.audioFfmpeg?.kill('SIGKILL'); } catch {}
     try { this.udp?.close(); } catch {}
+    try { this.audioUdp?.close(); } catch {}
     try { this.pc?.close(); } catch {}
     this.hub.sessions.delete(this.key);
   }
