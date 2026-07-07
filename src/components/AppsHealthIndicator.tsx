@@ -10,8 +10,8 @@ type FilialHealth = { id: string; nome: string; at: string | null; ago: number |
 
 function classify(ago: number | null): State {
   if (ago == null) return "offline";
-  if (ago < 3 * 60_000) return "online";
-  if (ago < 15 * 60_000) return "warn";
+  if (ago < 8 * 60_000) return "online";
+  if (ago < 30 * 60_000) return "warn";
   return "offline";
 }
 
