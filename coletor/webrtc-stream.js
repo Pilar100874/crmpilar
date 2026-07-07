@@ -211,17 +211,30 @@ class StreamSession {
     this.offerSent = false;
     this.mode = 'copy'; // tenta copy primeiro; se falhar, reencoda
     this.closed = false;
+    this.audioFfmpeg = null;
+    this.audioUdp = null;
+    this.audioUdpPort = 40000 + Math.floor(Math.random() * 20000);
+    this.audioRtpReceived = 0;
   }
 
   async start() {
+    const wantAudio = !!this.cam.tem_audio;
     this.pc = new RTCPeerConnection({
       iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
-      codecs: { video: [H264] },
+      codecs: {
+        video: [H264],
+        ...(wantAudio ? { audio: [OPUS] } : {}),
+      },
     });
     this.track = new MediaStreamTrack({ kind: 'video' });
     this.pc.addTransceiver(this.track, { direction: 'sendonly' });
+    if (wantAudio) {
+      this.audioTrack = new MediaStreamTrack({ kind: 'audio' });
+      // sendrecv para também poder receber áudio do viewer (falar na câmera)
+      this.pc.addTransceiver(this.audioTrack, { direction: 'sendrecv' });
+    }
 
-    // UDP receiver para RTP do ffmpeg
+    // UDP receiver para RTP do ffmpeg (vídeo)
     this.udp = dgram.createSocket('udp4');
     this.udp.on('message', (buf) => {
       this.rtpReceived++;
@@ -232,6 +245,16 @@ class StreamSession {
       }
     });
     await new Promise((r) => this.udp.bind(this.udpPort, '127.0.0.1', r));
+
+    if (wantAudio) {
+      this.audioUdp = dgram.createSocket('udp4');
+      this.audioUdp.on('message', (buf) => {
+        this.audioRtpReceived++;
+        try { this.audioTrack.writeRtp(buf); } catch {}
+      });
+      await new Promise((r) => this.audioUdp.bind(this.audioUdpPort, '127.0.0.1', r));
+      this._spawnFfmpegAudio();
+    }
 
     this._spawnFfmpeg();
 
@@ -244,6 +267,7 @@ class StreamSession {
         this._spawnFfmpeg();
       }
     }, 4000);
+
 
     // 10s sem nada → fecha
     setTimeout(() => {
