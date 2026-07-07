@@ -316,7 +316,52 @@ function PontoNotificacaoBuilderContent() {
         markerEnd: { type: MarkerType.ArrowClosed }, animated: true,
       } as Edge]);
     }
+    setSelected(node);
+    return node;
   }
+
+  // ============ Drag & drop (desktop) e evento add-block (mobile: 2 cliques) ============
+  const onDragStartBlock = useCallback((event: React.DragEvent, nodeType: string) => {
+    event.dataTransfer.setData("application/reactflow", nodeType);
+    event.dataTransfer.effectAllowed = "move";
+  }, []);
+
+  const onDragOverCanvas = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const onDropCanvas = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!reactFlowWrapper.current || !rfInstance) return;
+    const type = event.dataTransfer.getData("application/reactflow");
+    if (!type || !BLOCO_MAP[type]) return;
+    const bounds = reactFlowWrapper.current.getBoundingClientRect();
+    const position = rfInstance.screenToFlowPosition({
+      x: event.clientX - bounds.left,
+      y: event.clientY - bounds.top,
+    });
+    addBlockAt(type, position);
+    toast.success(`Bloco "${BLOCO_MAP[type].label}" adicionado!`);
+  }, [rfInstance]);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const type = (e as CustomEvent).detail?.type;
+      if (!type || !BLOCO_MAP[type]) return;
+      let pos: { x: number; y: number } | undefined;
+      if (reactFlowWrapper.current && rfInstance) {
+        const b = reactFlowWrapper.current.getBoundingClientRect();
+        pos = rfInstance.screenToFlowPosition({ x: b.left + b.width / 2, y: b.top + b.height / 2 });
+      }
+      addBlockAt(type, pos);
+      toast.success(`Bloco "${BLOCO_MAP[type].label}" adicionado!`);
+    };
+    window.addEventListener("ponto-notif:add-block", handler);
+    return () => window.removeEventListener("ponto-notif:add-block", handler);
+  }, [rfInstance]);
+
 
   function onSmartPick(type: string) {
     if (!smartMenu) return;
