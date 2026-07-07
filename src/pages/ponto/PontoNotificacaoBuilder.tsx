@@ -272,7 +272,6 @@ function PontoNotificacaoBuilderContent() {
 
   // ============ Conexões ============
   const onConnect = useCallback((c: Connection) => {
-    console.log("[ponto-nb] onConnect", c);
     if (!c.source || !c.target || c.source === c.target) return;
     setNodes((currNodes) => {
       const src = currNodes.find(n => n.id === c.source);
