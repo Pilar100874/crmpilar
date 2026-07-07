@@ -181,6 +181,10 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
         sendAll({ type: "stop", to: "coletor", viewer_id: viewerId, camera_id: cameraId });
       } catch {}
       try { pc?.close(); } catch {}
+      try { micStreamRef.current?.getTracks().forEach((t) => t.stop()); } catch {}
+      micStreamRef.current = null;
+      pcRef.current = null;
+      controlChannelsRef.current = [];
       for (const ch of channels) supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
