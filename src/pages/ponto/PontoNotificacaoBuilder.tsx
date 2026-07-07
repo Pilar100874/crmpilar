@@ -335,24 +335,23 @@ function PontoNotificacaoBuilderContent() {
 
   const addValidatedEdge = useCallback((c: Connection, notifyDuplicate = true) => {
     if (!c.source || !c.target || c.source === c.target) return false;
-    let accepted = false;
-    setEdges(eds => {
-      if (!isSingleEdgePerHandleAllowed(c, eds)) {
-        if (notifyDuplicate) toast.error(SINGLE_OUTPUT_TOAST);
-        return eds;
-      }
+    if (!isSingleEdgePerHandleAllowed(c, edgesRef.current)) {
+      if (notifyDuplicate) toast.error(SINGLE_OUTPUT_TOAST);
+      return false;
+    }
 
-      accepted = true;
-      return addEdge({
-        ...c,
-        id: `e-${c.source}-${c.sourceHandle || "o"}-${c.target}-${c.targetHandle || "t"}-${Date.now()}`,
-        type: "smoothstep",
-        markerEnd: { type: MarkerType.ArrowClosed },
-        animated: true,
-        label: c.sourceHandle || undefined,
-      }, eds);
-    });
-    return accepted;
+    const edge = {
+      ...c,
+      id: `e-${c.source}-${c.sourceHandle || "o"}-${c.target}-${c.targetHandle || "t"}-${Date.now()}`,
+      type: "smoothstep",
+      markerEnd: { type: MarkerType.ArrowClosed },
+      animated: true,
+      label: c.sourceHandle || undefined,
+    } as Edge;
+    const nextEdges = addEdge(edge, edgesRef.current);
+    edgesRef.current = nextEdges;
+    setEdges(nextEdges);
+    return true;
   }, [setEdges]);
 
   const onConnect = useCallback((c: Connection) => {
@@ -399,6 +398,42 @@ function PontoNotificacaoBuilderContent() {
     connectStartRef.current = { nodeId, handleId, handleType };
   }, []);
 
+  const finishManualConnection = useCallback((start: { nodeId: string | null; handleId: string | null; handleType: "source" | "target" }, point: { x: number; y: number }) => {
+    if (!start.nodeId || connectSucceededRef.current) return false;
+    const droppedNodeId = findNodeAtPoint(point.x, point.y, start.nodeId);
+    if (!droppedNodeId) return false;
+
+    const connection: Connection = start.handleType === "target"
+      ? { source: droppedNodeId, sourceHandle: null, target: start.nodeId, targetHandle: start.handleId ?? null }
+      : { source: start.nodeId, sourceHandle: start.handleId ?? null, target: droppedNodeId, targetHandle: null };
+
+    const accepted = addValidatedEdge(connection);
+    if (accepted) {
+      connectSucceededRef.current = true;
+      toast.success("Blocos vinculados");
+    }
+    return accepted;
+  }, [addValidatedEdge, findNodeAtPoint]);
+
+  useEffect(() => {
+    const finish = (event: any) => {
+      const start = connectStartRef.current;
+      if (!start || !start.nodeId) return;
+      const point = getPointerPoint(event);
+      if (!point) return;
+      finishManualConnection(start, point);
+    };
+
+    document.addEventListener("mouseup", finish, true);
+    document.addEventListener("touchend", finish, true);
+    document.addEventListener("pointerup", finish, true);
+    return () => {
+      document.removeEventListener("mouseup", finish, true);
+      document.removeEventListener("touchend", finish, true);
+      document.removeEventListener("pointerup", finish, true);
+    };
+  }, [finishManualConnection, getPointerPoint]);
+
   const onConnectEnd = useCallback((event: any) => {
     const start = connectStartRef.current;
     connectStartRef.current = null;
@@ -409,16 +444,8 @@ function PontoNotificacaoBuilderContent() {
     }
 
     const point = getPointerPoint(event);
-    if (!point) return;
-    const droppedNodeId = findNodeAtPoint(point.x, point.y, start.nodeId);
-    if (!droppedNodeId) return;
-
-    const connection: Connection = start.handleType === "target"
-      ? { source: droppedNodeId, sourceHandle: null, target: start.nodeId, targetHandle: start.handleId ?? null }
-      : { source: start.nodeId, sourceHandle: start.handleId ?? null, target: droppedNodeId, targetHandle: null };
-
-    if (addValidatedEdge(connection)) toast.success("Blocos vinculados");
-  }, [addValidatedEdge, findNodeAtPoint, getPointerPoint]);
+    if (point) finishManualConnection(start, point);
+  }, [finishManualConnection, getPointerPoint]);
 
   // Callbacks estáveis para os nodes (evita recriar data em cada render e cancelar conexões)
   const nodeCallbacks = useMemo<NodeCallbacks>(() => ({
