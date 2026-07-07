@@ -13,8 +13,6 @@ interface Cam {
   filial_id: string | null;
   grupo_id: string | null;
   ativo: boolean;
-  tem_ptz?: boolean;
-  tem_audio?: boolean;
 }
 
 const SEM_FILIAL = "__sem_filial__";
@@ -34,7 +32,7 @@ export default function CamerasAoVivo() {
       const [g, f, c] = await Promise.all([
         supabase.from("cameras_grupos").select("id,nome").eq("ativo", true).order("nome"),
         supabase.from("ponto_filiais").select("id,nome").eq("ativo", true).order("nome"),
-        supabase.from("cv_cameras").select("id,nome,filial_id,grupo_id,ativo,tem_ptz,tem_audio").eq("ativo", true).order("nome"),
+        supabase.from("cv_cameras").select("id,nome,filial_id,grupo_id,ativo").eq("ativo", true).order("nome"),
       ]);
       setGrupos(g.data ?? []);
       setFiliais(f.data ?? []);
@@ -221,8 +219,6 @@ export default function CamerasAoVivo() {
         cameraId={maximized?.id ?? null}
         cameraNome={maximized?.nome}
         filialId={maximized?.filial_id ?? null}
-        temPtz={maximized?.tem_ptz ?? false}
-        temAudio={maximized?.tem_audio ?? false}
         onClose={() => setMaximized(null)}
       />
     </div>

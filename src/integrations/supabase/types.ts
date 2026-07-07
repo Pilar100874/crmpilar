@@ -3868,16 +3868,10 @@ export type Database = {
           local_descricao: string | null
           marca: string
           nome: string
-          onvif_pass: string | null
-          onvif_porta: number | null
-          onvif_user: string | null
           porta: number | null
           protocolo: string
-          ptz_velocidade_padrao: number
           senha: string | null
           snapshot_path: string | null
-          tem_audio: boolean
-          tem_ptz: boolean
           tipo_rede: string
           ultima_verificacao: string | null
           ultimo_erro: string | null
@@ -3898,16 +3892,10 @@ export type Database = {
           local_descricao?: string | null
           marca: string
           nome: string
-          onvif_pass?: string | null
-          onvif_porta?: number | null
-          onvif_user?: string | null
           porta?: number | null
           protocolo?: string
-          ptz_velocidade_padrao?: number
           senha?: string | null
           snapshot_path?: string | null
-          tem_audio?: boolean
-          tem_ptz?: boolean
           tipo_rede?: string
           ultima_verificacao?: string | null
           ultimo_erro?: string | null
@@ -3928,16 +3916,10 @@ export type Database = {
           local_descricao?: string | null
           marca?: string
           nome?: string
-          onvif_pass?: string | null
-          onvif_porta?: number | null
-          onvif_user?: string | null
           porta?: number | null
           protocolo?: string
-          ptz_velocidade_padrao?: number
           senha?: string | null
           snapshot_path?: string | null
-          tem_audio?: boolean
-          tem_ptz?: boolean
           tipo_rede?: string
           ultima_verificacao?: string | null
           ultimo_erro?: string | null

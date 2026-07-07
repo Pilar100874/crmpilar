@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
 
     let camQ = supabase
       .from("cv_cameras")
-      .select("id,nome,marca,tipo_rede,host,porta,protocolo,usuario,senha,snapshot_path,angulo_key,grupo_id,filial_id,tem_ptz,tem_audio,onvif_user,onvif_pass,onvif_porta,ptz_velocidade_padrao")
+      .select("id,nome,marca,tipo_rede,host,porta,protocolo,usuario,senha,snapshot_path,angulo_key,grupo_id,filial_id")
       .eq("ativo", true);
     // Quando o coletor informa a filial, inclui também câmeras SEM filial atribuída
     // (fallback) — evita ficar invisível ao coletor após passar a exigir filial.
