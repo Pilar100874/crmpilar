@@ -652,9 +652,9 @@ function PontoNotificacaoBuilderContent() {
               <li>Cadeado no topo bloqueia edições acidentais do canvas.</li>
               <li>Variáveis: <code>{`{funcionario} {data} {link_aprovacao} {severidade}`}</code>.</li>
             </ul>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
+
 
       {/* ============ Dialogs ============ */}
       <></>
