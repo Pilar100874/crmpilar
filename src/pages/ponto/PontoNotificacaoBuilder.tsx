@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ReactFlow, ReactFlowProvider, Background, BackgroundVariant, Controls, MiniMap,
@@ -75,12 +75,23 @@ const NEXT_ALLOWED: Record<string, string[]> = {
   log:            ["canal_push", "canal_whatsapp", "canal_sms", "canal_email", "canal_webhook", "delay", "condicao"],
 };
 
+type NodeCallbacks = {
+  onDuplicate?: (id: string) => void;
+  onToggleBreakpoint?: (id: string) => void;
+  onToggleSkip?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onAddNote?: (id: string) => void;
+  onAddNext?: (id: string, handle: string | null, x: number, y: number) => void;
+};
+const NodeCallbacksContext = createContext<NodeCallbacks>({});
+
 function CustomNode({ id, data, selected }: any) {
   const b = BLOCO_MAP[data.type] || BLOCOS[0];
   const Icon = b.icon;
   const isBreakpoint = !!data.isBreakpoint;
   const isSkipped = !!data.isSkipped;
   const isHighlighted = !!data.isHighlighted;
+  const cbs = useContext(NodeCallbacksContext);
 
   return (
     <div className={cn(
@@ -105,16 +116,16 @@ function CustomNode({ id, data, selected }: any) {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="z-[1001]">
-            <DropdownMenuItem onClick={() => data.onDuplicate?.(id)}><Copy className="w-3.5 h-3.5 mr-2" />Duplicar</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => data.onToggleBreakpoint?.(id)}>
+            <DropdownMenuItem onClick={() => cbs.onDuplicate?.(id)}><Copy className="w-3.5 h-3.5 mr-2" />Duplicar</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => cbs.onToggleBreakpoint?.(id)}>
               <Pause className="w-3.5 h-3.5 mr-2" />{isBreakpoint ? "Remover breakpoint" : "Pausar aqui"}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => data.onToggleSkip?.(id)}>
+            <DropdownMenuItem onClick={() => cbs.onToggleSkip?.(id)}>
               <SkipForward className="w-3.5 h-3.5 mr-2" />{isSkipped ? "Reativar bloco" : "Pular na execução"}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => data.onAddNote?.(id)}><StickyNote className="w-3.5 h-3.5 mr-2" />{data.note ? "Editar nota" : "Adicionar nota"}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => cbs.onAddNote?.(id)}><StickyNote className="w-3.5 h-3.5 mr-2" />{data.note ? "Editar nota" : "Adicionar nota"}</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => data.onDelete?.(id)} className="text-destructive"><Trash2 className="w-3.5 h-3.5 mr-2" />Excluir</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => cbs.onDelete?.(id)} className="text-destructive"><Trash2 className="w-3.5 h-3.5 mr-2" />Excluir</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -135,16 +146,16 @@ function CustomNode({ id, data, selected }: any) {
           </div>
           <Handle type="source" id="sim" position={Position.Bottom} style={{ left: "30%" }} className="!bg-green-500 !w-3 !h-3 !border-2 !border-background" />
           <Handle type="source" id="nao" position={Position.Bottom} style={{ left: "70%" }} className="!bg-red-500 !w-3 !h-3 !border-2 !border-background" />
-          <button onClick={(e) => { e.stopPropagation(); data.onAddNext?.(id, "sim", e.clientX, e.clientY); }}
-            className="absolute -bottom-3 left-[30%] -translate-x-1/2 w-5 h-5 rounded-full bg-green-500 text-white shadow flex items-center justify-center opacity-0 group-hover:opacity-100 hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
-          <button onClick={(e) => { e.stopPropagation(); data.onAddNext?.(id, "nao", e.clientX, e.clientY); }}
-            className="absolute -bottom-3 left-[70%] -translate-x-1/2 w-5 h-5 rounded-full bg-red-500 text-white shadow flex items-center justify-center opacity-0 group-hover:opacity-100 hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
+          <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, "sim", e.clientX, e.clientY); }}
+            className="absolute -bottom-3 left-[30%] -translate-x-1/2 w-5 h-5 rounded-full bg-green-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
+          <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, "nao", e.clientX, e.clientY); }}
+            className="absolute -bottom-3 left-[70%] -translate-x-1/2 w-5 h-5 rounded-full bg-red-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
         </>
       ) : (
         <>
           <Handle type="source" position={Position.Bottom} className="!bg-primary !w-3 !h-3 !border-2 !border-background" />
-          <button onClick={(e) => { e.stopPropagation(); data.onAddNext?.(id, null, e.clientX, e.clientY); }}
-            className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-primary text-primary-foreground shadow flex items-center justify-center opacity-0 group-hover:opacity-100 hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
+          <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, null, e.clientX, e.clientY); }}
+            className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-primary text-primary-foreground shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
         </>
       )}
     </div>
@@ -254,25 +265,34 @@ function PontoNotificacaoBuilderContent() {
     setSmartMenu({ x, y, fromId, handle });
   }, []);
 
-  // Aplica callbacks a todos os nodes sempre que mudam
-  const enhancedNodes = useMemo(() => nodes.map(n => ({
-    ...n,
-    data: { ...n.data, onDuplicate, onToggleBreakpoint, onToggleSkip, onDelete: onDeleteNode, onAddNote, onAddNext } as any,
-  })), [nodes, onDuplicate, onToggleBreakpoint, onToggleSkip, onDeleteNode, onAddNote, onAddNext]);
+  // Callbacks estáveis para os nodes (evita recriar data em cada render e cancelar conexões)
+  const nodeCallbacks = useMemo<NodeCallbacks>(() => ({
+    onDuplicate, onToggleBreakpoint, onToggleSkip, onDelete: onDeleteNode, onAddNote, onAddNext,
+  }), [onDuplicate, onToggleBreakpoint, onToggleSkip, onDeleteNode, onAddNote, onAddNext]);
 
   // ============ Conexões ============
   const onConnect = useCallback((c: Connection) => {
-    const src = nodes.find(n => n.id === c.source);
-    const tgt = nodes.find(n => n.id === c.target);
-    if (src && tgt) {
-      const allowed = NEXT_ALLOWED[(src.data as any).type] || [];
-      if (allowed.length && !allowed.includes((tgt.data as any).type)) {
-        toast.error(`"${BLOCO_MAP[(tgt.data as any).type]?.label}" não pode vir depois de "${BLOCO_MAP[(src.data as any).type]?.label}"`);
-        return;
+    if (!c.source || !c.target || c.source === c.target) return;
+    setNodes((currNodes) => {
+      const src = currNodes.find(n => n.id === c.source);
+      const tgt = currNodes.find(n => n.id === c.target);
+      if (src && tgt) {
+        const allowed = NEXT_ALLOWED[(src.data as any).type] || [];
+        if (allowed.length && !allowed.includes((tgt.data as any).type)) {
+          toast.error(`"${BLOCO_MAP[(tgt.data as any).type]?.label}" não pode vir depois de "${BLOCO_MAP[(src.data as any).type]?.label}"`);
+          return currNodes;
+        }
       }
-    }
-    setEdges(eds => addEdge({ ...c, markerEnd: { type: MarkerType.ArrowClosed }, animated: true, label: c.sourceHandle || undefined }, eds));
-  }, [nodes, setEdges]);
+      setEdges(eds => addEdge({
+        ...c,
+        id: `e-${c.source}-${c.sourceHandle || "o"}-${c.target}`,
+        markerEnd: { type: MarkerType.ArrowClosed },
+        animated: true,
+        label: c.sourceHandle || undefined,
+      }, eds));
+      return currNodes;
+    });
+  }, [setNodes, setEdges]);
 
   function addBlockAt(type: string, pos?: { x: number; y: number }, connectFrom?: { id: string; handle: string | null }) {
     const b = BLOCO_MAP[type];
@@ -594,8 +614,9 @@ function PontoNotificacaoBuilderContent() {
           <FloatingAddBlockButton onClick={() => setIsLibExpanded(true)} />
         )}
 
+        <NodeCallbacksContext.Provider value={nodeCallbacks}>
         <ReactFlow
-          nodes={enhancedNodes} edges={edges}
+          nodes={nodes} edges={edges}
           onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onInit={setRfInstance}
@@ -615,6 +636,7 @@ function PontoNotificacaoBuilderContent() {
           <Controls showInteractive={false} />
           <MiniMap pannable className="!bg-card" />
         </ReactFlow>
+        </NodeCallbacksContext.Provider>
 
         {smartMenu && (
           <SmartConnectMenu x={smartMenu.x} y={smartMenu.y}
@@ -633,7 +655,7 @@ function PontoNotificacaoBuilderContent() {
             </Button>
           </div>
           <ScrollArea className="flex-1">
-            <PropsPanel node={enhancedNodes.find(n => n.id === selected.id) || selected} onChange={updateNode}
+            <PropsPanel node={nodes.find(n => n.id === selected.id) || selected} onChange={updateNode}
               onDelete={() => onDeleteNode(selected.id)}
               onDuplicate={() => onDuplicate(selected.id)}
               onToggleBreakpoint={() => onToggleBreakpoint(selected.id)}
