@@ -245,11 +245,25 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
   // ============ ÁUDIO ============
   // Escutar: apenas alterna o mute do <video> (o track chega junto no WebRTC).
   const toggleListen = () => {
-    if (!videoRef.current) return;
-    const nv = !audioMuted;
-    videoRef.current.muted = !nv; // se audioMuted vai virar false, video.muted = false
+    const v = videoRef.current;
+    if (!v) return;
+    const nv = !audioMuted; // true = queremos ouvir
+    v.muted = !nv;
+    v.volume = 1;
     setAudioMuted(!nv);
-    if (nv) videoRef.current.play().catch(() => {});
+    if (nv) {
+      v.play().catch(() => {});
+      // Verifica se o stream realmente contém áudio; se não, avisa o usuário.
+      setTimeout(() => {
+        const stream = v.srcObject as MediaStream | null;
+        const tracks = stream?.getAudioTracks?.() || [];
+        if (!tracks.length) {
+          toast.error("Esta câmera não está enviando áudio. Habilite áudio no stream principal (main) e atualize o Coletor para 1.7.1+.");
+        } else {
+          toast.success("Áudio ligado");
+        }
+      }, 400);
+    }
   };
 
   // Falar: captura microfone e adiciona o track ao PeerConnection existente.
