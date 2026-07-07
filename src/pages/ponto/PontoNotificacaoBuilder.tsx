@@ -656,7 +656,7 @@ function PontoNotificacaoBuilderContent() {
             </Button>
           </div>
           <ScrollArea className="flex-1">
-            <PropsPanel node={enhancedNodes.find(n => n.id === selected.id) || selected} onChange={updateNode}
+            <PropsPanel node={nodes.find(n => n.id === selected.id) || selected} onChange={updateNode}
               onDelete={() => onDeleteNode(selected.id)}
               onDuplicate={() => onDuplicate(selected.id)}
               onToggleBreakpoint={() => onToggleBreakpoint(selected.id)}
