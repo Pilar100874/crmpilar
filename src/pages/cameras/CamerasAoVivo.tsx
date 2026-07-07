@@ -73,19 +73,38 @@ export default function CamerasAoVivo() {
     cols === "4" ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" :
     "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
 
+  const totalAtivas = cams?.length ?? 0;
+  const totalFiltradas = filtered.length;
+
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2">
-            <Radio className="h-5 w-5 text-red-500 animate-pulse" /> Câmeras ao vivo
-          </h2>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            Streaming WebRTC via Coletor Desktop · agrupadas por filial e setor
-          </p>
+    <div className="space-y-5">
+      {/* Header com destaque */}
+      <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 sm:p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="h-11 w-11 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+              <Radio className="h-5 w-5 text-red-500 animate-pulse" />
+            </div>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Câmeras ao vivo</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                Streaming WebRTC via Coletor Desktop · agrupadas por filial e setor
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="inline-flex items-center gap-1.5 rounded-full border bg-background/60 backdrop-blur px-3 py-1.5 font-medium">
+              <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+              {totalFiltradas} exibindo
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border bg-background/60 backdrop-blur px-3 py-1.5 text-muted-foreground">
+              {totalAtivas} ativa{totalAtivas === 1 ? "" : "s"}
+            </span>
+          </div>
         </div>
       </div>
 
+      {/* Filtros */}
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="space-y-1">
           <Label className="text-xs">Filial</Label>
@@ -130,7 +149,7 @@ export default function CamerasAoVivo() {
       )}
 
       {cams !== null && filtered.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
+        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2 border border-dashed rounded-xl">
           <CameraIcon className="h-8 w-8 opacity-40" />
           <p className="text-sm">Nenhuma câmera ativa para os filtros selecionados</p>
         </div>
@@ -143,7 +162,9 @@ export default function CamerasAoVivo() {
           return (
             <section key={fk} className="space-y-3">
               <div className="flex items-center gap-2 border-b pb-2">
-                <Building2 className="h-4 w-4 text-primary" />
+                <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center">
+                  <Building2 className="h-4 w-4 text-primary" />
+                </div>
                 <h3 className="text-sm font-semibold">{filialNome}</h3>
                 <span className="text-xs text-muted-foreground">
                   · {totalNaFilial} câmera{totalNaFilial === 1 ? "" : "s"}
@@ -162,12 +183,17 @@ export default function CamerasAoVivo() {
                       </div>
                       <div className={cn("grid gap-3", colClass)}>
                         {list.map((c) => (
-                          <CameraLiveTile
+                          <div
                             key={c.id}
-                            cameraId={c.id}
-                            cameraNome={c.nome}
-                            filialId={c.filial_id ?? null}
-                          />
+                            className="rounded-lg overflow-hidden border bg-card shadow-sm hover:shadow-md transition-shadow"
+                          >
+                            <CameraLiveTile
+                              cameraId={c.id}
+                              cameraNome={c.nome}
+                              filialId={c.filial_id ?? null}
+                              onMaximize={() => setMaximized(c)}
+                            />
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -178,6 +204,13 @@ export default function CamerasAoVivo() {
           );
         })}
       </div>
+
+      <CameraLiveViewer
+        cameraId={maximized?.id ?? null}
+        cameraNome={maximized?.nome}
+        filialId={maximized?.filial_id ?? null}
+        onClose={() => setMaximized(null)}
+      />
     </div>
   );
 }
