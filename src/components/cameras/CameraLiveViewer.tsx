@@ -1,24 +1,36 @@
 // Live viewer WebRTC: negocia com o Coletor Desktop via canal "webrtc-signal"
 // (Realtime broadcast) e exibe o vídeo H.264 recebido no <video>.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Radio, X, Maximize2 } from "lucide-react";
+import {
+  Loader2, Radio, X, Maximize2,
+  ChevronUp, ChevronDown, ChevronLeft, ChevronRight,
+  Volume2, VolumeX, Mic, MicOff, Home, ZoomIn, ZoomOut,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Props {
   cameraId: string | null;
   cameraNome?: string;
   filialId?: string | null;
+  temPtz?: boolean;
+  temAudio?: boolean;
   onClose: () => void;
 }
 
 const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Props) {
+export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = false, temAudio = false, onClose }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [status, setStatus] = useState<"idle" | "conectando" | "ao-vivo" | "erro">("idle");
   const [erro, setErro] = useState<string | null>(null);
+  const [audioMuted, setAudioMuted] = useState(true);   // começa mutado por autoplay policy
+  const [micOn, setMicOn] = useState(false);
+  const micStreamRef = useRef<MediaStream | null>(null);
+  const pcRef = useRef<RTCPeerConnection | null>(null);
+  const controlChannelsRef = useRef<ReturnType<typeof supabase.channel>[]>([]);
 
   useEffect(() => {
     if (!cameraId) return;
