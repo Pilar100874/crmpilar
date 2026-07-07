@@ -75,12 +75,23 @@ const NEXT_ALLOWED: Record<string, string[]> = {
   log:            ["canal_push", "canal_whatsapp", "canal_sms", "canal_email", "canal_webhook", "delay", "condicao"],
 };
 
+type NodeCallbacks = {
+  onDuplicate?: (id: string) => void;
+  onToggleBreakpoint?: (id: string) => void;
+  onToggleSkip?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onAddNote?: (id: string) => void;
+  onAddNext?: (id: string, handle: string | null, x: number, y: number) => void;
+};
+const NodeCallbacksContext = createContext<NodeCallbacks>({});
+
 function CustomNode({ id, data, selected }: any) {
   const b = BLOCO_MAP[data.type] || BLOCOS[0];
   const Icon = b.icon;
   const isBreakpoint = !!data.isBreakpoint;
   const isSkipped = !!data.isSkipped;
   const isHighlighted = !!data.isHighlighted;
+  const cbs = useContext(NodeCallbacksContext);
 
   return (
     <div className={cn(
@@ -105,16 +116,16 @@ function CustomNode({ id, data, selected }: any) {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="z-[1001]">
-            <DropdownMenuItem onClick={() => data.onDuplicate?.(id)}><Copy className="w-3.5 h-3.5 mr-2" />Duplicar</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => data.onToggleBreakpoint?.(id)}>
+            <DropdownMenuItem onClick={() => cbs.onDuplicate?.(id)}><Copy className="w-3.5 h-3.5 mr-2" />Duplicar</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => cbs.onToggleBreakpoint?.(id)}>
               <Pause className="w-3.5 h-3.5 mr-2" />{isBreakpoint ? "Remover breakpoint" : "Pausar aqui"}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => data.onToggleSkip?.(id)}>
+            <DropdownMenuItem onClick={() => cbs.onToggleSkip?.(id)}>
               <SkipForward className="w-3.5 h-3.5 mr-2" />{isSkipped ? "Reativar bloco" : "Pular na execução"}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => data.onAddNote?.(id)}><StickyNote className="w-3.5 h-3.5 mr-2" />{data.note ? "Editar nota" : "Adicionar nota"}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => cbs.onAddNote?.(id)}><StickyNote className="w-3.5 h-3.5 mr-2" />{data.note ? "Editar nota" : "Adicionar nota"}</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => data.onDelete?.(id)} className="text-destructive"><Trash2 className="w-3.5 h-3.5 mr-2" />Excluir</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => cbs.onDelete?.(id)} className="text-destructive"><Trash2 className="w-3.5 h-3.5 mr-2" />Excluir</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -135,15 +146,15 @@ function CustomNode({ id, data, selected }: any) {
           </div>
           <Handle type="source" id="sim" position={Position.Bottom} style={{ left: "30%" }} className="!bg-green-500 !w-3 !h-3 !border-2 !border-background" />
           <Handle type="source" id="nao" position={Position.Bottom} style={{ left: "70%" }} className="!bg-red-500 !w-3 !h-3 !border-2 !border-background" />
-          <button onClick={(e) => { e.stopPropagation(); data.onAddNext?.(id, "sim", e.clientX, e.clientY); }}
+          <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, "sim", e.clientX, e.clientY); }}
             className="absolute -bottom-3 left-[30%] -translate-x-1/2 w-5 h-5 rounded-full bg-green-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
-          <button onClick={(e) => { e.stopPropagation(); data.onAddNext?.(id, "nao", e.clientX, e.clientY); }}
+          <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, "nao", e.clientX, e.clientY); }}
             className="absolute -bottom-3 left-[70%] -translate-x-1/2 w-5 h-5 rounded-full bg-red-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
         </>
       ) : (
         <>
           <Handle type="source" position={Position.Bottom} className="!bg-primary !w-3 !h-3 !border-2 !border-background" />
-          <button onClick={(e) => { e.stopPropagation(); data.onAddNext?.(id, null, e.clientX, e.clientY); }}
+          <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, null, e.clientX, e.clientY); }}
             className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-primary text-primary-foreground shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
         </>
       )}
