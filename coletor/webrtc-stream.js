@@ -263,14 +263,14 @@ class StreamSession {
     });
     await new Promise((r) => this.udp.bind(this.udpPort, '127.0.0.1', r));
 
-    if (wantAudio) {
+    if (audioEnabled) {
       this.audioUdp = dgram.createSocket('udp4');
       this.audioUdp.on('message', (buf) => {
         this.audioRtpReceived++;
         try { this.audioTrack.writeRtp(buf); } catch {}
       });
       await new Promise((r) => this.audioUdp.bind(this.audioUdpPort, '127.0.0.1', r));
-      this._spawnFfmpegAudio();
+      try { this._spawnFfmpegAudio(); } catch (e) { console.error('[webrtc] audio ffmpeg falhou:', e.message); }
     }
 
     this._spawnFfmpeg();
