@@ -84,7 +84,7 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
             await pc.setRemoteDescription({ type: "offer", sdp: payload.sdp });
             const answer = await pc.createAnswer();
             // Recheca: se outro handler correu em paralelo, aborta silenciosamente.
-            if (pc.signalingState !== "have-remote-offer") return;
+            if ((pc.signalingState as string) !== "have-remote-offer") return;
             await pc.setLocalDescription(answer);
             await new Promise<void>((resolve) => {
               if (pc!.iceGatheringState === "complete") return resolve();
