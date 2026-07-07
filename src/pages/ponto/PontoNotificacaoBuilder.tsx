@@ -293,39 +293,43 @@ function PontoNotificacaoBuilderContent() {
   }), [onDuplicate, onToggleBreakpoint, onToggleSkip, onDeleteNode, onAddNote, onAddNext]);
 
   // ============ Conexões ============
+  // Ref sempre atualizada com os nós — evita usar `nodes` como dep e recriar onConnect a cada render
+  const nodesRef = useRef<Node[]>([]);
+  useEffect(() => { nodesRef.current = nodes; }, [nodes]);
+
   const onConnect = useCallback((c: Connection) => {
     if (!c.source || !c.target || c.source === c.target) return;
-    setNodes((currNodes) => {
-      const src = currNodes.find(n => n.id === c.source);
-      const tgt = currNodes.find(n => n.id === c.target);
-      if (src && tgt) {
-        const allowed = NEXT_ALLOWED[(src.data as any).type] || [];
-        if (allowed.length && !allowed.includes((tgt.data as any).type)) {
-          toast.error(`"${BLOCO_MAP[(tgt.data as any).type]?.label}" não pode vir depois de "${BLOCO_MAP[(src.data as any).type]?.label}"`);
-          return currNodes;
-        }
+    const curr = nodesRef.current;
+    const src = curr.find(n => n.id === c.source);
+    const tgt = curr.find(n => n.id === c.target);
+    if (src && tgt) {
+      const allowed = NEXT_ALLOWED[(src.data as any).type] || [];
+      if (allowed.length && !allowed.includes((tgt.data as any).type)) {
+        toast.error(`"${BLOCO_MAP[(tgt.data as any).type]?.label}" não pode vir depois de "${BLOCO_MAP[(src.data as any).type]?.label}"`);
+        return;
       }
-      setEdges(eds => addEdge({
-        ...c,
-        id: `e-${c.source}-${c.sourceHandle || "o"}-${c.target}`,
-        markerEnd: { type: MarkerType.ArrowClosed },
-        animated: true,
-        label: c.sourceHandle || undefined,
-      }, eds));
-      return currNodes;
-    });
-  }, [setNodes, setEdges]);
+    }
+    setEdges(eds => addEdge({
+      ...c,
+      id: `e-${c.source}-${c.sourceHandle || "o"}-${c.target}-${c.targetHandle || "t"}`,
+      markerEnd: { type: MarkerType.ArrowClosed },
+      animated: true,
+      label: c.sourceHandle || undefined,
+    }, eds));
+  }, [setEdges]);
 
   // Validação visual (feedback durante o arrasto do handle)
   const isValidConnection = useCallback((c: Connection) => {
     if (!c.source || !c.target || c.source === c.target) return false;
-    const src = nodes.find(n => n.id === c.source);
-    const tgt = nodes.find(n => n.id === c.target);
+    const curr = nodesRef.current;
+    const src = curr.find(n => n.id === c.source);
+    const tgt = curr.find(n => n.id === c.target);
     if (!src || !tgt) return true;
     const allowed = NEXT_ALLOWED[(src.data as any).type] || [];
     if (!allowed.length) return true;
     return allowed.includes((tgt.data as any).type);
-  }, [nodes]);
+  }, []);
+
 
   function addBlockAt(type: string, pos?: { x: number; y: number }, connectFrom?: { id: string; handle: string | null }) {
     const b = BLOCO_MAP[type];
