@@ -193,6 +193,7 @@ function PontoNotificacaoBuilderContent() {
   const [noteFor, setNoteFor] = useState<string | null>(null);
   const [noteText, setNoteText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [rfInstance, setRfInstance] = useState<any>(null);
   const [isLocked, setIsLocked] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -315,7 +316,52 @@ function PontoNotificacaoBuilderContent() {
         markerEnd: { type: MarkerType.ArrowClosed }, animated: true,
       } as Edge]);
     }
+    setSelected(node);
+    return node;
   }
+
+  // ============ Drag & drop (desktop) e evento add-block (mobile: 2 cliques) ============
+  const onDragStartBlock = useCallback((event: React.DragEvent, nodeType: string) => {
+    event.dataTransfer.setData("application/reactflow", nodeType);
+    event.dataTransfer.effectAllowed = "move";
+  }, []);
+
+  const onDragOverCanvas = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const onDropCanvas = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!reactFlowWrapper.current || !rfInstance) return;
+    const type = event.dataTransfer.getData("application/reactflow");
+    if (!type || !BLOCO_MAP[type]) return;
+    const bounds = reactFlowWrapper.current.getBoundingClientRect();
+    const position = rfInstance.screenToFlowPosition({
+      x: event.clientX - bounds.left,
+      y: event.clientY - bounds.top,
+    });
+    addBlockAt(type, position);
+    toast.success(`Bloco "${BLOCO_MAP[type].label}" adicionado!`);
+  }, [rfInstance]);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const type = (e as CustomEvent).detail?.type;
+      if (!type || !BLOCO_MAP[type]) return;
+      let pos: { x: number; y: number } | undefined;
+      if (reactFlowWrapper.current && rfInstance) {
+        const b = reactFlowWrapper.current.getBoundingClientRect();
+        pos = rfInstance.screenToFlowPosition({ x: b.left + b.width / 2, y: b.top + b.height / 2 });
+      }
+      addBlockAt(type, pos);
+      toast.success(`Bloco "${BLOCO_MAP[type].label}" adicionado!`);
+    };
+    window.addEventListener("ponto-notif:add-block", handler);
+    return () => window.removeEventListener("ponto-notif:add-block", handler);
+  }, [rfInstance]);
+
 
   function onSmartPick(type: string) {
     if (!smartMenu) return;
@@ -584,17 +630,19 @@ function PontoNotificacaoBuilderContent() {
                             {category.blocks.map((b) => {
                               const Icon = b.icon;
                               return (
-                                <button
+                                <div
                                   key={b.type}
-                                  onClick={() => addBlockAt(b.type)}
-                                  title="Clique para adicionar"
-                                  className="w-full px-3 py-2 cursor-pointer bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-colors duration-100 select-none text-left"
+                                  draggable
+                                  onDragStart={(e) => onDragStartBlock(e, b.type)}
+                                  onDoubleClick={() => window.dispatchEvent(new CustomEvent("ponto-notif:add-block", { detail: { type: b.type } }))}
+                                  title="Arraste para o canvas ou clique 2x para adicionar"
+                                  className="w-full px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-colors duration-100 select-none text-left"
                                 >
                                   <div className="flex items-center gap-2">
                                     <Icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                                     <h4 className="text-xs font-normal text-foreground truncate">{b.label}</h4>
                                   </div>
-                                </button>
+                                </div>
                               );
                             })}
                           </div>
@@ -609,7 +657,7 @@ function PontoNotificacaoBuilderContent() {
       )}
 
       {/* Canvas — precisa de h-full/min-h-0 dentro do layout flex para o ReactFlow medir */}
-      <div className="flex-1 relative min-w-0 min-h-0 h-full w-full">
+      <div ref={reactFlowWrapper} onDrop={onDropCanvas} onDragOver={onDragOverCanvas} className="flex-1 relative min-w-0 min-h-0 h-full w-full" style={{ touchAction: 'none' }}>
         {!isLibExpanded && (
           <FloatingAddBlockButton onClick={() => setIsLibExpanded(true)} />
         )}
