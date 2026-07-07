@@ -522,7 +522,7 @@ const App = () => (
                 <Route path="contatos" element={<CVisContatos />} />
               </Route>
               <Route path="/cameras" element={<CamerasLayout />}>
-                <Route index element={<CamerasDashboard />} />
+                <Route index element={<CamerasAoVivo />} />
                 <Route path="ao-vivo" element={<CamerasAoVivo />} />
                 <Route path="grupos" element={<CamerasGrupos />} />
                 <Route path="cameras" element={<CamerasCameras />} />

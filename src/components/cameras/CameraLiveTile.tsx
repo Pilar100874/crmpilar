@@ -11,11 +11,12 @@ interface Props {
   filialId?: string | null;
   className?: string;
   autoStart?: boolean;
+  onMaximize?: () => void;
 }
 
 const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-export function CameraLiveTile({ cameraId, cameraNome, filialId, className, autoStart = true }: Props) {
+export function CameraLiveTile({ cameraId, cameraNome, filialId, className, autoStart = true, onMaximize }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [status, setStatus] = useState<"idle" | "conectando" | "ao-vivo" | "erro">(autoStart ? "conectando" : "idle");
@@ -261,9 +262,9 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
             ><RotateCcw className="h-3 w-3" /></button>
           )}
           <button
-            onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
+            onClick={(e) => { e.stopPropagation(); onMaximize ? onMaximize() : toggleFullscreen(); }}
             className="h-6 w-6 flex items-center justify-center rounded bg-black/60 text-white hover:bg-black/80"
-            title="Tela cheia"
+            title={onMaximize ? "Maximizar" : "Tela cheia"}
           ><Maximize2 className="h-3 w-3" /></button>
         </div>
       )}
