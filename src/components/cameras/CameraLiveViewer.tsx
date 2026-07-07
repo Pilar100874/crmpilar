@@ -69,10 +69,13 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Pr
         }
         if (payload.to !== viewerId) return;
         if (payload.type === "offer") {
+          // Dedupe: mesmo offer pode chegar em canais duplicados (plain + filial).
+          if (!pc || pc.signalingState !== "stable") return;
           try {
-            await pc!.setRemoteDescription({ type: "offer", sdp: payload.sdp });
-            const answer = await pc!.createAnswer();
-            await pc!.setLocalDescription(answer);
+            await pc.setRemoteDescription({ type: "offer", sdp: payload.sdp });
+            const answer = await pc.createAnswer();
+            if ((pc.signalingState as string) !== "have-remote-offer") return;
+            await pc.setLocalDescription(answer);
             await new Promise<void>((resolve) => {
               if (pc!.iceGatheringState === "complete") return resolve();
               const t = setTimeout(resolve, 3000);
@@ -88,6 +91,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Pr
               sdp: pc!.localDescription!.sdp,
             });
           } catch (e: any) {
+            if (String(e?.message || "").includes("wrong state")) return;
             setErro(e.message);
             setStatus("erro");
           }
