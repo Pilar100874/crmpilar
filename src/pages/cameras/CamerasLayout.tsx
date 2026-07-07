@@ -35,8 +35,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { to: "/cameras", label: "Dashboard", icon: LayoutDashboard, end: true, group: "principal" },
-  { to: "/cameras/ao-vivo", label: "Ao vivo", icon: Radio, group: "principal" },
+  { to: "/cameras", label: "Ao vivo", icon: Radio, end: true, group: "principal" },
   { to: "/cameras/grupos", label: "Grupos / Setores", icon: Layers, group: "config" },
   { to: "/cameras/cameras", label: "Câmeras", icon: Camera, group: "config" },
 ];
