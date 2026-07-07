@@ -37,6 +37,13 @@ const H264 = new RTCRtpCodecParameters({
   parameters: 'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f',
 });
 
+const OPUS = new RTCRtpCodecParameters({
+  mimeType: 'audio/opus',
+  clockRate: 48000,
+  channels: 2,
+  payloadType: 111,
+});
+
 function rtspUrlFor(cam) {
   const user = cam.usuario ? encodeURIComponent(cam.usuario) : '';
   const pass = cam.senha ? encodeURIComponent(cam.senha) : '';
