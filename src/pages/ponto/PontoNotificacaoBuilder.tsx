@@ -434,7 +434,7 @@ function PontoNotificacaoBuilderContent() {
     };
   }, [finishManualConnection, getPointerPoint]);
 
-  const onConnectEnd = useCallback((event: any) => {
+  const onConnectEnd = useCallback((event: any, connectionState?: any) => {
     const start = connectStartRef.current;
     connectStartRef.current = null;
     if (!start || !start.nodeId) return;
@@ -443,9 +443,18 @@ function PontoNotificacaoBuilderContent() {
       return;
     }
 
+    const stateTargetId = connectionState?.toNode?.id;
+    if (stateTargetId && stateTargetId !== start.nodeId) {
+      const connection: Connection = start.handleType === "target"
+        ? { source: stateTargetId, sourceHandle: null, target: start.nodeId, targetHandle: start.handleId ?? null }
+        : { source: start.nodeId, sourceHandle: start.handleId ?? null, target: stateTargetId, targetHandle: connectionState?.toHandle?.id ?? null };
+      if (addValidatedEdge(connection)) toast.success("Blocos vinculados");
+      return;
+    }
+
     const point = getPointerPoint(event);
     if (point) finishManualConnection(start, point);
-  }, [finishManualConnection, getPointerPoint]);
+  }, [addValidatedEdge, finishManualConnection, getPointerPoint]);
 
   // Callbacks estáveis para os nodes (evita recriar data em cada render e cancelar conexões)
   const nodeCallbacks = useMemo<NodeCallbacks>(() => ({
