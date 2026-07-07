@@ -185,6 +185,9 @@ function PontoNotificacaoBuilderContent() {
   const [rfInstance, setRfInstance] = useState<any>(null);
   const [isLocked, setIsLocked] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [isLibExpanded, setIsLibExpanded] = useState(false);
+  const [librarySearch, setLibrarySearch] = useState("");
+  const [openCategories, setOpenCategories] = useState<string[]>(["Início", "Lógica", "Conteúdo", "Canais", "Ações"]);
   const initialHashRef = useRef<string>("");
 
   useEffect(() => {
