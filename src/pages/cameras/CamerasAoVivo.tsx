@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Radio, Building2, Layers, Loader2, Camera as CameraIcon } from "lucide-react";
 import { CameraLiveTile } from "@/components/cameras/CameraLiveTile";
+import { CameraLiveViewer } from "@/components/cameras/CameraLiveViewer";
 import { cn } from "@/lib/utils";
 
 interface Cam {
