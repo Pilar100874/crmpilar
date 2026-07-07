@@ -316,6 +316,17 @@ function PontoNotificacaoBuilderContent() {
     });
   }, [setNodes, setEdges]);
 
+  // Validação visual (feedback durante o arrasto do handle)
+  const isValidConnection = useCallback((c: Connection) => {
+    if (!c.source || !c.target || c.source === c.target) return false;
+    const src = nodes.find(n => n.id === c.source);
+    const tgt = nodes.find(n => n.id === c.target);
+    if (!src || !tgt) return true;
+    const allowed = NEXT_ALLOWED[(src.data as any).type] || [];
+    if (!allowed.length) return true;
+    return allowed.includes((tgt.data as any).type);
+  }, [nodes]);
+
   function addBlockAt(type: string, pos?: { x: number; y: number }, connectFrom?: { id: string; handle: string | null }) {
     const b = BLOCO_MAP[type];
     const newId = crypto.randomUUID();
