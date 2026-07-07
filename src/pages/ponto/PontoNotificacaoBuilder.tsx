@@ -148,15 +148,16 @@ function CustomNode({ id, data, selected }: any) {
           <Handle type="source" id="sim" position={Position.Bottom} style={{ left: "30%" }} className="!bg-green-500 !w-3 !h-3 !border-2 !border-background" />
           <Handle type="source" id="nao" position={Position.Bottom} style={{ left: "70%" }} className="!bg-red-500 !w-3 !h-3 !border-2 !border-background" />
           <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, "sim", e.clientX, e.clientY); }}
-            className="absolute -bottom-3 left-[30%] -translate-x-1/2 w-5 h-5 rounded-full bg-green-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
+            className="absolute -bottom-7 left-[30%] -translate-x-1/2 w-5 h-5 rounded-full bg-green-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
           <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, "nao", e.clientX, e.clientY); }}
-            className="absolute -bottom-3 left-[70%] -translate-x-1/2 w-5 h-5 rounded-full bg-red-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
+            className="absolute -bottom-7 left-[70%] -translate-x-1/2 w-5 h-5 rounded-full bg-red-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
         </>
       ) : (
         <>
           <Handle type="source" position={Position.Bottom} className="!bg-primary !w-3 !h-3 !border-2 !border-background" />
           <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, null, e.clientX, e.clientY); }}
-            className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-primary text-primary-foreground shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
+            className="absolute -bottom-7 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-primary text-primary-foreground shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
+
         </>
       )}
     </div>
