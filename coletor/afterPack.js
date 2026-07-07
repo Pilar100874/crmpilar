@@ -23,16 +23,37 @@ function normalizeBinaryData(root) {
   const src = path.join(root, 'src');
   const nested = path.join(src, 'node_modules');
   const aliasRoot = src;
+  const internalDirs = new Set(['lib', 'types', 'internal']);
   for (const name of ['lib', 'types', 'internal']) {
     copyDirIfExists(path.join(nested, name), path.join(src, name));
   }
 
-  const re = /require\((['"])(?:(?:\.\/)?node_modules\/)?((?:lib|types|internal)\/[^'"]+)\1\)/g;
+  const re = /require\((['"])([^'"]+)\1\)/g;
   let patched = 0;
+  const internalPathFromRequire = (file, specifier) => {
+    const clean = specifier.replace(/\\/g, '/');
+    const parts = clean.split('/').filter(Boolean);
+    const firstInternal = parts.findIndex((part) => internalDirs.has(part));
+    if (!clean.startsWith('.') && firstInternal === 0) return parts.join('/');
+    if (clean.startsWith('.') && firstInternal >= 0) return parts.slice(firstInternal).join('/');
+    if (clean.startsWith('.')) {
+      const abs = path.resolve(path.dirname(file), specifier);
+      const nestedRel = path.relative(nested, abs).replace(/\\/g, '/');
+      const srcRel = path.relative(src, abs).replace(/\\/g, '/');
+      const nestedHead = nestedRel.split('/')[0];
+      const srcHead = srcRel.split('/')[0];
+      if (!nestedRel.startsWith('..') && internalDirs.has(nestedHead)) return nestedRel;
+      if (!srcRel.startsWith('..') && internalDirs.has(srcHead)) return srcRel;
+    }
+    return null;
+  };
+
   walkJs(root, (file) => {
     const input = fs.readFileSync(file, 'utf8');
     const output = input.replace(re, (_m, q, p) => {
-      const target = path.join(aliasRoot, p);
+      const internalPath = internalPathFromRequire(file, p);
+      if (!internalPath) return `require(${q}${p}${q})`;
+      const target = path.join(aliasRoot, internalPath);
       let rel = path.relative(path.dirname(file), target).replace(/\\/g, '/');
       if (!rel.startsWith('.')) rel = `./${rel}`;
       return `require(${q}${rel}${q})`;

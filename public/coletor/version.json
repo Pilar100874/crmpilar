@@ -1,5 +1,5 @@
 {
-  "version": "1.6.9",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.6.9/ColetorPilar-Setup.exe",
-  "notas": "1.6.9: corrige o carregamento do módulo WebRTC no Windows instalado para liberar câmeras ao vivo."
+  "version": "1.6.10",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.6.10/ColetorPilar-Setup.exe",
+  "notas": "1.6.10: corrige requires relativos quebrados do módulo WebRTC no Windows instalado para liberar câmeras ao vivo."
 }
