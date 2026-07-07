@@ -10,8 +10,8 @@ type FilialHealth = { id: string; nome: string; at: string | null; ago: number |
 
 function classify(ago: number | null): State {
   if (ago == null) return "offline";
-  if (ago < 3 * 60_000) return "online";
-  if (ago < 15 * 60_000) return "warn";
+  if (ago < 8 * 60_000) return "online";
+  if (ago < 30 * 60_000) return "warn";
   return "offline";
 }
 
@@ -158,7 +158,7 @@ export function AppsHealthIndicator({ compact = false }: { compact?: boolean }) 
     ? aggregate(filiais.map((f) => f.state))
     : classify(win.ago);
   const andState = classify(and.ago);
-  const filiaisOnline = filiais.filter((f) => f.state === "online").length;
+  const filiaisAtivas = filiais.filter((f) => f.state !== "offline").length;
   const filiaisComEquip = filiais.filter((f) => f.equipamentos > 0).length;
 
   return (
@@ -188,7 +188,7 @@ export function AppsHealthIndicator({ compact = false }: { compact?: boolean }) 
               {filiais.length > 0 ? (
                 <>
                   <div className="text-muted-foreground mb-1.5">
-                    {filiaisOnline} de {filiaisComEquip || filiais.length} filiais com coletor ativo
+                    {filiaisAtivas} de {filiaisComEquip || filiais.length} filiais com coletor ativo
                   </div>
                   <div className="flex flex-col gap-1 max-h-56 overflow-auto">
                     {filiais.map((f) => (
