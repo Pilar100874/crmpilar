@@ -219,19 +219,36 @@ class StreamSession {
 
   async start() {
     const wantAudio = !!this.cam.tem_audio;
-    this.pc = new RTCPeerConnection({
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
-      codecs: {
-        video: [H264],
-        ...(wantAudio ? { audio: [OPUS] } : {}),
-      },
-    });
+    // Garante que a porta de áudio nunca coincida com a de vídeo
+    while (wantAudio && this.audioUdpPort === this.udpPort) {
+      this.audioUdpPort = 40000 + Math.floor(Math.random() * 20000);
+    }
+    try {
+      this.pc = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+        codecs: {
+          video: [H264],
+          ...(wantAudio ? { audio: [OPUS] } : {}),
+        },
+      });
+    } catch (e) {
+      console.error('[webrtc] erro criando PC com áudio, tentando só vídeo:', e.message);
+      this.pc = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+        codecs: { video: [H264] },
+      });
+    }
     this.track = new MediaStreamTrack({ kind: 'video' });
     this.pc.addTransceiver(this.track, { direction: 'sendonly' });
+    let audioEnabled = false;
     if (wantAudio) {
-      this.audioTrack = new MediaStreamTrack({ kind: 'audio' });
-      // sendrecv para também poder receber áudio do viewer (falar na câmera)
-      this.pc.addTransceiver(this.audioTrack, { direction: 'sendrecv' });
+      try {
+        this.audioTrack = new MediaStreamTrack({ kind: 'audio' });
+        this.pc.addTransceiver(this.audioTrack, { direction: 'sendrecv' });
+        audioEnabled = true;
+      } catch (e) {
+        console.error('[webrtc] falha ao adicionar transceiver de áudio:', e.message);
+      }
     }
 
     // UDP receiver para RTP do ffmpeg (vídeo)
