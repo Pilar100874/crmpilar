@@ -167,11 +167,33 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Pr
   }, [cameraId]);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const toggleFullscreen = () => {
-    const el = containerRef.current;
-    if (!el) return;
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    else el.requestFullscreen().catch(() => {});
+  const toggleFullscreen = async () => {
+    const doc: any = document;
+    const fsEl = doc.fullscreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement;
+    try {
+      if (fsEl) {
+        if (doc.exitFullscreen) await doc.exitFullscreen();
+        else if (doc.webkitExitFullscreen) await doc.webkitExitFullscreen();
+        else if (doc.msExitFullscreen) await doc.msExitFullscreen();
+        return;
+      }
+      // Tenta o container; se falhar (Dialog em portal pode bloquear em alguns navegadores),
+      // cai para o <video> — que sempre aceita fullscreen.
+      const container: any = containerRef.current;
+      const video: any = videoRef.current;
+      const req = (el: any) =>
+        el?.requestFullscreen?.() ||
+        el?.webkitRequestFullscreen?.() ||
+        el?.msRequestFullscreen?.() ||
+        el?.webkitEnterFullscreen?.(); // iOS Safari
+      try {
+        await req(container);
+      } catch {
+        await req(video);
+      }
+    } catch (e) {
+      console.error("[CameraLiveViewer] fullscreen falhou:", e);
+    }
   };
 
   return (
