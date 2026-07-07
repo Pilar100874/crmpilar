@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ReactFlow, ReactFlowProvider, Background, BackgroundVariant, Controls, MiniMap,
@@ -136,15 +136,15 @@ function CustomNode({ id, data, selected }: any) {
           <Handle type="source" id="sim" position={Position.Bottom} style={{ left: "30%" }} className="!bg-green-500 !w-3 !h-3 !border-2 !border-background" />
           <Handle type="source" id="nao" position={Position.Bottom} style={{ left: "70%" }} className="!bg-red-500 !w-3 !h-3 !border-2 !border-background" />
           <button onClick={(e) => { e.stopPropagation(); data.onAddNext?.(id, "sim", e.clientX, e.clientY); }}
-            className="absolute -bottom-3 left-[30%] -translate-x-1/2 w-5 h-5 rounded-full bg-green-500 text-white shadow flex items-center justify-center opacity-0 group-hover:opacity-100 hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
+            className="absolute -bottom-3 left-[30%] -translate-x-1/2 w-5 h-5 rounded-full bg-green-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
           <button onClick={(e) => { e.stopPropagation(); data.onAddNext?.(id, "nao", e.clientX, e.clientY); }}
-            className="absolute -bottom-3 left-[70%] -translate-x-1/2 w-5 h-5 rounded-full bg-red-500 text-white shadow flex items-center justify-center opacity-0 group-hover:opacity-100 hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
+            className="absolute -bottom-3 left-[70%] -translate-x-1/2 w-5 h-5 rounded-full bg-red-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
         </>
       ) : (
         <>
           <Handle type="source" position={Position.Bottom} className="!bg-primary !w-3 !h-3 !border-2 !border-background" />
           <button onClick={(e) => { e.stopPropagation(); data.onAddNext?.(id, null, e.clientX, e.clientY); }}
-            className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-primary text-primary-foreground shadow flex items-center justify-center opacity-0 group-hover:opacity-100 hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
+            className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-primary text-primary-foreground shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
         </>
       )}
     </div>
@@ -262,17 +262,28 @@ function PontoNotificacaoBuilderContent() {
 
   // ============ Conexões ============
   const onConnect = useCallback((c: Connection) => {
-    const src = nodes.find(n => n.id === c.source);
-    const tgt = nodes.find(n => n.id === c.target);
-    if (src && tgt) {
-      const allowed = NEXT_ALLOWED[(src.data as any).type] || [];
-      if (allowed.length && !allowed.includes((tgt.data as any).type)) {
-        toast.error(`"${BLOCO_MAP[(tgt.data as any).type]?.label}" não pode vir depois de "${BLOCO_MAP[(src.data as any).type]?.label}"`);
-        return;
+    console.log("[ponto-nb] onConnect", c);
+    if (!c.source || !c.target || c.source === c.target) return;
+    setNodes((currNodes) => {
+      const src = currNodes.find(n => n.id === c.source);
+      const tgt = currNodes.find(n => n.id === c.target);
+      if (src && tgt) {
+        const allowed = NEXT_ALLOWED[(src.data as any).type] || [];
+        if (allowed.length && !allowed.includes((tgt.data as any).type)) {
+          toast.error(`"${BLOCO_MAP[(tgt.data as any).type]?.label}" não pode vir depois de "${BLOCO_MAP[(src.data as any).type]?.label}"`);
+          return currNodes;
+        }
       }
-    }
-    setEdges(eds => addEdge({ ...c, markerEnd: { type: MarkerType.ArrowClosed }, animated: true, label: c.sourceHandle || undefined }, eds));
-  }, [nodes, setEdges]);
+      setEdges(eds => addEdge({
+        ...c,
+        id: `e-${c.source}-${c.sourceHandle || "o"}-${c.target}`,
+        markerEnd: { type: MarkerType.ArrowClosed },
+        animated: true,
+        label: c.sourceHandle || undefined,
+      }, eds));
+      return currNodes;
+    });
+  }, [setNodes, setEdges]);
 
   function addBlockAt(type: string, pos?: { x: number; y: number }, connectFrom?: { id: string; handle: string | null }) {
     const b = BLOCO_MAP[type];
@@ -598,6 +609,8 @@ function PontoNotificacaoBuilderContent() {
           nodes={enhancedNodes} edges={edges}
           onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          onConnectStart={(_, p) => console.log("[ponto-nb] onConnectStart", p)}
+          onConnectEnd={(e) => console.log("[ponto-nb] onConnectEnd", (e as any)?.target?.className)}
           onInit={setRfInstance}
           onNodeClick={(_, n) => setSelected(n)}
           onPaneClick={() => { setSelected(null); setSmartMenu(null); }}
