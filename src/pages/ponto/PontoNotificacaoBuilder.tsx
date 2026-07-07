@@ -193,6 +193,7 @@ function PontoNotificacaoBuilderContent() {
   const [noteFor, setNoteFor] = useState<string | null>(null);
   const [noteText, setNoteText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [rfInstance, setRfInstance] = useState<any>(null);
   const [isLocked, setIsLocked] = useState(false);
   const [dirty, setDirty] = useState(false);
