@@ -220,6 +220,90 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
     }
   };
 
+  // ============ CONTROLES PTZ (ONVIF via Coletor) ============
+  const sendControl = useCallback((payload: any) => {
+    for (const ch of controlChannelsRef.current) {
+      try { ch.send({ type: "broadcast", event: "msg", payload }); } catch {}
+    }
+  }, []);
+
+  const ptzMoveStart = (dir: "up" | "down" | "left" | "right" | "zoom_in" | "zoom_out") => {
+    if (!temPtz || !cameraId) return;
+    sendControl({ type: "ptz", action: "move_start", direction: dir, camera_id: cameraId });
+  };
+  const ptzStop = () => {
+    if (!temPtz || !cameraId) return;
+    sendControl({ type: "ptz", action: "move_stop", camera_id: cameraId });
+  };
+  const ptzHome = () => {
+    if (!temPtz || !cameraId) return;
+    sendControl({ type: "ptz", action: "home", camera_id: cameraId });
+    toast.success("Comando 'Home' enviado");
+  };
+
+  // ============ ÁUDIO ============
+  // Escutar: apenas alterna o mute do <video> (o track chega junto no WebRTC).
+  const toggleListen = () => {
+    if (!videoRef.current) return;
+    const nv = !audioMuted;
+    videoRef.current.muted = !nv; // se audioMuted vai virar false, video.muted = false
+    setAudioMuted(!nv);
+    if (nv) videoRef.current.play().catch(() => {});
+  };
+
+  // Falar: captura microfone e adiciona o track ao PeerConnection existente.
+  const toggleTalk = async () => {
+    if (!temAudio || !cameraId) return;
+    if (micOn) {
+      try { micStreamRef.current?.getTracks().forEach((t) => t.stop()); } catch {}
+      micStreamRef.current = null;
+      // Remove o track do PC
+      const pc = pcRef.current;
+      if (pc) {
+        pc.getSenders().forEach((s) => {
+          if (s.track?.kind === "audio") {
+            try { s.replaceTrack(null); } catch {}
+          }
+        });
+      }
+      setMicOn(false);
+      sendControl({ type: "talk", action: "stop", camera_id: cameraId });
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      micStreamRef.current = stream;
+      const pc = pcRef.current;
+      if (pc) {
+        const track = stream.getAudioTracks()[0];
+        const sender = pc.getSenders().find((s) => s.track === null || s.track?.kind === "audio");
+        if (sender) sender.replaceTrack(track);
+        else pc.addTrack(track, stream);
+      }
+      setMicOn(true);
+      sendControl({ type: "talk", action: "start", camera_id: cameraId });
+      toast.success("Microfone ativo — falando na câmera");
+    } catch (e: any) {
+      toast.error("Não foi possível acessar o microfone: " + e.message);
+    }
+  };
+
+  const PtzBtn = ({ dir, children, className = "" }: { dir: any; children: any; className?: string }) => (
+    <button
+      onMouseDown={() => ptzMoveStart(dir)}
+      onMouseUp={ptzStop}
+      onMouseLeave={ptzStop}
+      onTouchStart={(e) => { e.preventDefault(); ptzMoveStart(dir); }}
+      onTouchEnd={ptzStop}
+      className={cn(
+        "h-10 w-10 flex items-center justify-center rounded-md bg-black/60 text-white hover:bg-black/80 active:bg-primary transition select-none",
+        className,
+      )}
+    >
+      {children}
+    </button>
+  );
+
   return (
     <Dialog open={!!cameraId} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-5xl p-0 overflow-hidden bg-background">
@@ -227,6 +311,8 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
           <DialogTitle className="flex items-center gap-2 text-base">
             <Radio className="h-4 w-4 text-red-500 animate-pulse" />
             Ao vivo — {cameraNome}
+            {temPtz && <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-medium">PTZ</span>}
+            {temAudio && <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-medium">ÁUDIO</span>}
           </DialogTitle>
         </DialogHeader>
         <div ref={containerRef} className="relative bg-black aspect-video overflow-hidden">
@@ -234,7 +320,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
             ref={videoRef}
             autoPlay
             playsInline
-            muted
+            muted={audioMuted}
             className="w-full h-full object-contain"
           />
           <button
@@ -244,6 +330,60 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
           >
             <Maximize2 className="h-4 w-4" />
           </button>
+
+          {/* Overlay PTZ (esquerda inferior) */}
+          {temPtz && status === "ao-vivo" && (
+            <div className="absolute bottom-3 left-3 flex flex-col items-center gap-1 bg-black/30 rounded-lg p-2 backdrop-blur-sm">
+              <PtzBtn dir="up"><ChevronUp className="h-5 w-5" /></PtzBtn>
+              <div className="flex items-center gap-1">
+                <PtzBtn dir="left"><ChevronLeft className="h-5 w-5" /></PtzBtn>
+                <button
+                  onClick={ptzHome}
+                  className="h-10 w-10 flex items-center justify-center rounded-md bg-black/60 text-white hover:bg-black/80 transition"
+                  title="Voltar ao centro"
+                >
+                  <Home className="h-4 w-4" />
+                </button>
+                <PtzBtn dir="right"><ChevronRight className="h-5 w-5" /></PtzBtn>
+              </div>
+              <PtzBtn dir="down"><ChevronDown className="h-5 w-5" /></PtzBtn>
+              <div className="flex items-center gap-1 mt-1 pt-1 border-t border-white/20 w-full justify-center">
+                <PtzBtn dir="zoom_in"><ZoomIn className="h-4 w-4" /></PtzBtn>
+                <PtzBtn dir="zoom_out"><ZoomOut className="h-4 w-4" /></PtzBtn>
+              </div>
+            </div>
+          )}
+
+          {/* Overlay áudio (direita inferior) */}
+          {temAudio && status === "ao-vivo" && (
+            <div className="absolute bottom-3 right-3 flex flex-col gap-2">
+              <button
+                onClick={toggleListen}
+                className={cn(
+                  "h-10 w-10 flex items-center justify-center rounded-md transition",
+                  audioMuted
+                    ? "bg-black/60 text-white hover:bg-black/80"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90",
+                )}
+                title={audioMuted ? "Ouvir câmera" : "Silenciar"}
+              >
+                {audioMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+              </button>
+              <button
+                onClick={toggleTalk}
+                className={cn(
+                  "h-10 w-10 flex items-center justify-center rounded-md transition",
+                  micOn
+                    ? "bg-red-500 text-white hover:bg-red-600 animate-pulse"
+                    : "bg-black/60 text-white hover:bg-black/80",
+                )}
+                title={micOn ? "Parar de falar" : "Falar na câmera"}
+              >
+                {micOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+              </button>
+            </div>
+          )}
+
           {status !== "ao-vivo" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-white gap-3 pointer-events-none">
               {status === "erro" ? (
@@ -261,10 +401,16 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
           )}
         </div>
         <div className="flex justify-between items-center gap-2 px-4 py-3 border-t bg-card">
-          <Button variant="outline" size="sm" onClick={toggleFullscreen}>
-            <Maximize2 className="h-4 w-4 mr-1" /> Tela cheia
-          </Button>
-          <Button variant="outline" size="sm" onClick={onClose}>Fechar</Button>
+          <div className="text-[11px] text-muted-foreground">
+            {temPtz && "Segure os botões para mover a câmera. "}
+            {temAudio && "Áudio requer Coletor 1.7.0+."}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={toggleFullscreen}>
+              <Maximize2 className="h-4 w-4 mr-1" /> Tela cheia
+            </Button>
+            <Button variant="outline" size="sm" onClick={onClose}>Fechar</Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
