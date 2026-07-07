@@ -416,6 +416,19 @@ function PontoNotificacaoBuilderContent() {
   }, [addValidatedEdge, findNodeAtPoint]);
 
   useEffect(() => {
+    const start = (event: any) => {
+      const target = event.target as HTMLElement | null;
+      const handle = target?.closest?.(".react-flow__handle") as HTMLElement | null;
+      const nodeEl = handle?.closest?.(".react-flow__node") as HTMLElement | null;
+      const nodeId = nodeEl?.getAttribute("data-id");
+      if (!handle || !nodeId || !reactFlowWrapper.current?.contains(handle)) return;
+
+      const handleType = handle.classList.contains("target") ? "target" : "source";
+      const handleId = handle.getAttribute("data-handleid") || handle.dataset.handleid || null;
+      connectSucceededRef.current = false;
+      connectStartRef.current = { nodeId, handleId, handleType };
+    };
+
     const finish = (event: any) => {
       const start = connectStartRef.current;
       if (!start || !start.nodeId) return;
@@ -424,10 +437,16 @@ function PontoNotificacaoBuilderContent() {
       finishManualConnection(start, point);
     };
 
+    document.addEventListener("mousedown", start, true);
+    document.addEventListener("touchstart", start, true);
+    document.addEventListener("pointerdown", start, true);
     document.addEventListener("mouseup", finish, true);
     document.addEventListener("touchend", finish, true);
     document.addEventListener("pointerup", finish, true);
     return () => {
+      document.removeEventListener("mousedown", start, true);
+      document.removeEventListener("touchstart", start, true);
+      document.removeEventListener("pointerdown", start, true);
       document.removeEventListener("mouseup", finish, true);
       document.removeEventListener("touchend", finish, true);
       document.removeEventListener("pointerup", finish, true);
