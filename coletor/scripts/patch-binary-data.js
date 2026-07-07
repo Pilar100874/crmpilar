@@ -15,7 +15,7 @@ if (!fs.existsSync(ROOT)) {
 const SRC = path.join(ROOT, 'src');
 const NESTED = path.join(SRC, 'node_modules');
 const ALIAS_ROOT = SRC;
-const RE = /require\((['"])((?:lib|types|internal)\/[^'"]+)\1\)/g;
+const RE = /require\((['"])(?:(?:\.\/)?node_modules\/)?((?:lib|types|internal)\/[^'"]+)\1\)/g;
 let patched = 0;
 
 function copyDirIfExists(src, dest) {

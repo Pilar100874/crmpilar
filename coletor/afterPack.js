@@ -27,7 +27,7 @@ function normalizeBinaryData(root) {
     copyDirIfExists(path.join(nested, name), path.join(src, name));
   }
 
-  const re = /require\((['"])((?:lib|types|internal)\/[^'"]+)\1\)/g;
+  const re = /require\((['"])(?:(?:\.\/)?node_modules\/)?((?:lib|types|internal)\/[^'"]+)\1\)/g;
   let patched = 0;
   walkJs(root, (file) => {
     const input = fs.readFileSync(file, 'utf8');
