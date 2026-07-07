@@ -187,10 +187,7 @@ export function AppsHealthIndicator({ compact = false }: { compact?: boolean }) 
               <div className="font-semibold">Coletor Windows</div>
               {filiais.length > 0 ? (
                 <>
-                  <div className="text-muted-foreground mb-1.5">
-                    {filiaisAtivas} de {filiaisComEquip || filiais.length} filiais com coletor ativo
-                  </div>
-                  <div className="flex flex-col gap-1 max-h-56 overflow-auto">
+              <div className="flex flex-col gap-1 max-h-56 overflow-auto">
                     {filiais.map((f) => (
                       <div key={f.id} className="flex items-center gap-1.5">
                         <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotClass(f.state)}`} />
