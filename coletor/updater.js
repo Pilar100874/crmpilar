@@ -14,7 +14,14 @@ function fetchJson(url, hops = 0) {
   return new Promise((resolve, reject) => {
     if (hops > 5) return reject(new Error('muitos redirecionamentos'));
     const lib = url.startsWith('https') ? https : http;
-    lib.get(url, { timeout: 10000 }, (res) => {
+    lib.get(url, {
+      timeout: 10000,
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    }, (res) => {
       // segue redirect (302/301/307/308) — necessário para domínios custom da Lovable
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         const next = res.headers.location.startsWith('http')
@@ -27,6 +34,27 @@ function fetchJson(url, hops = 0) {
       res.on('data', c => data += c);
       res.on('end', () => { try { resolve(JSON.parse(data)); } catch (e) { reject(e); } });
     }).on('error', reject);
+  });
+}
+
+function urlExiste(url, hops = 0) {
+  return new Promise((resolve) => {
+    if (!url || hops > 5) return resolve(false);
+    const lib = url.startsWith('https') ? https : http;
+    const req = lib.request(url, { method: 'HEAD', timeout: 10000 }, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        const next = res.headers.location.startsWith('http')
+          ? res.headers.location
+          : new URL(res.headers.location, url).toString();
+        res.resume();
+        return urlExiste(next, hops + 1).then(resolve);
+      }
+      res.resume();
+      resolve(res.statusCode >= 200 && res.statusCode < 400);
+    });
+    req.on('timeout', () => { req.destroy(); resolve(false); });
+    req.on('error', () => resolve(false));
+    req.end();
   });
 }
 
@@ -44,11 +72,18 @@ async function checarAtualizacao() {
   const local = app.getVersion();
   try {
     const remoto = await fetchJson(VERSION_URL + '?t=' + Date.now());
-    const disponivel = cmpVersion(remoto.version, local) > 0;
+    let disponivel = cmpVersion(remoto.version, local) > 0;
+    const downloadUrl = remoto.downloadUrl || null;
+
+    // Se o GitHub/release foi removido, não mostra falso aviso de atualização.
+    if (disponivel && !(await urlExiste(downloadUrl))) {
+      disponivel = false;
+    }
+
     return {
       localVersion: local,
       remoteVersion: remoto.version,
-      downloadUrl: remoto.downloadUrl || null,
+      downloadUrl,
       notas: remoto.notas || '',
       atualizacaoDisponivel: disponivel,
     };
