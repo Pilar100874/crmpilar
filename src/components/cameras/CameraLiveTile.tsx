@@ -77,10 +77,15 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
         }
         if (payload.to !== viewerId) return;
         if (payload.type === "offer") {
+          // Dedupe: o mesmo offer pode chegar em múltiplos canais (plain + filial).
+          // Só processa se ainda estivermos em "stable" (antes de setRemoteDescription).
+          if (!pc || pc.signalingState !== "stable") return;
           try {
-            await pc!.setRemoteDescription({ type: "offer", sdp: payload.sdp });
-            const answer = await pc!.createAnswer();
-            await pc!.setLocalDescription(answer);
+            await pc.setRemoteDescription({ type: "offer", sdp: payload.sdp });
+            const answer = await pc.createAnswer();
+            // Recheca: se outro handler correu em paralelo, aborta silenciosamente.
+            if (pc.signalingState !== "have-remote-offer") return;
+            await pc.setLocalDescription(answer);
             await new Promise<void>((resolve) => {
               if (pc!.iceGatheringState === "complete") return resolve();
               const t = setTimeout(resolve, 3000);
@@ -96,6 +101,8 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
               sdp: pc!.localDescription!.sdp,
             });
           } catch (e: any) {
+            // Ignora erros de estado (duplicata de offer); só reporta erros reais.
+            if (String(e?.message || "").includes("wrong state")) return;
             setErro(e.message);
             setStatus("erro");
           }
