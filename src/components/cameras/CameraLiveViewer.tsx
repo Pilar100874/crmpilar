@@ -125,6 +125,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
           ch.subscribe((s) => { if (s === "SUBSCRIBED") resolve(); });
         });
       }
+      controlChannelsRef.current = channels;
 
       // Ping proativo — Coletor responde com heartbeat imediato
       sendAll({ type: "viewer-ping", to: "coletor", viewer_id: viewerId });
