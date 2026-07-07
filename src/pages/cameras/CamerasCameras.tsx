@@ -720,6 +720,73 @@ export default function CamerasCameras() {
               <Switch checked={editing.ativo} onCheckedChange={(v) => setEditing({ ...editing, ativo: v })} />
               <Label>Ativa</Label>
             </div>
+
+            {/* ===== PTZ e Áudio (ONVIF) ===== */}
+            <div className="sm:col-span-2 border-t pt-3 mt-2">
+              <div className="text-sm font-semibold mb-2">Controles avançados (ONVIF)</div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={editing.tem_ptz}
+                    onCheckedChange={(v) => setEditing({ ...editing, tem_ptz: v })}
+                  />
+                  <Label>Câmera PTZ (motorizada)</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={editing.tem_audio}
+                    onCheckedChange={(v) => setEditing({ ...editing, tem_audio: v })}
+                  />
+                  <Label>Áudio bidirecional</Label>
+                </div>
+              </div>
+              {(editing.tem_ptz || editing.tem_audio) && (
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div className="space-y-1">
+                    <Label>Usuário ONVIF</Label>
+                    <Input
+                      placeholder="admin"
+                      value={editing.onvif_user ?? ""}
+                      onChange={(e) => setEditing({ ...editing, onvif_user: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Senha ONVIF</Label>
+                    <Input
+                      type="password"
+                      placeholder="••••••"
+                      value={editing.onvif_pass ?? ""}
+                      onChange={(e) => setEditing({ ...editing, onvif_pass: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Porta ONVIF</Label>
+                    <Input
+                      type="number"
+                      placeholder="80"
+                      value={editing.onvif_porta ?? 80}
+                      onChange={(e) => setEditing({ ...editing, onvif_porta: parseInt(e.target.value) || 80 })}
+                    />
+                  </div>
+                  {editing.tem_ptz && (
+                    <div className="space-y-1">
+                      <Label>Velocidade PTZ padrão (0.1 – 1.0)</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0.1"
+                        max="1"
+                        value={editing.ptz_velocidade_padrao ?? 0.5}
+                        onChange={(e) => setEditing({ ...editing, ptz_velocidade_padrao: parseFloat(e.target.value) || 0.5 })}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+              <p className="text-[11px] text-muted-foreground mt-2">
+                Normalmente o usuário/senha ONVIF é o mesmo do login web da câmera. A porta padrão é 80 (Hikvision/Intelbras) ou 8000. Requer Coletor Desktop 1.7.0+.
+              </p>
+            </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
