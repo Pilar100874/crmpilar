@@ -112,7 +112,7 @@ function CustomNode({ id, data, selected }: any) {
         onMouseDownCapture={() => cbs.onManualConnectStart?.(id, null, "target")}
         onTouchStartCapture={() => cbs.onManualConnectStart?.(id, null, "target")}
         onPointerDownCapture={() => cbs.onManualConnectStart?.(id, null, "target")}
-        className="!bg-primary !w-5 !h-5 !border-2 !border-background !rounded-full !cursor-crosshair"
+        className="!bg-primary !w-5 !h-5 !border-2 !border-background !rounded-full !cursor-crosshair !z-50 !pointer-events-auto"
       />
 
       <div className={cn("px-3 py-2 rounded-t-lg border-b flex items-center gap-2", b.color)}>
@@ -163,7 +163,7 @@ function CustomNode({ id, data, selected }: any) {
             onTouchStartCapture={() => cbs.onManualConnectStart?.(id, "sim", "source")}
             onPointerDownCapture={() => cbs.onManualConnectStart?.(id, "sim", "source")}
             style={{ left: "30%" }}
-            className="!bg-green-500 !w-5 !h-5 !border-2 !border-background !rounded-full !cursor-crosshair"
+            className="!bg-green-500 !w-5 !h-5 !border-2 !border-background !rounded-full !cursor-crosshair !z-50 !pointer-events-auto"
           />
           <Handle
             type="source"
@@ -173,7 +173,7 @@ function CustomNode({ id, data, selected }: any) {
             onTouchStartCapture={() => cbs.onManualConnectStart?.(id, "nao", "source")}
             onPointerDownCapture={() => cbs.onManualConnectStart?.(id, "nao", "source")}
             style={{ left: "70%" }}
-            className="!bg-red-500 !w-5 !h-5 !border-2 !border-background !rounded-full !cursor-crosshair"
+            className="!bg-red-500 !w-5 !h-5 !border-2 !border-background !rounded-full !cursor-crosshair !z-50 !pointer-events-auto"
           />
           <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, "sim", e.clientX, e.clientY); }}
             className="absolute -bottom-7 left-[30%] -translate-x-1/2 w-5 h-5 rounded-full bg-green-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
@@ -188,7 +188,7 @@ function CustomNode({ id, data, selected }: any) {
             onMouseDownCapture={() => cbs.onManualConnectStart?.(id, null, "source")}
             onTouchStartCapture={() => cbs.onManualConnectStart?.(id, null, "source")}
             onPointerDownCapture={() => cbs.onManualConnectStart?.(id, null, "source")}
-            className="!bg-primary !w-5 !h-5 !border-2 !border-background !rounded-full !cursor-crosshair"
+            className="!bg-primary !w-5 !h-5 !border-2 !border-background !rounded-full !cursor-crosshair !z-50 !pointer-events-auto"
           />
           <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, null, e.clientX, e.clientY); }}
             className="absolute -bottom-7 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-primary text-primary-foreground shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
