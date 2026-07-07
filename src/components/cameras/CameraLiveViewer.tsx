@@ -166,16 +166,24 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Pr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cameraId]);
 
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const toggleFullscreen = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else el.requestFullscreen().catch(() => {});
+  };
+
   return (
     <Dialog open={!!cameraId} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-4xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="max-w-5xl p-0 overflow-hidden bg-background">
+        <DialogHeader className="px-4 py-3 border-b bg-card">
+          <DialogTitle className="flex items-center gap-2 text-base">
             <Radio className="h-4 w-4 text-red-500 animate-pulse" />
             Ao vivo — {cameraNome}
           </DialogTitle>
         </DialogHeader>
-        <div className="relative bg-black rounded-md aspect-video overflow-hidden">
+        <div ref={containerRef} className="relative bg-black aspect-video overflow-hidden">
           <video
             ref={videoRef}
             autoPlay
@@ -183,8 +191,15 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Pr
             muted
             className="w-full h-full object-contain"
           />
+          <button
+            onClick={toggleFullscreen}
+            className="absolute top-2 right-2 h-8 w-8 flex items-center justify-center rounded bg-black/60 text-white hover:bg-black/80 transition"
+            title="Tela cheia"
+          >
+            <Maximize2 className="h-4 w-4" />
+          </button>
           {status !== "ao-vivo" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-white gap-3">
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-white gap-3 pointer-events-none">
               {status === "erro" ? (
                 <>
                   <X className="h-10 w-10 text-red-500" />
@@ -199,7 +214,10 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, onClose }: Pr
             </div>
           )}
         </div>
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center gap-2 px-4 py-3 border-t bg-card">
+          <Button variant="outline" size="sm" onClick={toggleFullscreen}>
+            <Maximize2 className="h-4 w-4 mr-1" /> Tela cheia
+          </Button>
           <Button variant="outline" size="sm" onClick={onClose}>Fechar</Button>
         </div>
       </DialogContent>
