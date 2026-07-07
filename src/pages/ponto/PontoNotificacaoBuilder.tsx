@@ -324,10 +324,6 @@ function PontoNotificacaoBuilderContent() {
   }, []);
 
   // Callbacks estáveis para os nodes (evita recriar data em cada render e cancelar conexões)
-  const nodeCallbacks = useMemo<NodeCallbacks>(() => ({
-    onDuplicate, onToggleBreakpoint, onToggleSkip, onDelete: onDeleteNode, onAddNote, onAddNext,
-  }), [onDuplicate, onToggleBreakpoint, onToggleSkip, onDeleteNode, onAddNote, onAddNext]);
-
   // ============ Conexões ============
   // Ref sempre atualizada com os nós — evita usar `nodes` como dep e recriar onConnect a cada render
   const nodesRef = useRef<Node[]>([]);
@@ -398,6 +394,11 @@ function PontoNotificacaoBuilderContent() {
     };
   }, []);
 
+  const onManualConnectStart = useCallback((nodeId: string, handleId: string | null, handleType: "source" | "target") => {
+    connectSucceededRef.current = false;
+    connectStartRef.current = { nodeId, handleId, handleType };
+  }, []);
+
   const onConnectEnd = useCallback((event: any) => {
     const start = connectStartRef.current;
     connectStartRef.current = null;
@@ -418,6 +419,11 @@ function PontoNotificacaoBuilderContent() {
 
     if (addValidatedEdge(connection)) toast.success("Blocos vinculados");
   }, [addValidatedEdge, findNodeAtPoint, getPointerPoint]);
+
+  // Callbacks estáveis para os nodes (evita recriar data em cada render e cancelar conexões)
+  const nodeCallbacks = useMemo<NodeCallbacks>(() => ({
+    onDuplicate, onToggleBreakpoint, onToggleSkip, onDelete: onDeleteNode, onAddNote, onAddNext, onManualConnectStart,
+  }), [onDuplicate, onToggleBreakpoint, onToggleSkip, onDeleteNode, onAddNote, onAddNext, onManualConnectStart]);
 
   // Validação visual (feedback durante o arrasto do handle)
   const isValidConnection = useCallback((c: Connection) => {
