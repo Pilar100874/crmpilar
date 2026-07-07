@@ -15,7 +15,8 @@ if (!fs.existsSync(ROOT)) {
 const SRC = path.join(ROOT, 'src');
 const NESTED = path.join(SRC, 'node_modules');
 const ALIAS_ROOT = SRC;
-const RE = /require\((['"])(?:(?:\.\/)?node_modules\/)?((?:lib|types|internal)\/[^'"]+)\1\)/g;
+const INTERNAL_DIRS = new Set(['lib', 'types', 'internal']);
+const RE = /require\((['"])([^'"]+)\1\)/g;
 let patched = 0;
 
 function copyDirIfExists(src, dest) {
@@ -37,6 +38,42 @@ function ensureCompatibilityAliases() {
   }
 }
 
+function internalPathFromRequire(file, specifier) {
+  const clean = specifier.replace(/\\/g, '/');
+  const parts = clean.split('/').filter(Boolean);
+  const firstInternal = parts.findIndex((part) => INTERNAL_DIRS.has(part));
+
+  // Bare requires do pacote: require('lib/...'), require('types/...') etc.
+  if (!clean.startsWith('.') && firstInternal === 0) return parts.join('/');
+
+  // Requires antigos/errados gerados por patches anteriores:
+  // require('./lib/...'), require('../../internal/...'), require('./node_modules/lib/...')
+  if (clean.startsWith('.') && firstInternal >= 0) return parts.slice(firstInternal).join('/');
+
+  // Se o caminho relativo resolver para src/node_modules/{lib,types,internal},
+  // também normaliza para src/{lib,types,internal}.
+  if (clean.startsWith('.')) {
+    const abs = path.resolve(path.dirname(file), specifier);
+    const nestedRel = path.relative(NESTED, abs).replace(/\\/g, '/');
+    const srcRel = path.relative(SRC, abs).replace(/\\/g, '/');
+    const nestedHead = nestedRel.split('/')[0];
+    const srcHead = srcRel.split('/')[0];
+    if (!nestedRel.startsWith('..') && INTERNAL_DIRS.has(nestedHead)) return nestedRel;
+    if (!srcRel.startsWith('..') && INTERNAL_DIRS.has(srcHead)) return srcRel;
+  }
+
+  return null;
+}
+
+function rewriteRequire(file, quote, specifier) {
+  const internalPath = internalPathFromRequire(file, specifier);
+  if (!internalPath) return `require(${quote}${specifier}${quote})`;
+  const target = path.join(ALIAS_ROOT, internalPath);
+  let rel = path.relative(path.dirname(file), target).replace(/\\/g, '/');
+  if (!rel.startsWith('.')) rel = `./${rel}`;
+  return `require(${quote}${rel}${quote})`;
+}
+
 function walk(dir) {
   for (const name of fs.readdirSync(dir)) {
     const full = path.join(dir, name);
@@ -44,13 +81,7 @@ function walk(dir) {
     if (st.isDirectory()) { walk(full); continue; }
     if (!full.endsWith('.js')) continue;
     const src = fs.readFileSync(full, 'utf8');
-    const from = path.dirname(full);
-    const out = src.replace(RE, (_m, q, p) => {
-      const target = path.join(ALIAS_ROOT, p);
-      let rel = path.relative(from, target).replace(/\\/g, '/');
-      if (!rel.startsWith('.')) rel = `./${rel}`;
-      return `require(${q}${rel}${q})`;
-    });
+    const out = src.replace(RE, (_m, q, p) => rewriteRequire(full, q, p));
     if (out !== src) {
       fs.writeFileSync(full, out);
       patched++;
