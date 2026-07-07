@@ -615,12 +615,11 @@ function PontoNotificacaoBuilderContent() {
           <FloatingAddBlockButton onClick={() => setIsLibExpanded(true)} />
         )}
 
+        <NodeCallbacksContext.Provider value={nodeCallbacks}>
         <ReactFlow
-          nodes={enhancedNodes} edges={edges}
+          nodes={nodes} edges={edges}
           onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          onConnectStart={(_, p) => console.log("[ponto-nb] onConnectStart", p)}
-          onConnectEnd={(e) => console.log("[ponto-nb] onConnectEnd", (e as any)?.target?.className)}
           onInit={setRfInstance}
           onNodeClick={(_, n) => setSelected(n)}
           onPaneClick={() => { setSelected(null); setSmartMenu(null); }}
@@ -638,6 +637,7 @@ function PontoNotificacaoBuilderContent() {
           <Controls showInteractive={false} />
           <MiniMap pannable className="!bg-card" />
         </ReactFlow>
+        </NodeCallbacksContext.Provider>
 
         {smartMenu && (
           <SmartConnectMenu x={smartMenu.x} y={smartMenu.y}
