@@ -32,6 +32,7 @@ import { FloatingAddBlockButton } from "@/components/workflow/FloatingAddBlockBu
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 const EVENTOS = [
   { key: "atraso", label: "Atrasos" },
@@ -247,11 +248,31 @@ function PontoNotificacaoBuilderContent() {
     setNodes(ns => ns.map(n => n.id === nodeId ? { ...n, data: { ...n.data, isSkipped: !(n.data as any).isSkipped } } : n));
   }, [setNodes]);
 
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; nodeId: string | null }>({ open: false, nodeId: null });
+
+  const isTriggerNode = useCallback((nodeId: string | null | undefined) => {
+    if (!nodeId) return false;
+    const n = nodes.find(x => x.id === nodeId);
+    return (n?.data as any)?.type === "trigger";
+  }, [nodes]);
+
   const onDeleteNode = useCallback((nodeId: string) => {
+    if (isTriggerNode(nodeId)) {
+      toast.error("O bloco Gatilho não pode ser excluído.");
+      return;
+    }
+    setDeleteConfirm({ open: true, nodeId });
+  }, [isTriggerNode]);
+
+  const confirmDeleteNode = useCallback(() => {
+    const nodeId = deleteConfirm.nodeId;
+    if (!nodeId) return;
     setNodes(ns => ns.filter(n => n.id !== nodeId));
     setEdges(es => es.filter(e => e.source !== nodeId && e.target !== nodeId));
     setSelected(s => s?.id === nodeId ? null : s);
-  }, [setNodes, setEdges]);
+    setDeleteConfirm({ open: false, nodeId: null });
+    toast.success("Bloco excluído");
+  }, [deleteConfirm.nodeId, setNodes, setEdges]);
 
   const onAddNote = useCallback((nodeId: string) => {
     setNodes(ns => {
@@ -294,6 +315,17 @@ function PontoNotificacaoBuilderContent() {
       return currNodes;
     });
   }, [setNodes, setEdges]);
+
+  // Validação visual (feedback durante o arrasto do handle)
+  const isValidConnection = useCallback((c: Connection) => {
+    if (!c.source || !c.target || c.source === c.target) return false;
+    const src = nodes.find(n => n.id === c.source);
+    const tgt = nodes.find(n => n.id === c.target);
+    if (!src || !tgt) return true;
+    const allowed = NEXT_ALLOWED[(src.data as any).type] || [];
+    if (!allowed.length) return true;
+    return allowed.includes((tgt.data as any).type);
+  }, [nodes]);
 
   function addBlockAt(type: string, pos?: { x: number; y: number }, connectFrom?: { id: string; handle: string | null }) {
     const b = BLOCO_MAP[type];
@@ -667,9 +699,19 @@ function PontoNotificacaoBuilderContent() {
           nodes={nodes} edges={edges}
           onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          isValidConnection={isValidConnection}
           onInit={setRfInstance}
           onNodeClick={(_, n) => setSelected(n)}
           onPaneClick={() => { setSelected(null); setSmartMenu(null); }}
+          onBeforeDelete={async ({ nodes: nodesToDelete, edges: edgesToDelete }) => {
+            const kept = nodesToDelete.filter(n => (n.data as any)?.type !== "trigger");
+            if (kept.length !== nodesToDelete.length) {
+              toast.error("O bloco Gatilho não pode ser excluído.");
+            }
+            if (kept.length === 0 && edgesToDelete.length === 0) return false;
+            // Se houver mais de um item selecionado, confirma direto (sem dialog individual)
+            return { nodes: kept, edges: edgesToDelete };
+          }}
           nodeTypes={nodeTypes}
           fitView
           nodesDraggable={!isLocked}
@@ -677,6 +719,7 @@ function PontoNotificacaoBuilderContent() {
           elementsSelectable={!isLocked}
           panOnDrag
           zoomOnScroll
+          deleteKeyCode={isLocked ? null : ["Delete", "Backspace"]}
           style={{ width: "100%", height: "100%" }}
           defaultEdgeOptions={{ animated: true, style: { strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed } as any }}
         >
@@ -785,6 +828,14 @@ function PontoNotificacaoBuilderContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm(prev => ({ open, nodeId: open ? prev.nodeId : null }))}
+        onConfirm={confirmDeleteNode}
+        title="Excluir bloco?"
+        description="Esta ação removerá o bloco e todas as suas conexões. Não pode ser desfeita."
+      />
     </WorkflowBuilderLayout>
   );
 }
