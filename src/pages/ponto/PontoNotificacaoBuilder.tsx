@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   ReactFlow, ReactFlowProvider, Background, BackgroundVariant, Controls, MiniMap,
   addEdge, useEdgesState, useNodesState, Handle, Position,
-  type Connection, type Edge, type Node, type NodeTypes, MarkerType,
+  type Connection, type Edge, type Node, type NodeTypes, MarkerType, ConnectionMode,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { supabase as supabaseTyped } from "@/integrations/supabase/client";
@@ -34,6 +34,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { isSingleEdgePerHandleAllowed, SINGLE_OUTPUT_TOAST } from "@/lib/flow-edge-utils";
+import { boxSelectionProps } from "@/lib/flowSelection";
 
 const EVENTOS = [
   { key: "atraso", label: "Atrasos" },
@@ -84,6 +85,7 @@ type NodeCallbacks = {
   onDelete?: (id: string) => void;
   onAddNote?: (id: string) => void;
   onAddNext?: (id: string, handle: string | null, x: number, y: number) => void;
+  onManualConnectStart?: (id: string, handle: string | null, handleType: "source" | "target") => void;
 };
 const NodeCallbacksContext = createContext<NodeCallbacks>({});
 
@@ -104,7 +106,14 @@ function CustomNode({ id, data, selected }: any) {
       isHighlighted && "ring-4 ring-green-500/60 border-green-500 scale-[1.02]",
       !selected && !isBreakpoint && !isHighlighted && "border-border hover:border-primary/40"
     )}>
-      <Handle type="target" position={Position.Top} className="!bg-primary !w-3 !h-3 !border-2 !border-background" />
+      <Handle
+        type="target"
+        position={Position.Top}
+        onMouseDownCapture={() => cbs.onManualConnectStart?.(id, null, "target")}
+        onTouchStartCapture={() => cbs.onManualConnectStart?.(id, null, "target")}
+        onPointerDownCapture={() => cbs.onManualConnectStart?.(id, null, "target")}
+        className="!bg-primary !w-5 !h-5 !border-2 !border-background !rounded-full !cursor-crosshair !z-50 !pointer-events-auto"
+      />
 
       <div className={cn("px-3 py-2 rounded-t-lg border-b flex items-center gap-2", b.color)}>
         <Icon className="w-4 h-4" />
@@ -146,8 +155,26 @@ function CustomNode({ id, data, selected }: any) {
             <span className="text-green-600">SIM</span>
             <span className="text-red-600">NÃO</span>
           </div>
-          <Handle type="source" id="sim" position={Position.Bottom} style={{ left: "30%" }} className="!bg-green-500 !w-3 !h-3 !border-2 !border-background" />
-          <Handle type="source" id="nao" position={Position.Bottom} style={{ left: "70%" }} className="!bg-red-500 !w-3 !h-3 !border-2 !border-background" />
+          <Handle
+            type="source"
+            id="sim"
+            position={Position.Bottom}
+            onMouseDownCapture={() => cbs.onManualConnectStart?.(id, "sim", "source")}
+            onTouchStartCapture={() => cbs.onManualConnectStart?.(id, "sim", "source")}
+            onPointerDownCapture={() => cbs.onManualConnectStart?.(id, "sim", "source")}
+            style={{ left: "30%" }}
+            className="!bg-green-500 !w-5 !h-5 !border-2 !border-background !rounded-full !cursor-crosshair !z-50 !pointer-events-auto"
+          />
+          <Handle
+            type="source"
+            id="nao"
+            position={Position.Bottom}
+            onMouseDownCapture={() => cbs.onManualConnectStart?.(id, "nao", "source")}
+            onTouchStartCapture={() => cbs.onManualConnectStart?.(id, "nao", "source")}
+            onPointerDownCapture={() => cbs.onManualConnectStart?.(id, "nao", "source")}
+            style={{ left: "70%" }}
+            className="!bg-red-500 !w-5 !h-5 !border-2 !border-background !rounded-full !cursor-crosshair !z-50 !pointer-events-auto"
+          />
           <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, "sim", e.clientX, e.clientY); }}
             className="absolute -bottom-7 left-[30%] -translate-x-1/2 w-5 h-5 rounded-full bg-green-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
           <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, "nao", e.clientX, e.clientY); }}
@@ -155,7 +182,14 @@ function CustomNode({ id, data, selected }: any) {
         </>
       ) : (
         <>
-          <Handle type="source" position={Position.Bottom} className="!bg-primary !w-3 !h-3 !border-2 !border-background" />
+          <Handle
+            type="source"
+            position={Position.Bottom}
+            onMouseDownCapture={() => cbs.onManualConnectStart?.(id, null, "source")}
+            onTouchStartCapture={() => cbs.onManualConnectStart?.(id, null, "source")}
+            onPointerDownCapture={() => cbs.onManualConnectStart?.(id, null, "source")}
+            className="!bg-primary !w-5 !h-5 !border-2 !border-background !rounded-full !cursor-crosshair !z-50 !pointer-events-auto"
+          />
           <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, null, e.clientX, e.clientY); }}
             className="absolute -bottom-7 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-primary text-primary-foreground shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
 
@@ -290,35 +324,173 @@ function PontoNotificacaoBuilderContent() {
   }, []);
 
   // Callbacks estáveis para os nodes (evita recriar data em cada render e cancelar conexões)
-  const nodeCallbacks = useMemo<NodeCallbacks>(() => ({
-    onDuplicate, onToggleBreakpoint, onToggleSkip, onDelete: onDeleteNode, onAddNote, onAddNext,
-  }), [onDuplicate, onToggleBreakpoint, onToggleSkip, onDeleteNode, onAddNote, onAddNext]);
-
   // ============ Conexões ============
   // Ref sempre atualizada com os nós — evita usar `nodes` como dep e recriar onConnect a cada render
   const nodesRef = useRef<Node[]>([]);
   const edgesRef = useRef<Edge[]>([]);
+  const connectStartRef = useRef<{ nodeId: string | null; handleId: string | null; handleType: "source" | "target" } | null>(null);
+  const connectSucceededRef = useRef(false);
   useEffect(() => { nodesRef.current = nodes; }, [nodes]);
   useEffect(() => { edgesRef.current = edges; }, [edges]);
 
-  const onConnect = useCallback((c: Connection) => {
-    if (!c.source || !c.target || c.source === c.target) return;
-    setEdges(eds => {
-      if (!isSingleEdgePerHandleAllowed(c, eds)) {
-        toast.error(SINGLE_OUTPUT_TOAST);
-        return eds;
-      }
+  const addValidatedEdge = useCallback((c: Connection, notifyDuplicate = true) => {
+    if (!c.source || !c.target || c.source === c.target) return false;
+    if (!isSingleEdgePerHandleAllowed(c, edgesRef.current)) {
+      if (notifyDuplicate) toast.error(SINGLE_OUTPUT_TOAST);
+      return false;
+    }
 
-      return addEdge({
-        ...c,
-        id: `e-${c.source}-${c.sourceHandle || "o"}-${c.target}-${c.targetHandle || "t"}-${Date.now()}`,
-        type: "smoothstep",
-        markerEnd: { type: MarkerType.ArrowClosed },
-        animated: true,
-        label: c.sourceHandle || undefined,
-      }, eds);
-    });
+    const edge = {
+      ...c,
+      id: `e-${c.source}-${c.sourceHandle || "o"}-${c.target}-${c.targetHandle || "t"}-${Date.now()}`,
+      type: "smoothstep",
+      markerEnd: { type: MarkerType.ArrowClosed },
+      animated: true,
+      label: c.sourceHandle || undefined,
+    } as Edge;
+    const nextEdges = addEdge(edge, edgesRef.current);
+    edgesRef.current = nextEdges;
+    setEdges(nextEdges);
+    return true;
   }, [setEdges]);
+
+  const onConnect = useCallback((c: Connection) => {
+    connectSucceededRef.current = addValidatedEdge(c);
+  }, [addValidatedEdge]);
+
+  const getPointerPoint = useCallback((event: any) => {
+    const touch = event?.changedTouches?.[0] || event?.touches?.[0];
+    const x = event?.clientX ?? touch?.clientX;
+    const y = event?.clientY ?? touch?.clientY;
+    return x == null || y == null ? null : { x, y };
+  }, []);
+
+  const findNodeAtPoint = useCallback((x: number, y: number, excludeId?: string | null) => {
+    const wrapper = reactFlowWrapper.current;
+    if (!wrapper) return null;
+    const hitPadding = 72;
+    let best: { id: string; distance: number } | null = null;
+    wrapper.querySelectorAll<HTMLElement>(".react-flow__node").forEach((el) => {
+      const nodeId = el.getAttribute("data-id");
+      if (!nodeId || nodeId === excludeId) return;
+      const rect = el.getBoundingClientRect();
+      const inside = x >= rect.left - hitPadding && x <= rect.right + hitPadding && y >= rect.top - hitPadding && y <= rect.bottom + hitPadding;
+      if (!inside) return;
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const distance = Math.hypot(x - cx, y - cy);
+      if (!best || distance < best.distance) best = { id: nodeId, distance };
+    });
+    return best?.id ?? null;
+  }, []);
+
+  const onConnectStart = useCallback((_: any, params: any) => {
+    connectSucceededRef.current = false;
+    connectStartRef.current = {
+      nodeId: params?.nodeId ?? null,
+      handleId: params?.handleId ?? null,
+      handleType: params?.handleType,
+    };
+  }, []);
+
+  const onManualConnectStart = useCallback((nodeId: string, handleId: string | null, handleType: "source" | "target") => {
+    connectSucceededRef.current = false;
+    connectStartRef.current = { nodeId, handleId, handleType };
+  }, []);
+
+  const finishManualConnection = useCallback((start: { nodeId: string | null; handleId: string | null; handleType: "source" | "target" }, point: { x: number; y: number }) => {
+    if (!start.nodeId || connectSucceededRef.current) return false;
+    const droppedNodeId = findNodeAtPoint(point.x, point.y, start.nodeId);
+    if (!droppedNodeId) return false;
+
+    const connection: Connection = start.handleType === "target"
+      ? { source: droppedNodeId, sourceHandle: null, target: start.nodeId, targetHandle: start.handleId ?? null }
+      : { source: start.nodeId, sourceHandle: start.handleId ?? null, target: droppedNodeId, targetHandle: null };
+
+    const accepted = addValidatedEdge(connection);
+    if (accepted) {
+      connectSucceededRef.current = true;
+      toast.success("Blocos vinculados");
+    }
+    return accepted;
+  }, [addValidatedEdge, findNodeAtPoint]);
+
+  useEffect(() => {
+    const start = (event: any) => {
+      const point = getPointerPoint(event);
+      const target = event.target as HTMLElement | null;
+      let handle = target?.closest?.(".react-flow__handle") as HTMLElement | null;
+      if (!handle && point && reactFlowWrapper.current) {
+        let nearest: { el: HTMLElement; distance: number } | null = null;
+        reactFlowWrapper.current.querySelectorAll<HTMLElement>(".react-flow__handle").forEach((el) => {
+          const rect = el.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          const distance = Math.hypot(point.x - cx, point.y - cy);
+          if (distance <= 56 && (!nearest || distance < nearest.distance)) nearest = { el, distance };
+        });
+        handle = nearest?.el ?? null;
+      }
+      const nodeEl = handle?.closest?.(".react-flow__node") as HTMLElement | null;
+      const nodeId = nodeEl?.getAttribute("data-id");
+      if (!handle || !nodeId || !reactFlowWrapper.current?.contains(handle)) return;
+
+      const handleType = handle.classList.contains("target") ? "target" : "source";
+      const handleId = handle.getAttribute("data-handleid") || handle.dataset.handleid || null;
+      connectSucceededRef.current = false;
+      connectStartRef.current = { nodeId, handleId, handleType };
+    };
+
+    const finish = (event: any) => {
+      const start = connectStartRef.current;
+      if (!start || !start.nodeId) return;
+      const point = getPointerPoint(event);
+      if (!point) return;
+      finishManualConnection(start, point);
+    };
+
+    document.addEventListener("mousedown", start, true);
+    document.addEventListener("touchstart", start, true);
+    document.addEventListener("pointerdown", start, true);
+    document.addEventListener("mouseup", finish, true);
+    document.addEventListener("touchend", finish, true);
+    document.addEventListener("pointerup", finish, true);
+    return () => {
+      document.removeEventListener("mousedown", start, true);
+      document.removeEventListener("touchstart", start, true);
+      document.removeEventListener("pointerdown", start, true);
+      document.removeEventListener("mouseup", finish, true);
+      document.removeEventListener("touchend", finish, true);
+      document.removeEventListener("pointerup", finish, true);
+    };
+  }, [finishManualConnection, getPointerPoint]);
+
+  const onConnectEnd = useCallback((event: any, connectionState?: any) => {
+    const start = connectStartRef.current;
+    connectStartRef.current = null;
+    if (!start || !start.nodeId) return;
+    if (connectSucceededRef.current) {
+      connectSucceededRef.current = false;
+      return;
+    }
+
+    const stateTargetId = connectionState?.toNode?.id;
+    if (stateTargetId && stateTargetId !== start.nodeId) {
+      const connection: Connection = start.handleType === "target"
+        ? { source: stateTargetId, sourceHandle: null, target: start.nodeId, targetHandle: start.handleId ?? null }
+        : { source: start.nodeId, sourceHandle: start.handleId ?? null, target: stateTargetId, targetHandle: connectionState?.toHandle?.id ?? null };
+      if (addValidatedEdge(connection)) toast.success("Blocos vinculados");
+      return;
+    }
+
+    const point = getPointerPoint(event);
+    if (point) finishManualConnection(start, point);
+  }, [addValidatedEdge, finishManualConnection, getPointerPoint]);
+
+  // Callbacks estáveis para os nodes (evita recriar data em cada render e cancelar conexões)
+  const nodeCallbacks = useMemo<NodeCallbacks>(() => ({
+    onDuplicate, onToggleBreakpoint, onToggleSkip, onDelete: onDeleteNode, onAddNote, onAddNext, onManualConnectStart,
+  }), [onDuplicate, onToggleBreakpoint, onToggleSkip, onDeleteNode, onAddNote, onAddNext, onManualConnectStart]);
 
   // Validação visual (feedback durante o arrasto do handle)
   const isValidConnection = useCallback((c: Connection) => {
@@ -706,6 +878,8 @@ function PontoNotificacaoBuilderContent() {
           onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           isValidConnection={isValidConnection}
+          onConnectStart={onConnectStart}
+          onConnectEnd={onConnectEnd}
           onInit={setRfInstance}
           onNodeClick={(_, n) => setSelected(n)}
           onPaneClick={() => { setSelected(null); setSmartMenu(null); }}
@@ -722,10 +896,15 @@ function PontoNotificacaoBuilderContent() {
           fitView
           nodesDraggable={!isLocked}
           nodesConnectable={!isLocked}
+          nodesFocusable={!isLocked}
+          edgesFocusable={!isLocked}
           elementsSelectable={!isLocked}
-          panOnDrag
-          zoomOnScroll
-          deleteKeyCode={isLocked ? null : ["Delete", "Backspace"]}
+          connectionMode={ConnectionMode.Loose}
+          connectionRadius={80}
+          connectOnClick={false}
+          autoPanOnConnect={false}
+          autoPanOnNodeDrag={true}
+          {...boxSelectionProps({ disabled: isLocked })}
           style={{ width: "100%", height: "100%" }}
           defaultEdgeOptions={{ animated: true, style: { strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed } as any }}
         >
