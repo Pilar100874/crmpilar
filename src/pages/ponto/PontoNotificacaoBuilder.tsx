@@ -699,9 +699,19 @@ function PontoNotificacaoBuilderContent() {
           nodes={nodes} edges={edges}
           onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          isValidConnection={isValidConnection}
           onInit={setRfInstance}
           onNodeClick={(_, n) => setSelected(n)}
           onPaneClick={() => { setSelected(null); setSmartMenu(null); }}
+          onBeforeDelete={async ({ nodes: nodesToDelete, edges: edgesToDelete }) => {
+            const kept = nodesToDelete.filter(n => (n.data as any)?.type !== "trigger");
+            if (kept.length !== nodesToDelete.length) {
+              toast.error("O bloco Gatilho não pode ser excluído.");
+            }
+            if (kept.length === 0 && edgesToDelete.length === 0) return false;
+            // Se houver mais de um item selecionado, confirma direto (sem dialog individual)
+            return { nodes: kept, edges: edgesToDelete };
+          }}
           nodeTypes={nodeTypes}
           fitView
           nodesDraggable={!isLocked}
@@ -709,6 +719,7 @@ function PontoNotificacaoBuilderContent() {
           elementsSelectable={!isLocked}
           panOnDrag
           zoomOnScroll
+          deleteKeyCode={isLocked ? null : ["Delete", "Backspace"]}
           style={{ width: "100%", height: "100%" }}
           defaultEdgeOptions={{ animated: true, style: { strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed } as any }}
         >
