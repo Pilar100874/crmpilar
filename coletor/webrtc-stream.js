@@ -393,7 +393,9 @@ class StreamSession {
     if (this.closed) return;
     this.closed = true;
     try { this.ffmpeg?.kill('SIGKILL'); } catch {}
+    try { this.audioFfmpeg?.kill('SIGKILL'); } catch {}
     try { this.udp?.close(); } catch {}
+    try { this.audioUdp?.close(); } catch {}
     try { this.pc?.close(); } catch {}
     this.hub.sessions.delete(this.key);
   }
