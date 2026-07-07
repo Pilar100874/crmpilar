@@ -149,6 +149,30 @@ class SignalHub {
       return;
     }
     if (!this.myCameraIds.has(m.camera_id)) return;
+
+    // ============ PTZ (ONVIF) ============
+    if (m.type === 'ptz') {
+      try {
+        const cam = (this.cameras || []).find((c) => c.id === m.camera_id);
+        if (!cam || !cam.tem_ptz) return;
+        const { ptzHandle } = require('./onvif-control');
+        await ptzHandle(cam, m);
+      } catch (e) {
+        console.error('[webrtc] ptz err', e.message);
+      }
+      return;
+    }
+
+    // ============ TALK (áudio do viewer → câmera) ============
+    if (m.type === 'talk') {
+      // O áudio do viewer chega dentro do próprio PeerConnection (track sendrecv).
+      // Aqui só logamos o start/stop; o roteamento do audio track para a câmera
+      // é feito dentro do StreamSession via ONVIF backchannel (implementação
+      // pendente na câmera de destino).
+      console.log('[webrtc] talk', m.action, m.camera_id);
+      return;
+    }
+
     const key = `${m.camera_id}:${m.viewer_id}`;
     if (m.type === 'request') {
       if (this.sessions.has(key)) this.sessions.get(key).close();
