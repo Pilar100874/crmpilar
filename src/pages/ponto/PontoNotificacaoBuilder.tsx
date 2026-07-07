@@ -33,6 +33,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { isSingleEdgePerHandleAllowed, SINGLE_OUTPUT_TOAST } from "@/lib/flow-edge-utils";
 
 const EVENTOS = [
   { key: "atraso", label: "Atrasos" },
@@ -296,44 +297,43 @@ function PontoNotificacaoBuilderContent() {
   // ============ Conexões ============
   // Ref sempre atualizada com os nós — evita usar `nodes` como dep e recriar onConnect a cada render
   const nodesRef = useRef<Node[]>([]);
+  const edgesRef = useRef<Edge[]>([]);
   useEffect(() => { nodesRef.current = nodes; }, [nodes]);
+  useEffect(() => { edgesRef.current = edges; }, [edges]);
 
   const onConnect = useCallback((c: Connection) => {
     if (!c.source || !c.target || c.source === c.target) return;
-    const curr = nodesRef.current;
-    const src = curr.find(n => n.id === c.source);
-    const tgt = curr.find(n => n.id === c.target);
-    if (src && tgt) {
-      const allowed = NEXT_ALLOWED[(src.data as any).type] || [];
-      if (allowed.length && !allowed.includes((tgt.data as any).type)) {
-        toast.error(`"${BLOCO_MAP[(tgt.data as any).type]?.label}" não pode vir depois de "${BLOCO_MAP[(src.data as any).type]?.label}"`);
-        return;
+    setEdges(eds => {
+      if (!isSingleEdgePerHandleAllowed(c, eds)) {
+        toast.error(SINGLE_OUTPUT_TOAST);
+        return eds;
       }
-    }
-    setEdges(eds => addEdge({
-      ...c,
-      id: `e-${c.source}-${c.sourceHandle || "o"}-${c.target}-${c.targetHandle || "t"}`,
-      markerEnd: { type: MarkerType.ArrowClosed },
-      animated: true,
-      label: c.sourceHandle || undefined,
-    }, eds));
+
+      return addEdge({
+        ...c,
+        id: `e-${c.source}-${c.sourceHandle || "o"}-${c.target}-${c.targetHandle || "t"}-${Date.now()}`,
+        type: "smoothstep",
+        markerEnd: { type: MarkerType.ArrowClosed },
+        animated: true,
+        label: c.sourceHandle || undefined,
+      }, eds);
+    });
   }, [setEdges]);
 
   // Validação visual (feedback durante o arrasto do handle)
   const isValidConnection = useCallback((c: Connection) => {
-    if (!c.source || !c.target || c.source === c.target) return false;
-    const curr = nodesRef.current;
-    const src = curr.find(n => n.id === c.source);
-    const tgt = curr.find(n => n.id === c.target);
-    if (!src || !tgt) return true;
-    const allowed = NEXT_ALLOWED[(src.data as any).type] || [];
-    if (!allowed.length) return true;
-    return allowed.includes((tgt.data as any).type);
+    if (!c.source || !c.target) return true;
+    if (c.source === c.target) return false;
+    return isSingleEdgePerHandleAllowed(c, edgesRef.current);
   }, []);
 
 
   function addBlockAt(type: string, pos?: { x: number; y: number }, connectFrom?: { id: string; handle: string | null }) {
     const b = BLOCO_MAP[type];
+    if (connectFrom && !isSingleEdgePerHandleAllowed({ source: connectFrom.id, sourceHandle: connectFrom.handle ?? null } as Connection, edgesRef.current)) {
+      toast.error(SINGLE_OUTPUT_TOAST);
+      return null;
+    }
     const newId = crypto.randomUUID();
     const position = pos || { x: 200 + Math.random() * 240, y: 200 + Math.random() * 200 };
     const cfgDefault: any = {};
@@ -347,11 +347,12 @@ function PontoNotificacaoBuilderContent() {
     const node: Node = { id: newId, type: "custom", position, data: { type, label: b.label, config: cfgDefault } as any };
     setNodes(ns => [...ns, node]);
     if (connectFrom) {
-      setEdges(es => [...es, {
+      setEdges(es => addEdge({
         id: `e-${connectFrom.id}-${newId}`, source: connectFrom.id, target: newId,
+        type: "smoothstep",
         sourceHandle: connectFrom.handle || undefined, label: connectFrom.handle || undefined,
         markerEnd: { type: MarkerType.ArrowClosed }, animated: true,
-      } as Edge]);
+      } as Edge, es));
     }
     setSelected(node);
     return node;
