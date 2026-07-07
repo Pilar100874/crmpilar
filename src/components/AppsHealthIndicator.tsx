@@ -128,16 +128,18 @@ function getPushState(): PushState {
 export function AppsHealthIndicator({ compact = false }: { compact?: boolean }) {
   const [win, setWin] = useState<Health>({ at: null, ago: null });
   const [and, setAnd] = useState<Health>({ at: null, ago: null });
+  const [filiais, setFiliais] = useState<FilialHealth[]>([]);
   const [push, setPush] = useState<PushState>(getPushState());
 
   useEffect(() => {
     let alive = true;
     const load = async () => {
       try {
-        const { win: w, and: a } = await fetchHealth();
+        const { win: w, and: a, filiais: f } = await fetchHealth();
         if (!alive) return;
         setWin(w);
         setAnd(a);
+        setFiliais(f);
       } catch { /* silencioso */ }
     };
     load();
@@ -152,8 +154,12 @@ export function AppsHealthIndicator({ compact = false }: { compact?: boolean }) 
     return () => window.removeEventListener("focus", handler);
   }, []);
 
-  const winState = classify(win.ago);
+  const winState = filiais.length
+    ? aggregate(filiais.map((f) => f.state))
+    : classify(win.ago);
   const andState = classify(and.ago);
+  const filiaisOnline = filiais.filter((f) => f.state === "online").length;
+  const filiaisComEquip = filiais.filter((f) => f.equipamentos > 0).length;
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -177,11 +183,35 @@ export function AppsHealthIndicator({ compact = false }: { compact?: boolean }) 
                 <span className={`h-1.5 w-1.5 rounded-full ${dotClass(winState)}`} />
               </span>
             </TooltipTrigger>
-            <TooltipContent side="right" className="text-xs">
+            <TooltipContent side="right" className="text-xs max-w-[280px]">
               <div className="font-semibold">Coletor Windows</div>
-              <div className="text-muted-foreground">{label(winState, win.at)}</div>
+              {filiais.length > 0 ? (
+                <>
+                  <div className="text-muted-foreground mb-1.5">
+                    {filiaisOnline} de {filiaisComEquip || filiais.length} filiais com coletor ativo
+                  </div>
+                  <div className="flex flex-col gap-1 max-h-56 overflow-auto">
+                    {filiais.map((f) => (
+                      <div key={f.id} className="flex items-center gap-1.5">
+                        <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotClass(f.state)}`} />
+                        <span className="truncate">{f.nome}</span>
+                        <span className="text-muted-foreground ml-auto text-[10px] whitespace-nowrap">
+                          {f.equipamentos === 0
+                            ? "sem equipamento"
+                            : f.at
+                            ? new Date(f.at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+                            : "nunca"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="text-muted-foreground">{label(winState, win.at)}</div>
+              )}
             </TooltipContent>
           </Tooltip>
+
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="relative inline-flex items-center gap-1">
