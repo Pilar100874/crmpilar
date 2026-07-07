@@ -158,7 +158,7 @@ export function AppsHealthIndicator({ compact = false }: { compact?: boolean }) 
     ? aggregate(filiais.map((f) => f.state))
     : classify(win.ago);
   const andState = classify(and.ago);
-  const filiaisOnline = filiais.filter((f) => f.state === "online").length;
+  const filiaisAtivas = filiais.filter((f) => f.state !== "offline").length;
   const filiaisComEquip = filiais.filter((f) => f.equipamentos > 0).length;
 
   return (
