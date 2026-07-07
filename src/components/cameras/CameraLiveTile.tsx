@@ -16,7 +16,7 @@ interface Props {
 
 const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-export function CameraLiveTile({ cameraId, cameraNome, filialId, className, autoStart = true }: Props) {
+export function CameraLiveTile({ cameraId, cameraNome, filialId, className, autoStart = true, onMaximize }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [status, setStatus] = useState<"idle" | "conectando" | "ao-vivo" | "erro">(autoStart ? "conectando" : "idle");
