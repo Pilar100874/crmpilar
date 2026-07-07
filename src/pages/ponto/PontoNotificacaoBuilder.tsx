@@ -333,9 +333,32 @@ function PontoNotificacaoBuilderContent() {
   useEffect(() => { nodesRef.current = nodes; }, [nodes]);
   useEffect(() => { edgesRef.current = edges; }, [edges]);
 
+  const getExistingNodeEdges = useCallback((edgeList: Edge[] = edgesRef.current) => {
+    const nodeIds = new Set(nodesRef.current.map(n => n.id));
+    return edgeList.filter(e => e.source && e.target && nodeIds.has(e.source) && nodeIds.has(e.target));
+  }, []);
+
+  const isSameConnection = useCallback((edge: Edge, conn: Connection) => (
+    edge.source === conn.source &&
+    edge.target === conn.target &&
+    (edge.sourceHandle ?? null) === (conn.sourceHandle ?? null) &&
+    (edge.targetHandle ?? null) === (conn.targetHandle ?? null)
+  ), []);
+
   const addValidatedEdge = useCallback((c: Connection, notifyDuplicate = true) => {
     if (!c.source || !c.target || c.source === c.target) return false;
-    if (!isSingleEdgePerHandleAllowed(c, edgesRef.current)) {
+    const currentEdges = getExistingNodeEdges(edgesRef.current);
+    const removedOrphans = currentEdges.length !== edgesRef.current.length;
+
+    if (currentEdges.some(e => isSameConnection(e, c))) {
+      if (removedOrphans) {
+        edgesRef.current = currentEdges;
+        setEdges(currentEdges);
+      }
+      return true;
+    }
+
+    if (!isSingleEdgePerHandleAllowed(c, currentEdges)) {
       if (notifyDuplicate) toast.error(SINGLE_OUTPUT_TOAST);
       return false;
     }
@@ -348,11 +371,11 @@ function PontoNotificacaoBuilderContent() {
       animated: true,
       label: c.sourceHandle || undefined,
     } as Edge;
-    const nextEdges = addEdge(edge, edgesRef.current);
+    const nextEdges = addEdge(edge, currentEdges);
     edgesRef.current = nextEdges;
     setEdges(nextEdges);
     return true;
-  }, [setEdges]);
+  }, [getExistingNodeEdges, isSameConnection, setEdges]);
 
   const onConnect = useCallback((c: Connection) => {
     connectSucceededRef.current = addValidatedEdge(c);
@@ -496,13 +519,16 @@ function PontoNotificacaoBuilderContent() {
   const isValidConnection = useCallback((c: Connection) => {
     if (!c.source || !c.target) return true;
     if (c.source === c.target) return false;
-    return isSingleEdgePerHandleAllowed(c, edgesRef.current);
-  }, []);
+    const existingEdges = getExistingNodeEdges(edgesRef.current);
+    if (existingEdges.some(e => isSameConnection(e, c))) return true;
+    return isSingleEdgePerHandleAllowed(c, existingEdges);
+  }, [getExistingNodeEdges, isSameConnection]);
 
 
   function addBlockAt(type: string, pos?: { x: number; y: number }, connectFrom?: { id: string; handle: string | null }) {
     const b = BLOCO_MAP[type];
-    if (connectFrom && !isSingleEdgePerHandleAllowed({ source: connectFrom.id, sourceHandle: connectFrom.handle ?? null } as Connection, edgesRef.current)) {
+    const existingEdges = getExistingNodeEdges(edgesRef.current);
+    if (connectFrom && !isSingleEdgePerHandleAllowed({ source: connectFrom.id, sourceHandle: connectFrom.handle ?? null } as Connection, existingEdges)) {
       toast.error(SINGLE_OUTPUT_TOAST);
       return null;
     }
@@ -524,7 +550,7 @@ function PontoNotificacaoBuilderContent() {
         type: "smoothstep",
         sourceHandle: connectFrom.handle || undefined, label: connectFrom.handle || undefined,
         markerEnd: { type: MarkerType.ArrowClosed }, animated: true,
-      } as Edge, es));
+      } as Edge, getExistingNodeEdges(es)));
     }
     setSelected(node);
     return node;
