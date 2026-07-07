@@ -1,5 +1,5 @@
 {
-  "version": "1.6.10",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.6.10/ColetorPilar-Setup.exe",
-  "notas": "1.6.10: corrige requires relativos quebrados do módulo WebRTC no Windows instalado para liberar câmeras ao vivo."
+  "version": "1.7.0",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.7.0/ColetorPilar-Setup.exe",
+  "notas": "1.7.0: adiciona controle PTZ (mover câmera) e áudio bidirecional via ONVIF no popup de Ao vivo."
 }
