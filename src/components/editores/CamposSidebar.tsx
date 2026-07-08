@@ -182,16 +182,14 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
         <span className="font-medium">{c.rotulo}</span>
         <span className="block text-[10px] text-muted-foreground font-mono">{`{{${c.chave}}}`}</span>
       </button>
-      {c.personalizado && (
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); setCampoParaExcluir(c); }}
-          className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-[10px] shadow"
-          title="Excluir campo personalizado"
-        >
-          ×
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setCampoParaExcluir(c); }}
+        className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-[10px] shadow"
+        title="Excluir campo"
+      >
+        ×
+      </button>
     </div>
   );
 
