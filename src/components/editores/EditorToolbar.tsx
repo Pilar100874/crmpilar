@@ -155,8 +155,12 @@ export function EditorToolbar({
 
             <Separator orientation="vertical" className="h-6 mx-1" />
             <TB onClick={() => {
-              const url = window.prompt("URL do link");
-              if (url) editor.chain().focus().setLink({ href: url }).run();
+              const sel = editor.state.selection;
+              const selectedText = editor.state.doc.textBetween(sel.from, sel.to, " ");
+              const prev = editor.getAttributes("link")?.href || "";
+              setLinkText(selectedText);
+              setLinkUrl(prev);
+              setLinkOpen(true);
             }} title="Link"><LinkIcon className="h-4 w-4" /></TB>
             <ImagePickerDialog onInsert={(url, w) => {
               editor.chain().focus().setImage({ src: url } as any).updateAttributes("image", { width: w } as any).run();
