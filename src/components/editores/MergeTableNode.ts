@@ -157,7 +157,17 @@ export const MergeTable = Node.create({
           const pos = typeof getPos === "function" ? getPos() : null;
           if (pos == null) return;
           if (a === "apply") {
-            const { from, to } = getVals();
+            let { from, to } = getVals();
+            const previewRows = getPreviewRows((node.attrs as MergeTableAttrs).alias);
+            const total = previewRows.length;
+            if (from < 1) from = 1;
+            if (total >= 2 && from > total - 1) from = total - 1;
+            if (to !== 0) {
+              if (to < from) to = from;
+              if (total > 0 && to > total) to = total;
+            }
+            (toolbar!.querySelector('[data-k="from"]') as HTMLInputElement).value = String(from);
+            (toolbar!.querySelector('[data-k="to"]') as HTMLInputElement).value = String(to);
             editor.chain().focus().command(({ tr }) => {
               tr.setNodeMarkup(pos, undefined, { ...node.attrs, from, to });
               return true;
