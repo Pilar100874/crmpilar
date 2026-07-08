@@ -244,7 +244,7 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
       let list: any[] = [];
       if (cfg.tabela.startsWith("api:")) {
         // Fonte é uma API do sistema
-        const all = await fetchApiEndpointRows(cfg.tabela.slice(4), Math.min(cfg.limite || 50, 500));
+        const all = await fetchApiEndpointRows(cfg.tabela.slice(4), cfg.limite && cfg.limite > 0 ? Math.min(cfg.limite, 500) : 0);
         list = all.filter(r => cfg.filtros.every(f => {
           if (!f.campo || !f.valor) return true;
           const rawCampo = f.campo.includes(".") ? f.campo.split(".").slice(1).join(".") : f.campo;
