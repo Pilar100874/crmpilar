@@ -1,13 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Database, Play, Plus, Trash2, Search, Image as ImageIcon, Calculator, Link2, Repeat, Sigma, Check } from "lucide-react";
+import { Database, Play, Plus, Trash2, Search, Image as ImageIcon, Link2, Repeat, Sigma, Check, ChevronRight, ChevronLeft, Table2, Filter, Calculator, GripVertical } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
@@ -20,10 +18,10 @@ export interface MergeConfigFiltro {
 }
 
 export interface MergeRelation {
-  alias: string;         // ex: "itens"
-  tabela: string;        // ex: "pedidos_ecommerce_itens"
-  localKey: string;      // campo da tabela principal (ex: "id")
-  foreignKey: string;    // campo da tabela relacionada (ex: "pedido_id")
+  alias: string;
+  tabela: string;
+  localKey: string;
+  foreignKey: string;
   cardinality: "1:1" | "1:N";
 }
 
@@ -36,6 +34,7 @@ export interface MergeConfig {
   calculados?: CampoCalculado[];
   relations?: MergeRelation[];
   sql?: string;
+  camposSelecionados?: Record<string, string[]>; // tabela -> campos
 }
 
 interface Props {
@@ -69,104 +68,148 @@ const OPS: { v: MergeConfigFiltro["op"]; label: string }[] = [
   { v: "lte", label: "menor ou igual" },
 ];
 
+const STEPS = [
+  { id: 0, label: "Tabelas & Campos", icon: Table2 },
+  { id: 1, label: "Filtros & Cálculos", icon: Filter },
+  { id: 2, label: "Consultar", icon: Play },
+  { id: 3, label: "Inserir campos", icon: Check },
+];
+
+async function fetchColumns(tabela: string): Promise<string[]> {
+  try {
+    const { data, error } = await supabase.from(tabela as any).select("*").limit(1);
+    if (error) throw error;
+    if (data && data.length > 0) return Object.keys(data[0] as any);
+    // tabela vazia: tenta via SQL
+    const { data: sqlData } = await supabase.functions.invoke("execute-merge-sql", {
+      body: { sql: `SELECT * FROM ${tabela} LIMIT 0` },
+    });
+    return (sqlData as any)?.columns ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFields, initialSelected }: Props) {
   const [open, setOpen] = useState(false);
+  const [step, setStep] = useState(0);
   const [cfg, setCfg] = useState<MergeConfig>(() => ({
-    mode: value?.mode || "visual",
-    tabela: value?.tabela || "customers",
+    mode: "visual",
+    tabela: value?.tabela || "",
     alias: value?.alias || "reg",
     filtros: Array.isArray(value?.filtros) ? value!.filtros : [],
     limite: value?.limite ?? 50,
     calculados: Array.isArray(value?.calculados) ? value!.calculados : [],
     relations: Array.isArray(value?.relations) ? value!.relations : [],
-    sql: value?.sql || "",
+    camposSelecionados: value?.camposSelecionados || {},
   }));
+
+  // Colunas descobertas por tabela
+  const [colsByTable, setColsByTable] = useState<Record<string, string[]>>({});
+  const [loadingCols, setLoadingCols] = useState<string>("");
+
   const [rows, setRows] = useState<any[]>([]);
-  const [colunas, setColunas] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [busca, setBusca] = useState("");
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set(initialSelected ?? []));
 
-  const toggleSel = (chave: string) => {
-    setSelecionados(prev => {
-      const n = new Set(prev);
-      n.has(chave) ? n.delete(chave) : n.add(chave);
-      return n;
+  const todasTabelas = useMemo(() => {
+    const arr: { tabela: string; alias: string; isMain: boolean }[] = [];
+    if (cfg.tabela) arr.push({ tabela: cfg.tabela, alias: cfg.alias, isMain: true });
+    (cfg.relations ?? []).forEach(r => { if (r.tabela) arr.push({ tabela: r.tabela, alias: r.alias || r.tabela, isMain: false }); });
+    return arr;
+  }, [cfg.tabela, cfg.alias, cfg.relations]);
+
+  // Carrega colunas de qualquer tabela nova selecionada
+  useEffect(() => {
+    todasTabelas.forEach(async ({ tabela }) => {
+      if (!tabela || colsByTable[tabela]) return;
+      setLoadingCols(tabela);
+      const cols = await fetchColumns(tabela);
+      setColsByTable(prev => ({ ...prev, [tabela]: cols }));
+      setLoadingCols("");
     });
-  };
-  const toggleTodos = () => {
-    const chaves = colunasFiltradasRef();
-    const allSelected = chaves.every(c => selecionados.has(c));
-    setSelecionados(prev => {
-      const n = new Set(prev);
-      if (allSelected) chaves.forEach(c => n.delete(c));
-      else chaves.forEach(c => n.add(c));
-      return n;
-    });
-  };
-  const colunasFiltradasRef = () => {
-    return colunas
-      .filter(c => !busca || c.toLowerCase().includes(busca.toLowerCase()))
-      .map(col => cfg.mode === "sql" ? col : `${cfg.alias}.${col}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todasTabelas.map(t => t.tabela).join(",")]);
+
+  const getSel = (tabela: string) => cfg.camposSelecionados?.[tabela] ?? [];
+  const toggleCampo = (tabela: string, campo: string) => {
+    const atual = new Set(getSel(tabela));
+    atual.has(campo) ? atual.delete(campo) : atual.add(campo);
+    setCfg({ ...cfg, camposSelecionados: { ...(cfg.camposSelecionados ?? {}), [tabela]: Array.from(atual) } });
   };
 
-  const aprovarSelecao = () => {
-    onSelectFields?.(Array.from(selecionados));
-    toast.success(`${selecionados.size} campo(s) aprovado(s) e disponível(is) na sidebar`);
-    setOpen(false);
+  const addRelation = () => setCfg({ ...cfg, relations: [...(cfg.relations ?? []), { alias: "", tabela: "", localKey: "", foreignKey: "", cardinality: "1:N" }] });
+  const rmRelation = (i: number) => {
+    const rel = (cfg.relations ?? [])[i];
+    const novo = { ...(cfg.camposSelecionados ?? {}) };
+    if (rel?.tabela) delete novo[rel.tabela];
+    setCfg({ ...cfg, relations: (cfg.relations ?? []).filter((_, k) => k !== i), camposSelecionados: novo });
+  };
+  const updRelation = (i: number, patch: Partial<MergeRelation>) => {
+    const n = [...(cfg.relations ?? [])];
+    n[i] = { ...n[i], ...patch };
+    setCfg({ ...cfg, relations: n });
   };
 
+  const addCalc = () => setCfg({ ...cfg, calculados: [...(cfg.calculados ?? []), { nome: "", expressao: "" }] });
+  const rmCalc = (i: number) => setCfg({ ...cfg, calculados: (cfg.calculados ?? []).filter((_, k) => k !== i) });
+  const addFiltro = () => setCfg({ ...cfg, filtros: [...cfg.filtros, { campo: "", op: "eq", valor: "" }] });
+  const rmFiltro = (i: number) => setCfg({ ...cfg, filtros: cfg.filtros.filter((_, k) => k !== i) });
+
+  // Todos os campos selecionados no formato "alias.campo"
+  const camposDisponiveis = useMemo(() => {
+    const list: { chave: string; tabela: string; alias: string; campo: string }[] = [];
+    todasTabelas.forEach(({ tabela, alias }) => {
+      getSel(tabela).forEach(campo => list.push({ chave: `${alias}.${campo}`, tabela, alias, campo }));
+    });
+    return list;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todasTabelas, cfg.camposSelecionados]);
 
   const executar = async () => {
     setLoading(true);
     try {
-      let list: any[] = [];
+      if (!cfg.tabela) throw new Error("Selecione a tabela principal");
+      const camposMain = getSel(cfg.tabela);
+      const selectCols = camposMain.length ? camposMain.join(",") : "*";
+      let q = supabase.from(cfg.tabela as any).select(selectCols).limit(Math.min(cfg.limite || 50, 500));
+      for (const f of cfg.filtros) {
+        if (!f.campo || !f.valor) continue;
+        const rawCampo = f.campo.includes(".") ? f.campo.split(".").slice(1).join(".") : f.campo;
+        if (f.op === "ilike") q = q.ilike(rawCampo, `%${f.valor}%`);
+        else q = (q as any)[f.op](rawCampo, f.valor);
+      }
+      const { data, error } = await q;
+      if (error) throw error;
+      let list = ((data ?? []) as any[]);
 
-      if (cfg.mode === "sql") {
-        if (!cfg.sql?.trim()) throw new Error("Digite um SELECT");
-        const { data, error } = await supabase.functions.invoke("execute-merge-sql", { body: { sql: cfg.sql } });
-        if (error) throw error;
-        if ((data as any)?.error) throw new Error((data as any).error);
-        list = Array.isArray((data as any)?.rows) ? (data as any).rows : [];
-      } else {
-        let q = supabase.from(cfg.tabela as any).select("*").limit(Math.min(cfg.limite || 50, 500));
-        for (const f of cfg.filtros) {
-          if (!f.campo || !f.valor) continue;
-          if (f.op === "ilike") q = q.ilike(f.campo, `%${f.valor}%`);
-          else q = (q as any)[f.op](f.campo, f.valor);
+      for (const rel of cfg.relations ?? []) {
+        if (!rel.tabela || !rel.localKey || !rel.foreignKey || !rel.alias) continue;
+        const relCols = getSel(rel.tabela);
+        const relSelect = relCols.length ? Array.from(new Set([rel.foreignKey, ...relCols])).join(",") : "*";
+        const ids = Array.from(new Set(list.map(r => r?.[rel.localKey]).filter(v => v != null)));
+        if (!ids.length) { list.forEach(r => (r[rel.alias] = rel.cardinality === "1:N" ? [] : null)); continue; }
+        const { data: relData, error: relErr } = await supabase.from(rel.tabela as any).select(relSelect).in(rel.foreignKey, ids as any);
+        if (relErr) throw relErr;
+        const groups = new Map<any, any[]>();
+        for (const r of (relData ?? []) as any[]) {
+          const k = r?.[rel.foreignKey];
+          if (!groups.has(k)) groups.set(k, []);
+          groups.get(k)!.push(r);
         }
-        const { data, error } = await q;
-        if (error) throw error;
-        list = ((data ?? []) as any[]);
-
-        // Resolve relações
-        for (const rel of cfg.relations ?? []) {
-          if (!rel.tabela || !rel.localKey || !rel.foreignKey || !rel.alias) continue;
-          const ids = Array.from(new Set(list.map((r) => r?.[rel.localKey]).filter((v) => v != null)));
-          if (ids.length === 0) { list.forEach((r) => (r[rel.alias] = rel.cardinality === "1:N" ? [] : null)); continue; }
-          const { data: relData, error: relErr } = await supabase.from(rel.tabela as any).select("*").in(rel.foreignKey, ids as any);
-          if (relErr) throw relErr;
-          const groups = new Map<any, any[]>();
-          for (const r of (relData ?? []) as any[]) {
-            const k = r?.[rel.foreignKey];
-            if (!groups.has(k)) groups.set(k, []);
-            groups.get(k)!.push(r);
-          }
-          list.forEach((r) => {
-            const g = groups.get(r?.[rel.localKey]) ?? [];
-            r[rel.alias] = rel.cardinality === "1:N" ? g : (g[0] ?? null);
-          });
-        }
+        list.forEach(r => {
+          const g = groups.get(r?.[rel.localKey]) ?? [];
+          r[rel.alias] = rel.cardinality === "1:N" ? g : (g[0] ?? null);
+        });
       }
 
       const calcs = cfg.calculados ?? [];
-      list = calcs.length ? list.map((r) => evalCalculados(r, calcs)) : list;
-
+      list = calcs.length ? list.map(r => evalCalculados(r, calcs)) : list;
       setRows(list);
-      const cols = list[0] ? Object.keys(list[0]) : [];
-      setColunas(cols);
       onChange(cfg, list);
       toast.success(`${list.length} registro(s) carregado(s)`);
+      setStep(3);
     } catch (e: any) {
       toast.error(e.message ?? "Erro ao consultar");
     } finally {
@@ -174,245 +217,374 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
     }
   };
 
-  const addCalc = () => setCfg({ ...cfg, calculados: [...(cfg.calculados ?? []), { nome: "", expressao: "" }] });
-  const rmCalc = (i: number) => setCfg({ ...cfg, calculados: (cfg.calculados ?? []).filter((_, k) => k !== i) });
-  const addFiltro = () => setCfg({ ...cfg, filtros: [...cfg.filtros, { campo: "", op: "eq", valor: "" }] });
-  const rmFiltro = (i: number) => setCfg({ ...cfg, filtros: cfg.filtros.filter((_, k) => k !== i) });
-  const addRel = () => setCfg({ ...cfg, relations: [...(cfg.relations ?? []), { alias: "", tabela: "", localKey: "id", foreignKey: "", cardinality: "1:N" }] });
-  const rmRel = (i: number) => setCfg({ ...cfg, relations: (cfg.relations ?? []).filter((_, k) => k !== i) });
+  const chavesFinais = useMemo(() => {
+    const list: { chave: string; preview?: any; isArray?: boolean }[] = [];
+    const main = rows[0];
+    todasTabelas.forEach(({ tabela, alias, isMain }) => {
+      getSel(tabela).forEach(campo => {
+        const chave = `${alias}.${campo}`;
+        let preview: any;
+        if (main) {
+          if (isMain) preview = main?.[campo];
+          else {
+            const rel = main?.[alias];
+            preview = Array.isArray(rel) ? rel[0]?.[campo] : rel?.[campo];
+          }
+        }
+        const isArray = !isMain && Array.isArray(main?.[alias]);
+        list.push({ chave, preview, isArray });
+      });
+    });
+    (cfg.calculados ?? []).forEach(c => {
+      if (c.nome) list.push({ chave: `${cfg.alias}.${c.nome}`, preview: main?.[c.nome] });
+    });
+    return list;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, todasTabelas, cfg.camposSelecionados, cfg.calculados, cfg.alias]);
 
-  const colunasFiltradas = colunas.filter(c => !busca || c.toLowerCase().includes(busca.toLowerCase()));
+  const chavesFiltradas = chavesFinais.filter(k => !busca || k.chave.toLowerCase().includes(busca.toLowerCase()));
 
-  const insertLoop = (relAlias: string) => {
-    onInsertField?.(`__LOOP__:${relAlias}`);
+  const toggleSel = (chave: string) => {
+    setSelecionados(prev => { const n = new Set(prev); n.has(chave) ? n.delete(chave) : n.add(chave); return n; });
   };
-  const insertAgg = (fn: string, path: string) => {
-    onInsertField?.(`__RAW__:{{${fn} ${path}}}`);
+  const aprovarSelecao = () => {
+    onSelectFields?.(Array.from(selecionados));
+    toast.success(`${selecionados.size} campo(s) disponível(is) na sidebar`);
+    setOpen(false);
+  };
+
+  // Drag & drop de tokens para dentro de fórmulas / valores
+  const onDragToken = (e: React.DragEvent, token: string) => {
+    e.dataTransfer.setData("text/plain", token);
+    e.dataTransfer.effectAllowed = "copy";
+  };
+  const onDropInto = (e: React.DragEvent, current: string, apply: (novo: string) => void) => {
+    e.preventDefault();
+    const tok = e.dataTransfer.getData("text/plain");
+    if (!tok) return;
+    apply((current || "") + (current && !current.endsWith(" ") ? " " : "") + `{{${tok}}}`);
+  };
+
+  const canNext = () => {
+    if (step === 0) return !!cfg.tabela && camposDisponiveis.length > 0 && (cfg.relations ?? []).every(r => !r.tabela || (r.alias && r.localKey && r.foreignKey));
+    return true;
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) setStep(0); }}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline">
           <Database className="h-3.5 w-3.5 mr-1" /> Vincular dados
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-5xl max-h-[92vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Merge Builder — Vincular dados</DialogTitle>
-          <DialogDescription>
-            Modo Visual: escolha tabela e relações. Modo SQL: escreva um SELECT livre.
-          </DialogDescription>
+          <DialogTitle>Merge Builder — Assistente</DialogTitle>
+          <DialogDescription>Configure o merge em 4 passos.</DialogDescription>
         </DialogHeader>
 
-        <Tabs value={cfg.mode} onValueChange={(v) => setCfg({ ...cfg, mode: v as any })} className="flex-1 overflow-hidden flex flex-col">
-          <TabsList className="grid grid-cols-2 w-64">
-            <TabsTrigger value="visual">Visual</TabsTrigger>
-            <TabsTrigger value="sql">SQL avançado</TabsTrigger>
-          </TabsList>
+        {/* Stepper */}
+        <div className="flex items-center gap-2 border-b pb-3">
+          {STEPS.map((s, i) => {
+            const Icon = s.icon;
+            const active = i === step;
+            const done = i < step;
+            return (
+              <div key={s.id} className="flex items-center gap-2">
+                <button
+                  onClick={() => setStep(i)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition
+                    ${active ? "bg-primary text-primary-foreground border-primary" : done ? "bg-primary/10 text-primary border-primary/30" : "bg-muted text-muted-foreground border-border"}`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span className="font-medium">{i + 1}. {s.label}</span>
+                </button>
+                {i < STEPS.length - 1 && <ChevronRight className="h-3 w-3 text-muted-foreground" />}
+              </div>
+            );
+          })}
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-4 overflow-hidden flex-1 mt-3">
-            <div className="space-y-3 overflow-auto pr-2">
-              <TabsContent value="visual" className="space-y-3 mt-0">
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-xs text-muted-foreground">Tabela principal</label>
-                    <Select value={cfg.tabela} onValueChange={v => setCfg({ ...cfg, tabela: v })}>
-                      <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {TABELAS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+        <div className="flex-1 overflow-auto py-3">
+          {/* STEP 0 — Tabelas & Campos */}
+          {step === 0 && (
+            <div className="space-y-4">
+              {/* Tabela principal */}
+              <div className="border rounded p-3 bg-muted/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="default">Principal</Badge>
+                  <Select value={cfg.tabela} onValueChange={v => setCfg({ ...cfg, tabela: v, camposSelecionados: { ...(cfg.camposSelecionados ?? {}), [v]: [] } })}>
+                    <SelectTrigger className="h-8 max-w-xs"><SelectValue placeholder="Escolha a tabela principal" /></SelectTrigger>
+                    <SelectContent>{TABELAS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                  {cfg.tabela && (
+                    <>
+                      <span className="text-xs text-muted-foreground">alias:</span>
+                      <Input value={cfg.alias} onChange={e => setCfg({ ...cfg, alias: e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase() || "reg" })} className="h-7 w-24 text-xs" />
+                    </>
+                  )}
+                </div>
+                {cfg.tabela && <CamposCheckList tabela={cfg.tabela} colunas={colsByTable[cfg.tabela] ?? []} loading={loadingCols === cfg.tabela} selecionados={getSel(cfg.tabela)} onToggle={c => toggleCampo(cfg.tabela, c)} />}
+              </div>
+
+              {/* Relações */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium flex items-center gap-1"><Link2 className="h-4 w-4" /> Tabelas relacionadas (JOIN)</label>
+                  <Button size="sm" variant="outline" onClick={addRelation}><Plus className="h-3.5 w-3.5 mr-1" /> Adicionar tabela</Button>
+                </div>
+                {(cfg.relations ?? []).map((rel, i) => {
+                  const relCampos = rel.tabela ? getSel(rel.tabela) : [];
+                  const mainCampos = getSel(cfg.tabela);
+                  return (
+                    <div key={i} className="border rounded p-3 space-y-2 bg-card">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">JOIN #{i + 1}</Badge>
+                        <Select value={rel.tabela} onValueChange={v => updRelation(i, { tabela: v, alias: rel.alias || v.slice(0, 8) })}>
+                          <SelectTrigger className="h-8 max-w-xs"><SelectValue placeholder="Tabela relacionada" /></SelectTrigger>
+                          <SelectContent>{TABELAS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                        <span className="text-xs text-muted-foreground">alias:</span>
+                        <Input value={rel.alias} onChange={e => updRelation(i, { alias: e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase() })} className="h-7 w-24 text-xs" />
+                        <Select value={rel.cardinality} onValueChange={(v: any) => updRelation(i, { cardinality: v })}>
+                          <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1:1">1:1</SelectItem>
+                            <SelectItem value="1:N">1:N</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button size="icon" variant="ghost" className="ml-auto h-7 w-7" onClick={() => rmRelation(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      </div>
+
+                      {rel.tabela && (
+                        <CamposCheckList tabela={rel.tabela} colunas={colsByTable[rel.tabela] ?? []} loading={loadingCols === rel.tabela} selecionados={relCampos} onToggle={c => toggleCampo(rel.tabela, c)} />
+                      )}
+
+                      {/* JOIN visual: seleciona campos das duas tabelas */}
+                      {rel.tabela && (mainCampos.length > 0 || relCampos.length > 0) && (
+                        <div className="border-t pt-2 mt-2">
+                          <div className="text-[11px] text-muted-foreground mb-1">Vincular campos (JOIN)</div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs">{cfg.alias}.</span>
+                            <Select value={rel.localKey} onValueChange={v => updRelation(i, { localKey: v })}>
+                              <SelectTrigger className="h-8 w-48 text-xs"><SelectValue placeholder="campo principal" /></SelectTrigger>
+                              <SelectContent>
+                                {(colsByTable[cfg.tabela] ?? []).map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                            <span className="text-xs font-bold text-primary">=</span>
+                            <span className="text-xs">{rel.alias}.</span>
+                            <Select value={rel.foreignKey} onValueChange={v => updRelation(i, { foreignKey: v })}>
+                              <SelectTrigger className="h-8 w-48 text-xs"><SelectValue placeholder="campo relacionado" /></SelectTrigger>
+                              <SelectContent>
+                                {(colsByTable[rel.tabela] ?? []).map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {(cfg.relations ?? []).length === 0 && (
+                  <p className="text-xs text-muted-foreground italic">Nenhuma tabela relacionada. Adicione uma para fazer JOIN.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* STEP 1 — Filtros & Calculados */}
+          {step === 1 && (
+            <div className="grid grid-cols-[220px_1fr] gap-4">
+              {/* Palheta de campos arrastáveis */}
+              <div className="border rounded p-2 bg-muted/20 h-fit sticky top-0">
+                <div className="text-xs font-medium mb-2 flex items-center gap-1"><GripVertical className="h-3 w-3" /> Arraste os campos</div>
+                <ScrollArea className="max-h-[420px]">
+                  <div className="space-y-1">
+                    {camposDisponiveis.map(c => (
+                      <div key={c.chave} draggable onDragStart={e => onDragToken(e, c.chave)}
+                        className="px-2 py-1 rounded border border-primary/30 bg-primary/5 text-[11px] font-mono cursor-grab active:cursor-grabbing hover:bg-primary/15">
+                        {c.chave}
+                      </div>
+                    ))}
+                    {camposDisponiveis.length === 0 && <p className="text-[11px] text-muted-foreground">Volte ao passo 1 e selecione campos.</p>}
                   </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground">Prefixo (alias)</label>
-                    <Input value={cfg.alias} onChange={e => setCfg({ ...cfg, alias: e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase() || "reg" })} className="h-8" />
+                </ScrollArea>
+                <div className="border-t mt-2 pt-2">
+                  <div className="text-[11px] font-medium mb-1">Operadores</div>
+                  <div className="flex flex-wrap gap-1">
+                    {["+", "-", "*", "/", "(", ")"].map(op => (
+                      <button key={op} draggable onDragStart={e => onDragToken(e, `__OP__${op}`)}
+                        onClick={e => e.currentTarget.blur()}
+                        className="w-7 h-7 rounded border bg-card text-xs font-mono hover:bg-accent cursor-grab">
+                        {op}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="text-[11px] font-medium mb-1 mt-2">Funções</div>
+                  <div className="flex flex-wrap gap-1">
+                    {["sum", "avg", "count", "min", "max"].map(fn => (
+                      <button key={fn} draggable onDragStart={e => onDragToken(e, `__FN__${fn}`)}
+                        className="px-2 h-6 rounded border bg-card text-[11px] font-mono hover:bg-accent cursor-grab">
+                        {fn}()
+                      </button>
+                    ))}
                   </div>
                 </div>
+              </div>
 
+              {/* Filtros + Calculados */}
+              <div className="space-y-4">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs text-muted-foreground">Filtros</label>
-                    <Button size="sm" variant="ghost" onClick={addFiltro} className="h-6 text-xs"><Plus className="h-3 w-3 mr-1" /> Adicionar</Button>
+                    <label className="text-sm font-medium flex items-center gap-1"><Filter className="h-4 w-4" /> Filtros</label>
+                    <Button size="sm" variant="outline" onClick={addFiltro}><Plus className="h-3.5 w-3.5 mr-1" /> Filtro</Button>
                   </div>
                   <div className="space-y-1">
                     {cfg.filtros.map((f, i) => (
                       <div key={i} className="flex gap-1 items-center">
-                        <Input value={f.campo} onChange={e => { const n = [...cfg.filtros]; n[i] = { ...f, campo: e.target.value }; setCfg({ ...cfg, filtros: n }); }} placeholder="campo" className="h-7 text-xs flex-1" />
+                        <Select value={f.campo} onValueChange={v => { const n = [...cfg.filtros]; n[i] = { ...f, campo: v }; setCfg({ ...cfg, filtros: n }); }}>
+                          <SelectTrigger className="h-8 flex-1 text-xs"><SelectValue placeholder="Escolha o campo" /></SelectTrigger>
+                          <SelectContent>{camposDisponiveis.map(c => <SelectItem key={c.chave} value={c.chave}>{c.chave}</SelectItem>)}</SelectContent>
+                        </Select>
                         <Select value={f.op} onValueChange={(v: any) => { const n = [...cfg.filtros]; n[i] = { ...f, op: v }; setCfg({ ...cfg, filtros: n }); }}>
-                          <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
                           <SelectContent>{OPS.map(o => <SelectItem key={o.v} value={o.v}>{o.label}</SelectItem>)}</SelectContent>
                         </Select>
-                        <Input value={f.valor} onChange={e => { const n = [...cfg.filtros]; n[i] = { ...f, valor: e.target.value }; setCfg({ ...cfg, filtros: n }); }} placeholder="valor" className="h-7 text-xs flex-1" />
-                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => rmFiltro(i)}><Trash2 className="h-3 w-3" /></Button>
+                        <Input value={f.valor} onChange={e => { const n = [...cfg.filtros]; n[i] = { ...f, valor: e.target.value }; setCfg({ ...cfg, filtros: n }); }}
+                          onDragOver={e => e.preventDefault()}
+                          onDrop={e => onDropInto(e, f.valor, novo => { const n = [...cfg.filtros]; n[i] = { ...f, valor: novo }; setCfg({ ...cfg, filtros: n }); })}
+                          placeholder="valor (ou arraste um campo)" className="h-8 text-xs flex-1" />
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => rmFiltro(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
                       </div>
                     ))}
-                    {cfg.filtros.length === 0 && <p className="text-[11px] text-muted-foreground">Sem filtros.</p>}
+                    {cfg.filtros.length === 0 && <p className="text-[11px] text-muted-foreground italic">Sem filtros. Todos os registros serão retornados (limite {cfg.limite}).</p>}
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <label className="text-xs text-muted-foreground">Limite:</label>
+                    <Input type="number" value={cfg.limite} onChange={e => setCfg({ ...cfg, limite: Number(e.target.value) })} className="h-7 w-20 text-xs" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs text-muted-foreground">Limite</label>
-                  <Input type="number" value={cfg.limite} onChange={e => setCfg({ ...cfg, limite: Number(e.target.value) })} className="h-8 w-24" />
-                </div>
-
-                {/* Relações */}
-                <div className="border-t pt-2">
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Link2 className="h-3 w-3" /> Relações (JOIN)
-                    </label>
-                    <Button size="sm" variant="ghost" onClick={addRel} className="h-6 text-xs">
-                      <Plus className="h-3 w-3 mr-1" /> Adicionar
-                    </Button>
+                    <label className="text-sm font-medium flex items-center gap-1"><Calculator className="h-4 w-4" /> Campos calculados</label>
+                    <Button size="sm" variant="outline" onClick={addCalc}><Plus className="h-3.5 w-3.5 mr-1" /> Fórmula</Button>
                   </div>
-                  <div className="space-y-2">
-                    {(cfg.relations ?? []).map((rel, i) => (
-                      <div key={i} className="border rounded p-2 space-y-1 bg-muted/20">
-                        <div className="grid grid-cols-2 gap-1">
-                          <Input value={rel.alias} onChange={e => { const n = [...(cfg.relations ?? [])]; n[i] = { ...rel, alias: e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase() }; setCfg({ ...cfg, relations: n }); }} placeholder="alias (ex: itens)" className="h-7 text-xs" />
-                          <Select value={rel.tabela} onValueChange={v => { const n = [...(cfg.relations ?? [])]; n[i] = { ...rel, tabela: v }; setCfg({ ...cfg, relations: n }); }}>
-                            <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="tabela relacionada" /></SelectTrigger>
-                            <SelectContent>{TABELAS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-                          </Select>
+                  <div className="space-y-1">
+                    {(cfg.calculados ?? []).map((c, i) => {
+                      const applyExpr = (novo: string) => { const n = [...(cfg.calculados ?? [])]; n[i] = { ...c, expressao: novo }; setCfg({ ...cfg, calculados: n }); };
+                      return (
+                        <div key={i} className="flex gap-1 items-center">
+                          <Input value={c.nome} onChange={e => { const n = [...(cfg.calculados ?? [])]; n[i] = { ...c, nome: e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase() }; setCfg({ ...cfg, calculados: n }); }}
+                            placeholder="nome" className="h-8 text-xs w-32" />
+                          <span className="text-xs">=</span>
+                          <Input value={c.expressao} onChange={e => applyExpr(e.target.value)}
+                            onDragOver={e => e.preventDefault()}
+                            onDrop={e => {
+                              e.preventDefault();
+                              const tok = e.dataTransfer.getData("text/plain");
+                              if (!tok) return;
+                              let insert = "";
+                              if (tok.startsWith("__OP__")) insert = ` ${tok.slice(6)} `;
+                              else if (tok.startsWith("__FN__")) insert = `${tok.slice(6)}()`;
+                              else insert = `{{${tok}}}`;
+                              applyExpr((c.expressao || "") + insert);
+                            }}
+                            placeholder="arraste campos e operadores aqui" className="h-8 text-xs flex-1 font-mono" />
+                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => rmCalc(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
                         </div>
-                        <div className="grid grid-cols-3 gap-1 items-center">
-                          <Input value={rel.localKey} onChange={e => { const n = [...(cfg.relations ?? [])]; n[i] = { ...rel, localKey: e.target.value }; setCfg({ ...cfg, relations: n }); }} placeholder="campo local (id)" className="h-7 text-xs" />
-                          <Input value={rel.foreignKey} onChange={e => { const n = [...(cfg.relations ?? [])]; n[i] = { ...rel, foreignKey: e.target.value }; setCfg({ ...cfg, relations: n }); }} placeholder="campo remoto (pedido_id)" className="h-7 text-xs" />
-                          <Select value={rel.cardinality} onValueChange={(v: any) => { const n = [...(cfg.relations ?? [])]; n[i] = { ...rel, cardinality: v }; setCfg({ ...cfg, relations: n }); }}>
-                            <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="1:1">1:1 (único)</SelectItem>
-                              <SelectItem value="1:N">1:N (lista)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="flex justify-between items-center pt-1">
-                          {rel.cardinality === "1:N" && rel.alias && (
-                            <Button size="sm" variant="secondary" className="h-6 text-[11px]" onClick={() => insertLoop(rel.alias)}>
-                              <Repeat className="h-3 w-3 mr-1" /> Inserir loop
-                            </Button>
-                          )}
-                          <Button size="icon" variant="ghost" className="h-6 w-6 ml-auto" onClick={() => rmRel(i)}><Trash2 className="h-3 w-3" /></Button>
-                        </div>
-                      </div>
-                    ))}
-                    {(cfg.relations ?? []).length === 0 && (
-                      <p className="text-[11px] text-muted-foreground">Ex: alias <code>itens</code>, tabela <code>pedidos_ecommerce_itens</code>, local <code>id</code>, remoto <code>pedido_id</code>, cardinalidade 1:N.</p>
-                    )}
+                      );
+                    })}
+                    {(cfg.calculados ?? []).length === 0 && <p className="text-[11px] text-muted-foreground italic">Ex: <code>total</code> = <code>{`{{itens.preco}} * {{itens.quantidade}}`}</code></p>}
                   </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="sql" className="space-y-2 mt-0">
-                <label className="text-xs text-muted-foreground">SQL (apenas SELECT / WITH)</label>
-                <Textarea
-                  value={cfg.sql || ""}
-                  onChange={e => setCfg({ ...cfg, sql: e.target.value })}
-                  placeholder={`SELECT p.numero_pedido, c.nome, p.valor_total\nFROM pedidos_ecommerce p\nLEFT JOIN customers c ON c.id = p.customer_id\nLIMIT 50`}
-                  className="font-mono text-xs min-h-[240px]"
-                />
-                <p className="text-[11px] text-muted-foreground">
-                  Executado em transação read-only. Ponto-e-vírgula final é aceito. Apenas 1 instrução por vez. RLS é respeitada.
-                </p>
-                <div>
-                  <label className="text-xs text-muted-foreground">Alias para o registro (usado nos loops)</label>
-                  <Input value={cfg.alias} onChange={e => setCfg({ ...cfg, alias: e.target.value })} className="h-8" />
-                </div>
-              </TabsContent>
-
-              {/* Campos calculados — comum aos dois modos */}
-              <div className="border-t pt-2">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs text-muted-foreground flex items-center gap-1"><Calculator className="h-3 w-3" /> Campos calculados</label>
-                  <Button size="sm" variant="ghost" onClick={addCalc} className="h-6 text-xs"><Plus className="h-3 w-3 mr-1" /> Adicionar</Button>
-                </div>
-                <div className="space-y-1">
-                  {(cfg.calculados ?? []).map((c, i) => (
-                    <div key={i} className="flex gap-1 items-center">
-                      <Input value={c.nome} onChange={e => { const n = [...(cfg.calculados ?? [])]; n[i] = { ...c, nome: e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase() }; setCfg({ ...cfg, calculados: n }); }} placeholder="nome" className="h-7 text-xs w-24" />
-                      <span className="text-xs">=</span>
-                      <Input value={c.expressao} onChange={e => { const n = [...(cfg.calculados ?? [])]; n[i] = { ...c, expressao: e.target.value }; setCfg({ ...cfg, calculados: n }); }} placeholder="preco * quantidade" className="h-7 text-xs flex-1 font-mono" />
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => rmCalc(i)}><Trash2 className="h-3 w-3" /></Button>
-                    </div>
-                  ))}
-                  {(cfg.calculados ?? []).length === 0 && (
-                    <p className="text-[11px] text-muted-foreground">Ex: <code>total = preco * quantidade</code></p>
-                  )}
                 </div>
               </div>
+            </div>
+          )}
 
-              <Button onClick={executar} disabled={loading} className="w-full">
+          {/* STEP 2 — Consulta */}
+          {step === 2 && (
+            <div className="space-y-3">
+              <div className="border rounded p-4 bg-muted/20">
+                <h3 className="text-sm font-medium mb-2">Revisão da consulta</h3>
+                <ul className="text-xs space-y-1 text-muted-foreground">
+                  <li>• Tabela principal: <b>{cfg.tabela}</b> (alias <code>{cfg.alias}</code>) — {getSel(cfg.tabela).length} campo(s) selecionado(s)</li>
+                  {(cfg.relations ?? []).map((r, i) => (
+                    <li key={i}>• JOIN <b>{r.tabela}</b> (alias <code>{r.alias}</code>) em <code>{cfg.alias}.{r.localKey}</code> = <code>{r.alias}.{r.foreignKey}</code> ({r.cardinality}) — {getSel(r.tabela).length} campo(s)</li>
+                  ))}
+                  <li>• Filtros: {cfg.filtros.length}</li>
+                  <li>• Calculados: {(cfg.calculados ?? []).length}</li>
+                  <li>• Limite: {cfg.limite}</li>
+                </ul>
+              </div>
+              <Button onClick={executar} disabled={loading} className="w-full" size="lg">
                 <Play className="h-4 w-4 mr-1" /> {loading ? "Executando…" : "Executar consulta"}
               </Button>
-            </div>
-
-            <div className="flex flex-col overflow-hidden border rounded">
-              <div className="p-2 border-b bg-muted/30 flex items-center gap-2">
-                <div className="relative flex-1">
-                  <Search className="h-3 w-3 absolute left-2 top-2 text-muted-foreground" />
-                  <Input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar variável…" className="pl-6 h-7 text-xs" />
-                </div>
-                <Badge variant="secondary" className="text-[10px]">{rows.length} reg.</Badge>
-                {colunas.length > 0 && (
-                  <Button size="sm" variant="ghost" onClick={toggleTodos} className="h-6 text-[11px]">Selec. todos</Button>
-                )}
-              </div>
-              {colunas.length > 0 && (
-                <div className="px-2 py-1 border-b bg-sky-500/5 text-[11px] text-muted-foreground">
-                  {selecionados.size} campo(s) selecionado(s) — marque os que devem aparecer na sidebar para arrastar
+              {rows.length > 0 && (
+                <div className="border rounded overflow-auto max-h-[300px]">
+                  <table className="text-[11px] w-full">
+                    <thead className="bg-muted sticky top-0"><tr>{Object.keys(rows[0]).slice(0, 8).map(k => <th key={k} className="px-2 py-1 text-left border-b">{k}</th>)}</tr></thead>
+                    <tbody>
+                      {rows.slice(0, 20).map((r, i) => (
+                        <tr key={i} className="border-b hover:bg-muted/40">
+                          {Object.keys(rows[0]).slice(0, 8).map(k => {
+                            const v = r[k];
+                            const s = v == null ? "" : typeof v === "object" ? JSON.stringify(v).slice(0, 40) : String(v).slice(0, 40);
+                            return <td key={k} className="px-2 py-1">{s}</td>;
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
-              <ScrollArea className="flex-1">
+            </div>
+          )}
+
+          {/* STEP 3 — Inserir */}
+          {step === 3 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="h-3 w-3 absolute left-2 top-2.5 text-muted-foreground" />
+                  <Input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar campo…" className="pl-6 h-8 text-xs" />
+                </div>
+                <Badge variant="secondary">{selecionados.size} selecionado(s)</Badge>
+                <Button size="sm" variant="ghost" onClick={() => {
+                  const all = chavesFiltradas.every(c => selecionados.has(c.chave));
+                  setSelecionados(prev => { const n = new Set(prev); chavesFiltradas.forEach(c => all ? n.delete(c.chave) : n.add(c.chave)); return n; });
+                }}>Marcar todos</Button>
+              </div>
+              <ScrollArea className="h-[380px] border rounded">
                 <div className="p-2 space-y-1">
-                  {colunasFiltradas.length === 0 && (
-                    <p className="text-xs text-muted-foreground text-center py-6">
-                      {rows.length === 0 ? "Configure as tabelas/relações e clique em Executar consulta." : "Nenhuma coluna."}
-                    </p>
-                  )}
-                  {colunasFiltradas.map(col => {
-                    const preview = rows[0]?.[col];
+                  {chavesFiltradas.length === 0 && <p className="text-xs text-muted-foreground text-center py-6">Execute a consulta no passo anterior.</p>}
+                  {chavesFiltradas.map(({ chave, preview, isArray }) => {
                     const previewStr = preview == null ? "" : (typeof preview === "object" ? JSON.stringify(preview).slice(0, 60) : String(preview));
-                    const isArray = Array.isArray(preview);
-                    const chave = cfg.mode === "sql" ? col : `${cfg.alias}.${col}`;
                     const isSel = selecionados.has(chave);
-                    const looksImage = /url|foto|imagem|image|photo|thumb/i.test(col)
-                      || /^https?:\/\/.*\.(png|jpe?g|webp|gif|svg)/i.test(previewStr)
-                      || previewStr.startsWith("data:image/");
+                    const looksImage = /url|foto|imagem|image|photo|thumb/i.test(chave) || /^https?:\/\/.*\.(png|jpe?g|webp|gif|svg)/i.test(previewStr);
                     return (
-                      <div key={col} className={`flex items-stretch gap-1 rounded ${isSel ? "ring-1 ring-sky-500/50" : ""}`}>
-                        <label className="flex items-center px-2 cursor-pointer">
-                          <Checkbox checked={isSel} onCheckedChange={() => toggleSel(chave)} />
-                        </label>
-                        <button
-                          onClick={() => onInsertField?.(chave)}
-                          className="flex-1 text-left px-2 py-1.5 rounded border border-primary/20 bg-primary/5 hover:bg-primary/15 text-xs"
-                        >
+                      <div key={chave} className={`flex items-stretch gap-1 rounded ${isSel ? "ring-1 ring-sky-500/50" : ""}`}>
+                        <label className="flex items-center px-2 cursor-pointer"><Checkbox checked={isSel} onCheckedChange={() => toggleSel(chave)} /></label>
+                        <button onClick={() => onInsertField?.(chave)}
+                          className="flex-1 text-left px-2 py-1.5 rounded border border-primary/20 bg-primary/5 hover:bg-primary/15 text-xs">
                           <div className="font-mono text-primary flex items-center gap-1">
                             {`{{${chave}}}`}
                             {isArray && <Badge variant="outline" className="text-[9px] h-4">lista</Badge>}
                           </div>
-                          {previewStr && (
-                            <div className="text-[10px] text-muted-foreground truncate">ex: {previewStr.slice(0, 60)}</div>
-                          )}
+                          {previewStr && <div className="text-[10px] text-muted-foreground truncate">ex: {previewStr}</div>}
                         </button>
                         {isArray && (
                           <>
                             <Button size="icon" variant="ghost" className="h-auto w-7" title="Inserir loop"
-                              onClick={() => insertLoop(chave)}>
-                              <Repeat className="h-3.5 w-3.5 text-primary" />
-                            </Button>
+                              onClick={() => onInsertField?.(`__LOOP__:${chave}`)}><Repeat className="h-3.5 w-3.5 text-primary" /></Button>
                             <Button size="icon" variant="ghost" className="h-auto w-7" title="Inserir soma"
-                              onClick={() => insertAgg("sum", chave)}>
-                              <Sigma className="h-3.5 w-3.5 text-primary" />
-                            </Button>
+                              onClick={() => onInsertField?.(`__RAW__:{{sum ${chave}}}`)}><Sigma className="h-3.5 w-3.5 text-primary" /></Button>
                           </>
                         )}
                         {looksImage && !isArray && (
-                          <Button size="icon" variant="ghost" className="h-auto w-7" title="Inserir como imagem"
-                            onClick={() => onInsertField?.(`__RAW__:{{img:${chave}}}`)}>
-                            <ImageIcon className="h-3.5 w-3.5 text-primary" />
-                          </Button>
+                          <Button size="icon" variant="ghost" className="h-auto w-7" title="Inserir imagem"
+                            onClick={() => onInsertField?.(`__RAW__:{{img:${chave}}}`)}><ImageIcon className="h-3.5 w-3.5 text-primary" /></Button>
                         )}
                       </div>
                     );
@@ -420,19 +592,54 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                 </div>
               </ScrollArea>
             </div>
-          </div>
-        </Tabs>
+          )}
+        </div>
 
-        <DialogFooter>
-          <div className="flex-1 text-[11px] text-muted-foreground">
-            1) Configure tabelas/relações → 2) Executar → 3) Marque os campos → 4) Aprovar seleção.
-          </div>
-          <Button variant="outline" onClick={() => setOpen(false)}>Fechar</Button>
-          <Button onClick={aprovarSelecao} disabled={selecionados.size === 0}>
-            <Check className="h-4 w-4 mr-1" /> Aprovar {selecionados.size > 0 ? `(${selecionados.size})` : ""}
+        <DialogFooter className="border-t pt-3">
+          <Button variant="outline" onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}>
+            <ChevronLeft className="h-4 w-4 mr-1" /> Voltar
           </Button>
+          <div className="flex-1" />
+          <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+          {step < 2 && <Button onClick={() => setStep(step + 1)} disabled={!canNext()}>Próximo <ChevronRight className="h-4 w-4 ml-1" /></Button>}
+          {step === 2 && <Button onClick={executar} disabled={loading}><Play className="h-4 w-4 mr-1" /> Executar</Button>}
+          {step === 3 && <Button onClick={aprovarSelecao} disabled={selecionados.size === 0}><Check className="h-4 w-4 mr-1" /> Aprovar ({selecionados.size})</Button>}
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ============ Componente auxiliar ============
+function CamposCheckList({ tabela, colunas, loading, selecionados, onToggle }: {
+  tabela: string; colunas: string[]; loading: boolean; selecionados: string[]; onToggle: (c: string) => void;
+}) {
+  const [q, setQ] = useState("");
+  const filt = colunas.filter(c => !q || c.toLowerCase().includes(q.toLowerCase()));
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-1">
+        <Input value={q} onChange={e => setQ(e.target.value)} placeholder={`Buscar campo em ${tabela}…`} className="h-7 text-xs max-w-xs" />
+        <span className="text-[11px] text-muted-foreground">{selecionados.length}/{colunas.length} selecionado(s)</span>
+        <Button size="sm" variant="ghost" className="h-6 text-[11px]" onClick={() => {
+          const all = filt.every(c => selecionados.includes(c));
+          filt.forEach(c => { if (all) { if (selecionados.includes(c)) onToggle(c); } else { if (!selecionados.includes(c)) onToggle(c); } });
+        }}>Todos</Button>
+      </div>
+      {loading && <p className="text-[11px] text-muted-foreground">Carregando colunas…</p>}
+      {!loading && (
+        <ScrollArea className="max-h-[180px] border rounded bg-background p-2">
+          <div className="grid grid-cols-3 gap-1">
+            {filt.map(c => (
+              <label key={c} className={`flex items-center gap-1 text-[11px] px-1.5 py-1 rounded cursor-pointer hover:bg-accent ${selecionados.includes(c) ? "bg-primary/10 font-medium" : ""}`}>
+                <Checkbox checked={selecionados.includes(c)} onCheckedChange={() => onToggle(c)} className="h-3.5 w-3.5" />
+                <span className="font-mono truncate">{c}</span>
+              </label>
+            ))}
+            {filt.length === 0 && <p className="text-[11px] text-muted-foreground col-span-3">Nenhum campo.</p>}
+          </div>
+        </ScrollArea>
+      )}
+    </div>
   );
 }
