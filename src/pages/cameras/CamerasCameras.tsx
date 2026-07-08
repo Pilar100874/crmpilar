@@ -28,19 +28,48 @@ const MARCAS = [
   { value: "tplink_tapo", label: "TP-Link Tapo" },
   { value: "hikvision", label: "Hikvision" },
   { value: "intelbras", label: "Intelbras" },
+  { value: "dahua", label: "Dahua" },
+  { value: "reolink", label: "Reolink" },
+  { value: "amcrest", label: "Amcrest" },
+  { value: "ezviz", label: "EZVIZ" },
+  { value: "foscam", label: "Foscam" },
+  { value: "axis", label: "Axis" },
+  { value: "uniview", label: "Uniview (UNV)" },
+  { value: "vivotek", label: "Vivotek" },
+  { value: "bosch", label: "Bosch" },
+  { value: "dlink", label: "D-Link" },
+  { value: "giga", label: "Giga Security" },
+  { value: "multilaser", label: "Multilaser (Liv)" },
+  { value: "positivo", label: "Positivo Smart" },
+  { value: "xiaomi", label: "Xiaomi / Mi Home" },
   { value: "generica_http", label: "Genérica HTTP" },
   { value: "generica_rtsp", label: "Genérica RTSP" },
+  { value: "generica_onvif", label: "Genérica ONVIF" },
 ];
 
-// Defaults corretos por marca (porta / protocolo / snapshot_path).
-// Tapo (C100/C110/C200/C210/C310/C320WS) NÃO responde em HTTP:80 — usa RTSP:554
-// com uma "Conta de Câmera" criada no app Tapo (Config. Avançadas).
+// Defaults por marca (porta / protocolo / snapshot_path).
+// Tapo NÃO responde em HTTP:80 — usa RTSP:554 com "Conta de Câmera" (app Tapo).
 const MARCA_DEFAULTS: Record<string, { porta: number; protocolo: string; snapshot_path: string }> = {
-  tplink_tapo:   { porta: 554, protocolo: "rtsp", snapshot_path: "/stream1" },
-  hikvision:     { porta: 80,  protocolo: "http", snapshot_path: "/ISAPI/Streaming/channels/101/picture" },
-  intelbras:     { porta: 80,  protocolo: "http", snapshot_path: "/cgi-bin/snapshot.cgi" },
-  generica_http: { porta: 80,  protocolo: "http", snapshot_path: "" },
-  generica_rtsp: { porta: 554, protocolo: "rtsp", snapshot_path: "/stream1" },
+  tplink_tapo:    { porta: 554, protocolo: "rtsp", snapshot_path: "/stream1" },
+  hikvision:      { porta: 80,  protocolo: "http", snapshot_path: "/ISAPI/Streaming/channels/101/picture" },
+  intelbras:      { porta: 80,  protocolo: "http", snapshot_path: "/cgi-bin/snapshot.cgi" },
+  dahua:          { porta: 80,  protocolo: "http", snapshot_path: "/cgi-bin/snapshot.cgi" },
+  reolink:        { porta: 554, protocolo: "rtsp", snapshot_path: "/h264Preview_01_main" },
+  amcrest:        { porta: 80,  protocolo: "http", snapshot_path: "/cgi-bin/snapshot.cgi" },
+  ezviz:          { porta: 554, protocolo: "rtsp", snapshot_path: "/Streaming/Channels/101" },
+  foscam:         { porta: 88,  protocolo: "rtsp", snapshot_path: "/videoMain" },
+  axis:           { porta: 80,  protocolo: "http", snapshot_path: "/axis-cgi/jpg/image.cgi" },
+  uniview:        { porta: 80,  protocolo: "http", snapshot_path: "/cgi-bin/snapshot.cgi" },
+  vivotek:        { porta: 80,  protocolo: "http", snapshot_path: "/cgi-bin/viewer/video.jpg" },
+  bosch:          { porta: 80,  protocolo: "http", snapshot_path: "/snap.jpg" },
+  dlink:          { porta: 554, protocolo: "rtsp", snapshot_path: "/live1.sdp" },
+  giga:           { porta: 80,  protocolo: "http", snapshot_path: "/cgi-bin/snapshot.cgi" },
+  multilaser:     { porta: 554, protocolo: "rtsp", snapshot_path: "/onvif1" },
+  positivo:       { porta: 554, protocolo: "rtsp", snapshot_path: "/live/ch00_0" },
+  xiaomi:         { porta: 554, protocolo: "rtsp", snapshot_path: "/live/ch00_0" },
+  generica_http:  { porta: 80,  protocolo: "http", snapshot_path: "" },
+  generica_rtsp:  { porta: 554, protocolo: "rtsp", snapshot_path: "/stream1" },
+  generica_onvif: { porta: 80,  protocolo: "http", snapshot_path: "" },
 };
 
 const emptyCam = {
