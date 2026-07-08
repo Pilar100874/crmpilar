@@ -37,8 +37,28 @@ export function SimuladorInline({
   const [fillables, setFillables] = useState<Record<string, string>>({});
   const [modoTravado, setModoTravado] = useState(soPreenchimento);
   const pageRef = useRef<HTMLDivElement>(null);
+  const [camposCalc, setCamposCalc] = useState<CampoCalc[]>([]);
 
   useEffect(() => { setModoTravado(soPreenchimento); }, [soPreenchimento]);
+
+  // Carrega definições de campos (para aplicar cálculos)
+  useEffect(() => {
+    (async () => {
+      const eid = await getEstabelecimentoId();
+      if (!eid) return;
+      const load = async () => {
+        const { data } = await supabase
+          .from("doc_campos")
+          .select("chave, tipo, formato")
+          .eq("estabelecimento_id", eid);
+        setCamposCalc((data ?? []) as CampoCalc[]);
+      };
+      void load();
+      const h = () => void load();
+      window.addEventListener("doc-campos:changed", h);
+      return () => window.removeEventListener("doc-campos:changed", h);
+    })();
+  }, []);
 
   // Auto-carrega registros do merge_config salvo ao abrir a aba
   useEffect(() => {
@@ -55,8 +75,9 @@ export function SimuladorInline({
     const base: Record<string, any> = { data_atual: new Date().toLocaleDateString("pt-BR") };
     if (registroAtual && cfg?.alias) base[cfg.alias] = registroAtual;
     if (registroAtual) Object.assign(base, registroAtual);
-    return { ...base, ...overrides };
-  }, [registroAtual, cfg?.alias, overrides]);
+    const merged = { ...base, ...overrides };
+    return applyCalculatedFields(merged, camposCalc);
+  }, [registroAtual, cfg?.alias, overrides, camposCalc]);
 
   const camposDinamicos = useMemo(() => extractFieldKeys(html).filter(k => !k.startsWith("#")), [html]);
   const tokensFill = useMemo(() => extractFillableTokens(html), [html]);
