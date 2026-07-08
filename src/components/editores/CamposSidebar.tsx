@@ -48,15 +48,18 @@ function formatValue(v: any): string {
 }
 
 const makeDragHandler =
-  (values: Record<string, any>) =>
+  (_values: Record<string, any>) =>
   (e: React.DragEvent, chave: string) => {
+    // NUNCA colar o valor resolvido no drag. Sempre inserir a variável;
+    // a exibição de valor vs. variável é controlada pelo botão de preview.
     let token: string;
     if (chave.startsWith("__RAW__:")) token = chave.slice("__RAW__:".length);
     else if (chave.startsWith("__LOOP__:"))
       token = `{{#each ${chave.slice("__LOOP__:".length)}}}{{this}}{{/each}}`;
-    else {
-      const v = getPath(values, chave);
-      token = v !== undefined && v !== null && v !== "" ? formatValue(v) : `{{${chave}}}`;
+    else token = `{{${chave}}}`;
+    // Payload custom para o editor converter em nó mergeField no drop.
+    if (!chave.startsWith("__RAW__:") && !chave.startsWith("__LOOP__:") && !chave.startsWith("__TABLE__:")) {
+      e.dataTransfer.setData("application/x-merge-field", chave);
     }
     e.dataTransfer.setData("text/plain", token);
     e.dataTransfer.effectAllowed = "copy";
