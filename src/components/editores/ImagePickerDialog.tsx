@@ -111,10 +111,11 @@ export function ImagePickerDialog({ onInsert }: Props) {
           <TabsList className="self-start">
             <TabsTrigger value="galeria">Galeria</TabsTrigger>
             <TabsTrigger value="produtos">Catálogo</TabsTrigger>
+            <TabsTrigger value="upload"><Upload className="h-3 w-3 mr-1" /> Computador</TabsTrigger>
             <TabsTrigger value="url"><LinkIcon className="h-3 w-3 mr-1" /> URL</TabsTrigger>
           </TabsList>
 
-          {tab !== "url" && (
+          {(tab === "galeria" || tab === "produtos") && (
             <div className="relative my-2">
               <Search className="h-4 w-4 absolute left-2 top-2.5 text-muted-foreground" />
               <Input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar…" className="pl-8" />
