@@ -125,6 +125,15 @@ export default function ModeloEditor() {
       ed.chain().focus().insertContent({ type: "mergeField", attrs: { token, label: rot } }).insertContent(" ").run();
       return;
     }
+    if (chave.startsWith("__RAW__:")) {
+      ed.chain().focus().insertContent(chave.slice("__RAW__:".length)).run();
+      return;
+    }
+    if (chave.startsWith("__LOOP__:")) {
+      const path = chave.slice("__LOOP__:".length);
+      ed.chain().focus().insertContent(`{{#each ${path}}}{{this}}{{/each}}`).run();
+      return;
+    }
     const token = `{{${chave}}}`;
     ed.chain().focus().insertContent({ type: "mergeField", attrs: { token, label: chave } }).insertContent(" ").run();
   };
