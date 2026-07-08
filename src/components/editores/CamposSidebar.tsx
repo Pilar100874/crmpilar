@@ -11,6 +11,7 @@ import { extractFieldKeys } from "@/lib/editores/mergeEngine";
 import { MergeBuilderDialog, type MergeConfig } from "./MergeBuilderDialog";
 import { runMergeConfig } from "@/lib/editores/runMergeConfig";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface Campo {
   id: string;
