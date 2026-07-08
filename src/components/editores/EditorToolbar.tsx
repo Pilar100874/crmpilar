@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { ImagePickerDialog } from "./ImagePickerDialog";
 
 interface Props {
   editor: Editor | null;
