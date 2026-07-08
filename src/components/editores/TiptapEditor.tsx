@@ -89,18 +89,17 @@ export function TiptapEditor({
           event.preventDefault();
           try {
             const meta = JSON.parse(text.slice("__TABLE__:".length)) as { alias: string; cols: string[] };
-            const resp = window.prompt(
-              `Inserir tabela "${meta.alias}".\nQuais linhas? Ex: 1-10 · 5-20 · vazio = todas`,
-              "",
-            );
-            if (resp === null) return true;
-            let from = 1, to = 0;
-            const m = resp.trim().match(/^(\d+)\s*[-\/]\s*(\d+)$/);
-            if (m) { from = Number(m[1]); to = Number(m[2]); }
-            else if (/^\d+$/.test(resp.trim())) { from = 1; to = Number(resp.trim()); }
-            const node = view.state.schema.nodes.mergeTable?.create({ alias: meta.alias, cols: meta.cols, from, to });
-            if (!node) return true;
-            view.dispatch(view.state.tr.insert(pos, node));
+            promptTableRows(meta.alias).then((res) => {
+              if (!res) return;
+              const node = view.state.schema.nodes.mergeTable?.create({
+                alias: meta.alias,
+                cols: meta.cols,
+                from: res.from,
+                to: res.to,
+              });
+              if (!node) return;
+              view.dispatch(view.state.tr.insert(pos, node));
+            });
           } catch (e) {
             console.error("[TiptapEditor] payload __TABLE__ inválido", e);
           }
