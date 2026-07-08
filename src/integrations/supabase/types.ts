@@ -4672,12 +4672,15 @@ export type Database = {
       }
       doc_gerados: {
         Row: {
+          content_html: string | null
           content_html_final: string
+          content_json: Json | null
           created_at: string
           dados_merge: Json | null
           estabelecimento_id: string
           gerado_por: string | null
           id: string
+          merge_config: Json
           modelo_id: string | null
           modelo_versao: number | null
           numero_documento: string | null
@@ -4685,16 +4688,20 @@ export type Database = {
           registro_id: string | null
           registro_tipo: string | null
           status: string
+          tipo: string
           titulo: string
           updated_at: string
         }
         Insert: {
+          content_html?: string | null
           content_html_final?: string
+          content_json?: Json | null
           created_at?: string
           dados_merge?: Json | null
           estabelecimento_id: string
           gerado_por?: string | null
           id?: string
+          merge_config?: Json
           modelo_id?: string | null
           modelo_versao?: number | null
           numero_documento?: string | null
@@ -4702,16 +4709,20 @@ export type Database = {
           registro_id?: string | null
           registro_tipo?: string | null
           status?: string
+          tipo?: string
           titulo: string
           updated_at?: string
         }
         Update: {
+          content_html?: string | null
           content_html_final?: string
+          content_json?: Json | null
           created_at?: string
           dados_merge?: Json | null
           estabelecimento_id?: string
           gerado_por?: string | null
           id?: string
+          merge_config?: Json
           modelo_id?: string | null
           modelo_versao?: number | null
           numero_documento?: string | null
@@ -4719,6 +4730,7 @@ export type Database = {
           registro_id?: string | null
           registro_tipo?: string | null
           status?: string
+          tipo?: string
           titulo?: string
           updated_at?: string
         }
@@ -4795,6 +4807,7 @@ export type Database = {
           footer_html: string | null
           header_html: string | null
           id: string
+          merge_config: Json
           page_size: string | null
           titulo: string
           updated_at: string
@@ -4813,6 +4826,7 @@ export type Database = {
           footer_html?: string | null
           header_html?: string | null
           id?: string
+          merge_config?: Json
           page_size?: string | null
           titulo: string
           updated_at?: string
@@ -4831,6 +4845,7 @@ export type Database = {
           footer_html?: string | null
           header_html?: string | null
           id?: string
+          merge_config?: Json
           page_size?: string | null
           titulo?: string
           updated_at?: string
