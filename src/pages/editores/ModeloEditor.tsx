@@ -255,7 +255,20 @@ export default function ModeloEditor() {
           sidebarOpen={sidebarOpen}
         />
 
+        {primaryRows.length > 0 && (
+          <div className="border-b bg-muted/30 px-3 py-1 flex items-center gap-2">
+            <span className="text-[11px] text-muted-foreground">Registro (vínculo <b>{primaryAlias}</b>):</span>
+            <RegistroNavigator
+              total={primaryRows.length}
+              index={recordIndex}
+              onChange={setRecordIndex}
+              label={primaryLabel}
+            />
+          </div>
+        )}
+
         <div className="flex-1 overflow-hidden">
+
           {modo !== "editar" ? (
             <div className="h-full flex flex-col overflow-hidden">
               <div className="px-3 py-1.5 border-b bg-muted/40 text-xs flex items-center gap-2">
