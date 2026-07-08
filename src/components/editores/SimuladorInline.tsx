@@ -13,6 +13,7 @@ import {
 import { downloadPdf, printHtml } from "@/lib/editores/pdfExport";
 import { MergeBuilderDialog, type MergeConfig } from "./MergeBuilderDialog";
 import { RegistroNavigator } from "./RegistroNavigator";
+import { runMergeConfig } from "@/lib/editores/runMergeConfig";
 
 interface Props {
   html: string;
@@ -35,6 +36,14 @@ export function SimuladorInline({
   const pageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { setModoTravado(soPreenchimento); }, [soPreenchimento]);
+
+  // Auto-carrega registros do merge_config salvo ao abrir a aba
+  useEffect(() => {
+    if (!mergeConfig?.tabela) return;
+    setCfg(mergeConfig);
+    runMergeConfig(mergeConfig).then(r => { setRows(r); setIdx(0); });
+  }, [mergeConfig]);
+
 
   const registroAtual = rows[idx];
   const dados: Record<string, any> = useMemo(() => {

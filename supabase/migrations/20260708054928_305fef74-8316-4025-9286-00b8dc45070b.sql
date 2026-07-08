@@ -1,0 +1,1 @@
+ALTER TABLE public.doc_modelos ADD COLUMN IF NOT EXISTS bloqueado BOOLEAN NOT NULL DEFAULT false;
