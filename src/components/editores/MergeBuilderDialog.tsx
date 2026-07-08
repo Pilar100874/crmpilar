@@ -300,7 +300,6 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
       setRows(list);
       onChange(cfg, list);
       toast.success(`${list.length} registro(s) carregado(s)`);
-      setStep(3);
     } catch (e: any) {
       toast.error(e.message ?? "Erro ao consultar");
     } finally {
