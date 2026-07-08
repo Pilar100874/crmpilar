@@ -4,7 +4,17 @@ type Listener = () => void;
 
 let values: Record<string, any> = {};
 let rowsByAlias: Record<string, any[]> = {};
+let previewActive = false;
 const listeners = new Set<Listener>();
+
+export function setPreviewActive(v: boolean) {
+  previewActive = !!v;
+  listeners.forEach((l) => l());
+}
+
+export function isPreviewActive(): boolean {
+  return previewActive;
+}
 
 export function setPreviewValues(v: Record<string, any>) {
   values = v || {};
