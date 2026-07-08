@@ -71,17 +71,14 @@ export default function EditoresHub() {
 
   const criarDocumento = async () => {
     if (!estabId) return;
-    const { data, error } = await supabase.from("doc_gerados").insert({
+    const { data, error } = await supabase.from("doc_modelos").insert({
       estabelecimento_id: estabId,
       titulo: "Novo documento",
-      tipo: "documento",
-      status: "rascunho",
       content_html: "<h1>Novo Documento</h1><p>Comece a escrever aqui…</p>",
-      content_html_final: "<h1>Novo Documento</h1><p>Comece a escrever aqui…</p>",
-      dados_merge: {},
+      content_json: {},
     }).select().single();
     if (error) { toast.error(error.message); return; }
-    nav(`/editores/documento/${data.id}`);
+    nav(`/editores/modelos/${data.id}`);
   };
 
   const duplicarModelo = async (m: Modelo) => {
@@ -162,9 +159,11 @@ export default function EditoresHub() {
                 </div>
                 <p className="text-[11px] text-muted-foreground">{new Date(d.created_at).toLocaleString("pt-BR")}</p>
                 <div className="flex flex-wrap gap-1 pt-1">
-                  <Button size="sm" variant="outline" onClick={() => nav(d.modelo_id ? `/editores/gerar?id=${d.id}` : `/editores/documento/${d.id}`)}>
-                    <Edit className="h-3.5 w-3.5 mr-1" /> Abrir
-                  </Button>
+                  {d.modelo_id && (
+                    <Button size="sm" variant="outline" onClick={() => nav(`/editores/gerar?id=${d.id}`)}>
+                      <Edit className="h-3.5 w-3.5 mr-1" /> Abrir
+                    </Button>
+                  )}
                   <Button size="sm" variant="ghost" onClick={() => duplicarDocumento(d)} title="Duplicar"><Copy className="h-3.5 w-3.5" /></Button>
                   <Button size="sm" variant="ghost" onClick={() => printHtml(d.content_html_final ?? d.content_html ?? "")} title="Imprimir"><Printer className="h-3.5 w-3.5" /></Button>
                   <Button size="sm" variant="ghost" onClick={() => setToDelete({ kind: "documento", item: d })} title="Excluir"><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
