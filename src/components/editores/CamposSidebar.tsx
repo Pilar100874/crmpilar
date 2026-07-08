@@ -95,18 +95,11 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml }: Prop
         <Button size="sm" variant="outline" className="w-full h-8" onClick={() => setOpenNovo(true)}>
           <Plus className="h-3.5 w-3.5 mr-1" /> Novo campo personalizado
         </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          className="w-full h-8"
-          onClick={() => {
-            const rot = window.prompt("Rótulo da lacuna (ex: Nome do responsável):");
-            if (rot && rot.trim()) onInsert(`__FILLABLE__${rot.trim()}`);
-          }}
-          title="Insere uma lacuna [[Rótulo]] que será preenchida no momento da geração"
-        >
-          <Plus className="h-3.5 w-3.5 mr-1" /> Inserir campo preenchível [[…]]
-        </Button>
+        <FormFieldPicker onInsert={(tok) => onInsert(tok)} triggerClassName="w-full h-8" triggerLabel="Campo de formulário" />
+        <MergeBuilderDialog
+          onChange={() => {}}
+          onInsertField={(chave) => onInsert(chave)}
+        />
       </div>
 
       <ScrollArea className="flex-1">
