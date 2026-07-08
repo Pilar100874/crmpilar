@@ -226,8 +226,8 @@ const menuItems: MenuItem[] = [
       { id: "Editores Modelos", title: "Modelos de Documento", url: "/editores/modelos", icon: LucideIcons.FileText },
       { id: "Editores Gerar", title: "Gerar Documento", url: "/editores/gerar", icon: LucideIcons.FilePlus },
       { id: "Editores Documentos", title: "Documentos Gerados", url: "/editores/documentos", icon: LucideIcons.Files },
-      { id: "Editores Variante Classico", title: "Editor Clássico (A4)", url: "/editores?v=v1", icon: LucideIcons.FileText },
-      { id: "Editores Variante Moderno", title: "Editor Moderno (Beta)", url: "/editores?v=v2", icon: LucideIcons.Sparkles },
+      { id: "Editores Variante Classico", title: "Editor Clássico (A4)", url: "/editores/playground?v=v1", icon: LucideIcons.FileText },
+      { id: "Editores Variante Moderno", title: "Editor Moderno (Beta)", url: "/editores/playground?v=v2", icon: LucideIcons.Sparkles },
     ],
   },
 
