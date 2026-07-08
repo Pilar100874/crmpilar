@@ -14,6 +14,9 @@ import { downloadPdf, printHtml } from "@/lib/editores/pdfExport";
 import { MergeBuilderDialog, type MergeConfig } from "./MergeBuilderDialog";
 import { RegistroNavigator } from "./RegistroNavigator";
 import { runMergeConfig } from "@/lib/editores/runMergeConfig";
+import { applyCalculatedFields, type CampoCalc } from "@/lib/editores/calcFields";
+import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
 interface Props {
   html: string;

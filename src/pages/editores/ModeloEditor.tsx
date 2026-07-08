@@ -199,7 +199,7 @@ export default function ModeloEditor() {
         {modo === "editar" ? (
           <div className="h-full flex overflow-hidden">
             <div className="flex-1 flex flex-col min-w-0">
-              <EditorToolbar editor={editorRef.current} zoom={zoom} setZoom={setZoom} onFullscreen={() => setFullscreen(f => !f)} onPreviewMerge={abrirPreview} />
+              <EditorToolbar editor={editorRef.current} zoom={zoom} setZoom={setZoom} onFullscreen={() => setFullscreen(f => !f)} onPreviewMerge={abrirPreview} estabelecimentoId={estabId} />
               <div className="flex-1 overflow-auto">
                 <TiptapEditor
                   initialContent={html}

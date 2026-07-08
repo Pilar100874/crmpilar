@@ -114,7 +114,7 @@ export default function DocumentoEditor() {
         <TabsContent value="editar" className="flex-1 overflow-hidden mt-0">
           <div className="h-full flex overflow-hidden">
             <div className="flex-1 flex flex-col min-w-0">
-              <EditorToolbar editor={editorRef.current} zoom={zoom} setZoom={setZoom} onFullscreen={() => setFullscreen(f => !f)} />
+              <EditorToolbar editor={editorRef.current} zoom={zoom} setZoom={setZoom} onFullscreen={() => setFullscreen(f => !f)} estabelecimentoId={estabId} />
               <div className="flex-1 overflow-auto">
                 <TiptapEditor
                   initialContent={html}
