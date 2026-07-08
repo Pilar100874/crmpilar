@@ -77,6 +77,28 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
 
   const [campos, setCampos] = useState<Campo[]>([]);
   const [busca, setBusca] = useState("");
+  const [previewValues, setPreviewValues] = useState<Record<string, any>>({});
+
+  // Carrega valores de preview (primeira linha de cada vínculo + base)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const base = await resolveMergeData("livre", null);
+      const acc: Record<string, any> = { ...base };
+      for (const c of configs) {
+        if (!c?.alias) continue;
+        try {
+          const rows = await runMergeConfig(c);
+          if (rows && rows[0]) acc[c.alias] = rows[0];
+        } catch {}
+      }
+      if (!cancelled) setPreviewValues(acc);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(configs)]);
+
+  const onDragToken = useMemo(() => makeDragHandler(previewValues), [previewValues]);
 
   const load = async () => {
     if (!estabelecimentoId) return;
