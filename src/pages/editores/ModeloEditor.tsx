@@ -203,14 +203,14 @@ export default function ModeloEditor() {
         <TabsContent value="editar" className="flex-1 overflow-hidden mt-0">
           <div className="h-full flex overflow-hidden">
             <div className="flex-1 flex flex-col min-w-0">
-              <EditorToolbar editor={editorRef.current} zoom={zoom} setZoom={setZoom} onFullscreen={() => setFullscreen(f => !f)} />
+              <EditorToolbar editor={editorRef.current} zoom={zoom} setZoom={setZoom} onFullscreen={() => setFullscreen(f => !f)} onPreviewMerge={abrirPreview} />
               <div className="flex-1 overflow-auto">
                 <TiptapEditor
                   initialContent={html}
                   onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
                   editorRef={(e) => { editorRef.current = e; }}
                   zoom={zoom}
-                  editable={!modelo.bloqueado}
+                  editable={!modelo.bloqueado && !modelo.campos_bloqueados}
                 />
 
               </div>
