@@ -1,105 +1,76 @@
-# Plano — Expansão do módulo Editores
+# Merge avançado no Editor Playground
 
-## 1. Nova tela unificada `/editores` (Hub em cards)
+## O que vai mudar
 
-Substitui a lista atual por **duas seções em cards**:
+### 1. Nova sintaxe de template (`src/lib/editores/mergeEngine.ts`)
+Amplia o `renderTemplate` para suportar, além de `{{campo}}`:
 
-- **📄 Documentos** — documentos criados avulsos (sem modelo).
-- **📐 Modelos** — modelos reutilizáveis.
+- **Caminhos aninhados**: `{{cliente.nome}}`, `{{pedido.itens.0.descricao}}`
+- **Loops**: `{{#each itens}} ... {{descricao}} — {{valor}} ... {{/each}}` (com `{{@index}}`, `{{@first}}`, `{{@last}}`)
+- **Condicional**: `{{#if valor}} ... {{/if}}` / `{{#unless}}`
+- **Agregações inline**: `{{sum itens.valor}}`, `{{avg itens.valor}}`, `{{count itens}}`, `{{min}}`, `{{max}}`
+- **Fórmulas**: `{{= valor * quantidade * (1 - desconto/100) }}` — avaliador seguro (whitelist de operadores + Math.*)
+- **Formatação**: `{{moeda valor}}`, `{{data data_venda}}`, `{{numero qtd 2}}`
 
-Cada card mostra: título, data, prévia curta e ações: **Abrir · Duplicar · Excluir · Imprimir PDF**.
+Compatível com a sintaxe atual (`{{campo}}` continua funcionando).
 
-Botões no topo:
-- **+ Criar Modelo** → abre editor em modo `modelo` (salva em `doc_modelos`).
-- **+ Criar Documento** → abre editor em modo `documento` (salva em `doc_gerados` sem `modelo_id`).
+### 2. Merge Builder revisado (`src/components/editores/MergeBuilderDialog.tsx`)
+Duas abas:
 
-## 2. Editor unificado (mesma tela para modelo e documento)
+**Aba "Visual"**
+- Tabela principal + alias (já existe)
+- **Novo:** botão "Adicionar relação" → escolhe tabela relacionada, campo local, campo remoto, alias, cardinalidade (1:1 ou 1:N). Ex.: `pedidos` + relação `itens` via `pedidos_ecommerce_itens.pedido_id = pedidos.id` (1:N).
+- Filtros e limite (já existem)
+- Preview do JSON resultante
 
-Reaproveita `ModeloEditor.tsx` renomeado para `EditorDocumento.tsx`, aceitando `?tipo=modelo|documento`.
+**Aba "SQL"**
+- Textarea SQL livre executada via edge function `execute-merge-query` (nova, ver §4). Suporta apenas `SELECT`.
+- Toggle "Usar SQL em vez do visual".
 
-Muda apenas: destino do save + rótulo do botão. Saída **exclusivamente PDF** (remove HTML/DOCX; mantém Imprimir).
-
-## 3. Novo: Merge Builder Visual (popup)
-
-Substitui a sidebar estática de campos por um **construtor de query** acessível via botão **"🔗 Vincular dados"** na toolbar.
-
-Popup com 3 abas:
-
-**a) Tabelas & Joins**
-- Selecionar tabela principal (customers, empresas, pedidos_ecommerce, orcamentos, ponto_funcionarios, etc.).
-- Adicionar tabelas relacionadas via FK (dropdown com joins sugeridos).
-- Visual estilo blocos empilhados.
-
-**b) Filtros**
-- Linhas condicionais: `campo` `operador` `valor` (=, !=, ilike, >, <, between, in).
-- AND/OR entre linhas.
-
-**c) Campos disponíveis**
-- Após montar a query, lista todos os campos como chips arrastáveis: `{{cliente.nome}}`, `{{pedido.total}}`, etc.
-- Clique = insere no editor no cursor.
-
-Estado do merge salvo em `doc_modelos.merge_config` (jsonb novo) e `doc_gerados.merge_config`.
-
-## 4. Navegação registro-a-registro (simulação)
-
-No modo Simular (mantém tab existente), após executar a query o usuário vê:
-- **⬅ Anterior | Registro 3 de 47 | Próximo ➡** + campo "ir para #".
-- Cada mudança re-renderiza o preview com os dados daquele registro.
-- Executa `supabase.from(tabela).select(campos_da_query).match(filtros)` uma vez, pagina em memória.
-
-## 5. Campos de formulário preenchíveis (novos tipos)
-
-Expande o sistema `[[label]]` atual para tipos ricos. Nova sintaxe:
-
-```
-[[texto:Nome do cliente]]
-[[textarea:Observações]]
-[[data:Vencimento]]
-[[numero:Valor]]
-[[check:Aceito os termos]]
-[[lista:Estado|SP,RJ,MG,RS]]
-[[radio:Sexo|M,F]]
+`MergeConfig` ganha campos:
+```ts
+{ tabela, alias, filtros, limite, calculados,
+  relations?: { alias, tabela, localKey, foreignKey, cardinality: '1:1'|'1:N' }[],
+  sql?: string,
+  mode: 'visual' | 'sql'
+}
 ```
 
-**Componente `FormFieldPicker`** — botão na toolbar abre popup para escolher tipo, rótulo e opções; insere o token no cursor.
+### 3. Executor (`src/lib/editores/runMergeConfig.ts`)
+- Modo `visual`: roda query principal, depois para cada relação faz um `select().in(foreignKey, ids)` e agrupa em memória (evita N+1).
+- Modo `sql`: invoca edge function.
+- Aplica `calculados` (já existe) por linha.
 
-Render (`applyFillables`) passa a gerar `<input>`, `<textarea>`, `<select>`, `<input type=checkbox>` etc. conforme o tipo.
+### 4. Edge function `execute-merge-query`
+- Aceita `{ sql, params }`, valida que começa com `SELECT`, bloqueia `;`, `INSERT|UPDATE|DELETE|DROP|ALTER|GRANT|TRUNCATE`.
+- Executa via `supabase.rpc` numa função `public.exec_readonly_sql(sql text)` criada por migration (SECURITY DEFINER, `SET default_transaction_read_only = on`, restrita ao role autenticado + filtro por `estabelecimento_id` do usuário).
+- Retorna `{ rows }`.
 
-## 6. Modo "Formulário travado" (Tab entre campos)
+### 5. UI do Simulador (`src/components/editores/SimuladorInline.tsx`)
+- Detecta variáveis usadas no template (incluindo caminhos e loops) e mostra árvore navegável do registro atual em vez do painel plano atual.
+- Painel "Sobrescrever" só aparece para campos raiz (compat).
+- Botão "Ver dados brutos" (JSON) para debug.
 
-Toggle **"🔒 Modo preenchimento"** na tela de geração/simulação:
-- Todo o texto fica `contentEditable=false` / com `user-select: none`.
-- Apenas os inputs de `[[...]]` ficam ativos.
-- **Tab** navega automaticamente entre eles (ordem natural do DOM já cobre isso).
-- Botão **"Gerar PDF"** coleta valores e produz PDF final.
+### 6. UI do Editor (barra do Tiptap)
+- Novo menu "Inserir": lista campos das tabelas configuradas (principal + relações), botão "Inserir loop de {{alias}}", botão "Inserir fórmula".
 
-## 7. Ajustes de banco (migração)
+## Segurança
+- SQL livre roda só via função `SECURITY DEFINER` read-only, escopada ao `estabelecimento_id` do usuário (WHERE injetado obrigatoriamente ou bloqueio).
+- Fórmulas: parser próprio (sem `new Function` sobre string bruta do usuário; whitelist de tokens numéricos, operadores e `Math.*`).
+- RLS das tabelas continua valendo (query roda como usuário autenticado).
 
-```sql
-ALTER TABLE doc_modelos ADD COLUMN merge_config jsonb DEFAULT '{}'::jsonb;
-ALTER TABLE doc_gerados ADD COLUMN merge_config jsonb DEFAULT '{}'::jsonb;
-ALTER TABLE doc_gerados ALTER COLUMN modelo_id DROP NOT NULL;
-ALTER TABLE doc_gerados ADD COLUMN tipo text DEFAULT 'documento'; -- 'documento' | 'gerado_de_modelo'
-```
+## Entregáveis
+1. Migration: `exec_readonly_sql` + grants.
+2. Edge function `execute-merge-query`.
+3. `mergeEngine.ts` reescrito com loops/condicionais/agregações/fórmulas + testes manuais no playground.
+4. `MergeBuilderDialog` com abas Visual/SQL e editor de relações.
+5. `runMergeConfig` com resolução de relações.
+6. `SimuladorInline` com árvore de dados.
+7. Menu "Inserir campos/loops" na toolbar do editor.
 
-## 8. Detalhes técnicos
+## Fora de escopo
+- Editor visual de fórmulas tipo Excel (só textarea com autocomplete simples).
+- Cache de queries.
+- Salvar SQL como "view reutilizável" (fica para depois).
 
-- **Arquivos novos**:
-  - `src/pages/editores/EditoresHub.tsx` (cards documentos + modelos)
-  - `src/components/editores/MergeBuilderDialog.tsx`
-  - `src/components/editores/FormFieldPicker.tsx`
-  - `src/components/editores/RegistroNavigator.tsx`
-  - `src/lib/editores/queryBuilder.ts` (monta query Supabase a partir do merge_config)
-  - `src/lib/editores/formFields.ts` (parse/serialize dos novos tokens `[[tipo:label|opções]]`)
-
-- **Arquivos editados**:
-  - `mergeEngine.ts` — regex ampliada para `[[tipo:label|opts]]`, novo `applyFillables` que renderiza inputs tipados.
-  - `SimuladorInline.tsx` — integra `RegistroNavigator` + modo formulário travado.
-  - `ModeloEditor.tsx` — aceita `?tipo=documento`, toolbar ganha botões Merge/Campo.
-  - `GerarDocumento.tsx` — botão único "Gerar PDF" (remove HTML).
-  - `App.tsx` + `menus.ts` — rota `/editores` = hub; remove sub-itens redundantes.
-  - `pdfExport.ts` — mantém só PDF/print.
-
-- **Fora de escopo agora**: DOCX, e-mail, WhatsApp, assinatura digital (já marcados como futuros).
-
-Confirma que sigo?
+Confirma para eu começar a implementar?
