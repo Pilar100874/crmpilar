@@ -409,7 +409,7 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
         open={!!campoParaExcluir}
         onOpenChange={(o) => { if (!o) setCampoParaExcluir(null); }}
         onConfirm={confirmarExclusao}
-        title="Excluir campo personalizado?"
+        title="Excluir campo?"
         description={
           campoParaExcluir
             ? `Documentos que usarem {{${campoParaExcluir.chave}}} ficarão sem valor. Esta ação não pode ser desfeita.`
