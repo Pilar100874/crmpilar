@@ -3867,6 +3867,7 @@ export type Database = {
           id: string
           local_descricao: string | null
           marca: string
+          modelo: string | null
           nome: string
           onvif_pass: string | null
           onvif_porta: number | null
@@ -3897,6 +3898,7 @@ export type Database = {
           id?: string
           local_descricao?: string | null
           marca: string
+          modelo?: string | null
           nome: string
           onvif_pass?: string | null
           onvif_porta?: number | null
@@ -3927,6 +3929,7 @@ export type Database = {
           id?: string
           local_descricao?: string | null
           marca?: string
+          modelo?: string | null
           nome?: string
           onvif_pass?: string | null
           onvif_porta?: number | null
