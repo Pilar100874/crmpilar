@@ -195,17 +195,40 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
     try {
       if (!cfg.tabela) throw new Error("Selecione a tabela principal");
       const camposMain = getSel(cfg.tabela);
-      const selectCols = camposMain.length ? camposMain.join(",") : "*";
-      let q = supabase.from(cfg.tabela as any).select(selectCols).limit(Math.min(cfg.limite || 50, 500));
-      for (const f of cfg.filtros) {
-        if (!f.campo || !f.valor) continue;
-        const rawCampo = f.campo.includes(".") ? f.campo.split(".").slice(1).join(".") : f.campo;
-        if (f.op === "ilike") q = q.ilike(rawCampo, `%${f.valor}%`);
-        else q = (q as any)[f.op](rawCampo, f.valor);
+      let list: any[] = [];
+      if (cfg.tabela.startsWith("api:")) {
+        // Fonte é uma API do sistema
+        const all = await fetchApiEndpointRows(cfg.tabela.slice(4), Math.min(cfg.limite || 50, 500));
+        list = all.filter(r => cfg.filtros.every(f => {
+          if (!f.campo || !f.valor) return true;
+          const rawCampo = f.campo.includes(".") ? f.campo.split(".").slice(1).join(".") : f.campo;
+          const v = r?.[rawCampo];
+          const val = f.valor;
+          switch (f.op) {
+            case "eq": return String(v) === val;
+            case "neq": return String(v) !== val;
+            case "ilike": return String(v ?? "").toLowerCase().includes(val.toLowerCase());
+            case "gt": return Number(v) > Number(val);
+            case "gte": return Number(v) >= Number(val);
+            case "lt": return Number(v) < Number(val);
+            case "lte": return Number(v) <= Number(val);
+            default: return true;
+          }
+        }));
+        if (camposMain.length) list = list.map(r => Object.fromEntries(camposMain.map(c => [c, r?.[c]])));
+      } else {
+        const selectCols = camposMain.length ? camposMain.join(",") : "*";
+        let q = supabase.from(cfg.tabela as any).select(selectCols).limit(Math.min(cfg.limite || 50, 500));
+        for (const f of cfg.filtros) {
+          if (!f.campo || !f.valor) continue;
+          const rawCampo = f.campo.includes(".") ? f.campo.split(".").slice(1).join(".") : f.campo;
+          if (f.op === "ilike") q = q.ilike(rawCampo, `%${f.valor}%`);
+          else q = (q as any)[f.op](rawCampo, f.valor);
+        }
+        const { data, error } = await q;
+        if (error) throw error;
+        list = ((data ?? []) as any[]);
       }
-      const { data, error } = await q;
-      if (error) throw error;
-      let list = ((data ?? []) as any[]);
 
       for (const rel of cfg.relations ?? []) {
         if (!rel.tabela || !rel.localKey || !rel.foreignKey || !rel.alias) continue;
