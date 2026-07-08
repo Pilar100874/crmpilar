@@ -155,8 +155,6 @@ export default function ModeloEditor() {
           locked={!!modelo.bloqueado}
           dirty={dirty}
           saving={saving}
-          titulo={modelo.titulo}
-          onTituloChange={(v) => { setModelo({ ...modelo, titulo: v }); setDirty(true); }}
           mode={modo}
           onModeChange={setModo}
         />
@@ -174,6 +172,21 @@ export default function ModeloEditor() {
             </div>
             <CamposSidebar estabelecimentoId={estabId} onInsert={inserirCampo} currentHtml={html} />
           </div>
+        </div>
+
+        {/* Barra inferior — nome do documento */}
+        <div className="border-t bg-card px-3 py-2 flex items-center gap-2">
+          <label className="text-xs text-muted-foreground shrink-0">Nome:</label>
+          <Input
+            value={modelo.titulo}
+            onChange={(e) => { setModelo({ ...modelo, titulo: e.target.value }); setDirty(true); }}
+            className="h-8 max-w-md font-semibold"
+            disabled={modelo.bloqueado}
+          />
+          <span className="text-[11px] text-muted-foreground">
+            {dirty && "não salvo"} {saving && "salvando…"}
+            {modelo.bloqueado && <span className="ml-2 px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700">🔒 bloqueado</span>}
+          </span>
         </div>
       </div>
 
