@@ -13,6 +13,7 @@ import {
 import { downloadPdf, printHtml } from "@/lib/editores/pdfExport";
 import { MergeBuilderDialog, type MergeConfig } from "./MergeBuilderDialog";
 import { RegistroNavigator } from "./RegistroNavigator";
+import { runMergeConfig } from "@/lib/editores/runMergeConfig";
 
 interface Props {
   html: string;
