@@ -142,6 +142,11 @@ import CamerasDashboard from "./pages/cameras/CamerasDashboard";
 import CamerasGrupos from "./pages/cameras/CamerasGrupos";
 import CamerasCameras from "./pages/cameras/CamerasCameras";
 import CamerasAoVivo from "./pages/cameras/CamerasAoVivo";
+import EditoresLayout from "./pages/editores/EditoresLayout";
+import ModelosLista from "./pages/editores/ModelosLista";
+import ModeloEditor from "./pages/editores/ModeloEditor";
+import GerarDocumento from "./pages/editores/GerarDocumento";
+import DocumentosGerados from "./pages/editores/DocumentosGerados";
 
 import ChatInterno from "./pages/ChatInterno";
 import ConfigSkills from "./pages/ConfigSkills";
@@ -526,6 +531,13 @@ const App = () => (
                 <Route path="ao-vivo" element={<CamerasAoVivo />} />
                 <Route path="grupos" element={<CamerasGrupos />} />
                 <Route path="cameras" element={<CamerasCameras />} />
+              </Route>
+              <Route path="/editores" element={<EditoresLayout />}>
+                <Route index element={<ModelosLista />} />
+                <Route path="modelos" element={<ModelosLista />} />
+                <Route path="modelos/:id" element={<ModeloEditor />} />
+                <Route path="gerar" element={<GerarDocumento />} />
+                <Route path="documentos" element={<DocumentosGerados />} />
               </Route>
             </Route>
             {/* Public routes (no layout) */}
