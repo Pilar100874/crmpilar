@@ -315,10 +315,7 @@ export default function ModeloEditor() {
           {modo !== "editar" ? (
             <div className="h-full flex flex-col overflow-hidden">
               <div className="px-3 py-1.5 border-b bg-muted/40 text-xs flex items-center gap-2">
-                <span className="font-semibold">
-                  {modo === "form" ? "Simular Formulário — preencher campos" : "Simular Merge — navegar registros"}
-                </span>
-                <span className="text-muted-foreground">(inline)</span>
+                <span className="font-semibold">Preenchimento rápido — preencher campos</span>
               </div>
               <div className="flex-1 overflow-hidden">
                 <SimuladorInline
