@@ -31,6 +31,8 @@ export default function ModeloEditor() {
   const [zoom, setZoom] = useState(1);
   const [fullscreen, setFullscreen] = useState(false);
   const [modo, setModo] = useState<EditorMode>("editar");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
 
   useEffect(() => {
     getEstabelecimentoId().then(setEstabId);
@@ -149,6 +151,16 @@ export default function ModeloEditor() {
 
   if (!modelo) return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
 
+  // Normaliza merge_config para array de configs (aceita objeto legado)
+  const mc = modelo.merge_config;
+  const configs: any[] = Array.isArray(mc?.configs)
+    ? mc.configs
+    : (mc && (mc.tabela || mc.sql) ? [mc] : []);
+  const setConfigs = (list: any[]) => {
+    setModelo({ ...modelo, merge_config: { ...(mc && !Array.isArray(mc?.configs) ? {} : mc), configs: list } });
+    setDirty(true);
+  };
+
   return (
     <div className={fullscreen ? "fixed inset-0 z-50 bg-background flex flex-col" : "h-full flex flex-col"}>
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -168,6 +180,9 @@ export default function ModeloEditor() {
           saving={saving}
           mode={modo}
           onModeChange={setModo}
+          onInsertFormField={(tok) => inserirCampo(tok)}
+          onToggleSidebar={() => setSidebarOpen(o => !o)}
+          sidebarOpen={sidebarOpen}
         />
 
         <div className="flex-1 overflow-hidden">
@@ -181,9 +196,18 @@ export default function ModeloEditor() {
                 editable={!modelo.bloqueado && !modelo.campos_bloqueados}
               />
             </div>
-            <CamposSidebar estabelecimentoId={estabId} onInsert={inserirCampo} currentHtml={html} />
+            {sidebarOpen && (
+              <CamposSidebar
+                estabelecimentoId={estabId}
+                onInsert={inserirCampo}
+                currentHtml={html}
+                configs={configs}
+                onConfigsChange={setConfigs}
+              />
+            )}
           </div>
         </div>
+
 
         {/* Barra inferior — nome do documento */}
         <div className="border-t bg-card px-3 py-2 flex items-center gap-2">

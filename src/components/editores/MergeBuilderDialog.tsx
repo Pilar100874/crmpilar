@@ -43,7 +43,13 @@ interface Props {
   onInsertField?: (chave: string) => void;
   onSelectFields?: (chaves: string[]) => void;
   initialSelected?: string[];
+  hideTrigger?: boolean;
+  open?: boolean;
+  onOpenChange?: (o: boolean) => void;
+  triggerLabel?: string;
+  triggerAsIcon?: boolean;
 }
+
 
 const TABELAS = [
   { value: "customers", label: "Clientes" },
@@ -128,8 +134,11 @@ async function fetchColumns(tabela: string): Promise<string[]> {
 }
 
 
-export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFields, initialSelected }: Props) {
-  const [open, setOpen] = useState(false);
+export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFields, initialSelected, hideTrigger, open: openProp, onOpenChange, triggerLabel = "Vincular dados", triggerAsIcon }: Props) {
+  const [openInternal, setOpenInternal] = useState(false);
+  const open = openProp !== undefined ? openProp : openInternal;
+  const setOpen = (o: boolean) => { onOpenChange?.(o); if (openProp === undefined) setOpenInternal(o); };
+
   const [step, setStep] = useState(0);
   const [cfg, setCfg] = useState<MergeConfig>(() => ({
     mode: "visual",
@@ -344,11 +353,20 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
 
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) setStep(0); }}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
-          <Database className="h-3.5 w-3.5 mr-1" /> Vincular dados
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          {triggerAsIcon ? (
+            <Button type="button" size="sm" variant="ghost" className="h-8 w-8 p-0" title={triggerLabel}>
+              <Database className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button size="sm" variant="outline">
+              <Database className="h-3.5 w-3.5 mr-1" /> {triggerLabel}
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
+
       <DialogContent className="max-w-5xl max-h-[92vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Merge Builder — Assistente</DialogTitle>

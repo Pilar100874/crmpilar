@@ -3,12 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Tags, Database } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, Tags, Database, Plus, Pencil, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { extractFieldKeys } from "@/lib/editores/mergeEngine";
-import { FormFieldPicker } from "./FormFieldPicker";
-import { MergeBuilderDialog } from "./MergeBuilderDialog";
+import { MergeBuilderDialog, type MergeConfig } from "./MergeBuilderDialog";
 
 interface Campo {
   id: string;
@@ -26,6 +26,8 @@ interface Props {
   currentHtml: string;
   mergeFields?: string[];
   onMergeFieldsChange?: (chaves: string[]) => void;
+  configs?: MergeConfig[];
+  onConfigsChange?: (configs: MergeConfig[]) => void;
 }
 
 const onDragToken = (e: React.DragEvent, chave: string) => {
@@ -36,13 +38,21 @@ const onDragToken = (e: React.DragEvent, chave: string) => {
   e.dataTransfer.effectAllowed = "copy";
 };
 
-export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeFields: mergeFieldsProp, onMergeFieldsChange }: Props) {
+export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeFields: mergeFieldsProp, onMergeFieldsChange, configs: configsProp, onConfigsChange }: Props) {
   const [mergeFieldsInternal, setMergeFieldsInternal] = useState<string[]>([]);
   const mergeFields = mergeFieldsProp ?? mergeFieldsInternal;
   const setMergeFields = (chaves: string[]) => {
     setMergeFieldsInternal(chaves);
     onMergeFieldsChange?.(chaves);
   };
+  const [configsInternal, setConfigsInternal] = useState<MergeConfig[]>([]);
+  const configs = configsProp ?? configsInternal;
+  const setConfigs = (list: MergeConfig[]) => {
+    setConfigsInternal(list);
+    onConfigsChange?.(list);
+  };
+  const [editIdx, setEditIdx] = useState<number | null>(null);
+
   const [campos, setCampos] = useState<Campo[]>([]);
   const [busca, setBusca] = useState("");
 
@@ -97,6 +107,22 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
     </button>
   );
 
+  const addConfig = () => {
+    setConfigs([...configs, { mode: "visual", tabela: "", alias: `reg${configs.length + 1}`, filtros: [], limite: 50, calculados: [], relations: [], camposSelecionados: {} }]);
+    setEditIdx(configs.length);
+  };
+  const removeConfig = (i: number) => {
+    const removed = configs[i];
+    setConfigs(configs.filter((_, k) => k !== i));
+    // remove campos ligados a esse alias
+    if (removed?.alias) setMergeFields(mergeFields.filter(k => !k.startsWith(`${removed.alias}.`)));
+  };
+  const updateConfig = (i: number, cfg: MergeConfig) => {
+    const n = [...configs];
+    n[i] = cfg;
+    setConfigs(n);
+  };
+
   return (
     <aside className="w-72 border-l bg-card flex flex-col">
       <div className="p-3 border-b space-y-2">
@@ -107,26 +133,65 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
           <Search className="h-3.5 w-3.5 absolute left-2 top-2.5 text-muted-foreground" />
           <Input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar campo…" className="pl-7 h-8 text-xs" />
         </div>
-        <FormFieldPicker onInsert={(tok) => onInsert(tok)} triggerClassName="w-full h-8" triggerLabel="Campo de formulário" />
-        <MergeBuilderDialog
-          onChange={() => {}}
-          onInsertField={(chave) => onInsert(chave)}
-          onSelectFields={(chaves) => setMergeFields(chaves)}
-          initialSelected={mergeFields}
-        />
       </div>
 
       <ScrollArea className="flex-1">
         <div className="p-3 space-y-4">
-          {/* Campos do Merge selecionados — acima de tudo */}
+          {/* Vínculos de dados (múltiplos) */}
           <div>
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
-              <Database className="h-3 w-3" /> Campos do Merge
+            <div className="flex items-center justify-between mb-1">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                <Database className="h-3 w-3" /> Vínculos de dados
+              </div>
+              <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={addConfig}>
+                <Plus className="h-3 w-3 mr-1" /> Novo
+              </Button>
             </div>
+            {configs.length === 0 && (
+              <p className="text-[11px] text-muted-foreground">Nenhum vínculo. Clique em <b>Novo</b> para vincular uma tabela ou API.</p>
+            )}
+            <div className="space-y-1">
+              {configs.map((c, i) => (
+                <div key={i} className="flex items-center gap-1 border rounded px-2 py-1 bg-muted/20">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[11px] font-medium truncate">{c.tabela || <span className="italic text-muted-foreground">sem tabela</span>}</div>
+                    <div className="text-[10px] text-muted-foreground font-mono truncate">alias: {c.alias}</div>
+                  </div>
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditIdx(i)} title="Editar">
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeConfig(i)} title="Remover">
+                    <Trash2 className="h-3 w-3 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+            {/* Diálogos controlados dos configs */}
+            {configs.map((c, i) => (
+              <MergeBuilderDialog
+                key={`dlg-${i}`}
+                hideTrigger
+                open={editIdx === i}
+                onOpenChange={(o) => { if (!o) setEditIdx(null); }}
+                value={c}
+                onChange={(cfg) => updateConfig(i, cfg)}
+                onInsertField={(chave) => onInsert(chave)}
+                onSelectFields={(chaves) => {
+                  // mantém campos de outros aliases + acrescenta os novos deste alias
+                  const alias = configs[i]?.alias;
+                  const outros = alias ? mergeFields.filter(k => !k.startsWith(`${alias}.`)) : mergeFields;
+                  setMergeFields([...outros, ...chaves]);
+                }}
+                initialSelected={mergeFields.filter(k => c.alias && k.startsWith(`${c.alias}.`))}
+              />
+            ))}
+          </div>
+
+          {/* Campos do Merge selecionados */}
+          <div className="border-t pt-3">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Campos do Merge</div>
             {mergeFields.length === 0 ? (
-              <p className="text-[11px] text-muted-foreground">
-                Nenhum. Abra <b>Vincular dados</b>, vincule as tabelas, execute e selecione os campos.
-              </p>
+              <p className="text-[11px] text-muted-foreground">Nenhum campo selecionado nos vínculos.</p>
             ) : (
               <div className="flex flex-wrap gap-1">
                 {mergeFields.map(chave => (
@@ -144,6 +209,7 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
               </div>
             )}
           </div>
+
 
           {/* Sistema — somente Data atual */}
           <div className="border-t pt-3">

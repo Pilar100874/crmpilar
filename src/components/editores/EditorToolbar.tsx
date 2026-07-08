@@ -10,13 +10,14 @@ import {
   List, ListOrdered, Undo, Redo, Link as LinkIcon,
   Table as TableIcon, Rows, Columns, Trash2, Eraser, Maximize2, ZoomIn, ZoomOut,
   ScanSearch, ArrowLeft, Save, Eye, Lock, Unlock, Copy,
-  Database, ClipboardList, Pencil,
+  Database, ClipboardList, Pencil, PanelRightOpen, PanelRightClose,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { ImagePickerDialog } from "./ImagePickerDialog";
 import { AssinaturaPickerDialog } from "./AssinaturaPickerDialog";
 import { NovoCampoDialog } from "./NovoCampoDialog";
+import { FormFieldPicker } from "./FormFieldPicker";
 
 export type EditorMode = "editar" | "merge" | "form";
 
@@ -39,7 +40,11 @@ interface Props {
   onTituloChange?: (v: string) => void;
   mode?: EditorMode;
   onModeChange?: (m: EditorMode) => void;
+  onInsertFormField?: (token: string) => void;
+  onToggleSidebar?: () => void;
+  sidebarOpen?: boolean;
 }
+
 
 function TB({ active, onClick, disabled, title, children }: any) {
   return (
@@ -64,7 +69,9 @@ export function EditorToolbar({
   editor, onFullscreen, zoom, setZoom, onPreviewMerge, estabelecimentoId,
   onBack, onSave, onSalvarComo, onToggleLock, locked, dirty, saving,
   titulo, onTituloChange, mode = "editar", onModeChange,
+  onInsertFormField, onToggleSidebar, sidebarOpen,
 }: Props) {
+
   const [color, setColor] = useState("#111111");
   const [bgColor, setBgColor] = useState("#fff59d");
   const isEdit = mode === "editar";
@@ -81,6 +88,15 @@ export function EditorToolbar({
             {locked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
           </TB>
         )}
+        {onInsertFormField && (
+          <FormFieldPicker asIcon onInsert={onInsertFormField} />
+        )}
+        {onToggleSidebar && (
+          <TB onClick={onToggleSidebar} active={!!sidebarOpen} title={sidebarOpen ? "Fechar campos" : "Abrir campos e vínculos"}>
+            {sidebarOpen ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
+          </TB>
+        )}
+
         {onModeChange && (
           <>
             <Separator orientation="vertical" className="h-6 mx-1" />
