@@ -128,7 +128,13 @@ export default function EditorPlayground() {
                 />
               )}
             </div>
-            <CamposSidebar estabelecimentoId={estabId} onInsert={inserirCampo} currentHtml={html} />
+            <CamposSidebar
+              estabelecimentoId={estabId}
+              onInsert={inserirCampo}
+              currentHtml={html}
+              mergeFields={mergeFields}
+              onMergeFieldsChange={setMergeFields}
+            />
           </div>
         </div>
 
