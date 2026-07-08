@@ -189,20 +189,6 @@ export default function ModeloEditor() {
             {dirty && "não salvo"} {saving && "salvando…"}
             {modelo.bloqueado && <span className="ml-2 px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700">🔒 bloqueado</span>}
           </span>
-          <div className="ml-auto flex items-center gap-1 rounded border p-0.5 bg-muted/40">
-            <button
-              type="button"
-              onClick={() => setVariante("v1")}
-              className={`text-[11px] px-2 py-1 rounded ${variante === "v1" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
-              title="Layout A4 clássico"
-            >Clássico A4</button>
-            <button
-              type="button"
-              onClick={() => setVariante("v2")}
-              className={`text-[11px] px-2 py-1 rounded ${variante === "v2" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
-              title="Layout moderno fluido (base para customização)"
-            >Moderno</button>
-          </div>
         </div>
       </div>
 
