@@ -7,11 +7,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Signature, Plus, Trash2, Pencil, Star, StarOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TiptapEditor } from "./TiptapEditor";
+import { EditorToolbar } from "./EditorToolbar";
+import type { Editor } from "@tiptap/react";
+import { useRef, useState as useStateReact } from "react";
 
 interface Props {
   onInsert: (html: string) => void;
