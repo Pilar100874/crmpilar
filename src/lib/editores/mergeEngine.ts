@@ -59,6 +59,20 @@ export function renderTemplate(
     return isTruthy(getValue(data, key.trim())) ? body : "";
   });
 
+  // {{img:key}} — insere <img src="{value}">
+  const imgRe = /\{\{\s*img:([a-zA-Z0-9_\.]+)\s*\}\}/g;
+  html = html.replace(imgRe, (_m, key: string) => {
+    used.push(key);
+    const value = getValue(data, key);
+    if (value == null || value === "") {
+      missing.push(key);
+      return opts.highlightMissing
+        ? `<span style="background:#fef3c7;border:1px dashed #f59e0b;color:#92400e;padding:0 4px;border-radius:2px;">🖼 {{img:${escapeHtml(key)}}}</span>`
+        : "";
+    }
+    return `<img src="${escapeAttrLocal(String(value))}" style="max-width:100%;height:auto;" />`;
+  });
+
   const varRe = /\{\{\s*([a-zA-Z0-9_\.]+)\s*\}\}/g;
   const out = html.replace(varRe, (_m, key: string) => {
     used.push(key);
