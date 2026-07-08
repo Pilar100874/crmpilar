@@ -264,7 +264,8 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
         if (camposMain.length) list = list.map(r => Object.fromEntries(camposMain.map(c => [c, r?.[c]])));
       } else {
         const selectCols = camposMain.length ? camposMain.join(",") : "*";
-        let q = supabase.from(cfg.tabela as any).select(selectCols).limit(Math.min(cfg.limite || 50, 500));
+        let q = supabase.from(cfg.tabela as any).select(selectCols);
+        if (cfg.limite && cfg.limite > 0) q = q.limit(Math.min(cfg.limite, 500));
         for (const f of cfg.filtros) {
           if (!f.campo || !f.valor) continue;
           const rawCampo = f.campo.includes(".") ? f.campo.split(".").slice(1).join(".") : f.campo;
