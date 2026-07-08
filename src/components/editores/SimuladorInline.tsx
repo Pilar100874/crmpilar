@@ -41,7 +41,9 @@ export function SimuladorInline({
   useEffect(() => {
     if (!mergeConfig?.tabela) return;
     setCfg(mergeConfig);
-    runMergeConfig(mergeConfig).then(r => { setRows(r); setIdx(0); });
+    runMergeConfig(mergeConfig)
+      .then(r => { setRows(Array.isArray(r) ? r : []); setIdx(0); })
+      .catch(err => { console.warn("[Simulador] falha ao carregar merge:", err); setRows([]); });
   }, [mergeConfig]);
 
 
@@ -105,7 +107,8 @@ export function SimuladorInline({
   };
 
   return (
-    <div className="flex-1 grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4 p-4 overflow-auto">
+    <div className="h-full w-full grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4 p-4 overflow-auto">
+
       <Card className="p-3 space-y-3 h-fit sticky top-0">
         <MergeBuilderDialog
           value={cfg}
