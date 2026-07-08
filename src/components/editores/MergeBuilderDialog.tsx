@@ -412,7 +412,16 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
               <div className="border rounded p-3 bg-muted/20">
                 <div className="flex items-center gap-2 mb-2">
                   <Badge variant="default">Principal</Badge>
-                  <Select value={cfg.tabela} onValueChange={v => setCfg({ ...cfg, tabela: v, camposSelecionados: { ...(cfg.camposSelecionados ?? {}), [v]: [] } })}>
+                  <Select value={cfg.tabela} onValueChange={v => {
+                    let novoAlias = cfg.alias;
+                    if (v.startsWith("api:")) {
+                      const found = tabelasDisponiveis.find(t => t.value === v);
+                      const nome = (found?.label ?? "").replace(/^🔌\s*/, "").trim();
+                      const sane = nome.replace(/[^a-z0-9_]/gi, "_").replace(/_+/g, "_").replace(/^_|_$/g, "").toLowerCase();
+                      if (sane) novoAlias = sane;
+                    }
+                    setCfg({ ...cfg, tabela: v, alias: novoAlias, camposSelecionados: { ...(cfg.camposSelecionados ?? {}), [v]: [] } });
+                  }}>
                     <SelectTrigger className="h-8 max-w-xs"><SelectValue placeholder="Escolha a tabela principal" /></SelectTrigger>
                     <SelectContent>{tabelasDisponiveis.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
                   </Select>
