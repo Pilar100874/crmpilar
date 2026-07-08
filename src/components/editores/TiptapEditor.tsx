@@ -69,18 +69,43 @@ export function TiptapEditor({
       handleDrop: (view, event) => {
         const dt = (event as DragEvent).dataTransfer;
         if (!dt) return false;
-        const chave = dt.getData("application/x-merge-field");
-        if (!chave) return false;
         const coords = { left: (event as DragEvent).clientX, top: (event as DragEvent).clientY };
         const pos = view.posAtCoords(coords)?.pos;
         if (pos == null) return false;
-        event.preventDefault();
-        const token = `{{${chave}}}`;
-        const node = view.state.schema.nodes.mergeField?.create({ token, label: chave });
-        if (!node) return false;
-        const tr = view.state.tr.insert(pos, node);
-        view.dispatch(tr);
-        return true;
+
+        const chave = dt.getData("application/x-merge-field");
+        if (chave) {
+          event.preventDefault();
+          const token = `{{${chave}}}`;
+          const node = view.state.schema.nodes.mergeField?.create({ token, label: chave });
+          if (!node) return false;
+          view.dispatch(view.state.tr.insert(pos, node));
+          return true;
+        }
+
+        const text = dt.getData("text/plain");
+        if (text && text.startsWith("__TABLE__:")) {
+          event.preventDefault();
+          try {
+            const meta = JSON.parse(text.slice("__TABLE__:".length)) as { alias: string; cols: string[] };
+            const resp = window.prompt(
+              `Inserir tabela "${meta.alias}".\nQuais linhas? Ex: 1-10 · 5-20 · vazio = todas`,
+              "",
+            );
+            if (resp === null) return true;
+            let from = 1, to = 0;
+            const m = resp.trim().match(/^(\d+)\s*[-\/]\s*(\d+)$/);
+            if (m) { from = Number(m[1]); to = Number(m[2]); }
+            else if (/^\d+$/.test(resp.trim())) { from = 1; to = Number(resp.trim()); }
+            const node = view.state.schema.nodes.mergeTable?.create({ alias: meta.alias, cols: meta.cols, from, to });
+            if (!node) return true;
+            view.dispatch(view.state.tr.insert(pos, node));
+          } catch (e) {
+            console.error("[TiptapEditor] payload __TABLE__ inválido", e);
+          }
+          return true;
+        }
+        return false;
       },
     },
     onUpdate: ({ editor }) => {
