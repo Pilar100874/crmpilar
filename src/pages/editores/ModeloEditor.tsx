@@ -224,7 +224,7 @@ export default function ModeloEditor() {
                 <TiptapEditor
                   initialContent={html}
                   onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
-                  editorRef={(e) => { editorRef.current = e; }}
+                  editorRef={(e) => { editorRef.current = e; setEditorInstance(e); }}
                   zoom={zoom}
                   editable={!modelo.bloqueado && !modelo.campos_bloqueados}
                 />
