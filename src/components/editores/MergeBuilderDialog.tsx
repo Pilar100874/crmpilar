@@ -82,8 +82,11 @@ const STEPS = [
 ];
 
 async function fetchApiEndpointRows(endpointId: string, limit = 5): Promise<any[]> {
+  // IMPORTANT: a edge function encaminha TODO o body (exceto endpoint_id/endpoint_path)
+  // como parâmetros do SQL Server. Enviar `params`/`limit` faz o proxy rejeitar com
+  // "Validation failed for parameter 'params'". Portanto só mandamos endpoint_id.
   const { data, error } = await supabase.functions.invoke("execute-dynamic-query", {
-    body: { endpoint_id: endpointId, params: {}, limit },
+    body: { endpoint_id: endpointId },
   });
   if (error) {
     const msg = (data as any)?.error || (error as any)?.message || "Falha ao chamar execute-dynamic-query";
@@ -92,8 +95,9 @@ async function fetchApiEndpointRows(endpointId: string, limit = 5): Promise<any[
   if ((data as any)?.success === false) {
     throw new Error(`API endpoint: ${(data as any)?.error ?? "erro desconhecido"}`);
   }
-  const rows = (data as any)?.data ?? (data as any)?.rows ?? (Array.isArray(data) ? data : []);
-  return Array.isArray(rows) ? rows : [];
+  const rowsAll = (data as any)?.data ?? (data as any)?.rows ?? (Array.isArray(data) ? data : []);
+  const rows = Array.isArray(rowsAll) ? rowsAll : [];
+  return typeof limit === "number" && limit > 0 ? rows.slice(0, limit) : rows;
 }
 
 // Extrai nomes de colunas da cláusula SELECT ... FROM (fallback quando não há linhas)
