@@ -127,6 +127,15 @@ export default function ModeloEditor() {
       ed.chain().focus().insertContent({ type: "mergeField", attrs: { token, label: rot } }).insertContent(" ").run();
       return;
     }
+    if (chave.startsWith("__FIELD__:")) {
+      try {
+        const attrs = JSON.parse(chave.slice("__FIELD__:".length));
+        ed.chain().focus().insertContent({ type: "fillableField", attrs }).insertContent(" ").run();
+      } catch (e) {
+        console.error("[ModeloEditor] payload __FIELD__ inválido", e);
+      }
+      return;
+    }
     if (chave.startsWith("__RAW__:")) {
       ed.chain().focus().insertContent(chave.slice("__RAW__:".length)).run();
       return;

@@ -9,6 +9,7 @@ import FontFamily from "@tiptap/extension-font-family";
 import Link from "@tiptap/extension-link";
 import { ResizableImage } from "./ResizableImageNode";
 import { MergeField } from "./MergeFieldNode";
+import { FillableField } from "./FillableFieldNode";
 import { Table } from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
@@ -53,6 +54,7 @@ export function TiptapEditor({
       Placeholder.configure({ placeholder: "Comece a escrever seu documento…" }),
       CharacterCount,
       MergeField,
+      FillableField,
     ],
     [],
   );

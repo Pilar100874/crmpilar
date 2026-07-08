@@ -85,7 +85,13 @@ async function fetchApiEndpointRows(endpointId: string, limit = 5): Promise<any[
   const { data, error } = await supabase.functions.invoke("execute-dynamic-query", {
     body: { endpoint_id: endpointId, params: {}, limit },
   });
-  if (error) throw error;
+  if (error) {
+    const msg = (data as any)?.error || (error as any)?.message || "Falha ao chamar execute-dynamic-query";
+    throw new Error(`API endpoint: ${msg}`);
+  }
+  if ((data as any)?.success === false) {
+    throw new Error(`API endpoint: ${(data as any)?.error ?? "erro desconhecido"}`);
+  }
   const rows = (data as any)?.data ?? (data as any)?.rows ?? (Array.isArray(data) ? data : []);
   return Array.isArray(rows) ? rows : [];
 }
