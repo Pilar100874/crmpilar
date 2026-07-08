@@ -258,8 +258,17 @@ export default function ModeloEditor() {
   if (!modelo) return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
 
   const mc = modelo.merge_config;
+  const baseMc = () => (mc && typeof mc === "object" && !Array.isArray(mc) ? { ...mc } : {});
   const setConfigs = (list: any[]) => {
-    setModelo({ ...modelo, merge_config: { ...(mc && !Array.isArray(mc?.configs) ? {} : mc), configs: list } });
+    setModelo({ ...modelo, merge_config: { ...baseMc(), configs: list } });
+    setDirty(true);
+  };
+  const setSavedTables = (list: { name: string; alias: string; cols: string[] }[]) => {
+    setModelo({ ...modelo, merge_config: { ...baseMc(), configs, savedTables: list } });
+    setDirty(true);
+  };
+  const setMergeFields = (list: string[]) => {
+    setModelo({ ...modelo, merge_config: { ...baseMc(), configs, mergeFields: list } });
     setDirty(true);
   };
 
