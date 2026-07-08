@@ -53,13 +53,13 @@ const OPS: { v: MergeConfigFiltro["op"]; label: string }[] = [
 
 export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
   const [open, setOpen] = useState(false);
-  const [cfg, setCfg] = useState<MergeConfig>(value ?? {
-    tabela: "customers",
-    alias: "reg",
-    filtros: [],
-    limite: 50,
-    calculados: [],
-  });
+  const [cfg, setCfg] = useState<MergeConfig>(() => ({
+    tabela: value?.tabela || "customers",
+    alias: value?.alias || "reg",
+    filtros: Array.isArray(value?.filtros) ? value!.filtros : [],
+    limite: value?.limite ?? 50,
+    calculados: Array.isArray(value?.calculados) ? value!.calculados : [],
+  }));
   const [rows, setRows] = useState<any[]>([]);
   const [colunas, setColunas] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
