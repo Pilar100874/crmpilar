@@ -696,3 +696,65 @@ function CamposCheckList({ tabela, colunas, loading, selecionados, onToggle }: {
     </div>
   );
 }
+
+// ============ Inserir lista/tabela como HTML ============
+function InserirListaTabela({ todasTabelas, camposSelecionados, onInsert }: {
+  todasTabelas: { tabela: string; alias: string; isMain: boolean }[];
+  camposSelecionados: Record<string, string[]>;
+  onInsert: (html: string) => void;
+}) {
+  const opcoes = todasTabelas.filter(t => (camposSelecionados[t.tabela] ?? []).length > 0);
+  const [alias, setAlias] = useState<string>("");
+  const [cols, setCols] = useState<string[]>([]);
+
+  const sel = opcoes.find(o => o.alias === alias);
+  const camposDoAlias = sel ? (camposSelecionados[sel.tabela] ?? []) : [];
+
+  const toggleCol = (c: string) => setCols(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
+
+  const gerarHtml = () => {
+    if (!sel || cols.length === 0) return;
+    const th = cols.map(c => `<th style="border:1px solid #ccc;padding:4px;background:#f4f4f4;text-align:left;">${c}</th>`).join("");
+    const td = cols.map(c => `<td style="border:1px solid #ccc;padding:4px;">{{${c}}}</td>`).join("");
+    const html = sel.isMain
+      ? `<table style="border-collapse:collapse;width:100%;font-size:11pt;"><thead><tr>${th}</tr></thead><tbody><tr>${td}</tr></tbody></table>`
+      : `<table style="border-collapse:collapse;width:100%;font-size:11pt;"><thead><tr>${th}</tr></thead><tbody>{{#each ${sel.alias}}}<tr>${td}</tr>{{/each}}</tbody></table>`;
+    onInsert(html);
+  };
+
+  if (opcoes.length === 0) return null;
+
+  return (
+    <div className="border-t pt-3 mt-2 space-y-2">
+      <div className="text-xs font-medium flex items-center gap-1"><Table2 className="h-3.5 w-3.5" /> Inserir lista/tabela no documento</div>
+      <div className="flex flex-wrap gap-2 items-center">
+        <Select value={alias} onValueChange={(v) => { setAlias(v); setCols([]); }}>
+          <SelectTrigger className="h-8 w-56 text-xs"><SelectValue placeholder="Escolha a tabela/relação" /></SelectTrigger>
+          <SelectContent>
+            {opcoes.map(o => (
+              <SelectItem key={o.alias} value={o.alias}>
+                {o.tabela} ({o.alias}){o.isMain ? " — principal" : " — lista relacionada"}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button size="sm" onClick={gerarHtml} disabled={!sel || cols.length === 0}>
+          <Plus className="h-3.5 w-3.5 mr-1" /> Inserir tabela
+        </Button>
+      </div>
+      {sel && (
+        <div className="flex flex-wrap gap-1 pl-1">
+          {camposDoAlias.map(c => (
+            <label key={c} className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded border cursor-pointer ${cols.includes(c) ? "bg-primary/10 border-primary" : "bg-card"}`}>
+              <Checkbox checked={cols.includes(c)} onCheckedChange={() => toggleCol(c)} className="h-3 w-3" />
+              <span className="font-mono">{c}</span>
+            </label>
+          ))}
+        </div>
+      )}
+      <p className="text-[10px] text-muted-foreground">
+        Gera uma tabela HTML no editor com as colunas escolhidas. Para relações 1:N usa <code>{`{{#each ${sel?.alias || "alias"}}}`}</code>, iterando todos os registros filtrados pelo JOIN configurado.
+      </p>
+    </div>
+  );
+}
