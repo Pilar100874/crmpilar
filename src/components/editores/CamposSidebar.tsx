@@ -152,11 +152,19 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
   const validKeys = new Set(campos.map(c => c.chave));
   const invalidUsed = usadas.filter(k => !validKeys.has(k.split(".")[0]) && !mergeFields.includes(k));
 
-  const excluirCampo = async (c: Campo) => {
-    if (!confirm(`Excluir o campo personalizado "${c.rotulo}"?\n\nOs documentos que usarem {{${c.chave}}} ficarão sem valor.`)) return;
-    const { error } = await supabase.from("doc_campos").delete().eq("id", c.id);
-    if (error) { console.error(error); return; }
-    window.dispatchEvent(new CustomEvent("doc-campos:changed"));
+  const confirmarExclusao = async () => {
+    if (!campoParaExcluir) return;
+    setExcluindo(true);
+    try {
+      const { error } = await supabase.from("doc_campos").delete().eq("id", campoParaExcluir.id);
+      if (error) throw error;
+      window.dispatchEvent(new CustomEvent("doc-campos:changed"));
+      setCampoParaExcluir(null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setExcluindo(false);
+    }
   };
 
   const renderCampoBtn = (c: Campo, emerald = false) => (
