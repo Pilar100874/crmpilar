@@ -756,9 +756,10 @@ function CamposCheckList({ tabela, colunas, loading, selecionados, onToggle }: {
 }
 
 // ============ Inserir lista/tabela como HTML ============
-function InserirListaTabela({ todasTabelas, camposSelecionados, onInsert }: {
+function InserirListaTabela({ todasTabelas, camposSelecionados, rows, onInsert }: {
   todasTabelas: { tabela: string; alias: string; isMain: boolean }[];
   camposSelecionados: Record<string, string[]>;
+  rows: any[];
   onInsert: (html: string) => void;
 }) {
   const opcoes = todasTabelas.filter(t => (camposSelecionados[t.tabela] ?? []).length > 0);
@@ -770,16 +771,38 @@ function InserirListaTabela({ todasTabelas, camposSelecionados, onInsert }: {
 
   const toggleCol = (c: string) => setCols(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
 
+  const fmtVal = (v: any) => {
+    if (v == null) return "";
+    if (typeof v === "object") return JSON.stringify(v);
+    return String(v);
+  };
+  const escapeHtml = (s: string) => s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+
   const gerarHtml = () => {
     if (!sel || cols.length === 0) return;
     const th = cols.map(c => `<th style="border:1px solid #ccc;padding:4px;background:#f4f4f4;text-align:left;">${c}</th>`).join("");
-    // Tabela principal → cada célula usa {{alias.campo}} para bater com os dados resolvidos.
-    // Relações 1:N → dentro do {{#each alias}} basta {{campo}} pois o contexto já é o item.
-    const tdMain = cols.map(c => `<td style="border:1px solid #ccc;padding:4px;">{{${sel.alias}.${c}}}</td>`).join("");
-    const tdEach = cols.map(c => `<td style="border:1px solid #ccc;padding:4px;">{{${c}}}</td>`).join("");
-    const html = sel.isMain
-      ? `<table style="border-collapse:collapse;width:100%;font-size:11pt;"><thead><tr>${th}</tr></thead><tbody><tr>${tdMain}</tr></tbody></table>`
-      : `<table style="border-collapse:collapse;width:100%;font-size:11pt;"><thead><tr>${th}</tr></thead><tbody>{{#each ${sel.alias}}}<tr>${tdEach}</tr>{{/each}}</tbody></table>`;
+
+    // Fonte de dados: se for a tabela principal, usa `rows` direto; se for relação,
+    // agrega todos os itens da relação em cada registro pai.
+    let dataRows: any[] = [];
+    if (sel.isMain) {
+      dataRows = rows;
+    } else {
+      rows.forEach(r => {
+        const v = r?.[sel.alias];
+        if (Array.isArray(v)) dataRows.push(...v);
+        else if (v) dataRows.push(v);
+      });
+    }
+
+    const tbody = dataRows.length
+      ? dataRows.map(r => {
+          const tds = cols.map(c => `<td style="border:1px solid #ccc;padding:4px;">${escapeHtml(fmtVal(r?.[c]))}</td>`).join("");
+          return `<tr>${tds}</tr>`;
+        }).join("")
+      : `<tr>${cols.map(() => `<td style="border:1px solid #ccc;padding:4px;">&nbsp;</td>`).join("")}</tr>`;
+
+    const html = `<table style="border-collapse:collapse;width:100%;font-size:11pt;"><thead><tr>${th}</tr></thead><tbody>${tbody}</tbody></table>`;
     onInsert(html);
   };
 
