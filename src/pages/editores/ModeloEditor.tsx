@@ -96,6 +96,7 @@ export default function ModeloEditor() {
         merged[c.alias] = rows[Math.min(i, rows.length - 1)];
       }
       setPreviewValues(merged);
+      setPreviewRows(rowsByAlias);
     })();
   }, [rowsByAlias, primaryAlias, recordIndex, configsKey, showResolved]);
 
