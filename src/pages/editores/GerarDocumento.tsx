@@ -151,9 +151,26 @@ export default function GerarDocumento() {
             </div>
           )}
 
-          {camposUsados.length > 0 && (
+          {lacunasUsadas.length > 0 && (
             <div className="space-y-2 border-t pt-3">
-              <div className="text-xs font-semibold">Preencher campos manualmente</div>
+              <div className="text-xs font-semibold text-primary">📝 Lacunas a preencher</div>
+              {lacunasUsadas.map(k => (
+                <div key={k}>
+                  <label className="text-[11px] text-muted-foreground">{k}</label>
+                  <Input value={fillables[k] ?? ""} onChange={e => setFillables({ ...fillables, [k]: e.target.value })} className="h-8 text-xs" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 border-t pt-3">
+            <Switch id="lock" checked={soPreenchimento} onCheckedChange={setSoPreenchimento} />
+            <label htmlFor="lock" className="text-xs flex items-center gap-1"><Lock className="h-3 w-3" /> Apenas preencher lacunas (travar textos)</label>
+          </div>
+
+          {!soPreenchimento && camposUsados.length > 0 && (
+            <div className="space-y-2 border-t pt-3">
+              <div className="text-xs font-semibold">Sobrescrever campos {"{{..}}"}</div>
               {camposUsados.filter(k => !k.startsWith("#")).map(k => {
                 const val = overrides[k] ?? (dados[k] ?? "");
                 return (
