@@ -10,7 +10,9 @@ interface Props {
   onInsert: (token: string) => void;
   triggerClassName?: string;
   triggerLabel?: string;
+  asIcon?: boolean;
 }
+
 
 const TIPOS: { value: FillableTipo; label: string; hasOpcoes?: boolean }[] = [
   { value: "texto", label: "Texto curto" },
