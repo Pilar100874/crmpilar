@@ -80,6 +80,10 @@ export default function ModeloEditor() {
 
   // Publica valores no store para os chips renderizarem o valor real
   useEffect(() => {
+    if (!showResolved) {
+      setPreviewValues({});
+      return;
+    }
     (async () => {
       const base = await resolveMergeData("livre", null);
       const merged: Record<string, any> = { ...base };
@@ -92,7 +96,7 @@ export default function ModeloEditor() {
       }
       setPreviewValues(merged);
     })();
-  }, [rowsByAlias, primaryAlias, recordIndex, configsKey]);
+  }, [rowsByAlias, primaryAlias, recordIndex, configsKey, showResolved]);
 
   const primaryRows = primaryAlias ? (rowsByAlias[primaryAlias] || []) : [];
   const primaryLabel = primaryRows[recordIndex]
