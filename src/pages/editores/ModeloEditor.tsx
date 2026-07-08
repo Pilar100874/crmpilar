@@ -157,20 +157,31 @@ export default function ModeloEditor() {
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
-        <div className="flex-1 flex flex-col min-w-0">
-          <EditorToolbar editor={editorRef.current} zoom={zoom} setZoom={setZoom} onFullscreen={() => setFullscreen(f => !f)} />
-          <div className="flex-1 overflow-auto">
-            <TiptapEditor
-              initialContent={html}
-              onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
-              editorRef={(e) => { editorRef.current = e; }}
-              zoom={zoom}
-            />
+      <Tabs defaultValue="editar" className="flex-1 flex flex-col overflow-hidden">
+        <TabsList className="mx-3 mt-2 self-start">
+          <TabsTrigger value="editar"><Pencil className="h-3.5 w-3.5 mr-1" /> Editar</TabsTrigger>
+          <TabsTrigger value="simular"><FlaskConical className="h-3.5 w-3.5 mr-1" /> Simular / Preencher</TabsTrigger>
+        </TabsList>
+        <TabsContent value="editar" className="flex-1 overflow-hidden mt-0">
+          <div className="h-full flex overflow-hidden">
+            <div className="flex-1 flex flex-col min-w-0">
+              <EditorToolbar editor={editorRef.current} zoom={zoom} setZoom={setZoom} onFullscreen={() => setFullscreen(f => !f)} />
+              <div className="flex-1 overflow-auto">
+                <TiptapEditor
+                  initialContent={html}
+                  onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
+                  editorRef={(e) => { editorRef.current = e; }}
+                  zoom={zoom}
+                />
+              </div>
+            </div>
+            <CamposSidebar estabelecimentoId={estabId} onInsert={inserirCampo} currentHtml={html} />
           </div>
-        </div>
-        <CamposSidebar estabelecimentoId={estabId} onInsert={inserirCampo} currentHtml={html} />
-      </div>
+        </TabsContent>
+        <TabsContent value="simular" className="flex-1 overflow-hidden mt-0">
+          <SimuladorInline html={html} titulo={modelo.titulo} />
+        </TabsContent>
+      </Tabs>
 
       <PreviewModal
         open={showPreview}
