@@ -11,6 +11,7 @@ import type { Editor } from "@tiptap/react";
 import { SimuladorInline } from "@/components/editores/SimuladorInline";
 import { renderTemplate } from "@/lib/editores/mergeEngine";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function ModeloEditor() {
   const { id } = useParams<{ id: string }>();
@@ -161,30 +162,42 @@ export default function ModeloEditor() {
         />
 
         <div className="flex-1 overflow-hidden">
-          {modo === "editar" ? (
-            <div className="h-full flex overflow-hidden">
-              <div className="flex-1 overflow-auto">
-                <TiptapEditor
-                  initialContent={html}
-                  onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
-                  editorRef={(e) => { editorRef.current = e; }}
-                  zoom={zoom}
-                  editable={!modelo.bloqueado && !modelo.campos_bloqueados}
-                />
-              </div>
-              <CamposSidebar estabelecimentoId={estabId} onInsert={inserirCampo} currentHtml={html} />
+          <div className="h-full flex overflow-hidden">
+            <div className="flex-1 overflow-auto">
+              <TiptapEditor
+                initialContent={html}
+                onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
+                editorRef={(e) => { editorRef.current = e; }}
+                zoom={zoom}
+                editable={!modelo.bloqueado && !modelo.campos_bloqueados}
+              />
             </div>
-          ) : (
-            <SimuladorInline
-              html={html}
-              titulo={modelo.titulo}
-              soPreenchimento={modo === "form"}
-              mergeConfig={modelo.merge_config ?? null}
-              onMergeConfigChange={(cfg) => { setModelo({ ...modelo, merge_config: cfg }); setDirty(true); }}
-            />
-          )}
+            <CamposSidebar estabelecimentoId={estabId} onInsert={inserirCampo} currentHtml={html} />
+          </div>
         </div>
       </div>
+
+      {/* Simuladores sobrepõem o editor (não navegam para outra tela) */}
+      <Dialog open={modo !== "editar"} onOpenChange={(o) => { if (!o) setModo("editar"); }}>
+        <DialogContent className="max-w-[95vw] w-[95vw] h-[92vh] p-0 flex flex-col gap-0">
+          <DialogHeader className="p-3 border-b">
+            <DialogTitle className="text-sm">
+              {modo === "form" ? "Simular Formulário — preencher campos" : "Simular Merge — navegar registros"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden">
+            {modo !== "editar" && (
+              <SimuladorInline
+                html={html}
+                titulo={modelo.titulo}
+                soPreenchimento={modo === "form"}
+                mergeConfig={modelo.merge_config ?? null}
+                onMergeConfigChange={(cfg) => { setModelo({ ...modelo, merge_config: cfg }); setDirty(true); }}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <PreviewModal
         open={showPreview}
@@ -199,4 +212,5 @@ export default function ModeloEditor() {
     </div>
   );
 }
+
 
