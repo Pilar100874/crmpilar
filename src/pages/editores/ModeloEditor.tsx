@@ -225,11 +225,7 @@ export default function ModeloEditor() {
 
   if (!modelo) return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
 
-  // Normaliza merge_config para array de configs (aceita objeto legado)
   const mc = modelo.merge_config;
-  const configs: any[] = Array.isArray(mc?.configs)
-    ? mc.configs
-    : (mc && (mc.tabela || mc.sql) ? [mc] : []);
   const setConfigs = (list: any[]) => {
     setModelo({ ...modelo, merge_config: { ...(mc && !Array.isArray(mc?.configs) ? {} : mc), configs: list } });
     setDirty(true);
