@@ -69,7 +69,7 @@ const OPS: { v: MergeConfigFiltro["op"]; label: string }[] = [
   { v: "lte", label: "menor ou igual" },
 ];
 
-export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
+export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFields, initialSelected }: Props) {
   const [open, setOpen] = useState(false);
   const [cfg, setCfg] = useState<MergeConfig>(() => ({
     mode: value?.mode || "visual",
@@ -85,6 +85,37 @@ export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
   const [colunas, setColunas] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [busca, setBusca] = useState("");
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set(initialSelected ?? []));
+
+  const toggleSel = (chave: string) => {
+    setSelecionados(prev => {
+      const n = new Set(prev);
+      n.has(chave) ? n.delete(chave) : n.add(chave);
+      return n;
+    });
+  };
+  const toggleTodos = () => {
+    const chaves = colunasFiltradasRef();
+    const allSelected = chaves.every(c => selecionados.has(c));
+    setSelecionados(prev => {
+      const n = new Set(prev);
+      if (allSelected) chaves.forEach(c => n.delete(c));
+      else chaves.forEach(c => n.add(c));
+      return n;
+    });
+  };
+  const colunasFiltradasRef = () => {
+    return colunas
+      .filter(c => !busca || c.toLowerCase().includes(busca.toLowerCase()))
+      .map(col => cfg.mode === "sql" ? col : `${cfg.alias}.${col}`);
+  };
+
+  const aprovarSelecao = () => {
+    onSelectFields?.(Array.from(selecionados));
+    toast.success(`${selecionados.size} campo(s) aprovado(s) e disponível(is) na sidebar`);
+    setOpen(false);
+  };
+
 
   const executar = async () => {
     setLoading(true);
