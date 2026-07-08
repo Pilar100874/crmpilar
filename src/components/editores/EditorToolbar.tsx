@@ -29,6 +29,7 @@ interface Props {
   zoom: number;
   setZoom: (z: number) => void;
   onPreviewMerge?: () => void;
+  previewActive?: boolean;
   estabelecimentoId?: string | null;
   // Ações unificadas (barra única)
   onBack?: () => void;
