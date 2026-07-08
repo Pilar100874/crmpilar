@@ -34,7 +34,7 @@ export function PreviewModal({
 
   useEffect(() => {
     if (!open) return;
-    if (mergeConfig?.tabela) {
+    if (mergeConfig?.tabela || (mergeConfig?.mode === "sql" && mergeConfig?.sql)) {
       setLoadingRows(true);
       runMergeConfig(mergeConfig)
         .then((r) => { setRows(r); setIdx(0); })

@@ -60,6 +60,19 @@ export default function EditorPlayground() {
   const inserirCampo = (chave: string) => {
     const ed = editorRef.current;
     if (!ed) return;
+    // Prefixos especiais vindos do MergeBuilder:
+    //   __LOOP__:alias   -> insere bloco {{#each alias}}...{{/each}}
+    //   __RAW__:texto    -> insere texto bruto (ex: {{sum itens.valor}})
+    if (chave.startsWith("__LOOP__:")) {
+      const alias = chave.slice("__LOOP__:".length);
+      const snippet = `<p>{{#each ${alias}}}• {{this.nome}} — {{this.valor}}<br/>{{/each}}</p>`;
+      ed.chain().focus().insertContent(snippet).run();
+      return;
+    }
+    if (chave.startsWith("__RAW__:")) {
+      ed.chain().focus().insertContent(chave.slice("__RAW__:".length)).run();
+      return;
+    }
     const token = `{{${chave}}}`;
     ed.chain().focus().insertContent({ type: "mergeField", attrs: { token, label: chave } }).insertContent(" ").run();
   };
