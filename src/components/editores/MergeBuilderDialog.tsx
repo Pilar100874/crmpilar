@@ -697,8 +697,10 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
               <InserirListaTabela
                 todasTabelas={todasTabelas}
                 camposSelecionados={cfg.camposSelecionados ?? {}}
+                rows={rows}
                 onInsert={(html) => onInsertField?.(`__RAW__:${html}`)}
               />
+
             </div>
           )}
         </div>
