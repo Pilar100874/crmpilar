@@ -205,7 +205,7 @@ export function ImagePickerDialog({ onInsert }: Props) {
           </Select>
           <DialogFooter className="ml-auto gap-2">
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button onClick={inserir} disabled={tab === "url" ? !urlManual.trim() : !sel}>Inserir</Button>
+            <Button onClick={inserir} disabled={tab === "url" ? !urlManual.trim() : tab === "upload" ? !uploadPreview : !sel}>Inserir</Button>
           </DialogFooter>
         </div>
       </DialogContent>
