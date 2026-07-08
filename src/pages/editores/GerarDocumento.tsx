@@ -39,6 +39,8 @@ export default function GerarDocumento() {
   const [registroId, setRegistroId] = useState<string | null>(null);
   const [dados, setDados] = useState<Record<string, any>>({});
   const [overrides, setOverrides] = useState<Record<string, string>>({});
+  const [fillables, setFillables] = useState<Record<string, string>>({});
+  const [soPreenchimento, setSoPreenchimento] = useState(false);
   const [rendered, setRendered] = useState<string>("");
   const [missing, setMissing] = useState<string[]>([]);
   const pageRef = useRef<HTMLDivElement>(null);
@@ -64,6 +66,7 @@ export default function GerarDocumento() {
 
   const modelo = useMemo(() => modelos.find(m => m.id === modeloId), [modelos, modeloId]);
   const camposUsados = useMemo(() => modelo ? extractFieldKeys(modelo.content_html) : [], [modelo]);
+  const lacunasUsadas = useMemo(() => modelo ? extractFillables(modelo.content_html) : [], [modelo]);
 
   useEffect(() => {
     (async () => {
@@ -71,11 +74,12 @@ export default function GerarDocumento() {
       const d = await resolveMergeData(tipo, registroId);
       const merged = { ...d, ...overrides };
       setDados(merged);
-      const { html, missing } = renderTemplate(modelo.content_html, merged, { highlightMissing: true });
-      setRendered(html);
-      setMissing(missing);
+      const step1 = renderTemplate(modelo.content_html, merged, { highlightMissing: true });
+      const withFill = applyFillables(step1.html, fillables, { highlightEmpty: true });
+      setRendered(withFill);
+      setMissing(step1.missing);
     })();
-  }, [modelo, tipo, registroId, overrides]);
+  }, [modelo, tipo, registroId, overrides, fillables]);
 
   const salvarNoHistorico = async (): Promise<string | null> => {
     if (!estabId || !modelo) { toast.error("Escolha um modelo"); return null; }
