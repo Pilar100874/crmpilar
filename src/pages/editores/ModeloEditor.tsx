@@ -194,7 +194,9 @@ export default function ModeloEditor() {
                   onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
                   editorRef={(e) => { editorRef.current = e; }}
                   zoom={zoom}
+                  editable={!modelo.bloqueado}
                 />
+
               </div>
             </div>
             <CamposSidebar estabelecimentoId={estabId} onInsert={inserirCampo} currentHtml={html} />
