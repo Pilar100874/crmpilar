@@ -94,6 +94,12 @@ const emptyCam = {
   onvif_pass: "",
   onvif_porta: 80,
   ptz_velocidade_padrao: 0.5,
+  modo_manual: false,
+  rtsp_porta: null as number | null,
+  rtsp_path: "",
+  rtsp_user: "",
+  rtsp_pass: "",
+  rtsp_transporte: "tcp",
 };
 
 export default function CamerasCameras() {
