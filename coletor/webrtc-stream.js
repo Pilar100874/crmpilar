@@ -333,7 +333,8 @@ class CameraPump {
       if (!this.stopped && this.rtpReceived === 0 && this.mode === 'copy') {
         console.log('[pump] sem RTP em copy, caindo para libx264', this.cam.nome);
         this.mode = 'encode';
-        try { this.ffmpeg?.kill('SIGKILL'); } catch {}
+        const old = this.ffmpeg;
+        if (old) { old._intentionalKill = true; try { old.kill('SIGKILL'); } catch {} }
         this._spawnVideo();
       }
     }, 4000);
