@@ -217,7 +217,19 @@ const menuItems: MenuItem[] = [
   { id: "Controle de Veículos", title: "Controle de Veículos", url: "/controle-veiculos", icon: LucideIcons.Car },
   { id: "Controle de Visitantes", title: "Controle de Visitantes", url: "/controle-visitantes", icon: LucideIcons.Users },
   { id: "Câmeras", title: "Câmeras", url: "/cameras", icon: LucideIcons.Camera },
-  { id: "Editores", title: "Editores", url: "/editores", icon: LucideIcons.FileText },
+  {
+    id: "Editores",
+    title: "Editores",
+    icon: LucideIcons.FileText,
+    subItems: [
+      { id: "Editores Hub", title: "Início", url: "/editores", icon: LucideIcons.LayoutGrid },
+      { id: "Editores Modelos", title: "Modelos de Documento", url: "/editores/modelos", icon: LucideIcons.FileText },
+      { id: "Editores Gerar", title: "Gerar Documento", url: "/editores/gerar", icon: LucideIcons.FilePlus },
+      { id: "Editores Documentos", title: "Documentos Gerados", url: "/editores/documentos", icon: LucideIcons.Files },
+      { id: "Editores Variante Classico", title: "Editor Clássico (A4)", url: "/editores?v=v1", icon: LucideIcons.FileText },
+      { id: "Editores Variante Moderno", title: "Editor Moderno (Beta)", url: "/editores?v=v2", icon: LucideIcons.Sparkles },
+    ],
+  },
 
 
 
