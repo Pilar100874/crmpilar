@@ -295,6 +295,7 @@ export default function ModeloEditor() {
           onInsertFormField={(tok) => inserirCampo(tok)}
           onToggleSidebar={() => setSidebarOpen(o => !o)}
           sidebarOpen={sidebarOpen}
+          hasFormFields={/data-fillable-field=|data-fillable=/i.test(html)}
         />
 
         {primaryRows.length > 0 && (
