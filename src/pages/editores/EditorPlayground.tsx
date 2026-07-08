@@ -3,26 +3,42 @@ import { useSearchParams } from "react-router-dom";
 import type { Editor } from "@tiptap/react";
 import { TiptapEditor } from "@/components/editores/TiptapEditor";
 import { TiptapEditorV2 } from "@/components/editores/TiptapEditorV2";
-import { EditorToolbar } from "@/components/editores/EditorToolbar";
+import { EditorToolbar, type EditorMode } from "@/components/editores/EditorToolbar";
+import { CamposSidebar } from "@/components/editores/CamposSidebar";
+import { PreviewModal } from "@/components/editores/PreviewModal";
+import { SimuladorInline } from "@/components/editores/SimuladorInline";
+import { renderTemplate } from "@/lib/editores/mergeEngine";
+import { resolveMergeData } from "@/lib/editores/dataResolvers";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { toast } from "@/lib/toast-config";
 
 /**
- * Playground para experimentar as variantes do editor (v1/v2) sem precisar
- * de um modelo salvo. Inclui a barra de ferramentas completa (EditorToolbar).
+ * Playground das variantes v1/v2 — mesma UX do ModeloEditor (toolbar, sidebar de
+ * campos, preview merge, simuladores), porém sem persistência em banco.
  */
 export default function EditorPlayground() {
   const [params, setParams] = useSearchParams();
   const [variante, setVariante] = useState<"v1" | "v2">(
     () => (params.get("v") as "v1" | "v2") || (localStorage.getItem("editor_variant") as any) || "v1",
   );
-  const [html, setHtml] = useState<string>("<h1>Rascunho</h1><p>Escreva aqui para testar o editor…</p>");
+  const [html, setHtml] = useState<string>("<h1>Rascunho</h1><p>Escreva aqui…</p>");
   const [titulo, setTitulo] = useState("Rascunho sem título");
   const [zoom, setZoom] = useState(1);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [modo, setModo] = useState<EditorMode>("editar");
+  const [locked, setLocked] = useState(false);
+  const [estabId, setEstabId] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState("");
+  const [previewMissing, setPreviewMissing] = useState<string[]>([]);
+  const [mergeConfig, setMergeConfig] = useState<any>(null);
   const editorRef = useRef<Editor | null>(null);
   const [, force] = useState(0);
 
-  useEffect(() => {
-    localStorage.setItem("editor_variant", variante);
-  }, [variante]);
+  useEffect(() => { getEstabelecimentoId().then(setEstabId); }, []);
+  useEffect(() => { localStorage.setItem("editor_variant", variante); }, [variante]);
 
   useEffect(() => {
     const v = params.get("v");
@@ -41,49 +57,115 @@ export default function EditorPlayground() {
     force((n) => n + 1);
   };
 
+  const inserirCampo = (chave: string) => {
+    const ed = editorRef.current;
+    if (!ed) return;
+    const token = `{{${chave}}}`;
+    ed.chain().focus().insertContent({ type: "mergeField", attrs: { token, label: chave } }).insertContent(" ").run();
+  };
+
+  const abrirPreview = async () => {
+    const data = await resolveMergeData("livre", null);
+    const { html: rendered, missing } = renderTemplate(html || "<p><em>Documento vazio</em></p>", data, { highlightMissing: true });
+    setPreviewHtml(rendered);
+    setPreviewMissing(missing);
+    setShowPreview(true);
+  };
+
   return (
-    <div className="h-full flex flex-col">
-      <EditorToolbar
-        editor={editorRef.current}
-        zoom={zoom}
-        setZoom={setZoom}
+    <div className={fullscreen ? "fixed inset-0 z-50 bg-background flex flex-col" : "h-full flex flex-col"}>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <EditorToolbar
+          editor={editorRef.current}
+          zoom={zoom}
+          setZoom={setZoom}
+          onFullscreen={() => setFullscreen((f) => !f)}
+          onPreviewMerge={abrirPreview}
+          estabelecimentoId={estabId}
+          onSave={() => toast.info("Playground — salvamento desativado")}
+          onToggleLock={() => setLocked((l) => !l)}
+          locked={locked}
+          mode={modo}
+          onModeChange={setModo}
+          titulo={titulo}
+          onTituloChange={setTitulo}
+        />
+
+        <div className="flex-1 overflow-hidden">
+          <div className="h-full flex overflow-hidden">
+            <div className="flex-1 overflow-auto">
+              {variante === "v1" ? (
+                <TiptapEditor
+                  key="v1"
+                  initialContent={html}
+                  onChange={(h) => setHtml(h)}
+                  editorRef={setEditor}
+                  zoom={zoom}
+                  editable={!locked}
+                />
+              ) : (
+                <TiptapEditorV2
+                  key="v2"
+                  initialContent={html}
+                  onChange={(h) => setHtml(h)}
+                  editorRef={setEditor}
+                  zoom={zoom}
+                  editable={!locked}
+                />
+              )}
+            </div>
+            <CamposSidebar estabelecimentoId={estabId} onInsert={inserirCampo} currentHtml={html} />
+          </div>
+        </div>
+
+        <div className="border-t bg-card px-3 py-2 flex items-center gap-2">
+          <label className="text-xs text-muted-foreground shrink-0">Nome:</label>
+          <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} className="h-8 max-w-md font-semibold" />
+          <div className="ml-auto flex items-center gap-1 rounded border p-0.5 bg-muted/40">
+            <button
+              type="button"
+              onClick={() => trocar("v1")}
+              className={`text-[11px] px-2 py-1 rounded ${variante === "v1" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+            >Clássico A4</button>
+            <button
+              type="button"
+              onClick={() => trocar("v2")}
+              className={`text-[11px] px-2 py-1 rounded ${variante === "v2" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+            >Moderno</button>
+          </div>
+        </div>
+      </div>
+
+      <Dialog open={modo !== "editar"} onOpenChange={(o) => { if (!o) setModo("editar"); }}>
+        <DialogContent className="max-w-[95vw] w-[95vw] h-[92vh] p-0 flex flex-col gap-0">
+          <DialogHeader className="p-3 border-b">
+            <DialogTitle className="text-sm">
+              {modo === "form" ? "Simular Formulário — preencher campos" : "Simular Merge — navegar registros"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden">
+            {modo !== "editar" && (
+              <SimuladorInline
+                html={html}
+                titulo={titulo}
+                soPreenchimento={modo === "form"}
+                mergeConfig={mergeConfig}
+                onMergeConfigChange={setMergeConfig}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <PreviewModal
+        open={showPreview}
+        onOpenChange={setShowPreview}
+        templateHtml={html}
+        html={previewHtml}
         titulo={titulo}
-        onTituloChange={setTitulo}
+        missing={previewMissing}
+        mergeConfig={mergeConfig}
       />
-      <div className="border-b bg-card px-4 py-1.5 flex items-center gap-2">
-        <span className="text-xs text-muted-foreground mr-2">Variante:</span>
-        <button
-          onClick={() => trocar("v1")}
-          className={`text-xs px-3 py-1 rounded ${variante === "v1" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
-        >
-          Clássico (A4)
-        </button>
-        <button
-          onClick={() => trocar("v2")}
-          className={`text-xs px-3 py-1 rounded ${variante === "v2" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
-        >
-          Moderno (Beta)
-        </button>
-      </div>
-      <div className="flex-1 min-h-0 overflow-auto">
-        {variante === "v1" ? (
-          <TiptapEditor
-            key="v1"
-            initialContent={html}
-            onChange={(h) => setHtml(h)}
-            editorRef={setEditor}
-            zoom={zoom}
-          />
-        ) : (
-          <TiptapEditorV2
-            key="v2"
-            initialContent={html}
-            onChange={(h) => setHtml(h)}
-            editorRef={setEditor}
-            zoom={zoom}
-          />
-        )}
-      </div>
     </div>
   );
 }
