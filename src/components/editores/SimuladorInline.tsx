@@ -41,7 +41,9 @@ export function SimuladorInline({
   useEffect(() => {
     if (!mergeConfig?.tabela) return;
     setCfg(mergeConfig);
-    runMergeConfig(mergeConfig).then(r => { setRows(r); setIdx(0); });
+    runMergeConfig(mergeConfig)
+      .then(r => { setRows(Array.isArray(r) ? r : []); setIdx(0); })
+      .catch(err => { console.warn("[Simulador] falha ao carregar merge:", err); setRows([]); });
   }, [mergeConfig]);
 
 
@@ -57,11 +59,17 @@ export function SimuladorInline({
   const tokensFill = useMemo(() => extractFillableTokens(html), [html]);
 
   const renderedHtml = useMemo(() => {
-    const step1 = renderTemplate(html, dados, { highlightMissing: !modoTravado }).html;
-    return applyFillables(step1, fillables, {
-      highlightEmpty: !modoTravado,
-      asInput: modoTravado,
-    });
+    try {
+      const base = html && html.trim() ? html : "<p><em>Documento vazio</em></p>";
+      const step1 = renderTemplate(base, dados, { highlightMissing: !modoTravado }).html;
+      return applyFillables(step1, fillables, {
+        highlightEmpty: !modoTravado,
+        asInput: modoTravado,
+      });
+    } catch (err) {
+      console.error("[Simulador] erro ao renderizar:", err);
+      return `<p style="color:#b91c1c">Erro ao renderizar o documento. Verifique os campos.</p>`;
+    }
   }, [html, dados, fillables, modoTravado]);
 
   const htmlFinalLimpo = () => {
@@ -105,7 +113,8 @@ export function SimuladorInline({
   };
 
   return (
-    <div className="flex-1 grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4 p-4 overflow-auto">
+    <div className="h-full w-full grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4 p-4 overflow-auto">
+
       <Card className="p-3 space-y-3 h-fit sticky top-0">
         <MergeBuilderDialog
           value={cfg}
@@ -119,7 +128,10 @@ export function SimuladorInline({
 
         {rows.length > 0 && (
           <div className="border-t pt-3 space-y-2">
-            <div className="text-xs font-semibold">Simular registro</div>
+            <div className="text-xs font-semibold flex items-center justify-between">
+              <span>Navegar registros</span>
+              <span className="text-[11px] text-primary font-mono">{idx + 1} / {rows.length}</span>
+            </div>
             <RegistroNavigator total={rows.length} index={idx} onChange={setIdx} label={registroLabel(registroAtual)} />
           </div>
         )}

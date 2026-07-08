@@ -22,6 +22,7 @@ interface Campo {
   categoria: string;
   tipo: string;
   personalizado: boolean;
+  descricao?: string | null;
 }
 
 interface Props {
@@ -34,13 +35,13 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml }: Prop
   const [campos, setCampos] = useState<Campo[]>([]);
   const [busca, setBusca] = useState("");
   const [openNovo, setOpenNovo] = useState(false);
-  const [novo, setNovo] = useState({ chave: "", rotulo: "", categoria: "Personalizado", tipo: "texto" });
+  const [novo, setNovo] = useState({ chave: "", rotulo: "", categoria: "Personalizado", tipo: "texto", descricao: "" });
 
   const load = async () => {
     if (!estabelecimentoId) return;
     const { data } = await supabase
       .from("doc_campos")
-      .select("id, chave, rotulo, categoria, tipo, personalizado")
+      .select("id, chave, rotulo, categoria, tipo, personalizado, descricao")
       .eq("estabelecimento_id", estabelecimentoId)
       .order("categoria")
       .order("rotulo");
@@ -75,12 +76,13 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml }: Prop
       rotulo: novo.rotulo.trim(),
       categoria: novo.categoria.trim() || "Personalizado",
       tipo: novo.tipo,
+      descricao: novo.descricao.trim() || null,
       personalizado: true,
     });
     if (error) { toast.error(error.message); return; }
     toast.success("Campo criado");
     setOpenNovo(false);
-    setNovo({ chave: "", rotulo: "", categoria: "Personalizado", tipo: "texto" });
+    setNovo({ chave: "", rotulo: "", categoria: "Personalizado", tipo: "texto", descricao: "" });
     void load();
   };
 
@@ -118,10 +120,13 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml }: Prop
                       "text-xs px-2 py-1 rounded border border-primary/20 bg-primary/5 hover:bg-primary/15 text-left",
                       c.personalizado && "border-emerald-500/40 bg-emerald-500/5"
                     )}
-                    title={`{{${c.chave}}}`}
+                    title={c.descricao ? `${c.descricao}\n\n{{${c.chave}}}` : `{{${c.chave}}}`}
                   >
                     <span className="font-medium">{c.rotulo}</span>
                     <span className="block text-[10px] text-muted-foreground font-mono">{`{{${c.chave}}}`}</span>
+                    {c.descricao && (
+                      <span className="block text-[10px] text-muted-foreground italic mt-0.5 line-clamp-2">{c.descricao}</span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -198,8 +203,17 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml }: Prop
                     <SelectItem value="booleano">Booleano</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
             </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Instrução de preenchimento (opcional)</label>
+              <Input
+                value={novo.descricao}
+                onChange={e => setNovo({ ...novo, descricao: e.target.value })}
+                placeholder="ex: Informar o número da apólice sem hífens"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">Aparece como dica no editor e como placeholder no Simular/Preencher.</p>
+            </div>
+          </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenNovo(false)}>Cancelar</Button>

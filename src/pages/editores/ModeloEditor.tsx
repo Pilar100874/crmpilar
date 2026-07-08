@@ -5,18 +5,13 @@ import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { toast } from "@/lib/toast-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { TiptapEditor } from "@/components/editores/TiptapEditor";
 import { EditorToolbar } from "@/components/editores/EditorToolbar";
 import { CamposSidebar } from "@/components/editores/CamposSidebar";
 import { PreviewModal } from "@/components/editores/PreviewModal";
-import { ArrowLeft, Eye, Save, GitBranch, Send, Pencil, FlaskConical, Lock, Unlock, ShieldCheck, ShieldOff } from "lucide-react";
+import { ArrowLeft, Eye, Save, Pencil, FlaskConical, Lock, Unlock, ShieldCheck, Copy } from "lucide-react";
 import type { Editor } from "@tiptap/react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SimuladorInline } from "@/components/editores/SimuladorInline";
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
-} from "@/components/ui/sheet";
 import { renderTemplate } from "@/lib/editores/mergeEngine";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
 
@@ -35,8 +30,7 @@ export default function ModeloEditor() {
   const editorRef = useRef<Editor | null>(null);
   const [zoom, setZoom] = useState(1);
   const [fullscreen, setFullscreen] = useState(false);
-  const [versoesOpen, setVersoesOpen] = useState(false);
-  const [versoes, setVersoes] = useState<any[]>([]);
+  const [modo, setModo] = useState<"editar" | "simular">("editar");
 
   useEffect(() => {
     getEstabelecimentoId().then(setEstabId);
@@ -99,43 +93,28 @@ export default function ModeloEditor() {
     toast.success(novo ? "Estrutura travada — apenas campos de formulário podem ser preenchidos" : "Estrutura liberada");
   };
 
-  const publicarVersao = async () => {
-    if (!id || !estabId || !modelo) return;
-    await salvar();
-    const novaVersao = (modelo.versao_atual ?? 0) + 1;
-    const { error } = await supabase.from("doc_modelo_versoes").insert({
-      modelo_id: id,
+  const salvarComo = async () => {
+    if (!modelo || !estabId) return;
+    const novoTitulo = window.prompt("Nome do novo modelo:", `${modelo.titulo} (cópia)`);
+    if (!novoTitulo) return;
+    const { data, error } = await supabase.from("doc_modelos").insert({
       estabelecimento_id: estabId,
-      versao: novaVersao,
+      titulo: novoTitulo,
+      descricao: modelo.descricao,
       content_html: html,
       content_json: json,
       header_html: modelo.header_html,
       footer_html: modelo.footer_html,
-    });
+      merge_config: modelo.merge_config ?? {},
+      categoria_id: modelo.categoria_id,
+      bloqueado: false,
+      campos_bloqueados: false,
+    } as any).select("id").single();
     if (error) { toast.error(error.message); return; }
-    await supabase.from("doc_modelos").update({ versao_atual: novaVersao }).eq("id", id);
-    setModelo({ ...modelo, versao_atual: novaVersao });
-    toast.success(`Versão ${novaVersao} publicada`);
+    toast.success("Cópia criada");
+    if (data?.id) nav(`/editores/modelo/${data.id}`);
   };
 
-  const abrirVersoes = async () => {
-    if (!id) return;
-    const { data } = await supabase
-      .from("doc_modelo_versoes")
-      .select("*")
-      .eq("modelo_id", id)
-      .order("versao", { ascending: false });
-    setVersoes(data ?? []);
-    setVersoesOpen(true);
-  };
-
-  const restaurarVersao = (v: any) => {
-    setHtml(v.content_html || "");
-    setJson(v.content_json || {});
-    setDirty(true);
-    setVersoesOpen(false);
-    toast.success(`Versão ${v.versao} carregada — salve para aplicar.`);
-  };
 
   const inserirCampo = (chave: string) => {
     const ed = editorRef.current;
@@ -167,6 +146,29 @@ export default function ModeloEditor() {
         <Button variant="ghost" size="sm" onClick={() => nav("/editores")}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
         </Button>
+
+        {/* Toggle Editar / Simular no topo, estilo ícone */}
+        <div className="flex items-center border rounded-md overflow-hidden">
+          <Button
+            size="sm"
+            variant={modo === "editar" ? "default" : "ghost"}
+            onClick={() => setModo("editar")}
+            className="rounded-none h-8"
+            title="Modo edição"
+          >
+            <Pencil className="h-4 w-4 mr-1" /> Editar
+          </Button>
+          <Button
+            size="sm"
+            variant={modo === "simular" ? "default" : "ghost"}
+            onClick={() => setModo("simular")}
+            className="rounded-none h-8"
+            title="Modo simular / preencher"
+          >
+            <FlaskConical className="h-4 w-4 mr-1" /> Simular
+          </Button>
+        </div>
+
         <Input
           value={modelo.titulo}
           onChange={e => { setModelo({ ...modelo, titulo: e.target.value }); setDirty(true); }}
@@ -174,8 +176,9 @@ export default function ModeloEditor() {
           disabled={modelo.bloqueado}
         />
         <span className="text-xs text-muted-foreground">
-          v{modelo.versao_atual} {dirty && "· não salvo"} {saving && "· salvando…"}
+          {dirty && "· não salvo"} {saving && "· salvando…"}
           {modelo.bloqueado && <span className="ml-2 px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700">🔒 bloqueado</span>}
+          {modelo.campos_bloqueados && <span className="ml-2 px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-700">🛡 estrutura travada</span>}
         </span>
         <div className="ml-auto flex items-center gap-2">
           <Button size="sm" variant={modelo.bloqueado ? "secondary" : "outline"} onClick={alternarBloqueio}
@@ -183,24 +186,17 @@ export default function ModeloEditor() {
             {modelo.bloqueado ? <><Unlock className="h-4 w-4 mr-1" /> Desbloquear</> : <><Lock className="h-4 w-4 mr-1" /> Bloquear</>}
           </Button>
           <Button size="sm" variant={modelo.campos_bloqueados ? "secondary" : "outline"} onClick={alternarCamposBloqueados}
-            title={modelo.campos_bloqueados ? "Liberar estrutura" : "Travar estrutura (só permite preencher campos de formulário)"}>
-            {modelo.campos_bloqueados ? <><ShieldOff className="h-4 w-4 mr-1" /> Liberar estrutura</> : <><ShieldCheck className="h-4 w-4 mr-1" /> Travar estrutura</>}
+            title="Travar estrutura (só permite preencher campos de formulário)">
+            <ShieldCheck className="h-4 w-4 mr-1" /> Travar estrutura
           </Button>
-          <Button size="sm" variant="outline" onClick={abrirVersoes}><GitBranch className="h-4 w-4 mr-1" /> Versões</Button>
           <Button size="sm" variant="outline" onClick={abrirPreview}><Eye className="h-4 w-4 mr-1" /> Visualizar</Button>
-          <Button size="sm" variant="outline" onClick={() => nav(`/editores/gerar?modelo=${id}`)}><Send className="h-4 w-4 mr-1" /> Gerar</Button>
-          <Button size="sm" variant="secondary" onClick={publicarVersao} disabled={modelo.bloqueado}>Publicar versão</Button>
+          <Button size="sm" variant="outline" onClick={salvarComo}><Copy className="h-4 w-4 mr-1" /> Salvar como</Button>
           <Button size="sm" onClick={() => salvar()} disabled={modelo.bloqueado}><Save className="h-4 w-4 mr-1" /> Salvar</Button>
         </div>
       </div>
 
-
-      <Tabs defaultValue="editar" className="flex-1 flex flex-col overflow-hidden">
-        <TabsList className="mx-3 mt-2 self-start">
-          <TabsTrigger value="editar"><Pencil className="h-3.5 w-3.5 mr-1" /> Editar</TabsTrigger>
-          <TabsTrigger value="simular"><FlaskConical className="h-3.5 w-3.5 mr-1" /> Simular / Preencher</TabsTrigger>
-        </TabsList>
-        <TabsContent value="editar" className="flex-1 overflow-hidden mt-0">
+      <div className="flex-1 overflow-hidden">
+        {modo === "editar" ? (
           <div className="h-full flex overflow-hidden">
             <div className="flex-1 flex flex-col min-w-0">
               <EditorToolbar editor={editorRef.current} zoom={zoom} setZoom={setZoom} onFullscreen={() => setFullscreen(f => !f)} onPreviewMerge={abrirPreview} />
@@ -212,21 +208,19 @@ export default function ModeloEditor() {
                   zoom={zoom}
                   editable={!modelo.bloqueado && !modelo.campos_bloqueados}
                 />
-
               </div>
             </div>
             <CamposSidebar estabelecimentoId={estabId} onInsert={inserirCampo} currentHtml={html} />
           </div>
-        </TabsContent>
-        <TabsContent value="simular" className="flex-1 overflow-hidden mt-0">
+        ) : (
           <SimuladorInline
             html={html}
             titulo={modelo.titulo}
             mergeConfig={modelo.merge_config ?? null}
             onMergeConfigChange={(cfg) => { setModelo({ ...modelo, merge_config: cfg }); setDirty(true); }}
           />
-        </TabsContent>
-      </Tabs>
+        )}
+      </div>
 
       <PreviewModal
         open={showPreview}
@@ -238,24 +232,7 @@ export default function ModeloEditor() {
         mergeConfig={modelo.merge_config ?? null}
         onSave={async () => { await salvar(); toast.success("Rascunho salvo"); }}
       />
-
-      <Sheet open={versoesOpen} onOpenChange={setVersoesOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-md">
-          <SheetHeader><SheetTitle>Histórico de versões</SheetTitle></SheetHeader>
-          <div className="mt-4 space-y-2">
-            {versoes.length === 0 && <p className="text-sm text-muted-foreground">Ainda não há versões publicadas.</p>}
-            {versoes.map(v => (
-              <div key={v.id} className="flex items-center justify-between border rounded p-2">
-                <div>
-                  <div className="font-medium text-sm">Versão {v.versao}</div>
-                  <div className="text-xs text-muted-foreground">{new Date(v.created_at).toLocaleString("pt-BR")}</div>
-                </div>
-                <Button size="sm" variant="outline" onClick={() => restaurarVersao(v)}>Restaurar</Button>
-              </div>
-            ))}
-          </div>
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }
+
