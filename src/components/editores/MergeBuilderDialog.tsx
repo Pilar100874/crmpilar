@@ -353,11 +353,20 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
 
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) setStep(0); }}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
-          <Database className="h-3.5 w-3.5 mr-1" /> Vincular dados
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          {triggerAsIcon ? (
+            <Button type="button" size="sm" variant="ghost" className="h-8 w-8 p-0" title={triggerLabel}>
+              <Database className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button size="sm" variant="outline">
+              <Database className="h-3.5 w-3.5 mr-1" /> {triggerLabel}
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
+
       <DialogContent className="max-w-5xl max-h-[92vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Merge Builder — Assistente</DialogTitle>
