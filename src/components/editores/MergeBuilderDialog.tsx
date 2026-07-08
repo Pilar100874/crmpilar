@@ -637,6 +637,13 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                   })}
                 </div>
               </ScrollArea>
+
+              {/* Inserir lista/tabela */}
+              <InserirListaTabela
+                todasTabelas={todasTabelas}
+                camposSelecionados={cfg.camposSelecionados ?? {}}
+                onInsert={(html) => onInsertField?.(`__RAW__:${html}`)}
+              />
             </div>
           )}
         </div>
