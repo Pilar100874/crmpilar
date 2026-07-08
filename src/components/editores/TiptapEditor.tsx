@@ -8,6 +8,17 @@ import Highlight from "@tiptap/extension-highlight";
 import FontFamily from "@tiptap/extension-font-family";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
+
+// Image estendida com atributos width/height para redimensionamento
+const ResizableImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: { default: null, parseHTML: e => (e as HTMLElement).style.width || (e as HTMLElement).getAttribute("width"), renderHTML: a => a.width ? { style: `width:${a.width}` } : {} },
+      height: { default: null, parseHTML: e => (e as HTMLElement).style.height || (e as HTMLElement).getAttribute("height"), renderHTML: a => a.height ? { style: `height:${a.height}` } : {} },
+    };
+  },
+});
 import { Table } from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
