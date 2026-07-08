@@ -58,6 +58,7 @@ export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
     alias: "reg",
     filtros: [],
     limite: 50,
+    calculados: [],
   });
   const [rows, setRows] = useState<any[]>([]);
   const [colunas, setColunas] = useState<string[]>([]);
