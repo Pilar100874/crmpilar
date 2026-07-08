@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { REGISTRO_TIPOS, RegistroTipo, resolveMergeData } from "@/lib/editores/dataResolvers";
-import { extractFieldKeys, renderTemplate } from "@/lib/editores/mergeEngine";
+import { extractFieldKeys, extractFillables, renderTemplate, applyFillables } from "@/lib/editores/mergeEngine";
 import { downloadPdf, downloadHtml, printHtml } from "@/lib/editores/pdfExport";
-import { FileDown, Printer, Download, Save, Search, ArrowLeft } from "lucide-react";
+import { FileDown, Printer, Download, Save, Search, ArrowLeft, Lock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface Modelo {
   id: string; titulo: string; content_html: string; versao_atual: number;
