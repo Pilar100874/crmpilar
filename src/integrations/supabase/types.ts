@@ -4827,6 +4827,7 @@ export type Database = {
       doc_modelos: {
         Row: {
           ativo: boolean
+          bloqueado: boolean
           categoria_id: string | null
           content_html: string | null
           content_json: Json | null
@@ -4846,6 +4847,7 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean
+          bloqueado?: boolean
           categoria_id?: string | null
           content_html?: string | null
           content_json?: Json | null
@@ -4865,6 +4867,7 @@ export type Database = {
         }
         Update: {
           ativo?: boolean
+          bloqueado?: boolean
           categoria_id?: string | null
           content_html?: string | null
           content_json?: Json | null
