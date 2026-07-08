@@ -70,6 +70,7 @@ export default function ModeloEditor() {
       content_json: json,
       header_html: modelo.header_html,
       footer_html: modelo.footer_html,
+      merge_config: modelo.merge_config ?? {},
     }).eq("id", id);
     setSaving(false);
     if (error) { toast.error(error.message); return; }
