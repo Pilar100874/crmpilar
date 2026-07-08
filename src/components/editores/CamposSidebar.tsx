@@ -29,8 +29,6 @@ interface Props {
 export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml }: Props) {
   const [campos, setCampos] = useState<Campo[]>([]);
   const [busca, setBusca] = useState("");
-  const [openNovo, setOpenNovo] = useState(false);
-  const [novo, setNovo] = useState({ chave: "", rotulo: "", categoria: "Personalizado", tipo: "texto", descricao: "" });
 
   const load = async () => {
     if (!estabelecimentoId) return;
@@ -43,6 +41,13 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml }: Prop
     setCampos((data ?? []) as Campo[]);
   };
   useEffect(() => { void load(); }, [estabelecimentoId]);
+
+  // Recarrega quando um campo é criado via NovoCampoDialog em outro lugar
+  useEffect(() => {
+    const h = () => void load();
+    window.addEventListener("doc-campos:changed", h);
+    return () => window.removeEventListener("doc-campos:changed", h);
+  }, [estabelecimentoId]);
 
   const grupos = useMemo(() => {
     const filtered = campos.filter(c =>
@@ -61,26 +66,6 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml }: Prop
   const validKeys = new Set(campos.map(c => c.chave));
   const invalidUsed = usadas.filter(k => !validKeys.has(k.split(".")[0]));
 
-  const criarCampo = async () => {
-    if (!estabelecimentoId) return;
-    const chave = novo.chave.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
-    if (!chave || !novo.rotulo.trim()) { toast.error("Informe chave e rótulo"); return; }
-    const { error } = await supabase.from("doc_campos").insert({
-      estabelecimento_id: estabelecimentoId,
-      chave,
-      rotulo: novo.rotulo.trim(),
-      categoria: novo.categoria.trim() || "Personalizado",
-      tipo: novo.tipo,
-      descricao: novo.descricao.trim() || null,
-      personalizado: true,
-    });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Campo criado");
-    setOpenNovo(false);
-    setNovo({ chave: "", rotulo: "", categoria: "Personalizado", tipo: "texto", descricao: "" });
-    void load();
-  };
-
   return (
     <aside className="w-72 border-l bg-card flex flex-col">
       <div className="p-3 border-b space-y-2">
@@ -91,9 +76,6 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml }: Prop
           <Search className="h-3.5 w-3.5 absolute left-2 top-2.5 text-muted-foreground" />
           <Input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar campo…" className="pl-7 h-8 text-xs" />
         </div>
-        <Button size="sm" variant="outline" className="w-full h-8" onClick={() => setOpenNovo(true)}>
-          <Plus className="h-3.5 w-3.5 mr-1" /> Novo campo personalizado
-        </Button>
         <FormFieldPicker onInsert={(tok) => onInsert(tok)} triggerClassName="w-full h-8" triggerLabel="Campo de formulário" />
         <MergeBuilderDialog
           onChange={() => {}}
