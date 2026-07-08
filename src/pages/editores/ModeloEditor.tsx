@@ -221,12 +221,9 @@ export default function ModeloEditor() {
   };
 
   const abrirPreview = async () => {
+    // Toggle inline: mostra valores resolvidos direto no editor (não abre modal).
     if (dirty) await salvar(true);
-    const data = await resolveMergeData("livre", null);
-    const { html: rendered, missing } = renderTemplate(html || "<p><em>Documento vazio</em></p>", data, { highlightMissing: true });
-    setPreviewHtml(rendered);
-    setPreviewMissing(missing);
-    setShowPreview(true);
+    setShowResolved((v) => !v);
   };
 
   if (!modelo) return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
