@@ -75,12 +75,24 @@ const STEPS = [
   { id: 3, label: "Inserir campos", icon: Check },
 ];
 
+async function fetchApiEndpointRows(endpointId: string, limit = 5): Promise<any[]> {
+  const { data, error } = await supabase.functions.invoke("execute-dynamic-query", {
+    body: { endpoint_id: endpointId, params: {}, limit },
+  });
+  if (error) throw error;
+  const rows = (data as any)?.data ?? (data as any)?.rows ?? (Array.isArray(data) ? data : []);
+  return Array.isArray(rows) ? rows : [];
+}
+
 async function fetchColumns(tabela: string): Promise<string[]> {
   try {
+    if (tabela.startsWith("api:")) {
+      const rows = await fetchApiEndpointRows(tabela.slice(4), 1);
+      return rows.length ? Object.keys(rows[0]) : [];
+    }
     const { data, error } = await supabase.from(tabela as any).select("*").limit(1);
     if (error) throw error;
     if (data && data.length > 0) return Object.keys(data[0] as any);
-    // tabela vazia: tenta via SQL
     const { data: sqlData } = await supabase.functions.invoke("execute-merge-sql", {
       body: { sql: `SELECT * FROM ${tabela} LIMIT 0` },
     });
