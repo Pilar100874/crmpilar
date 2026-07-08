@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { toast } from "@/lib/toast-config";
@@ -14,7 +14,6 @@ import { cn } from "@/lib/utils";
 import { TiptapEditor } from "./TiptapEditor";
 import { EditorToolbar } from "./EditorToolbar";
 import type { Editor } from "@tiptap/react";
-import { useRef, useState as useStateReact } from "react";
 
 interface Props {
   onInsert: (html: string) => void;
