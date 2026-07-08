@@ -837,7 +837,7 @@ function InserirListaTabela({ todasTabelas, camposSelecionados, rows, onInsert }
         </div>
       )}
       <p className="text-[10px] text-muted-foreground">
-        Gera uma tabela HTML no editor com as colunas escolhidas. Para relações 1:N usa <code>{`{{#each ${sel?.alias || "alias"}}}`}</code>, iterando todos os registros filtrados pelo JOIN configurado.
+        Gera uma tabela HTML no editor já preenchida com todos os registros retornados pela consulta.
       </p>
     </div>
   );
