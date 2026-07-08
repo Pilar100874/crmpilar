@@ -361,7 +361,7 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                   <Badge variant="default">Principal</Badge>
                   <Select value={cfg.tabela} onValueChange={v => setCfg({ ...cfg, tabela: v, camposSelecionados: { ...(cfg.camposSelecionados ?? {}), [v]: [] } })}>
                     <SelectTrigger className="h-8 max-w-xs"><SelectValue placeholder="Escolha a tabela principal" /></SelectTrigger>
-                    <SelectContent>{TABELAS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                    <SelectContent>{tabelasDisponiveis.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
                   </Select>
                   {cfg.tabela && (
                     <>
@@ -388,7 +388,7 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                         <Badge variant="secondary">JOIN #{i + 1}</Badge>
                         <Select value={rel.tabela} onValueChange={v => updRelation(i, { tabela: v, alias: rel.alias || v.slice(0, 8) })}>
                           <SelectTrigger className="h-8 max-w-xs"><SelectValue placeholder="Tabela relacionada" /></SelectTrigger>
-                          <SelectContent>{TABELAS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                          <SelectContent>{tabelasDisponiveis.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
                         </Select>
                         <span className="text-xs text-muted-foreground">alias:</span>
                         <Input value={rel.alias} onChange={e => updRelation(i, { alias: e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase() })} className="h-7 w-24 text-xs" />
