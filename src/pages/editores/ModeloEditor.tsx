@@ -46,7 +46,7 @@ export default function ModeloEditor() {
     if (!id) return;
     (async () => {
       const { data } = await supabase.from("doc_modelos").select("*").eq("id", id).single();
-      if (!data) { toast.error("Modelo não encontrado"); nav("/editores/modelos"); return; }
+      if (!data) { toast.error("Modelo não encontrado"); nav("/editores"); return; }
       setModelo(data);
       setHtml((data as any).content_html || "");
       setJson((data as any).content_json || {});
@@ -70,6 +70,7 @@ export default function ModeloEditor() {
       content_json: json,
       header_html: modelo.header_html,
       footer_html: modelo.footer_html,
+      merge_config: modelo.merge_config ?? {},
     }).eq("id", id);
     setSaving(false);
     if (error) { toast.error(error.message); return; }
@@ -139,7 +140,7 @@ export default function ModeloEditor() {
   return (
     <div className={fullscreen ? "fixed inset-0 z-50 bg-background flex flex-col" : "h-full flex flex-col"}>
       <div className="flex items-center gap-2 border-b bg-card p-3">
-        <Button variant="ghost" size="sm" onClick={() => nav("/editores/modelos")}>
+        <Button variant="ghost" size="sm" onClick={() => nav("/editores")}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
         </Button>
         <Input
@@ -179,7 +180,12 @@ export default function ModeloEditor() {
           </div>
         </TabsContent>
         <TabsContent value="simular" className="flex-1 overflow-hidden mt-0">
-          <SimuladorInline html={html} titulo={modelo.titulo} />
+          <SimuladorInline
+            html={html}
+            titulo={modelo.titulo}
+            mergeConfig={modelo.merge_config ?? null}
+            onMergeConfigChange={(cfg) => { setModelo({ ...modelo, merge_config: cfg }); setDirty(true); }}
+          />
         </TabsContent>
       </Tabs>
 
