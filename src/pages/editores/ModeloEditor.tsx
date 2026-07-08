@@ -28,6 +28,7 @@ export default function ModeloEditor() {
   const [previewHtml, setPreviewHtml] = useState("");
   const [previewMissing, setPreviewMissing] = useState<string[]>([]);
   const editorRef = useRef<Editor | null>(null);
+  const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
   const [zoom, setZoom] = useState(1);
   const [fullscreen, setFullscreen] = useState(false);
   const [modo, setModo] = useState<EditorMode>("editar");
@@ -174,7 +175,7 @@ export default function ModeloEditor() {
     <div className={fullscreen ? "fixed inset-0 z-50 bg-background flex flex-col" : "h-full flex flex-col"}>
       <div className="flex-1 flex flex-col overflow-hidden">
         <EditorToolbar
-          editor={editorRef.current}
+          editor={editorInstance}
           zoom={zoom}
           setZoom={setZoom}
           onFullscreen={() => setFullscreen(f => !f)}
@@ -223,7 +224,7 @@ export default function ModeloEditor() {
                 <TiptapEditor
                   initialContent={html}
                   onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
-                  editorRef={(e) => { editorRef.current = e; }}
+                  editorRef={(e) => { editorRef.current = e; setEditorInstance(e); }}
                   zoom={zoom}
                   editable={!modelo.bloqueado && !modelo.campos_bloqueados}
                 />
