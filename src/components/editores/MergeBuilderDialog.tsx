@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Database, Play, Plus, Trash2, Search, Image as ImageIcon, Calculator, Link2, Repeat, Sigma } from "lucide-react";
+import { Database, Play, Plus, Trash2, Search, Image as ImageIcon, Calculator, Link2, Repeat, Sigma, Check } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { evalCalculados, type CampoCalculado } from "@/lib/editores/mergeEngine";
@@ -41,6 +42,8 @@ interface Props {
   value?: MergeConfig | null;
   onChange: (cfg: MergeConfig, sampleRows: any[]) => void;
   onInsertField?: (chave: string) => void;
+  onSelectFields?: (chaves: string[]) => void;
+  initialSelected?: string[];
 }
 
 const TABELAS = [
@@ -66,7 +69,7 @@ const OPS: { v: MergeConfigFiltro["op"]; label: string }[] = [
   { v: "lte", label: "menor ou igual" },
 ];
 
-export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
+export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFields, initialSelected }: Props) {
   const [open, setOpen] = useState(false);
   const [cfg, setCfg] = useState<MergeConfig>(() => ({
     mode: value?.mode || "visual",
@@ -82,6 +85,37 @@ export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
   const [colunas, setColunas] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [busca, setBusca] = useState("");
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set(initialSelected ?? []));
+
+  const toggleSel = (chave: string) => {
+    setSelecionados(prev => {
+      const n = new Set(prev);
+      n.has(chave) ? n.delete(chave) : n.add(chave);
+      return n;
+    });
+  };
+  const toggleTodos = () => {
+    const chaves = colunasFiltradasRef();
+    const allSelected = chaves.every(c => selecionados.has(c));
+    setSelecionados(prev => {
+      const n = new Set(prev);
+      if (allSelected) chaves.forEach(c => n.delete(c));
+      else chaves.forEach(c => n.add(c));
+      return n;
+    });
+  };
+  const colunasFiltradasRef = () => {
+    return colunas
+      .filter(c => !busca || c.toLowerCase().includes(busca.toLowerCase()))
+      .map(col => cfg.mode === "sql" ? col : `${cfg.alias}.${col}`);
+  };
+
+  const aprovarSelecao = () => {
+    onSelectFields?.(Array.from(selecionados));
+    toast.success(`${selecionados.size} campo(s) aprovado(s) e disponível(is) na sidebar`);
+    setOpen(false);
+  };
+
 
   const executar = async () => {
     setLoading(true);
@@ -320,12 +354,20 @@ export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
                   <Input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar variável…" className="pl-6 h-7 text-xs" />
                 </div>
                 <Badge variant="secondary" className="text-[10px]">{rows.length} reg.</Badge>
+                {colunas.length > 0 && (
+                  <Button size="sm" variant="ghost" onClick={toggleTodos} className="h-6 text-[11px]">Selec. todos</Button>
+                )}
               </div>
+              {colunas.length > 0 && (
+                <div className="px-2 py-1 border-b bg-sky-500/5 text-[11px] text-muted-foreground">
+                  {selecionados.size} campo(s) selecionado(s) — marque os que devem aparecer na sidebar para arrastar
+                </div>
+              )}
               <ScrollArea className="flex-1">
                 <div className="p-2 space-y-1">
                   {colunasFiltradas.length === 0 && (
                     <p className="text-xs text-muted-foreground text-center py-6">
-                      {rows.length === 0 ? "Execute a consulta para listar as variáveis." : "Nenhuma coluna."}
+                      {rows.length === 0 ? "Configure as tabelas/relações e clique em Executar consulta." : "Nenhuma coluna."}
                     </p>
                   )}
                   {colunasFiltradas.map(col => {
@@ -333,11 +375,15 @@ export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
                     const previewStr = preview == null ? "" : (typeof preview === "object" ? JSON.stringify(preview).slice(0, 60) : String(preview));
                     const isArray = Array.isArray(preview);
                     const chave = cfg.mode === "sql" ? col : `${cfg.alias}.${col}`;
+                    const isSel = selecionados.has(chave);
                     const looksImage = /url|foto|imagem|image|photo|thumb/i.test(col)
                       || /^https?:\/\/.*\.(png|jpe?g|webp|gif|svg)/i.test(previewStr)
                       || previewStr.startsWith("data:image/");
                     return (
-                      <div key={col} className="flex items-stretch gap-1">
+                      <div key={col} className={`flex items-stretch gap-1 rounded ${isSel ? "ring-1 ring-sky-500/50" : ""}`}>
+                        <label className="flex items-center px-2 cursor-pointer">
+                          <Checkbox checked={isSel} onCheckedChange={() => toggleSel(chave)} />
+                        </label>
                         <button
                           onClick={() => onInsertField?.(chave)}
                           className="flex-1 text-left px-2 py-1.5 rounded border border-primary/20 bg-primary/5 hover:bg-primary/15 text-xs"
@@ -379,11 +425,12 @@ export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
 
         <DialogFooter>
           <div className="flex-1 text-[11px] text-muted-foreground">
-            Sintaxe suportada no documento: <code>{"{{campo}}"}</code>, <code>{"{{#each alias}}...{{/each}}"}</code>,
-            {" "}<code>{"{{sum alias.campo}}"}</code>, <code>{"{{= preco*qtd }}"}</code>,
-            {" "}<code>{"{{moeda valor}}"}</code>, <code>{"{{data campo}}"}</code>.
+            1) Configure tabelas/relações → 2) Executar → 3) Marque os campos → 4) Aprovar seleção.
           </div>
           <Button variant="outline" onClick={() => setOpen(false)}>Fechar</Button>
+          <Button onClick={aprovarSelecao} disabled={selecionados.size === 0}>
+            <Check className="h-4 w-4 mr-1" /> Aprovar {selecionados.size > 0 ? `(${selecionados.size})` : ""}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
