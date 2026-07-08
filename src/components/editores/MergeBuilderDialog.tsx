@@ -726,8 +726,7 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
           <div className="flex-1" />
           <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
           {step < 2 && <Button onClick={() => setStep(step + 1)} disabled={!canNext()}>Próximo <ChevronRight className="h-4 w-4 ml-1" /></Button>}
-          {step === 2 && rows.length === 0 && <Button onClick={executar} disabled={loading}><Play className="h-4 w-4 mr-1" /> Executar</Button>}
-          {step === 2 && rows.length > 0 && <Button onClick={() => setStep(3)}>Próximo <ChevronRight className="h-4 w-4 ml-1" /></Button>}
+          {step === 2 && <Button onClick={() => setStep(3)} disabled={rows.length === 0}>Próximo <ChevronRight className="h-4 w-4 ml-1" /></Button>}
           {step === 3 && <Button onClick={aprovarSelecao} disabled={selecionados.size === 0}><Check className="h-4 w-4 mr-1" /> Aprovar ({selecionados.size})</Button>}
         </DialogFooter>
       </DialogContent>
