@@ -1,15 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Search, Tags } from "lucide-react";
-import { toast } from "@/lib/toast-config";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
-} from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Tags } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { extractFieldKeys } from "@/lib/editores/mergeEngine";
 import { FormFieldPicker } from "./FormFieldPicker";
@@ -34,8 +29,6 @@ interface Props {
 export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml }: Props) {
   const [campos, setCampos] = useState<Campo[]>([]);
   const [busca, setBusca] = useState("");
-  const [openNovo, setOpenNovo] = useState(false);
-  const [novo, setNovo] = useState({ chave: "", rotulo: "", categoria: "Personalizado", tipo: "texto", descricao: "" });
 
   const load = async () => {
     if (!estabelecimentoId) return;
@@ -48,6 +41,13 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml }: Prop
     setCampos((data ?? []) as Campo[]);
   };
   useEffect(() => { void load(); }, [estabelecimentoId]);
+
+  // Recarrega quando um campo é criado via NovoCampoDialog em outro lugar
+  useEffect(() => {
+    const h = () => void load();
+    window.addEventListener("doc-campos:changed", h);
+    return () => window.removeEventListener("doc-campos:changed", h);
+  }, [estabelecimentoId]);
 
   const grupos = useMemo(() => {
     const filtered = campos.filter(c =>
@@ -66,26 +66,6 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml }: Prop
   const validKeys = new Set(campos.map(c => c.chave));
   const invalidUsed = usadas.filter(k => !validKeys.has(k.split(".")[0]));
 
-  const criarCampo = async () => {
-    if (!estabelecimentoId) return;
-    const chave = novo.chave.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
-    if (!chave || !novo.rotulo.trim()) { toast.error("Informe chave e rótulo"); return; }
-    const { error } = await supabase.from("doc_campos").insert({
-      estabelecimento_id: estabelecimentoId,
-      chave,
-      rotulo: novo.rotulo.trim(),
-      categoria: novo.categoria.trim() || "Personalizado",
-      tipo: novo.tipo,
-      descricao: novo.descricao.trim() || null,
-      personalizado: true,
-    });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Campo criado");
-    setOpenNovo(false);
-    setNovo({ chave: "", rotulo: "", categoria: "Personalizado", tipo: "texto", descricao: "" });
-    void load();
-  };
-
   return (
     <aside className="w-72 border-l bg-card flex flex-col">
       <div className="p-3 border-b space-y-2">
@@ -96,9 +76,6 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml }: Prop
           <Search className="h-3.5 w-3.5 absolute left-2 top-2.5 text-muted-foreground" />
           <Input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar campo…" className="pl-7 h-8 text-xs" />
         </div>
-        <Button size="sm" variant="outline" className="w-full h-8" onClick={() => setOpenNovo(true)}>
-          <Plus className="h-3.5 w-3.5 mr-1" /> Novo campo personalizado
-        </Button>
         <FormFieldPicker onInsert={(tok) => onInsert(tok)} triggerClassName="w-full h-8" triggerLabel="Campo de formulário" />
         <MergeBuilderDialog
           onChange={() => {}}
@@ -171,56 +148,6 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml }: Prop
         </div>
       </ScrollArea>
 
-      <Dialog open={openNovo} onOpenChange={setOpenNovo}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Novo campo personalizado</DialogTitle>
-            <DialogDescription>Ficará disponível para todos os modelos deste estabelecimento.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs text-muted-foreground">Chave (sem espaços)</label>
-              <Input value={novo.chave} onChange={e => setNovo({ ...novo, chave: e.target.value })} placeholder="ex: numero_apolice" />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">Rótulo</label>
-              <Input value={novo.rotulo} onChange={e => setNovo({ ...novo, rotulo: e.target.value })} placeholder="ex: Número da apólice" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-muted-foreground">Categoria</label>
-                <Input value={novo.categoria} onChange={e => setNovo({ ...novo, categoria: e.target.value })} />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground">Tipo</label>
-                <Select value={novo.tipo} onValueChange={v => setNovo({ ...novo, tipo: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="texto">Texto</SelectItem>
-                    <SelectItem value="data">Data</SelectItem>
-                    <SelectItem value="moeda">Moeda</SelectItem>
-                    <SelectItem value="numero">Número</SelectItem>
-                    <SelectItem value="booleano">Booleano</SelectItem>
-                  </SelectContent>
-                </Select>
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">Instrução de preenchimento (opcional)</label>
-              <Input
-                value={novo.descricao}
-                onChange={e => setNovo({ ...novo, descricao: e.target.value })}
-                placeholder="ex: Informar o número da apólice sem hífens"
-              />
-              <p className="text-[10px] text-muted-foreground mt-1">Aparece como dica no editor e como placeholder no Simular/Preencher.</p>
-            </div>
-          </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenNovo(false)}>Cancelar</Button>
-            <Button onClick={criarCampo}>Criar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </aside>
   );
 }
