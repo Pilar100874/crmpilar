@@ -7,19 +7,8 @@ import Color from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
 import FontFamily from "@tiptap/extension-font-family";
 import Link from "@tiptap/extension-link";
-import Image from "@tiptap/extension-image";
+import { ResizableImage } from "./ResizableImageNode";
 import { MergeField } from "./MergeFieldNode";
-
-// Image estendida com atributos width/height para redimensionamento
-const ResizableImage = Image.extend({
-  addAttributes() {
-    return {
-      ...this.parent?.(),
-      width: { default: null, parseHTML: e => (e as HTMLElement).style.width || (e as HTMLElement).getAttribute("width"), renderHTML: a => a.width ? { style: `width:${a.width}` } : {} },
-      height: { default: null, parseHTML: e => (e as HTMLElement).style.height || (e as HTMLElement).getAttribute("height"), renderHTML: a => a.height ? { style: `height:${a.height}` } : {} },
-    };
-  },
-});
 import { Table } from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
@@ -133,6 +122,20 @@ export function TiptapEditor({
         .doc-editor-content .ProseMirror th { background: #f3f4f6; font-weight: 600; }
         .doc-editor-content .ProseMirror img { max-width: 100%; height: auto; }
         .doc-editor-content .ProseMirror a { color: #2563eb; text-decoration: underline; }
+        .doc-editor-content .ProseMirror .doc-img-wrap { position: relative; display: inline-block; line-height: 0; }
+        .doc-editor-content .ProseMirror .doc-img-wrap.doc-img-selected,
+        .doc-editor-content .ProseMirror .doc-img-wrap:hover { outline: 2px solid #2563eb; }
+        .doc-editor-content .ProseMirror .doc-img-handle {
+          position: absolute; width: 12px; height: 12px; background: #2563eb;
+          border: 2px solid #fff; border-radius: 2px; z-index: 5; opacity: 0;
+          transition: opacity 0.1s;
+        }
+        .doc-editor-content .ProseMirror .doc-img-wrap:hover .doc-img-handle,
+        .doc-editor-content .ProseMirror .doc-img-wrap.doc-img-selected .doc-img-handle { opacity: 1; }
+        .doc-editor-content .ProseMirror .doc-img-handle-nw { top: -6px; left: -6px; cursor: nwse-resize; }
+        .doc-editor-content .ProseMirror .doc-img-handle-ne { top: -6px; right: -6px; cursor: nesw-resize; }
+        .doc-editor-content .ProseMirror .doc-img-handle-sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
+        .doc-editor-content .ProseMirror .doc-img-handle-se { bottom: -6px; right: -6px; cursor: nwse-resize; }
         .doc-editor-content .ProseMirror .doc-field-chip {
           display: inline-block;
           background: #dbeafe;

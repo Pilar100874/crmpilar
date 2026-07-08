@@ -10,7 +10,7 @@ import { TiptapEditor } from "@/components/editores/TiptapEditor";
 import { EditorToolbar } from "@/components/editores/EditorToolbar";
 import { CamposSidebar } from "@/components/editores/CamposSidebar";
 import { PreviewModal } from "@/components/editores/PreviewModal";
-import { ArrowLeft, Eye, Save, GitBranch, Send, Pencil, FlaskConical, Lock, Unlock } from "lucide-react";
+import { ArrowLeft, Eye, Save, GitBranch, Send, Pencil, FlaskConical, Lock, Unlock, ShieldCheck, ShieldOff } from "lucide-react";
 import type { Editor } from "@tiptap/react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SimuladorInline } from "@/components/editores/SimuladorInline";
@@ -73,6 +73,7 @@ export default function ModeloEditor() {
       footer_html: modelo.footer_html,
       merge_config: modelo.merge_config ?? {},
       bloqueado: modelo.bloqueado ?? false,
+      campos_bloqueados: modelo.campos_bloqueados ?? false,
     } as any).eq("id", id);
     setSaving(false);
     if (error) { toast.error(error.message); return; }
@@ -87,6 +88,15 @@ export default function ModeloEditor() {
     if (error) { toast.error(error.message); return; }
     setModelo({ ...modelo, bloqueado: novo });
     toast.success(novo ? "Modelo bloqueado para edição" : "Modelo desbloqueado");
+  };
+
+  const alternarCamposBloqueados = async () => {
+    if (!id || !modelo) return;
+    const novo = !modelo.campos_bloqueados;
+    const { error } = await supabase.from("doc_modelos").update({ campos_bloqueados: novo } as any).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    setModelo({ ...modelo, campos_bloqueados: novo });
+    toast.success(novo ? "Estrutura travada — apenas campos de formulário podem ser preenchidos" : "Estrutura liberada");
   };
 
   const publicarVersao = async () => {
@@ -172,6 +182,10 @@ export default function ModeloEditor() {
             title={modelo.bloqueado ? "Desbloquear edição" : "Bloquear edição (somente-leitura)"}>
             {modelo.bloqueado ? <><Unlock className="h-4 w-4 mr-1" /> Desbloquear</> : <><Lock className="h-4 w-4 mr-1" /> Bloquear</>}
           </Button>
+          <Button size="sm" variant={modelo.campos_bloqueados ? "secondary" : "outline"} onClick={alternarCamposBloqueados}
+            title={modelo.campos_bloqueados ? "Liberar estrutura" : "Travar estrutura (só permite preencher campos de formulário)"}>
+            {modelo.campos_bloqueados ? <><ShieldOff className="h-4 w-4 mr-1" /> Liberar estrutura</> : <><ShieldCheck className="h-4 w-4 mr-1" /> Travar estrutura</>}
+          </Button>
           <Button size="sm" variant="outline" onClick={abrirVersoes}><GitBranch className="h-4 w-4 mr-1" /> Versões</Button>
           <Button size="sm" variant="outline" onClick={abrirPreview}><Eye className="h-4 w-4 mr-1" /> Visualizar</Button>
           <Button size="sm" variant="outline" onClick={() => nav(`/editores/gerar?modelo=${id}`)}><Send className="h-4 w-4 mr-1" /> Gerar</Button>
@@ -189,14 +203,14 @@ export default function ModeloEditor() {
         <TabsContent value="editar" className="flex-1 overflow-hidden mt-0">
           <div className="h-full flex overflow-hidden">
             <div className="flex-1 flex flex-col min-w-0">
-              <EditorToolbar editor={editorRef.current} zoom={zoom} setZoom={setZoom} onFullscreen={() => setFullscreen(f => !f)} />
+              <EditorToolbar editor={editorRef.current} zoom={zoom} setZoom={setZoom} onFullscreen={() => setFullscreen(f => !f)} onPreviewMerge={abrirPreview} />
               <div className="flex-1 overflow-auto">
                 <TiptapEditor
                   initialContent={html}
                   onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
                   editorRef={(e) => { editorRef.current = e; }}
                   zoom={zoom}
-                  editable={!modelo.bloqueado}
+                  editable={!modelo.bloqueado && !modelo.campos_bloqueados}
                 />
 
               </div>
