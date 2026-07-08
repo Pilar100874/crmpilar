@@ -128,8 +128,9 @@ export default function ModeloEditor() {
   };
 
   const abrirPreview = async () => {
+    if (dirty) await salvar(true);
     const data = await resolveMergeData("livre", null);
-    const { html: rendered, missing } = renderTemplate(html, data, { highlightMissing: true });
+    const { html: rendered, missing } = renderTemplate(html || "<p><em>Documento vazio</em></p>", data, { highlightMissing: true });
     setPreviewHtml(rendered);
     setPreviewMissing(missing);
     setShowPreview(true);
@@ -197,6 +198,7 @@ export default function ModeloEditor() {
         titulo={modelo.titulo}
         missing={previewMissing}
         mergeConfig={modelo.merge_config ?? null}
+        onSave={async () => { await salvar(); toast.success("Rascunho salvo"); }}
       />
 
       <Sheet open={versoesOpen} onOpenChange={setVersoesOpen}>

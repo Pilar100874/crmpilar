@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { ImagePickerDialog } from "./ImagePickerDialog";
+import { AssinaturaPickerDialog } from "./AssinaturaPickerDialog";
 
 interface Props {
   editor: Editor | null;
@@ -101,6 +102,9 @@ export function EditorToolbar({ editor, onFullscreen, zoom, setZoom }: Props) {
       }} title="Link"><LinkIcon className="h-4 w-4" /></TB>
       <ImagePickerDialog onInsert={(url, w) => {
         editor.chain().focus().setImage({ src: url } as any).updateAttributes("image", { width: w } as any).run();
+      }} />
+      <AssinaturaPickerDialog onInsert={(html) => {
+        editor.chain().focus().insertContent(html).run();
       }} />
       {editor.isActive("image") && (
         <Select value="" onValueChange={(v) => editor.chain().focus().updateAttributes("image", { width: v } as any).run()}>

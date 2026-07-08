@@ -4592,6 +4592,36 @@ export type Database = {
           },
         ]
       }
+      doc_assinaturas: {
+        Row: {
+          content_html: string
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          padrao: boolean
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          content_html?: string
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          padrao?: boolean
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          content_html?: string
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          padrao?: boolean
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       doc_campos: {
         Row: {
           categoria: string | null
