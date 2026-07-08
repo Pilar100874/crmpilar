@@ -46,7 +46,7 @@ export default function ModeloEditor() {
     if (!id) return;
     (async () => {
       const { data } = await supabase.from("doc_modelos").select("*").eq("id", id).single();
-      if (!data) { toast.error("Modelo não encontrado"); nav("/editores/modelos"); return; }
+      if (!data) { toast.error("Modelo não encontrado"); nav("/editores"); return; }
       setModelo(data);
       setHtml((data as any).content_html || "");
       setJson((data as any).content_json || {});
@@ -140,7 +140,7 @@ export default function ModeloEditor() {
   return (
     <div className={fullscreen ? "fixed inset-0 z-50 bg-background flex flex-col" : "h-full flex flex-col"}>
       <div className="flex items-center gap-2 border-b bg-card p-3">
-        <Button variant="ghost" size="sm" onClick={() => nav("/editores/modelos")}>
+        <Button variant="ghost" size="sm" onClick={() => nav("/editores")}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
         </Button>
         <Input
