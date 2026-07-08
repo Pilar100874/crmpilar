@@ -189,6 +189,18 @@ export function SimuladorInline({
           </div>
         )}
 
+        {registroAtual && (
+          <details className="border-t pt-3">
+            <summary className="text-xs font-semibold cursor-pointer text-muted-foreground hover:text-foreground">
+              Ver dados brutos do registro (JSON)
+            </summary>
+            <pre className="mt-2 text-[10px] bg-muted/40 p-2 rounded max-h-64 overflow-auto font-mono">
+              {JSON.stringify(dados, null, 2)}
+            </pre>
+          </details>
+        )}
+
+
         <div className="border-t pt-3 space-y-2">
           <Button size="sm" className="w-full" onClick={gerarPdf}>
             <FileDown className="h-4 w-4 mr-1" /> Gerar PDF
