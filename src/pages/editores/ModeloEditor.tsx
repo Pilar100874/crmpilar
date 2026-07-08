@@ -13,7 +13,7 @@ import { SimuladorInline } from "@/components/editores/SimuladorInline";
 import { renderTemplate } from "@/lib/editores/mergeEngine";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
 import { runMergeConfig } from "@/lib/editores/runMergeConfig";
-import { setPreviewValues } from "@/lib/editores/mergePreviewStore";
+import { setPreviewValues, setPreviewRows } from "@/lib/editores/mergePreviewStore";
 import { RegistroNavigator } from "@/components/editores/RegistroNavigator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
