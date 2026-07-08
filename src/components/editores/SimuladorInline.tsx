@@ -42,6 +42,8 @@ export function SimuladorInline({
   const [modoTravado, setModoTravado] = useState(soPreenchimento);
   const pageRef = useRef<HTMLDivElement>(null);
   const [camposCalc, setCamposCalc] = useState<CampoCalc[]>([]);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkDraft, setBulkDraft] = useState<Record<string, string>>({});
 
   useEffect(() => { setModoTravado(soPreenchimento); }, [soPreenchimento]);
 
