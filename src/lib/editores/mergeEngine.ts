@@ -1,12 +1,26 @@
-// Engine leve tipo Handlebars: {{campo}}, {{#if chave}}...{{/if}}, {{#each lista}}...{{/each}}
-// Suporta acesso aninhado {{cliente.nome}}. Executa apenas no client.
+// Engine leve tipo Handlebars com extensões para merge avançado:
+//   {{campo}} {{obj.campo}}                    -> valor com formatação básica
+//   {{#each lista}} ... {{this.x}} ... {{/each}} -> loop com @index/@first/@last
+//   {{#if chave}} ... {{/if}}                  -> condicional
+//   {{#unless chave}} ... {{/unless}}          -> condicional negativo
+//   {{= expressão }}                           -> fórmula (whitelist Math/Number)
+//   {{sum lista.campo}} {{avg}} {{count}} {{min}} {{max}}
+//   {{moeda valor}} {{data campo}} {{numero campo 2}}
+//   {{img:campo}}                              -> <img>
+//
+// Executa apenas no client.
 
 export type MergeData = Record<string, any>;
+
+// ---------- utils ----------
 
 function getValue(data: MergeData, path: string): any {
   return path.split(".").reduce<any>((acc, key) => {
     if (acc == null) return undefined;
-    return acc[key.trim()];
+    const k = key.trim();
+    // suporte a índices numéricos
+    if (Array.isArray(acc) && /^\d+$/.test(k)) return acc[Number(k)];
+    return acc[k];
   }, data);
 }
 
@@ -30,19 +44,82 @@ function escapeAttr(s: string): string {
   return escapeHtml(s).replace(/'/g, "&#39;");
 }
 
+function toNumber(v: any): number {
+  if (v == null || v === "") return 0;
+  if (typeof v === "number") return v;
+  const s = String(v).replace(/[^\d,.-]/g, "").replace(",", ".");
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function fmtMoeda(v: any): string {
+  return toNumber(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function fmtData(v: any): string {
+  if (!v) return "";
+  const d = v instanceof Date ? v : new Date(String(v));
+  return isNaN(d.getTime()) ? String(v) : d.toLocaleDateString("pt-BR");
+}
+
+function fmtNumero(v: any, casas = 2): string {
+  return toNumber(v).toLocaleString("pt-BR", {
+    minimumFractionDigits: casas, maximumFractionDigits: casas,
+  });
+}
+
 function formatValue(v: any): string {
   if (v == null) return "";
   if (v instanceof Date) return v.toLocaleDateString("pt-BR");
-  if (typeof v === "number") return String(v);
   return String(v);
 }
 
-/**
- * Desembrulha os "chips" de merge do Tiptap (`<span data-merge-field="{{x}}">{{x}}</span>`)
- * para o token puro `{{x}}`. Sem isso, o regex de `{{...}}` casaria o token dentro do
- * atributo `data-merge-field="..."` e injetaria HTML dentro de um atributo, quebrando
- * a página e exibindo marcação crua no preview.
- */
+/** Retorna array da chave `path` (aceita "itens" ou "itens.valor" retornando os valores). */
+function resolveArray(data: MergeData, path: string): any[] {
+  const parts = path.split(".");
+  let cur: any = data;
+  for (let i = 0; i < parts.length; i++) {
+    if (cur == null) return [];
+    if (Array.isArray(cur)) {
+      const rest = parts.slice(i).join(".");
+      return cur.map((el) => (rest ? getValue(el, rest) : el));
+    }
+    cur = cur[parts[i].trim()];
+  }
+  if (Array.isArray(cur)) return cur;
+  return [];
+}
+
+// ---------- avaliador de fórmula seguro ----------
+// Permite: números, + - * / % ( ) , identificadores (variáveis conhecidas + Math.*), comparações.
+const FORMULA_TOKEN_RE = /^[\s0-9+\-*/%().,<>=!&|?:_a-zA-Z]*$/;
+
+function evalFormula(expr: string, ctx: Record<string, any>): any {
+  const raw = expr.trim();
+  if (!raw) return "";
+  if (!FORMULA_TOKEN_RE.test(raw)) return "";
+  // Coleta identificadores raiz e mapeia para valores numéricos/strings do ctx
+  const idents = Array.from(new Set(raw.match(/[a-zA-Z_][a-zA-Z0-9_]*/g) ?? []))
+    .filter((k) => k !== "Math" && k !== "Number" && k !== "true" && k !== "false" && k !== "null");
+  const args = idents.map((k) => {
+    const v = getValue(ctx, k);
+    if (typeof v === "number") return v;
+    if (typeof v === "string") {
+      const n = toNumber(v);
+      return v.trim() !== "" && Number.isFinite(n) ? n : v;
+    }
+    return v ?? 0;
+  });
+  try {
+    // eslint-disable-next-line no-new-func
+    const fn = new Function(...idents, "Math", "Number", `"use strict"; return (${raw});`);
+    return fn(...args, Math, Number);
+  } catch {
+    return "";
+  }
+}
+
+// ---------- unwrap Tiptap chips ----------
 function unwrapMergeChips(html: string): string {
   return html.replace(
     /<span[^>]*\bdata-merge-field\s*=\s*"([^"]*)"[^>]*>[\s\S]*?<\/span>/gi,
@@ -50,6 +127,16 @@ function unwrapMergeChips(html: string): string {
   );
 }
 
+// ---------- helpers de agregação ----------
+const AGG_FNS: Record<string, (list: any[]) => number> = {
+  sum: (l) => l.reduce((a, b) => a + toNumber(b), 0),
+  avg: (l) => l.length ? l.reduce((a, b) => a + toNumber(b), 0) / l.length : 0,
+  count: (l) => l.length,
+  min: (l) => l.length ? Math.min(...l.map(toNumber)) : 0,
+  max: (l) => l.length ? Math.max(...l.map(toNumber)) : 0,
+};
+
+// ---------- render principal ----------
 export function renderTemplate(
   html: string,
   data: MergeData,
@@ -59,25 +146,33 @@ export function renderTemplate(
   const used: string[] = [];
   html = unwrapMergeChips(html);
 
-
-
+  // {{#each lista}}...{{/each}} — expandido primeiro
   const eachRe = /\{\{#each\s+([^\}]+)\}\}([\s\S]*?)\{\{\/each\}\}/g;
   html = html.replace(eachRe, (_m, key: string, body: string) => {
-    const list = getValue(data, key.trim());
-    if (!Array.isArray(list)) return "";
-    return list
-      .map((item) => renderTemplate(body, { ...data, ...item, this: item }, opts).html)
-      .join("");
+    const list = resolveArray(data, key.trim());
+    if (!Array.isArray(list) || list.length === 0) return "";
+    return list.map((item, i) => {
+      const ctx = {
+        ...data,
+        ...(typeof item === "object" && item !== null ? item : {}),
+        this: item,
+        "@index": i,
+        "@first": i === 0,
+        "@last": i === list.length - 1,
+        "@number": i + 1,
+      };
+      return renderTemplate(body, ctx, opts).html;
+    }).join("");
   });
 
-  const ifRe = /\{\{#if\s+([^\}]+)\}\}([\s\S]*?)\{\{\/if\}\}/g;
-  html = html.replace(ifRe, (_m, key: string, body: string) => {
-    return isTruthy(getValue(data, key.trim())) ? body : "";
-  });
+  // {{#if x}} / {{#unless x}}
+  html = html.replace(/\{\{#if\s+([^\}]+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
+    (_m, key: string, body: string) => isTruthy(getValue(data, key.trim())) ? body : "");
+  html = html.replace(/\{\{#unless\s+([^\}]+)\}\}([\s\S]*?)\{\{\/unless\}\}/g,
+    (_m, key: string, body: string) => isTruthy(getValue(data, key.trim())) ? "" : body);
 
-  // {{img:key}} — insere <img src="{value}">
-  const imgRe = /\{\{\s*img:([a-zA-Z0-9_\.]+)\s*\}\}/g;
-  html = html.replace(imgRe, (_m, key: string) => {
+  // {{img:key}}
+  html = html.replace(/\{\{\s*img:([a-zA-Z0-9_\.]+)\s*\}\}/g, (_m, key: string) => {
     used.push(key);
     const value = getValue(data, key);
     if (value == null || value === "") {
@@ -89,7 +184,36 @@ export function renderTemplate(
     return `<img src="${escapeAttr(String(value))}" style="max-width:100%;height:auto;" />`;
   });
 
-  const varRe = /\{\{\s*([a-zA-Z0-9_\.]+)\s*\}\}/g;
+  // {{= expressão }} — fórmula
+  html = html.replace(/\{\{\s*=\s*([^}]+?)\s*\}\}/g, (_m, expr: string) => {
+    const v = evalFormula(expr, data);
+    if (v === "" || v == null || (typeof v === "number" && !Number.isFinite(v))) {
+      return opts.highlightMissing
+        ? `<span style="background:#fee2e2;color:#991b1b;padding:0 4px;border-radius:2px;">= ${escapeHtml(expr)}</span>`
+        : "";
+    }
+    return escapeHtml(typeof v === "number" ? fmtNumero(v, 2) : String(v));
+  });
+
+  // helpers com argumento: {{sum path}} {{moeda campo}} {{data campo}} {{numero campo 2}}
+  const helperRe = /\{\{\s*(sum|avg|count|min|max|moeda|data|numero)\s+([a-zA-Z0-9_\.]+)(?:\s+(\d+))?\s*\}\}/g;
+  html = html.replace(helperRe, (_m, fn: string, path: string, arg?: string) => {
+    if (fn in AGG_FNS) {
+      const list = resolveArray(data, path);
+      const v = AGG_FNS[fn](list);
+      return escapeHtml(fn === "count" ? String(v) : fmtNumero(v, 2));
+    }
+    used.push(path);
+    const v = getValue(data, path);
+    if (v == null || v === "") { missing.push(path); return ""; }
+    if (fn === "moeda") return escapeHtml(fmtMoeda(v));
+    if (fn === "data") return escapeHtml(fmtData(v));
+    if (fn === "numero") return escapeHtml(fmtNumero(v, arg ? parseInt(arg) : 2));
+    return escapeHtml(String(v));
+  });
+
+  // {{campo}} simples
+  const varRe = /\{\{\s*([a-zA-Z0-9_\.@]+)\s*\}\}/g;
   const out = html.replace(varRe, (_m, key: string) => {
     used.push(key);
     const value = getValue(data, key);
@@ -113,59 +237,37 @@ export function renderTemplate(
 
 export function extractFieldKeys(html: string): string[] {
   const keys = new Set<string>();
-  const varRe = /\{\{\s*(?:#(?:if|each)\s+|img:)?([a-zA-Z0-9_\.]+)\s*\}\}/g;
+  const varRe = /\{\{\s*(?:#(?:if|each|unless)\s+|img:|=\s*|(?:sum|avg|count|min|max|moeda|data|numero)\s+)?([a-zA-Z0-9_\.]+)\s*\}\}/g;
   let m: RegExpExecArray | null;
   while ((m = varRe.exec(html)) !== null) {
-    if (m[1] !== undefined) keys.add(m[1]);
+    if (m[1] && !m[1].startsWith("@")) keys.add(m[1]);
   }
   return Array.from(keys);
 }
 
-// ============ Campos calculados ============
+// ============ Campos calculados por registro (usados pelo MergeBuilder) ============
 export interface CampoCalculado {
-  nome: string;       // ex: "total"
-  expressao: string;  // ex: "preco * quantidade * (1 - desconto/100)"
+  nome: string;
+  expressao: string;
 }
 
-/**
- * Avalia expressões usando as chaves do row como variáveis.
- * Ex: expressao "preco * quantidade" com row {preco:10, quantidade:3} => 30.
- * Segurança: `Function` sem acesso a globals sensíveis (fornece Math/Number).
- */
 export function evalCalculados(row: Record<string, any>, calc: CampoCalculado[]): Record<string, any> {
   const out: Record<string, any> = { ...row };
   for (const c of calc) {
     if (!c.nome || !c.expressao) continue;
-    try {
-      const keys = Object.keys(out);
-      const values = keys.map(k => out[k]);
-      // eslint-disable-next-line no-new-func
-      const fn = new Function(...keys, "Math", "Number", `"use strict"; return (${c.expressao});`);
-      out[c.nome] = fn(...values, Math, Number);
-    } catch {
-      out[c.nome] = null;
-    }
+    out[c.nome] = evalFormula(c.expressao, out);
   }
   return out;
 }
 
 // ============ Campos PREENCHÍVEIS [[tipo:label|opts]] ============
-// Sintaxe:
-//   [[Nome]]                    -> texto (default)
-//   [[texto:Nome]]              -> texto
-//   [[textarea:Observações]]    -> textarea
-//   [[data:Vencimento]]         -> input type=date
-//   [[numero:Valor]]            -> input type=number
-//   [[check:Aceito]]            -> checkbox
-//   [[lista:UF|SP,RJ,MG]]       -> select
-//   [[radio:Sexo|M,F]]          -> radios
 
 const FILLABLE_RE = /\[\[([^\[\]\n]{1,200})\]\]/g;
 
 export type FillableTipo = "texto" | "textarea" | "data" | "numero" | "check" | "lista" | "radio";
 
 export interface FillableToken {
-  raw: string;      // conteúdo entre [[ ]]
+  raw: string;
   tipo: FillableTipo;
   label: string;
   opcoes?: string[];
@@ -198,7 +300,6 @@ export function serializeFillable(t: Omit<FillableToken, "raw">): string {
   return `[[${t.tipo}:${t.label}${opts}]]`;
 }
 
-/** Compat: retorna labels únicos (usado por telas antigas). */
 export function extractFillables(html: string): string[] {
   return Array.from(new Set(extractFillableTokens(html).map(t => t.label)));
 }
@@ -217,10 +318,6 @@ export function extractFillableTokens(html: string): FillableToken[] {
   return out;
 }
 
-/**
- * Substitui [[...]] pelos valores informados.
- * Chave dos values = raw (conteúdo original entre [[ ]]).
- */
 export function applyFillables(
   html: string,
   values: Record<string, string>,
@@ -271,7 +368,6 @@ export function applyFillables(
   });
 }
 
-/** Realça visualmente os [[...]] no editor (chip azul). */
 export function highlightFillables(html: string): string {
   return html.replace(new RegExp(FILLABLE_RE.source, "g"), (_m, raw: string) => {
     const t = parseFillable(raw);

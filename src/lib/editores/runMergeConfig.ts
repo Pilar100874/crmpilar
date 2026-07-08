@@ -1,23 +1,73 @@
-// Executa a MergeConfig (mesma lógica do MergeBuilderDialog) e devolve as linhas
-// já com os campos calculados aplicados. Usado pelo preview para navegar
-// registro a registro.
+// Executa a MergeConfig e devolve as linhas prontas (com relações resolvidas
+// e campos calculados aplicados). Suporta modo "visual" (tabela principal +
+// relações) e modo "sql" (SELECT livre via edge function).
 import { supabase } from "@/integrations/supabase/client";
 import { evalCalculados } from "@/lib/editores/mergeEngine";
-import type { MergeConfig } from "@/components/editores/MergeBuilderDialog";
+import type { MergeConfig, MergeRelation } from "@/components/editores/MergeBuilderDialog";
+
+async function resolveRelations(
+  rows: any[],
+  relations: MergeRelation[] | undefined,
+): Promise<any[]> {
+  if (!relations || relations.length === 0 || rows.length === 0) return rows;
+
+  for (const rel of relations) {
+    if (!rel.tabela || !rel.localKey || !rel.foreignKey || !rel.alias) continue;
+    const ids = Array.from(new Set(rows.map((r) => r?.[rel.localKey]).filter((v) => v != null)));
+    if (ids.length === 0) {
+      rows.forEach((r) => { r[rel.alias] = rel.cardinality === "1:N" ? [] : null; });
+      continue;
+    }
+    try {
+      const { data, error } = await supabase
+        .from(rel.tabela as any)
+        .select("*")
+        .in(rel.foreignKey, ids as any);
+      if (error) throw error;
+      const groups = new Map<any, any[]>();
+      for (const r of (data ?? []) as any[]) {
+        const k = r?.[rel.foreignKey];
+        if (!groups.has(k)) groups.set(k, []);
+        groups.get(k)!.push(r);
+      }
+      rows.forEach((r) => {
+        const list = groups.get(r?.[rel.localKey]) ?? [];
+        r[rel.alias] = rel.cardinality === "1:N" ? list : (list[0] ?? null);
+      });
+    } catch (e) {
+      console.warn("[runMergeConfig] relação falhou:", rel, e);
+      rows.forEach((r) => { r[rel.alias] = rel.cardinality === "1:N" ? [] : null; });
+    }
+  }
+  return rows;
+}
 
 export async function runMergeConfig(cfg: MergeConfig | null | undefined): Promise<any[]> {
-  if (!cfg?.tabela) return [];
+  if (!cfg) return [];
   try {
-    let q = supabase.from(cfg.tabela as any).select("*").limit(Math.min(cfg.limite || 50, 500));
-    for (const f of cfg.filtros ?? []) {
-      if (!f.campo || !f.valor) continue;
-      if (f.op === "ilike") q = q.ilike(f.campo, `%${f.valor}%`);
-      else q = (q as any)[f.op](f.campo, f.valor);
+    let rows: any[] = [];
+
+    if (cfg.mode === "sql" && cfg.sql?.trim()) {
+      const { data, error } = await supabase.functions.invoke("execute-merge-sql", {
+        body: { sql: cfg.sql },
+      });
+      if (error) throw error;
+      rows = Array.isArray(data?.rows) ? data.rows : [];
+    } else if (cfg.tabela) {
+      let q = supabase.from(cfg.tabela as any).select("*").limit(Math.min(cfg.limite || 50, 500));
+      for (const f of cfg.filtros ?? []) {
+        if (!f.campo || !f.valor) continue;
+        if (f.op === "ilike") q = q.ilike(f.campo, `%${f.valor}%`);
+        else q = (q as any)[f.op](f.campo, f.valor);
+      }
+      const { data, error } = await q;
+      if (error) throw error;
+      rows = (data ?? []) as any[];
+      rows = await resolveRelations(rows, cfg.relations);
     }
-    const { data, error } = await q;
-    if (error) throw error;
+
     const calcs = cfg.calculados ?? [];
-    return ((data ?? []) as any[]).map((r) => (calcs.length ? evalCalculados(r, calcs) : r));
+    return calcs.length ? rows.map((r) => evalCalculados(r, calcs)) : rows;
   } catch (e) {
     console.error("[runMergeConfig]", e);
     return [];
