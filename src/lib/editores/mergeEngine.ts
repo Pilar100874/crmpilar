@@ -127,6 +127,28 @@ function unwrapMergeChips(html: string): string {
   );
 }
 
+/**
+ * O nó Tiptap FillableField é serializado como
+ *   <span data-fillable-field="[[tipo:label]]" ...><input .../></span>
+ * O token `[[...]]` fica também dentro do atributo, o que quebraria a regex
+ * de applyFillables. Aqui reduzimos o chip inteiro ao seu token cru para que
+ * o pipeline de merge/aplicação trate igual ao texto original.
+ */
+export function unwrapFillableChips(html: string): string {
+  return html.replace(
+    /<span\b[^>]*\bdata-fillable-field\s*=\s*"([^"]*)"[^>]*>[\s\S]*?<\/span>/gi,
+    (_m, token: string) => {
+      const decoded = token
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+      return decoded;
+    },
+  );
+}
+
 // ---------- helpers de agregação ----------
 const AGG_FNS: Record<string, (list: any[]) => number> = {
   sum: (l) => l.reduce((a, b) => a + toNumber(b), 0),
@@ -145,6 +167,7 @@ export function renderTemplate(
   const missing: string[] = [];
   const used: string[] = [];
   html = unwrapMergeChips(html);
+  html = unwrapFillableChips(html);
 
   // {{#each lista}}...{{/each}} — expandido primeiro
   const eachRe = /\{\{#each\s+([^\}]+)\}\}([\s\S]*?)\{\{\/each\}\}/g;
