@@ -167,6 +167,7 @@ export function renderTemplate(
   const missing: string[] = [];
   const used: string[] = [];
   html = unwrapMergeChips(html);
+  html = unwrapFillableChips(html);
 
   // {{#each lista}}...{{/each}} — expandido primeiro
   const eachRe = /\{\{#each\s+([^\}]+)\}\}([\s\S]*?)\{\{\/each\}\}/g;
