@@ -43,7 +43,13 @@ interface Props {
   onInsertField?: (chave: string) => void;
   onSelectFields?: (chaves: string[]) => void;
   initialSelected?: string[];
+  hideTrigger?: boolean;
+  open?: boolean;
+  onOpenChange?: (o: boolean) => void;
+  triggerLabel?: string;
+  triggerAsIcon?: boolean;
 }
+
 
 const TABELAS = [
   { value: "customers", label: "Clientes" },
