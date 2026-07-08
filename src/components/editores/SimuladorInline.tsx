@@ -59,11 +59,17 @@ export function SimuladorInline({
   const tokensFill = useMemo(() => extractFillableTokens(html), [html]);
 
   const renderedHtml = useMemo(() => {
-    const step1 = renderTemplate(html, dados, { highlightMissing: !modoTravado }).html;
-    return applyFillables(step1, fillables, {
-      highlightEmpty: !modoTravado,
-      asInput: modoTravado,
-    });
+    try {
+      const base = html && html.trim() ? html : "<p><em>Documento vazio</em></p>";
+      const step1 = renderTemplate(base, dados, { highlightMissing: !modoTravado }).html;
+      return applyFillables(step1, fillables, {
+        highlightEmpty: !modoTravado,
+        asInput: modoTravado,
+      });
+    } catch (err) {
+      console.error("[Simulador] erro ao renderizar:", err);
+      return `<p style="color:#b91c1c">Erro ao renderizar o documento. Verifique os campos.</p>`;
+    }
   }, [html, dados, fillables, modoTravado]);
 
   const htmlFinalLimpo = () => {
