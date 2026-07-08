@@ -155,6 +155,26 @@ export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
               <Input type="number" value={cfg.limite} onChange={e => setCfg({ ...cfg, limite: Number(e.target.value) })} className="h-8 w-24" />
             </div>
 
+            <div className="border-t pt-2">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs text-muted-foreground flex items-center gap-1"><Calculator className="h-3 w-3" /> Campos calculados</label>
+                <Button size="sm" variant="ghost" onClick={addCalc} className="h-6 text-xs"><Plus className="h-3 w-3 mr-1" /> Adicionar</Button>
+              </div>
+              <div className="space-y-1">
+                {(cfg.calculados ?? []).map((c, i) => (
+                  <div key={i} className="flex gap-1 items-center">
+                    <Input value={c.nome} onChange={e => { const n = [...(cfg.calculados ?? [])]; n[i] = { ...c, nome: e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase() }; setCfg({ ...cfg, calculados: n }); }} placeholder="nome" className="h-7 text-xs w-24" />
+                    <span className="text-xs">=</span>
+                    <Input value={c.expressao} onChange={e => { const n = [...(cfg.calculados ?? [])]; n[i] = { ...c, expressao: e.target.value }; setCfg({ ...cfg, calculados: n }); }} placeholder="preco * quantidade" className="h-7 text-xs flex-1 font-mono" />
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => rmCalc(i)}><Trash2 className="h-3 w-3" /></Button>
+                  </div>
+                ))}
+                {(cfg.calculados ?? []).length === 0 && (
+                  <p className="text-[11px] text-muted-foreground">Ex: <code>total = preco * quantidade</code>, <code>desc = valor * 0.1</code>. Use Math.round(), Number(), etc.</p>
+                )}
+              </div>
+            </div>
+
             <Button onClick={executar} disabled={loading} className="w-full">
               <Play className="h-4 w-4 mr-1" /> {loading ? "Executando…" : "Executar consulta"}
             </Button>
