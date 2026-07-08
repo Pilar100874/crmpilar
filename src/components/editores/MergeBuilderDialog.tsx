@@ -75,12 +75,24 @@ const STEPS = [
   { id: 3, label: "Inserir campos", icon: Check },
 ];
 
+async function fetchApiEndpointRows(endpointId: string, limit = 5): Promise<any[]> {
+  const { data, error } = await supabase.functions.invoke("execute-dynamic-query", {
+    body: { endpoint_id: endpointId, params: {}, limit },
+  });
+  if (error) throw error;
+  const rows = (data as any)?.data ?? (data as any)?.rows ?? (Array.isArray(data) ? data : []);
+  return Array.isArray(rows) ? rows : [];
+}
+
 async function fetchColumns(tabela: string): Promise<string[]> {
   try {
+    if (tabela.startsWith("api:")) {
+      const rows = await fetchApiEndpointRows(tabela.slice(4), 1);
+      return rows.length ? Object.keys(rows[0]) : [];
+    }
     const { data, error } = await supabase.from(tabela as any).select("*").limit(1);
     if (error) throw error;
     if (data && data.length > 0) return Object.keys(data[0] as any);
-    // tabela vazia: tenta via SQL
     const { data: sqlData } = await supabase.functions.invoke("execute-merge-sql", {
       body: { sql: `SELECT * FROM ${tabela} LIMIT 0` },
     });
@@ -107,11 +119,22 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
   // Colunas descobertas por tabela
   const [colsByTable, setColsByTable] = useState<Record<string, string[]>>({});
   const [loadingCols, setLoadingCols] = useState<string>("");
+  const [apiEndpoints, setApiEndpoints] = useState<{ value: string; label: string }[]>([]);
 
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [busca, setBusca] = useState("");
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set(initialSelected ?? []));
+
+  // Load API endpoints on mount
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("api_endpoints").select("id,name,description").eq("active", true).order("name");
+      setApiEndpoints((data ?? []).map((e: any) => ({ value: `api:${e.id}`, label: `🔌 ${e.name}` })));
+    })();
+  }, []);
+
+  const tabelasDisponiveis = useMemo(() => [...TABELAS, ...apiEndpoints], [apiEndpoints]);
 
   const todasTabelas = useMemo(() => {
     const arr: { tabela: string; alias: string; isMain: boolean }[] = [];
@@ -172,17 +195,40 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
     try {
       if (!cfg.tabela) throw new Error("Selecione a tabela principal");
       const camposMain = getSel(cfg.tabela);
-      const selectCols = camposMain.length ? camposMain.join(",") : "*";
-      let q = supabase.from(cfg.tabela as any).select(selectCols).limit(Math.min(cfg.limite || 50, 500));
-      for (const f of cfg.filtros) {
-        if (!f.campo || !f.valor) continue;
-        const rawCampo = f.campo.includes(".") ? f.campo.split(".").slice(1).join(".") : f.campo;
-        if (f.op === "ilike") q = q.ilike(rawCampo, `%${f.valor}%`);
-        else q = (q as any)[f.op](rawCampo, f.valor);
+      let list: any[] = [];
+      if (cfg.tabela.startsWith("api:")) {
+        // Fonte é uma API do sistema
+        const all = await fetchApiEndpointRows(cfg.tabela.slice(4), Math.min(cfg.limite || 50, 500));
+        list = all.filter(r => cfg.filtros.every(f => {
+          if (!f.campo || !f.valor) return true;
+          const rawCampo = f.campo.includes(".") ? f.campo.split(".").slice(1).join(".") : f.campo;
+          const v = r?.[rawCampo];
+          const val = f.valor;
+          switch (f.op) {
+            case "eq": return String(v) === val;
+            case "neq": return String(v) !== val;
+            case "ilike": return String(v ?? "").toLowerCase().includes(val.toLowerCase());
+            case "gt": return Number(v) > Number(val);
+            case "gte": return Number(v) >= Number(val);
+            case "lt": return Number(v) < Number(val);
+            case "lte": return Number(v) <= Number(val);
+            default: return true;
+          }
+        }));
+        if (camposMain.length) list = list.map(r => Object.fromEntries(camposMain.map(c => [c, r?.[c]])));
+      } else {
+        const selectCols = camposMain.length ? camposMain.join(",") : "*";
+        let q = supabase.from(cfg.tabela as any).select(selectCols).limit(Math.min(cfg.limite || 50, 500));
+        for (const f of cfg.filtros) {
+          if (!f.campo || !f.valor) continue;
+          const rawCampo = f.campo.includes(".") ? f.campo.split(".").slice(1).join(".") : f.campo;
+          if (f.op === "ilike") q = q.ilike(rawCampo, `%${f.valor}%`);
+          else q = (q as any)[f.op](rawCampo, f.valor);
+        }
+        const { data, error } = await q;
+        if (error) throw error;
+        list = ((data ?? []) as any[]);
       }
-      const { data, error } = await q;
-      if (error) throw error;
-      let list = ((data ?? []) as any[]);
 
       for (const rel of cfg.relations ?? []) {
         if (!rel.tabela || !rel.localKey || !rel.foreignKey || !rel.alias) continue;
@@ -315,7 +361,7 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                   <Badge variant="default">Principal</Badge>
                   <Select value={cfg.tabela} onValueChange={v => setCfg({ ...cfg, tabela: v, camposSelecionados: { ...(cfg.camposSelecionados ?? {}), [v]: [] } })}>
                     <SelectTrigger className="h-8 max-w-xs"><SelectValue placeholder="Escolha a tabela principal" /></SelectTrigger>
-                    <SelectContent>{TABELAS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                    <SelectContent>{tabelasDisponiveis.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
                   </Select>
                   {cfg.tabela && (
                     <>
@@ -342,7 +388,7 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                         <Badge variant="secondary">JOIN #{i + 1}</Badge>
                         <Select value={rel.tabela} onValueChange={v => updRelation(i, { tabela: v, alias: rel.alias || v.slice(0, 8) })}>
                           <SelectTrigger className="h-8 max-w-xs"><SelectValue placeholder="Tabela relacionada" /></SelectTrigger>
-                          <SelectContent>{TABELAS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                          <SelectContent>{tabelasDisponiveis.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
                         </Select>
                         <span className="text-xs text-muted-foreground">alias:</span>
                         <Input value={rel.alias} onChange={e => updRelation(i, { alias: e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase() })} className="h-7 w-24 text-xs" />
@@ -591,6 +637,13 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                   })}
                 </div>
               </ScrollArea>
+
+              {/* Inserir lista/tabela */}
+              <InserirListaTabela
+                todasTabelas={todasTabelas}
+                camposSelecionados={cfg.camposSelecionados ?? {}}
+                onInsert={(html) => onInsertField?.(`__RAW__:${html}`)}
+              />
             </div>
           )}
         </div>
@@ -640,6 +693,68 @@ function CamposCheckList({ tabela, colunas, loading, selecionados, onToggle }: {
           </div>
         </ScrollArea>
       )}
+    </div>
+  );
+}
+
+// ============ Inserir lista/tabela como HTML ============
+function InserirListaTabela({ todasTabelas, camposSelecionados, onInsert }: {
+  todasTabelas: { tabela: string; alias: string; isMain: boolean }[];
+  camposSelecionados: Record<string, string[]>;
+  onInsert: (html: string) => void;
+}) {
+  const opcoes = todasTabelas.filter(t => (camposSelecionados[t.tabela] ?? []).length > 0);
+  const [alias, setAlias] = useState<string>("");
+  const [cols, setCols] = useState<string[]>([]);
+
+  const sel = opcoes.find(o => o.alias === alias);
+  const camposDoAlias = sel ? (camposSelecionados[sel.tabela] ?? []) : [];
+
+  const toggleCol = (c: string) => setCols(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
+
+  const gerarHtml = () => {
+    if (!sel || cols.length === 0) return;
+    const th = cols.map(c => `<th style="border:1px solid #ccc;padding:4px;background:#f4f4f4;text-align:left;">${c}</th>`).join("");
+    const td = cols.map(c => `<td style="border:1px solid #ccc;padding:4px;">{{${c}}}</td>`).join("");
+    const html = sel.isMain
+      ? `<table style="border-collapse:collapse;width:100%;font-size:11pt;"><thead><tr>${th}</tr></thead><tbody><tr>${td}</tr></tbody></table>`
+      : `<table style="border-collapse:collapse;width:100%;font-size:11pt;"><thead><tr>${th}</tr></thead><tbody>{{#each ${sel.alias}}}<tr>${td}</tr>{{/each}}</tbody></table>`;
+    onInsert(html);
+  };
+
+  if (opcoes.length === 0) return null;
+
+  return (
+    <div className="border-t pt-3 mt-2 space-y-2">
+      <div className="text-xs font-medium flex items-center gap-1"><Table2 className="h-3.5 w-3.5" /> Inserir lista/tabela no documento</div>
+      <div className="flex flex-wrap gap-2 items-center">
+        <Select value={alias} onValueChange={(v) => { setAlias(v); setCols([]); }}>
+          <SelectTrigger className="h-8 w-56 text-xs"><SelectValue placeholder="Escolha a tabela/relação" /></SelectTrigger>
+          <SelectContent>
+            {opcoes.map(o => (
+              <SelectItem key={o.alias} value={o.alias}>
+                {o.tabela} ({o.alias}){o.isMain ? " — principal" : " — lista relacionada"}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button size="sm" onClick={gerarHtml} disabled={!sel || cols.length === 0}>
+          <Plus className="h-3.5 w-3.5 mr-1" /> Inserir tabela
+        </Button>
+      </div>
+      {sel && (
+        <div className="flex flex-wrap gap-1 pl-1">
+          {camposDoAlias.map(c => (
+            <label key={c} className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded border cursor-pointer ${cols.includes(c) ? "bg-primary/10 border-primary" : "bg-card"}`}>
+              <Checkbox checked={cols.includes(c)} onCheckedChange={() => toggleCol(c)} className="h-3 w-3" />
+              <span className="font-mono">{c}</span>
+            </label>
+          ))}
+        </div>
+      )}
+      <p className="text-[10px] text-muted-foreground">
+        Gera uma tabela HTML no editor com as colunas escolhidas. Para relações 1:N usa <code>{`{{#each ${sel?.alias || "alias"}}}`}</code>, iterando todos os registros filtrados pelo JOIN configurado.
+      </p>
     </div>
   );
 }
