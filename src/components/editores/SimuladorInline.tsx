@@ -11,7 +11,7 @@ import {
   renderTemplate,
 } from "@/lib/editores/mergeEngine";
 import { downloadPdf, printHtml } from "@/lib/editores/pdfExport";
-import { MergeBuilderDialog, type MergeConfig } from "./MergeBuilderDialog";
+import { type MergeConfig } from "./MergeBuilderDialog";
 import { RegistroNavigator } from "./RegistroNavigator";
 import { runMergeConfig } from "@/lib/editores/runMergeConfig";
 import { applyCalculatedFields, type CampoCalc } from "@/lib/editores/calcFields";
