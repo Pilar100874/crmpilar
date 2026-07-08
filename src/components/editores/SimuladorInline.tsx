@@ -128,7 +128,10 @@ export function SimuladorInline({
 
         {rows.length > 0 && (
           <div className="border-t pt-3 space-y-2">
-            <div className="text-xs font-semibold">Simular registro</div>
+            <div className="text-xs font-semibold flex items-center justify-between">
+              <span>Navegar registros</span>
+              <span className="text-[11px] text-primary font-mono">{idx + 1} / {rows.length}</span>
+            </div>
             <RegistroNavigator total={rows.length} index={idx} onChange={setIdx} label={registroLabel(registroAtual)} />
           </div>
         )}
