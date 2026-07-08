@@ -203,8 +203,17 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml }: Prop
                     <SelectItem value="booleano">Booleano</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
             </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Instrução de preenchimento (opcional)</label>
+              <Input
+                value={novo.descricao}
+                onChange={e => setNovo({ ...novo, descricao: e.target.value })}
+                placeholder="ex: Informar o número da apólice sem hífens"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">Aparece como dica no editor e como placeholder no Simular/Preencher.</p>
+            </div>
+          </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenNovo(false)}>Cancelar</Button>
