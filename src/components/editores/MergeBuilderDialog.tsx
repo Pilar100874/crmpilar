@@ -708,7 +708,9 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                 camposSelecionados={cfg.camposSelecionados ?? {}}
                 rows={rows}
                 onInsert={(html) => onInsertField?.(`__RAW__:${html}`)}
+                onSaveTable={onSaveTable}
               />
+
 
             </div>
           )}
