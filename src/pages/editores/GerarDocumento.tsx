@@ -83,7 +83,8 @@ export default function GerarDocumento() {
 
   const salvarNoHistorico = async (): Promise<string | null> => {
     if (!estabId || !modelo) { toast.error("Escolha um modelo"); return null; }
-    const finalHtml = renderTemplate(modelo.content_html, dados, { highlightMissing: false }).html;
+    const step1 = renderTemplate(modelo.content_html, dados, { highlightMissing: false });
+    const finalHtml = applyFillables(step1.html, fillables, { highlightEmpty: false });
     const { data, error } = await supabase.from("doc_gerados").insert({
       estabelecimento_id: estabId,
       modelo_id: modelo.id,
