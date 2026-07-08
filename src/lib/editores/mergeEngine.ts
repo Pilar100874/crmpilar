@@ -37,6 +37,19 @@ function formatValue(v: any): string {
   return String(v);
 }
 
+/**
+ * Desembrulha os "chips" de merge do Tiptap (`<span data-merge-field="{{x}}">{{x}}</span>`)
+ * para o token puro `{{x}}`. Sem isso, o regex de `{{...}}` casaria o token dentro do
+ * atributo `data-merge-field="..."` e injetaria HTML dentro de um atributo, quebrando
+ * a página e exibindo marcação crua no preview.
+ */
+function unwrapMergeChips(html: string): string {
+  return html.replace(
+    /<span[^>]*\bdata-merge-field\s*=\s*"([^"]*)"[^>]*>[\s\S]*?<\/span>/gi,
+    (_m, token: string) => token,
+  );
+}
+
 export function renderTemplate(
   html: string,
   data: MergeData,
@@ -44,6 +57,9 @@ export function renderTemplate(
 ): { html: string; missing: string[]; used: string[] } {
   const missing: string[] = [];
   const used: string[] = [];
+  html = unwrapMergeChips(html);
+
+
 
   const eachRe = /\{\{#each\s+([^\}]+)\}\}([\s\S]*?)\{\{\/each\}\}/g;
   html = html.replace(eachRe, (_m, key: string, body: string) => {
