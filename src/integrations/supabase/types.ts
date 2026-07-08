@@ -3868,6 +3868,7 @@ export type Database = {
           local_descricao: string | null
           marca: string
           modelo: string | null
+          modo_manual: boolean
           nome: string
           onvif_pass: string | null
           onvif_porta: number | null
@@ -3875,6 +3876,11 @@ export type Database = {
           porta: number | null
           protocolo: string
           ptz_velocidade_padrao: number
+          rtsp_pass: string | null
+          rtsp_path: string | null
+          rtsp_porta: number | null
+          rtsp_transporte: string | null
+          rtsp_user: string | null
           senha: string | null
           snapshot_path: string | null
           tem_audio: boolean
@@ -3899,6 +3905,7 @@ export type Database = {
           local_descricao?: string | null
           marca: string
           modelo?: string | null
+          modo_manual?: boolean
           nome: string
           onvif_pass?: string | null
           onvif_porta?: number | null
@@ -3906,6 +3913,11 @@ export type Database = {
           porta?: number | null
           protocolo?: string
           ptz_velocidade_padrao?: number
+          rtsp_pass?: string | null
+          rtsp_path?: string | null
+          rtsp_porta?: number | null
+          rtsp_transporte?: string | null
+          rtsp_user?: string | null
           senha?: string | null
           snapshot_path?: string | null
           tem_audio?: boolean
@@ -3930,6 +3942,7 @@ export type Database = {
           local_descricao?: string | null
           marca?: string
           modelo?: string | null
+          modo_manual?: boolean
           nome?: string
           onvif_pass?: string | null
           onvif_porta?: number | null
@@ -3937,6 +3950,11 @@ export type Database = {
           porta?: number | null
           protocolo?: string
           ptz_velocidade_padrao?: number
+          rtsp_pass?: string | null
+          rtsp_path?: string | null
+          rtsp_porta?: number | null
+          rtsp_transporte?: string | null
+          rtsp_user?: string | null
           senha?: string | null
           snapshot_path?: string | null
           tem_audio?: boolean
