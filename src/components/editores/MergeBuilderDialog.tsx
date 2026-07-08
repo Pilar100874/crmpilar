@@ -42,7 +42,7 @@ interface Props {
   onChange: (cfg: MergeConfig, sampleRows: any[]) => void;
   onInsertField?: (chave: string) => void;
   onSelectFields?: (chaves: string[]) => void;
-  onSaveTable?: (name: string, html: string) => void;
+  onSaveTable?: (name: string, meta: { alias: string; cols: string[] }) => void;
   initialSelected?: string[];
   hideTrigger?: boolean;
   open?: boolean;
