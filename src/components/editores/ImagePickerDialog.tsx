@@ -17,7 +17,7 @@ interface Props {
 
 export function ImagePickerDialog({ onInsert }: Props) {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<"galeria" | "produtos" | "url">("galeria");
+  const [tab, setTab] = useState<"galeria" | "produtos" | "upload" | "url">("galeria");
   const [estabId, setEstabId] = useState<string | null>(null);
   const [gallery, setGallery] = useState<any[]>([]);
   const [produtos, setProdutos] = useState<any[]>([]);
@@ -25,6 +25,9 @@ export function ImagePickerDialog({ onInsert }: Props) {
   const [urlManual, setUrlManual] = useState("");
   const [sel, setSel] = useState<string | null>(null);
   const [largura, setLargura] = useState("100%");
+  const [uploading, setUploading] = useState(false);
+  const [uploadPreview, setUploadPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { getEstabelecimentoId().then(setEstabId); }, []);
 
