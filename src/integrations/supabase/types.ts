@@ -21728,6 +21728,7 @@ export type Database = {
         Returns: boolean
       }
       desativar_automacoes_vencidas: { Args: never; Returns: undefined }
+      exec_readonly_select: { Args: { sql_query: string }; Returns: Json }
       execute_sql: { Args: { sql_query: string }; Returns: Json }
       generate_orcamento_token: { Args: never; Returns: string }
       get_auth_user_estabelecimento_id: { Args: never; Returns: string }
