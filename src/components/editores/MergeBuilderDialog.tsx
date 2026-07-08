@@ -215,7 +215,7 @@ export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
                       </button>
                       {looksImage && (
                         <Button size="icon" variant="ghost" className="h-auto w-7" title="Inserir como imagem"
-                          onClick={() => onInsertField?.(`__IMG__${chave}`)}>
+                          onClick={() => onInsertField?.(`{{img:${chave}}}`)}>
                           <ImageIcon className="h-3.5 w-3.5 text-primary" />
                         </Button>
                       )}
