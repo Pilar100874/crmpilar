@@ -9,6 +9,7 @@ import {
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   List, ListOrdered, Undo, Redo, Link as LinkIcon, Image as ImageIcon,
   Table as TableIcon, Rows, Columns, Trash2, Eraser, Maximize2, ZoomIn, ZoomOut,
+  ScanSearch,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -20,6 +21,7 @@ interface Props {
   onFullscreen?: () => void;
   zoom: number;
   setZoom: (z: number) => void;
+  onPreviewMerge?: () => void;
 }
 
 function TB({ active, onClick, disabled, title, children }: any) {
@@ -41,7 +43,7 @@ function TB({ active, onClick, disabled, title, children }: any) {
 const FONTS = ["Arial", "Times New Roman", "Georgia", "Courier New", "Verdana", "Tahoma", "Calibri"];
 const SIZES = ["10px", "12px", "14px", "16px", "18px", "24px", "32px"];
 
-export function EditorToolbar({ editor, onFullscreen, zoom, setZoom }: Props) {
+export function EditorToolbar({ editor, onFullscreen, zoom, setZoom, onPreviewMerge }: Props) {
   const [color, setColor] = useState("#111111");
   const [bgColor, setBgColor] = useState("#fff59d");
   if (!editor) return <div className="h-12 border-b bg-card" />;
@@ -125,6 +127,11 @@ export function EditorToolbar({ editor, onFullscreen, zoom, setZoom }: Props) {
       <TB onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()} title="Limpar formatação"><Eraser className="h-4 w-4" /></TB>
 
       <div className="ml-auto flex items-center gap-1">
+        {onPreviewMerge && (
+          <TB onClick={onPreviewMerge} title="Ver merge (navegar registro a registro)">
+            <ScanSearch className="h-4 w-4" />
+          </TB>
+        )}
         <TB onClick={() => setZoom(Math.max(0.5, zoom - 0.1))} title="Diminuir zoom"><ZoomOut className="h-4 w-4" /></TB>
         <span className="text-xs w-10 text-center">{Math.round(zoom * 100)}%</span>
         <TB onClick={() => setZoom(Math.min(2, zoom + 0.1))} title="Aumentar zoom"><ZoomIn className="h-4 w-4" /></TB>
