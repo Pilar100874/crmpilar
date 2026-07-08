@@ -532,6 +532,13 @@ const App = () => (
                 <Route path="grupos" element={<CamerasGrupos />} />
                 <Route path="cameras" element={<CamerasCameras />} />
               </Route>
+              <Route path="/editores" element={<EditoresLayout />}>
+                <Route index element={<ModelosLista />} />
+                <Route path="modelos" element={<ModelosLista />} />
+                <Route path="modelos/:id" element={<ModeloEditor />} />
+                <Route path="gerar" element={<GerarDocumento />} />
+                <Route path="documentos" element={<DocumentosGerados />} />
+              </Route>
             </Route>
             {/* Public routes (no layout) */}
             <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
