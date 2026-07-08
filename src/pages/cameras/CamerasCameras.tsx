@@ -635,8 +635,7 @@ export default function CamerasCameras() {
                   setEditing((prev: any) => ({
                     ...prev,
                     marca: v,
-                    // só sobrescreve porta/protocolo se ainda estiverem no default anterior
-                    // (evita sobrepor ajustes manuais do usuário)
+                    modelo: null, // reset modelo ao trocar de marca
                     porta: d?.porta ?? prev.porta,
                     protocolo: d?.protocolo ?? prev.protocolo,
                     snapshot_path: prev.snapshot_path && prev.snapshot_path.length > 0
@@ -653,6 +652,47 @@ export default function CamerasCameras() {
                 </SelectContent>
               </Select>
             </div>
+            {(CAMERA_MODELS[editing.marca]?.length ?? 0) > 0 && (
+              <div className="space-y-1">
+                <Label>Modelo</Label>
+                <Select
+                  value={editing.modelo ?? "__generic__"}
+                  onValueChange={(v) => {
+                    if (v === "__generic__") {
+                      setEditing((prev: any) => ({ ...prev, modelo: null }));
+                      return;
+                    }
+                    const spec = findModel(editing.marca, v);
+                    if (!spec) return;
+                    setEditing((prev: any) => ({
+                      ...prev,
+                      modelo: spec.value,
+                      // aplica capacidades específicas do modelo
+                      tem_ptz: spec.tem_ptz,
+                      tem_audio: spec.tem_audio,
+                      onvif_porta: spec.onvif_porta,
+                      porta: spec.porta ?? prev.porta,
+                      protocolo: spec.protocolo ?? prev.protocolo,
+                      snapshot_path: spec.snapshot_path ?? prev.snapshot_path,
+                      // se ONVIF ainda vazio, herda credencial principal
+                      onvif_user: prev.onvif_user || prev.usuario || "",
+                      onvif_pass: prev.onvif_pass || prev.senha || "",
+                    }));
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Selecione o modelo" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__generic__">Genérico (configurar manualmente)</SelectItem>
+                    {(CAMERA_MODELS[editing.marca] || []).map((m) => (
+                      <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground">
+                  Selecionar o modelo autoconfigura PTZ, áudio bidirecional e porta ONVIF.
+                </p>
+              </div>
+            )}
             <div className="space-y-1">
               <Label>Tipo de rede</Label>
               <Select value={editing.tipo_rede} onValueChange={(v) => setEditing({ ...editing, tipo_rede: v })}>
