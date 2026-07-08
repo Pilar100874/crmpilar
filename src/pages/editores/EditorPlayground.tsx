@@ -34,6 +34,7 @@ export default function EditorPlayground() {
   const [previewHtml, setPreviewHtml] = useState("");
   const [previewMissing, setPreviewMissing] = useState<string[]>([]);
   const [mergeConfig, setMergeConfig] = useState<any>(null);
+  const [mergeFields, setMergeFields] = useState<string[]>([]);
   const editorRef = useRef<Editor | null>(null);
   const [, force] = useState(0);
 
