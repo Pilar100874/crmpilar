@@ -213,6 +213,24 @@ export default function ModeloEditor() {
       ed.chain().focus().insertContent(chave.slice("__RAW__:".length)).run();
       return;
     }
+    if (chave.startsWith("__TABLE__:")) {
+      try {
+        const meta = JSON.parse(chave.slice("__TABLE__:".length)) as { alias: string; cols: string[] };
+        const resp = window.prompt(
+          `Inserir tabela "${meta.alias}".\nQuais linhas? Ex: 1-10 · 5-20 · vazio = todas`,
+          "",
+        );
+        if (resp === null) return; // cancelou
+        let from = 1, to = 0;
+        const m = resp.trim().match(/^(\d+)\s*[-\/]\s*(\d+)$/);
+        if (m) { from = Number(m[1]); to = Number(m[2]); }
+        else if (/^\d+$/.test(resp.trim())) { from = 1; to = Number(resp.trim()); }
+        ed.chain().focus().insertContent({ type: "mergeTable", attrs: { alias: meta.alias, cols: meta.cols, from, to } }).run();
+      } catch (e) {
+        console.error("[ModeloEditor] payload __TABLE__ inválido", e);
+      }
+      return;
+    }
     if (chave.startsWith("__LOOP__:")) {
       const path = chave.slice("__LOOP__:".length);
       ed.chain().focus().insertContent(`{{#each ${path}}}{{this}}{{/each}}`).run();
