@@ -540,7 +540,7 @@ const App = () => (
                 <Route path="modelos" element={<ModelosLista />} />
                 <Route path="documentos" element={<DocumentosGerados />} />
                 <Route path="modelos/:id" element={<ModeloEditor />} />
-                <Route path="documento/:id" element={<DocumentoEditor />} />
+                
                 <Route path="gerar" element={<GerarDocumento />} />
                 
               </Route>
