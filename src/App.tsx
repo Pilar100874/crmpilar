@@ -538,7 +538,7 @@ const App = () => (
                 <Route path="documentos" element={<EditoresHub />} />
                 <Route path="modelos/:id" element={<ModeloEditor />} />
                 <Route path="documento/:id" element={<DocumentoEditor />} />
-                <Route path="gerar" element={<GerarDocumento />} />
+                <Route path="gerar" element={<EditoresHub />} />
               </Route>
             </Route>
             {/* Public routes (no layout) */}
