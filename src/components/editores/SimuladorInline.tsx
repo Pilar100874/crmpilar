@@ -171,9 +171,28 @@ export function SimuladorInline({
           </label>
         </div>
         {modoTravado && (
-          <p className="text-[11px] text-muted-foreground">
-            Texto travado. Use <kbd className="bg-muted px-1 rounded">Tab</kbd> para navegar entre os {tokensFill.length} campo(s).
-          </p>
+          <>
+            <p className="text-[11px] text-muted-foreground">
+              Texto travado. Use <kbd className="bg-muted px-1 rounded">Tab</kbd> para navegar entre os {tokensFill.length} campo(s).
+            </p>
+            {tokensFill.length > 0 && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="w-full"
+                onClick={() => {
+                  const draft: Record<string, string> = {};
+                  tokensFill.forEach(t => {
+                    draft[t.raw] = fillables[t.raw] ?? fillables[t.label] ?? "";
+                  });
+                  setBulkDraft(draft);
+                  setBulkOpen(true);
+                }}
+              >
+                <ListChecks className="h-4 w-4 mr-1" /> Preencher todos os campos
+              </Button>
+            )}
+          </>
         )}
 
         {!modoTravado && camposDinamicos.length > 0 && (
