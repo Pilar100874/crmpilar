@@ -8,6 +8,7 @@ import Highlight from "@tiptap/extension-highlight";
 import FontFamily from "@tiptap/extension-font-family";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
+import { MergeField } from "./MergeFieldNode";
 
 // Image estendida com atributos width/height para redimensionamento
 const ResizableImage = Image.extend({
@@ -62,6 +63,7 @@ export function TiptapEditor({
       TableCell,
       Placeholder.configure({ placeholder: "Comece a escrever seu documento…" }),
       CharacterCount,
+      MergeField,
     ],
     [],
   );
@@ -132,8 +134,20 @@ export function TiptapEditor({
         .doc-editor-content .ProseMirror img { max-width: 100%; height: auto; }
         .doc-editor-content .ProseMirror a { color: #2563eb; text-decoration: underline; }
         .doc-editor-content .ProseMirror .doc-field-chip {
-          background: #dbeafe; color: #1e40af; padding: 1px 6px; border-radius: 4px;
-          font-family: monospace; font-size: 0.9em;
+          display: inline-block;
+          background: #dbeafe;
+          color: #1e40af;
+          border: 1px solid #93c5fd;
+          padding: 1px 8px;
+          margin: 0 1px;
+          border-radius: 4px;
+          font-family: monospace;
+          font-size: 0.9em;
+          user-select: all;
+          cursor: default;
+        }
+        .doc-editor-content .ProseMirror .doc-field-chip.ProseMirror-selectednode {
+          outline: 2px solid #2563eb;
         }
       `}</style>
     </div>

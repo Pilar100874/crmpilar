@@ -132,10 +132,12 @@ export default function ModeloEditor() {
     if (!ed) return;
     if (chave.startsWith("__FILLABLE__")) {
       const rot = chave.replace("__FILLABLE__", "");
-      ed.chain().focus().insertContent(`[[${rot}]]`).run();
+      const token = `[[${rot}]]`;
+      ed.chain().focus().insertContent({ type: "mergeField", attrs: { token, label: rot } }).insertContent(" ").run();
       return;
     }
-    ed.chain().focus().insertContent(`{{${chave}}}`).run();
+    const token = `{{${chave}}}`;
+    ed.chain().focus().insertContent({ type: "mergeField", attrs: { token, label: chave } }).insertContent(" ").run();
   };
 
   const abrirPreview = async () => {
