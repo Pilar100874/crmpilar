@@ -55,6 +55,7 @@ export function TiptapEditor({
       Placeholder.configure({ placeholder: "Comece a escrever seu documento…" }),
       CharacterCount,
       MergeField,
+      MergeTable,
       FillableField,
     ],
     [],
