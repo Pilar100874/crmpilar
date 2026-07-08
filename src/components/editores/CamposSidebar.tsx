@@ -406,6 +406,20 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
           </div>
         </div>
       </ScrollArea>
+
+      <DeleteConfirmDialog
+        open={!!campoParaExcluir}
+        onOpenChange={(o) => { if (!o) setCampoParaExcluir(null); }}
+        onConfirm={confirmarExclusao}
+        title="Excluir campo personalizado?"
+        description={
+          campoParaExcluir
+            ? `Documentos que usarem {{${campoParaExcluir.chave}}} ficarão sem valor. Esta ação não pode ser desfeita.`
+            : ""
+        }
+        itemName={campoParaExcluir?.rotulo}
+        isLoading={excluindo}
+      />
     </aside>
   );
 }
