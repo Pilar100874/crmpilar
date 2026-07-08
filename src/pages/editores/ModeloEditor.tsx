@@ -10,8 +10,10 @@ import { TiptapEditor } from "@/components/editores/TiptapEditor";
 import { EditorToolbar } from "@/components/editores/EditorToolbar";
 import { CamposSidebar } from "@/components/editores/CamposSidebar";
 import { PreviewModal } from "@/components/editores/PreviewModal";
-import { ArrowLeft, Eye, Save, GitBranch, Send } from "lucide-react";
+import { ArrowLeft, Eye, Save, GitBranch, Send, Pencil, FlaskConical } from "lucide-react";
 import type { Editor } from "@tiptap/react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { SimuladorInline } from "@/components/editores/SimuladorInline";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
@@ -116,6 +118,11 @@ export default function ModeloEditor() {
   const inserirCampo = (chave: string) => {
     const ed = editorRef.current;
     if (!ed) return;
+    if (chave.startsWith("__FILLABLE__")) {
+      const rot = chave.replace("__FILLABLE__", "");
+      ed.chain().focus().insertContent(`[[${rot}]]`).run();
+      return;
+    }
     ed.chain().focus().insertContent(`{{${chave}}}`).run();
   };
 
@@ -150,20 +157,31 @@ export default function ModeloEditor() {
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
-        <div className="flex-1 flex flex-col min-w-0">
-          <EditorToolbar editor={editorRef.current} zoom={zoom} setZoom={setZoom} onFullscreen={() => setFullscreen(f => !f)} />
-          <div className="flex-1 overflow-auto">
-            <TiptapEditor
-              initialContent={html}
-              onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
-              editorRef={(e) => { editorRef.current = e; }}
-              zoom={zoom}
-            />
+      <Tabs defaultValue="editar" className="flex-1 flex flex-col overflow-hidden">
+        <TabsList className="mx-3 mt-2 self-start">
+          <TabsTrigger value="editar"><Pencil className="h-3.5 w-3.5 mr-1" /> Editar</TabsTrigger>
+          <TabsTrigger value="simular"><FlaskConical className="h-3.5 w-3.5 mr-1" /> Simular / Preencher</TabsTrigger>
+        </TabsList>
+        <TabsContent value="editar" className="flex-1 overflow-hidden mt-0">
+          <div className="h-full flex overflow-hidden">
+            <div className="flex-1 flex flex-col min-w-0">
+              <EditorToolbar editor={editorRef.current} zoom={zoom} setZoom={setZoom} onFullscreen={() => setFullscreen(f => !f)} />
+              <div className="flex-1 overflow-auto">
+                <TiptapEditor
+                  initialContent={html}
+                  onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
+                  editorRef={(e) => { editorRef.current = e; }}
+                  zoom={zoom}
+                />
+              </div>
+            </div>
+            <CamposSidebar estabelecimentoId={estabId} onInsert={inserirCampo} currentHtml={html} />
           </div>
-        </div>
-        <CamposSidebar estabelecimentoId={estabId} onInsert={inserirCampo} currentHtml={html} />
-      </div>
+        </TabsContent>
+        <TabsContent value="simular" className="flex-1 overflow-hidden mt-0">
+          <SimuladorInline html={html} titulo={modelo.titulo} />
+        </TabsContent>
+      </Tabs>
 
       <PreviewModal
         open={showPreview}

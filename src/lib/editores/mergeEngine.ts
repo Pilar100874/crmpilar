@@ -95,3 +95,47 @@ export function extractFieldKeys(html: string): string[] {
   }
   return Array.from(keys);
 }
+
+// ============ Campos PREENCHÍVEIS [[Rótulo]] ============
+// Diferente dos campos {{...}} que vêm do banco, os [[...]] são lacunas
+// que o usuário preenche manualmente no momento da geração.
+
+const FILLABLE_RE = /\[\[([^\[\]\n]{1,80})\]\]/g;
+
+export function extractFillables(html: string): string[] {
+  const keys = new Set<string>();
+  let m: RegExpExecArray | null;
+  const re = new RegExp(FILLABLE_RE.source, "g");
+  while ((m = re.exec(html)) !== null) keys.add(m[1].trim());
+  return Array.from(keys);
+}
+
+/** Substitui [[Rótulo]] pelos valores informados. Se ausente, mantém destaque. */
+export function applyFillables(
+  html: string,
+  values: Record<string, string>,
+  opts: { highlightEmpty?: boolean; asInput?: boolean } = {},
+): string {
+  return html.replace(new RegExp(FILLABLE_RE.source, "g"), (_m, raw: string) => {
+    const label = raw.trim();
+    const v = values[label];
+    if (opts.asInput) {
+      const val = escapeHtml(v ?? "");
+      return `<input data-fillable="${escapeHtml(label)}" value="${val}" placeholder="${escapeHtml(label)}" style="border:0;border-bottom:1.5px dashed #2563eb;background:transparent;color:#111;font:inherit;padding:0 4px;min-width:120px;outline:none;" />`;
+    }
+    if (v && v.trim() !== "") {
+      return `<span style="background:#dcfce7;border-radius:2px;padding:0 2px;">${escapeHtml(v)}</span>`;
+    }
+    if (opts.highlightEmpty) {
+      return `<span style="background:#fef3c7;border:1px dashed #f59e0b;color:#92400e;padding:0 4px;border-radius:2px;">${escapeHtml(label)}</span>`;
+    }
+    return "";
+  });
+}
+
+/** Realça visualmente os [[Rótulo]] no editor (chip azul). */
+export function highlightFillables(html: string): string {
+  return html.replace(new RegExp(FILLABLE_RE.source, "g"), (_m, raw: string) => {
+    return `<span style="background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:4px;font-family:monospace;font-size:0.9em;">[[${escapeHtml(raw.trim())}]]</span>`;
+  });
+}

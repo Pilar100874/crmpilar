@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { REGISTRO_TIPOS, RegistroTipo, resolveMergeData } from "@/lib/editores/dataResolvers";
-import { extractFieldKeys, renderTemplate } from "@/lib/editores/mergeEngine";
+import { extractFieldKeys, extractFillables, renderTemplate, applyFillables } from "@/lib/editores/mergeEngine";
 import { downloadPdf, downloadHtml, printHtml } from "@/lib/editores/pdfExport";
-import { FileDown, Printer, Download, Save, Search, ArrowLeft } from "lucide-react";
+import { FileDown, Printer, Download, Save, Search, ArrowLeft, Lock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface Modelo {
   id: string; titulo: string; content_html: string; versao_atual: number;
@@ -38,6 +39,8 @@ export default function GerarDocumento() {
   const [registroId, setRegistroId] = useState<string | null>(null);
   const [dados, setDados] = useState<Record<string, any>>({});
   const [overrides, setOverrides] = useState<Record<string, string>>({});
+  const [fillables, setFillables] = useState<Record<string, string>>({});
+  const [soPreenchimento, setSoPreenchimento] = useState(false);
   const [rendered, setRendered] = useState<string>("");
   const [missing, setMissing] = useState<string[]>([]);
   const pageRef = useRef<HTMLDivElement>(null);
@@ -63,6 +66,7 @@ export default function GerarDocumento() {
 
   const modelo = useMemo(() => modelos.find(m => m.id === modeloId), [modelos, modeloId]);
   const camposUsados = useMemo(() => modelo ? extractFieldKeys(modelo.content_html) : [], [modelo]);
+  const lacunasUsadas = useMemo(() => modelo ? extractFillables(modelo.content_html) : [], [modelo]);
 
   useEffect(() => {
     (async () => {
@@ -70,15 +74,17 @@ export default function GerarDocumento() {
       const d = await resolveMergeData(tipo, registroId);
       const merged = { ...d, ...overrides };
       setDados(merged);
-      const { html, missing } = renderTemplate(modelo.content_html, merged, { highlightMissing: true });
-      setRendered(html);
-      setMissing(missing);
+      const step1 = renderTemplate(modelo.content_html, merged, { highlightMissing: true });
+      const withFill = applyFillables(step1.html, fillables, { highlightEmpty: true });
+      setRendered(withFill);
+      setMissing(step1.missing);
     })();
-  }, [modelo, tipo, registroId, overrides]);
+  }, [modelo, tipo, registroId, overrides, fillables]);
 
   const salvarNoHistorico = async (): Promise<string | null> => {
     if (!estabId || !modelo) { toast.error("Escolha um modelo"); return null; }
-    const finalHtml = renderTemplate(modelo.content_html, dados, { highlightMissing: false }).html;
+    const step1 = renderTemplate(modelo.content_html, dados, { highlightMissing: false });
+    const finalHtml = applyFillables(step1.html, fillables, { highlightEmpty: false });
     const { data, error } = await supabase.from("doc_gerados").insert({
       estabelecimento_id: estabId,
       modelo_id: modelo.id,
@@ -145,9 +151,26 @@ export default function GerarDocumento() {
             </div>
           )}
 
-          {camposUsados.length > 0 && (
+          {lacunasUsadas.length > 0 && (
             <div className="space-y-2 border-t pt-3">
-              <div className="text-xs font-semibold">Preencher campos manualmente</div>
+              <div className="text-xs font-semibold text-primary">📝 Lacunas a preencher</div>
+              {lacunasUsadas.map(k => (
+                <div key={k}>
+                  <label className="text-[11px] text-muted-foreground">{k}</label>
+                  <Input value={fillables[k] ?? ""} onChange={e => setFillables({ ...fillables, [k]: e.target.value })} className="h-8 text-xs" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 border-t pt-3">
+            <Switch id="lock" checked={soPreenchimento} onCheckedChange={setSoPreenchimento} />
+            <label htmlFor="lock" className="text-xs flex items-center gap-1"><Lock className="h-3 w-3" /> Apenas preencher lacunas (travar textos)</label>
+          </div>
+
+          {!soPreenchimento && camposUsados.length > 0 && (
+            <div className="space-y-2 border-t pt-3">
+              <div className="text-xs font-semibold">Sobrescrever campos {"{{..}}"}</div>
               {camposUsados.filter(k => !k.startsWith("#")).map(k => {
                 const val = overrides[k] ?? (dados[k] ?? "");
                 return (
