@@ -98,43 +98,28 @@ export default function ModeloEditor() {
     toast.success(novo ? "Estrutura travada — apenas campos de formulário podem ser preenchidos" : "Estrutura liberada");
   };
 
-  const publicarVersao = async () => {
-    if (!id || !estabId || !modelo) return;
-    await salvar();
-    const novaVersao = (modelo.versao_atual ?? 0) + 1;
-    const { error } = await supabase.from("doc_modelo_versoes").insert({
-      modelo_id: id,
+  const salvarComo = async () => {
+    if (!modelo || !estabId) return;
+    const novoTitulo = window.prompt("Nome do novo modelo:", `${modelo.titulo} (cópia)`);
+    if (!novoTitulo) return;
+    const { data, error } = await supabase.from("doc_modelos").insert({
       estabelecimento_id: estabId,
-      versao: novaVersao,
+      titulo: novoTitulo,
+      descricao: modelo.descricao,
       content_html: html,
       content_json: json,
       header_html: modelo.header_html,
       footer_html: modelo.footer_html,
-    });
+      merge_config: modelo.merge_config ?? {},
+      categoria_id: modelo.categoria_id,
+      bloqueado: false,
+      campos_bloqueados: false,
+    } as any).select("id").single();
     if (error) { toast.error(error.message); return; }
-    await supabase.from("doc_modelos").update({ versao_atual: novaVersao }).eq("id", id);
-    setModelo({ ...modelo, versao_atual: novaVersao });
-    toast.success(`Versão ${novaVersao} publicada`);
+    toast.success("Cópia criada");
+    if (data?.id) nav(`/editores/modelo/${data.id}`);
   };
 
-  const abrirVersoes = async () => {
-    if (!id) return;
-    const { data } = await supabase
-      .from("doc_modelo_versoes")
-      .select("*")
-      .eq("modelo_id", id)
-      .order("versao", { ascending: false });
-    setVersoes(data ?? []);
-    setVersoesOpen(true);
-  };
-
-  const restaurarVersao = (v: any) => {
-    setHtml(v.content_html || "");
-    setJson(v.content_json || {});
-    setDirty(true);
-    setVersoesOpen(false);
-    toast.success(`Versão ${v.versao} carregada — salve para aplicar.`);
-  };
 
   const inserirCampo = (chave: string) => {
     const ed = editorRef.current;
