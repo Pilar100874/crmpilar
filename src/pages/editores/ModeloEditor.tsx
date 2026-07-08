@@ -180,7 +180,12 @@ export default function ModeloEditor() {
           </div>
         </TabsContent>
         <TabsContent value="simular" className="flex-1 overflow-hidden mt-0">
-          <SimuladorInline html={html} titulo={modelo.titulo} />
+          <SimuladorInline
+            html={html}
+            titulo={modelo.titulo}
+            mergeConfig={modelo.merge_config ?? null}
+            onMergeConfigChange={(cfg) => { setModelo({ ...modelo, merge_config: cfg }); setDirty(true); }}
+          />
         </TabsContent>
       </Tabs>
 
