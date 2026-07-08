@@ -69,7 +69,7 @@ const FONTS = ["Arial", "Times New Roman", "Georgia", "Courier New", "Verdana", 
 const SIZES = ["10px", "12px", "14px", "16px", "18px", "24px", "32px"];
 
 export function EditorToolbar({
-  editor, onFullscreen, zoom, setZoom, onPreviewMerge, estabelecimentoId,
+  editor, onFullscreen, zoom, setZoom, onPreviewMerge, previewActive, estabelecimentoId,
   onBack, onSave, onSalvarComo, onToggleLock, locked, dirty, saving,
   titulo, onTituloChange, mode = "editar", onModeChange,
   onInsertFormField, onToggleSidebar, sidebarOpen,
