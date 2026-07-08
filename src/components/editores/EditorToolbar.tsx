@@ -10,13 +10,14 @@ import {
   List, ListOrdered, Undo, Redo, Link as LinkIcon,
   Table as TableIcon, Rows, Columns, Trash2, Eraser, Maximize2, ZoomIn, ZoomOut,
   ScanSearch, ArrowLeft, Save, Eye, Lock, Unlock, Copy,
-  Database, ClipboardList, Pencil,
+  Database, ClipboardList, Pencil, PanelRightOpen, PanelRightClose,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { ImagePickerDialog } from "./ImagePickerDialog";
 import { AssinaturaPickerDialog } from "./AssinaturaPickerDialog";
 import { NovoCampoDialog } from "./NovoCampoDialog";
+import { FormFieldPicker } from "./FormFieldPicker";
 
 export type EditorMode = "editar" | "merge" | "form";
 
@@ -39,7 +40,11 @@ interface Props {
   onTituloChange?: (v: string) => void;
   mode?: EditorMode;
   onModeChange?: (m: EditorMode) => void;
+  onInsertFormField?: (token: string) => void;
+  onToggleSidebar?: () => void;
+  sidebarOpen?: boolean;
 }
+
 
 function TB({ active, onClick, disabled, title, children }: any) {
   return (
