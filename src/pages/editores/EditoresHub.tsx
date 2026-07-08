@@ -159,9 +159,11 @@ export default function EditoresHub() {
                 </div>
                 <p className="text-[11px] text-muted-foreground">{new Date(d.created_at).toLocaleString("pt-BR")}</p>
                 <div className="flex flex-wrap gap-1 pt-1">
-                  <Button size="sm" variant="outline" onClick={() => nav(d.modelo_id ? `/editores/gerar?id=${d.id}` : `/editores/documento/${d.id}`)}>
-                    <Edit className="h-3.5 w-3.5 mr-1" /> Abrir
-                  </Button>
+                  {d.modelo_id && (
+                    <Button size="sm" variant="outline" onClick={() => nav(`/editores/gerar?id=${d.id}`)}>
+                      <Edit className="h-3.5 w-3.5 mr-1" /> Abrir
+                    </Button>
+                  )}
                   <Button size="sm" variant="ghost" onClick={() => duplicarDocumento(d)} title="Duplicar"><Copy className="h-3.5 w-3.5" /></Button>
                   <Button size="sm" variant="ghost" onClick={() => printHtml(d.content_html_final ?? d.content_html ?? "")} title="Imprimir"><Printer className="h-3.5 w-3.5" /></Button>
                   <Button size="sm" variant="ghost" onClick={() => setToDelete({ kind: "documento", item: d })} title="Excluir"><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
