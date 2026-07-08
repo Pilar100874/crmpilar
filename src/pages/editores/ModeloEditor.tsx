@@ -198,6 +198,7 @@ export default function ModeloEditor() {
         titulo={modelo.titulo}
         missing={previewMissing}
         mergeConfig={modelo.merge_config ?? null}
+        onSave={async () => { await salvar(); toast.success("Rascunho salvo"); }}
       />
 
       <Sheet open={versoesOpen} onOpenChange={setVersoesOpen}>
