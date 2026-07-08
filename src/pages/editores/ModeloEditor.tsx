@@ -312,6 +312,8 @@ export default function ModeloEditor() {
                   currentHtml={html}
                   configs={configs}
                   onConfigsChange={setConfigs}
+                  savedTables={savedTables}
+                  onSavedTablesChange={setSavedTables}
                 />
               )}
             </div>
