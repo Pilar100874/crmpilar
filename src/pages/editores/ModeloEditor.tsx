@@ -10,7 +10,7 @@ import { TiptapEditor } from "@/components/editores/TiptapEditor";
 import { EditorToolbar } from "@/components/editores/EditorToolbar";
 import { CamposSidebar } from "@/components/editores/CamposSidebar";
 import { PreviewModal } from "@/components/editores/PreviewModal";
-import { ArrowLeft, Eye, Save, GitBranch, Send, Pencil, FlaskConical, Lock, Unlock, ShieldCheck, ShieldOff } from "lucide-react";
+import { ArrowLeft, Eye, Save, Pencil, FlaskConical, Lock, Unlock, ShieldCheck, ShieldOff, Copy } from "lucide-react";
 import type { Editor } from "@tiptap/react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SimuladorInline } from "@/components/editores/SimuladorInline";
@@ -35,8 +35,7 @@ export default function ModeloEditor() {
   const editorRef = useRef<Editor | null>(null);
   const [zoom, setZoom] = useState(1);
   const [fullscreen, setFullscreen] = useState(false);
-  const [versoesOpen, setVersoesOpen] = useState(false);
-  const [versoes, setVersoes] = useState<any[]>([]);
+  const [modo, setModo] = useState<"editar" | "simular">("editar");
 
   useEffect(() => {
     getEstabelecimentoId().then(setEstabId);
