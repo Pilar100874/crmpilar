@@ -31,6 +31,8 @@ export default function ModeloEditor() {
   const [zoom, setZoom] = useState(1);
   const [fullscreen, setFullscreen] = useState(false);
   const [modo, setModo] = useState<EditorMode>("editar");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
 
   useEffect(() => {
     getEstabelecimentoId().then(setEstabId);
