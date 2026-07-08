@@ -123,7 +123,7 @@ export const MergeTable = Node.create({
         document.removeEventListener("mousedown", onDocDown, true);
       };
       const onDocDown = (e: MouseEvent) => {
-        if (toolbar && !toolbar.contains(e.target as Node) && !dom.contains(e.target as Node)) closeToolbar();
+        if (toolbar && !toolbar.contains(e.target as globalThis.Node) && !dom.contains(e.target as globalThis.Node)) closeToolbar();
       };
       const openToolbar = () => {
         closeToolbar();
