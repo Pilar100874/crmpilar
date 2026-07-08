@@ -142,6 +142,11 @@ import CamerasDashboard from "./pages/cameras/CamerasDashboard";
 import CamerasGrupos from "./pages/cameras/CamerasGrupos";
 import CamerasCameras from "./pages/cameras/CamerasCameras";
 import CamerasAoVivo from "./pages/cameras/CamerasAoVivo";
+import EditoresLayout from "./pages/editores/EditoresLayout";
+import ModelosLista from "./pages/editores/ModelosLista";
+import ModeloEditor from "./pages/editores/ModeloEditor";
+import GerarDocumento from "./pages/editores/GerarDocumento";
+import DocumentosGerados from "./pages/editores/DocumentosGerados";
 
 import ChatInterno from "./pages/ChatInterno";
 import ConfigSkills from "./pages/ConfigSkills";
