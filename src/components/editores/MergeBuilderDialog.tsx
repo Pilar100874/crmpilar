@@ -710,9 +710,11 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                 todasTabelas={todasTabelas}
                 camposSelecionados={cfg.camposSelecionados ?? {}}
                 rows={rows}
-                onInsert={(html) => onInsertField?.(`__RAW__:${html}`)}
+                onInsert={(payload) => onInsertField?.(payload)}
                 onSaveTable={onSaveTable}
+                onInserted={() => setOpen(false)}
               />
+
 
 
             </div>
