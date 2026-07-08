@@ -148,56 +148,6 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml }: Prop
         </div>
       </ScrollArea>
 
-      <Dialog open={openNovo} onOpenChange={setOpenNovo}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Novo campo personalizado</DialogTitle>
-            <DialogDescription>Ficará disponível para todos os modelos deste estabelecimento.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs text-muted-foreground">Chave (sem espaços)</label>
-              <Input value={novo.chave} onChange={e => setNovo({ ...novo, chave: e.target.value })} placeholder="ex: numero_apolice" />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">Rótulo</label>
-              <Input value={novo.rotulo} onChange={e => setNovo({ ...novo, rotulo: e.target.value })} placeholder="ex: Número da apólice" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-muted-foreground">Categoria</label>
-                <Input value={novo.categoria} onChange={e => setNovo({ ...novo, categoria: e.target.value })} />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground">Tipo</label>
-                <Select value={novo.tipo} onValueChange={v => setNovo({ ...novo, tipo: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="texto">Texto</SelectItem>
-                    <SelectItem value="data">Data</SelectItem>
-                    <SelectItem value="moeda">Moeda</SelectItem>
-                    <SelectItem value="numero">Número</SelectItem>
-                    <SelectItem value="booleano">Booleano</SelectItem>
-                  </SelectContent>
-                </Select>
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">Instrução de preenchimento (opcional)</label>
-              <Input
-                value={novo.descricao}
-                onChange={e => setNovo({ ...novo, descricao: e.target.value })}
-                placeholder="ex: Informar o número da apólice sem hífens"
-              />
-              <p className="text-[10px] text-muted-foreground mt-1">Aparece como dica no editor e como placeholder no Simular/Preencher.</p>
-            </div>
-          </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenNovo(false)}>Cancelar</Button>
-            <Button onClick={criarCampo}>Criar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </aside>
   );
 }
