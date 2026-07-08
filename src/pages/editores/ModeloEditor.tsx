@@ -353,6 +353,8 @@ export default function ModeloEditor() {
                   onConfigsChange={setConfigs}
                   savedTables={savedTables}
                   onSavedTablesChange={setSavedTables}
+                  mergeFields={mergeFields}
+                  onMergeFieldsChange={setMergeFields}
                 />
               </div>
             </div>
