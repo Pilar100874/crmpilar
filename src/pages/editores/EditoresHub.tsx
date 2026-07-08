@@ -71,17 +71,14 @@ export default function EditoresHub() {
 
   const criarDocumento = async () => {
     if (!estabId) return;
-    const { data, error } = await supabase.from("doc_gerados").insert({
+    const { data, error } = await supabase.from("doc_modelos").insert({
       estabelecimento_id: estabId,
       titulo: "Novo documento",
-      tipo: "documento",
-      status: "rascunho",
       content_html: "<h1>Novo Documento</h1><p>Comece a escrever aqui…</p>",
-      content_html_final: "<h1>Novo Documento</h1><p>Comece a escrever aqui…</p>",
-      dados_merge: {},
+      content_json: {},
     }).select().single();
     if (error) { toast.error(error.message); return; }
-    nav(`/editores/documento/${data.id}`);
+    nav(`/editores/modelos/${data.id}`);
   };
 
   const duplicarModelo = async (m: Modelo) => {
