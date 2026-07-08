@@ -3,12 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Tags, Database } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, Tags, Database, Plus, Pencil, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { extractFieldKeys } from "@/lib/editores/mergeEngine";
-import { FormFieldPicker } from "./FormFieldPicker";
-import { MergeBuilderDialog } from "./MergeBuilderDialog";
+import { MergeBuilderDialog, type MergeConfig } from "./MergeBuilderDialog";
 
 interface Campo {
   id: string;
@@ -26,6 +26,8 @@ interface Props {
   currentHtml: string;
   mergeFields?: string[];
   onMergeFieldsChange?: (chaves: string[]) => void;
+  configs?: MergeConfig[];
+  onConfigsChange?: (configs: MergeConfig[]) => void;
 }
 
 const onDragToken = (e: React.DragEvent, chave: string) => {
@@ -36,13 +38,21 @@ const onDragToken = (e: React.DragEvent, chave: string) => {
   e.dataTransfer.effectAllowed = "copy";
 };
 
-export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeFields: mergeFieldsProp, onMergeFieldsChange }: Props) {
+export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeFields: mergeFieldsProp, onMergeFieldsChange, configs: configsProp, onConfigsChange }: Props) {
   const [mergeFieldsInternal, setMergeFieldsInternal] = useState<string[]>([]);
   const mergeFields = mergeFieldsProp ?? mergeFieldsInternal;
   const setMergeFields = (chaves: string[]) => {
     setMergeFieldsInternal(chaves);
     onMergeFieldsChange?.(chaves);
   };
+  const [configsInternal, setConfigsInternal] = useState<MergeConfig[]>([]);
+  const configs = configsProp ?? configsInternal;
+  const setConfigs = (list: MergeConfig[]) => {
+    setConfigsInternal(list);
+    onConfigsChange?.(list);
+  };
+  const [editIdx, setEditIdx] = useState<number | null>(null);
+
   const [campos, setCampos] = useState<Campo[]>([]);
   const [busca, setBusca] = useState("");
 
