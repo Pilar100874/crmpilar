@@ -30,6 +30,8 @@ interface Props {
   onMergeFieldsChange?: (chaves: string[]) => void;
   configs?: MergeConfig[];
   onConfigsChange?: (configs: MergeConfig[]) => void;
+  savedTables?: { name: string; html: string }[];
+  onSavedTablesChange?: (list: { name: string; html: string }[]) => void;
 }
 
 // Resolve caminho "a.b.c" em objeto aninhado
@@ -60,7 +62,7 @@ const makeDragHandler =
     e.dataTransfer.effectAllowed = "copy";
   };
 
-export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeFields: mergeFieldsProp, onMergeFieldsChange, configs: configsProp, onConfigsChange }: Props) {
+export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeFields: mergeFieldsProp, onMergeFieldsChange, configs: configsProp, onConfigsChange, savedTables: savedTablesProp, onSavedTablesChange }: Props) {
   const [mergeFieldsInternal, setMergeFieldsInternal] = useState<string[]>([]);
   const mergeFields = mergeFieldsProp ?? mergeFieldsInternal;
   const setMergeFields = (chaves: string[]) => {
@@ -73,6 +75,16 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
     setConfigsInternal(list);
     onConfigsChange?.(list);
   };
+  const [savedTablesInternal, setSavedTablesInternal] = useState<{ name: string; html: string }[]>([]);
+  const savedTables = savedTablesProp ?? savedTablesInternal;
+  const setSavedTables = (list: { name: string; html: string }[]) => {
+    setSavedTablesInternal(list);
+    onSavedTablesChange?.(list);
+  };
+  const addSavedTable = (name: string, html: string) => {
+    setSavedTables([...savedTables.filter(t => t.name !== name), { name, html }]);
+  };
+  const removeSavedTable = (name: string) => setSavedTables(savedTables.filter(t => t.name !== name));
   const [editIdx, setEditIdx] = useState<number | null>(null);
 
   const [campos, setCampos] = useState<Campo[]>([]);
@@ -227,9 +239,40 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
                   setMergeFields([...outros, ...chaves]);
                 }}
                 initialSelected={mergeFields.filter(k => c.alias && k.startsWith(`${c.alias}.`))}
+                onSaveTable={addSavedTable}
               />
             ))}
           </div>
+
+          {/* Tabelas salvas — subgrupo */}
+          <div className="border-t pt-3">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
+              <Database className="h-3 w-3" /> Tabelas
+            </div>
+            {savedTables.length === 0 ? (
+              <p className="text-[11px] text-muted-foreground">Nenhuma tabela gerada. Use "Inserir tabela" no vínculo para criar.</p>
+            ) : (
+              <div className="flex flex-wrap gap-1">
+                {savedTables.map(t => (
+                  <div key={t.name} className="flex items-center gap-1 border rounded px-2 py-1 bg-violet-500/5 border-violet-500/40">
+                    <button
+                      draggable
+                      onDragStart={(e) => { e.dataTransfer.setData("text/plain", t.html); e.dataTransfer.effectAllowed = "copy"; }}
+                      onClick={() => onInsert(`__RAW__:${t.html}`)}
+                      className="text-[11px] font-medium cursor-grab active:cursor-grabbing"
+                      title="Arraste ou clique para reinserir a tabela"
+                    >
+                      📊 {t.name}
+                    </button>
+                    <button onClick={() => removeSavedTable(t.name)} className="text-destructive/70 hover:text-destructive" title="Remover">
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
 
           {/* Campos do Merge selecionados */}
           <div className="border-t pt-3">

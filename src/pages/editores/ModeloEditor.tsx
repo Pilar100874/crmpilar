@@ -39,6 +39,8 @@ export default function ModeloEditor() {
   const [recordIndex, setRecordIndex] = useState(0);
   const [rowsByAlias, setRowsByAlias] = useState<Record<string, any[]>>({});
   const [primaryAlias, setPrimaryAlias] = useState<string | null>(null);
+  const [showResolved, setShowResolved] = useState(false);
+  const [savedTables, setSavedTables] = useState<{ name: string; html: string }[]>([]);
 
   // Normaliza merge_config para array de configs (aceita objeto legado)
   const configs = useMemo<any[]>(() => {
@@ -78,6 +80,10 @@ export default function ModeloEditor() {
 
   // Publica valores no store para os chips renderizarem o valor real
   useEffect(() => {
+    if (!showResolved) {
+      setPreviewValues({});
+      return;
+    }
     (async () => {
       const base = await resolveMergeData("livre", null);
       const merged: Record<string, any> = { ...base };
@@ -90,7 +96,7 @@ export default function ModeloEditor() {
       }
       setPreviewValues(merged);
     })();
-  }, [rowsByAlias, primaryAlias, recordIndex, configsKey]);
+  }, [rowsByAlias, primaryAlias, recordIndex, configsKey, showResolved]);
 
   const primaryRows = primaryAlias ? (rowsByAlias[primaryAlias] || []) : [];
   const primaryLabel = primaryRows[recordIndex]
@@ -215,12 +221,9 @@ export default function ModeloEditor() {
   };
 
   const abrirPreview = async () => {
+    // Toggle inline: mostra valores resolvidos direto no editor (não abre modal).
     if (dirty) await salvar(true);
-    const data = await resolveMergeData("livre", null);
-    const { html: rendered, missing } = renderTemplate(html || "<p><em>Documento vazio</em></p>", data, { highlightMissing: true });
-    setPreviewHtml(rendered);
-    setPreviewMissing(missing);
-    setShowPreview(true);
+    setShowResolved((v) => !v);
   };
 
   if (!modelo) return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
@@ -309,6 +312,8 @@ export default function ModeloEditor() {
                   currentHtml={html}
                   configs={configs}
                   onConfigsChange={setConfigs}
+                  savedTables={savedTables}
+                  onSavedTablesChange={setSavedTables}
                 />
               )}
             </div>
