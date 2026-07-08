@@ -100,20 +100,89 @@ export const MergeTable = Node.create({
   },
 
   addNodeView() {
-    return ({ node }) => {
+    return ({ node, editor, getPos }) => {
+      const wrapper = document.createElement("div");
+      wrapper.style.cssText = "position:relative;margin:8px 0;";
       const dom = document.createElement("table");
       dom.setAttribute("data-merge-table", "1");
       dom.setAttribute("data-alias", node.attrs.alias);
       dom.setAttribute("data-cols", (node.attrs.cols || []).join(","));
       dom.setAttribute("data-from", String(node.attrs.from ?? 1));
       dom.setAttribute("data-to", String(node.attrs.to ?? 0));
-      dom.style.cssText = "border-collapse:collapse;width:100%;font-size:11pt;";
+      dom.style.cssText = "border-collapse:collapse;width:100%;font-size:11pt;cursor:pointer;";
       const render = () => {
         dom.innerHTML = buildInner(node.attrs as MergeTableAttrs);
       };
       render();
       const unsub = subscribePreview(render);
-      return { dom, destroy: () => unsub() };
+
+      // Toolbar flutuante ao clicar
+      let toolbar: HTMLDivElement | null = null;
+      const closeToolbar = () => {
+        if (toolbar) { toolbar.remove(); toolbar = null; }
+        document.removeEventListener("mousedown", onDocDown, true);
+      };
+      const onDocDown = (e: MouseEvent) => {
+        if (toolbar && !toolbar.contains(e.target as globalThis.Node) && !dom.contains(e.target as globalThis.Node)) closeToolbar();
+      };
+      const openToolbar = () => {
+        closeToolbar();
+        const attrs = node.attrs as MergeTableAttrs;
+        toolbar = document.createElement("div");
+        toolbar.contentEditable = "false";
+        toolbar.style.cssText = "position:absolute;top:-40px;left:0;z-index:50;display:flex;gap:6px;align-items:center;background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:4px 8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:12px;";
+        toolbar.innerHTML = `
+          <span style="color:#555;">Linhas:</span>
+          <input type="number" min="1" value="${attrs.from ?? 1}" style="width:56px;padding:2px 4px;border:1px solid #ccc;border-radius:4px;" data-k="from" />
+          <span style="color:#555;">até</span>
+          <input type="number" min="0" value="${attrs.to ?? 0}" placeholder="todas" style="width:56px;padding:2px 4px;border:1px solid #ccc;border-radius:4px;" data-k="to" />
+          <button type="button" data-a="apply" style="padding:2px 8px;background:#2563eb;color:#fff;border:none;border-radius:4px;cursor:pointer;">Aplicar</button>
+          <button type="button" data-a="dup" style="padding:2px 8px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;">Duplicar</button>
+          <button type="button" data-a="del" style="padding:2px 8px;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;border-radius:4px;cursor:pointer;">Excluir</button>
+        `;
+        wrapper.appendChild(toolbar);
+        const getVals = () => {
+          const from = Number((toolbar!.querySelector('[data-k="from"]') as HTMLInputElement).value) || 1;
+          const to = Number((toolbar!.querySelector('[data-k="to"]') as HTMLInputElement).value) || 0;
+          return { from, to };
+        };
+        toolbar.addEventListener("click", (e) => {
+          const t = e.target as HTMLElement;
+          const a = t.getAttribute("data-a");
+          if (!a) return;
+          const pos = typeof getPos === "function" ? getPos() : null;
+          if (pos == null) return;
+          if (a === "apply") {
+            const { from, to } = getVals();
+            editor.chain().focus().command(({ tr }) => {
+              tr.setNodeMarkup(pos, undefined, { ...node.attrs, from, to });
+              return true;
+            }).run();
+            closeToolbar();
+          } else if (a === "dup") {
+            editor.chain().focus().insertContentAt(pos + node.nodeSize, { type: "mergeTable", attrs: { ...node.attrs } }).run();
+            closeToolbar();
+          } else if (a === "del") {
+            editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).run();
+            closeToolbar();
+          }
+        });
+        setTimeout(() => document.addEventListener("mousedown", onDocDown, true), 0);
+      };
+      dom.addEventListener("click", (e) => { e.stopPropagation(); openToolbar(); });
+
+      wrapper.appendChild(dom);
+      return {
+        dom: wrapper,
+        update(updated) {
+          if (updated.type.name !== "mergeTable") return false;
+          dom.setAttribute("data-from", String(updated.attrs.from ?? 1));
+          dom.setAttribute("data-to", String(updated.attrs.to ?? 0));
+          dom.innerHTML = buildInner(updated.attrs as MergeTableAttrs);
+          return true;
+        },
+        destroy: () => { unsub(); closeToolbar(); },
+      };
     };
   },
 });
