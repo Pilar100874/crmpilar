@@ -145,7 +145,7 @@ import CamerasAoVivo from "./pages/cameras/CamerasAoVivo";
 import EditoresLayout from "./pages/editores/EditoresLayout";
 import EditoresHub from "./pages/editores/EditoresHub";
 import ModeloEditor from "./pages/editores/ModeloEditor";
-import DocumentoEditor from "./pages/editores/DocumentoEditor";
+
 import ModelosLista from "./pages/editores/ModelosLista";
 import DocumentosGerados from "./pages/editores/DocumentosGerados";
 import GerarDocumento from "./pages/editores/GerarDocumento";
