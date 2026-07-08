@@ -156,7 +156,7 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
     tabela: value?.tabela || "",
     alias: value?.alias || "reg",
     filtros: Array.isArray(value?.filtros) ? value!.filtros : [],
-    limite: value?.limite ?? 50,
+    limite: value?.limite ?? 0,
     calculados: Array.isArray(value?.calculados) ? value!.calculados : [],
     relations: Array.isArray(value?.relations) ? value!.relations : [],
     camposSelecionados: value?.camposSelecionados || {},
