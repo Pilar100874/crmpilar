@@ -30,8 +30,8 @@ interface Props {
   onMergeFieldsChange?: (chaves: string[]) => void;
   configs?: MergeConfig[];
   onConfigsChange?: (configs: MergeConfig[]) => void;
-  savedTables?: { name: string; html: string }[];
-  onSavedTablesChange?: (list: { name: string; html: string }[]) => void;
+  savedTables?: { name: string; alias: string; cols: string[] }[];
+  onSavedTablesChange?: (list: { name: string; alias: string; cols: string[] }[]) => void;
 }
 
 // Resolve caminho "a.b.c" em objeto aninhado
@@ -75,14 +75,14 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
     setConfigsInternal(list);
     onConfigsChange?.(list);
   };
-  const [savedTablesInternal, setSavedTablesInternal] = useState<{ name: string; html: string }[]>([]);
+  const [savedTablesInternal, setSavedTablesInternal] = useState<{ name: string; alias: string; cols: string[] }[]>([]);
   const savedTables = savedTablesProp ?? savedTablesInternal;
-  const setSavedTables = (list: { name: string; html: string }[]) => {
+  const setSavedTables = (list: { name: string; alias: string; cols: string[] }[]) => {
     setSavedTablesInternal(list);
     onSavedTablesChange?.(list);
   };
-  const addSavedTable = (name: string, html: string) => {
-    setSavedTables([...savedTables.filter(t => t.name !== name), { name, html }]);
+  const addSavedTable = (name: string, meta: { alias: string; cols: string[] }) => {
+    setSavedTables([...savedTables.filter(t => t.name !== name), { name, ...meta }]);
   };
   const removeSavedTable = (name: string) => setSavedTables(savedTables.filter(t => t.name !== name));
   const [editIdx, setEditIdx] = useState<number | null>(null);
@@ -257,10 +257,14 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
                   <div key={t.name} className="flex items-center gap-1 border rounded px-2 py-1 bg-violet-500/5 border-violet-500/40">
                     <button
                       draggable
-                      onDragStart={(e) => { e.dataTransfer.setData("text/plain", t.html); e.dataTransfer.effectAllowed = "copy"; }}
-                      onClick={() => onInsert(`__RAW__:${t.html}`)}
+                      onDragStart={(e) => {
+                        const payload = `__TABLE__:${JSON.stringify({ alias: t.alias, cols: t.cols })}`;
+                        e.dataTransfer.setData("text/plain", payload);
+                        e.dataTransfer.effectAllowed = "copy";
+                      }}
+                      onClick={() => onInsert(`__TABLE__:${JSON.stringify({ alias: t.alias, cols: t.cols })}`)}
                       className="text-[11px] font-medium cursor-grab active:cursor-grabbing"
-                      title="Arraste ou clique para reinserir a tabela"
+                      title="Arraste ou clique para inserir a tabela (será perguntado o intervalo de linhas)"
                     >
                       📊 {t.name}
                     </button>

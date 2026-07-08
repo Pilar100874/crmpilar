@@ -1,14 +1,23 @@
-// Store simples (singleton) que mantém os valores resolvidos do primeiro
-// registro (ou do registro atualmente selecionado no navegador) para que os
-// chips {{campo}} do editor mostrem o valor real em vez do token.
+// Store singleton que mantém os valores resolvidos do registro selecionado
+// (para chips {{campo}}) e as linhas completas por alias (para nós de tabela).
 type Listener = () => void;
 
 let values: Record<string, any> = {};
+let rowsByAlias: Record<string, any[]> = {};
 const listeners = new Set<Listener>();
 
 export function setPreviewValues(v: Record<string, any>) {
   values = v || {};
   listeners.forEach((l) => l());
+}
+
+export function setPreviewRows(map: Record<string, any[]>) {
+  rowsByAlias = map || {};
+  listeners.forEach((l) => l());
+}
+
+export function getPreviewRows(alias: string): any[] {
+  return rowsByAlias[alias] || [];
 }
 
 export function subscribePreview(cb: Listener): () => void {

@@ -13,7 +13,7 @@ import { SimuladorInline } from "@/components/editores/SimuladorInline";
 import { renderTemplate } from "@/lib/editores/mergeEngine";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
 import { runMergeConfig } from "@/lib/editores/runMergeConfig";
-import { setPreviewValues } from "@/lib/editores/mergePreviewStore";
+import { setPreviewValues, setPreviewRows } from "@/lib/editores/mergePreviewStore";
 import { RegistroNavigator } from "@/components/editores/RegistroNavigator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -40,7 +40,7 @@ export default function ModeloEditor() {
   const [rowsByAlias, setRowsByAlias] = useState<Record<string, any[]>>({});
   const [primaryAlias, setPrimaryAlias] = useState<string | null>(null);
   const [showResolved, setShowResolved] = useState(false);
-  const [savedTables, setSavedTables] = useState<{ name: string; html: string }[]>([]);
+  const [savedTables, setSavedTables] = useState<{ name: string; alias: string; cols: string[] }[]>([]);
 
   // Normaliza merge_config para array de configs (aceita objeto legado)
   const configs = useMemo<any[]>(() => {
@@ -82,6 +82,7 @@ export default function ModeloEditor() {
   useEffect(() => {
     if (!showResolved) {
       setPreviewValues({});
+      setPreviewRows({});
       return;
     }
     (async () => {
@@ -95,6 +96,7 @@ export default function ModeloEditor() {
         merged[c.alias] = rows[Math.min(i, rows.length - 1)];
       }
       setPreviewValues(merged);
+      setPreviewRows(rowsByAlias);
     })();
   }, [rowsByAlias, primaryAlias, recordIndex, configsKey, showResolved]);
 
@@ -209,6 +211,24 @@ export default function ModeloEditor() {
     }
     if (chave.startsWith("__RAW__:")) {
       ed.chain().focus().insertContent(chave.slice("__RAW__:".length)).run();
+      return;
+    }
+    if (chave.startsWith("__TABLE__:")) {
+      try {
+        const meta = JSON.parse(chave.slice("__TABLE__:".length)) as { alias: string; cols: string[] };
+        const resp = window.prompt(
+          `Inserir tabela "${meta.alias}".\nQuais linhas? Ex: 1-10 · 5-20 · vazio = todas`,
+          "",
+        );
+        if (resp === null) return; // cancelou
+        let from = 1, to = 0;
+        const m = resp.trim().match(/^(\d+)\s*[-\/]\s*(\d+)$/);
+        if (m) { from = Number(m[1]); to = Number(m[2]); }
+        else if (/^\d+$/.test(resp.trim())) { from = 1; to = Number(resp.trim()); }
+        ed.chain().focus().insertContent({ type: "mergeTable", attrs: { alias: meta.alias, cols: meta.cols, from, to } }).run();
+      } catch (e) {
+        console.error("[ModeloEditor] payload __TABLE__ inválido", e);
+      }
       return;
     }
     if (chave.startsWith("__LOOP__:")) {
