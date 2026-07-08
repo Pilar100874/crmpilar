@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/lib/toast-config";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FormInput } from "lucide-react";
+import { FormInput, Loader2 } from "lucide-react";
 import { serializeFillable, type FillableTipo } from "@/lib/editores/mergeEngine";
 
 interface Props {
@@ -13,33 +15,82 @@ interface Props {
   asIcon?: boolean;
 }
 
-
 const TIPOS: { value: FillableTipo; label: string; hasOpcoes?: boolean }[] = [
   { value: "texto", label: "Texto curto" },
   { value: "textarea", label: "Texto longo (parágrafo)" },
   { value: "data", label: "Data" },
   { value: "numero", label: "Número" },
-  { value: "check", label: "Caixa de seleção (checkbox)" },
+  { value: "check", label: "Caixa de seleção (checkbox)", hasOpcoes: true },
   { value: "lista", label: "Lista suspensa (select)", hasOpcoes: true },
   { value: "radio", label: "Opções (radio)", hasOpcoes: true },
+];
+
+// Tabelas disponíveis (mesma lista usada no MergeBuilderDialog).
+const TABELAS = [
+  { value: "customers", label: "Clientes" },
+  { value: "empresas", label: "Empresas / Fornecedores" },
+  { value: "ponto_funcionarios", label: "Funcionários" },
+  { value: "pedidos_ecommerce", label: "Pedidos" },
+  { value: "orcamentos", label: "Orçamentos" },
+  { value: "produtos", label: "Produtos" },
+  { value: "vis_visitors", label: "Visitantes" },
+  { value: "veiculos", label: "Veículos" },
 ];
 
 export function FormFieldPicker({ onInsert, triggerClassName, triggerLabel = "Inserir campo de formulário", asIcon }: Props) {
   const [open, setOpen] = useState(false);
   const [tipo, setTipo] = useState<FillableTipo>("texto");
   const [label, setLabel] = useState("");
+  const [fonte, setFonte] = useState<"manual" | "tabela">("manual");
   const [opcoes, setOpcoes] = useState("");
+  const [tabela, setTabela] = useState("");
+  const [coluna, setColuna] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const cfg = TIPOS.find(t => t.value === tipo)!;
+
+  const carregarValores = async () => {
+    if (!tabela || !coluna.trim()) {
+      toast.error("Escolha a tabela e informe a coluna");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from(tabela as any)
+        .select(coluna.trim())
+        .not(coluna.trim(), "is", null)
+        .limit(2000);
+      if (error) throw error;
+      const set = new Set<string>();
+      for (const row of (data ?? []) as any[]) {
+        const v = row?.[coluna.trim()];
+        if (v == null) continue;
+        const s = String(v).trim();
+        if (s) set.add(s);
+      }
+      const uniq = Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR"));
+      if (uniq.length === 0) { toast.error("Nenhum valor encontrado"); return; }
+      setOpcoes(uniq.join(", "));
+      toast.success(`${uniq.length} valor(es) únicos carregados`);
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao carregar valores");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const inserir = () => {
     if (!label.trim()) return;
     const opcoesArr = cfg.hasOpcoes ? opcoes.split(",").map(s => s.trim()).filter(Boolean) : undefined;
-    const token = serializeFillable({ tipo, label: label.trim(), opcoes: opcoesArr });
-    const payload = JSON.stringify({ tipo, token, label: label.trim(), opcoes: (opcoesArr ?? []).join(",") });
+    // Para "check" com múltiplas opções, mantemos como radio-style (múltiplas caixas).
+    const tipoFinal: FillableTipo =
+      tipo === "check" && opcoesArr && opcoesArr.length > 0 ? "radio" : tipo;
+    const token = serializeFillable({ tipo: tipoFinal, label: label.trim(), opcoes: opcoesArr });
+    const payload = JSON.stringify({ tipo: tipoFinal, token, label: label.trim(), opcoes: (opcoesArr ?? []).join(",") });
     onInsert(`__FIELD__:${payload}`);
     setOpen(false);
-    setLabel(""); setOpcoes(""); setTipo("texto");
+    setLabel(""); setOpcoes(""); setTipo("texto"); setFonte("manual"); setTabela(""); setColuna("");
   };
 
   return (
@@ -60,9 +111,11 @@ export function FormFieldPicker({ onInsert, triggerClassName, triggerLabel = "In
         <DialogHeader>
           <DialogTitle>Inserir campo de formulário</DialogTitle>
           <DialogDescription>
-            Cria uma lacuna que o usuário preenche no momento da geração. Se o modo "formulário travado" estiver ativo, apenas estes campos poderão ser editados.
+            Cria uma lacuna que o usuário preenche na geração. Se o modo "formulário travado" estiver ativo,
+            apenas estes campos poderão ser editados.
           </DialogDescription>
         </DialogHeader>
+
         <div className="space-y-3">
           <div>
             <label className="text-xs text-muted-foreground">Tipo</label>
@@ -73,17 +126,59 @@ export function FormFieldPicker({ onInsert, triggerClassName, triggerLabel = "In
               </SelectContent>
             </Select>
           </div>
+
           <div>
             <label className="text-xs text-muted-foreground">Rótulo</label>
             <Input value={label} onChange={e => setLabel(e.target.value)} placeholder="Ex.: Nome do responsável" autoFocus />
           </div>
+
           {cfg.hasOpcoes && (
-            <div>
-              <label className="text-xs text-muted-foreground">Opções (separadas por vírgula)</label>
-              <Input value={opcoes} onChange={e => setOpcoes(e.target.value)} placeholder="SP, RJ, MG" />
+            <div className="space-y-2 border rounded p-3 bg-muted/20">
+              <div>
+                <label className="text-xs text-muted-foreground">Fonte das opções</label>
+                <Select value={fonte} onValueChange={(v: "manual" | "tabela") => setFonte(v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="manual">Digitar opções manualmente</SelectItem>
+                    <SelectItem value="tabela">Buscar valores únicos de uma tabela</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {fonte === "tabela" && (
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[11px] text-muted-foreground">Tabela</label>
+                    <Select value={tabela} onValueChange={setTabela}>
+                      <SelectTrigger className="h-8"><SelectValue placeholder="Selecionar…" /></SelectTrigger>
+                      <SelectContent>
+                        {TABELAS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-muted-foreground">Coluna</label>
+                    <Input className="h-8" value={coluna} onChange={e => setColuna(e.target.value)} placeholder="ex: cidade" />
+                  </div>
+                  <div className="col-span-2">
+                    <Button size="sm" variant="outline" onClick={carregarValores} disabled={loading} className="w-full h-8">
+                      {loading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                      Carregar valores únicos
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="text-xs text-muted-foreground">
+                  Opções {fonte === "tabela" ? "(carregadas da tabela — pode editar)" : "(separadas por vírgula)"}
+                </label>
+                <Input value={opcoes} onChange={e => setOpcoes(e.target.value)} placeholder="SP, RJ, MG" />
+              </div>
             </div>
           )}
         </div>
+
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
           <Button onClick={inserir}>Inserir</Button>
