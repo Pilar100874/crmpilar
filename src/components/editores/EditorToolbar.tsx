@@ -103,6 +103,9 @@ export function EditorToolbar({ editor, onFullscreen, zoom, setZoom }: Props) {
       <ImagePickerDialog onInsert={(url, w) => {
         editor.chain().focus().setImage({ src: url } as any).updateAttributes("image", { width: w } as any).run();
       }} />
+      <AssinaturaPickerDialog onInsert={(html) => {
+        editor.chain().focus().insertContent(html).run();
+      }} />
       {editor.isActive("image") && (
         <Select value="" onValueChange={(v) => editor.chain().focus().updateAttributes("image", { width: v } as any).run()}>
           <SelectTrigger className="h-8 w-24 text-xs"><SelectValue placeholder="Tam. img" /></SelectTrigger>
