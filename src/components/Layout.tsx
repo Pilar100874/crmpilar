@@ -217,6 +217,16 @@ const menuItems: MenuItem[] = [
   { id: "Controle de Veículos", title: "Controle de Veículos", url: "/controle-veiculos", icon: LucideIcons.Car },
   { id: "Controle de Visitantes", title: "Controle de Visitantes", url: "/controle-visitantes", icon: LucideIcons.Users },
   { id: "Câmeras", title: "Câmeras", url: "/cameras", icon: LucideIcons.Camera },
+  {
+    id: "Editores",
+    title: "Editores",
+    icon: LucideIcons.FileText,
+    subItems: [
+      { id: "Editores Modelos", title: "Modelos de Documento", url: "/editores/modelos", icon: LucideIcons.FileText },
+      { id: "Editores Gerar", title: "Gerar Documento", url: "/editores/gerar", icon: LucideIcons.Send },
+      { id: "Editores Documentos", title: "Documentos Gerados", url: "/editores/documentos", icon: LucideIcons.FileStack },
+    ],
+  },
 
 
 
