@@ -62,6 +62,7 @@ export default function ModeloEditor() {
 
   const salvar = async (auto = false) => {
     if (!id || !modelo) return;
+    if (modelo.bloqueado && !auto) { toast.error("Modelo bloqueado — desbloqueie para editar."); return; }
     setSaving(true);
     const { error } = await supabase.from("doc_modelos").update({
       titulo: modelo.titulo,
@@ -71,11 +72,21 @@ export default function ModeloEditor() {
       header_html: modelo.header_html,
       footer_html: modelo.footer_html,
       merge_config: modelo.merge_config ?? {},
-    }).eq("id", id);
+      bloqueado: modelo.bloqueado ?? false,
+    } as any).eq("id", id);
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     setDirty(false);
     if (!auto) toast.success("Salvo");
+  };
+
+  const alternarBloqueio = async () => {
+    if (!id || !modelo) return;
+    const novo = !modelo.bloqueado;
+    const { error } = await supabase.from("doc_modelos").update({ bloqueado: novo } as any).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    setModelo({ ...modelo, bloqueado: novo });
+    toast.success(novo ? "Modelo bloqueado para edição" : "Modelo desbloqueado");
   };
 
   const publicarVersao = async () => {
