@@ -32,9 +32,13 @@ function buildInner(attrs: MergeTableAttrs): string {
   const rows = getPreviewRows(attrs.alias);
   let body = "";
   if (rows.length) {
-    const from = Math.max(0, (attrs.from || 1) - 1);
-    const to = attrs.to && attrs.to > 0 ? Math.min(rows.length, attrs.to) : rows.length;
-    const slice = rows.slice(from, to);
+    const total = rows.length;
+    let from = Math.max(1, attrs.from || 1);
+    if (from > total) from = total;
+    let to = attrs.to && attrs.to > 0 ? attrs.to : total;
+    if (to > total) to = total;
+    if (to < from) to = from;
+    const slice = rows.slice(from - 1, to);
     body = slice
       .map((r) => `<tr>${cols.map((c) => `<td style="border:1px solid #ccc;padding:4px;">${esc(fmt(r?.[c]))}</td>`).join("")}</tr>`)
       .join("");
@@ -153,7 +157,17 @@ export const MergeTable = Node.create({
           const pos = typeof getPos === "function" ? getPos() : null;
           if (pos == null) return;
           if (a === "apply") {
-            const { from, to } = getVals();
+            let { from, to } = getVals();
+            const previewRows = getPreviewRows((node.attrs as MergeTableAttrs).alias);
+            const total = previewRows.length;
+            if (from < 1) from = 1;
+            if (total >= 2 && from > total - 1) from = total - 1;
+            if (to !== 0) {
+              if (to < from) to = from;
+              if (total > 0 && to > total) to = total;
+            }
+            (toolbar!.querySelector('[data-k="from"]') as HTMLInputElement).value = String(from);
+            (toolbar!.querySelector('[data-k="to"]') as HTMLInputElement).value = String(to);
             editor.chain().focus().command(({ tr }) => {
               tr.setNodeMarkup(pos, undefined, { ...node.attrs, from, to });
               return true;
