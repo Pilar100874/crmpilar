@@ -710,9 +710,11 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                 todasTabelas={todasTabelas}
                 camposSelecionados={cfg.camposSelecionados ?? {}}
                 rows={rows}
-                onInsert={(html) => onInsertField?.(`__RAW__:${html}`)}
+                onInsert={(payload) => onInsertField?.(payload)}
                 onSaveTable={onSaveTable}
+                onInserted={() => setOpen(false)}
               />
+
 
 
             </div>
@@ -769,12 +771,13 @@ function CamposCheckList({ tabela, colunas, loading, selecionados, onToggle }: {
 }
 
 // ============ Salvar tabela como chip na sidebar (não insere no editor) ============
-function InserirListaTabela({ todasTabelas, camposSelecionados, onSaveTable }: {
+function InserirListaTabela({ todasTabelas, camposSelecionados, onInsert, onSaveTable, onInserted }: {
   todasTabelas: { tabela: string; alias: string; isMain: boolean }[];
   camposSelecionados: Record<string, string[]>;
   rows: any[];
-  onInsert: (html: string) => void;
+  onInsert: (payload: string) => void;
   onSaveTable?: (name: string, meta: { alias: string; cols: string[] }) => void;
+  onInserted?: () => void;
 }) {
   const opcoes = todasTabelas.filter(t => (camposSelecionados[t.tabela] ?? []).length > 0);
   const [alias, setAlias] = useState<string>("");
@@ -789,6 +792,13 @@ function InserirListaTabela({ todasTabelas, camposSelecionados, onSaveTable }: {
     if (!sel || cols.length === 0 || !onSaveTable) return;
     onSaveTable(sel.alias, { alias: sel.alias, cols: [...cols] });
     toast.success(`Tabela "${sel.alias}" adicionada à barra lateral. Arraste para o documento para inserir.`);
+  };
+
+  const inserirAgora = () => {
+    if (!sel || cols.length === 0) return;
+    onSaveTable?.(sel.alias, { alias: sel.alias, cols: [...cols] });
+    onInsert(`__TABLE__:${JSON.stringify({ alias: sel.alias, cols: [...cols] })}`);
+    onInserted?.();
   };
 
   if (opcoes.length === 0) return null;
@@ -807,10 +817,14 @@ function InserirListaTabela({ todasTabelas, camposSelecionados, onSaveTable }: {
             ))}
           </SelectContent>
         </Select>
-        <Button size="sm" onClick={salvar} disabled={!sel || cols.length === 0}>
+        <Button size="sm" variant="outline" onClick={salvar} disabled={!sel || cols.length === 0}>
           <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar à sidebar
         </Button>
+        <Button size="sm" onClick={inserirAgora} disabled={!sel || cols.length === 0}>
+          <Table2 className="h-3.5 w-3.5 mr-1" /> Inserir tabela no documento
+        </Button>
       </div>
+
       {sel && (
         <div className="flex flex-wrap gap-1 pl-1">
           {camposDoAlias.map(c => (
