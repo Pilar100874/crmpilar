@@ -568,11 +568,12 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                         <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => rmFiltro(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
                       </div>
                     ))}
-                    {cfg.filtros.length === 0 && <p className="text-[11px] text-muted-foreground italic">Sem filtros. Todos os registros serão retornados (limite {cfg.limite}).</p>}
+                    {cfg.filtros.length === 0 && <p className="text-[11px] text-muted-foreground italic">Sem filtros. Todos os registros serão retornados{cfg.limite && cfg.limite > 0 ? ` (limite ${cfg.limite})` : " (sem limite)"}.</p>}
                   </div>
                   <div className="mt-2 flex items-center gap-2">
                     <label className="text-xs text-muted-foreground">Limite:</label>
-                    <Input type="number" value={cfg.limite} onChange={e => setCfg({ ...cfg, limite: Number(e.target.value) })} className="h-7 w-20 text-xs" />
+                    <Input type="number" min={0} value={cfg.limite} onChange={e => setCfg({ ...cfg, limite: Number(e.target.value) })} className="h-7 w-20 text-xs" placeholder="0 = sem limite" />
+                    <span className="text-[11px] text-muted-foreground">0 = sem limite</span>
                   </div>
                 </div>
 
