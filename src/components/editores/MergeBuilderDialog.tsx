@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Database, Play, Plus, Trash2, Search } from "lucide-react";
+import { Database, Play, Plus, Trash2, Search, Image as ImageIcon, Calculator } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
+import { evalCalculados, type CampoCalculado } from "@/lib/editores/mergeEngine";
 
 export interface MergeConfigFiltro {
   campo: string;
@@ -17,9 +18,10 @@ export interface MergeConfigFiltro {
 
 export interface MergeConfig {
   tabela: string;
-  alias: string; // prefixo usado em {{alias.campo}}
+  alias: string;
   filtros: MergeConfigFiltro[];
   limite: number;
+  calculados?: CampoCalculado[];
 }
 
 interface Props {
