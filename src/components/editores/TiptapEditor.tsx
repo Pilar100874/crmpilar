@@ -65,6 +65,24 @@ export function TiptapEditor({
     extensions,
     content: initialContent || "<p></p>",
     editable,
+    editorProps: {
+      handleDrop: (view, event) => {
+        const dt = (event as DragEvent).dataTransfer;
+        if (!dt) return false;
+        const chave = dt.getData("application/x-merge-field");
+        if (!chave) return false;
+        const coords = { left: (event as DragEvent).clientX, top: (event as DragEvent).clientY };
+        const pos = view.posAtCoords(coords)?.pos;
+        if (pos == null) return false;
+        event.preventDefault();
+        const token = `{{${chave}}}`;
+        const node = view.state.schema.nodes.mergeField?.create({ token, label: chave });
+        if (!node) return false;
+        const tr = view.state.tr.insert(pos, node);
+        view.dispatch(tr);
+        return true;
+      },
+    },
     onUpdate: ({ editor }) => {
       onChange?.(editor.getHTML(), editor.getJSON());
     },
