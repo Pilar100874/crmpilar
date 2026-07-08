@@ -28,6 +28,7 @@ export default function ModeloEditor() {
   const [previewHtml, setPreviewHtml] = useState("");
   const [previewMissing, setPreviewMissing] = useState<string[]>([]);
   const editorRef = useRef<Editor | null>(null);
+  const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
   const [zoom, setZoom] = useState(1);
   const [fullscreen, setFullscreen] = useState(false);
   const [modo, setModo] = useState<EditorMode>("editar");
