@@ -46,6 +46,7 @@ interface Props {
   onInsertFormField?: (token: string) => void;
   onToggleSidebar?: () => void;
   sidebarOpen?: boolean;
+  hasFormFields?: boolean;
 }
 
 
