@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { toast } from "@/lib/toast-config";
 import { TiptapEditor } from "@/components/editores/TiptapEditor";
-import { TiptapEditorV2 } from "@/components/editores/TiptapEditorV2";
+
 import { EditorToolbar, type EditorMode } from "@/components/editores/EditorToolbar";
 import { CamposSidebar } from "@/components/editores/CamposSidebar";
 import { PreviewModal } from "@/components/editores/PreviewModal";
@@ -31,8 +31,6 @@ export default function ModeloEditor() {
   const [zoom, setZoom] = useState(1);
   const [fullscreen, setFullscreen] = useState(false);
   const [modo, setModo] = useState<EditorMode>("editar");
-  const [variante, setVariante] = useState<"v1" | "v2">(() => (localStorage.getItem("editor_variant") as any) || "v1");
-  useEffect(() => { localStorage.setItem("editor_variant", variante); }, [variante]);
 
   useEffect(() => {
     getEstabelecimentoId().then(setEstabId);
@@ -166,23 +164,13 @@ export default function ModeloEditor() {
         <div className="flex-1 overflow-hidden">
           <div className="h-full flex overflow-hidden">
             <div className="flex-1 overflow-auto">
-              {variante === "v1" ? (
-                <TiptapEditor
-                  initialContent={html}
-                  onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
-                  editorRef={(e) => { editorRef.current = e; }}
-                  zoom={zoom}
-                  editable={!modelo.bloqueado && !modelo.campos_bloqueados}
-                />
-              ) : (
-                <TiptapEditorV2
-                  initialContent={html}
-                  onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
-                  editorRef={(e) => { editorRef.current = e; }}
-                  zoom={zoom}
-                  editable={!modelo.bloqueado && !modelo.campos_bloqueados}
-                />
-              )}
+              <TiptapEditor
+                initialContent={html}
+                onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
+                editorRef={(e) => { editorRef.current = e; }}
+                zoom={zoom}
+                editable={!modelo.bloqueado && !modelo.campos_bloqueados}
+              />
             </div>
             <CamposSidebar estabelecimentoId={estabId} onInsert={inserirCampo} currentHtml={html} />
           </div>
