@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { ImagePickerDialog } from "./ImagePickerDialog";
+import { AssinaturaPickerDialog } from "./AssinaturaPickerDialog";
 
 interface Props {
   editor: Editor | null;
