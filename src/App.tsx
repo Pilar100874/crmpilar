@@ -146,6 +146,9 @@ import EditoresLayout from "./pages/editores/EditoresLayout";
 import EditoresHub from "./pages/editores/EditoresHub";
 import ModeloEditor from "./pages/editores/ModeloEditor";
 import DocumentoEditor from "./pages/editores/DocumentoEditor";
+import ModelosLista from "./pages/editores/ModelosLista";
+import DocumentosGerados from "./pages/editores/DocumentosGerados";
+import GerarDocumento from "./pages/editores/GerarDocumento";
 
 
 import ChatInterno from "./pages/ChatInterno";
@@ -534,11 +537,11 @@ const App = () => (
               </Route>
               <Route path="/editores" element={<EditoresLayout />}>
                 <Route index element={<EditoresHub />} />
-                <Route path="modelos" element={<EditoresHub />} />
-                <Route path="documentos" element={<EditoresHub />} />
+                <Route path="modelos" element={<ModelosLista />} />
+                <Route path="documentos" element={<DocumentosGerados />} />
                 <Route path="modelos/:id" element={<ModeloEditor />} />
                 <Route path="documento/:id" element={<DocumentoEditor />} />
-                <Route path="gerar" element={<EditoresHub />} />
+                <Route path="gerar" element={<GerarDocumento />} />
                 
               </Route>
             </Route>
