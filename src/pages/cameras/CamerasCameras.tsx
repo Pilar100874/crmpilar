@@ -21,6 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { CameraLiveViewer } from "@/components/cameras/CameraLiveViewer";
 import { StatusPingDot } from "@/components/StatusPingDot";
+import { CAMERA_MODELS, findModel } from "@/lib/cameraModels";
 
 
 const MARCAS = [
