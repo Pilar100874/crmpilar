@@ -36,7 +36,13 @@ const onDragToken = (e: React.DragEvent, chave: string) => {
   e.dataTransfer.effectAllowed = "copy";
 };
 
-export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeFields = [], onMergeFieldsChange }: Props) {
+export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeFields: mergeFieldsProp, onMergeFieldsChange }: Props) {
+  const [mergeFieldsInternal, setMergeFieldsInternal] = useState<string[]>([]);
+  const mergeFields = mergeFieldsProp ?? mergeFieldsInternal;
+  const setMergeFields = (chaves: string[]) => {
+    setMergeFieldsInternal(chaves);
+    onMergeFieldsChange?.(chaves);
+  };
   const [campos, setCampos] = useState<Campo[]>([]);
   const [busca, setBusca] = useState("");
 
@@ -105,7 +111,7 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
         <MergeBuilderDialog
           onChange={() => {}}
           onInsertField={(chave) => onInsert(chave)}
-          onSelectFields={(chaves) => onMergeFieldsChange?.(chaves)}
+          onSelectFields={(chaves) => setMergeFields(chaves)}
           initialSelected={mergeFields}
         />
       </div>

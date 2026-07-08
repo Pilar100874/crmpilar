@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { toast } from "@/lib/toast-config";
 import { TiptapEditor } from "@/components/editores/TiptapEditor";
-import { TiptapEditorV2 } from "@/components/editores/TiptapEditorV2";
+
 import { EditorToolbar, type EditorMode } from "@/components/editores/EditorToolbar";
 import { CamposSidebar } from "@/components/editores/CamposSidebar";
 import { PreviewModal } from "@/components/editores/PreviewModal";
@@ -31,8 +31,6 @@ export default function ModeloEditor() {
   const [zoom, setZoom] = useState(1);
   const [fullscreen, setFullscreen] = useState(false);
   const [modo, setModo] = useState<EditorMode>("editar");
-  const [variante, setVariante] = useState<"v1" | "v2">(() => (localStorage.getItem("editor_variant") as any) || "v1");
-  useEffect(() => { localStorage.setItem("editor_variant", variante); }, [variante]);
 
   useEffect(() => {
     getEstabelecimentoId().then(setEstabId);
@@ -166,23 +164,13 @@ export default function ModeloEditor() {
         <div className="flex-1 overflow-hidden">
           <div className="h-full flex overflow-hidden">
             <div className="flex-1 overflow-auto">
-              {variante === "v1" ? (
-                <TiptapEditor
-                  initialContent={html}
-                  onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
-                  editorRef={(e) => { editorRef.current = e; }}
-                  zoom={zoom}
-                  editable={!modelo.bloqueado && !modelo.campos_bloqueados}
-                />
-              ) : (
-                <TiptapEditorV2
-                  initialContent={html}
-                  onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
-                  editorRef={(e) => { editorRef.current = e; }}
-                  zoom={zoom}
-                  editable={!modelo.bloqueado && !modelo.campos_bloqueados}
-                />
-              )}
+              <TiptapEditor
+                initialContent={html}
+                onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
+                editorRef={(e) => { editorRef.current = e; }}
+                zoom={zoom}
+                editable={!modelo.bloqueado && !modelo.campos_bloqueados}
+              />
             </div>
             <CamposSidebar estabelecimentoId={estabId} onInsert={inserirCampo} currentHtml={html} />
           </div>
@@ -201,20 +189,6 @@ export default function ModeloEditor() {
             {dirty && "não salvo"} {saving && "salvando…"}
             {modelo.bloqueado && <span className="ml-2 px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700">🔒 bloqueado</span>}
           </span>
-          <div className="ml-auto flex items-center gap-1 rounded border p-0.5 bg-muted/40">
-            <button
-              type="button"
-              onClick={() => setVariante("v1")}
-              className={`text-[11px] px-2 py-1 rounded ${variante === "v1" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
-              title="Layout A4 clássico"
-            >Clássico A4</button>
-            <button
-              type="button"
-              onClick={() => setVariante("v2")}
-              className={`text-[11px] px-2 py-1 rounded ${variante === "v2" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
-              title="Layout moderno fluido (base para customização)"
-            >Moderno</button>
-          </div>
         </div>
       </div>
 
