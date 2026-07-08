@@ -70,7 +70,7 @@ export function renderTemplate(
         ? `<span style="background:#fef3c7;border:1px dashed #f59e0b;color:#92400e;padding:0 4px;border-radius:2px;">🖼 {{img:${escapeHtml(key)}}}</span>`
         : "";
     }
-    return `<img src="${escapeAttrLocal(String(value))}" style="max-width:100%;height:auto;" />`;
+    return `<img src="${escapeAttr(String(value))}" style="max-width:100%;height:auto;" />`;
   });
 
   const varRe = /\{\{\s*([a-zA-Z0-9_\.]+)\s*\}\}/g;
