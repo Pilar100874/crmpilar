@@ -533,11 +533,12 @@ const App = () => (
                 <Route path="cameras" element={<CamerasCameras />} />
               </Route>
               <Route path="/editores" element={<EditoresLayout />}>
-                <Route index element={<ModelosLista />} />
-                <Route path="modelos" element={<ModelosLista />} />
+                <Route index element={<EditoresHub />} />
+                <Route path="modelos" element={<EditoresHub />} />
+                <Route path="documentos" element={<EditoresHub />} />
                 <Route path="modelos/:id" element={<ModeloEditor />} />
+                <Route path="documento/:id" element={<DocumentoEditor />} />
                 <Route path="gerar" element={<GerarDocumento />} />
-                <Route path="documentos" element={<DocumentosGerados />} />
               </Route>
             </Route>
             {/* Public routes (no layout) */}
