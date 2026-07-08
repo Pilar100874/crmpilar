@@ -9,6 +9,8 @@ import { Search, Tags, Database, Plus, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { extractFieldKeys } from "@/lib/editores/mergeEngine";
 import { MergeBuilderDialog, type MergeConfig } from "./MergeBuilderDialog";
+import { runMergeConfig } from "@/lib/editores/runMergeConfig";
+import { resolveMergeData } from "@/lib/editores/dataResolvers";
 
 interface Campo {
   id: string;
@@ -30,13 +32,33 @@ interface Props {
   onConfigsChange?: (configs: MergeConfig[]) => void;
 }
 
-const onDragToken = (e: React.DragEvent, chave: string) => {
-  const token = chave.startsWith("__RAW__:") ? chave.slice("__RAW__:".length)
-              : chave.startsWith("__LOOP__:") ? `{{#each ${chave.slice("__LOOP__:".length)}}}{{this}}{{/each}}`
-              : `{{${chave}}}`;
-  e.dataTransfer.setData("text/plain", token);
-  e.dataTransfer.effectAllowed = "copy";
-};
+// Resolve caminho "a.b.c" em objeto aninhado
+function getPath(obj: any, path: string): any {
+  return path.split(".").reduce((acc, k) => (acc == null ? acc : acc[k]), obj);
+}
+
+function formatValue(v: any): string {
+  if (v == null) return "";
+  if (v instanceof Date) return v.toLocaleDateString("pt-BR");
+  if (typeof v === "number") return String(v);
+  if (typeof v === "object") return JSON.stringify(v);
+  return String(v);
+}
+
+const makeDragHandler =
+  (values: Record<string, any>) =>
+  (e: React.DragEvent, chave: string) => {
+    let token: string;
+    if (chave.startsWith("__RAW__:")) token = chave.slice("__RAW__:".length);
+    else if (chave.startsWith("__LOOP__:"))
+      token = `{{#each ${chave.slice("__LOOP__:".length)}}}{{this}}{{/each}}`;
+    else {
+      const v = getPath(values, chave);
+      token = v !== undefined && v !== null && v !== "" ? formatValue(v) : `{{${chave}}}`;
+    }
+    e.dataTransfer.setData("text/plain", token);
+    e.dataTransfer.effectAllowed = "copy";
+  };
 
 export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeFields: mergeFieldsProp, onMergeFieldsChange, configs: configsProp, onConfigsChange }: Props) {
   const [mergeFieldsInternal, setMergeFieldsInternal] = useState<string[]>([]);
@@ -55,6 +77,28 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
 
   const [campos, setCampos] = useState<Campo[]>([]);
   const [busca, setBusca] = useState("");
+  const [previewValues, setPreviewValues] = useState<Record<string, any>>({});
+
+  // Carrega valores de preview (primeira linha de cada vínculo + base)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const base = await resolveMergeData("livre", null);
+      const acc: Record<string, any> = { ...base };
+      for (const c of configs) {
+        if (!c?.alias) continue;
+        try {
+          const rows = await runMergeConfig(c);
+          if (rows && rows[0]) acc[c.alias] = rows[0];
+        } catch {}
+      }
+      if (!cancelled) setPreviewValues(acc);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(configs)]);
+
+  const onDragToken = useMemo(() => makeDragHandler(previewValues), [previewValues]);
 
   const load = async () => {
     if (!estabelecimentoId) return;
