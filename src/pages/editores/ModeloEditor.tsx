@@ -175,7 +175,7 @@ export default function ModeloEditor() {
     <div className={fullscreen ? "fixed inset-0 z-50 bg-background flex flex-col" : "h-full flex flex-col"}>
       <div className="flex-1 flex flex-col overflow-hidden">
         <EditorToolbar
-          editor={editorRef.current}
+          editor={editorInstance}
           zoom={zoom}
           setZoom={setZoom}
           onFullscreen={() => setFullscreen(f => !f)}
