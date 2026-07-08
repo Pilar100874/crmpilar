@@ -94,6 +94,8 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
   const [campos, setCampos] = useState<Campo[]>([]);
   const [busca, setBusca] = useState("");
   const [previewValues, setPreviewValues] = useState<Record<string, any>>({});
+  const [campoParaExcluir, setCampoParaExcluir] = useState<Campo | null>(null);
+  const [excluindo, setExcluindo] = useState(false);
 
   // Carrega valores de preview (primeira linha de cada vínculo + base)
   useEffect(() => {
