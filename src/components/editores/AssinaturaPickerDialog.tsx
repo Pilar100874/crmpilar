@@ -40,6 +40,8 @@ export function AssinaturaPickerDialog({ onInsert }: Props) {
   const [selId, setSelId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Assinatura | null>(null);
   const [loading, setLoading] = useState(false);
+  const editorRef = useRef<Editor | null>(null);
+  const [zoom, setZoom] = useState(1);
 
   useEffect(() => { getEstabelecimentoId().then(setEstabId); }, []);
 
@@ -114,18 +116,26 @@ export function AssinaturaPickerDialog({ onInsert }: Props) {
         </DialogHeader>
 
         {editing ? (
-          <div className="space-y-3 flex-1 overflow-auto">
+          <div className="space-y-3 flex-1 overflow-auto flex flex-col">
             <Input
               value={editing.titulo}
               onChange={e => setEditing({ ...editing, titulo: e.target.value })}
               placeholder="Título (ex: Assinatura Diretor)"
             />
-            <Textarea
-              value={editing.content_html}
-              onChange={e => setEditing({ ...editing, content_html: e.target.value })}
-              placeholder="HTML da assinatura. Use [[Campo]] para preenchimento."
-              className="min-h-[220px] font-mono text-xs"
-            />
+            <div className="border rounded flex flex-col overflow-hidden">
+              <EditorToolbar editor={editorRef.current} zoom={zoom} setZoom={setZoom} />
+              <div className="max-h-[45vh] overflow-auto bg-muted/20">
+                <TiptapEditor
+                  initialContent={editing.content_html || "<p></p>"}
+                  onChange={(h) => setEditing((prev) => (prev ? { ...prev, content_html: h } : prev))}
+                  editorRef={(e) => { editorRef.current = e; }}
+                  zoom={zoom}
+                />
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Dica: use <code className="bg-muted px-1 rounded">[[Nome]]</code>, <code className="bg-muted px-1 rounded">[[Cargo]]</code> etc. para campos preenchíveis. Insira imagens (assinatura escaneada, logo) pela toolbar.
+            </p>
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -134,10 +144,6 @@ export function AssinaturaPickerDialog({ onInsert }: Props) {
                 onChange={e => setEditing({ ...editing, padrao: e.target.checked })}
               />
               <label htmlFor="padrao" className="text-sm">Marcar como assinatura padrão</label>
-            </div>
-            <div className="border rounded p-3 bg-muted/30">
-              <p className="text-xs font-semibold mb-2 text-muted-foreground">Prévia</p>
-              <div dangerouslySetInnerHTML={{ __html: editing.content_html }} />
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditing(null)}>Cancelar</Button>
