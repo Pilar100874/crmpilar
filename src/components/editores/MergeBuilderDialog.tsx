@@ -156,7 +156,7 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
     tabela: value?.tabela || "",
     alias: value?.alias || "reg",
     filtros: Array.isArray(value?.filtros) ? value!.filtros : [],
-    limite: value?.limite ?? 50,
+    limite: value?.limite ?? 0,
     calculados: Array.isArray(value?.calculados) ? value!.calculados : [],
     relations: Array.isArray(value?.relations) ? value!.relations : [],
     camposSelecionados: value?.camposSelecionados || {},
@@ -244,7 +244,7 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
       let list: any[] = [];
       if (cfg.tabela.startsWith("api:")) {
         // Fonte é uma API do sistema
-        const all = await fetchApiEndpointRows(cfg.tabela.slice(4), Math.min(cfg.limite || 50, 500));
+        const all = await fetchApiEndpointRows(cfg.tabela.slice(4), cfg.limite && cfg.limite > 0 ? Math.min(cfg.limite, 500) : 0);
         list = all.filter(r => cfg.filtros.every(f => {
           if (!f.campo || !f.valor) return true;
           const rawCampo = f.campo.includes(".") ? f.campo.split(".").slice(1).join(".") : f.campo;
@@ -264,7 +264,8 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
         if (camposMain.length) list = list.map(r => Object.fromEntries(camposMain.map(c => [c, r?.[c]])));
       } else {
         const selectCols = camposMain.length ? camposMain.join(",") : "*";
-        let q = supabase.from(cfg.tabela as any).select(selectCols).limit(Math.min(cfg.limite || 50, 500));
+        let q = supabase.from(cfg.tabela as any).select(selectCols);
+        if (cfg.limite && cfg.limite > 0) q = q.limit(Math.min(cfg.limite, 500));
         for (const f of cfg.filtros) {
           if (!f.campo || !f.valor) continue;
           const rawCampo = f.campo.includes(".") ? f.campo.split(".").slice(1).join(".") : f.campo;
@@ -567,11 +568,12 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                         <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => rmFiltro(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
                       </div>
                     ))}
-                    {cfg.filtros.length === 0 && <p className="text-[11px] text-muted-foreground italic">Sem filtros. Todos os registros serão retornados (limite {cfg.limite}).</p>}
+                    {cfg.filtros.length === 0 && <p className="text-[11px] text-muted-foreground italic">Sem filtros. Todos os registros serão retornados{cfg.limite && cfg.limite > 0 ? ` (limite ${cfg.limite})` : " (sem limite)"}.</p>}
                   </div>
                   <div className="mt-2 flex items-center gap-2">
                     <label className="text-xs text-muted-foreground">Limite:</label>
-                    <Input type="number" value={cfg.limite} onChange={e => setCfg({ ...cfg, limite: Number(e.target.value) })} className="h-7 w-20 text-xs" />
+                    <Input type="number" min={0} value={cfg.limite} onChange={e => setCfg({ ...cfg, limite: Number(e.target.value) })} className="h-7 w-20 text-xs" placeholder="0 = sem limite" />
+                    <span className="text-[11px] text-muted-foreground">0 = sem limite</span>
                   </div>
                 </div>
 
@@ -724,8 +726,7 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
           <div className="flex-1" />
           <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
           {step < 2 && <Button onClick={() => setStep(step + 1)} disabled={!canNext()}>Próximo <ChevronRight className="h-4 w-4 ml-1" /></Button>}
-          {step === 2 && rows.length === 0 && <Button onClick={executar} disabled={loading}><Play className="h-4 w-4 mr-1" /> Executar</Button>}
-          {step === 2 && rows.length > 0 && <Button onClick={() => setStep(3)}>Próximo <ChevronRight className="h-4 w-4 ml-1" /></Button>}
+          {step === 2 && <Button onClick={() => setStep(3)} disabled={rows.length === 0}>Próximo <ChevronRight className="h-4 w-4 ml-1" /></Button>}
           {step === 3 && <Button onClick={aprovarSelecao} disabled={selecionados.size === 0}><Check className="h-4 w-4 mr-1" /> Aprovar ({selecionados.size})</Button>}
         </DialogFooter>
       </DialogContent>
