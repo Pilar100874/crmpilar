@@ -30,8 +30,8 @@ interface Props {
   onMergeFieldsChange?: (chaves: string[]) => void;
   configs?: MergeConfig[];
   onConfigsChange?: (configs: MergeConfig[]) => void;
-  savedTables?: { name: string; html: string }[];
-  onSavedTablesChange?: (list: { name: string; html: string }[]) => void;
+  savedTables?: { name: string; alias: string; cols: string[] }[];
+  onSavedTablesChange?: (list: { name: string; alias: string; cols: string[] }[]) => void;
 }
 
 // Resolve caminho "a.b.c" em objeto aninhado
