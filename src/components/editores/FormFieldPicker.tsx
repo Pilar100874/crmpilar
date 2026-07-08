@@ -24,7 +24,7 @@ const TIPOS: { value: FillableTipo; label: string; hasOpcoes?: boolean }[] = [
   { value: "radio", label: "Opções (radio)", hasOpcoes: true },
 ];
 
-export function FormFieldPicker({ onInsert, triggerClassName, triggerLabel = "Inserir campo de formulário" }: Props) {
+export function FormFieldPicker({ onInsert, triggerClassName, triggerLabel = "Inserir campo de formulário", asIcon }: Props) {
   const [open, setOpen] = useState(false);
   const [tipo, setTipo] = useState<FillableTipo>("texto");
   const [label, setLabel] = useState("");
@@ -47,10 +47,17 @@ export function FormFieldPicker({ onInsert, triggerClassName, triggerLabel = "In
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="secondary" className={triggerClassName}>
-          <FormInput className="h-3.5 w-3.5 mr-1" /> {triggerLabel}
-        </Button>
+        {asIcon ? (
+          <Button type="button" size="sm" variant="ghost" className="h-8 w-8 p-0" title={triggerLabel}>
+            <FormInput className="h-4 w-4" />
+          </Button>
+        ) : (
+          <Button size="sm" variant="secondary" className={triggerClassName}>
+            <FormInput className="h-3.5 w-3.5 mr-1" /> {triggerLabel}
+          </Button>
+        )}
       </DialogTrigger>
+
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Inserir campo de formulário</DialogTitle>
