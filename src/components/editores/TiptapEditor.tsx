@@ -55,7 +55,7 @@ export function TiptapEditor({
       Highlight.configure({ multicolor: true }),
       FontFamily,
       Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-primary underline" } }),
-      Image.configure({ inline: false, allowBase64: true }),
+      ResizableImage.configure({ inline: false, allowBase64: true }),
       Table.configure({ resizable: true }),
       TableRow,
       TableHeader,
