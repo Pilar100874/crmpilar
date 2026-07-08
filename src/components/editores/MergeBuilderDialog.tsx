@@ -198,17 +198,28 @@ export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
                 {colunasFiltradas.map(col => {
                   const chave = `${cfg.alias}.${col}`;
                   const preview = rows[0]?.[col];
+                  const previewStr = preview == null ? "" : String(preview);
+                  const looksImage = /url|foto|imagem|image|photo|thumb/i.test(col)
+                    || /^https?:\/\/.*\.(png|jpe?g|webp|gif|svg)/i.test(previewStr)
+                    || previewStr.startsWith("data:image/");
                   return (
-                    <button
-                      key={col}
-                      onClick={() => onInsertField?.(chave)}
-                      className="w-full text-left px-2 py-1.5 rounded border border-primary/20 bg-primary/5 hover:bg-primary/15 text-xs"
-                    >
-                      <div className="font-mono text-primary">{`{{${chave}}}`}</div>
-                      {preview != null && String(preview) !== "" && (
-                        <div className="text-[10px] text-muted-foreground truncate">ex: {String(preview).slice(0, 60)}</div>
+                    <div key={col} className="flex items-stretch gap-1">
+                      <button
+                        onClick={() => onInsertField?.(chave)}
+                        className="flex-1 text-left px-2 py-1.5 rounded border border-primary/20 bg-primary/5 hover:bg-primary/15 text-xs"
+                      >
+                        <div className="font-mono text-primary">{`{{${chave}}}`}</div>
+                        {previewStr && (
+                          <div className="text-[10px] text-muted-foreground truncate">ex: {previewStr.slice(0, 60)}</div>
+                        )}
+                      </button>
+                      {looksImage && (
+                        <Button size="icon" variant="ghost" className="h-auto w-7" title="Inserir como imagem"
+                          onClick={() => onInsertField?.(`__IMG__${chave}`)}>
+                          <ImageIcon className="h-3.5 w-3.5 text-primary" />
+                        </Button>
                       )}
-                    </button>
+                    </div>
                   );
                 })}
               </div>
