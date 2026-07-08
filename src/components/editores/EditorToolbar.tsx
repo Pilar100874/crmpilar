@@ -29,6 +29,7 @@ interface Props {
   zoom: number;
   setZoom: (z: number) => void;
   onPreviewMerge?: () => void;
+  previewActive?: boolean;
   estabelecimentoId?: string | null;
   // Ações unificadas (barra única)
   onBack?: () => void;
@@ -68,7 +69,7 @@ const FONTS = ["Arial", "Times New Roman", "Georgia", "Courier New", "Verdana", 
 const SIZES = ["10px", "12px", "14px", "16px", "18px", "24px", "32px"];
 
 export function EditorToolbar({
-  editor, onFullscreen, zoom, setZoom, onPreviewMerge, estabelecimentoId,
+  editor, onFullscreen, zoom, setZoom, onPreviewMerge, previewActive, estabelecimentoId,
   onBack, onSave, onSalvarComo, onToggleLock, locked, dirty, saving,
   titulo, onTituloChange, mode = "editar", onModeChange,
   onInsertFormField, onToggleSidebar, sidebarOpen,
@@ -87,7 +88,11 @@ export function EditorToolbar({
         {onBack && <TB onClick={onBack} title="Voltar"><ArrowLeft className="h-4 w-4" /></TB>}
         {onSave && <TB onClick={onSave} disabled={locked} title="Salvar"><Save className="h-4 w-4" /></TB>}
         {onSalvarComo && <TB onClick={onSalvarComo} title="Salvar como"><Copy className="h-4 w-4" /></TB>}
-        {onPreviewMerge && <TB onClick={onPreviewMerge} title="Visualizar"><Eye className="h-4 w-4" /></TB>}
+        {onPreviewMerge && (
+          <TB onClick={onPreviewMerge} active={previewActive} title={previewActive ? "Visualização ATIVA — mostrando valores. Clique para ver variáveis." : "Visualização INATIVA — mostrando variáveis. Clique para ver valores."}>
+            <Eye className={cn("h-4 w-4", previewActive && "text-emerald-600")} />
+          </TB>
+        )}
         {onToggleLock && (
           <TB onClick={onToggleLock} active={locked} title={locked ? "Desbloquear" : "Bloquear edição"}>
             {locked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
