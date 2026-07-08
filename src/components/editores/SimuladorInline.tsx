@@ -140,18 +140,14 @@ export function SimuladorInline({
     <div className="h-full w-full grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4 p-4 overflow-auto">
 
       <Card className="p-3 space-y-3 h-fit sticky top-0">
-        <MergeBuilderDialog
-          value={cfg}
-          onChange={(c, sample) => {
-            setCfg(c);
-            setRows(sample);
-            setIdx(0);
-            onMergeConfigChange?.(c);
-          }}
-        />
+        {!cfg?.tabela && !cfg?.sql && (
+          <div className="text-[11px] text-muted-foreground border rounded p-2 bg-muted/30">
+            Nenhum vínculo de dados configurado no modelo. Use "Vincular dados" no editor para configurar.
+          </div>
+        )}
 
         {rows.length > 0 && (
-          <div className="border-t pt-3 space-y-2">
+          <div className="space-y-2">
             <div className="text-xs font-semibold flex items-center justify-between">
               <span>Navegar registros</span>
               <span className="text-[11px] text-primary font-mono">{idx + 1} / {rows.length}</span>
@@ -159,6 +155,7 @@ export function SimuladorInline({
             <RegistroNavigator total={rows.length} index={idx} onChange={setIdx} label={registroLabel(registroAtual)} />
           </div>
         )}
+
 
         <div className="border-t pt-3 flex items-center gap-2">
           <Switch id="modo-travado" checked={modoTravado} onCheckedChange={setModoTravado} />
