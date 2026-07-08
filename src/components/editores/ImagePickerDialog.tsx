@@ -60,11 +60,38 @@ export function ImagePickerDialog({ onInsert }: Props) {
   const filtered = (list: any[]) => list.filter(x => !busca || (x.nome ?? "").toLowerCase().includes(busca.toLowerCase()));
 
   const inserir = () => {
-    const url = tab === "url" ? urlManual.trim() : sel;
+    const url = tab === "url" ? urlManual.trim() : tab === "upload" ? uploadPreview : sel;
     if (!url) return;
     onInsert(url, largura);
     setOpen(false);
-    setSel(null); setUrlManual("");
+    setSel(null); setUrlManual(""); setUploadPreview(null);
+  };
+
+  const handleUpload = async (file: File) => {
+    if (!file || !estabId) return;
+    if (!file.type.startsWith("image/")) { toast.error("Selecione uma imagem"); return; }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const path = `${estabId}/editores/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage.from("marketing-images").upload(path, file, { contentType: file.type, upsert: false });
+      if (error) throw error;
+      const { data } = supabase.storage.from("marketing-images").getPublicUrl(path);
+      setUploadPreview(data.publicUrl);
+      // registra na galeria
+      await supabase.from("media_gallery").insert({
+        estabelecimento_id: estabId,
+        tipo: "image",
+        nome: file.name,
+        public_url: data.publicUrl,
+        storage_path: path,
+      });
+      toast.success("Imagem enviada");
+    } catch (e: any) {
+      toast.error("Erro ao enviar: " + (e.message ?? ""));
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
