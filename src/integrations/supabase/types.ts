@@ -4592,6 +4592,303 @@ export type Database = {
           },
         ]
       }
+      doc_campos: {
+        Row: {
+          categoria: string | null
+          chave: string
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          formato: string | null
+          id: string
+          origem_coluna: string | null
+          origem_tabela: string | null
+          personalizado: boolean
+          rotulo: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          categoria?: string | null
+          chave: string
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          formato?: string | null
+          id?: string
+          origem_coluna?: string | null
+          origem_tabela?: string | null
+          personalizado?: boolean
+          rotulo: string
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          categoria?: string | null
+          chave?: string
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          formato?: string | null
+          id?: string
+          origem_coluna?: string | null
+          origem_tabela?: string | null
+          personalizado?: boolean
+          rotulo?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      doc_categorias: {
+        Row: {
+          cor: string | null
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          nome: string
+          ordem: number
+          updated_at: string
+        }
+        Insert: {
+          cor?: string | null
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          ordem?: number
+          updated_at?: string
+        }
+        Update: {
+          cor?: string | null
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          ordem?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      doc_gerados: {
+        Row: {
+          content_html_final: string
+          created_at: string
+          dados_merge: Json | null
+          estabelecimento_id: string
+          gerado_por: string | null
+          id: string
+          modelo_id: string | null
+          modelo_versao: number | null
+          numero_documento: string | null
+          observacoes: string | null
+          registro_id: string | null
+          registro_tipo: string | null
+          status: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          content_html_final?: string
+          created_at?: string
+          dados_merge?: Json | null
+          estabelecimento_id: string
+          gerado_por?: string | null
+          id?: string
+          modelo_id?: string | null
+          modelo_versao?: number | null
+          numero_documento?: string | null
+          observacoes?: string | null
+          registro_id?: string | null
+          registro_tipo?: string | null
+          status?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          content_html_final?: string
+          created_at?: string
+          dados_merge?: Json | null
+          estabelecimento_id?: string
+          gerado_por?: string | null
+          id?: string
+          modelo_id?: string | null
+          modelo_versao?: number | null
+          numero_documento?: string | null
+          observacoes?: string | null
+          registro_id?: string | null
+          registro_tipo?: string | null
+          status?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doc_gerados_modelo_id_fkey"
+            columns: ["modelo_id"]
+            isOneToOne: false
+            referencedRelation: "doc_modelos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doc_modelo_versoes: {
+        Row: {
+          content_html: string | null
+          content_json: Json | null
+          created_at: string
+          criado_por: string | null
+          estabelecimento_id: string
+          footer_html: string | null
+          header_html: string | null
+          id: string
+          modelo_id: string
+          notas: string | null
+          versao: number
+        }
+        Insert: {
+          content_html?: string | null
+          content_json?: Json | null
+          created_at?: string
+          criado_por?: string | null
+          estabelecimento_id: string
+          footer_html?: string | null
+          header_html?: string | null
+          id?: string
+          modelo_id: string
+          notas?: string | null
+          versao: number
+        }
+        Update: {
+          content_html?: string | null
+          content_json?: Json | null
+          created_at?: string
+          criado_por?: string | null
+          estabelecimento_id?: string
+          footer_html?: string | null
+          header_html?: string | null
+          id?: string
+          modelo_id?: string
+          notas?: string | null
+          versao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doc_modelo_versoes_modelo_id_fkey"
+            columns: ["modelo_id"]
+            isOneToOne: false
+            referencedRelation: "doc_modelos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doc_modelos: {
+        Row: {
+          ativo: boolean
+          categoria_id: string | null
+          content_html: string | null
+          content_json: Json | null
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          footer_html: string | null
+          header_html: string | null
+          id: string
+          page_size: string | null
+          titulo: string
+          updated_at: string
+          updated_by: string | null
+          versao_atual: number
+        }
+        Insert: {
+          ativo?: boolean
+          categoria_id?: string | null
+          content_html?: string | null
+          content_json?: Json | null
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          footer_html?: string | null
+          header_html?: string | null
+          id?: string
+          page_size?: string | null
+          titulo: string
+          updated_at?: string
+          updated_by?: string | null
+          versao_atual?: number
+        }
+        Update: {
+          ativo?: boolean
+          categoria_id?: string | null
+          content_html?: string | null
+          content_json?: Json | null
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          footer_html?: string | null
+          header_html?: string | null
+          id?: string
+          page_size?: string | null
+          titulo?: string
+          updated_at?: string
+          updated_by?: string | null
+          versao_atual?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doc_modelos_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "doc_categorias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doc_permissoes: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          pode_criar_modelo: boolean
+          pode_editar_modelo: boolean
+          pode_excluir_modelo: boolean
+          pode_gerar: boolean
+          pode_ver_gerados: boolean
+          pode_ver_historico: boolean
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          pode_criar_modelo?: boolean
+          pode_editar_modelo?: boolean
+          pode_excluir_modelo?: boolean
+          pode_gerar?: boolean
+          pode_ver_gerados?: boolean
+          pode_ver_historico?: boolean
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          pode_criar_modelo?: boolean
+          pode_editar_modelo?: boolean
+          pode_excluir_modelo?: boolean
+          pode_gerar?: boolean
+          pode_ver_gerados?: boolean
+          pode_ver_historico?: boolean
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       ecom_active_carts: {
         Row: {
           created_at: string
