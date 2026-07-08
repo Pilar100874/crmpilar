@@ -37,6 +37,14 @@ export function SimuladorInline({
 
   useEffect(() => { setModoTravado(soPreenchimento); }, [soPreenchimento]);
 
+  // Auto-carrega registros do merge_config salvo ao abrir a aba
+  useEffect(() => {
+    if (!mergeConfig?.tabela) return;
+    setCfg(mergeConfig);
+    runMergeConfig(mergeConfig).then(r => { setRows(r); setIdx(0); });
+  }, [mergeConfig]);
+
+
   const registroAtual = rows[idx];
   const dados: Record<string, any> = useMemo(() => {
     const base: Record<string, any> = { data_atual: new Date().toLocaleDateString("pt-BR") };
