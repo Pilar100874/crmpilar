@@ -11,6 +11,7 @@ import type { Editor } from "@tiptap/react";
 import { SimuladorInline } from "@/components/editores/SimuladorInline";
 import { renderTemplate } from "@/lib/editores/mergeEngine";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function ModeloEditor() {
   const { id } = useParams<{ id: string }>();
