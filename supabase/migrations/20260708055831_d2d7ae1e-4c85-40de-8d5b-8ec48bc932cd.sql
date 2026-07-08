@@ -1,0 +1,1 @@
+ALTER TABLE public.doc_modelos ADD COLUMN IF NOT EXISTS campos_bloqueados boolean NOT NULL DEFAULT false;
