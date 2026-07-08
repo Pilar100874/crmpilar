@@ -153,6 +153,36 @@ export function ImagePickerDialog({ onInsert }: Props) {
             </ScrollArea>
           </TabsContent>
 
+          <TabsContent value="upload" className="mt-2 space-y-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f); e.target.value = ""; }}
+            />
+            <div
+              onClick={() => !uploading && fileInputRef.current?.click()}
+              onDragOver={e => { e.preventDefault(); }}
+              onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) handleUpload(f); }}
+              className="border-2 border-dashed rounded-lg h-40 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition"
+            >
+              {uploading ? (
+                <><Loader2 className="h-6 w-6 animate-spin mb-2" /><p className="text-sm text-muted-foreground">Enviando…</p></>
+              ) : (
+                <><Upload className="h-8 w-8 mb-2 text-muted-foreground" />
+                <p className="text-sm">Clique ou arraste uma imagem aqui</p>
+                <p className="text-xs text-muted-foreground">PNG, JPG, GIF, WEBP</p></>
+              )}
+            </div>
+            {uploadPreview && (
+              <div className="flex items-center gap-3">
+                <img src={uploadPreview} alt="preview" className="max-h-32 rounded border" />
+                <p className="text-xs text-muted-foreground">Pronto para inserir.</p>
+              </div>
+            )}
+          </TabsContent>
+
           <TabsContent value="url" className="mt-2 space-y-2">
             <label className="text-xs text-muted-foreground">URL da imagem</label>
             <Input value={urlManual} onChange={e => setUrlManual(e.target.value)} placeholder="https://…" />
