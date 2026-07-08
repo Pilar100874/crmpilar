@@ -105,6 +105,34 @@ export function extractFieldKeys(html: string): string[] {
   return Array.from(keys);
 }
 
+// ============ Campos calculados ============
+export interface CampoCalculado {
+  nome: string;       // ex: "total"
+  expressao: string;  // ex: "preco * quantidade * (1 - desconto/100)"
+}
+
+/**
+ * Avalia expressões usando as chaves do row como variáveis.
+ * Ex: expressao "preco * quantidade" com row {preco:10, quantidade:3} => 30.
+ * Segurança: `Function` sem acesso a globals sensíveis (fornece Math/Number).
+ */
+export function evalCalculados(row: Record<string, any>, calc: CampoCalculado[]): Record<string, any> {
+  const out: Record<string, any> = { ...row };
+  for (const c of calc) {
+    if (!c.nome || !c.expressao) continue;
+    try {
+      const keys = Object.keys(out);
+      const values = keys.map(k => out[k]);
+      // eslint-disable-next-line no-new-func
+      const fn = new Function(...keys, "Math", "Number", `"use strict"; return (${c.expressao});`);
+      out[c.nome] = fn(...values, Math, Number);
+    } catch {
+      out[c.nome] = null;
+    }
+  }
+  return out;
+}
+
 // ============ Campos PREENCHÍVEIS [[tipo:label|opts]] ============
 // Sintaxe:
 //   [[Nome]]                    -> texto (default)
