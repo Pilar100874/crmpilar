@@ -198,6 +198,58 @@ export function EditorToolbar({
           <TB onClick={onFullscreen} title="Tela cheia"><Maximize2 className="h-4 w-4" /></TB>
         </div>
       </div>
+
+      <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Inserir link</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="link-text">Texto</Label>
+              <Input id="link-text" value={linkText} onChange={(e) => setLinkText(e.target.value)} placeholder="Texto exibido" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="link-url">URL</Label>
+              <Input id="link-url" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://exemplo.com" autoFocus />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            {editor?.isActive("link") && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  editor.chain().focus().extendMarkRange("link").unsetLink().run();
+                  setLinkOpen(false);
+                }}
+              >
+                Remover link
+              </Button>
+            )}
+            <Button
+              type="button"
+              onClick={() => {
+                if (!editor || !linkUrl) return;
+                const url = linkUrl.trim();
+                const chain = editor.chain().focus();
+                const sel = editor.state.selection;
+                const currentText = editor.state.doc.textBetween(sel.from, sel.to, " ");
+                if (linkText && linkText !== currentText) {
+                  chain.insertContent(`<a href="${url}">${linkText}</a>`).run();
+                } else if (sel.empty) {
+                  chain.insertContent(`<a href="${url}">${linkText || url}</a>`).run();
+                } else {
+                  chain.extendMarkRange("link").setLink({ href: url }).run();
+                }
+                setLinkOpen(false);
+              }}
+            >
+              Aplicar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
