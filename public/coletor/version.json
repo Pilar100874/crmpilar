@@ -1,5 +1,5 @@
 {
-  "version": "1.7.3",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.7.3/ColetorPilar-Setup.exe",
-  "notas": "1.7.3: corrige 'Cannot find module lib/binary-stream' que desativava o streaming ao vivo (câmera preta / coletor não respondeu). Instalado hook runtime que resolve o pacote binary-data mesmo quando o empacotamento do Electron poda src/node_modules. Combina com a captura RTSP compartilhada e /stream2 do Tapo introduzidos em 1.7.2."
+  "version": "1.7.4",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.7.4/ColetorPilar-Setup.exe",
+  "notas": "1.7.4: adiciona modo de configuração manual (RTSP/ONVIF) com campos separados de porta, path, transporte (TCP/UDP/HTTP) e credenciais RTSP, permitindo instalar qualquer câmera fora do catálogo. Coletor respeita os novos campos ao montar a URL RTSP."
 }
