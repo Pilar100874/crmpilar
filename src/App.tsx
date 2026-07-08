@@ -146,7 +146,6 @@ import EditoresLayout from "./pages/editores/EditoresLayout";
 import EditoresHub from "./pages/editores/EditoresHub";
 import ModeloEditor from "./pages/editores/ModeloEditor";
 import DocumentoEditor from "./pages/editores/DocumentoEditor";
-import GerarDocumento from "./pages/editores/GerarDocumento";
 
 import ChatInterno from "./pages/ChatInterno";
 import ConfigSkills from "./pages/ConfigSkills";
