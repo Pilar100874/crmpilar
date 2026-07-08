@@ -47,6 +47,7 @@ const emptyCam = {
   id: null as string | null,
   nome: "",
   marca: "hikvision",
+  modelo: null as string | null,
   tipo_rede: "interna",
   host: "",
   porta: 80,
