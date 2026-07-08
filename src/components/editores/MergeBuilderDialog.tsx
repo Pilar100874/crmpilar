@@ -354,12 +354,20 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                   <Input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar variável…" className="pl-6 h-7 text-xs" />
                 </div>
                 <Badge variant="secondary" className="text-[10px]">{rows.length} reg.</Badge>
+                {colunas.length > 0 && (
+                  <Button size="sm" variant="ghost" onClick={toggleTodos} className="h-6 text-[11px]">Selec. todos</Button>
+                )}
               </div>
+              {colunas.length > 0 && (
+                <div className="px-2 py-1 border-b bg-sky-500/5 text-[11px] text-muted-foreground">
+                  {selecionados.size} campo(s) selecionado(s) — marque os que devem aparecer na sidebar para arrastar
+                </div>
+              )}
               <ScrollArea className="flex-1">
                 <div className="p-2 space-y-1">
                   {colunasFiltradas.length === 0 && (
                     <p className="text-xs text-muted-foreground text-center py-6">
-                      {rows.length === 0 ? "Execute a consulta para listar as variáveis." : "Nenhuma coluna."}
+                      {rows.length === 0 ? "Configure as tabelas/relações e clique em Executar consulta." : "Nenhuma coluna."}
                     </p>
                   )}
                   {colunasFiltradas.map(col => {
@@ -367,11 +375,15 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                     const previewStr = preview == null ? "" : (typeof preview === "object" ? JSON.stringify(preview).slice(0, 60) : String(preview));
                     const isArray = Array.isArray(preview);
                     const chave = cfg.mode === "sql" ? col : `${cfg.alias}.${col}`;
+                    const isSel = selecionados.has(chave);
                     const looksImage = /url|foto|imagem|image|photo|thumb/i.test(col)
                       || /^https?:\/\/.*\.(png|jpe?g|webp|gif|svg)/i.test(previewStr)
                       || previewStr.startsWith("data:image/");
                     return (
-                      <div key={col} className="flex items-stretch gap-1">
+                      <div key={col} className={`flex items-stretch gap-1 rounded ${isSel ? "ring-1 ring-sky-500/50" : ""}`}>
+                        <label className="flex items-center px-2 cursor-pointer">
+                          <Checkbox checked={isSel} onCheckedChange={() => toggleSel(chave)} />
+                        </label>
                         <button
                           onClick={() => onInsertField?.(chave)}
                           className="flex-1 text-left px-2 py-1.5 rounded border border-primary/20 bg-primary/5 hover:bg-primary/15 text-xs"
@@ -413,11 +425,12 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
 
         <DialogFooter>
           <div className="flex-1 text-[11px] text-muted-foreground">
-            Sintaxe suportada no documento: <code>{"{{campo}}"}</code>, <code>{"{{#each alias}}...{{/each}}"}</code>,
-            {" "}<code>{"{{sum alias.campo}}"}</code>, <code>{"{{= preco*qtd }}"}</code>,
-            {" "}<code>{"{{moeda valor}}"}</code>, <code>{"{{data campo}}"}</code>.
+            1) Configure tabelas/relações → 2) Executar → 3) Marque os campos → 4) Aprovar seleção.
           </div>
           <Button variant="outline" onClick={() => setOpen(false)}>Fechar</Button>
+          <Button onClick={aprovarSelecao} disabled={selecionados.size === 0}>
+            <Check className="h-4 w-4 mr-1" /> Aprovar {selecionados.size > 0 ? `(${selecionados.size})` : ""}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
