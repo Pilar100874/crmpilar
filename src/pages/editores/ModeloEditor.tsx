@@ -166,13 +166,23 @@ export default function ModeloEditor() {
         <div className="flex-1 overflow-hidden">
           <div className="h-full flex overflow-hidden">
             <div className="flex-1 overflow-auto">
-              <TiptapEditor
-                initialContent={html}
-                onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
-                editorRef={(e) => { editorRef.current = e; }}
-                zoom={zoom}
-                editable={!modelo.bloqueado && !modelo.campos_bloqueados}
-              />
+              {variante === "v1" ? (
+                <TiptapEditor
+                  initialContent={html}
+                  onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
+                  editorRef={(e) => { editorRef.current = e; }}
+                  zoom={zoom}
+                  editable={!modelo.bloqueado && !modelo.campos_bloqueados}
+                />
+              ) : (
+                <TiptapEditorV2
+                  initialContent={html}
+                  onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
+                  editorRef={(e) => { editorRef.current = e; }}
+                  zoom={zoom}
+                  editable={!modelo.bloqueado && !modelo.campos_bloqueados}
+                />
+              )}
             </div>
             <CamposSidebar estabelecimentoId={estabId} onInsert={inserirCampo} currentHtml={html} />
           </div>
