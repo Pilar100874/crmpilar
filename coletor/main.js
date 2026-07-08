@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const {
   startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow,
-  startPonto, stopPonto, startCameras, stopCameras, listarFiliais,
+  startPonto, stopPonto, startCameras, stopCameras, listarFiliais, clearDiagnostics,
 } = require('./collector');
 const { checarAtualizacao, baixarEInstalar } = require('./updater');
 
@@ -64,6 +64,29 @@ function initLogging() {
   });
 }
 initLogging();
+
+function clearLogFiles() {
+  try {
+    const dir = path.join(app.getPath('userData'), 'logs');
+    fs.mkdirSync(dir, { recursive: true });
+    const current = logFilePath || path.join(dir, 'coletor.log');
+
+    try { if (logStream) logStream.end(); } catch {}
+    logStream = null;
+
+    for (const file of [current, current + '.1']) {
+      try { fs.writeFileSync(file, ''); } catch {}
+    }
+
+    logFilePath = current;
+    logStream = fs.createWriteStream(logFilePath, { flags: 'a' });
+    console.log('[coletor] logs e avisos limpos pelo usuário');
+    return { ok: true };
+  } catch (e) {
+    console.error('[coletor] falha ao limpar logs:', e.message);
+    return { ok: false, error: String(e.message || e) };
+  }
+}
 
 // ─── Single instance lock ────────────────────────────────────────────────
 // Impede múltiplas instâncias simultâneas do Coletor (evita vários
@@ -172,6 +195,10 @@ ipcMain.handle('updater:install', async (evt, downloadUrl) => {
 ipcMain.handle('app:version', () => app.getVersion());
 ipcMain.handle('app:openLogsFolder', () => { try { shell.openPath(path.join(app.getPath('userData'), 'logs')); return true; } catch { return false; } });
 ipcMain.handle('app:openDevTools', () => { try { if (win) { win.show(); win.webContents.openDevTools({ mode: 'detach' }); } return true; } catch { return false; } });
+ipcMain.handle('collector:clear', () => {
+  try { clearDiagnostics(); } catch {}
+  return clearLogFiles();
+});
 ipcMain.handle('collector:listarFiliais', () => listarFiliais());
 ipcMain.handle('collector:setFilial', (evt, id, nome) => {
   saveConfig({ filialId: id, filialNome: nome });

@@ -1,5 +1,5 @@
 {
-  "version": "1.7.4",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.7.4/ColetorPilar-Setup.exe",
-  "notas": "1.7.4: adiciona modo de configuração manual (RTSP/ONVIF) com campos separados de porta, path, transporte (TCP/UDP/HTTP) e credenciais RTSP, permitindo instalar qualquer câmera fora do catálogo. Coletor respeita os novos campos ao montar a URL RTSP."
+  "version": "1.7.5",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.7.5/ColetorPilar-Setup.exe",
+  "notas": "1.7.5: adiciona botão para limpar logs/erros no Coletor, remove o rodapé com servidor e Verificar atualização, e reforça a correção do WebRTC para evitar erro de módulo binary-data no ao vivo."
 }

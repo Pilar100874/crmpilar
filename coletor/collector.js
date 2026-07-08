@@ -311,7 +311,16 @@ async function pollNow() {
   return getStatus();
 }
 
+function clearDiagnostics() {
+  STATE.errors = 0;
+  STATE.lastErrors = {};
+  STATE.failStreak = {};
+  STATE.cameras = (STATE.cameras || []).map((camera) => ({ ...camera, erro: null }));
+  STATE.progress = { ativo: false, etapa: 'idle', equipNome: '', indice: 0, total: 0, batidasEquip: 0 };
+  return getStatus();
+}
+
 module.exports = {
   startCollector, stopCollector, getStatus, saveConfig, loadConfig, pollNow,
-  startPonto, stopPonto, startCameras, stopCameras, listarFiliais,
+  startPonto, stopPonto, startCameras, stopCameras, listarFiliais, clearDiagnostics,
 };

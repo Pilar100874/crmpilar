@@ -34,6 +34,7 @@ contextBridge.exposeInMainWorld('coletor', {
   setFilial: (id, nome) => ipcRenderer.invoke('collector:setFilial', id, nome),
   openLogsFolder: () => ipcRenderer.invoke('app:openLogsFolder'),
   openDevTools: () => ipcRenderer.invoke('app:openDevTools'),
+  clear: () => ipcRenderer.invoke('collector:clear'),
   // Descoberta de câmeras
   discoverSubnet: () => ipcRenderer.invoke('discover:subnet'),
   discoverCameras: (opts) => ipcRenderer.invoke('discover:cameras', opts),
