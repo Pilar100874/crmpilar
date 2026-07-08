@@ -27,7 +27,7 @@ export interface MergeRelation {
 }
 
 export interface MergeConfig {
-  mode: "visual" | "sql";
+  mode?: "visual" | "sql";
   tabela: string;
   alias: string;
   filtros: MergeConfigFiltro[];
