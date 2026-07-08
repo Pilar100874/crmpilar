@@ -747,6 +747,7 @@ export default function CamerasCameras() {
                   <li>Abra o app <b>Tapo</b> → sua câmera → <b>Configurações da Câmera</b> → <b>Configurações Avançadas</b> → <b>Conta da Câmera</b> e crie usuário/senha (essas credenciais vão nos campos acima — <u>não</u> use a senha da sua conta Tapo).</li>
                   <li>A Tapo <b>não</b> responde em HTTP:80. Use <b>RTSP na porta 554</b> (já preenchido).</li>
                   <li>Snapshot path: <code>/stream1</code> (HD) ou <code>/stream2</code> (SD).</li>
+                  <li>Para <b>PTZ e áudio bidirecional</b> (C200/C210/C220/C500/C510W/C520WS/C720), o <b>ONVIF</b> roda na <b>porta 2020</b> com a MESMA credencial da Conta da Câmera. Selecione o modelo acima que já configuramos tudo.</li>
                   <li>Reserve IP fixo no roteador — a Tapo troca de IP com frequência via DHCP.</li>
                 </ul>
               </div>
