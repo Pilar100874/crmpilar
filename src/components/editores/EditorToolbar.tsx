@@ -88,6 +88,15 @@ export function EditorToolbar({
             {locked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
           </TB>
         )}
+        {onInsertFormField && (
+          <FormFieldPicker asIcon onInsert={onInsertFormField} />
+        )}
+        {onToggleSidebar && (
+          <TB onClick={onToggleSidebar} active={!!sidebarOpen} title={sidebarOpen ? "Fechar campos" : "Abrir campos e vínculos"}>
+            {sidebarOpen ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
+          </TB>
+        )}
+
         {onModeChange && (
           <>
             <Separator orientation="vertical" className="h-6 mx-1" />
