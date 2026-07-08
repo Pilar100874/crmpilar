@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Database, Play, Plus, Trash2, Search, Image as ImageIcon, Calculator, Link2, Repeat, Sigma } from "lucide-react";
+import { Database, Play, Plus, Trash2, Search, Image as ImageIcon, Calculator, Link2, Repeat, Sigma, Check } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { evalCalculados, type CampoCalculado } from "@/lib/editores/mergeEngine";
