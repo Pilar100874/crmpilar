@@ -405,16 +405,22 @@ class CameraPump {
       '-payload_type', '96',
       `rtp://127.0.0.1:${this.videoUdpPort}?pkt_size=1200`,
     ];
-    this.ffmpeg = spawn(ffmpegPath, args, { stdio: ['ignore', 'ignore', 'pipe'] });
-    this.ffmpeg.stderr.on('data', (d) => {
+    const child = spawn(ffmpegPath, args, { stdio: ['ignore', 'ignore', 'pipe'] });
+    this.ffmpeg = child;
+    child.stderr.on('data', (d) => {
       const s = d.toString();
       if (/error|failed|unable|invalid|denied|refused|timeout|non-monotonous|codec|not.*found|hevc|h265/i.test(s)) {
         console.log('[ffmpeg]', this.cam.nome, s.trim());
       }
     });
-    this.ffmpeg.on('exit', (code) => {
-      console.log('[pump] ffmpeg exit', code, this.cam.nome, 'mode=', this.mode, 'rtp=', this.rtpReceived);
-      if (!this.stopped && this.mode === 'copy' && this.rtpReceived === 0) {
+    const spawnedMode = this.mode;
+    child.on('exit', (code) => {
+      console.log('[pump] ffmpeg exit', code, this.cam.nome, 'mode=', spawnedMode, 'rtp=', this.rtpReceived);
+      // Ignora exits de processos que matamos de propósito (troca copy→encode)
+      if (child._intentionalKill) return;
+      // Se este exit é de um processo já substituído, ignora
+      if (this.ffmpeg && this.ffmpeg !== child) return;
+      if (!this.stopped && spawnedMode === 'copy' && this.rtpReceived === 0) {
         this.mode = 'encode';
         this._spawnVideo();
         return;
