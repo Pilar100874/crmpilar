@@ -110,6 +110,9 @@ export function EditorToolbar({ editor, onFullscreen, zoom, setZoom, onPreviewMe
       <AssinaturaPickerDialog onInsert={(html) => {
         editor.chain().focus().insertContent(html).run();
       }} />
+      {estabelecimentoId !== undefined && (
+        <NovoCampoDialog estabelecimentoId={estabelecimentoId ?? null} triggerAsIcon />
+      )}
       {editor.isActive("image") && (
         <Select value="" onValueChange={(v) => editor.chain().focus().updateAttributes("image", { width: v } as any).run()}>
           <SelectTrigger className="h-8 w-24 text-xs"><SelectValue placeholder="Tam. img" /></SelectTrigger>
