@@ -80,6 +80,7 @@ export default function ModeloEditor() {
 
   // Publica valores no store para os chips renderizarem o valor real
   useEffect(() => {
+    setPreviewActive(showResolved);
     if (!showResolved) {
       setPreviewValues({});
       setPreviewRows({});
