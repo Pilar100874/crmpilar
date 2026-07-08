@@ -119,11 +119,22 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
   // Colunas descobertas por tabela
   const [colsByTable, setColsByTable] = useState<Record<string, string[]>>({});
   const [loadingCols, setLoadingCols] = useState<string>("");
+  const [apiEndpoints, setApiEndpoints] = useState<{ value: string; label: string }[]>([]);
 
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [busca, setBusca] = useState("");
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set(initialSelected ?? []));
+
+  // Load API endpoints on mount
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("api_endpoints").select("id,name,description").eq("active", true).order("name");
+      setApiEndpoints((data ?? []).map((e: any) => ({ value: `api:${e.id}`, label: `🔌 ${e.name}` })));
+    })();
+  }, []);
+
+  const tabelasDisponiveis = useMemo(() => [...TABELAS, ...apiEndpoints], [apiEndpoints]);
 
   const todasTabelas = useMemo(() => {
     const arr: { tabela: string; alias: string; isMain: boolean }[] = [];
