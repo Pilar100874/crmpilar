@@ -3,7 +3,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Printer, FileDown, Lock, Unlock } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Printer, FileDown, Lock, Unlock, ListChecks } from "lucide-react";
 import {
   applyFillables,
   extractFieldKeys,
@@ -38,6 +42,8 @@ export function SimuladorInline({
   const [modoTravado, setModoTravado] = useState(soPreenchimento);
   const pageRef = useRef<HTMLDivElement>(null);
   const [camposCalc, setCamposCalc] = useState<CampoCalc[]>([]);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkDraft, setBulkDraft] = useState<Record<string, string>>({});
 
   useEffect(() => { setModoTravado(soPreenchimento); }, [soPreenchimento]);
 
@@ -165,9 +171,28 @@ export function SimuladorInline({
           </label>
         </div>
         {modoTravado && (
-          <p className="text-[11px] text-muted-foreground">
-            Texto travado. Use <kbd className="bg-muted px-1 rounded">Tab</kbd> para navegar entre os {tokensFill.length} campo(s).
-          </p>
+          <>
+            <p className="text-[11px] text-muted-foreground">
+              Texto travado. Use <kbd className="bg-muted px-1 rounded">Tab</kbd> para navegar entre os {tokensFill.length} campo(s).
+            </p>
+            {tokensFill.length > 0 && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="w-full"
+                onClick={() => {
+                  const draft: Record<string, string> = {};
+                  tokensFill.forEach(t => {
+                    draft[t.raw] = fillables[t.raw] ?? fillables[t.label] ?? "";
+                  });
+                  setBulkDraft(draft);
+                  setBulkOpen(true);
+                }}
+              >
+                <ListChecks className="h-4 w-4 mr-1" /> Preencher todos os campos
+              </Button>
+            )}
+          </>
         )}
 
         {!modoTravado && camposDinamicos.length > 0 && (
@@ -220,6 +245,72 @@ export function SimuladorInline({
           .doc-locked [data-fillable] { user-select: text; -webkit-user-select: text; }
         `}</style>
       </div>
+
+      <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Preencher campos do formulário</DialogTitle>
+            <DialogDescription>
+              Preencha todos os {tokensFill.length} campo(s) de uma vez. Os valores serão aplicados no documento.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {tokensFill.map(tok => {
+              const v = bulkDraft[tok.raw] ?? "";
+              const setV = (nv: string) => setBulkDraft(d => ({ ...d, [tok.raw]: nv }));
+              return (
+                <div key={tok.raw} className="space-y-1">
+                  <label className="text-xs font-medium">{tok.label}</label>
+                  {tok.tipo === "textarea" ? (
+                    <Textarea value={v} onChange={e => setV(e.target.value)} rows={3} />
+                  ) : tok.tipo === "data" ? (
+                    <Input type="date" value={v} onChange={e => setV(e.target.value)} />
+                  ) : tok.tipo === "numero" ? (
+                    <Input type="number" value={v} onChange={e => setV(e.target.value)} />
+                  ) : tok.tipo === "check" ? (
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        checked={v === "true"}
+                        onCheckedChange={ck => setV(ck ? "true" : "")}
+                      />
+                      <span className="text-xs text-muted-foreground">{v === "true" ? "Marcado" : "Desmarcado"}</span>
+                    </div>
+                  ) : tok.tipo === "lista" ? (
+                    <Select value={v} onValueChange={setV}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {(tok.opcoes || []).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  ) : tok.tipo === "radio" ? (
+                    <div className="flex flex-wrap gap-3">
+                      {(tok.opcoes || []).map(o => (
+                        <label key={o} className="flex items-center gap-1 text-sm">
+                          <input type="radio" name={tok.raw} checked={v === o} onChange={() => setV(o)} />
+                          {o}
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <Input value={v} onChange={e => setV(e.target.value)} />
+                  )}
+                </div>
+              );
+            })}
+            {tokensFill.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Nenhum campo de formulário no documento.
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkOpen(false)}>Cancelar</Button>
+            <Button onClick={() => { setFillables(f => ({ ...f, ...bulkDraft })); setBulkOpen(false); }}>
+              Aplicar no documento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
