@@ -84,11 +84,36 @@ async function fetchApiEndpointRows(endpointId: string, limit = 5): Promise<any[
   return Array.isArray(rows) ? rows : [];
 }
 
+// Extrai nomes de colunas da cláusula SELECT ... FROM (fallback quando não há linhas)
+function parseSelectColumns(sql: string): string[] {
+  try {
+    const m = sql.match(/select\s+([\s\S]+?)\s+from\s/i);
+    if (!m) return [];
+    return m[1]
+      .split(",")
+      .map(part => {
+        const p = part.trim().replace(/\s+/g, " ");
+        const asMatch = p.match(/\s+as\s+["`\[]?([a-z0-9_]+)["`\]]?$/i);
+        if (asMatch) return asMatch[1];
+        const last = p.split(".").pop() || p;
+        return last.replace(/["`\[\]]/g, "").trim();
+      })
+      .filter(c => c && c !== "*" && /^[a-z_][a-z0-9_]*$/i.test(c));
+  } catch { return []; }
+}
+
 async function fetchColumns(tabela: string): Promise<string[]> {
   try {
     if (tabela.startsWith("api:")) {
-      const rows = await fetchApiEndpointRows(tabela.slice(4), 1);
-      return rows.length ? Object.keys(rows[0]) : [];
+      const id = tabela.slice(4);
+      try {
+        const rows = await fetchApiEndpointRows(id, 1);
+        if (rows.length) return Object.keys(rows[0]);
+      } catch (e) {
+        console.warn("[MergeBuilder] execute-dynamic-query falhou, tentando parsear SELECT:", e);
+      }
+      const { data: ep } = await supabase.from("api_endpoints").select("query").eq("id", id).maybeSingle();
+      return ep?.query ? parseSelectColumns(ep.query) : [];
     }
     const { data, error } = await supabase.from(tabela as any).select("*").limit(1);
     if (error) throw error;
@@ -101,6 +126,7 @@ async function fetchColumns(tabela: string): Promise<string[]> {
     return [];
   }
 }
+
 
 export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFields, initialSelected }: Props) {
   const [open, setOpen] = useState(false);
