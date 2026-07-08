@@ -5,18 +5,13 @@ import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { toast } from "@/lib/toast-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { TiptapEditor } from "@/components/editores/TiptapEditor";
 import { EditorToolbar } from "@/components/editores/EditorToolbar";
 import { CamposSidebar } from "@/components/editores/CamposSidebar";
 import { PreviewModal } from "@/components/editores/PreviewModal";
-import { ArrowLeft, Eye, Save, Pencil, FlaskConical, Lock, Unlock, ShieldCheck, ShieldOff, Copy } from "lucide-react";
+import { ArrowLeft, Eye, Save, Pencil, FlaskConical, Lock, Unlock, ShieldCheck, Copy } from "lucide-react";
 import type { Editor } from "@tiptap/react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SimuladorInline } from "@/components/editores/SimuladorInline";
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
-} from "@/components/ui/sheet";
 import { renderTemplate } from "@/lib/editores/mergeEngine";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
 
