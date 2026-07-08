@@ -15,7 +15,55 @@
 const dgram = require('dgram');
 const { spawn } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
+
+// ─── Runtime patch para @shinyoshiaki/binary-data ────────────────────────────
+// O pacote publica requires bare tipo require('lib/binary-stream') e guarda os
+// arquivos em src/node_modules/{lib,types,internal}. No build empacotado do
+// Electron isso às vezes vira "Cannot find module 'lib/binary-stream'" mesmo
+// com afterPack.js. Instala um hook no Module._resolveFilename que, quando o
+// require vier de dentro do pacote binary-data, tenta resolver contra src/
+// e src/node_modules/. Isso garante que o webrtc-stream carregue no cliente
+// final independentemente do estado do empacotamento.
+try {
+  const Module = require('module');
+  const origResolve = Module._resolveFilename;
+  const BD_MARK = path.join('@shinyoshiaki', 'binary-data');
+  const INTERNAL = new Set(['lib', 'types', 'internal']);
+  Module._resolveFilename = function (request, parent, ...rest) {
+    try {
+      return origResolve.call(this, request, parent, ...rest);
+    } catch (err) {
+      if (
+        typeof request === 'string' &&
+        parent && parent.filename && parent.filename.includes(BD_MARK) &&
+        !request.startsWith('.') && !request.startsWith('/') &&
+        INTERNAL.has(request.split('/')[0])
+      ) {
+        // localiza a raiz do pacote binary-data a partir do arquivo pai
+        const idx = parent.filename.indexOf(BD_MARK);
+        const root = parent.filename.slice(0, idx + BD_MARK.length);
+        const candidates = [
+          path.join(root, 'src', request),
+          path.join(root, 'src', request + '.js'),
+          path.join(root, 'src', 'node_modules', request),
+          path.join(root, 'src', 'node_modules', request + '.js'),
+          path.join(root, 'src', request, 'index.js'),
+          path.join(root, 'src', 'node_modules', request, 'index.js'),
+        ];
+        for (const c of candidates) {
+          if (fs.existsSync(c)) return c;
+        }
+      }
+      throw err;
+    }
+  };
+} catch (e) {
+  console.warn('[webrtc-stream] falha ao instalar hook binary-data:', e.message);
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 let WebSocketTransport = null;
 try {
   const ws = require('ws');
@@ -26,6 +74,7 @@ const {
   MediaStreamTrack,
   RTCRtpCodecParameters,
 } = require('werift');
+
 
 let ffmpegPath;
 try { ffmpegPath = require('ffmpeg-static'); } catch { ffmpegPath = 'ffmpeg'; }
