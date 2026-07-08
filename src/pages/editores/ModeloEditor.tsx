@@ -82,6 +82,7 @@ export default function ModeloEditor() {
   useEffect(() => {
     if (!showResolved) {
       setPreviewValues({});
+      setPreviewRows({});
       return;
     }
     (async () => {
