@@ -99,7 +99,11 @@ Deno.serve(async (req) => {
     // no CRM antes de habilitar.
     if (body?.action === "bulk_create_cameras" && Array.isArray(body?.cameras)) {
       const filial = body.filial_id || null;
-      const ALLOWED_MARCA = new Set(["tplink_tapo", "hikvision", "intelbras", "generica_http", "generica_rtsp"]);
+      const ALLOWED_MARCA = new Set([
+        "tplink_tapo","hikvision","intelbras","dahua","reolink","amcrest","ezviz",
+        "foscam","axis","uniview","vivotek","bosch","dlink","giga","multilaser",
+        "positivo","xiaomi","generica_http","generica_rtsp","generica_onvif",
+      ]);
       const ALLOWED_PROTO = new Set(["http", "https", "rtsp"]);
       const rows = body.cameras
         .filter((c: any) => c && c.host && c.marca)
