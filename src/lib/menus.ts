@@ -72,6 +72,12 @@ export const MENU_CONFIG: MenuConfigItem[] = [
 
   // Controle de Visitantes
   { id: "Controle de Visitantes", label: "Controle de Visitantes (Menu)", category: "Visitantes" },
+
+  // Editores
+  { id: "Editores", label: "Editores (Categoria)", category: "Editores" },
+  { id: "Editores Modelos", label: "Modelos de Documento", category: "Editores" },
+  { id: "Editores Gerar", label: "Gerar Documento", category: "Editores" },
+  { id: "Editores Documentos", label: "Documentos Gerados", category: "Editores" },
 ];
 
 // Lista apenas dos IDs dos menus (para compatibilidade com código existente)
