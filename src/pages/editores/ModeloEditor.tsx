@@ -40,7 +40,6 @@ export default function ModeloEditor() {
   const [rowsByAlias, setRowsByAlias] = useState<Record<string, any[]>>({});
   const [primaryAlias, setPrimaryAlias] = useState<string | null>(null);
   const [showResolved, setShowResolved] = useState(false);
-  const [savedTables, setSavedTables] = useState<{ name: string; alias: string; cols: string[] }[]>([]);
 
   // Normaliza merge_config para array de configs (aceita objeto legado)
   const configs = useMemo<any[]>(() => {
@@ -49,6 +48,15 @@ export default function ModeloEditor() {
     if (mc && (mc.tabela || mc.sql)) return [mc];
     return [];
   }, [modelo?.merge_config]);
+
+  const savedTables = useMemo<{ name: string; alias: string; cols: string[] }[]>(
+    () => (Array.isArray(modelo?.merge_config?.savedTables) ? modelo.merge_config.savedTables : []),
+    [modelo?.merge_config],
+  );
+  const mergeFields = useMemo<string[]>(
+    () => (Array.isArray(modelo?.merge_config?.mergeFields) ? modelo.merge_config.mergeFields : []),
+    [modelo?.merge_config],
+  );
 
   const configsKey = JSON.stringify(configs);
 
@@ -250,8 +258,17 @@ export default function ModeloEditor() {
   if (!modelo) return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
 
   const mc = modelo.merge_config;
+  const baseMc = () => (mc && typeof mc === "object" && !Array.isArray(mc) ? { ...mc } : {});
   const setConfigs = (list: any[]) => {
-    setModelo({ ...modelo, merge_config: { ...(mc && !Array.isArray(mc?.configs) ? {} : mc), configs: list } });
+    setModelo({ ...modelo, merge_config: { ...baseMc(), configs: list } });
+    setDirty(true);
+  };
+  const setSavedTables = (list: { name: string; alias: string; cols: string[] }[]) => {
+    setModelo({ ...modelo, merge_config: { ...baseMc(), configs, savedTables: list } });
+    setDirty(true);
+  };
+  const setMergeFields = (list: string[]) => {
+    setModelo({ ...modelo, merge_config: { ...baseMc(), configs, mergeFields: list } });
     setDirty(true);
   };
 
@@ -336,6 +353,8 @@ export default function ModeloEditor() {
                   onConfigsChange={setConfigs}
                   savedTables={savedTables}
                   onSavedTablesChange={setSavedTables}
+                  mergeFields={mergeFields}
+                  onMergeFieldsChange={setMergeFields}
                 />
               </div>
             </div>
