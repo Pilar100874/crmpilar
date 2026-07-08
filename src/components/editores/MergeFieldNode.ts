@@ -1,9 +1,12 @@
 import { Node, mergeAttributes } from "@tiptap/core";
+import { getPreviewValue, subscribePreview } from "@/lib/editores/mergePreviewStore";
 
 /**
  * Nó inline atômico (não editável) que representa um campo de merge.
- * Renderiza como um "chip" retangular. O texto interno preserva o token
- * original ([[Campo]] ou {{campo}}) para que o mergeEngine continue funcionando.
+ * Renderiza como um "chip" retangular. O HTML persistido preserva o token
+ * original ({{campo}}) — a exibição em tela mostra o VALOR resolvido do
+ * primeiro registro (ou do registro selecionado), caindo para o token quando
+ * ainda não há dados.
  */
 export const MergeField = Node.create({
   name: "mergeField",
@@ -52,6 +55,37 @@ export const MergeField = Node.create({
 
   renderText({ node }) {
     return String(node.attrs.token ?? "");
+  },
+
+  addNodeView() {
+    return ({ node }) => {
+      const token = String(node.attrs.token ?? "");
+      const label = String(node.attrs.label ?? token);
+      const dom = document.createElement("span");
+      dom.setAttribute("data-merge-field", token);
+      dom.setAttribute("data-label", label);
+      dom.className = "doc-field-chip";
+      dom.contentEditable = "false";
+
+      const render = () => {
+        const v = getPreviewValue(token);
+        if (v != null && v !== "") {
+          dom.textContent = v;
+          dom.classList.add("doc-field-chip-live");
+          dom.title = token;
+        } else {
+          dom.textContent = token;
+          dom.classList.remove("doc-field-chip-live");
+          dom.title = "";
+        }
+      };
+      render();
+      const unsub = subscribePreview(render);
+      return {
+        dom,
+        destroy: () => unsub(),
+      };
+    };
   },
 });
 

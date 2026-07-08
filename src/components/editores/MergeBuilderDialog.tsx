@@ -769,10 +769,13 @@ function InserirListaTabela({ todasTabelas, camposSelecionados, onInsert }: {
   const gerarHtml = () => {
     if (!sel || cols.length === 0) return;
     const th = cols.map(c => `<th style="border:1px solid #ccc;padding:4px;background:#f4f4f4;text-align:left;">${c}</th>`).join("");
-    const td = cols.map(c => `<td style="border:1px solid #ccc;padding:4px;">{{${c}}}</td>`).join("");
+    // Tabela principal → cada célula usa {{alias.campo}} para bater com os dados resolvidos.
+    // Relações 1:N → dentro do {{#each alias}} basta {{campo}} pois o contexto já é o item.
+    const tdMain = cols.map(c => `<td style="border:1px solid #ccc;padding:4px;">{{${sel.alias}.${c}}}</td>`).join("");
+    const tdEach = cols.map(c => `<td style="border:1px solid #ccc;padding:4px;">{{${c}}}</td>`).join("");
     const html = sel.isMain
-      ? `<table style="border-collapse:collapse;width:100%;font-size:11pt;"><thead><tr>${th}</tr></thead><tbody><tr>${td}</tr></tbody></table>`
-      : `<table style="border-collapse:collapse;width:100%;font-size:11pt;"><thead><tr>${th}</tr></thead><tbody>{{#each ${sel.alias}}}<tr>${td}</tr>{{/each}}</tbody></table>`;
+      ? `<table style="border-collapse:collapse;width:100%;font-size:11pt;"><thead><tr>${th}</tr></thead><tbody><tr>${tdMain}</tr></tbody></table>`
+      : `<table style="border-collapse:collapse;width:100%;font-size:11pt;"><thead><tr>${th}</tr></thead><tbody>{{#each ${sel.alias}}}<tr>${tdEach}</tr>{{/each}}</tbody></table>`;
     onInsert(html);
   };
 

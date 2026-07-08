@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
@@ -12,6 +12,9 @@ import type { Editor } from "@tiptap/react";
 import { SimuladorInline } from "@/components/editores/SimuladorInline";
 import { renderTemplate } from "@/lib/editores/mergeEngine";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
+import { runMergeConfig } from "@/lib/editores/runMergeConfig";
+import { setPreviewValues } from "@/lib/editores/mergePreviewStore";
+import { RegistroNavigator } from "@/components/editores/RegistroNavigator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
@@ -33,6 +36,67 @@ export default function ModeloEditor() {
   const [fullscreen, setFullscreen] = useState(false);
   const [modo, setModo] = useState<EditorMode>("editar");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [recordIndex, setRecordIndex] = useState(0);
+  const [rowsByAlias, setRowsByAlias] = useState<Record<string, any[]>>({});
+  const [primaryAlias, setPrimaryAlias] = useState<string | null>(null);
+
+  // Normaliza merge_config para array de configs (aceita objeto legado)
+  const configs = useMemo<any[]>(() => {
+    const mc = modelo?.merge_config;
+    if (Array.isArray(mc?.configs)) return mc.configs;
+    if (mc && (mc.tabela || mc.sql)) return [mc];
+    return [];
+  }, [modelo?.merge_config]);
+
+  const configsKey = JSON.stringify(configs);
+
+  // Carrega registros de cada vínculo para o preview inline dos chips
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const acc: Record<string, any[]> = {};
+      let primary: string | null = null;
+      for (const c of configs) {
+        if (!c?.alias) continue;
+        try {
+          const rows = await runMergeConfig(c);
+          if (rows && rows.length) {
+            acc[c.alias] = rows;
+            if (!primary) primary = c.alias;
+          }
+        } catch {}
+      }
+      if (!cancelled) {
+        setRowsByAlias(acc);
+        setPrimaryAlias(primary);
+        setRecordIndex(0);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [configsKey]);
+
+  // Publica valores no store para os chips renderizarem o valor real
+  useEffect(() => {
+    (async () => {
+      const base = await resolveMergeData("livre", null);
+      const merged: Record<string, any> = { ...base };
+      for (const c of configs) {
+        if (!c?.alias) continue;
+        const rows = rowsByAlias[c.alias] || [];
+        if (!rows.length) continue;
+        const i = c.alias === primaryAlias ? recordIndex : 0;
+        merged[c.alias] = rows[Math.min(i, rows.length - 1)];
+      }
+      setPreviewValues(merged);
+    })();
+  }, [rowsByAlias, primaryAlias, recordIndex, configsKey]);
+
+  const primaryRows = primaryAlias ? (rowsByAlias[primaryAlias] || []) : [];
+  const primaryLabel = primaryRows[recordIndex]
+    ? String(primaryRows[recordIndex].nome ?? primaryRows[recordIndex].name ?? primaryRows[recordIndex].razao_social ?? "")
+    : "";
+
 
 
   useEffect(() => {
@@ -161,11 +225,7 @@ export default function ModeloEditor() {
 
   if (!modelo) return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
 
-  // Normaliza merge_config para array de configs (aceita objeto legado)
   const mc = modelo.merge_config;
-  const configs: any[] = Array.isArray(mc?.configs)
-    ? mc.configs
-    : (mc && (mc.tabela || mc.sql) ? [mc] : []);
   const setConfigs = (list: any[]) => {
     setModelo({ ...modelo, merge_config: { ...(mc && !Array.isArray(mc?.configs) ? {} : mc), configs: list } });
     setDirty(true);
@@ -195,7 +255,20 @@ export default function ModeloEditor() {
           sidebarOpen={sidebarOpen}
         />
 
+        {primaryRows.length > 0 && (
+          <div className="border-b bg-muted/30 px-3 py-1 flex items-center gap-2">
+            <span className="text-[11px] text-muted-foreground">Registro (vínculo <b>{primaryAlias}</b>):</span>
+            <RegistroNavigator
+              total={primaryRows.length}
+              index={recordIndex}
+              onChange={setRecordIndex}
+              label={primaryLabel}
+            />
+          </div>
+        )}
+
         <div className="flex-1 overflow-hidden">
+
           {modo !== "editar" ? (
             <div className="h-full flex flex-col overflow-hidden">
               <div className="px-3 py-1.5 border-b bg-muted/40 text-xs flex items-center gap-2">
