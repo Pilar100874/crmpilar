@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { ImagePickerDialog } from "./ImagePickerDialog";
 import { AssinaturaPickerDialog } from "./AssinaturaPickerDialog";
 import { NovoCampoDialog } from "./NovoCampoDialog";
@@ -74,6 +76,9 @@ export function EditorToolbar({
 
   const [color, setColor] = useState("#111111");
   const [bgColor, setBgColor] = useState("#fff59d");
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkText, setLinkText] = useState("");
   const isEdit = mode === "editar";
 
   return (
@@ -150,8 +155,12 @@ export function EditorToolbar({
 
             <Separator orientation="vertical" className="h-6 mx-1" />
             <TB onClick={() => {
-              const url = window.prompt("URL do link");
-              if (url) editor.chain().focus().setLink({ href: url }).run();
+              const sel = editor.state.selection;
+              const selectedText = editor.state.doc.textBetween(sel.from, sel.to, " ");
+              const prev = editor.getAttributes("link")?.href || "";
+              setLinkText(selectedText);
+              setLinkUrl(prev);
+              setLinkOpen(true);
             }} title="Link"><LinkIcon className="h-4 w-4" /></TB>
             <ImagePickerDialog onInsert={(url, w) => {
               editor.chain().focus().setImage({ src: url } as any).updateAttributes("image", { width: w } as any).run();
@@ -189,6 +198,58 @@ export function EditorToolbar({
           <TB onClick={onFullscreen} title="Tela cheia"><Maximize2 className="h-4 w-4" /></TB>
         </div>
       </div>
+
+      <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Inserir link</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="link-text">Texto</Label>
+              <Input id="link-text" value={linkText} onChange={(e) => setLinkText(e.target.value)} placeholder="Texto exibido" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="link-url">URL</Label>
+              <Input id="link-url" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://exemplo.com" autoFocus />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            {editor?.isActive("link") && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  editor.chain().focus().extendMarkRange("link").unsetLink().run();
+                  setLinkOpen(false);
+                }}
+              >
+                Remover link
+              </Button>
+            )}
+            <Button
+              type="button"
+              onClick={() => {
+                if (!editor || !linkUrl) return;
+                const url = linkUrl.trim();
+                const chain = editor.chain().focus();
+                const sel = editor.state.selection;
+                const currentText = editor.state.doc.textBetween(sel.from, sel.to, " ");
+                if (linkText && linkText !== currentText) {
+                  chain.insertContent(`<a href="${url}">${linkText}</a>`).run();
+                } else if (sel.empty) {
+                  chain.insertContent(`<a href="${url}">${linkText || url}</a>`).run();
+                } else {
+                  chain.extendMarkRange("link").setLink({ href: url }).run();
+                }
+                setLinkOpen(false);
+              }}
+            >
+              Aplicar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
