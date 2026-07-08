@@ -159,16 +159,25 @@ export default function ModeloEditor() {
           value={modelo.titulo}
           onChange={e => { setModelo({ ...modelo, titulo: e.target.value }); setDirty(true); }}
           className="max-w-md font-semibold"
+          disabled={modelo.bloqueado}
         />
-        <span className="text-xs text-muted-foreground">v{modelo.versao_atual} {dirty && "· não salvo"} {saving && "· salvando…"}</span>
+        <span className="text-xs text-muted-foreground">
+          v{modelo.versao_atual} {dirty && "· não salvo"} {saving && "· salvando…"}
+          {modelo.bloqueado && <span className="ml-2 px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700">🔒 bloqueado</span>}
+        </span>
         <div className="ml-auto flex items-center gap-2">
+          <Button size="sm" variant={modelo.bloqueado ? "secondary" : "outline"} onClick={alternarBloqueio}
+            title={modelo.bloqueado ? "Desbloquear edição" : "Bloquear edição (somente-leitura)"}>
+            {modelo.bloqueado ? <><Unlock className="h-4 w-4 mr-1" /> Desbloquear</> : <><Lock className="h-4 w-4 mr-1" /> Bloquear</>}
+          </Button>
           <Button size="sm" variant="outline" onClick={abrirVersoes}><GitBranch className="h-4 w-4 mr-1" /> Versões</Button>
           <Button size="sm" variant="outline" onClick={abrirPreview}><Eye className="h-4 w-4 mr-1" /> Visualizar</Button>
           <Button size="sm" variant="outline" onClick={() => nav(`/editores/gerar?modelo=${id}`)}><Send className="h-4 w-4 mr-1" /> Gerar</Button>
-          <Button size="sm" variant="secondary" onClick={publicarVersao}>Publicar versão</Button>
-          <Button size="sm" onClick={() => salvar()}><Save className="h-4 w-4 mr-1" /> Salvar</Button>
+          <Button size="sm" variant="secondary" onClick={publicarVersao} disabled={modelo.bloqueado}>Publicar versão</Button>
+          <Button size="sm" onClick={() => salvar()} disabled={modelo.bloqueado}><Save className="h-4 w-4 mr-1" /> Salvar</Button>
         </div>
       </div>
+
 
       <Tabs defaultValue="editar" className="flex-1 flex flex-col overflow-hidden">
         <TabsList className="mx-3 mt-2 self-start">
