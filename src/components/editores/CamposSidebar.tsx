@@ -149,21 +149,39 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
   const validKeys = new Set(campos.map(c => c.chave));
   const invalidUsed = usadas.filter(k => !validKeys.has(k.split(".")[0]) && !mergeFields.includes(k));
 
+  const excluirCampo = async (c: Campo) => {
+    if (!confirm(`Excluir o campo personalizado "${c.rotulo}"?\n\nOs documentos que usarem {{${c.chave}}} ficarão sem valor.`)) return;
+    const { error } = await supabase.from("doc_campos").delete().eq("id", c.id);
+    if (error) { console.error(error); return; }
+    window.dispatchEvent(new CustomEvent("doc-campos:changed"));
+  };
+
   const renderCampoBtn = (c: Campo, emerald = false) => (
-    <button
-      key={c.id}
-      draggable
-      onDragStart={(e) => onDragToken(e, c.chave)}
-      onClick={() => onInsert(c.chave)}
-      className={cn(
-        "text-xs px-2 py-1 rounded border border-primary/20 bg-primary/5 hover:bg-primary/15 text-left cursor-grab active:cursor-grabbing",
-        emerald && "border-emerald-500/40 bg-emerald-500/5"
+    <div key={c.id} className="relative group">
+      <button
+        draggable
+        onDragStart={(e) => onDragToken(e, c.chave)}
+        onClick={() => onInsert(c.chave)}
+        className={cn(
+          "text-xs px-2 py-1 rounded border border-primary/20 bg-primary/5 hover:bg-primary/15 text-left cursor-grab active:cursor-grabbing w-full",
+          emerald && "border-emerald-500/40 bg-emerald-500/5",
+        )}
+        title={c.descricao ? `${c.descricao}\n\n{{${c.chave}}}` : `{{${c.chave}}}\n\nArraste ou clique para inserir`}
+      >
+        <span className="font-medium">{c.rotulo}</span>
+        <span className="block text-[10px] text-muted-foreground font-mono">{`{{${c.chave}}}`}</span>
+      </button>
+      {c.personalizado && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); void excluirCampo(c); }}
+          className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-[10px] shadow"
+          title="Excluir campo personalizado"
+        >
+          ×
+        </button>
       )}
-      title={c.descricao ? `${c.descricao}\n\n{{${c.chave}}}` : `{{${c.chave}}}\n\nArraste ou clique para inserir`}
-    >
-      <span className="font-medium">{c.rotulo}</span>
-      <span className="block text-[10px] text-muted-foreground font-mono">{`{{${c.chave}}}`}</span>
-    </button>
+    </div>
   );
 
   const addConfig = () => {
