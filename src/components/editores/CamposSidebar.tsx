@@ -71,7 +71,7 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
       !busca || c.rotulo.toLowerCase().includes(q) || c.chave.toLowerCase().includes(q)
     );
     return {
-      sistema: filtered.filter(c => !c.personalizado),
+      sistema: filtered.filter(c => !c.personalizado && c.chave === "data_atual"),
       personalizado: filtered.filter(c => c.personalizado),
     };
   }, [campos, busca]);
@@ -118,8 +118,35 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
 
       <ScrollArea className="flex-1">
         <div className="p-3 space-y-4">
-          {/* Sistema */}
+          {/* Campos do Merge selecionados — acima de tudo */}
           <div>
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
+              <Database className="h-3 w-3" /> Campos do Merge
+            </div>
+            {mergeFields.length === 0 ? (
+              <p className="text-[11px] text-muted-foreground">
+                Nenhum. Abra <b>Vincular dados</b>, vincule as tabelas, execute e selecione os campos.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-1">
+                {mergeFields.map(chave => (
+                  <button
+                    key={chave}
+                    draggable
+                    onDragStart={(e) => onDragToken(e, chave)}
+                    onClick={() => onInsert(chave)}
+                    className="text-xs px-2 py-1 rounded border border-sky-500/40 bg-sky-500/5 hover:bg-sky-500/15 text-left cursor-grab active:cursor-grabbing"
+                    title={`{{${chave}}}\n\nArraste ou clique para inserir`}
+                  >
+                    <span className="font-mono text-[11px] text-sky-700 dark:text-sky-300">{`{{${chave}}}`}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Sistema — somente Data atual */}
+          <div className="border-t pt-3">
             <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Sistema</div>
             {sistema.length === 0 ? (
               <p className="text-[11px] text-muted-foreground">Nenhum campo.</p>
@@ -167,32 +194,6 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
             </div>
           </div>
 
-          {/* Campos do Merge selecionados */}
-          <div className="border-t pt-3">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
-              <Database className="h-3 w-3" /> Campos do Merge
-            </div>
-            {mergeFields.length === 0 ? (
-              <p className="text-[11px] text-muted-foreground">
-                Nenhum. Abra <b>Vincular dados</b>, vincule as tabelas, execute e selecione os campos.
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-1">
-                {mergeFields.map(chave => (
-                  <button
-                    key={chave}
-                    draggable
-                    onDragStart={(e) => onDragToken(e, chave)}
-                    onClick={() => onInsert(chave)}
-                    className="text-xs px-2 py-1 rounded border border-sky-500/40 bg-sky-500/5 hover:bg-sky-500/15 text-left cursor-grab active:cursor-grabbing"
-                    title={`{{${chave}}}\n\nArraste ou clique para inserir`}
-                  >
-                    <span className="font-mono text-[11px] text-sky-700 dark:text-sky-300">{`{{${chave}}}`}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
 
           {/* Usados no documento */}
           <div className="border-t pt-3">
