@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Database, Play, Plus, Trash2, Search } from "lucide-react";
+import { Database, Play, Plus, Trash2, Search, Image as ImageIcon, Calculator } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
+import { evalCalculados, type CampoCalculado } from "@/lib/editores/mergeEngine";
 
 export interface MergeConfigFiltro {
   campo: string;
@@ -17,9 +18,10 @@ export interface MergeConfigFiltro {
 
 export interface MergeConfig {
   tabela: string;
-  alias: string; // prefixo usado em {{alias.campo}}
+  alias: string;
   filtros: MergeConfigFiltro[];
   limite: number;
+  calculados?: CampoCalculado[];
 }
 
 interface Props {
@@ -56,6 +58,7 @@ export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
     alias: "reg",
     filtros: [],
     limite: 50,
+    calculados: [],
   });
   const [rows, setRows] = useState<any[]>([]);
   const [colunas, setColunas] = useState<string[]>([]);
@@ -73,7 +76,8 @@ export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
       }
       const { data, error } = await q;
       if (error) throw error;
-      const list = (data ?? []) as any[];
+      const calcs = cfg.calculados ?? [];
+      const list = ((data ?? []) as any[]).map(r => calcs.length ? evalCalculados(r, calcs) : r);
       setRows(list);
       const cols = list[0] ? Object.keys(list[0]) : [];
       setColunas(cols);
@@ -85,6 +89,9 @@ export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
       setLoading(false);
     }
   };
+
+  const addCalc = () => setCfg({ ...cfg, calculados: [...(cfg.calculados ?? []), { nome: "", expressao: "" }] });
+  const rmCalc = (i: number) => setCfg({ ...cfg, calculados: (cfg.calculados ?? []).filter((_, k) => k !== i) });
 
   const addFiltro = () => setCfg({ ...cfg, filtros: [...cfg.filtros, { campo: "", op: "eq", valor: "" }] });
   const rmFiltro = (i: number) => setCfg({ ...cfg, filtros: cfg.filtros.filter((_, k) => k !== i) });
@@ -148,6 +155,26 @@ export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
               <Input type="number" value={cfg.limite} onChange={e => setCfg({ ...cfg, limite: Number(e.target.value) })} className="h-8 w-24" />
             </div>
 
+            <div className="border-t pt-2">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs text-muted-foreground flex items-center gap-1"><Calculator className="h-3 w-3" /> Campos calculados</label>
+                <Button size="sm" variant="ghost" onClick={addCalc} className="h-6 text-xs"><Plus className="h-3 w-3 mr-1" /> Adicionar</Button>
+              </div>
+              <div className="space-y-1">
+                {(cfg.calculados ?? []).map((c, i) => (
+                  <div key={i} className="flex gap-1 items-center">
+                    <Input value={c.nome} onChange={e => { const n = [...(cfg.calculados ?? [])]; n[i] = { ...c, nome: e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase() }; setCfg({ ...cfg, calculados: n }); }} placeholder="nome" className="h-7 text-xs w-24" />
+                    <span className="text-xs">=</span>
+                    <Input value={c.expressao} onChange={e => { const n = [...(cfg.calculados ?? [])]; n[i] = { ...c, expressao: e.target.value }; setCfg({ ...cfg, calculados: n }); }} placeholder="preco * quantidade" className="h-7 text-xs flex-1 font-mono" />
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => rmCalc(i)}><Trash2 className="h-3 w-3" /></Button>
+                  </div>
+                ))}
+                {(cfg.calculados ?? []).length === 0 && (
+                  <p className="text-[11px] text-muted-foreground">Ex: <code>total = preco * quantidade</code>, <code>desc = valor * 0.1</code>. Use Math.round(), Number(), etc.</p>
+                )}
+              </div>
+            </div>
+
             <Button onClick={executar} disabled={loading} className="w-full">
               <Play className="h-4 w-4 mr-1" /> {loading ? "Executando…" : "Executar consulta"}
             </Button>
@@ -171,17 +198,28 @@ export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
                 {colunasFiltradas.map(col => {
                   const chave = `${cfg.alias}.${col}`;
                   const preview = rows[0]?.[col];
+                  const previewStr = preview == null ? "" : String(preview);
+                  const looksImage = /url|foto|imagem|image|photo|thumb/i.test(col)
+                    || /^https?:\/\/.*\.(png|jpe?g|webp|gif|svg)/i.test(previewStr)
+                    || previewStr.startsWith("data:image/");
                   return (
-                    <button
-                      key={col}
-                      onClick={() => onInsertField?.(chave)}
-                      className="w-full text-left px-2 py-1.5 rounded border border-primary/20 bg-primary/5 hover:bg-primary/15 text-xs"
-                    >
-                      <div className="font-mono text-primary">{`{{${chave}}}`}</div>
-                      {preview != null && String(preview) !== "" && (
-                        <div className="text-[10px] text-muted-foreground truncate">ex: {String(preview).slice(0, 60)}</div>
+                    <div key={col} className="flex items-stretch gap-1">
+                      <button
+                        onClick={() => onInsertField?.(chave)}
+                        className="flex-1 text-left px-2 py-1.5 rounded border border-primary/20 bg-primary/5 hover:bg-primary/15 text-xs"
+                      >
+                        <div className="font-mono text-primary">{`{{${chave}}}`}</div>
+                        {previewStr && (
+                          <div className="text-[10px] text-muted-foreground truncate">ex: {previewStr.slice(0, 60)}</div>
+                        )}
+                      </button>
+                      {looksImage && (
+                        <Button size="icon" variant="ghost" className="h-auto w-7" title="Inserir como imagem"
+                          onClick={() => onInsertField?.(`{{img:${chave}}}`)}>
+                          <ImageIcon className="h-3.5 w-3.5 text-primary" />
+                        </Button>
                       )}
-                    </button>
+                    </div>
                   );
                 })}
               </div>

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { ImagePickerDialog } from "./ImagePickerDialog";
 
 interface Props {
   editor: Editor | null;
@@ -98,10 +99,17 @@ export function EditorToolbar({ editor, onFullscreen, zoom, setZoom }: Props) {
         const url = window.prompt("URL do link");
         if (url) editor.chain().focus().setLink({ href: url }).run();
       }} title="Link"><LinkIcon className="h-4 w-4" /></TB>
-      <TB onClick={() => {
-        const url = window.prompt("URL da imagem");
-        if (url) editor.chain().focus().setImage({ src: url }).run();
-      }} title="Imagem"><ImageIcon className="h-4 w-4" /></TB>
+      <ImagePickerDialog onInsert={(url, w) => {
+        editor.chain().focus().setImage({ src: url } as any).updateAttributes("image", { width: w } as any).run();
+      }} />
+      {editor.isActive("image") && (
+        <Select value="" onValueChange={(v) => editor.chain().focus().updateAttributes("image", { width: v } as any).run()}>
+          <SelectTrigger className="h-8 w-24 text-xs"><SelectValue placeholder="Tam. img" /></SelectTrigger>
+          <SelectContent>
+            {["25%","50%","75%","100%","200px","400px","auto"].map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      )}
 
       <Separator orientation="vertical" className="h-6 mx-1" />
       <TB onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} title="Inserir tabela"><TableIcon className="h-4 w-4" /></TB>

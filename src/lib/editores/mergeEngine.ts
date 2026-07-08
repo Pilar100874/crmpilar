@@ -59,6 +59,20 @@ export function renderTemplate(
     return isTruthy(getValue(data, key.trim())) ? body : "";
   });
 
+  // {{img:key}} — insere <img src="{value}">
+  const imgRe = /\{\{\s*img:([a-zA-Z0-9_\.]+)\s*\}\}/g;
+  html = html.replace(imgRe, (_m, key: string) => {
+    used.push(key);
+    const value = getValue(data, key);
+    if (value == null || value === "") {
+      missing.push(key);
+      return opts.highlightMissing
+        ? `<span style="background:#fef3c7;border:1px dashed #f59e0b;color:#92400e;padding:0 4px;border-radius:2px;">🖼 {{img:${escapeHtml(key)}}}</span>`
+        : "";
+    }
+    return `<img src="${escapeAttr(String(value))}" style="max-width:100%;height:auto;" />`;
+  });
+
   const varRe = /\{\{\s*([a-zA-Z0-9_\.]+)\s*\}\}/g;
   const out = html.replace(varRe, (_m, key: string) => {
     used.push(key);
@@ -83,12 +97,40 @@ export function renderTemplate(
 
 export function extractFieldKeys(html: string): string[] {
   const keys = new Set<string>();
-  const varRe = /\{\{\s*(?:#(?:if|each)\s+)?([a-zA-Z0-9_\.]+)\s*\}\}/g;
+  const varRe = /\{\{\s*(?:#(?:if|each)\s+|img:)?([a-zA-Z0-9_\.]+)\s*\}\}/g;
   let m: RegExpExecArray | null;
   while ((m = varRe.exec(html)) !== null) {
     if (m[1] !== undefined) keys.add(m[1]);
   }
   return Array.from(keys);
+}
+
+// ============ Campos calculados ============
+export interface CampoCalculado {
+  nome: string;       // ex: "total"
+  expressao: string;  // ex: "preco * quantidade * (1 - desconto/100)"
+}
+
+/**
+ * Avalia expressões usando as chaves do row como variáveis.
+ * Ex: expressao "preco * quantidade" com row {preco:10, quantidade:3} => 30.
+ * Segurança: `Function` sem acesso a globals sensíveis (fornece Math/Number).
+ */
+export function evalCalculados(row: Record<string, any>, calc: CampoCalculado[]): Record<string, any> {
+  const out: Record<string, any> = { ...row };
+  for (const c of calc) {
+    if (!c.nome || !c.expressao) continue;
+    try {
+      const keys = Object.keys(out);
+      const values = keys.map(k => out[k]);
+      // eslint-disable-next-line no-new-func
+      const fn = new Function(...keys, "Math", "Number", `"use strict"; return (${c.expressao});`);
+      out[c.nome] = fn(...values, Math, Number);
+    } catch {
+      out[c.nome] = null;
+    }
+  }
+  return out;
 }
 
 // ============ Campos PREENCHÍVEIS [[tipo:label|opts]] ============
