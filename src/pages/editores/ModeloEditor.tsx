@@ -31,6 +31,8 @@ export default function ModeloEditor() {
   const [zoom, setZoom] = useState(1);
   const [fullscreen, setFullscreen] = useState(false);
   const [modo, setModo] = useState<EditorMode>("editar");
+  const [variante, setVariante] = useState<"v1" | "v2">(() => (localStorage.getItem("editor_variant") as any) || "v1");
+  useEffect(() => { localStorage.setItem("editor_variant", variante); }, [variante]);
 
   useEffect(() => {
     getEstabelecimentoId().then(setEstabId);
