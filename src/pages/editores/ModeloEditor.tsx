@@ -243,6 +243,7 @@ export default function ModeloEditor() {
           setZoom={setZoom}
           onFullscreen={() => setFullscreen(f => !f)}
           onPreviewMerge={abrirPreview}
+          previewActive={showResolved}
           estabelecimentoId={estabId}
           onBack={() => nav("/editores")}
           onSave={() => salvar()}
