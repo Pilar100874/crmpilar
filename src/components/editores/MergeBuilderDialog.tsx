@@ -617,9 +617,11 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                   <li>• Limite: {cfg.limite}</li>
                 </ul>
               </div>
-              <Button onClick={executar} disabled={loading} className="w-full" size="lg">
-                <Play className="h-4 w-4 mr-1" /> {loading ? "Executando…" : "Executar consulta"}
-              </Button>
+              {rows.length === 0 && (
+                <Button onClick={executar} disabled={loading} className="w-full" size="lg">
+                  <Play className="h-4 w-4 mr-1" /> {loading ? "Executando…" : "Executar consulta"}
+                </Button>
+              )}
               {rows.length > 0 && (
                 <div className="border rounded overflow-auto max-h-[300px]">
                   <table className="text-[11px] w-full">
