@@ -104,17 +104,24 @@ const OPUS = new RTCRtpCodecParameters({
 });
 
 function rtspUrlFor(cam) {
-  const user = cam.usuario ? encodeURIComponent(cam.usuario) : '';
-  const pass = cam.senha ? encodeURIComponent(cam.senha) : '';
+  // Modo manual: campos explícitos têm prioridade absoluta sobre defaults da marca.
+  const manualUser = cam.rtsp_user || cam.usuario;
+  const manualPass = cam.rtsp_pass || cam.senha;
+  const user = manualUser ? encodeURIComponent(manualUser) : '';
+  const pass = manualPass ? encodeURIComponent(manualPass) : '';
   const auth = user ? `${user}:${pass}@` : '';
-  const port = cam.porta_rtsp || 554;
+  const port = cam.rtsp_porta || cam.porta_rtsp || 554;
   const host = cam.host;
   let p;
-  switch ((cam.marca || '').toLowerCase()) {
-    case 'hikvision': p = '/Streaming/Channels/102'; break; // substream H.264
-    case 'intelbras': p = '/cam/realmonitor?channel=1&subtype=1'; break; // substream
-    case 'tplink_tapo': p = cam.rtsp_path || '/stream2'; break; // substream H.264 — /stream1 pode ser H.265
-    default: p = cam.rtsp_path || '/';
+  if (cam.modo_manual && cam.rtsp_path) {
+    p = cam.rtsp_path.startsWith('/') ? cam.rtsp_path : `/${cam.rtsp_path}`;
+  } else {
+    switch ((cam.marca || '').toLowerCase()) {
+      case 'hikvision': p = cam.rtsp_path || '/Streaming/Channels/102'; break;
+      case 'intelbras': p = cam.rtsp_path || '/cam/realmonitor?channel=1&subtype=1'; break;
+      case 'tplink_tapo': p = cam.rtsp_path || '/stream2'; break;
+      default: p = cam.rtsp_path || '/';
+    }
   }
   return `rtsp://${auth}${host}:${port}${p}`;
 }
