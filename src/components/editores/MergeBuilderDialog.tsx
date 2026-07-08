@@ -767,76 +767,34 @@ function CamposCheckList({ tabela, colunas, loading, selecionados, onToggle }: {
   );
 }
 
-// ============ Inserir lista/tabela como HTML ============
-function InserirListaTabela({ todasTabelas, camposSelecionados, rows, onInsert, onSaveTable }: {
+// ============ Salvar tabela como chip na sidebar (não insere no editor) ============
+function InserirListaTabela({ todasTabelas, camposSelecionados, onSaveTable }: {
   todasTabelas: { tabela: string; alias: string; isMain: boolean }[];
   camposSelecionados: Record<string, string[]>;
   rows: any[];
   onInsert: (html: string) => void;
-  onSaveTable?: (name: string, html: string) => void;
+  onSaveTable?: (name: string, meta: { alias: string; cols: string[] }) => void;
 }) {
   const opcoes = todasTabelas.filter(t => (camposSelecionados[t.tabela] ?? []).length > 0);
   const [alias, setAlias] = useState<string>("");
   const [cols, setCols] = useState<string[]>([]);
-  const [linhaDe, setLinhaDe] = useState<number>(1);
-  const [linhaAte, setLinhaAte] = useState<number>(0); // 0 = todas
 
   const sel = opcoes.find(o => o.alias === alias);
   const camposDoAlias = sel ? (camposSelecionados[sel.tabela] ?? []) : [];
 
   const toggleCol = (c: string) => setCols(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
 
-  const fmtVal = (v: any) => {
-    if (v == null) return "";
-    if (typeof v === "object") return JSON.stringify(v);
-    return String(v);
-  };
-  const escapeHtml = (s: string) => s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
-
-  const buildHtml = () => {
-    if (!sel || cols.length === 0) return "";
-    const th = cols.map(c => `<th style="border:1px solid #ccc;padding:4px;background:#f4f4f4;text-align:left;">${c}</th>`).join("");
-
-    let dataRows: any[] = [];
-    if (sel.isMain) dataRows = rows;
-    else {
-      rows.forEach(r => {
-        const v = r?.[sel.alias];
-        if (Array.isArray(v)) dataRows.push(...v);
-        else if (v) dataRows.push(v);
-      });
-    }
-
-    // Aplica range de linhas (1-indexed inclusivo). linhaAte=0 => todas.
-    const from = Math.max(0, (linhaDe || 1) - 1);
-    const to = linhaAte && linhaAte > 0 ? Math.min(dataRows.length, linhaAte) : dataRows.length;
-    dataRows = dataRows.slice(from, to);
-
-    const tbody = dataRows.length
-      ? dataRows.map(r => {
-          const tds = cols.map(c => `<td style="border:1px solid #ccc;padding:4px;">${escapeHtml(fmtVal(r?.[c]))}</td>`).join("");
-          return `<tr>${tds}</tr>`;
-        }).join("")
-      : `<tr>${cols.map(() => `<td style="border:1px solid #ccc;padding:4px;">&nbsp;</td>`).join("")}</tr>`;
-
-    return `<table style="border-collapse:collapse;width:100%;font-size:11pt;"><thead><tr>${th}</tr></thead><tbody>${tbody}</tbody></table>`;
-  };
-
-  const gerarHtml = () => {
-    const html = buildHtml();
-    if (!html) return;
-    onInsert(html);
-    if (onSaveTable && sel) {
-      const nome = `${sel.alias} (${linhaDe || 1}${linhaAte ? `–${linhaAte}` : "+"})`;
-      onSaveTable(nome, html);
-    }
+  const salvar = () => {
+    if (!sel || cols.length === 0 || !onSaveTable) return;
+    onSaveTable(sel.alias, { alias: sel.alias, cols: [...cols] });
+    toast.success(`Tabela "${sel.alias}" adicionada à barra lateral. Arraste para o documento para inserir.`);
   };
 
   if (opcoes.length === 0) return null;
 
   return (
     <div className="border-t pt-3 mt-2 space-y-2">
-      <div className="text-xs font-medium flex items-center gap-1"><Table2 className="h-3.5 w-3.5" /> Inserir lista/tabela no documento</div>
+      <div className="text-xs font-medium flex items-center gap-1"><Table2 className="h-3.5 w-3.5" /> Criar tabela vinculada</div>
       <div className="flex flex-wrap gap-2 items-center">
         <Select value={alias} onValueChange={(v) => { setAlias(v); setCols([]); }}>
           <SelectTrigger className="h-8 w-56 text-xs"><SelectValue placeholder="Escolha a tabela/relação" /></SelectTrigger>
@@ -848,14 +806,8 @@ function InserirListaTabela({ todasTabelas, camposSelecionados, rows, onInsert, 
             ))}
           </SelectContent>
         </Select>
-        <div className="flex items-center gap-1 text-[11px]">
-          <span className="text-muted-foreground">linha</span>
-          <Input type="number" min={1} value={linhaDe} onChange={e => setLinhaDe(Number(e.target.value) || 1)} className="h-8 w-16 text-xs" />
-          <span className="text-muted-foreground">até</span>
-          <Input type="number" min={0} value={linhaAte} onChange={e => setLinhaAte(Number(e.target.value) || 0)} className="h-8 w-16 text-xs" placeholder="todas" />
-        </div>
-        <Button size="sm" onClick={gerarHtml} disabled={!sel || cols.length === 0}>
-          <Plus className="h-3.5 w-3.5 mr-1" /> Inserir tabela
+        <Button size="sm" onClick={salvar} disabled={!sel || cols.length === 0}>
+          <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar à sidebar
         </Button>
       </div>
       {sel && (
@@ -869,9 +821,10 @@ function InserirListaTabela({ todasTabelas, camposSelecionados, rows, onInsert, 
         </div>
       )}
       <p className="text-[10px] text-muted-foreground">
-        Gera uma tabela HTML no editor com o intervalo de linhas escolhido. A tabela também fica salva no grupo <b>Tabelas</b> da barra lateral para reinserir arrastando.
+        Nada é inserido agora. A tabela vai para o grupo <b>Tabelas</b> da sidebar. Ao arrastar/clicar lá, será perguntado o intervalo de linhas (ex. <code>1-10</code>). Você pode inserir a mesma tabela várias vezes com intervalos diferentes.
       </p>
     </div>
   );
 }
+
 
