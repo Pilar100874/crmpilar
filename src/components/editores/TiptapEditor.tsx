@@ -151,6 +151,12 @@ export function TiptapEditor({
           user-select: all;
           cursor: default;
         }
+        .doc-editor-content .ProseMirror .doc-field-chip.doc-field-chip-live {
+          background: #dcfce7;
+          color: #166534;
+          border-color: #86efac;
+          font-family: inherit;
+        }
         .doc-editor-content .ProseMirror .doc-field-chip.ProseMirror-selectednode {
           outline: 2px solid #2563eb;
         }
