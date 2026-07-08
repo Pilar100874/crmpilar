@@ -40,7 +40,7 @@ export default function ModeloEditor() {
   const [rowsByAlias, setRowsByAlias] = useState<Record<string, any[]>>({});
   const [primaryAlias, setPrimaryAlias] = useState<string | null>(null);
   const [showResolved, setShowResolved] = useState(false);
-  const [savedTables, setSavedTables] = useState<{ name: string; html: string }[]>([]);
+  const [savedTables, setSavedTables] = useState<{ name: string; alias: string; cols: string[] }[]>([]);
 
   // Normaliza merge_config para array de configs (aceita objeto legado)
   const configs = useMemo<any[]>(() => {
