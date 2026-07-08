@@ -76,6 +76,9 @@ export function EditorToolbar({
 
   const [color, setColor] = useState("#111111");
   const [bgColor, setBgColor] = useState("#fff59d");
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkText, setLinkText] = useState("");
   const isEdit = mode === "editar";
 
   return (
