@@ -186,26 +186,50 @@ export default function ModeloEditor() {
         />
 
         <div className="flex-1 overflow-hidden">
-          <div className="h-full flex overflow-hidden">
-            <div className="flex-1 overflow-auto">
-              <TiptapEditor
-                initialContent={html}
-                onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
-                editorRef={(e) => { editorRef.current = e; }}
-                zoom={zoom}
-                editable={!modelo.bloqueado && !modelo.campos_bloqueados}
-              />
+          {modo !== "editar" ? (
+            <div className="h-full flex flex-col overflow-hidden">
+              <div className="px-3 py-1.5 border-b bg-muted/40 text-xs flex items-center gap-2">
+                <span className="font-semibold">
+                  {modo === "form" ? "Simular Formulário — preencher campos" : "Simular Merge — navegar registros"}
+                </span>
+                <span className="text-muted-foreground">(inline)</span>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <SimuladorInline
+                  html={html}
+                  titulo={modelo.titulo}
+                  soPreenchimento={modo === "form"}
+                  mergeConfig={configs[0] ?? modelo.merge_config ?? null}
+                  onMergeConfigChange={(cfg) => {
+                    const next = [...configs];
+                    if (next.length) next[0] = cfg; else next.push(cfg);
+                    setConfigs(next);
+                  }}
+                />
+              </div>
             </div>
-            {sidebarOpen && (
-              <CamposSidebar
-                estabelecimentoId={estabId}
-                onInsert={inserirCampo}
-                currentHtml={html}
-                configs={configs}
-                onConfigsChange={setConfigs}
-              />
-            )}
-          </div>
+          ) : (
+            <div className="h-full flex overflow-hidden">
+              <div className="flex-1 overflow-auto">
+                <TiptapEditor
+                  initialContent={html}
+                  onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
+                  editorRef={(e) => { editorRef.current = e; }}
+                  zoom={zoom}
+                  editable={!modelo.bloqueado && !modelo.campos_bloqueados}
+                />
+              </div>
+              {sidebarOpen && (
+                <CamposSidebar
+                  estabelecimentoId={estabId}
+                  onInsert={inserirCampo}
+                  currentHtml={html}
+                  configs={configs}
+                  onConfigsChange={setConfigs}
+                />
+              )}
+            </div>
+          )}
         </div>
 
 
@@ -224,28 +248,6 @@ export default function ModeloEditor() {
           </span>
         </div>
       </div>
-
-      {/* Simuladores sobrepõem o editor (não navegam para outra tela) */}
-      <Dialog open={modo !== "editar"} onOpenChange={(o) => { if (!o) setModo("editar"); }}>
-        <DialogContent className="max-w-[95vw] w-[95vw] h-[92vh] p-0 flex flex-col gap-0">
-          <DialogHeader className="p-3 border-b">
-            <DialogTitle className="text-sm">
-              {modo === "form" ? "Simular Formulário — preencher campos" : "Simular Merge — navegar registros"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 overflow-hidden">
-            {modo !== "editar" && (
-              <SimuladorInline
-                html={html}
-                titulo={modelo.titulo}
-                soPreenchimento={modo === "form"}
-                mergeConfig={modelo.merge_config ?? null}
-                onMergeConfigChange={(cfg) => { setModelo({ ...modelo, merge_config: cfg }); setDirty(true); }}
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <PreviewModal
         open={showPreview}
