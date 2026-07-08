@@ -145,7 +145,7 @@ async function fetchColumns(tabela: string): Promise<string[]> {
 }
 
 
-export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFields, initialSelected, hideTrigger, open: openProp, onOpenChange, triggerLabel = "Vincular dados", triggerAsIcon }: Props) {
+export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFields, onSaveTable, initialSelected, hideTrigger, open: openProp, onOpenChange, triggerLabel = "Vincular dados", triggerAsIcon }: Props) {
   const [openInternal, setOpenInternal] = useState(false);
   const open = openProp !== undefined ? openProp : openInternal;
   const setOpen = (o: boolean) => { onOpenChange?.(o); if (openProp === undefined) setOpenInternal(o); };
