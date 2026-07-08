@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { ImagePickerDialog } from "./ImagePickerDialog";
 import { AssinaturaPickerDialog } from "./AssinaturaPickerDialog";
+import { NovoCampoDialog } from "./NovoCampoDialog";
 
 interface Props {
   editor: Editor | null;
@@ -22,6 +23,7 @@ interface Props {
   zoom: number;
   setZoom: (z: number) => void;
   onPreviewMerge?: () => void;
+  estabelecimentoId?: string | null;
 }
 
 function TB({ active, onClick, disabled, title, children }: any) {
@@ -43,7 +45,7 @@ function TB({ active, onClick, disabled, title, children }: any) {
 const FONTS = ["Arial", "Times New Roman", "Georgia", "Courier New", "Verdana", "Tahoma", "Calibri"];
 const SIZES = ["10px", "12px", "14px", "16px", "18px", "24px", "32px"];
 
-export function EditorToolbar({ editor, onFullscreen, zoom, setZoom, onPreviewMerge }: Props) {
+export function EditorToolbar({ editor, onFullscreen, zoom, setZoom, onPreviewMerge, estabelecimentoId }: Props) {
   const [color, setColor] = useState("#111111");
   const [bgColor, setBgColor] = useState("#fff59d");
   if (!editor) return <div className="h-12 border-b bg-card" />;
