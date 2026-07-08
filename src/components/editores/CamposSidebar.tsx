@@ -257,10 +257,14 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
                   <div key={t.name} className="flex items-center gap-1 border rounded px-2 py-1 bg-violet-500/5 border-violet-500/40">
                     <button
                       draggable
-                      onDragStart={(e) => { e.dataTransfer.setData("text/plain", t.html); e.dataTransfer.effectAllowed = "copy"; }}
-                      onClick={() => onInsert(`__RAW__:${t.html}`)}
+                      onDragStart={(e) => {
+                        const payload = `__TABLE__:${JSON.stringify({ alias: t.alias, cols: t.cols })}`;
+                        e.dataTransfer.setData("text/plain", payload);
+                        e.dataTransfer.effectAllowed = "copy";
+                      }}
+                      onClick={() => onInsert(`__TABLE__:${JSON.stringify({ alias: t.alias, cols: t.cols })}`)}
                       className="text-[11px] font-medium cursor-grab active:cursor-grabbing"
-                      title="Arraste ou clique para reinserir a tabela"
+                      title="Arraste ou clique para inserir a tabela (será perguntado o intervalo de linhas)"
                     >
                       📊 {t.name}
                     </button>
