@@ -62,7 +62,7 @@ export function SimuladorInline({
 
   // Auto-carrega registros do merge_config salvo ao abrir a aba
   useEffect(() => {
-    if (!mergeConfig?.tabela) return;
+    if (!mergeConfig?.tabela && !(mergeConfig?.mode === "sql" && mergeConfig?.sql)) return;
     setCfg(mergeConfig);
     runMergeConfig(mergeConfig)
       .then(r => { setRows(Array.isArray(r) ? r : []); setIdx(0); })
