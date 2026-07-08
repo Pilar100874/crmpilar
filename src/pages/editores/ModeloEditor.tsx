@@ -36,6 +36,67 @@ export default function ModeloEditor() {
   const [fullscreen, setFullscreen] = useState(false);
   const [modo, setModo] = useState<EditorMode>("editar");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [recordIndex, setRecordIndex] = useState(0);
+  const [rowsByAlias, setRowsByAlias] = useState<Record<string, any[]>>({});
+  const [primaryAlias, setPrimaryAlias] = useState<string | null>(null);
+
+  // Normaliza merge_config para array de configs (aceita objeto legado)
+  const configs = useMemo<any[]>(() => {
+    const mc = modelo?.merge_config;
+    if (Array.isArray(mc?.configs)) return mc.configs;
+    if (mc && (mc.tabela || mc.sql)) return [mc];
+    return [];
+  }, [modelo?.merge_config]);
+
+  const configsKey = JSON.stringify(configs);
+
+  // Carrega registros de cada vínculo para o preview inline dos chips
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const acc: Record<string, any[]> = {};
+      let primary: string | null = null;
+      for (const c of configs) {
+        if (!c?.alias) continue;
+        try {
+          const rows = await runMergeConfig(c);
+          if (rows && rows.length) {
+            acc[c.alias] = rows;
+            if (!primary) primary = c.alias;
+          }
+        } catch {}
+      }
+      if (!cancelled) {
+        setRowsByAlias(acc);
+        setPrimaryAlias(primary);
+        setRecordIndex(0);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [configsKey]);
+
+  // Publica valores no store para os chips renderizarem o valor real
+  useEffect(() => {
+    (async () => {
+      const base = await resolveMergeData("livre", null);
+      const merged: Record<string, any> = { ...base };
+      for (const c of configs) {
+        if (!c?.alias) continue;
+        const rows = rowsByAlias[c.alias] || [];
+        if (!rows.length) continue;
+        const i = c.alias === primaryAlias ? recordIndex : 0;
+        merged[c.alias] = rows[Math.min(i, rows.length - 1)];
+      }
+      setPreviewValues(merged);
+    })();
+  }, [rowsByAlias, primaryAlias, recordIndex, configsKey]);
+
+  const primaryRows = primaryAlias ? (rowsByAlias[primaryAlias] || []) : [];
+  const primaryLabel = primaryRows[recordIndex]
+    ? String(primaryRows[recordIndex].nome ?? primaryRows[recordIndex].name ?? primaryRows[recordIndex].razao_social ?? "")
+    : "";
+
 
 
   useEffect(() => {
