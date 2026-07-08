@@ -111,9 +111,18 @@ export function EditorToolbar({
         {onModeChange && (
           <>
             <Separator orientation="vertical" className="h-6 mx-1" />
-            <TB onClick={() => onModeChange("editar")} active={mode === "editar"} title="Editar"><Pencil className="h-4 w-4" /></TB>
-            <TB onClick={() => onModeChange("merge")} active={mode === "merge"} title="Simular Merge"><Database className="h-4 w-4" /></TB>
-            <TB onClick={() => onModeChange("form")} active={mode === "form"} title="Simular Formulário"><ClipboardList className="h-4 w-4" /></TB>
+            <TB
+              onClick={() => onModeChange(mode === "form" ? "editar" : "form")}
+              active={mode === "form"}
+              disabled={!hasFormFields && mode !== "form"}
+              title={
+                hasFormFields
+                  ? (mode === "form" ? "Sair do preenchimento rápido" : "Preenchimento rápido")
+                  : "Insira ao menos um campo de formulário para habilitar"
+              }
+            >
+              <ClipboardList className="h-4 w-4" />
+            </TB>
           </>
         )}
 
