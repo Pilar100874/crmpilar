@@ -768,15 +768,18 @@ function CamposCheckList({ tabela, colunas, loading, selecionados, onToggle }: {
 }
 
 // ============ Inserir lista/tabela como HTML ============
-function InserirListaTabela({ todasTabelas, camposSelecionados, rows, onInsert }: {
+function InserirListaTabela({ todasTabelas, camposSelecionados, rows, onInsert, onSaveTable }: {
   todasTabelas: { tabela: string; alias: string; isMain: boolean }[];
   camposSelecionados: Record<string, string[]>;
   rows: any[];
   onInsert: (html: string) => void;
+  onSaveTable?: (name: string, html: string) => void;
 }) {
   const opcoes = todasTabelas.filter(t => (camposSelecionados[t.tabela] ?? []).length > 0);
   const [alias, setAlias] = useState<string>("");
   const [cols, setCols] = useState<string[]>([]);
+  const [linhaDe, setLinhaDe] = useState<number>(1);
+  const [linhaAte, setLinhaAte] = useState<number>(0); // 0 = todas
 
   const sel = opcoes.find(o => o.alias === alias);
   const camposDoAlias = sel ? (camposSelecionados[sel.tabela] ?? []) : [];
@@ -790,22 +793,24 @@ function InserirListaTabela({ todasTabelas, camposSelecionados, rows, onInsert }
   };
   const escapeHtml = (s: string) => s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
-  const gerarHtml = () => {
-    if (!sel || cols.length === 0) return;
+  const buildHtml = () => {
+    if (!sel || cols.length === 0) return "";
     const th = cols.map(c => `<th style="border:1px solid #ccc;padding:4px;background:#f4f4f4;text-align:left;">${c}</th>`).join("");
 
-    // Fonte de dados: se for a tabela principal, usa `rows` direto; se for relação,
-    // agrega todos os itens da relação em cada registro pai.
     let dataRows: any[] = [];
-    if (sel.isMain) {
-      dataRows = rows;
-    } else {
+    if (sel.isMain) dataRows = rows;
+    else {
       rows.forEach(r => {
         const v = r?.[sel.alias];
         if (Array.isArray(v)) dataRows.push(...v);
         else if (v) dataRows.push(v);
       });
     }
+
+    // Aplica range de linhas (1-indexed inclusivo). linhaAte=0 => todas.
+    const from = Math.max(0, (linhaDe || 1) - 1);
+    const to = linhaAte && linhaAte > 0 ? Math.min(dataRows.length, linhaAte) : dataRows.length;
+    dataRows = dataRows.slice(from, to);
 
     const tbody = dataRows.length
       ? dataRows.map(r => {
@@ -814,8 +819,17 @@ function InserirListaTabela({ todasTabelas, camposSelecionados, rows, onInsert }
         }).join("")
       : `<tr>${cols.map(() => `<td style="border:1px solid #ccc;padding:4px;">&nbsp;</td>`).join("")}</tr>`;
 
-    const html = `<table style="border-collapse:collapse;width:100%;font-size:11pt;"><thead><tr>${th}</tr></thead><tbody>${tbody}</tbody></table>`;
+    return `<table style="border-collapse:collapse;width:100%;font-size:11pt;"><thead><tr>${th}</tr></thead><tbody>${tbody}</tbody></table>`;
+  };
+
+  const gerarHtml = () => {
+    const html = buildHtml();
+    if (!html) return;
     onInsert(html);
+    if (onSaveTable && sel) {
+      const nome = `${sel.alias} (${linhaDe || 1}${linhaAte ? `–${linhaAte}` : "+"})`;
+      onSaveTable(nome, html);
+    }
   };
 
   if (opcoes.length === 0) return null;
@@ -834,6 +848,12 @@ function InserirListaTabela({ todasTabelas, camposSelecionados, rows, onInsert }
             ))}
           </SelectContent>
         </Select>
+        <div className="flex items-center gap-1 text-[11px]">
+          <span className="text-muted-foreground">linha</span>
+          <Input type="number" min={1} value={linhaDe} onChange={e => setLinhaDe(Number(e.target.value) || 1)} className="h-8 w-16 text-xs" />
+          <span className="text-muted-foreground">até</span>
+          <Input type="number" min={0} value={linhaAte} onChange={e => setLinhaAte(Number(e.target.value) || 0)} className="h-8 w-16 text-xs" placeholder="todas" />
+        </div>
         <Button size="sm" onClick={gerarHtml} disabled={!sel || cols.length === 0}>
           <Plus className="h-3.5 w-3.5 mr-1" /> Inserir tabela
         </Button>
@@ -849,8 +869,9 @@ function InserirListaTabela({ todasTabelas, camposSelecionados, rows, onInsert }
         </div>
       )}
       <p className="text-[10px] text-muted-foreground">
-        Gera uma tabela HTML no editor já preenchida com todos os registros retornados pela consulta.
+        Gera uma tabela HTML no editor com o intervalo de linhas escolhido. A tabela também fica salva no grupo <b>Tabelas</b> da barra lateral para reinserir arrastando.
       </p>
     </div>
   );
 }
+
