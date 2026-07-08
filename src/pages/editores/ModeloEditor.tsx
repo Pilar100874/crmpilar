@@ -192,9 +192,11 @@ export default function ModeloEditor() {
       <PreviewModal
         open={showPreview}
         onOpenChange={setShowPreview}
+        templateHtml={html}
         html={previewHtml}
         titulo={modelo.titulo}
         missing={previewMissing}
+        mergeConfig={modelo.merge_config ?? null}
       />
 
       <Sheet open={versoesOpen} onOpenChange={setVersoesOpen}>
