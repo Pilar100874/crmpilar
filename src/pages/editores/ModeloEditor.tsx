@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
@@ -12,6 +12,9 @@ import type { Editor } from "@tiptap/react";
 import { SimuladorInline } from "@/components/editores/SimuladorInline";
 import { renderTemplate } from "@/lib/editores/mergeEngine";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
+import { runMergeConfig } from "@/lib/editores/runMergeConfig";
+import { setPreviewValues } from "@/lib/editores/mergePreviewStore";
+import { RegistroNavigator } from "@/components/editores/RegistroNavigator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
