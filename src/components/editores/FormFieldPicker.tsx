@@ -32,14 +32,36 @@ export function FormFieldPicker({ onInsert, triggerClassName, triggerLabel = "In
 
   const cfg = TIPOS.find(t => t.value === tipo)!;
 
+  const buildHtml = (token: string, tipo: FillableTipo, label: string, opcoes?: string[]) => {
+    const key = token.replace(/"/g, "&quot;");
+    const lbl = label.replace(/"/g, "&quot;");
+    const baseStyle = 'style="border:1px solid #cbd5e1;border-radius:4px;padding:2px 6px;font:inherit;background:#fefce8;min-width:120px"';
+    switch (tipo) {
+      case "textarea":
+        return `<textarea data-fillable="${key}" placeholder="${lbl}" rows="3" ${baseStyle}></textarea>&nbsp;`;
+      case "data":
+        return `<input type="date" data-fillable="${key}" ${baseStyle} />&nbsp;`;
+      case "numero":
+        return `<input type="number" data-fillable="${key}" placeholder="${lbl}" ${baseStyle} />&nbsp;`;
+      case "check":
+        return `<label style="display:inline-flex;align-items:center;gap:4px"><input type="checkbox" data-fillable="${key}" /> ${lbl}</label>&nbsp;`;
+      case "lista": {
+        const opts = (opcoes || []).map(o => `<option value="${o}">${o}</option>`).join("");
+        return `<select data-fillable="${key}" ${baseStyle}><option value="">${lbl}</option>${opts}</select>&nbsp;`;
+      }
+      case "radio":
+        return (opcoes || []).map(o => `<label style="display:inline-flex;align-items:center;gap:4px;margin-right:8px"><input type="radio" name="${key}" value="${o}" data-fillable="${key}" /> ${o}</label>`).join("") + "&nbsp;";
+      default:
+        return `<input type="text" data-fillable="${key}" placeholder="${lbl}" ${baseStyle} />&nbsp;`;
+    }
+  };
+
   const inserir = () => {
     if (!label.trim()) return;
-    const token = serializeFillable({
-      tipo,
-      label: label.trim(),
-      opcoes: cfg.hasOpcoes ? opcoes.split(",").map(s => s.trim()).filter(Boolean) : undefined,
-    });
-    onInsert(token);
+    const opcoesArr = cfg.hasOpcoes ? opcoes.split(",").map(s => s.trim()).filter(Boolean) : undefined;
+    const token = serializeFillable({ tipo, label: label.trim(), opcoes: opcoesArr });
+    const html = buildHtml(token, tipo, label.trim(), opcoesArr);
+    onInsert(`__RAW__:${html}`);
     setOpen(false);
     setLabel(""); setOpcoes(""); setTipo("texto");
   };
