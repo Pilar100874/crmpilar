@@ -11,6 +11,7 @@ import { extractFieldKeys } from "@/lib/editores/mergeEngine";
 import { MergeBuilderDialog, type MergeConfig } from "./MergeBuilderDialog";
 import { runMergeConfig } from "@/lib/editores/runMergeConfig";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface Campo {
   id: string;
@@ -93,6 +94,8 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
   const [campos, setCampos] = useState<Campo[]>([]);
   const [busca, setBusca] = useState("");
   const [previewValues, setPreviewValues] = useState<Record<string, any>>({});
+  const [campoParaExcluir, setCampoParaExcluir] = useState<Campo | null>(null);
+  const [excluindo, setExcluindo] = useState(false);
 
   // Carrega valores de preview (primeira linha de cada vínculo + base)
   useEffect(() => {
@@ -149,11 +152,19 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
   const validKeys = new Set(campos.map(c => c.chave));
   const invalidUsed = usadas.filter(k => !validKeys.has(k.split(".")[0]) && !mergeFields.includes(k));
 
-  const excluirCampo = async (c: Campo) => {
-    if (!confirm(`Excluir o campo personalizado "${c.rotulo}"?\n\nOs documentos que usarem {{${c.chave}}} ficarão sem valor.`)) return;
-    const { error } = await supabase.from("doc_campos").delete().eq("id", c.id);
-    if (error) { console.error(error); return; }
-    window.dispatchEvent(new CustomEvent("doc-campos:changed"));
+  const confirmarExclusao = async () => {
+    if (!campoParaExcluir) return;
+    setExcluindo(true);
+    try {
+      const { error } = await supabase.from("doc_campos").delete().eq("id", campoParaExcluir.id);
+      if (error) throw error;
+      window.dispatchEvent(new CustomEvent("doc-campos:changed"));
+      setCampoParaExcluir(null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setExcluindo(false);
+    }
   };
 
   const renderCampoBtn = (c: Campo, emerald = false) => (
@@ -174,7 +185,7 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
       {c.personalizado && (
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); void excluirCampo(c); }}
+          onClick={(e) => { e.stopPropagation(); setCampoParaExcluir(c); }}
           className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-[10px] shadow"
           title="Excluir campo personalizado"
         >
@@ -395,6 +406,20 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
           </div>
         </div>
       </ScrollArea>
+
+      <DeleteConfirmDialog
+        open={!!campoParaExcluir}
+        onOpenChange={(o) => { if (!o) setCampoParaExcluir(null); }}
+        onConfirm={confirmarExclusao}
+        title="Excluir campo personalizado?"
+        description={
+          campoParaExcluir
+            ? `Documentos que usarem {{${campoParaExcluir.chave}}} ficarão sem valor. Esta ação não pode ser desfeita.`
+            : ""
+        }
+        itemName={campoParaExcluir?.rotulo}
+        isLoading={excluindo}
+      />
     </aside>
   );
 }
