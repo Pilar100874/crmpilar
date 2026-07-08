@@ -537,11 +537,11 @@ const App = () => (
               </Route>
               <Route path="/editores" element={<EditoresLayout />}>
                 <Route index element={<EditoresHub />} />
-                <Route path="modelos" element={<EditoresHub />} />
-                <Route path="documentos" element={<EditoresHub />} />
+                <Route path="modelos" element={<ModelosLista />} />
+                <Route path="documentos" element={<DocumentosGerados />} />
                 <Route path="modelos/:id" element={<ModeloEditor />} />
                 <Route path="documento/:id" element={<DocumentoEditor />} />
-                <Route path="gerar" element={<EditoresHub />} />
+                <Route path="gerar" element={<GerarDocumento />} />
                 
               </Route>
             </Route>
