@@ -35,22 +35,26 @@ try {
     try {
       return origResolve.call(this, request, parent, ...rest);
     } catch (err) {
+      const clean = typeof request === 'string' ? request.replace(/\\/g, '/') : '';
+      const parts = clean.split('/').filter(Boolean);
+      const firstInternal = parts.findIndex((part) => INTERNAL.has(part));
       if (
         typeof request === 'string' &&
         parent && parent.filename && parent.filename.includes(BD_MARK) &&
-        !request.startsWith('.') && !request.startsWith('/') &&
-        INTERNAL.has(request.split('/')[0])
+        !request.startsWith('/') &&
+        firstInternal >= 0
       ) {
         // localiza a raiz do pacote binary-data a partir do arquivo pai
         const idx = parent.filename.indexOf(BD_MARK);
         const root = parent.filename.slice(0, idx + BD_MARK.length);
+        const internalPath = parts.slice(firstInternal).join('/');
         const candidates = [
-          path.join(root, 'src', request),
-          path.join(root, 'src', request + '.js'),
-          path.join(root, 'src', 'node_modules', request),
-          path.join(root, 'src', 'node_modules', request + '.js'),
-          path.join(root, 'src', request, 'index.js'),
-          path.join(root, 'src', 'node_modules', request, 'index.js'),
+          path.join(root, 'src', internalPath),
+          path.join(root, 'src', internalPath + '.js'),
+          path.join(root, 'src', 'node_modules', internalPath),
+          path.join(root, 'src', 'node_modules', internalPath + '.js'),
+          path.join(root, 'src', internalPath, 'index.js'),
+          path.join(root, 'src', 'node_modules', internalPath, 'index.js'),
         ];
         for (const c of candidates) {
           if (fs.existsSync(c)) return c;
