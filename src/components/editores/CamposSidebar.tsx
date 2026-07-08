@@ -62,7 +62,7 @@ const makeDragHandler =
     e.dataTransfer.effectAllowed = "copy";
   };
 
-export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeFields: mergeFieldsProp, onMergeFieldsChange, configs: configsProp, onConfigsChange }: Props) {
+export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeFields: mergeFieldsProp, onMergeFieldsChange, configs: configsProp, onConfigsChange, savedTables: savedTablesProp, onSavedTablesChange }: Props) {
   const [mergeFieldsInternal, setMergeFieldsInternal] = useState<string[]>([]);
   const mergeFields = mergeFieldsProp ?? mergeFieldsInternal;
   const setMergeFields = (chaves: string[]) => {
@@ -75,6 +75,16 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
     setConfigsInternal(list);
     onConfigsChange?.(list);
   };
+  const [savedTablesInternal, setSavedTablesInternal] = useState<{ name: string; html: string }[]>([]);
+  const savedTables = savedTablesProp ?? savedTablesInternal;
+  const setSavedTables = (list: { name: string; html: string }[]) => {
+    setSavedTablesInternal(list);
+    onSavedTablesChange?.(list);
+  };
+  const addSavedTable = (name: string, html: string) => {
+    setSavedTables([...savedTables.filter(t => t.name !== name), { name, html }]);
+  };
+  const removeSavedTable = (name: string) => setSavedTables(savedTables.filter(t => t.name !== name));
   const [editIdx, setEditIdx] = useState<number | null>(null);
 
   const [campos, setCampos] = useState<Campo[]>([]);
