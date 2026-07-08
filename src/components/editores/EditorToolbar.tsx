@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { ImagePickerDialog } from "./ImagePickerDialog";
 import { AssinaturaPickerDialog } from "./AssinaturaPickerDialog";
 import { NovoCampoDialog } from "./NovoCampoDialog";
