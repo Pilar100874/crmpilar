@@ -97,7 +97,7 @@ export function renderTemplate(
 
 export function extractFieldKeys(html: string): string[] {
   const keys = new Set<string>();
-  const varRe = /\{\{\s*(?:#(?:if|each)\s+)?([a-zA-Z0-9_\.]+)\s*\}\}/g;
+  const varRe = /\{\{\s*(?:#(?:if|each)\s+|img:)?([a-zA-Z0-9_\.]+)\s*\}\}/g;
   let m: RegExpExecArray | null;
   while ((m = varRe.exec(html)) !== null) {
     if (m[1] !== undefined) keys.add(m[1]);
