@@ -76,7 +76,8 @@ export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
       }
       const { data, error } = await q;
       if (error) throw error;
-      const list = (data ?? []) as any[];
+      const calcs = cfg.calculados ?? [];
+      const list = ((data ?? []) as any[]).map(r => calcs.length ? evalCalculados(r, calcs) : r);
       setRows(list);
       const cols = list[0] ? Object.keys(list[0]) : [];
       setColunas(cols);
@@ -88,6 +89,9 @@ export function MergeBuilderDialog({ value, onChange, onInsertField }: Props) {
       setLoading(false);
     }
   };
+
+  const addCalc = () => setCfg({ ...cfg, calculados: [...(cfg.calculados ?? []), { nome: "", expressao: "" }] });
+  const rmCalc = (i: number) => setCfg({ ...cfg, calculados: (cfg.calculados ?? []).filter((_, k) => k !== i) });
 
   const addFiltro = () => setCfg({ ...cfg, filtros: [...cfg.filtros, { campo: "", op: "eq", valor: "" }] });
   const rmFiltro = (i: number) => setCfg({ ...cfg, filtros: cfg.filtros.filter((_, k) => k !== i) });
