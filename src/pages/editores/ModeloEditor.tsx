@@ -3,13 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { toast } from "@/lib/toast-config";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { TiptapEditor } from "@/components/editores/TiptapEditor";
-import { EditorToolbar } from "@/components/editores/EditorToolbar";
+import { EditorToolbar, type EditorMode } from "@/components/editores/EditorToolbar";
 import { CamposSidebar } from "@/components/editores/CamposSidebar";
 import { PreviewModal } from "@/components/editores/PreviewModal";
-import { ArrowLeft, Eye, Save, Pencil, FlaskConical, Lock, Unlock, ShieldCheck, Copy } from "lucide-react";
 import type { Editor } from "@tiptap/react";
 import { SimuladorInline } from "@/components/editores/SimuladorInline";
 import { renderTemplate } from "@/lib/editores/mergeEngine";
@@ -30,7 +27,7 @@ export default function ModeloEditor() {
   const editorRef = useRef<Editor | null>(null);
   const [zoom, setZoom] = useState(1);
   const [fullscreen, setFullscreen] = useState(false);
-  const [modo, setModo] = useState<"editar" | "simular">("editar");
+  const [modo, setModo] = useState<EditorMode>("editar");
 
   useEffect(() => {
     getEstabelecimentoId().then(setEstabId);
@@ -142,64 +139,30 @@ export default function ModeloEditor() {
 
   return (
     <div className={fullscreen ? "fixed inset-0 z-50 bg-background flex flex-col" : "h-full flex flex-col"}>
-      <div className="flex items-center gap-2 border-b bg-card p-3">
-        <Button variant="ghost" size="sm" onClick={() => nav("/editores")}>
-          <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
-        </Button>
-
-        {/* Toggle Editar / Simular no topo, estilo ícone */}
-        <div className="flex items-center border rounded-md overflow-hidden">
-          <Button
-            size="sm"
-            variant={modo === "editar" ? "default" : "ghost"}
-            onClick={() => setModo("editar")}
-            className="rounded-none h-8"
-            title="Modo edição"
-          >
-            <Pencil className="h-4 w-4 mr-1" /> Editar
-          </Button>
-          <Button
-            size="sm"
-            variant={modo === "simular" ? "default" : "ghost"}
-            onClick={() => setModo("simular")}
-            className="rounded-none h-8"
-            title="Modo simular / preencher"
-          >
-            <FlaskConical className="h-4 w-4 mr-1" /> Simular
-          </Button>
-        </div>
-
-        <Input
-          value={modelo.titulo}
-          onChange={e => { setModelo({ ...modelo, titulo: e.target.value }); setDirty(true); }}
-          className="max-w-md font-semibold"
-          disabled={modelo.bloqueado}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <EditorToolbar
+          editor={editorRef.current}
+          zoom={zoom}
+          setZoom={setZoom}
+          onFullscreen={() => setFullscreen(f => !f)}
+          onPreviewMerge={abrirPreview}
+          estabelecimentoId={estabId}
+          onBack={() => nav("/editores")}
+          onSave={() => salvar()}
+          onSalvarComo={salvarComo}
+          onToggleLock={alternarBloqueio}
+          locked={!!modelo.bloqueado}
+          dirty={dirty}
+          saving={saving}
+          titulo={modelo.titulo}
+          onTituloChange={(v) => { setModelo({ ...modelo, titulo: v }); setDirty(true); }}
+          mode={modo}
+          onModeChange={setModo}
         />
-        <span className="text-xs text-muted-foreground">
-          {dirty && "· não salvo"} {saving && "· salvando…"}
-          {modelo.bloqueado && <span className="ml-2 px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700">🔒 bloqueado</span>}
-          {modelo.campos_bloqueados && <span className="ml-2 px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-700">🛡 estrutura travada</span>}
-        </span>
-        <div className="ml-auto flex items-center gap-2">
-          <Button size="sm" variant={modelo.bloqueado ? "secondary" : "outline"} onClick={alternarBloqueio}
-            title={modelo.bloqueado ? "Desbloquear edição" : "Bloquear edição (somente-leitura)"}>
-            {modelo.bloqueado ? <><Unlock className="h-4 w-4 mr-1" /> Desbloquear</> : <><Lock className="h-4 w-4 mr-1" /> Bloquear</>}
-          </Button>
-          <Button size="sm" variant={modelo.campos_bloqueados ? "secondary" : "outline"} onClick={alternarCamposBloqueados}
-            title="Travar estrutura (só permite preencher campos de formulário)">
-            <ShieldCheck className="h-4 w-4 mr-1" /> Travar estrutura
-          </Button>
-          <Button size="sm" variant="outline" onClick={abrirPreview}><Eye className="h-4 w-4 mr-1" /> Visualizar</Button>
-          <Button size="sm" variant="outline" onClick={salvarComo}><Copy className="h-4 w-4 mr-1" /> Salvar como</Button>
-          <Button size="sm" onClick={() => salvar()} disabled={modelo.bloqueado}><Save className="h-4 w-4 mr-1" /> Salvar</Button>
-        </div>
-      </div>
 
-      <div className="flex-1 overflow-hidden">
-        {modo === "editar" ? (
-          <div className="h-full flex overflow-hidden">
-            <div className="flex-1 flex flex-col min-w-0">
-              <EditorToolbar editor={editorRef.current} zoom={zoom} setZoom={setZoom} onFullscreen={() => setFullscreen(f => !f)} onPreviewMerge={abrirPreview} estabelecimentoId={estabId} />
+        <div className="flex-1 overflow-hidden">
+          {modo === "editar" ? (
+            <div className="h-full flex overflow-hidden">
               <div className="flex-1 overflow-auto">
                 <TiptapEditor
                   initialContent={html}
@@ -209,17 +172,18 @@ export default function ModeloEditor() {
                   editable={!modelo.bloqueado && !modelo.campos_bloqueados}
                 />
               </div>
+              <CamposSidebar estabelecimentoId={estabId} onInsert={inserirCampo} currentHtml={html} />
             </div>
-            <CamposSidebar estabelecimentoId={estabId} onInsert={inserirCampo} currentHtml={html} />
-          </div>
-        ) : (
-          <SimuladorInline
-            html={html}
-            titulo={modelo.titulo}
-            mergeConfig={modelo.merge_config ?? null}
-            onMergeConfigChange={(cfg) => { setModelo({ ...modelo, merge_config: cfg }); setDirty(true); }}
-          />
-        )}
+          ) : (
+            <SimuladorInline
+              html={html}
+              titulo={modelo.titulo}
+              soPreenchimento={modo === "form"}
+              mergeConfig={modelo.merge_config ?? null}
+              onMergeConfigChange={(cfg) => { setModelo({ ...modelo, merge_config: cfg }); setDirty(true); }}
+            />
+          )}
+        </div>
       </div>
 
       <PreviewModal

@@ -7,15 +7,18 @@ import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   Heading1, Heading2, Heading3, Pilcrow,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered, Undo, Redo, Link as LinkIcon, Image as ImageIcon,
+  List, ListOrdered, Undo, Redo, Link as LinkIcon,
   Table as TableIcon, Rows, Columns, Trash2, Eraser, Maximize2, ZoomIn, ZoomOut,
-  ScanSearch,
+  ScanSearch, ArrowLeft, Save, Eye, Lock, Unlock, Copy,
+  Database, ClipboardList, Pencil,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { ImagePickerDialog } from "./ImagePickerDialog";
 import { AssinaturaPickerDialog } from "./AssinaturaPickerDialog";
 import { NovoCampoDialog } from "./NovoCampoDialog";
+
+export type EditorMode = "editar" | "merge" | "form";
 
 interface Props {
   editor: Editor | null;
@@ -24,6 +27,18 @@ interface Props {
   setZoom: (z: number) => void;
   onPreviewMerge?: () => void;
   estabelecimentoId?: string | null;
+  // Ações unificadas (barra única)
+  onBack?: () => void;
+  onSave?: () => void;
+  onSalvarComo?: () => void;
+  onToggleLock?: () => void;
+  locked?: boolean;
+  dirty?: boolean;
+  saving?: boolean;
+  titulo?: string;
+  onTituloChange?: (v: string) => void;
+  mode?: EditorMode;
+  onModeChange?: (m: EditorMode) => void;
 }
 
 function TB({ active, onClick, disabled, title, children }: any) {
@@ -45,102 +60,173 @@ function TB({ active, onClick, disabled, title, children }: any) {
 const FONTS = ["Arial", "Times New Roman", "Georgia", "Courier New", "Verdana", "Tahoma", "Calibri"];
 const SIZES = ["10px", "12px", "14px", "16px", "18px", "24px", "32px"];
 
-export function EditorToolbar({ editor, onFullscreen, zoom, setZoom, onPreviewMerge, estabelecimentoId }: Props) {
+export function EditorToolbar({
+  editor, onFullscreen, zoom, setZoom, onPreviewMerge, estabelecimentoId,
+  onBack, onSave, onSalvarComo, onToggleLock, locked, dirty, saving,
+  titulo, onTituloChange, mode = "editar", onModeChange,
+}: Props) {
   const [color, setColor] = useState("#111111");
   const [bgColor, setBgColor] = useState("#fff59d");
-  if (!editor) return <div className="h-12 border-b bg-card" />;
+  const isEdit = mode === "editar";
 
   return (
-    <div className="flex flex-wrap items-center gap-1 border-b bg-card px-2 py-1 sticky top-0 z-10">
-      <TB onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Desfazer">
-        <Undo className="h-4 w-4" />
-      </TB>
-      <TB onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Refazer">
-        <Redo className="h-4 w-4" />
-      </TB>
-      <Separator orientation="vertical" className="h-6 mx-1" />
-
-      <Select value="" onValueChange={(v) => editor.chain().focus().setFontFamily(v).run()}>
-        <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue placeholder="Fonte" /></SelectTrigger>
-        <SelectContent>{FONTS.map(f => <SelectItem key={f} value={f} style={{fontFamily:f}}>{f}</SelectItem>)}</SelectContent>
-      </Select>
-      <Select value="" onValueChange={(v) => editor.chain().focus().setMark("textStyle", { fontSize: v } as any).run()}>
-        <SelectTrigger className="h-8 w-[80px] text-xs"><SelectValue placeholder="Tam." /></SelectTrigger>
-        <SelectContent>{SIZES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-      </Select>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-      <TB active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()} title="Negrito"><Bold className="h-4 w-4" /></TB>
-      <TB active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()} title="Itálico"><Italic className="h-4 w-4" /></TB>
-      <TB active={editor.isActive("underline")} onClick={() => editor.chain().focus().toggleUnderline().run()} title="Sublinhado"><UnderlineIcon className="h-4 w-4" /></TB>
-      <TB active={editor.isActive("strike")} onClick={() => editor.chain().focus().toggleStrike().run()} title="Tachado"><Strikethrough className="h-4 w-4" /></TB>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-      <TB active={editor.isActive("heading",{level:1})} onClick={() => editor.chain().focus().toggleHeading({level:1}).run()} title="H1"><Heading1 className="h-4 w-4" /></TB>
-      <TB active={editor.isActive("heading",{level:2})} onClick={() => editor.chain().focus().toggleHeading({level:2}).run()} title="H2"><Heading2 className="h-4 w-4" /></TB>
-      <TB active={editor.isActive("heading",{level:3})} onClick={() => editor.chain().focus().toggleHeading({level:3}).run()} title="H3"><Heading3 className="h-4 w-4" /></TB>
-      <TB active={editor.isActive("paragraph")} onClick={() => editor.chain().focus().setParagraph().run()} title="Parágrafo"><Pilcrow className="h-4 w-4" /></TB>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-      <TB active={editor.isActive({textAlign:"left"})} onClick={() => editor.chain().focus().setTextAlign("left").run()} title="Esquerda"><AlignLeft className="h-4 w-4" /></TB>
-      <TB active={editor.isActive({textAlign:"center"})} onClick={() => editor.chain().focus().setTextAlign("center").run()} title="Centro"><AlignCenter className="h-4 w-4" /></TB>
-      <TB active={editor.isActive({textAlign:"right"})} onClick={() => editor.chain().focus().setTextAlign("right").run()} title="Direita"><AlignRight className="h-4 w-4" /></TB>
-      <TB active={editor.isActive({textAlign:"justify"})} onClick={() => editor.chain().focus().setTextAlign("justify").run()} title="Justificado"><AlignJustify className="h-4 w-4" /></TB>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-      <TB active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()} title="Lista"><List className="h-4 w-4" /></TB>
-      <TB active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()} title="Lista numerada"><ListOrdered className="h-4 w-4" /></TB>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-      <div className="flex items-center gap-1" title="Cor do texto">
-        <Input type="color" value={color} onChange={(e) => { setColor(e.target.value); editor.chain().focus().setColor(e.target.value).run(); }} className="h-8 w-8 p-0.5 cursor-pointer" />
-      </div>
-      <div className="flex items-center gap-1" title="Cor de fundo">
-        <Input type="color" value={bgColor} onChange={(e) => { setBgColor(e.target.value); editor.chain().focus().toggleHighlight({ color: e.target.value }).run(); }} className="h-8 w-8 p-0.5 cursor-pointer" />
-      </div>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-      <TB onClick={() => {
-        const url = window.prompt("URL do link");
-        if (url) editor.chain().focus().setLink({ href: url }).run();
-      }} title="Link"><LinkIcon className="h-4 w-4" /></TB>
-      <ImagePickerDialog onInsert={(url, w) => {
-        editor.chain().focus().setImage({ src: url } as any).updateAttributes("image", { width: w } as any).run();
-      }} />
-      <AssinaturaPickerDialog onInsert={(html) => {
-        editor.chain().focus().insertContent(html).run();
-      }} />
-      {estabelecimentoId !== undefined && (
-        <NovoCampoDialog estabelecimentoId={estabelecimentoId ?? null} triggerAsIcon />
-      )}
-      {editor.isActive("image") && (
-        <Select value="" onValueChange={(v) => editor.chain().focus().updateAttributes("image", { width: v } as any).run()}>
-          <SelectTrigger className="h-8 w-24 text-xs"><SelectValue placeholder="Tam. img" /></SelectTrigger>
-          <SelectContent>
-            {["25%","50%","75%","100%","200px","400px","auto"].map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      )}
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-      <TB onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} title="Inserir tabela"><TableIcon className="h-4 w-4" /></TB>
-      <TB onClick={() => editor.chain().focus().addRowAfter().run()} title="Adicionar linha"><Rows className="h-4 w-4" /></TB>
-      <TB onClick={() => editor.chain().focus().addColumnAfter().run()} title="Adicionar coluna"><Columns className="h-4 w-4" /></TB>
-      <TB onClick={() => editor.chain().focus().deleteTable().run()} title="Remover tabela"><Trash2 className="h-4 w-4" /></TB>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-      <TB onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()} title="Limpar formatação"><Eraser className="h-4 w-4" /></TB>
-
-      <div className="ml-auto flex items-center gap-1">
-        {onPreviewMerge && (
-          <TB onClick={onPreviewMerge} title="Ver merge (navegar registro a registro)">
-            <ScanSearch className="h-4 w-4" />
-          </TB>
+    <div className="sticky top-0 z-20 border-b bg-card">
+      {/* Linha 1: ações do documento (voltar, título, salvar, bloquear, modos) */}
+      <div className="flex flex-wrap items-center gap-1 px-2 py-1 border-b">
+        {onBack && (
+          <Button variant="ghost" size="sm" onClick={onBack} className="h-8">
+            <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
+          </Button>
         )}
-        <TB onClick={() => setZoom(Math.max(0.5, zoom - 0.1))} title="Diminuir zoom"><ZoomOut className="h-4 w-4" /></TB>
-        <span className="text-xs w-10 text-center">{Math.round(zoom * 100)}%</span>
-        <TB onClick={() => setZoom(Math.min(2, zoom + 0.1))} title="Aumentar zoom"><ZoomIn className="h-4 w-4" /></TB>
-        <TB onClick={onFullscreen} title="Tela cheia"><Maximize2 className="h-4 w-4" /></TB>
+        {onTituloChange && (
+          <Input
+            value={titulo ?? ""}
+            onChange={(e) => onTituloChange(e.target.value)}
+            className="h-8 max-w-xs font-semibold"
+            disabled={locked}
+          />
+        )}
+        <span className="text-[11px] text-muted-foreground px-1">
+          {dirty && "não salvo"} {saving && "salvando…"}
+          {locked && <span className="ml-1 px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700">🔒</span>}
+        </span>
+
+        {onModeChange && (
+          <div className="flex items-center border rounded-md overflow-hidden ml-2">
+            <Button size="sm" variant={mode === "editar" ? "default" : "ghost"}
+              onClick={() => onModeChange("editar")} className="rounded-none h-8" title="Editar documento">
+              <Pencil className="h-4 w-4 mr-1" /> Editar
+            </Button>
+            <Button size="sm" variant={mode === "merge" ? "default" : "ghost"}
+              onClick={() => onModeChange("merge")} className="rounded-none h-8" title="Simular Merge (preview com dados)">
+              <Database className="h-4 w-4 mr-1" /> Simular Merge
+            </Button>
+            <Button size="sm" variant={mode === "form" ? "default" : "ghost"}
+              onClick={() => onModeChange("form")} className="rounded-none h-8" title="Simular Formulário (preencher campos)">
+              <ClipboardList className="h-4 w-4 mr-1" /> Simular Formulário
+            </Button>
+          </div>
+        )}
+
+        <div className="ml-auto flex items-center gap-1">
+          {onToggleLock && (
+            <Button size="sm" variant={locked ? "secondary" : "outline"} onClick={onToggleLock} className="h-8"
+              title={locked ? "Desbloquear" : "Bloquear edição"}>
+              {locked ? <Unlock className="h-4 w-4 mr-1" /> : <Lock className="h-4 w-4 mr-1" />}
+              {locked ? "Desbloquear" : "Bloquear"}
+            </Button>
+          )}
+          {onPreviewMerge && (
+            <Button size="sm" variant="outline" onClick={onPreviewMerge} className="h-8" title="Visualizar">
+              <Eye className="h-4 w-4 mr-1" /> Visualizar
+            </Button>
+          )}
+          {onSalvarComo && (
+            <Button size="sm" variant="outline" onClick={onSalvarComo} className="h-8">
+              <Copy className="h-4 w-4 mr-1" /> Salvar como
+            </Button>
+          )}
+          {onSave && (
+            <Button size="sm" onClick={onSave} disabled={locked} className="h-8">
+              <Save className="h-4 w-4 mr-1" /> Salvar
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Linha 2: ferramentas do editor (sempre visível) */}
+      <div className={cn("flex flex-wrap items-center gap-1 px-2 py-1", !isEdit && "opacity-50 pointer-events-none")}>
+        {!editor ? (
+          <div className="h-8 text-xs text-muted-foreground">Carregando ferramentas…</div>
+        ) : (
+          <>
+            <TB onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Desfazer">
+              <Undo className="h-4 w-4" />
+            </TB>
+            <TB onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Refazer">
+              <Redo className="h-4 w-4" />
+            </TB>
+            <Separator orientation="vertical" className="h-6 mx-1" />
+
+            <Select value="" onValueChange={(v) => editor.chain().focus().setFontFamily(v).run()}>
+              <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue placeholder="Fonte" /></SelectTrigger>
+              <SelectContent>{FONTS.map(f => <SelectItem key={f} value={f} style={{ fontFamily: f }}>{f}</SelectItem>)}</SelectContent>
+            </Select>
+            <Select value="" onValueChange={(v) => editor.chain().focus().setMark("textStyle", { fontSize: v } as any).run()}>
+              <SelectTrigger className="h-8 w-[80px] text-xs"><SelectValue placeholder="Tam." /></SelectTrigger>
+              <SelectContent>{SIZES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+            </Select>
+
+            <Separator orientation="vertical" className="h-6 mx-1" />
+            <TB active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()} title="Negrito"><Bold className="h-4 w-4" /></TB>
+            <TB active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()} title="Itálico"><Italic className="h-4 w-4" /></TB>
+            <TB active={editor.isActive("underline")} onClick={() => editor.chain().focus().toggleUnderline().run()} title="Sublinhado"><UnderlineIcon className="h-4 w-4" /></TB>
+            <TB active={editor.isActive("strike")} onClick={() => editor.chain().focus().toggleStrike().run()} title="Tachado"><Strikethrough className="h-4 w-4" /></TB>
+
+            <Separator orientation="vertical" className="h-6 mx-1" />
+            <TB active={editor.isActive("heading", { level: 1 })} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} title="H1"><Heading1 className="h-4 w-4" /></TB>
+            <TB active={editor.isActive("heading", { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} title="H2"><Heading2 className="h-4 w-4" /></TB>
+            <TB active={editor.isActive("heading", { level: 3 })} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} title="H3"><Heading3 className="h-4 w-4" /></TB>
+            <TB active={editor.isActive("paragraph")} onClick={() => editor.chain().focus().setParagraph().run()} title="Parágrafo"><Pilcrow className="h-4 w-4" /></TB>
+
+            <Separator orientation="vertical" className="h-6 mx-1" />
+            <TB active={editor.isActive({ textAlign: "left" })} onClick={() => editor.chain().focus().setTextAlign("left").run()} title="Esquerda"><AlignLeft className="h-4 w-4" /></TB>
+            <TB active={editor.isActive({ textAlign: "center" })} onClick={() => editor.chain().focus().setTextAlign("center").run()} title="Centro"><AlignCenter className="h-4 w-4" /></TB>
+            <TB active={editor.isActive({ textAlign: "right" })} onClick={() => editor.chain().focus().setTextAlign("right").run()} title="Direita"><AlignRight className="h-4 w-4" /></TB>
+            <TB active={editor.isActive({ textAlign: "justify" })} onClick={() => editor.chain().focus().setTextAlign("justify").run()} title="Justificado"><AlignJustify className="h-4 w-4" /></TB>
+
+            <Separator orientation="vertical" className="h-6 mx-1" />
+            <TB active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()} title="Lista"><List className="h-4 w-4" /></TB>
+            <TB active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()} title="Lista numerada"><ListOrdered className="h-4 w-4" /></TB>
+
+            <Separator orientation="vertical" className="h-6 mx-1" />
+            <div className="flex items-center gap-1" title="Cor do texto">
+              <Input type="color" value={color} onChange={(e) => { setColor(e.target.value); editor.chain().focus().setColor(e.target.value).run(); }} className="h-8 w-8 p-0.5 cursor-pointer" />
+            </div>
+            <div className="flex items-center gap-1" title="Cor de fundo">
+              <Input type="color" value={bgColor} onChange={(e) => { setBgColor(e.target.value); editor.chain().focus().toggleHighlight({ color: e.target.value }).run(); }} className="h-8 w-8 p-0.5 cursor-pointer" />
+            </div>
+
+            <Separator orientation="vertical" className="h-6 mx-1" />
+            <TB onClick={() => {
+              const url = window.prompt("URL do link");
+              if (url) editor.chain().focus().setLink({ href: url }).run();
+            }} title="Link"><LinkIcon className="h-4 w-4" /></TB>
+            <ImagePickerDialog onInsert={(url, w) => {
+              editor.chain().focus().setImage({ src: url } as any).updateAttributes("image", { width: w } as any).run();
+            }} />
+            <AssinaturaPickerDialog onInsert={(html) => {
+              editor.chain().focus().insertContent(html).run();
+            }} />
+            {estabelecimentoId !== undefined && (
+              <NovoCampoDialog estabelecimentoId={estabelecimentoId ?? null} triggerAsIcon />
+            )}
+            {editor.isActive("image") && (
+              <Select value="" onValueChange={(v) => editor.chain().focus().updateAttributes("image", { width: v } as any).run()}>
+                <SelectTrigger className="h-8 w-24 text-xs"><SelectValue placeholder="Tam. img" /></SelectTrigger>
+                <SelectContent>
+                  {["25%", "50%", "75%", "100%", "200px", "400px", "auto"].map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
+
+            <Separator orientation="vertical" className="h-6 mx-1" />
+            <TB onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} title="Inserir tabela"><TableIcon className="h-4 w-4" /></TB>
+            <TB onClick={() => editor.chain().focus().addRowAfter().run()} title="Adicionar linha"><Rows className="h-4 w-4" /></TB>
+            <TB onClick={() => editor.chain().focus().addColumnAfter().run()} title="Adicionar coluna"><Columns className="h-4 w-4" /></TB>
+            <TB onClick={() => editor.chain().focus().deleteTable().run()} title="Remover tabela"><Trash2 className="h-4 w-4" /></TB>
+
+            <Separator orientation="vertical" className="h-6 mx-1" />
+            <TB onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()} title="Limpar formatação"><Eraser className="h-4 w-4" /></TB>
+
+            <div className="ml-auto flex items-center gap-1">
+              <TB onClick={() => setZoom(Math.max(0.5, zoom - 0.1))} title="Diminuir zoom"><ZoomOut className="h-4 w-4" /></TB>
+              <span className="text-xs w-10 text-center">{Math.round(zoom * 100)}%</span>
+              <TB onClick={() => setZoom(Math.min(2, zoom + 0.1))} title="Aumentar zoom"><ZoomIn className="h-4 w-4" /></TB>
+              <TB onClick={onFullscreen} title="Tela cheia"><Maximize2 className="h-4 w-4" /></TB>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
