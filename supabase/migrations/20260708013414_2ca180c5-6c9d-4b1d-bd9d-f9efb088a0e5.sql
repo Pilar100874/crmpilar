@@ -1,0 +1,1 @@
+ALTER TABLE public.cv_cameras ADD COLUMN IF NOT EXISTS modelo text;

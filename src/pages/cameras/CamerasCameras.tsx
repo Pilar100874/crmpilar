@@ -21,6 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { CameraLiveViewer } from "@/components/cameras/CameraLiveViewer";
 import { StatusPingDot } from "@/components/StatusPingDot";
+import { CAMERA_MODELS, findModel } from "@/lib/cameraModels";
 
 
 const MARCAS = [
@@ -46,6 +47,7 @@ const emptyCam = {
   id: null as string | null,
   nome: "",
   marca: "hikvision",
+  modelo: null as string | null,
   tipo_rede: "interna",
   host: "",
   porta: 80,
@@ -633,8 +635,7 @@ export default function CamerasCameras() {
                   setEditing((prev: any) => ({
                     ...prev,
                     marca: v,
-                    // só sobrescreve porta/protocolo se ainda estiverem no default anterior
-                    // (evita sobrepor ajustes manuais do usuário)
+                    modelo: null, // reset modelo ao trocar de marca
                     porta: d?.porta ?? prev.porta,
                     protocolo: d?.protocolo ?? prev.protocolo,
                     snapshot_path: prev.snapshot_path && prev.snapshot_path.length > 0
@@ -651,6 +652,47 @@ export default function CamerasCameras() {
                 </SelectContent>
               </Select>
             </div>
+            {(CAMERA_MODELS[editing.marca]?.length ?? 0) > 0 && (
+              <div className="space-y-1">
+                <Label>Modelo</Label>
+                <Select
+                  value={editing.modelo ?? "__generic__"}
+                  onValueChange={(v) => {
+                    if (v === "__generic__") {
+                      setEditing((prev: any) => ({ ...prev, modelo: null }));
+                      return;
+                    }
+                    const spec = findModel(editing.marca, v);
+                    if (!spec) return;
+                    setEditing((prev: any) => ({
+                      ...prev,
+                      modelo: spec.value,
+                      // aplica capacidades específicas do modelo
+                      tem_ptz: spec.tem_ptz,
+                      tem_audio: spec.tem_audio,
+                      onvif_porta: spec.onvif_porta,
+                      porta: spec.porta ?? prev.porta,
+                      protocolo: spec.protocolo ?? prev.protocolo,
+                      snapshot_path: spec.snapshot_path ?? prev.snapshot_path,
+                      // se ONVIF ainda vazio, herda credencial principal
+                      onvif_user: prev.onvif_user || prev.usuario || "",
+                      onvif_pass: prev.onvif_pass || prev.senha || "",
+                    }));
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Selecione o modelo" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__generic__">Genérico (configurar manualmente)</SelectItem>
+                    {(CAMERA_MODELS[editing.marca] || []).map((m) => (
+                      <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground">
+                  Selecionar o modelo autoconfigura PTZ, áudio bidirecional e porta ONVIF.
+                </p>
+              </div>
+            )}
             <div className="space-y-1">
               <Label>Tipo de rede</Label>
               <Select value={editing.tipo_rede} onValueChange={(v) => setEditing({ ...editing, tipo_rede: v })}>
@@ -705,6 +747,7 @@ export default function CamerasCameras() {
                   <li>Abra o app <b>Tapo</b> → sua câmera → <b>Configurações da Câmera</b> → <b>Configurações Avançadas</b> → <b>Conta da Câmera</b> e crie usuário/senha (essas credenciais vão nos campos acima — <u>não</u> use a senha da sua conta Tapo).</li>
                   <li>A Tapo <b>não</b> responde em HTTP:80. Use <b>RTSP na porta 554</b> (já preenchido).</li>
                   <li>Snapshot path: <code>/stream1</code> (HD) ou <code>/stream2</code> (SD).</li>
+                  <li>Para <b>PTZ e áudio bidirecional</b> (C200/C210/C220/C500/C510W/C520WS/C720), o <b>ONVIF</b> roda na <b>porta 2020</b> com a MESMA credencial da Conta da Câmera. Selecione o modelo acima que já configuramos tudo.</li>
                   <li>Reserve IP fixo no roteador — a Tapo troca de IP com frequência via DHCP.</li>
                 </ul>
               </div>
