@@ -42,6 +42,8 @@ interface Props {
   value?: MergeConfig | null;
   onChange: (cfg: MergeConfig, sampleRows: any[]) => void;
   onInsertField?: (chave: string) => void;
+  onSelectFields?: (chaves: string[]) => void;
+  initialSelected?: string[];
 }
 
 const TABELAS = [
