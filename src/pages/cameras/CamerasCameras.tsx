@@ -877,6 +877,88 @@ export default function CamerasCameras() {
                 Normalmente o usuário/senha ONVIF é o mesmo do login web da câmera. A porta padrão é 80 (Hikvision/Intelbras) ou 8000. Requer Coletor Desktop 1.7.0+.
               </p>
             </div>
+
+            {/* ===== Modo manual (RTSP avançado) ===== */}
+            <div className="sm:col-span-2 border-t pt-3 mt-2">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <div className="text-sm font-semibold">Configuração manual (RTSP avançado)</div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Ative para qualquer câmera IP que fale RTSP/ONVIF fora dos modelos catalogados.
+                    Os campos abaixo têm prioridade sobre os defaults da marca.
+                  </p>
+                </div>
+                <Switch
+                  checked={!!editing.modo_manual}
+                  onCheckedChange={(v) => setEditing({ ...editing, modo_manual: v })}
+                />
+              </div>
+              {editing.modo_manual && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>Porta RTSP</Label>
+                    <Input
+                      type="number"
+                      placeholder="554"
+                      value={editing.rtsp_porta ?? ""}
+                      onChange={(e) =>
+                        setEditing({ ...editing, rtsp_porta: e.target.value ? parseInt(e.target.value) : null })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Transporte</Label>
+                    <Select
+                      value={editing.rtsp_transporte ?? "tcp"}
+                      onValueChange={(v) => setEditing({ ...editing, rtsp_transporte: v })}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="tcp">TCP (recomendado)</SelectItem>
+                        <SelectItem value="udp">UDP</SelectItem>
+                        <SelectItem value="http">HTTP tunnel</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="sm:col-span-2 space-y-1 col-span-2">
+                    <Label>Caminho RTSP (path)</Label>
+                    <Input
+                      placeholder="/Streaming/Channels/101  ou  /cam/realmonitor?channel=1&subtype=0"
+                      value={editing.rtsp_path ?? ""}
+                      onChange={(e) => setEditing({ ...editing, rtsp_path: e.target.value })}
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Path completo após o host. Se vazio, usa o snapshot path acima.
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Usuário RTSP</Label>
+                    <Input
+                      placeholder="Deixe vazio para usar o usuário principal"
+                      value={editing.rtsp_user ?? ""}
+                      onChange={(e) => setEditing({ ...editing, rtsp_user: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Senha RTSP</Label>
+                    <Input
+                      type="password"
+                      placeholder="Deixe vazia para usar a senha principal"
+                      value={editing.rtsp_pass ?? ""}
+                      onChange={(e) => setEditing({ ...editing, rtsp_pass: e.target.value })}
+                    />
+                  </div>
+                  <div className="sm:col-span-2 col-span-2 rounded-md border bg-muted/40 p-2 text-[11px] font-mono break-all">
+                    URL montada:{" "}
+                    rtsp://
+                    {(editing.rtsp_user || editing.usuario) ? `${editing.rtsp_user || editing.usuario}:***@` : ""}
+                    {editing.host || "<host>"}
+                    :{editing.rtsp_porta ?? editing.porta ?? 554}
+                    {editing.rtsp_path || editing.snapshot_path || "/"}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
