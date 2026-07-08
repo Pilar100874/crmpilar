@@ -128,8 +128,9 @@ export default function ModeloEditor() {
   };
 
   const abrirPreview = async () => {
+    if (dirty) await salvar(true);
     const data = await resolveMergeData("livre", null);
-    const { html: rendered, missing } = renderTemplate(html, data, { highlightMissing: true });
+    const { html: rendered, missing } = renderTemplate(html || "<p><em>Documento vazio</em></p>", data, { highlightMissing: true });
     setPreviewHtml(rendered);
     setPreviewMissing(missing);
     setShowPreview(true);
