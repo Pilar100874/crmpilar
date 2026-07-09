@@ -144,11 +144,15 @@ export default function GerarDocumento() {
                 {registros.map((r: any) => {
                   const cfg = TABELA_POR_TIPO[tipo as Exclude<RegistroTipo,"livre">];
                   const label = r[cfg.label] || r.id;
+                  const checked = registroIds.includes(r.id);
                   return (
-                    <button key={r.id} onClick={() => setRegistroId(r.id)}
-                      className={`block w-full text-left text-xs px-2 py-1.5 hover:bg-muted/50 ${registroId === r.id ? "bg-primary/10" : ""}`}>
-                      {label}
-                    </button>
+                    <label key={r.id}
+                      className={`flex items-center gap-2 w-full text-left text-xs px-2 py-1.5 hover:bg-muted/50 cursor-pointer ${checked ? "bg-primary/10" : ""}`}>
+                      <Checkbox checked={checked} onCheckedChange={(v) => {
+                        setRegistroIds(prev => v ? [...prev, r.id] : prev.filter(x => x !== r.id));
+                      }} />
+                      <span className="flex-1">{label}</span>
+                    </label>
                   );
                 })}
                 {registros.length === 0 && <div className="text-xs text-muted-foreground p-2">Nenhum registro.</div>}
