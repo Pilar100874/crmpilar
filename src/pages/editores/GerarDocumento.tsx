@@ -118,12 +118,44 @@ export default function GerarDocumento() {
     return applyFillables(step1.html, fillables, { highlightEmpty: false });
   };
 
-  const gerarPdf = async (modo: "unico" | "individual") => {
+  const abrirPreview = async (mode: "pdf" | "print") => {
     if (!modelo) { toast.error("Escolha um modelo"); return; }
     const ids = registroIds.length > 0 ? registroIds : [null as any];
     setGerando(true);
     try {
       const htmls = await Promise.all(ids.map(id => renderHtmlPara(id)));
+      setPreviewHtmls(htmls);
+      setPreviewMode(mode);
+      setPreviewOpen(true);
+    } finally { setGerando(false); }
+  };
+
+  const confirmarPreview = async () => {
+    if (previewMode === "print") {
+      printHtml(previewHtmls.join('<div style="page-break-before:always"></div>'));
+      setPreviewOpen(false);
+      return;
+    }
+    // pdf
+    if (previewHtmls.length > 1) {
+      setPreviewOpen(false);
+      setPdfDialogOpen(true);
+      return;
+    }
+    setGerando(true);
+    try {
+      await downloadHtmlsPdf(previewHtmls, { filename: modelo?.titulo ?? "documento" });
+      await salvarNoHistorico();
+      setPreviewOpen(false);
+    } finally { setGerando(false); }
+  };
+
+  const gerarPdf = async (modo: "unico" | "individual") => {
+    if (!modelo) { toast.error("Escolha um modelo"); return; }
+    setGerando(true);
+    try {
+      const htmls = previewHtmls.length ? previewHtmls
+        : await Promise.all((registroIds.length ? registroIds : [null as any]).map(id => renderHtmlPara(id)));
       if (modo === "unico") {
         await downloadHtmlsPdf(htmls, { filename: modelo.titulo });
       } else {
