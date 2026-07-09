@@ -113,6 +113,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const [editingValue, setEditingValue] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
+  const [fieldToDelete, setFieldToDelete] = useState<{ id: string; category: "contact" | "company"; label: string } | null>(null);
   
   // Estados para validação de duplicidade
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
@@ -753,19 +754,27 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const handleRemoveField = (fieldId: string, category: "contact" | "company") => {
     const fields = category === "contact" ? contactFields : companyFields;
     const field = fields.find(f => f.id === fieldId);
-    
+
     // Não permite remover campos bloqueados
     if (field?.locked) {
       toast.error("Este campo é obrigatório e não pode ser removido");
       return;
     }
-    
+
+    // Solicita confirmação antes de excluir
+    setFieldToDelete({ id: fieldId, category, label: field?.label || "campo" });
+  };
+
+  const confirmRemoveField = () => {
+    if (!fieldToDelete) return;
+    const { id, category } = fieldToDelete;
     if (category === "contact") {
-      setContactFields(contactFields.filter(f => f.id !== fieldId));
+      setContactFields(contactFields.filter(f => f.id !== id));
     } else {
-      setCompanyFields(companyFields.filter(f => f.id !== fieldId));
+      setCompanyFields(companyFields.filter(f => f.id !== id));
     }
     toast.success("Campo removido com sucesso");
+    setFieldToDelete(null);
   };
 
   // Buscar dados do CNPJ
@@ -2318,6 +2327,22 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               <AlertDialogAction onClick={confirmDelete}>
                 Confirmar
               </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Confirmação de exclusão de campo personalizado */}
+        <AlertDialog open={!!fieldToDelete} onOpenChange={(o) => !o && setFieldToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir campo personalizado</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir o campo <strong>{fieldToDelete?.label}</strong>? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmRemoveField}>Excluir</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
