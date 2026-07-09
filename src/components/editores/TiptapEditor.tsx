@@ -256,6 +256,16 @@ export function TiptapEditor({
           color: inherit;
           font-family: inherit;
         }
+        .doc-editor-content .ProseMirror .doc-fillable .fillable-ctrl {
+          opacity: 0;
+          transition: opacity 0.15s;
+        }
+        .doc-editor-content .ProseMirror .doc-fillable:hover .fillable-ctrl {
+          opacity: 1;
+        }
+        .doc-editor-content .ProseMirror[contenteditable="false"] .doc-fillable .fillable-ctrl {
+          display: none !important;
+        }
         .doc-editor-content .ProseMirror .doc-field-chip.ProseMirror-selectednode {
           outline: 2px solid #2563eb;
         }

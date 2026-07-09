@@ -213,7 +213,7 @@ export const FillableField = Node.create({
   },
 
   addNodeView() {
-    return ({ node }) => {
+    return ({ node, editor, getPos }) => {
       const tipo = String(node.attrs.tipo || "texto");
       const token = String(node.attrs.token || "");
       const label = String(node.attrs.label || "");
@@ -230,8 +230,8 @@ export const FillableField = Node.create({
       if (cnpjSubfield) dom.setAttribute("data-cnpj-subfield", cnpjSubfield);
       if (cnpjGroup) dom.setAttribute("data-cnpj-group", cnpjGroup);
       dom.contentEditable = "false";
-      dom.className = "doc-fillable";
-      dom.style.cssText = "display:inline-block;vertical-align:middle;margin:0 2px";
+      dom.className = "doc-fillable group/fillable";
+      dom.style.cssText = "display:inline-flex;align-items:center;gap:2px;vertical-align:middle;margin:0 2px;position:relative";
 
       let currentValue = getFillableValue(token, label);
 
@@ -378,7 +378,30 @@ export const FillableField = Node.create({
 
       const render = () => {
         dom.innerHTML = "";
+        const grip = document.createElement("span");
+        grip.setAttribute("data-drag-handle", "");
+        grip.className = "fillable-ctrl fillable-grip";
+        grip.title = "Arraste para mover";
+        grip.style.cssText = "cursor:grab;user-select:none;color:#94a3b8;font-size:12px;padding:0 2px;line-height:1";
+        grip.textContent = "⋮⋮";
+        dom.appendChild(grip);
         dom.appendChild(buildInput());
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "fillable-ctrl fillable-del";
+        del.title = "Remover campo";
+        del.textContent = "×";
+        del.style.cssText = "cursor:pointer;border:none;background:transparent;color:#dc2626;font-size:14px;line-height:1;padding:0 4px";
+        del.addEventListener("mousedown", (ev) => ev.preventDefault());
+        del.addEventListener("click", (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          if (editor?.isEditable === false) return;
+          const pos = typeof getPos === "function" ? getPos() : null;
+          if (pos == null || !editor) return;
+          editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).run();
+        });
+        dom.appendChild(del);
       };
       render();
       const unsub = subscribeFillable(() => {
