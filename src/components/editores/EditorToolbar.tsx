@@ -77,6 +77,7 @@ export function EditorToolbar({
   onBack, onSave, onSalvarComo, onToggleLock, locked, dirty, saving,
   titulo, onTituloChange, mode = "editar", onModeChange,
   onInsertFormField, onToggleSidebar, sidebarOpen, hasFormFields = false,
+  onQuickFill, onGeneratePdf, onPrint,
 }: Props) {
 
   const [color, setColor] = useState("#111111");
