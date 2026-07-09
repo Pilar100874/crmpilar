@@ -51,6 +51,8 @@ interface Props {
   onQuickFill?: () => void;
   onGeneratePdf?: () => void;
   onPrint?: () => void;
+  onSearchEmpresa?: () => void;
+  onSearchEstoque?: () => void;
 }
 
 
