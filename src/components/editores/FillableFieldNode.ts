@@ -85,12 +85,11 @@ async function autofillCnpj(cnpjLimpo: string, group?: string) {
 /** Sem popup: foca o sub-campo CNPJ do grupo (que tem máscara + autofill no blur). */
 function focusCnpjInputForGroup(group: string): boolean {
   if (!group) return false;
-  if (cnpjGroupState.get(group)) return false;
   const cnpjEl = document.querySelector<HTMLInputElement>(
     `[data-cnpj-group="${CSS.escape(group)}"][data-cnpj-subfield="cnpj"] input[data-cnpj-autofill="1"]`
   );
   if (!cnpjEl) return false;
-  cnpjGroupState.set(group, "asking");
+  if (cnpjEl.value && cnpjEl.value.replace(/\D/g, "").length === 14) return false;
   const prevBg = cnpjEl.style.background;
   cnpjEl.style.background = "#fde68a";
   cnpjEl.focus();
