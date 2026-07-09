@@ -16,11 +16,15 @@ const maskCnpj = (v: string) => {
     .replace(/(\d{4})(\d)/, "$1-$2");
 };
 
+const maskCep = (v: string) => {
+  const d = v.replace(/\D/g, "").slice(0, 8);
+  return d.replace(/^(\d{5})(\d)/, "$1-$2");
+};
+
 // Estado por grupo de CNPJ:
-// - "manual": usuário escolheu digitar; não perguntar em outros campos do grupo.
-// - "loaded": CNPJ já buscado e aplicado (parcial ou total).
 type GroupState = "manual" | "loaded";
 const cnpjGroupState = new Map<string, GroupState>();
+const cepGroupState = new Map<string, GroupState>();
 
 // Dispara autofill dos demais campos preenchíveis a partir dos dados da Receita.
 async function autofillCnpj(cnpjLimpo: string, group?: string, applyAll = true) {
@@ -70,6 +74,48 @@ async function autofillCnpj(cnpjLimpo: string, group?: string, applyAll = true) 
     if (group && elGroup && elGroup !== group) return;
     const sub = el.getAttribute("data-cnpj-subfield") || "";
     if (!applyAll && sub !== "cnpj") return;
+    const token = el.getAttribute("data-fillable-field") || "";
+    const label = el.getAttribute("data-label") || "";
+    let val = "";
+    if (sub && byKey[sub] != null) val = byKey[sub];
+    else {
+      const key = norm(label || token);
+      if (key && src[key]) val = src[key];
+    }
+    if (val) updates[token] = val;
+  });
+  if (Object.keys(updates).length) mergeFillableValues(updates);
+}
+
+// Autofill via ViaCEP para grupos de CEP.
+async function autofillCep(cepLimpo: string, group?: string, applyAll = true) {
+  const resp = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+  if (!resp.ok) throw new Error("CEP não encontrado");
+  const d: any = await resp.json();
+  if (d.erro) throw new Error("CEP não encontrado");
+  const byKey: Record<string, string> = {
+    cep: maskCep(cepLimpo),
+    logradouro: d.logradouro || "",
+    complemento: d.complemento || "",
+    bairro: d.bairro || "",
+    localidade: d.localidade || "",
+    uf: d.uf || "",
+  };
+  const src: Record<string, string> = {};
+  const put = (aliases: string[], val: string) => { for (const a of aliases) src[norm(a)] = val; };
+  put(["cep"], byKey.cep);
+  put(["logradouro", "endereco", "rua"], byKey.logradouro);
+  put(["complemento"], byKey.complemento);
+  put(["bairro"], byKey.bairro);
+  put(["municipio", "cidade", "localidade"], byKey.localidade);
+  put(["uf", "estado"], byKey.uf);
+
+  const updates: Record<string, string> = {};
+  document.querySelectorAll<HTMLElement>("[data-fillable-field]").forEach((el) => {
+    const elGroup = el.getAttribute("data-cep-group") || "";
+    if (group && elGroup && elGroup !== group) return;
+    const sub = el.getAttribute("data-cep-subfield") || "";
+    if (!applyAll && sub !== "cep") return;
     const token = el.getAttribute("data-fillable-field") || "";
     const label = el.getAttribute("data-label") || "";
     let val = "";
@@ -179,6 +225,64 @@ function askApplyAll(anchor: HTMLElement, group: string, cnpjLimpo: string) {
   });
 }
 
+/** Escolha inicial ao focar um sub-campo do grupo CEP. */
+function askCepGroupMethod(anchor: HTMLElement, group: string) {
+  showInlinePopover(anchor, (close) => {
+    const wrap = document.createElement("div");
+    const title = document.createElement("div");
+    title.textContent = "Como deseja preencher os campos deste endereço?";
+    title.style.cssText = "font-weight:600;margin-bottom:8px;";
+    const auto = makeBtn("Buscar pelo CEP", true);
+    const manual = makeBtn("Digitar manualmente");
+    auto.addEventListener("click", () => {
+      close();
+      const cepEl = document.querySelector<HTMLInputElement>(
+        `[data-cep-group="${CSS.escape(group)}"][data-cep-subfield="cep"] input[data-cep-autofill="1"]`
+      );
+      if (cepEl) {
+        const prev = cepEl.style.background;
+        cepEl.style.background = "#fde68a";
+        cepEl.focus();
+        try { cepEl.scrollIntoView({ block: "center", behavior: "smooth" }); } catch {}
+        setTimeout(() => { cepEl.style.background = prev; }, 1200);
+      }
+    });
+    manual.addEventListener("click", () => {
+      cepGroupState.set(group, "manual");
+      close();
+      (anchor as HTMLInputElement).focus();
+    });
+    wrap.appendChild(title);
+    wrap.appendChild(auto);
+    wrap.appendChild(manual);
+    return wrap;
+  });
+}
+
+function askCepApplyAll(anchor: HTMLElement, group: string, cepLimpo: string) {
+  showInlinePopover(anchor, (close) => {
+    const wrap = document.createElement("div");
+    const title = document.createElement("div");
+    title.textContent = "Aplicar dados do CEP em todos os campos deste grupo?";
+    title.style.cssText = "font-weight:600;margin-bottom:8px;";
+    const yes = makeBtn("Sim, preencher todos", true);
+    const no = makeBtn("Não, só o CEP");
+    const finish = async (applyAll: boolean) => {
+      close();
+      try {
+        await autofillCep(cepLimpo, group, applyAll);
+        cepGroupState.set(group, applyAll ? "loaded" : "manual");
+      } catch (e) { console.warn("[cep autofill]", e); }
+    };
+    yes.addEventListener("click", () => void finish(true));
+    no.addEventListener("click", () => void finish(false));
+    wrap.appendChild(title);
+    wrap.appendChild(yes);
+    wrap.appendChild(no);
+    return wrap;
+  });
+}
+
 
 
 /**
@@ -212,6 +316,16 @@ export const FillableField = Node.create({
         parseHTML: (el: HTMLElement) => el.getAttribute("data-cnpj-group") || "",
         renderHTML: (attrs: any) => attrs.cnpjGroup ? { "data-cnpj-group": attrs.cnpjGroup } : {},
       },
+      cepSubfield: {
+        default: "",
+        parseHTML: (el: HTMLElement) => el.getAttribute("data-cep-subfield") || "",
+        renderHTML: (attrs: any) => attrs.cepSubfield ? { "data-cep-subfield": attrs.cepSubfield } : {},
+      },
+      cepGroup: {
+        default: "",
+        parseHTML: (el: HTMLElement) => el.getAttribute("data-cep-group") || "",
+        renderHTML: (attrs: any) => attrs.cepGroup ? { "data-cep-group": attrs.cepGroup } : {},
+      },
     };
   },
 
@@ -229,10 +343,14 @@ export const FillableField = Node.create({
       .split(",").map(s => s.trim()).filter(Boolean);
     const cnpjSubfield = String(node.attrs.cnpjSubfield || "");
     const cnpjGroup = String(node.attrs.cnpjGroup || "");
+    const cepSubfield = String(node.attrs.cepSubfield || "");
+    const cepGroup = String(node.attrs.cepGroup || "");
 
     const extra: Record<string, string> = {};
     if (cnpjSubfield) extra["data-cnpj-subfield"] = cnpjSubfield;
     if (cnpjGroup) extra["data-cnpj-group"] = cnpjGroup;
+    if (cepSubfield) extra["data-cep-subfield"] = cepSubfield;
+    if (cepGroup) extra["data-cep-group"] = cepGroup;
 
     const wrapAttrs = mergeAttributes(HTMLAttributes, {
       "data-fillable-field": token,
@@ -284,6 +402,9 @@ export const FillableField = Node.create({
       case "cnpj":
         child = ["input", { type: "text", "data-fillable": token, "data-cnpj-autofill": "1", placeholder: label || "CNPJ", style: inputStyle + ";min-width:180px" }];
         break;
+      case "cep":
+        child = ["input", { type: "text", "data-fillable": token, "data-cep-autofill": "1", placeholder: label || "CEP", style: inputStyle + ";min-width:120px" }];
+        break;
       default:
         child = ["input", { type: "text", "data-fillable": token, placeholder: label, style: inputStyle }];
     }
@@ -300,6 +421,8 @@ export const FillableField = Node.create({
         .split(",").map(s => s.trim()).filter(Boolean);
       const cnpjSubfield = String(node.attrs.cnpjSubfield || "");
       const cnpjGroup = String(node.attrs.cnpjGroup || "");
+      const cepSubfield = String(node.attrs.cepSubfield || "");
+      const cepGroup = String(node.attrs.cepGroup || "");
 
       const dom = document.createElement("span");
       dom.setAttribute("data-fillable-field", token);
@@ -308,23 +431,33 @@ export const FillableField = Node.create({
       dom.setAttribute("data-opcoes", opcoes.join(","));
       if (cnpjSubfield) dom.setAttribute("data-cnpj-subfield", cnpjSubfield);
       if (cnpjGroup) dom.setAttribute("data-cnpj-group", cnpjGroup);
+      if (cepSubfield) dom.setAttribute("data-cep-subfield", cepSubfield);
+      if (cepGroup) dom.setAttribute("data-cep-group", cepGroup);
       dom.contentEditable = "false";
       dom.className = "doc-fillable group/fillable";
       dom.style.cssText = "display:inline-flex;align-items:center;gap:2px;vertical-align:middle;margin:0 2px;position:relative";
 
       let currentValue = getFillableValue(token, label);
 
-      // Hook: no primeiro foco de um sub-campo do grupo CNPJ ainda vazio,
-      // pergunta o CNPJ e autopreenche todos os sub-campos vazios do grupo.
       const attachCnpjGroupFocus = (input: HTMLElement) => {
         if (!cnpjGroup || !cnpjSubfield) return;
-        // Não redireciona se este próprio campo é o CNPJ do grupo
         if (cnpjSubfield === "cnpj") return;
         input.addEventListener("focus", () => {
           const v = (input as HTMLInputElement | HTMLTextAreaElement).value;
           if (v && v.trim()) return;
           if (cnpjGroupState.get(cnpjGroup)) return;
           askGroupMethod(input, cnpjGroup);
+        }, { once: false });
+      };
+
+      const attachCepGroupFocus = (input: HTMLElement) => {
+        if (!cepGroup || !cepSubfield) return;
+        if (cepSubfield === "cep") return;
+        input.addEventListener("focus", () => {
+          const v = (input as HTMLInputElement | HTMLTextAreaElement).value;
+          if (v && v.trim()) return;
+          if (cepGroupState.get(cepGroup)) return;
+          askCepGroupMethod(input, cepGroup);
         }, { once: false });
       };
 
@@ -454,12 +587,39 @@ export const FillableField = Node.create({
             autosize(i);
             el = i; break;
           }
+          case "cep": {
+            const i = document.createElement("input");
+            i.type = "text";
+            i.setAttribute("data-fillable", token);
+            i.setAttribute("data-cep-autofill", "1");
+            i.placeholder = label || "CEP";
+            i.style.cssText = inputStyle + ";min-width:110px;pointer-events:auto";
+            i.value = currentValue ? maskCep(currentValue) : "";
+            i.addEventListener("mousedown", (ev) => ev.stopPropagation());
+            i.addEventListener("input", () => {
+              i.value = maskCep(i.value);
+              currentValue = i.value;
+            });
+            i.addEventListener("blur", () => {
+              const clean = i.value.replace(/\D/g, "");
+              if (clean.length !== 8) return;
+              if (cepGroup) {
+                if (cepGroupState.get(cepGroup) === "loaded") return;
+                askCepApplyAll(i, cepGroup, clean);
+              } else {
+                void autofillCep(clean, undefined, true);
+              }
+            });
+            autosize(i);
+            el = i; break;
+          }
           default: {
             const i = document.createElement("input");
             i.type = "text"; i.setAttribute("data-fillable", token); i.placeholder = label; i.style.cssText = inputStyle;
             i.value = currentValue;
             i.addEventListener("input", () => { currentValue = i.value; });
             attachCnpjGroupFocus(i);
+            attachCepGroupFocus(i);
             autosize(i);
             el = i;
           }

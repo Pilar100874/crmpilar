@@ -11,6 +11,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Search, Plus, Pencil, Trash2, GripVertical, FormInput, ChevronRight, ChevronDown } from "lucide-react";
 import { serializeFillable, type FillableTipo } from "@/lib/editores/mergeEngine";
 import { CNPJ_SUBFIELDS, buildCnpjGroupPayload } from "@/lib/editores/cnpjGroup";
+import { CEP_SUBFIELDS, buildCepGroupPayload } from "@/lib/editores/cepGroup";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface CustomField {
@@ -34,10 +35,18 @@ const TIPOS: { value: FillableTipo; label: string; hasOpcoes?: boolean }[] = [
   { value: "data", label: "Data" },
   { value: "numero", label: "Número" },
   { value: "cnpj", label: "CNPJ (auto-preenche pela Receita)" },
+  { value: "cep", label: "CEP (auto-preenche pelo ViaCEP)" },
   { value: "check", label: "Caixa de seleção (checkbox)", hasOpcoes: true },
   { value: "lista", label: "Lista suspensa (select)", hasOpcoes: true },
   { value: "radio", label: "Opções (radio)", hasOpcoes: true },
 ];
+
+// Campos de sistema (não removíveis, disponíveis para todos os usuários).
+const SYSTEM_FIELDS: CustomField[] = [
+  { id: "__sys_cnpj__", label: "CNPJ", tipo: "cnpj", fonte: "manual", opcoes: CNPJ_SUBFIELDS.map(s => s.key), tabela: null, coluna: null },
+  { id: "__sys_cep__", label: "CEP", tipo: "cep", fonte: "manual", opcoes: CEP_SUBFIELDS.map(s => s.key), tabela: null, coluna: null },
+];
+const isSystemField = (f: CustomField) => f.id.startsWith("__sys_");
 
 const TABELAS = [
   { value: "customers", label: "Clientes" },
@@ -51,11 +60,13 @@ const TABELAS = [
 ];
 
 function buildFieldPayload(f: CustomField): string {
-  // Campo do tipo CNPJ gera um grupo de sub-campos (Razão Social, Endereço, etc.)
-  // que serão preenchidos automaticamente ao informar o CNPJ.
   if (f.tipo === "cnpj") {
     const keys = f.opcoes.length > 0 ? f.opcoes : CNPJ_SUBFIELDS.map(s => s.key);
     return buildCnpjGroupPayload(f.label, keys);
+  }
+  if (f.tipo === "cep") {
+    const keys = f.opcoes.length > 0 ? f.opcoes : CEP_SUBFIELDS.map(s => s.key);
+    return buildCepGroupPayload(f.label, keys);
   }
   const tipoFinal: FillableTipo =
     f.tipo === "check" && f.opcoes.length > 0 ? "radio" : f.tipo;
@@ -73,8 +84,12 @@ export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) 
   const toggleExpand = (id: string) => setExpanded(prev => {
     const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n;
   });
-  const subLabelMap = new Map(CNPJ_SUBFIELDS.map(s => [s.key, s.label]));
-  const buildSubPayload = (f: CustomField, key: string) => buildCnpjGroupPayload(f.label, [key]);
+  const subLabelMap = new Map<string, string>([
+    ...CNPJ_SUBFIELDS.map(s => [s.key, s.label] as [string, string]),
+    ...CEP_SUBFIELDS.map(s => [s.key, s.label] as [string, string]),
+  ]);
+  const buildSubPayload = (f: CustomField, key: string) =>
+    f.tipo === "cep" ? buildCepGroupPayload(f.label, [key]) : buildCnpjGroupPayload(f.label, [key]);
   const onDragSub = (e: React.DragEvent, f: CustomField, key: string) => {
     const payload = buildSubPayload(f, key);
     e.dataTransfer.setData("application/x-doc-payload", payload);
@@ -114,8 +129,9 @@ export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) 
   }, [editing?.tabela]);
 
   const filtrados = useMemo(() => {
+    const combined = [...SYSTEM_FIELDS, ...fields];
     const q = busca.toLowerCase();
-    return q ? fields.filter(f => f.label.toLowerCase().includes(q)) : fields;
+    return q ? combined.filter(f => f.label.toLowerCase().includes(q)) : combined;
   }, [fields, busca]);
 
   const novo = () => {
@@ -132,13 +148,15 @@ export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) 
       toast.error("Escolha tabela e coluna"); return;
     }
     const isCnpj = editing.tipo === "cnpj";
-    if (isCnpj && editing.opcoes.length === 0) { toast.error("Selecione ao menos um sub-campo"); return; }
+    const isCep = editing.tipo === "cep";
+    const isGroup = isCnpj || isCep;
+    if (isGroup && editing.opcoes.length === 0) { toast.error("Selecione ao menos um sub-campo"); return; }
     const payload = {
       estabelecimento_id: estabelecimentoId,
       label: editing.label.trim(),
       tipo: editing.tipo,
       fonte: cfg.hasOpcoes ? editing.fonte : "manual",
-      opcoes: isCnpj ? editing.opcoes : (cfg.hasOpcoes && editing.fonte === "manual" ? editing.opcoes : []),
+      opcoes: isGroup ? editing.opcoes : (cfg.hasOpcoes && editing.fonte === "manual" ? editing.opcoes : []),
       tabela: cfg.hasOpcoes && editing.fonte === "tabela" ? editing.tabela : null,
       coluna: cfg.hasOpcoes && editing.fonte === "tabela" ? editing.coluna : null,
     };
@@ -189,18 +207,22 @@ export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) 
           )}
           {filtrados.map(f => {
             const isCnpj = f.tipo === "cnpj";
+            const isCep = f.tipo === "cep";
+            const isGroup = isCnpj || isCep;
+            const isSystem = isSystemField(f);
             const isOpen = expanded.has(f.id);
-            const subKeys = isCnpj ? (f.opcoes.length ? f.opcoes : CNPJ_SUBFIELDS.map(s => s.key)) : [];
+            const allSubs = isCnpj ? CNPJ_SUBFIELDS : isCep ? CEP_SUBFIELDS : [];
+            const subKeys = isGroup ? (f.opcoes.length ? f.opcoes : allSubs.map(s => s.key)) : [];
             return (
               <div key={f.id}>
                 <div
                   draggable
                   onDragStart={(e) => onDrag(e, f)}
-                  onClick={() => isCnpj ? toggleExpand(f.id) : onInsert(buildFieldPayload(f))}
+                  onClick={() => isGroup ? toggleExpand(f.id) : onInsert(buildFieldPayload(f))}
                   className="group flex items-center gap-2 p-2 rounded border bg-card hover:bg-accent cursor-grab active:cursor-grabbing"
-                  title={isCnpj ? "Clique para ver sub-campos · arraste para inserir todos" : "Arraste para o documento ou clique para inserir"}
+                  title={isGroup ? "Clique para ver sub-campos · arraste para inserir todos" : "Arraste para o documento ou clique para inserir"}
                 >
-                  {isCnpj ? (
+                  {isGroup ? (
                     <button type="button" onClick={(e) => { e.stopPropagation(); toggleExpand(f.id); }} className="shrink-0">
                       {isOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                     </button>
@@ -209,7 +231,10 @@ export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) 
                   )}
                   <FormInput className="h-3.5 w-3.5 text-primary shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium truncate">{f.label}</div>
+                    <div className="text-xs font-medium truncate flex items-center gap-1">
+                      {f.label}
+                      {isSystem && <Badge variant="outline" className="h-4 px-1 text-[9px] border-primary/40 text-primary">sistema</Badge>}
+                    </div>
                     <div className="flex items-center gap-1 mt-0.5">
                       <Badge variant="outline" className="h-4 px-1 text-[9px]">{f.tipo}</Badge>
                       {f.fonte === "tabela" && (
@@ -217,21 +242,23 @@ export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) 
                           {f.tabela}.{f.coluna}
                         </Badge>
                       )}
-                      {isCnpj && (
+                      {isGroup && (
                         <Badge variant="secondary" className="h-4 px-1 text-[9px]">{subKeys.length} sub-campos</Badge>
                       )}
                     </div>
                   </div>
-                  <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); editar(f); }}>
-                      <Pencil className="h-3 w-3" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={(e) => { e.stopPropagation(); setToDelete(f); }}>
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
+                  {!isSystem && (
+                    <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); editar(f); }}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={(e) => { e.stopPropagation(); setToDelete(f); }}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
-                {isCnpj && isOpen && (
+                {isGroup && isOpen && (
                   <div className="ml-5 mt-1 space-y-0.5 border-l pl-2">
                     {subKeys.map(k => (
                       <div
@@ -271,7 +298,10 @@ export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) 
                 <Select value={editing.tipo} onValueChange={(v: FillableTipo) => setEditing({
                   ...editing,
                   tipo: v,
-                  opcoes: v === "cnpj" && editing.opcoes.length === 0 ? CNPJ_SUBFIELDS.map(s => s.key) : editing.opcoes,
+                  opcoes:
+                    v === "cnpj" && editing.opcoes.length === 0 ? CNPJ_SUBFIELDS.map(s => s.key) :
+                    v === "cep" && editing.opcoes.length === 0 ? CEP_SUBFIELDS.map(s => s.key) :
+                    editing.opcoes,
                 })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -279,33 +309,38 @@ export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) 
                   </SelectContent>
                 </Select>
               </div>
-              {editing.tipo === "cnpj" && (
-                <div className="border rounded p-3 space-y-2 bg-muted/20">
-                  <div className="text-xs font-medium">Sub-campos da Receita a inserir</div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Ao inserir, cada item vira um campo no documento. No primeiro foco em qualquer um deles, o CNPJ será solicitado e todos os campos vazios serão preenchidos automaticamente.
-                  </p>
-                  <div className="grid grid-cols-2 gap-1.5 max-h-56 overflow-auto">
-                    {CNPJ_SUBFIELDS.map(sf => {
-                      const checked = editing.opcoes.includes(sf.key);
-                      return (
-                        <label key={sf.key} className="flex items-center gap-2 text-xs cursor-pointer">
-                          <Checkbox
-                            checked={checked}
-                            onCheckedChange={(v) => {
-                              const next = v
-                                ? [...editing.opcoes, sf.key]
-                                : editing.opcoes.filter(k => k !== sf.key);
-                              setEditing({ ...editing, opcoes: next });
-                            }}
-                          />
-                          {sf.label}
-                        </label>
-                      );
-                    })}
+              {(editing.tipo === "cnpj" || editing.tipo === "cep") && (() => {
+                const subs = editing.tipo === "cnpj" ? CNPJ_SUBFIELDS : CEP_SUBFIELDS;
+                const fonte = editing.tipo === "cnpj" ? "Receita" : "ViaCEP";
+                const chave = editing.tipo === "cnpj" ? "CNPJ" : "CEP";
+                return (
+                  <div className="border rounded p-3 space-y-2 bg-muted/20">
+                    <div className="text-xs font-medium">Sub-campos do {fonte} a inserir</div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Ao inserir, cada item vira um campo no documento. No primeiro foco em qualquer um deles, o {chave} será solicitado e todos os campos vazios serão preenchidos automaticamente.
+                    </p>
+                    <div className="grid grid-cols-2 gap-1.5 max-h-56 overflow-auto">
+                      {subs.map(sf => {
+                        const checked = editing.opcoes.includes(sf.key);
+                        return (
+                          <label key={sf.key} className="flex items-center gap-2 text-xs cursor-pointer">
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(v) => {
+                                const next = v
+                                  ? [...editing.opcoes, sf.key]
+                                  : editing.opcoes.filter(k => k !== sf.key);
+                                setEditing({ ...editing, opcoes: next });
+                              }}
+                            />
+                            {sf.label}
+                          </label>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
               {cfg?.hasOpcoes && (
                 <div className="border rounded p-3 space-y-2 bg-muted/20">
                   <div>
