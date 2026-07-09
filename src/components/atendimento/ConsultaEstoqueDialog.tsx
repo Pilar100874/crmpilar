@@ -295,11 +295,16 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
           case 'preco': return esc(fmtMoney(p.preco_tabela));
         }
       };
-      const th = visCols.map(c => `<th style="border:1px solid #ccc;padding:6px;background:#f4f4f5;text-align:left;">${esc(c.label)}</th>`).join('');
-      const trs = selected.map(p =>
-        `<tr>${visCols.map(c => `<td style="border:1px solid #ccc;padding:6px;">${cell(p, c.key)}</td>`).join('')}</tr>`
-      ).join('');
-      const html = `<table style="border-collapse:collapse;width:100%;margin:8px 0;"><thead><tr>${th}</tr></thead><tbody>${trs}</tbody></table>`;
+      // linhas em parágrafos (compatível com qualquer editor rich-text)
+      const paras = selected.map(p => {
+        const parts = visCols.map(c => {
+          const val = cell(p, c.key);
+          if (!val) return '';
+          return c.key === 'nome' ? `<strong>${val}</strong>` : `${esc(c.label)}: ${val}`;
+        }).filter(Boolean);
+        return `<p>${parts.join(' — ')}</p>`;
+      }).join('');
+      const html = `<p><strong>Consulta de Estoque</strong></p>${paras}`;
       onInsertHtml(html);
       onOpenChange(false);
       toast.success(`${selected.length} produto(s) inserido(s)`);
