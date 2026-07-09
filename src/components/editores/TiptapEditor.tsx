@@ -24,6 +24,7 @@ import { MergeField } from "./MergeFieldNode";
 import { MergeTable } from "./MergeTableNode";
 import { promptTableRows } from "@/lib/editores/tableRowsPrompt";
 import { FillableField } from "./FillableFieldNode";
+import { parseCnpjGroupPayload, buildCnpjGroupFields } from "@/lib/editores/cnpjGroup";
 import { Table } from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
