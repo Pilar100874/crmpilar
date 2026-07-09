@@ -11,7 +11,7 @@ import {
   Table as TableIcon, Rows, Columns, Trash2, Eraser, Maximize2, ZoomIn, ZoomOut,
   ScanSearch, ArrowLeft, Save, Eye, Lock, Unlock, Copy, Printer, FileDown,
   Database, ClipboardList, Pencil, PanelRightOpen, PanelRightClose,
-  Building2, Package,
+  Building2, Package, FormInput,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -47,6 +47,8 @@ interface Props {
   onInsertFormField?: (token: string) => void;
   onToggleSidebar?: () => void;
   sidebarOpen?: boolean;
+  onToggleFormFields?: () => void;
+  formFieldsOpen?: boolean;
   hasFormFields?: boolean;
   onQuickFill?: () => void;
   onGeneratePdf?: () => void;
@@ -82,7 +84,7 @@ export function EditorToolbar({
   editor, onFullscreen, zoom, setZoom, onPreviewMerge, previewActive, estabelecimentoId,
   onBack, onSave, onSalvarComo, onToggleLock, locked, dirty, saving,
   titulo, onTituloChange, mode = "editar", onModeChange,
-  onInsertFormField, onToggleSidebar, sidebarOpen, hasFormFields = false,
+  onInsertFormField, onToggleSidebar, sidebarOpen, onToggleFormFields, formFieldsOpen, hasFormFields = false,
   onQuickFill, onGeneratePdf, onPrint, onSearchEmpresa, onSearchEstoque,
 }: Props) {
 
@@ -115,6 +117,11 @@ export function EditorToolbar({
         {onToggleSidebar && (
           <TB onClick={onToggleSidebar} active={!!sidebarOpen} title={sidebarOpen ? "Fechar campos" : "Abrir campos e vínculos"}>
             {sidebarOpen ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
+          </TB>
+        )}
+        {onToggleFormFields && (
+          <TB onClick={onToggleFormFields} active={!!formFieldsOpen} title={formFieldsOpen ? "Fechar campos personalizados" : "Abrir campos personalizados"}>
+            <FormInput className="h-4 w-4" />
           </TB>
         )}
 

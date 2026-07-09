@@ -7,6 +7,7 @@ import { TiptapEditor } from "@/components/editores/TiptapEditor";
 
 import { EditorToolbar, type EditorMode } from "@/components/editores/EditorToolbar";
 import { CamposSidebar } from "@/components/editores/CamposSidebar";
+import { CamposFormularioSidebar } from "@/components/editores/CamposFormularioSidebar";
 import { FloatingPanel } from "@/components/editores/FloatingPanel";
 import { PreviewModal } from "@/components/editores/PreviewModal";
 import type { Editor } from "@tiptap/react";
@@ -41,6 +42,7 @@ export default function ModeloEditor() {
   const [fullscreen, setFullscreen] = useState(false);
   const [modo, setModo] = useState<EditorMode>("editar");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [formFieldsOpen, setFormFieldsOpen] = useState(false);
   const [recordIndex, setRecordIndex] = useState(0);
   const [rowsByAlias, setRowsByAlias] = useState<Record<string, any[]>>({});
   const [primaryAlias, setPrimaryAlias] = useState<string | null>(null);
@@ -348,6 +350,8 @@ export default function ModeloEditor() {
           onInsertFormField={(tok) => inserirCampo(tok)}
           onToggleSidebar={() => setSidebarOpen(o => !o)}
           sidebarOpen={sidebarOpen}
+          onToggleFormFields={() => setFormFieldsOpen(o => !o)}
+          formFieldsOpen={formFieldsOpen}
           hasFormFields={/data-fillable-field=|data-fillable=/i.test(html)}
           onQuickFill={() => setQuickFillOpen(true)}
           onSearchEmpresa={() => setEmpresaSearchOpen(true)}
@@ -397,6 +401,18 @@ export default function ModeloEditor() {
                   onSavedTablesChange={setSavedTables}
                   mergeFields={mergeFields}
                   onMergeFieldsChange={setMergeFields}
+                />
+              </FloatingPanel>
+              <FloatingPanel
+                open={formFieldsOpen}
+                onClose={() => setFormFieldsOpen(false)}
+                title="Campos personalizados"
+                initialX={420}
+                initialY={80}
+              >
+                <CamposFormularioSidebar
+                  estabelecimentoId={estabId}
+                  onInsert={inserirCampo}
                 />
               </FloatingPanel>
             </div>

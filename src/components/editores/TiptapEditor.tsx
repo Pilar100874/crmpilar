@@ -96,6 +96,20 @@ export function TiptapEditor({
           return true;
         }
 
+        const docPayload = dt.getData("application/x-doc-payload");
+        if (docPayload && docPayload.startsWith("__FIELD__:")) {
+          event.preventDefault();
+          try {
+            const attrs = JSON.parse(docPayload.slice("__FIELD__:".length));
+            const node = view.state.schema.nodes.fillableField?.create(attrs);
+            if (!node) return false;
+            view.dispatch(view.state.tr.insert(pos, node));
+          } catch (e) {
+            console.error("[TiptapEditor] payload __FIELD__ inválido", e);
+          }
+          return true;
+        }
+
         const text = dt.getData("text/plain");
         if (text && text.startsWith("__TABLE__:")) {
           event.preventDefault();
