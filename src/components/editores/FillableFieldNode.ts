@@ -587,12 +587,39 @@ export const FillableField = Node.create({
             autosize(i);
             el = i; break;
           }
+          case "cep": {
+            const i = document.createElement("input");
+            i.type = "text";
+            i.setAttribute("data-fillable", token);
+            i.setAttribute("data-cep-autofill", "1");
+            i.placeholder = label || "CEP";
+            i.style.cssText = inputStyle + ";min-width:110px;pointer-events:auto";
+            i.value = currentValue ? maskCep(currentValue) : "";
+            i.addEventListener("mousedown", (ev) => ev.stopPropagation());
+            i.addEventListener("input", () => {
+              i.value = maskCep(i.value);
+              currentValue = i.value;
+            });
+            i.addEventListener("blur", () => {
+              const clean = i.value.replace(/\D/g, "");
+              if (clean.length !== 8) return;
+              if (cepGroup) {
+                if (cepGroupState.get(cepGroup) === "loaded") return;
+                askCepApplyAll(i, cepGroup, clean);
+              } else {
+                void autofillCep(clean, undefined, true);
+              }
+            });
+            autosize(i);
+            el = i; break;
+          }
           default: {
             const i = document.createElement("input");
             i.type = "text"; i.setAttribute("data-fillable", token); i.placeholder = label; i.style.cssText = inputStyle;
             i.value = currentValue;
             i.addEventListener("input", () => { currentValue = i.value; });
             attachCnpjGroupFocus(i);
+            attachCepGroupFocus(i);
             autosize(i);
             el = i;
           }
