@@ -87,12 +87,24 @@ export function EmpresaSearchDialog({ open, onOpenChange, onInsert }: Props) {
   useEffect(() => {
     if (!selectedEmp) { setContatos([]); setSelectedContatos(new Set()); return; }
     (async () => {
-      const { data } = await supabase
-        .from("customers")
-        .select("id,nome,email,telefone,tel")
-        .eq("empresa_id", selectedEmp.id)
-        .order("nome");
-      setContatos(data || []);
+      const [{ data: diretos }, { data: vinculos }] = await Promise.all([
+        supabase
+          .from("customers")
+          .select("id,nome,email,telefone,tel")
+          .eq("empresa_id", selectedEmp.id)
+          .order("nome"),
+        supabase
+          .from("customer_empresas")
+          .select("cargo,customer:customers(id,nome,email,telefone,tel)")
+          .eq("empresa_id", selectedEmp.id),
+      ]);
+      const map = new Map<string, any>();
+      (diretos || []).forEach((c: any) => map.set(c.id, c));
+      (vinculos || []).forEach((v: any) => {
+        const c = v.customer;
+        if (c && !map.has(c.id)) map.set(c.id, { ...c, cargo: v.cargo });
+      });
+      setContatos(Array.from(map.values()).sort((a, b) => (a.nome || "").localeCompare(b.nome || "")));
     })();
   }, [selectedEmp]);
 
