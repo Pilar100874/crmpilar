@@ -12,8 +12,10 @@ export interface ImportedDataset {
 type Listener = () => void;
 const store = new Map<string, ImportedDataset>();
 const listeners = new Set<Listener>();
+let cachedSnapshot: ImportedDataset[] = [];
 
-const notify = () => listeners.forEach((l) => l());
+const refreshSnapshot = () => { cachedSnapshot = Array.from(store.values()); };
+const notify = () => { refreshSnapshot(); listeners.forEach((l) => l()); };
 
 export function registerDataset(ds: ImportedDataset) {
   store.set(ds.id, ds);
@@ -30,7 +32,7 @@ export function getDataset(id: string): ImportedDataset | undefined {
 }
 
 export function getAllDatasets(): ImportedDataset[] {
-  return Array.from(store.values());
+  return cachedSnapshot;
 }
 
 export function hydrateDatasets(list: ImportedDataset[] | null | undefined) {
