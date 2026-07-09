@@ -144,11 +144,11 @@ export function EditorToolbar({
             <Separator orientation="vertical" className="h-6 mx-1" />
 
             <Select value="" onValueChange={(v) => editor.chain().focus().setFontFamily(v).run()}>
-              <SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue placeholder="Fonte" /></SelectTrigger>
+              <SelectTrigger onMouseDown={(e) => e.preventDefault()} className="h-8 w-[130px] text-xs"><SelectValue placeholder="Fonte" /></SelectTrigger>
               <SelectContent>{FONTS.map(f => <SelectItem key={f} value={f} style={{ fontFamily: f }}>{f}</SelectItem>)}</SelectContent>
             </Select>
             <Select value="" onValueChange={(v) => editor.chain().focus().setMark("textStyle", { fontSize: v } as any).run()}>
-              <SelectTrigger className="h-8 w-[70px] text-xs"><SelectValue placeholder="Tam." /></SelectTrigger>
+              <SelectTrigger onMouseDown={(e) => e.preventDefault()} className="h-8 w-[70px] text-xs"><SelectValue placeholder="Tam." /></SelectTrigger>
               <SelectContent>{SIZES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
 
