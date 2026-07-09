@@ -112,8 +112,12 @@ export function ImportWizardStep5({ data, selectedFields, filters, fieldMapping,
     });
 
     setProcessedData(mappedData);
-    onFinalDataChange(mappedData);
-  }, [data, filters, fieldMapping, onFinalDataChange]);
+    const serialized = JSON.stringify(mappedData);
+    if (serialized !== lastSerializedRef.current) {
+      lastSerializedRef.current = serialized;
+      onFinalDataChangeRef.current(mappedData);
+    }
+  }, [data, filters, fieldMapping]);
 
   const fixedFields = Object.keys(fieldMapping);
 
