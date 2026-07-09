@@ -554,6 +554,20 @@ export default function ModeloEditor() {
           <span className="text-[11px] text-muted-foreground">
             {dirty && "não salvo"} {saving && "salvando…"}
             {modelo.bloqueado && <span className="ml-2 px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700">🔒 bloqueado</span>}
+            {fillablesInfo.total > 0 && (
+              <span
+                className={`ml-2 px-1.5 py-0.5 rounded ${
+                  fillablesInfo.pendentes > 0
+                    ? "bg-orange-500/20 text-orange-700"
+                    : "bg-emerald-500/20 text-emerald-700"
+                }`}
+                title="Campos de formulário pendentes"
+              >
+                {fillablesInfo.pendentes > 0
+                  ? `${fillablesInfo.pendentes} de ${fillablesInfo.total} campo(s) a preencher`
+                  : `Todos os ${fillablesInfo.total} campo(s) preenchidos`}
+              </span>
+            )}
           </span>
         </div>
       </div>
