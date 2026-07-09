@@ -57,6 +57,8 @@ export function EmpresaSearchDialog({ open, onOpenChange, onInsert }: Props) {
   const [selectedFields, setSelectedFields] = useState<Set<FieldKey>>(
     new Set(FIELDS.map(f => f.key))
   );
+  const [contatos, setContatos] = useState<any[]>([]);
+  const [selectedContatos, setSelectedContatos] = useState<Set<string>>(new Set());
 
   // live search com debounce
   useEffect(() => {
@@ -81,12 +83,27 @@ export function EmpresaSearchDialog({ open, onOpenChange, onInsert }: Props) {
     return () => clearTimeout(handle);
   }, [query, open]);
 
+  // carrega contatos vinculados ao selecionar empresa
+  useEffect(() => {
+    if (!selectedEmp) { setContatos([]); setSelectedContatos(new Set()); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("customers")
+        .select("id,nome,email,telefone,tel")
+        .eq("empresa_id", selectedEmp.id)
+        .order("nome");
+      setContatos(data || []);
+    })();
+  }, [selectedEmp]);
+
   useEffect(() => {
     if (!open) {
       setQuery("");
       setResults([]);
       setSelectedEmp(null);
       setSelectedFields(new Set(FIELDS.map(f => f.key)));
+      setContatos([]);
+      setSelectedContatos(new Set());
     }
   }, [open]);
 
@@ -96,6 +113,19 @@ export function EmpresaSearchDialog({ open, onOpenChange, onInsert }: Props) {
       if (next.has(k)) next.delete(k); else next.add(k);
       return next;
     });
+  };
+
+  const toggleContato = (id: string) => {
+    setSelectedContatos(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const clearAll = () => {
+    setSelectedFields(new Set());
+    setSelectedContatos(new Set());
   };
 
   const confirmInsert = () => {
