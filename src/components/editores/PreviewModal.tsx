@@ -68,7 +68,7 @@ export function PreviewModal({
   const renderForRow = (row: any): string => {
     if (!templateHtml) return html;
     const dados: Record<string, any> = { data_atual: new Date().toLocaleDateString("pt-BR") };
-    if (row && effectiveMerge?.alias) dados[mergeConfig.alias] = row;
+    if (row && effectiveMerge?.alias) dados[effectiveMerge.alias] = row;
     if (row) Object.assign(dados, row);
     return renderTemplate(templateHtml, dados, { highlightMissing: true }).html;
   };
@@ -76,7 +76,7 @@ export function PreviewModal({
   const renderCleanForRow = (row: any): string => {
     if (!templateHtml) return html;
     const dados: Record<string, any> = { data_atual: new Date().toLocaleDateString("pt-BR") };
-    if (row && effectiveMerge?.alias) dados[mergeConfig.alias] = row;
+    if (row && effectiveMerge?.alias) dados[effectiveMerge.alias] = row;
     if (row) Object.assign(dados, row);
     return renderTemplate(templateHtml, dados, { highlightMissing: false }).html;
   };
