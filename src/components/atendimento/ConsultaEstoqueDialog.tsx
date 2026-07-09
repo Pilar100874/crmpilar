@@ -304,7 +304,7 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
         }).filter(Boolean);
         return `<p>${parts.join(' — ')}</p>`;
       }).join('');
-      const html = `<p><strong>Consulta de Estoque</strong></p>${paras}`;
+      const html = `<p><strong>Produtos:</strong></p>${paras}`;
       onInsertHtml(html);
       onOpenChange(false);
       toast.success(`${selected.length} produto(s) inserido(s)`);
