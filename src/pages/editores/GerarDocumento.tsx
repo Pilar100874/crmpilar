@@ -38,7 +38,10 @@ export default function GerarDocumento() {
   const [tipo, setTipo] = useState<RegistroTipo>("livre");
   const [registroBusca, setRegistroBusca] = useState("");
   const [registros, setRegistros] = useState<any[]>([]);
-  const [registroId, setRegistroId] = useState<string | null>(null);
+  const [registroIds, setRegistroIds] = useState<string[]>([]);
+  const registroId = registroIds[0] ?? null;
+  const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
+  const [gerando, setGerando] = useState(false);
   const [dados, setDados] = useState<Record<string, any>>({});
   const [overrides, setOverrides] = useState<Record<string, string>>({});
   const [fillables, setFillables] = useState<Record<string, string>>({});
