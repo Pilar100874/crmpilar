@@ -59,6 +59,9 @@ function TB({ active, onClick, disabled, title, children }: any) {
       type="button"
       size="sm"
       variant={active ? "secondary" : "ghost"}
+      // Preserva a seleção do editor (Word-like): impede que o clique no botão
+      // roube o foco antes de o comando de formatação ser aplicado.
+      onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       disabled={disabled}
       title={title}
