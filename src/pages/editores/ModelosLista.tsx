@@ -25,12 +25,16 @@ interface Modelo {
   versao_atual: number;
   updated_at: string;
   created_at: string;
+  is_modelo: boolean;
+  owner_user_id: string | null;
 }
 interface Categoria { id: string; nome: string; cor: string; }
 
 export default function ModelosLista() {
   const nav = useNavigate();
   const [estabId, setEstabId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [usuarioId, setUsuarioId] = useState<string | null>(null);
   const [modelos, setModelos] = useState<Modelo[]>([]);
   const [cats, setCats] = useState<Categoria[]>([]);
   const [busca, setBusca] = useState("");
