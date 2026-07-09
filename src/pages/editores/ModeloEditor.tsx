@@ -11,6 +11,7 @@ import { PreviewModal } from "@/components/editores/PreviewModal";
 import type { Editor } from "@tiptap/react";
 import { QuickFillDialog } from "@/components/editores/QuickFillDialog";
 import { renderTemplate, applyFillables } from "@/lib/editores/mergeEngine";
+import { setFillableValues as setFillableStore } from "@/lib/editores/fillableValuesStore";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
 import { runMergeConfig } from "@/lib/editores/runMergeConfig";
 import { setPreviewValues, setPreviewRows, setPreviewActive } from "@/lib/editores/mergePreviewStore";
@@ -394,7 +395,7 @@ export default function ModeloEditor() {
           onOpenChange={setQuickFillOpen}
           html={html}
           values={fillableValues}
-          onApply={(v) => setFillableValues(v)}
+          onApply={(v) => { setFillableValues(v); setFillableStore(v); }}
         />
 
 

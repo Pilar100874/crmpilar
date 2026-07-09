@@ -1,5 +1,5 @@
 import { Node, mergeAttributes } from "@tiptap/core";
-import { isPreviewActive, subscribePreview } from "@/lib/editores/mergePreviewStore";
+import { getFillableValue, subscribeFillable } from "@/lib/editores/fillableValuesStore";
 
 /**
  * Nó inline atômico que representa um campo preenchível de formulário
@@ -107,7 +107,7 @@ export const FillableField = Node.create({
       dom.className = "doc-fillable";
       dom.style.cssText = "display:inline-block;vertical-align:middle;margin:0 2px";
 
-      let currentValue = "";
+      let currentValue = getFillableValue(token, label);
 
       const inputStyle =
         "border:1px solid #cbd5e1;border-radius:4px;padding:2px 6px;font:inherit;background:#fefce8;min-width:120px";
@@ -184,27 +184,15 @@ export const FillableField = Node.create({
         return wrap;
       };
 
-      const buildChip = (): HTMLElement => {
-        const chip = document.createElement("span");
-        chip.className = "doc-field-chip";
-        if (currentValue && currentValue !== "true") {
-          chip.classList.add("doc-field-chip-live");
-          chip.textContent = currentValue;
-        } else if (currentValue === "true") {
-          chip.classList.add("doc-field-chip-live");
-          chip.textContent = "✓ " + label;
-        } else {
-          chip.textContent = `[[${label || token}]]`;
-        }
-        return chip;
-      };
-
       const render = () => {
         dom.innerHTML = "";
-        dom.appendChild(isPreviewActive() ? buildChip() : buildInput());
+        dom.appendChild(buildInput());
       };
       render();
-      const unsub = subscribePreview(render);
+      const unsub = subscribeFillable(() => {
+        currentValue = getFillableValue(token, label);
+        render();
+      });
 
       return { dom, destroy: () => unsub() };
     };
