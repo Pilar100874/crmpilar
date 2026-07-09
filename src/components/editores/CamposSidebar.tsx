@@ -259,7 +259,17 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
                 key={`dlg-${i}`}
                 hideTrigger
                 open={editIdx === i}
-                onOpenChange={(o) => { if (!o) setEditIdx(null); }}
+                onOpenChange={(o) => {
+                  if (!o) {
+                    setEditIdx(null);
+                    // remove vínculo vazio criado sem finalizar
+                    if (!configs[i]?.tabela) {
+                      const alias = configs[i]?.alias;
+                      setConfigs(configs.filter((_, k) => k !== i));
+                      if (alias) setMergeFields(mergeFields.filter(k => !k.startsWith(`${alias}.`)));
+                    }
+                  }
+                }}
                 value={c}
                 onChange={(cfg) => updateConfig(i, cfg)}
                 onInsertField={(chave) => onInsert(chave)}
