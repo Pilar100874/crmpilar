@@ -198,7 +198,7 @@ export function TiptapEditor({
         .doc-editor-content .ProseMirror .doc-field-chip {
           display: inline-block;
           background: #dbeafe;
-          color: #1e40af;
+          color: inherit;
           border: 1px solid #93c5fd;
           padding: 1px 8px;
           margin: 0 1px;
@@ -210,8 +210,15 @@ export function TiptapEditor({
         }
         .doc-editor-content .ProseMirror .doc-field-chip.doc-field-chip-live {
           background: #dcfce7;
-          color: #166534;
+          color: inherit;
           border-color: #86efac;
+          font-family: inherit;
+        }
+        .doc-editor-content .ProseMirror .doc-fillable,
+        .doc-editor-content .ProseMirror .doc-fillable input,
+        .doc-editor-content .ProseMirror .doc-fillable select,
+        .doc-editor-content .ProseMirror .doc-fillable textarea {
+          color: inherit;
           font-family: inherit;
         }
         .doc-editor-content .ProseMirror .doc-field-chip.ProseMirror-selectednode {
