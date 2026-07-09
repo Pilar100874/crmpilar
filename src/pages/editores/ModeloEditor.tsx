@@ -394,7 +394,7 @@ export default function ModeloEditor() {
           onOpenChange={setQuickFillOpen}
           html={html}
           values={fillableValues}
-          onApply={(v) => setFillableValues(v)}
+          onApply={(v) => { setFillableValues(v); setFillableStore(v); }}
         />
 
 
