@@ -32,18 +32,32 @@ export function PreviewModal({
   const [loadingRows, setLoadingRows] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  // Normaliza: aceita mergeConfig com { configs: [...] } (formato do ModeloEditor)
+  const effectiveMerge = useMemo(() => {
+    const anyMc: any = mergeConfig;
+    if (!anyMc) return null;
+    if (Array.isArray(anyMc.configs) && anyMc.configs.length) {
+      const primary =
+        anyMc.configs.find((c: any) => c?.primary) ||
+        anyMc.configs.find((c: any) => c?.tabela || (c?.mode === "sql" && c?.sql)) ||
+        anyMc.configs[0];
+      return primary ?? null;
+    }
+    return anyMc;
+  }, [mergeConfig]);
+
   useEffect(() => {
     if (!open) return;
-    if (mergeConfig?.tabela || (mergeConfig?.mode === "sql" && mergeConfig?.sql)) {
+    if (effectiveMerge?.tabela || (effectiveMerge?.mode === "sql" && effectiveMerge?.sql)) {
       setLoadingRows(true);
-      runMergeConfig(mergeConfig)
+      runMergeConfig(effectiveMerge)
         .then((r) => { setRows(r); setIdx(0); })
         .finally(() => setLoadingRows(false));
     } else {
       setRows([]);
       setIdx(0);
     }
-  }, [open, mergeConfig]);
+  }, [open, effectiveMerge]);
 
   const registroLabel = (r: any): string => {
     if (!r) return "";
@@ -54,7 +68,7 @@ export function PreviewModal({
   const renderForRow = (row: any): string => {
     if (!templateHtml) return html;
     const dados: Record<string, any> = { data_atual: new Date().toLocaleDateString("pt-BR") };
-    if (row && mergeConfig?.alias) dados[mergeConfig.alias] = row;
+    if (row && effectiveMerge?.alias) dados[effectiveMerge.alias] = row;
     if (row) Object.assign(dados, row);
     return renderTemplate(templateHtml, dados, { highlightMissing: true }).html;
   };
@@ -62,7 +76,7 @@ export function PreviewModal({
   const renderCleanForRow = (row: any): string => {
     if (!templateHtml) return html;
     const dados: Record<string, any> = { data_atual: new Date().toLocaleDateString("pt-BR") };
-    if (row && mergeConfig?.alias) dados[mergeConfig.alias] = row;
+    if (row && effectiveMerge?.alias) dados[effectiveMerge.alias] = row;
     if (row) Object.assign(dados, row);
     return renderTemplate(templateHtml, dados, { highlightMissing: false }).html;
   };
@@ -70,7 +84,7 @@ export function PreviewModal({
   const currentHtml = useMemo(
     () => (rows.length ? renderForRow(rows[idx]) : renderForRow(null)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [rows, idx, templateHtml, html, mergeConfig?.alias],
+    [rows, idx, templateHtml, html, effectiveMerge?.alias],
   );
 
   // ---------- Ações ----------
