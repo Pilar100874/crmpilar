@@ -213,7 +213,7 @@ export const FillableField = Node.create({
   },
 
   addNodeView() {
-    return ({ node }) => {
+    return ({ node, editor, getPos }) => {
       const tipo = String(node.attrs.tipo || "texto");
       const token = String(node.attrs.token || "");
       const label = String(node.attrs.label || "");
@@ -230,8 +230,8 @@ export const FillableField = Node.create({
       if (cnpjSubfield) dom.setAttribute("data-cnpj-subfield", cnpjSubfield);
       if (cnpjGroup) dom.setAttribute("data-cnpj-group", cnpjGroup);
       dom.contentEditable = "false";
-      dom.className = "doc-fillable";
-      dom.style.cssText = "display:inline-block;vertical-align:middle;margin:0 2px";
+      dom.className = "doc-fillable group/fillable";
+      dom.style.cssText = "display:inline-flex;align-items:center;gap:2px;vertical-align:middle;margin:0 2px;position:relative";
 
       let currentValue = getFillableValue(token, label);
 
