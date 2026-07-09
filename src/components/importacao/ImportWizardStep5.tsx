@@ -28,6 +28,9 @@ interface Props {
 
 export function ImportWizardStep5({ data, selectedFields, filters, fieldMapping, onFinalDataChange }: Props) {
   const [processedData, setProcessedData] = useState<any[]>([]);
+  const onFinalDataChangeRef = useRef(onFinalDataChange);
+  const lastSerializedRef = useRef<string>("");
+  useEffect(() => { onFinalDataChangeRef.current = onFinalDataChange; }, [onFinalDataChange]);
 
   const applyFormat = (value: any, format?: string): any => {
     if (!format || format === "none" || !value) return value;
