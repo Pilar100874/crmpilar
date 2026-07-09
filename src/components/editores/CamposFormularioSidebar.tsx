@@ -129,8 +129,9 @@ export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) 
   }, [editing?.tabela]);
 
   const filtrados = useMemo(() => {
+    const combined = [...SYSTEM_FIELDS, ...fields];
     const q = busca.toLowerCase();
-    return q ? fields.filter(f => f.label.toLowerCase().includes(q)) : fields;
+    return q ? combined.filter(f => f.label.toLowerCase().includes(q)) : combined;
   }, [fields, busca]);
 
   const novo = () => {
