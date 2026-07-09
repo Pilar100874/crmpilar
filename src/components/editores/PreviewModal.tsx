@@ -203,13 +203,32 @@ export function PreviewModal({
           </div>
         )}
 
-        <div className="flex-1 overflow-auto bg-muted/20 p-6">
-          <div
-            ref={pageRef}
-            className="bg-white text-black shadow-xl mx-auto"
-            style={{ width: "210mm", minHeight: "297mm", padding: "20mm", boxSizing: "border-box", fontFamily: "Arial, sans-serif", fontSize: "12pt", lineHeight: 1.5 }}
-            dangerouslySetInnerHTML={{ __html: currentHtml || '<p style="color:#999;text-align:center;padding:40px;">Documento vazio. Adicione conteúdo no editor.</p>' }}
-          />
+        <div className="flex-1 overflow-auto bg-muted/20 p-6 space-y-6">
+          {rows.length > 1 ? (
+            rows.map((r, i) => (
+              <div key={i} className="mx-auto" style={{ width: "210mm" }}>
+                <div className="text-[11px] text-muted-foreground mb-1 flex items-center justify-between px-1">
+                  <span>Página {i + 1} de {rows.length}</span>
+                  <span className="truncate max-w-[60%] text-right">{registroLabel(r)}</span>
+                </div>
+                <div
+                  ref={i === idx ? pageRef : undefined}
+                  data-pdf-section
+                  className="bg-white text-black shadow-xl"
+                  style={{ width: "210mm", minHeight: "297mm", padding: "20mm", boxSizing: "border-box", fontFamily: "Arial, sans-serif", fontSize: "12pt", lineHeight: 1.5, pageBreakAfter: "always", breakAfter: "page" }}
+                  dangerouslySetInnerHTML={{ __html: renderForRow(r) }}
+                />
+              </div>
+            ))
+          ) : (
+            <div
+              ref={pageRef}
+              data-pdf-section
+              className="bg-white text-black shadow-xl mx-auto"
+              style={{ width: "210mm", minHeight: "297mm", padding: "20mm", boxSizing: "border-box", fontFamily: "Arial, sans-serif", fontSize: "12pt", lineHeight: 1.5 }}
+              dangerouslySetInnerHTML={{ __html: currentHtml || '<p style="color:#999;text-align:center;padding:40px;">Documento vazio. Adicione conteúdo no editor.</p>' }}
+            />
+          )}
         </div>
       </DialogContent>
     </Dialog>
