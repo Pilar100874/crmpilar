@@ -286,14 +286,8 @@ export function PreviewModal({
               </div>
             )}
 
-            <div className="flex items-center gap-2">
-              <Button size="sm" variant="ghost" onClick={() => downloadHtml(getCleanHtml(currentIdx), titulo)}>
-                <Download className="h-4 w-4 mr-1" /> HTML
-              </Button>
-              {onSave && (
-                <Button size="sm" variant="outline" onClick={onSave}>Salvar histórico</Button>
-              )}
-            </div>
+            <div />
+
           </div>
 
           {/* ===== PDF ===== */}
