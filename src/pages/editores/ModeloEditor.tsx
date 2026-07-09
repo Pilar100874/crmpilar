@@ -147,15 +147,48 @@ export default function ModeloEditor() {
     })();
   }, [id, nav]);
 
-  // Autosave (2s debounce)
+  // Autosave (2s debounce) — só quando o registro atual é editável pelo usuário
   useEffect(() => {
-    if (!dirty || !id) return;
+    if (!dirty || !id || !modelo) return;
+    const podeEditar = modelo.is_modelo ? isAdmin : modelo.owner_user_id === usuarioId;
+    if (!podeEditar) return; // não faz autosave em modelo de admin sendo visto por usuário comum
     const t = setTimeout(() => { void salvar(true); }, 2000);
     return () => clearTimeout(t);
-  }, [html, dirty]);
+  }, [html, dirty, isAdmin, usuarioId, modelo?.is_modelo, modelo?.owner_user_id]);
+
+  const salvarComoArquivoPessoal = async () => {
+    if (!modelo || !estabId || !usuarioId) return;
+    setSaving(true);
+    const { data, error } = await supabase.from("doc_modelos").insert({
+      estabelecimento_id: estabId,
+      titulo: `${modelo.titulo} (meu arquivo)`,
+      descricao: modelo.descricao,
+      content_html: html,
+      content_json: json,
+      header_html: modelo.header_html,
+      footer_html: modelo.footer_html,
+      merge_config: modelo.merge_config ?? {},
+      categoria_id: modelo.categoria_id,
+      bloqueado: false,
+      campos_bloqueados: false,
+      is_modelo: false,
+      owner_user_id: usuarioId,
+    } as any).select("id").single();
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    setDirty(false);
+    toast.success("Arquivo pessoal criado");
+    if (data?.id) nav(`/editores/modelos/${data.id}`);
+  };
 
   const salvar = async (auto = false) => {
     if (!id || !modelo) return;
+    // Usuário comum vendo um modelo: salvar cria um arquivo pessoal
+    if (modelo.is_modelo && !isAdmin) {
+      if (auto) return; // não auto-cria cópias
+      await salvarComoArquivoPessoal();
+      return;
+    }
     if (modelo.bloqueado && !auto) { toast.error("Modelo bloqueado — desbloqueie para editar."); return; }
     setSaving(true);
     const { error } = await supabase.from("doc_modelos").update({
