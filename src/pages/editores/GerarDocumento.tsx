@@ -9,9 +9,11 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { REGISTRO_TIPOS, RegistroTipo, resolveMergeData } from "@/lib/editores/dataResolvers";
 import { extractFieldKeys, extractFillables, renderTemplate, applyFillables } from "@/lib/editores/mergeEngine";
-import { downloadPdf, downloadHtml, printHtml } from "@/lib/editores/pdfExport";
+import { downloadPdf, downloadHtml, printHtml, downloadHtmlsPdf } from "@/lib/editores/pdfExport";
 import { FileDown, Printer, Download, Save, Search, ArrowLeft, Lock } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 interface Modelo {
   id: string; titulo: string; content_html: string; versao_atual: number;
