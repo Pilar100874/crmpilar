@@ -111,12 +111,12 @@ export function EditorToolbar({
             {locked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
           </TB>
         )}
-        {onToggleSidebar && (
+        {onToggleSidebar && !locked && (
           <TB onClick={onToggleSidebar} active={!!sidebarOpen} title={sidebarOpen ? "Fechar campos" : "Abrir campos e vínculos"}>
             {sidebarOpen ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
           </TB>
         )}
-        {onToggleFormFields && (
+        {onToggleFormFields && !locked && (
           <TB onClick={onToggleFormFields} active={!!formFieldsOpen} title={formFieldsOpen ? "Fechar campos personalizados" : "Abrir campos personalizados"}>
             <FormInput className="h-4 w-4" />
           </TB>
