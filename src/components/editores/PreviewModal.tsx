@@ -32,18 +32,32 @@ export function PreviewModal({
   const [loadingRows, setLoadingRows] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  // Normaliza: aceita mergeConfig com { configs: [...] } (formato do ModeloEditor)
+  const effectiveMerge = useMemo(() => {
+    const anyMc: any = mergeConfig;
+    if (!anyMc) return null;
+    if (Array.isArray(anyMc.configs) && anyMc.configs.length) {
+      const primary =
+        anyMc.configs.find((c: any) => c?.primary) ||
+        anyMc.configs.find((c: any) => c?.tabela || (c?.mode === "sql" && c?.sql)) ||
+        anyMc.configs[0];
+      return primary ?? null;
+    }
+    return anyMc;
+  }, [mergeConfig]);
+
   useEffect(() => {
     if (!open) return;
-    if (mergeConfig?.tabela || (mergeConfig?.mode === "sql" && mergeConfig?.sql)) {
+    if (effectiveMerge?.tabela || (effectiveMerge?.mode === "sql" && effectiveMerge?.sql)) {
       setLoadingRows(true);
-      runMergeConfig(mergeConfig)
+      runMergeConfig(effectiveMerge)
         .then((r) => { setRows(r); setIdx(0); })
         .finally(() => setLoadingRows(false));
     } else {
       setRows([]);
       setIdx(0);
     }
-  }, [open, mergeConfig]);
+  }, [open, effectiveMerge]);
 
   const registroLabel = (r: any): string => {
     if (!r) return "";
