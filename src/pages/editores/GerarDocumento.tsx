@@ -257,19 +257,10 @@ export default function GerarDocumento() {
           )}
 
           <div className="border-t pt-3 space-y-2">
-            <Button className="w-full" disabled={gerando} onClick={async () => {
-              if (registroIds.length > 1) { setPdfDialogOpen(true); return; }
-              if (pageRef.current) {
-                setGerando(true);
-                try {
-                  await downloadPdf(pageRef.current, { filename: modelo?.titulo ?? "documento" });
-                  await salvarNoHistorico();
-                } finally { setGerando(false); }
-              }
-            }}>
-              <FileDown className="h-4 w-4 mr-1" /> {gerando ? "Gerando…" : `Gerar PDF e salvar${registroIds.length > 1 ? ` (${registroIds.length})` : ""}`}
+            <Button className="w-full" disabled={gerando} onClick={() => abrirPreview("pdf")}>
+              <FileDown className="h-4 w-4 mr-1" /> {gerando ? "Preparando…" : `Gerar PDF${registroIds.length > 1 ? ` (${registroIds.length})` : ""}`}
             </Button>
-            <Button variant="outline" className="w-full" onClick={() => printHtml(renderTemplate(modelo?.content_html ?? "", dados).html)}>
+            <Button variant="outline" className="w-full" disabled={gerando} onClick={() => abrirPreview("print")}>
               <Printer className="h-4 w-4 mr-1" /> Imprimir
             </Button>
             <Button variant="outline" className="w-full" onClick={() => downloadHtml(renderTemplate(modelo?.content_html ?? "", dados).html, modelo?.titulo ?? "documento")}>
