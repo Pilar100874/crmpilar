@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { Search, Plus, Pencil, Trash2, GripVertical, FormInput } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, GripVertical, FormInput, ChevronRight, ChevronDown } from "lucide-react";
 import { serializeFillable, type FillableTipo } from "@/lib/editores/mergeEngine";
 import { CNPJ_SUBFIELDS, buildCnpjGroupPayload } from "@/lib/editores/cnpjGroup";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -69,6 +69,18 @@ function buildFieldPayload(f: CustomField): string {
 }
 
 export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) {
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const toggleExpand = (id: string) => setExpanded(prev => {
+    const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n;
+  });
+  const subLabelMap = new Map(CNPJ_SUBFIELDS.map(s => [s.key, s.label]));
+  const buildSubPayload = (f: CustomField, key: string) => buildCnpjGroupPayload(f.label, [key]);
+  const onDragSub = (e: React.DragEvent, f: CustomField, key: string) => {
+    const payload = buildSubPayload(f, key);
+    e.dataTransfer.setData("application/x-doc-payload", payload);
+    e.dataTransfer.setData("text/plain", `${f.label} - ${subLabelMap.get(key) || key}`);
+    e.dataTransfer.effectAllowed = "copy";
+  };
   const [fields, setFields] = useState<CustomField[]>([]);
   const [busca, setBusca] = useState("");
   const [editing, setEditing] = useState<CustomField | null>(null);
@@ -175,38 +187,70 @@ export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) 
           {filtrados.length === 0 && (
             <p className="text-xs text-muted-foreground text-center py-4">Nenhum campo personalizado.</p>
           )}
-          {filtrados.map(f => (
-            <div
-              key={f.id}
-              draggable
-              onDragStart={(e) => onDrag(e, f)}
-              onClick={() => onInsert(buildFieldPayload(f))}
-              className="group flex items-center gap-2 p-2 rounded border bg-card hover:bg-accent cursor-grab active:cursor-grabbing"
-              title="Arraste para o documento ou clique para inserir"
-            >
-              <GripVertical className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              <FormInput className="h-3.5 w-3.5 text-primary shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-medium truncate">{f.label}</div>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <Badge variant="outline" className="h-4 px-1 text-[9px]">{f.tipo}</Badge>
-                  {f.fonte === "tabela" && (
-                    <Badge variant="secondary" className="h-4 px-1 text-[9px]">
-                      {f.tabela}.{f.coluna}
-                    </Badge>
+          {filtrados.map(f => {
+            const isCnpj = f.tipo === "cnpj";
+            const isOpen = expanded.has(f.id);
+            const subKeys = isCnpj ? (f.opcoes.length ? f.opcoes : CNPJ_SUBFIELDS.map(s => s.key)) : [];
+            return (
+              <div key={f.id}>
+                <div
+                  draggable
+                  onDragStart={(e) => onDrag(e, f)}
+                  onClick={() => isCnpj ? toggleExpand(f.id) : onInsert(buildFieldPayload(f))}
+                  className="group flex items-center gap-2 p-2 rounded border bg-card hover:bg-accent cursor-grab active:cursor-grabbing"
+                  title={isCnpj ? "Clique para ver sub-campos · arraste para inserir todos" : "Arraste para o documento ou clique para inserir"}
+                >
+                  {isCnpj ? (
+                    <button type="button" onClick={(e) => { e.stopPropagation(); toggleExpand(f.id); }} className="shrink-0">
+                      {isOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                    </button>
+                  ) : (
+                    <GripVertical className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                   )}
+                  <FormInput className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium truncate">{f.label}</div>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <Badge variant="outline" className="h-4 px-1 text-[9px]">{f.tipo}</Badge>
+                      {f.fonte === "tabela" && (
+                        <Badge variant="secondary" className="h-4 px-1 text-[9px]">
+                          {f.tabela}.{f.coluna}
+                        </Badge>
+                      )}
+                      {isCnpj && (
+                        <Badge variant="secondary" className="h-4 px-1 text-[9px]">{subKeys.length} sub-campos</Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); editar(f); }}>
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={(e) => { e.stopPropagation(); setToDelete(f); }}>
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
+                {isCnpj && isOpen && (
+                  <div className="ml-5 mt-1 space-y-0.5 border-l pl-2">
+                    {subKeys.map(k => (
+                      <div
+                        key={k}
+                        draggable
+                        onDragStart={(e) => onDragSub(e, f, k)}
+                        onClick={() => onInsert(buildSubPayload(f, k))}
+                        className="flex items-center gap-2 px-2 py-1 rounded hover:bg-accent cursor-grab active:cursor-grabbing"
+                        title="Arraste ou clique para inserir apenas este sub-campo"
+                      >
+                        <GripVertical className="h-3 w-3 text-muted-foreground shrink-0" />
+                        <span className="text-[11px] truncate">{subLabelMap.get(k) || k}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); editar(f); }}>
-                  <Pencil className="h-3 w-3" />
-                </Button>
-                <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={(e) => { e.stopPropagation(); setToDelete(f); }}>
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </ScrollArea>
 
