@@ -121,6 +121,16 @@ export const FillableField = Node.create({
       token: { default: "" },
       label: { default: "" },
       opcoes: { default: "" }, // csv
+      cnpjSubfield: {
+        default: "",
+        parseHTML: (el: HTMLElement) => el.getAttribute("data-cnpj-subfield") || "",
+        renderHTML: (attrs: any) => attrs.cnpjSubfield ? { "data-cnpj-subfield": attrs.cnpjSubfield } : {},
+      },
+      cnpjGroup: {
+        default: "",
+        parseHTML: (el: HTMLElement) => el.getAttribute("data-cnpj-group") || "",
+        renderHTML: (attrs: any) => attrs.cnpjGroup ? { "data-cnpj-group": attrs.cnpjGroup } : {},
+      },
     };
   },
 
@@ -136,12 +146,19 @@ export const FillableField = Node.create({
     const label = String(node.attrs.label || "");
     const opcoes = String(node.attrs.opcoes || "")
       .split(",").map(s => s.trim()).filter(Boolean);
+    const cnpjSubfield = String(node.attrs.cnpjSubfield || "");
+    const cnpjGroup = String(node.attrs.cnpjGroup || "");
+
+    const extra: Record<string, string> = {};
+    if (cnpjSubfield) extra["data-cnpj-subfield"] = cnpjSubfield;
+    if (cnpjGroup) extra["data-cnpj-group"] = cnpjGroup;
 
     const wrapAttrs = mergeAttributes(HTMLAttributes, {
       "data-fillable-field": token,
       "data-tipo": tipo,
       "data-label": label,
       "data-opcoes": opcoes.join(","),
+      ...extra,
       contenteditable: "false",
       class: "doc-fillable",
       style: "display:inline-block;vertical-align:middle;margin:0 2px",
