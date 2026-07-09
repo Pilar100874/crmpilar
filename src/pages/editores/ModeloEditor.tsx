@@ -385,6 +385,11 @@ export default function ModeloEditor() {
     setModelo({ ...modelo, merge_config: { ...baseMc(), configs, mergeFields: list } });
     setDirty(true);
   };
+  const handleImportedDataset = (_ds: ImportedDataset) => {
+    // Store já foi atualizada pelo diálogo; persistimos o snapshot completo.
+    setModelo({ ...modelo, merge_config: { ...baseMc(), configs, importedDatasets: getAllDatasets() } });
+    setDirty(true);
+  };
 
   return (
     <div className={fullscreen ? "fixed inset-0 z-50 bg-background flex flex-col" : "absolute inset-0 flex flex-col bg-background"}>
