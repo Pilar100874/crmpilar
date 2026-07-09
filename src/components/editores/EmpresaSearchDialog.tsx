@@ -146,7 +146,6 @@ export function EmpresaSearchDialog({ open, onOpenChange, onInsert }: Props) {
     const chosen = contatos.filter(c => selectedContatos.has(c.id));
     if (chosen.length > 0) {
       const esc = (v: any) => String(v ?? "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
-      html += `<p><strong>Contatos</strong></p>`;
       for (const c of chosen) {
         const linha = [c.nome, c.email, c.telefone || c.tel].filter(Boolean).map(esc).join(" — ");
         html += `<p>${linha}</p>`;
