@@ -21,7 +21,9 @@ export function getFillableValues(): Record<string, string> {
 }
 
 export function getFillableValue(rawToken: string, label?: string): string {
+  const stripped = rawToken.replace(/^\[\[/, "").replace(/\]\]$/, "").trim();
   if (rawToken in values) return values[rawToken] ?? "";
+  if (stripped in values) return values[stripped] ?? "";
   if (label && label in values) return values[label] ?? "";
   return "";
 }
