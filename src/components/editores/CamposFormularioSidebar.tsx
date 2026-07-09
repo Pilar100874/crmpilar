@@ -35,10 +35,18 @@ const TIPOS: { value: FillableTipo; label: string; hasOpcoes?: boolean }[] = [
   { value: "data", label: "Data" },
   { value: "numero", label: "Número" },
   { value: "cnpj", label: "CNPJ (auto-preenche pela Receita)" },
+  { value: "cep", label: "CEP (auto-preenche pelo ViaCEP)" },
   { value: "check", label: "Caixa de seleção (checkbox)", hasOpcoes: true },
   { value: "lista", label: "Lista suspensa (select)", hasOpcoes: true },
   { value: "radio", label: "Opções (radio)", hasOpcoes: true },
 ];
+
+// Campos de sistema (não removíveis, disponíveis para todos os usuários).
+const SYSTEM_FIELDS: CustomField[] = [
+  { id: "__sys_cnpj__", label: "CNPJ", tipo: "cnpj", fonte: "manual", opcoes: CNPJ_SUBFIELDS.map(s => s.key), tabela: null, coluna: null },
+  { id: "__sys_cep__", label: "CEP", tipo: "cep", fonte: "manual", opcoes: CEP_SUBFIELDS.map(s => s.key), tabela: null, coluna: null },
+];
+const isSystemField = (f: CustomField) => f.id.startsWith("__sys_");
 
 const TABELAS = [
   { value: "customers", label: "Clientes" },
