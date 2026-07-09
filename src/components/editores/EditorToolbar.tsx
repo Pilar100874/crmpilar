@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { ImagePickerDialog } from "./ImagePickerDialog";
 import { AssinaturaPickerDialog } from "./AssinaturaPickerDialog";
 import { NovoCampoDialog } from "./NovoCampoDialog";
-import { FormFieldPicker } from "./FormFieldPicker";
+
 
 export type EditorMode = "editar" | "merge" | "form";
 
@@ -110,9 +110,6 @@ export function EditorToolbar({
           <TB onClick={onToggleLock} active={locked} title={locked ? "Desbloquear" : "Bloquear edição"}>
             {locked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
           </TB>
-        )}
-        {onInsertFormField && (
-          <FormFieldPicker asIcon onInsert={onInsertFormField} />
         )}
         {onToggleSidebar && (
           <TB onClick={onToggleSidebar} active={!!sidebarOpen} title={sidebarOpen ? "Fechar campos" : "Abrir campos e vínculos"}>
