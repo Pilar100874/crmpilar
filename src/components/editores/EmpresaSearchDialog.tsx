@@ -5,7 +5,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Loader2, ArrowLeft } from "lucide-react";
+import { Search, Loader2, ArrowLeft, Eraser } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 
@@ -57,6 +57,8 @@ export function EmpresaSearchDialog({ open, onOpenChange, onInsert }: Props) {
   const [selectedFields, setSelectedFields] = useState<Set<FieldKey>>(
     new Set(FIELDS.map(f => f.key))
   );
+  const [contatos, setContatos] = useState<any[]>([]);
+  const [selectedContatos, setSelectedContatos] = useState<Set<string>>(new Set());
 
   // live search com debounce
   useEffect(() => {
@@ -81,12 +83,27 @@ export function EmpresaSearchDialog({ open, onOpenChange, onInsert }: Props) {
     return () => clearTimeout(handle);
   }, [query, open]);
 
+  // carrega contatos vinculados ao selecionar empresa
+  useEffect(() => {
+    if (!selectedEmp) { setContatos([]); setSelectedContatos(new Set()); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("customers")
+        .select("id,nome,email,telefone,tel")
+        .eq("empresa_id", selectedEmp.id)
+        .order("nome");
+      setContatos(data || []);
+    })();
+  }, [selectedEmp]);
+
   useEffect(() => {
     if (!open) {
       setQuery("");
       setResults([]);
       setSelectedEmp(null);
       setSelectedFields(new Set(FIELDS.map(f => f.key)));
+      setContatos([]);
+      setSelectedContatos(new Set());
     }
   }, [open]);
 
@@ -98,9 +115,31 @@ export function EmpresaSearchDialog({ open, onOpenChange, onInsert }: Props) {
     });
   };
 
+  const toggleContato = (id: string) => {
+    setSelectedContatos(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const clearAll = () => {
+    setSelectedFields(new Set());
+    setSelectedContatos(new Set());
+  };
+
   const confirmInsert = () => {
     if (!selectedEmp) return;
-    const html = buildHtml(selectedEmp, selectedFields);
+    let html = buildHtml(selectedEmp, selectedFields);
+    const chosen = contatos.filter(c => selectedContatos.has(c.id));
+    if (chosen.length > 0) {
+      const esc = (v: any) => String(v ?? "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
+      html += `<p><strong>Contatos</strong></p>`;
+      for (const c of chosen) {
+        const linha = [c.nome, c.email, c.telefone || c.tel].filter(Boolean).map(esc).join(" — ");
+        html += `<p>${linha}</p>`;
+      }
+    }
     if (!html) {
       toast.error("Selecione ao menos um campo.");
       return;
@@ -201,6 +240,33 @@ export function EmpresaSearchDialog({ open, onOpenChange, onInsert }: Props) {
                 );
               })}
             </div>
+
+            {contatos.length > 0 && (
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground px-1">
+                  Contatos vinculados ({contatos.length})
+                </div>
+                <div className="space-y-1 max-h-40 overflow-y-auto border rounded p-1">
+                  {contatos.map(c => (
+                    <label
+                      key={c.id}
+                      className="flex items-start gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer"
+                    >
+                      <Checkbox
+                        checked={selectedContatos.has(c.id)}
+                        onCheckedChange={() => toggleContato(c.id)}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium truncate">{c.nome}</div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {[c.email, c.telefone || c.tel].filter(Boolean).join(" — ") || "—"}
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -209,6 +275,9 @@ export function EmpresaSearchDialog({ open, onOpenChange, onInsert }: Props) {
             <>
               <Button variant="outline" onClick={() => setSelectedEmp(null)}>
                 <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
+              </Button>
+              <Button variant="outline" onClick={clearAll}>
+                <Eraser className="h-4 w-4 mr-1" /> Limpar
               </Button>
               <Button onClick={confirmInsert}>Inserir no documento</Button>
             </>
