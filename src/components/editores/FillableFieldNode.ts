@@ -1,5 +1,5 @@
 import { Node, mergeAttributes } from "@tiptap/core";
-import { isPreviewActive, subscribePreview } from "@/lib/editores/mergePreviewStore";
+import { getFillableValue, subscribeFillable } from "@/lib/editores/fillableValuesStore";
 
 /**
  * Nó inline atômico que representa um campo preenchível de formulário
