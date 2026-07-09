@@ -108,7 +108,7 @@ export function EditorToolbar({
         )}
         {onToggleLock && (
           <TB onClick={onToggleLock} active={locked} title={locked ? "Desbloquear" : "Bloquear edição"}>
-            {locked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+            {locked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
           </TB>
         )}
         {onToggleSidebar && (
