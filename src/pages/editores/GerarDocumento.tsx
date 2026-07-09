@@ -106,6 +106,35 @@ export default function GerarDocumento() {
     return (data as any).id;
   };
 
+  /** Renderiza o HTML final para um determinado registro. */
+  const renderHtmlPara = async (rid: string | null): Promise<string> => {
+    if (!modelo) return "";
+    const d = await resolveMergeData(tipo, rid);
+    const merged = { ...d, ...overrides };
+    const step1 = renderTemplate(modelo.content_html, merged, { highlightMissing: false });
+    return applyFillables(step1.html, fillables, { highlightEmpty: false });
+  };
+
+  const gerarPdf = async (modo: "unico" | "individual") => {
+    if (!modelo) { toast.error("Escolha um modelo"); return; }
+    const ids = registroIds.length > 0 ? registroIds : [null as any];
+    setGerando(true);
+    try {
+      const htmls = await Promise.all(ids.map(id => renderHtmlPara(id)));
+      if (modo === "unico") {
+        await downloadHtmlsPdf(htmls, { filename: modelo.titulo });
+      } else {
+        for (let i = 0; i < htmls.length; i++) {
+          await downloadHtmlsPdf([htmls[i]], { filename: `${modelo.titulo}-${i + 1}` });
+        }
+      }
+      await salvarNoHistorico();
+    } finally {
+      setGerando(false);
+      setPdfDialogOpen(false);
+    }
+  };
+
   return (
     <div className="p-4 sm:p-6 space-y-4">
       <div className="flex items-center gap-2">
