@@ -1,6 +1,62 @@
 import { Node, mergeAttributes } from "@tiptap/core";
-import { getFillableValue, subscribeFillable } from "@/lib/editores/fillableValuesStore";
+import { getFillableValue, subscribeFillable, mergeFillableValues } from "@/lib/editores/fillableValuesStore";
 import { fetchDynamicOptions, isDynamicOpcoes, parseDynamic } from "@/lib/editores/dynamicOptions";
+
+// Normaliza label (sem acento, minúsculo, sem pontuação) para casar campos do formulário
+// com as chaves retornadas pela BrasilAPI de CNPJ.
+const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+const maskCnpj = (v: string) => {
+  const d = v.replace(/\D/g, "").slice(0, 14);
+  return d
+    .replace(/^(\d{2})(\d)/, "$1.$2")
+    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/\.(\d{3})(\d)/, ".$1/$2")
+    .replace(/(\d{4})(\d)/, "$1-$2");
+};
+
+// Dispara autofill dos demais campos preenchíveis a partir dos dados da Receita.
+async function autofillCnpj(cnpjLimpo: string) {
+  const resp = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
+  if (!resp.ok) throw new Error("CNPJ não encontrado");
+  const d: any = await resp.json();
+  // Aliases (rótulos normalizados) → valor
+  const src: Record<string, string> = {};
+  const put = (aliases: string[], val: any) => {
+    const v = val == null ? "" : String(val);
+    for (const a of aliases) src[norm(a)] = v;
+  };
+  put(["cnpj"], cnpjLimpo);
+  put(["razao social", "nome", "razaosocial"], d.razao_social || d.nome);
+  put(["nome fantasia", "fantasia"], d.nome_fantasia || d.fantasia);
+  put(["logradouro", "endereco", "rua"], d.logradouro);
+  put(["numero", "num"], d.numero);
+  put(["complemento"], d.complemento);
+  put(["bairro"], d.bairro);
+  put(["municipio", "cidade"], d.municipio);
+  put(["uf", "estado"], d.uf);
+  put(["cep"], d.cep);
+  put(["telefone", "fone"], d.ddd_telefone_1);
+  put(["email", "e mail"], d.email);
+  put(["inscricao estadual", "ie"], d.inscricoes_estaduais?.[0]?.inscricao_estadual);
+  put(["situacao", "situacao cadastral"], d.descricao_situacao_cadastral);
+  put(["abertura", "data abertura", "data de abertura"], d.data_inicio_atividade);
+  put(["cnae principal", "cnae"], d.cnae_fiscal_descricao);
+
+  // Percorre todos os fillables no documento e casa pelo label
+  const updates: Record<string, string> = {};
+  document.querySelectorAll<HTMLElement>("[data-fillable-field]").forEach((el) => {
+    const token = el.getAttribute("data-fillable-field") || "";
+    const label = el.getAttribute("data-label") || "";
+    const tipo = el.getAttribute("data-tipo") || "";
+    if (tipo === "cnpj") return;
+    const key = norm(label || token);
+    if (key && key in src && src[key]) updates[token] = src[key];
+  });
+  if (Object.keys(updates).length) mergeFillableValues(updates);
+}
+
+
 
 /**
  * Nó inline atômico que representa um campo preenchível de formulário
