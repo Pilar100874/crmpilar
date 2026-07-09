@@ -7,6 +7,7 @@ import { TiptapEditor } from "@/components/editores/TiptapEditor";
 
 import { EditorToolbar, type EditorMode } from "@/components/editores/EditorToolbar";
 import { CamposSidebar } from "@/components/editores/CamposSidebar";
+import { FloatingPanel } from "@/components/editores/FloatingPanel";
 import { PreviewModal } from "@/components/editores/PreviewModal";
 import type { Editor } from "@tiptap/react";
 import { QuickFillDialog } from "@/components/editores/QuickFillDialog";
@@ -368,7 +369,7 @@ export default function ModeloEditor() {
           </div>
         )}
 
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden relative">
 
           {(
             <div className="h-full flex overflow-hidden">
@@ -381,7 +382,11 @@ export default function ModeloEditor() {
                   editable={!modelo.bloqueado && !modelo.campos_bloqueados}
                 />
               </div>
-              <div className={sidebarOpen ? "h-full shrink-0" : "hidden"}>
+              <FloatingPanel
+                open={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
+                title="Campos"
+              >
                 <CamposSidebar
                   estabelecimentoId={estabId}
                   onInsert={inserirCampo}
@@ -393,10 +398,11 @@ export default function ModeloEditor() {
                   mergeFields={mergeFields}
                   onMergeFieldsChange={setMergeFields}
                 />
-              </div>
+              </FloatingPanel>
             </div>
           )}
         </div>
+
 
         <QuickFillDialog
           open={quickFillOpen}
