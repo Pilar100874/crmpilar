@@ -418,6 +418,8 @@ export default function ModeloEditor() {
             open={estoqueSearchOpen}
             onOpenChange={setEstoqueSearchOpen}
             estabelecimentoId={estabId}
+            actionLabel="Inserir no documento"
+            actionLabelShort="Inserir"
             onEnviarParaConversa={(texto) => {
               const html = texto
                 .split("\n")
