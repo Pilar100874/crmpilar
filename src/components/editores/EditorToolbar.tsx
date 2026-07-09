@@ -112,21 +112,24 @@ export function EditorToolbar({
           </TB>
         )}
 
-        {onModeChange && (
+        {(onQuickFill || onGeneratePdf || onPrint) && (
           <>
             <Separator orientation="vertical" className="h-6 mx-1" />
-            <TB
-              onClick={() => onModeChange(mode === "form" ? "editar" : "form")}
-              active={mode === "form"}
-              disabled={!hasFormFields && mode !== "form"}
-              title={
-                hasFormFields
-                  ? (mode === "form" ? "Sair do preenchimento rápido" : "Preenchimento rápido")
-                  : "Insira ao menos um campo de formulário para habilitar"
-              }
-            >
-              <ClipboardList className="h-4 w-4" />
-            </TB>
+            {onQuickFill && (
+              <TB
+                onClick={onQuickFill}
+                disabled={!hasFormFields}
+                title={hasFormFields ? "Preenchimento rápido" : "Insira ao menos um campo de formulário para habilitar"}
+              >
+                <ClipboardList className="h-4 w-4" />
+              </TB>
+            )}
+            {onGeneratePdf && (
+              <TB onClick={onGeneratePdf} title="Gerar PDF"><FileDown className="h-4 w-4" /></TB>
+            )}
+            {onPrint && (
+              <TB onClick={onPrint} title="Imprimir"><Printer className="h-4 w-4" /></TB>
+            )}
           </>
         )}
 
