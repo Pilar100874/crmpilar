@@ -46,6 +46,30 @@ export function FormFieldPicker({ onInsert, triggerClassName, triggerLabel = "In
   const [tabela, setTabela] = useState("");
   const [coluna, setColuna] = useState("");
   const [loading, setLoading] = useState(false);
+  const [colunas, setColunas] = useState<string[]>([]);
+  const [loadingCols, setLoadingCols] = useState(false);
+
+  // Ao selecionar a tabela, carrega dinamicamente as colunas disponíveis
+  useEffect(() => {
+    if (!tabela) { setColunas([]); setColuna(""); return; }
+    let cancel = false;
+    (async () => {
+      setLoadingCols(true);
+      try {
+        const { data, error } = await supabase.from(tabela as any).select("*").limit(1);
+        if (error) throw error;
+        if (cancel) return;
+        const cols = data && data[0] ? Object.keys(data[0]) : [];
+        setColunas(cols);
+        setColuna("");
+      } catch (e: any) {
+        if (!cancel) { setColunas([]); toast.error(e?.message || "Falha ao ler colunas"); }
+      } finally {
+        if (!cancel) setLoadingCols(false);
+      }
+    })();
+    return () => { cancel = true; };
+  }, [tabela]);
 
   const cfg = TIPOS.find(t => t.value === tipo)!;
 
