@@ -1,6 +1,7 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { getFillableValue, subscribeFillable, mergeFillableValues } from "@/lib/editores/fillableValuesStore";
 import { fetchDynamicOptions, isDynamicOpcoes, parseDynamic } from "@/lib/editores/dynamicOptions";
+import { askCnpjModal } from "@/lib/editores/cnpjPrompt";
 
 // Normaliza label (sem acento, minúsculo, sem pontuação) para casar campos do formulário
 // com as chaves retornadas pela BrasilAPI de CNPJ.
@@ -26,7 +27,7 @@ async function autofillCnpj(cnpjLimpo: string, group?: string) {
   if (!resp.ok) throw new Error("CNPJ não encontrado");
   const d: any = await resp.json();
   const byKey: Record<string, string> = {
-    cnpj: cnpjLimpo,
+    cnpj: maskCnpj(cnpjLimpo),
     razao_social: d.razao_social || d.nome || "",
     nome_fantasia: d.nome_fantasia || d.fantasia || "",
     logradouro: d.logradouro || "",
@@ -86,8 +87,9 @@ async function askCnpjForGroup(group: string) {
   if (!group) return;
   if (cnpjGroupState.get(group)) return;
   cnpjGroupState.set(group, "asking");
-  const raw = window.prompt(`Informe o CNPJ para preencher automaticamente "${group}":`, "");
-  const clean = (raw || "").replace(/\D/g, "");
+  const masked = await askCnpjModal(`Informe o CNPJ para preencher "${group}"`);
+  if (!masked) { cnpjGroupState.delete(group); return; }
+  const clean = masked.replace(/\D/g, "");
   if (clean.length !== 14) { cnpjGroupState.delete(group); return; }
   try {
     await autofillCnpj(clean, group);

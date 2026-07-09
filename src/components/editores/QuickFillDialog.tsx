@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { extractFillableTokens } from "@/lib/editores/mergeEngine";
 import { fetchDynamicOptions, isDynamicOpcoes, parseDynamic } from "@/lib/editores/dynamicOptions";
+import { maskCnpjValue } from "@/lib/editores/cnpjPrompt";
 
 interface Props {
   open: boolean;
@@ -18,17 +19,42 @@ interface Props {
   onApply: (values: Record<string, string>) => void;
 }
 
+// Extrai metadados por token (grupo/sub-campo) direto do HTML dos chips.
+function extractFillableMeta(html: string): Map<string, { group: string; subfield: string }> {
+  const map = new Map<string, { group: string; subfield: string }>();
+  const re = /<span\b[^>]*\bdata-fillable-field\s*=\s*"([^"]*)"[^>]*>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) !== null) {
+    const tag = m[0];
+    const token = m[1]
+      .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+    const g = /data-cnpj-group\s*=\s*"([^"]*)"/i.exec(tag)?.[1] || "";
+    const s = /data-cnpj-subfield\s*=\s*"([^"]*)"/i.exec(tag)?.[1] || "";
+    if (!map.has(token)) map.set(token, { group: g, subfield: s });
+  }
+  return map;
+}
+
+const norm = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
 export function QuickFillDialog({ open, onOpenChange, html, values, onApply }: Props) {
   const tokens = useMemo(() => extractFillableTokens(html), [html]);
+  const meta = useMemo(() => extractFillableMeta(html), [html]);
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [dynOpts, setDynOpts] = useState<Record<string, string[]>>({});
+  const [loadingCnpj, setLoadingCnpj] = useState<string>("");
 
   useEffect(() => {
     if (!open) return;
     const d: Record<string, string> = {};
-    tokens.forEach(t => { d[t.raw] = values[t.raw] ?? values[t.label] ?? ""; });
+    tokens.forEach(t => {
+      let v = values[t.raw] ?? values[t.label] ?? "";
+      if (t.tipo === "cnpj" && v) v = maskCnpjValue(v);
+      d[t.raw] = v;
+    });
     setDraft(d);
-    // Busca em tempo real as opções dinâmicas de cada token vinculado a tabela
     tokens.forEach(t => {
       const dyn = parseDynamic(t.opcoes || []);
       if (dyn) {
@@ -42,8 +68,76 @@ export function QuickFillDialog({ open, onOpenChange, html, values, onApply }: P
   const optionsFor = (tok: (typeof tokens)[number]): string[] =>
     isDynamicOpcoes(tok.opcoes) ? (dynOpts[tok.raw] ?? []) : (tok.opcoes || []);
 
-
   const setV = (k: string, v: string) => setDraft(d => ({ ...d, [k]: v }));
+
+  // Ao digitar/sair de um campo CNPJ, busca BrasilAPI e preenche demais tokens do grupo.
+  const autofillFromCnpj = async (cnpjRaw: string, sourceToken: string) => {
+    const clean = cnpjRaw.replace(/\D/g, "");
+    if (clean.length !== 14) return;
+    setLoadingCnpj(sourceToken);
+    try {
+      const resp = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${clean}`);
+      if (!resp.ok) return;
+      const d: any = await resp.json();
+      const byKey: Record<string, string> = {
+        cnpj: maskCnpjValue(clean),
+        razao_social: d.razao_social || d.nome || "",
+        nome_fantasia: d.nome_fantasia || d.fantasia || "",
+        logradouro: d.logradouro || "",
+        numero: d.numero || "",
+        complemento: d.complemento || "",
+        bairro: d.bairro || "",
+        cep: d.cep || "",
+        municipio: d.municipio || "",
+        uf: d.uf || "",
+        ddd_telefone_1: d.ddd_telefone_1 || "",
+        email: d.email || "",
+        inscricao_estadual: d.inscricoes_estaduais?.[0]?.inscricao_estadual || "",
+        descricao_situacao_cadastral: d.descricao_situacao_cadastral || "",
+        data_inicio_atividade: d.data_inicio_atividade || "",
+        cnae_fiscal_descricao: d.cnae_fiscal_descricao || "",
+      };
+      const aliases: Record<string, string> = {};
+      const put = (a: string[], v: string) => a.forEach(x => { aliases[norm(x)] = v; });
+      put(["cnpj"], byKey.cnpj);
+      put(["razao social", "nome", "razaosocial"], byKey.razao_social);
+      put(["nome fantasia", "fantasia"], byKey.nome_fantasia);
+      put(["logradouro", "endereco", "rua"], byKey.logradouro);
+      put(["numero"], byKey.numero);
+      put(["complemento"], byKey.complemento);
+      put(["bairro"], byKey.bairro);
+      put(["municipio", "cidade"], byKey.municipio);
+      put(["uf", "estado"], byKey.uf);
+      put(["cep"], byKey.cep);
+      put(["telefone", "fone"], byKey.ddd_telefone_1);
+      put(["email"], byKey.email);
+      put(["inscricao estadual", "ie"], byKey.inscricao_estadual);
+      put(["situacao"], byKey.descricao_situacao_cadastral);
+      put(["abertura", "data abertura"], byKey.data_inicio_atividade);
+      put(["cnae principal", "cnae"], byKey.cnae_fiscal_descricao);
+
+      const srcMeta = meta.get(sourceToken);
+      const group = srcMeta?.group || "";
+      setDraft(prev => {
+        const next = { ...prev };
+        tokens.forEach(t => {
+          const m = meta.get(t.raw);
+          if (group && m?.group && m.group !== group) return; // limita ao mesmo grupo
+          if (prev[t.raw] && t.raw !== sourceToken) return;   // não sobrescreve preenchidos
+          let val = "";
+          if (m?.subfield && byKey[m.subfield] != null) val = byKey[m.subfield];
+          else {
+            const key = norm(t.label);
+            if (key && aliases[key]) val = aliases[key];
+          }
+          if (val) next[t.raw] = val;
+        });
+        return next;
+      });
+    } finally {
+      setLoadingCnpj("");
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -52,7 +146,7 @@ export function QuickFillDialog({ open, onOpenChange, html, values, onApply }: P
           <DialogTitle>Preencher campos do formulário</DialogTitle>
           <DialogDescription>
             {tokens.length > 0
-              ? `Preencha os ${tokens.length} campo(s). Os valores serão aplicados ao documento.`
+              ? `Preencha os ${tokens.length} campo(s) inseridos no documento.`
               : "Nenhum campo de formulário no documento."}
           </DialogDescription>
         </DialogHeader>
@@ -69,6 +163,15 @@ export function QuickFillDialog({ open, onOpenChange, html, values, onApply }: P
                   <Input type="date" value={v} onChange={e => setV(tok.raw, e.target.value)} />
                 ) : tok.tipo === "numero" ? (
                   <Input type="number" value={v} onChange={e => setV(tok.raw, e.target.value)} />
+                ) : tok.tipo === "cnpj" ? (
+                  <Input
+                    value={v}
+                    placeholder="00.000.000/0000-00"
+                    inputMode="numeric"
+                    onChange={e => setV(tok.raw, maskCnpjValue(e.target.value))}
+                    onBlur={e => autofillFromCnpj(e.target.value, tok.raw)}
+                    disabled={loadingCnpj === tok.raw}
+                  />
                 ) : tok.tipo === "check" ? (
                   <div className="flex items-center gap-2">
                     <Checkbox checked={v === "true"} onCheckedChange={ck => setV(tok.raw, ck ? "true" : "")} />
