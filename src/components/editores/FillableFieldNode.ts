@@ -316,6 +316,16 @@ export const FillableField = Node.create({
         parseHTML: (el: HTMLElement) => el.getAttribute("data-cnpj-group") || "",
         renderHTML: (attrs: any) => attrs.cnpjGroup ? { "data-cnpj-group": attrs.cnpjGroup } : {},
       },
+      cepSubfield: {
+        default: "",
+        parseHTML: (el: HTMLElement) => el.getAttribute("data-cep-subfield") || "",
+        renderHTML: (attrs: any) => attrs.cepSubfield ? { "data-cep-subfield": attrs.cepSubfield } : {},
+      },
+      cepGroup: {
+        default: "",
+        parseHTML: (el: HTMLElement) => el.getAttribute("data-cep-group") || "",
+        renderHTML: (attrs: any) => attrs.cepGroup ? { "data-cep-group": attrs.cepGroup } : {},
+      },
     };
   },
 
