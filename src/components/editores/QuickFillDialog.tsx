@@ -152,7 +152,12 @@ export function QuickFillDialog({ open, onOpenChange, html, values, onApply }: P
         </DialogHeader>
 
         <div className="space-y-3 py-2">
-          {tokens.map(tok => {
+          {tokens.filter(tok => {
+            const m = meta.get(tok.raw);
+            // Em grupos CNPJ, exibe apenas o sub-campo CNPJ; os demais são preenchidos automaticamente.
+            if (m?.group && m.subfield && m.subfield !== "cnpj") return false;
+            return true;
+          }).map(tok => {
             const v = draft[tok.raw] ?? "";
             return (
               <div key={tok.raw} className="space-y-1">
