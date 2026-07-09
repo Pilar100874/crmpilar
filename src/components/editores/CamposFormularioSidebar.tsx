@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Search, Plus, Pencil, Trash2, GripVertical, FormInput } from "lucide-react";
 import { serializeFillable, type FillableTipo } from "@/lib/editores/mergeEngine";
+import { CNPJ_SUBFIELDS, buildCnpjGroupPayload } from "@/lib/editores/cnpjGroup";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface CustomField {
   id: string;
