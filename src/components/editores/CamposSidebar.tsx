@@ -67,7 +67,7 @@ const makeDragHandler =
     e.dataTransfer.effectAllowed = "copy";
   };
 
-export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeFields: mergeFieldsProp, onMergeFieldsChange, configs: configsProp, onConfigsChange, savedTables: savedTablesProp, onSavedTablesChange }: Props) {
+export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeFields: mergeFieldsProp, onMergeFieldsChange, configs: configsProp, onConfigsChange, savedTables: savedTablesProp, onSavedTablesChange, onImportedDataset }: Props) {
   const [mergeFieldsInternal, setMergeFieldsInternal] = useState<string[]>([]);
   const mergeFields = mergeFieldsProp ?? mergeFieldsInternal;
   const setMergeFields = (chaves: string[]) => {
