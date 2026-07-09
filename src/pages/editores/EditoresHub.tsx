@@ -57,8 +57,8 @@ export default function EditoresHub() {
     [documentos, busca],
   );
 
-  const criarModelo = () => nav(`/editores/modelos/new?tipo=modelo`);
   const criarDocumento = () => nav(`/editores/modelos/new?tipo=documento`);
+
 
 
   const duplicarModelo = async (m: Modelo) => {
@@ -118,8 +118,8 @@ export default function EditoresHub() {
           <Search className="h-4 w-4 absolute left-2 top-2.5 text-muted-foreground" />
           <Input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar…" className="pl-8" />
         </div>
-        <Button onClick={criarModelo} variant="outline"><Plus className="h-4 w-4 mr-1" /> Criar modelo</Button>
         <Button onClick={criarDocumento}><Plus className="h-4 w-4 mr-1" /> Criar documento</Button>
+
       </div>
 
       {/* Documentos */}
