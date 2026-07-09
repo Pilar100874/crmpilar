@@ -9,12 +9,13 @@ import { EditorToolbar, type EditorMode } from "@/components/editores/EditorTool
 import { CamposSidebar } from "@/components/editores/CamposSidebar";
 import { PreviewModal } from "@/components/editores/PreviewModal";
 import type { Editor } from "@tiptap/react";
-import { SimuladorInline } from "@/components/editores/SimuladorInline";
-import { renderTemplate } from "@/lib/editores/mergeEngine";
+import { QuickFillDialog } from "@/components/editores/QuickFillDialog";
+import { renderTemplate, applyFillables } from "@/lib/editores/mergeEngine";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
 import { runMergeConfig } from "@/lib/editores/runMergeConfig";
 import { setPreviewValues, setPreviewRows, setPreviewActive } from "@/lib/editores/mergePreviewStore";
 import { RegistroNavigator } from "@/components/editores/RegistroNavigator";
+import { downloadPdf, printHtml } from "@/lib/editores/pdfExport";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
