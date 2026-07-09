@@ -113,6 +113,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const [editingValue, setEditingValue] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
+  const [fieldToDelete, setFieldToDelete] = useState<{ id: string; category: "contact" | "company"; label: string } | null>(null);
   
   // Estados para validação de duplicidade
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
