@@ -28,11 +28,12 @@ interface Props {
 
 const TIPOS: { value: FillableTipo; label: string; hasOpcoes?: boolean }[] = [
   { value: "texto", label: "Texto curto" },
-  { value: "textarea", label: "Texto longo" },
+  { value: "textarea", label: "Texto longo (parágrafo)" },
   { value: "data", label: "Data" },
   { value: "numero", label: "Número" },
-  { value: "check", label: "Checkbox", hasOpcoes: true },
-  { value: "lista", label: "Lista suspensa", hasOpcoes: true },
+  { value: "cnpj", label: "CNPJ (auto-preenche pela Receita)" },
+  { value: "check", label: "Caixa de seleção (checkbox)", hasOpcoes: true },
+  { value: "lista", label: "Lista suspensa (select)", hasOpcoes: true },
   { value: "radio", label: "Opções (radio)", hasOpcoes: true },
 ];
 
@@ -202,8 +203,8 @@ export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editing?.id ? "Editar campo" : "Novo campo personalizado"}</DialogTitle>
-            <DialogDescription>Reutilizável em qualquer documento do estabelecimento.</DialogDescription>
+            <DialogTitle>{editing?.id ? "Editar campo personalizado" : "Inserir campo personalizado"}</DialogTitle>
+            <DialogDescription>Campo reutilizável em qualquer documento do estabelecimento. Arraste ou clique para inserir no editor.</DialogDescription>
           </DialogHeader>
           {editing && (
             <div className="space-y-3">
