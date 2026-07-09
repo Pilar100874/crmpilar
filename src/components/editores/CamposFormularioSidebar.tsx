@@ -69,6 +69,18 @@ function buildFieldPayload(f: CustomField): string {
 }
 
 export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) {
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const toggleExpand = (id: string) => setExpanded(prev => {
+    const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n;
+  });
+  const subLabelMap = new Map(CNPJ_SUBFIELDS.map(s => [s.key, s.label]));
+  const buildSubPayload = (f: CustomField, key: string) => buildCnpjGroupPayload(f.label, [key]);
+  const onDragSub = (e: React.DragEvent, f: CustomField, key: string) => {
+    const payload = buildSubPayload(f, key);
+    e.dataTransfer.setData("application/x-doc-payload", payload);
+    e.dataTransfer.setData("text/plain", `${f.label} - ${subLabelMap.get(key) || key}`);
+    e.dataTransfer.effectAllowed = "copy";
+  };
   const [fields, setFields] = useState<CustomField[]>([]);
   const [busca, setBusca] = useState("");
   const [editing, setEditing] = useState<CustomField | null>(null);
