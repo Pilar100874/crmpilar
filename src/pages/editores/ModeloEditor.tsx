@@ -132,6 +132,8 @@ export default function ModeloEditor() {
 
   useEffect(() => {
     getEstabelecimentoId().then(setEstabId);
+    isEstabelecimentoAdmin().then(setIsAdmin);
+    getUserIdFromAuth().then(setUsuarioId);
   }, []);
 
   useEffect(() => {
