@@ -146,6 +146,8 @@ export default function ModeloEditor() {
       setModelo(data);
       setHtml((data as any).content_html || "");
       setJson((data as any).content_json || {});
+      const imp = (data as any)?.merge_config?.importedDatasets;
+      hydrateDatasets(Array.isArray(imp) ? imp : []);
     })();
   }, [id, nav]);
 
