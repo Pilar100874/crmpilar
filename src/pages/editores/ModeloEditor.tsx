@@ -76,6 +76,17 @@ export default function ModeloEditor() {
 
   const configsKey = JSON.stringify(configs);
 
+  // Contagem de campos de formulário pendentes (sem valor preenchido)
+  const fillablesInfo = useMemo(() => {
+    const tokens = extractFillableTokens(html);
+    const total = tokens.length;
+    const pendentes = tokens.filter(t => {
+      const v = fillableValues[t.raw] ?? fillableValues[t.label] ?? "";
+      return !String(v).trim();
+    }).length;
+    return { total, pendentes };
+  }, [html, fillableValues]);
+
   // Carrega registros de cada vínculo para o preview inline dos chips
   useEffect(() => {
     let cancelled = false;
