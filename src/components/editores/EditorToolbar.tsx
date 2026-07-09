@@ -153,7 +153,7 @@ export function EditorToolbar({
           </>
         )}
 
-        {editor && (
+        {editor && !locked && (
           <>
             <Separator orientation="vertical" className="h-6 mx-1" />
             <TB onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Desfazer"><Undo className="h-4 w-4" /></TB>
