@@ -16,11 +16,15 @@ const maskCnpj = (v: string) => {
     .replace(/(\d{4})(\d)/, "$1-$2");
 };
 
+const maskCep = (v: string) => {
+  const d = v.replace(/\D/g, "").slice(0, 8);
+  return d.replace(/^(\d{5})(\d)/, "$1-$2");
+};
+
 // Estado por grupo de CNPJ:
-// - "manual": usuário escolheu digitar; não perguntar em outros campos do grupo.
-// - "loaded": CNPJ já buscado e aplicado (parcial ou total).
 type GroupState = "manual" | "loaded";
 const cnpjGroupState = new Map<string, GroupState>();
+const cepGroupState = new Map<string, GroupState>();
 
 // Dispara autofill dos demais campos preenchíveis a partir dos dados da Receita.
 async function autofillCnpj(cnpjLimpo: string, group?: string, applyAll = true) {
