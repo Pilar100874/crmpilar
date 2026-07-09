@@ -125,12 +125,12 @@ export function EditorToolbar({
         {(onQuickFill || onGeneratePdf || onPrint || onSearchEmpresa || onSearchEstoque) && (
           <>
             <Separator orientation="vertical" className="h-6 mx-1" />
-            {onSearchEmpresa && (
+            {onSearchEmpresa && !locked && (
               <TB onClick={onSearchEmpresa} title="Buscar empresa e inserir dados no documento">
                 <Building2 className="h-4 w-4" />
               </TB>
             )}
-            {onSearchEstoque && (
+            {onSearchEstoque && !locked && (
               <TB onClick={onSearchEstoque} title="Consultar estoque e inserir tabela de produtos">
                 <Package className="h-4 w-4" />
               </TB>
