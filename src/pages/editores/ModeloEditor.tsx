@@ -29,6 +29,8 @@ export default function ModeloEditor() {
   const { id } = useParams<{ id: string }>();
   const nav = useNavigate();
   const [estabId, setEstabId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [usuarioId, setUsuarioId] = useState<string | null>(null);
   const [modelo, setModelo] = useState<any>(null);
   const [html, setHtml] = useState<string>("");
   const [json, setJson] = useState<any>({});
