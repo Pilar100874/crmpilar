@@ -23,11 +23,13 @@ interface Props {
   missing?: string[];
   mergeConfig?: MergeConfig | null;
   onSave?: () => void;
+  /** Modo inicial: "pdf" (padrão) mostra apenas exportação PDF; "print" mostra apenas impressão. */
+  initialMode?: "pdf" | "print";
 }
 
 export function PreviewModal({
   open, onOpenChange, templateHtml, html = "", pages, titulo,
-  missing = [], mergeConfig, onSave,
+  missing = [], mergeConfig, onSave, initialMode = "pdf",
 }: Props) {
   const pageRef = useRef<HTMLDivElement>(null);
   const [rows, setRows] = useState<any[]>([]);
