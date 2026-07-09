@@ -325,7 +325,8 @@ export default function ModeloEditor() {
 
   return (
     <div className={fullscreen ? "fixed inset-0 z-50 bg-background flex flex-col" : "h-full flex flex-col"}>
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="sticky top-0 z-30 bg-card shadow-sm">
         <EditorToolbar
           editor={editorInstance}
           zoom={zoom}
@@ -353,6 +354,7 @@ export default function ModeloEditor() {
           onGeneratePdf={gerarPdf}
           onPrint={imprimir}
         />
+        </div>
 
         {primaryRows.length > 0 && (
           <div className="border-b bg-muted/30 px-3 py-1 flex items-center gap-2">
