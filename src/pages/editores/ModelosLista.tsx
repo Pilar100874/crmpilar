@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
+import { isEstabelecimentoAdmin, getUserIdFromAuth } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
@@ -23,16 +25,21 @@ interface Modelo {
   versao_atual: number;
   updated_at: string;
   created_at: string;
+  is_modelo: boolean;
+  owner_user_id: string | null;
 }
 interface Categoria { id: string; nome: string; cor: string; }
 
 export default function ModelosLista() {
   const nav = useNavigate();
   const [estabId, setEstabId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [usuarioId, setUsuarioId] = useState<string | null>(null);
   const [modelos, setModelos] = useState<Modelo[]>([]);
   const [cats, setCats] = useState<Categoria[]>([]);
   const [busca, setBusca] = useState("");
   const [filtroCat, setFiltroCat] = useState<string>("__all");
+  const [aba, setAba] = useState<"modelos" | "meus">("modelos");
   const [loading, setLoading] = useState(true);
   const [toDelete, setToDelete] = useState<Modelo | null>(null);
   const [openNovo, setOpenNovo] = useState(false);
@@ -53,15 +60,19 @@ export default function ModelosLista() {
 
   useEffect(() => {
     getEstabelecimentoId().then(id => { setEstabId(id); void load(id); }).catch(() => toast.error("Estabelecimento não encontrado"));
+    isEstabelecimentoAdmin().then((v) => { setIsAdmin(v); if (!v) setAba("modelos"); });
+    getUserIdFromAuth().then(setUsuarioId);
   }, []);
 
   const filtered = useMemo(() => modelos.filter(m =>
-    (!busca || m.titulo.toLowerCase().includes(busca.toLowerCase()))
+    (aba === "modelos" ? m.is_modelo : (!m.is_modelo && m.owner_user_id === usuarioId))
+    && (!busca || m.titulo.toLowerCase().includes(busca.toLowerCase()))
     && (filtroCat === "__all" || m.categoria_id === filtroCat)
-  ), [modelos, busca, filtroCat]);
+  ), [modelos, busca, filtroCat, aba, usuarioId]);
 
   const criarModelo = async () => {
     if (!estabId || !novo.titulo.trim()) { toast.error("Informe o título"); return; }
+    const criarComoModelo = isAdmin && aba === "modelos";
     const { data, error } = await supabase.from("doc_modelos").insert({
       estabelecimento_id: estabId,
       titulo: novo.titulo.trim(),
@@ -69,7 +80,9 @@ export default function ModelosLista() {
       categoria_id: novo.categoria_id === "__none" ? null : novo.categoria_id,
       content_html: "<h1>Novo Documento</h1><p>Comece a escrever aqui…</p>",
       content_json: {},
-    }).select().single();
+      is_modelo: criarComoModelo,
+      owner_user_id: criarComoModelo ? null : usuarioId,
+    } as any).select().single();
     if (error) { toast.error(error.message); return; }
     setOpenNovo(false);
     setNovo({ titulo: "", descricao: "", categoria_id: "__none" });
@@ -80,6 +93,8 @@ export default function ModelosLista() {
     if (!estabId) return;
     const { data: full } = await supabase.from("doc_modelos").select("*").eq("id", m.id).single();
     if (!full) return;
+    // Admin duplicando um modelo => cria outro modelo; caso contrário vira arquivo pessoal.
+    const asModelo = isAdmin && (full as any).is_modelo;
     const { data, error } = await supabase.from("doc_modelos").insert({
       estabelecimento_id: estabId,
       titulo: (full as any).titulo + " (cópia)",
@@ -89,9 +104,11 @@ export default function ModelosLista() {
       content_json: (full as any).content_json,
       header_html: (full as any).header_html,
       footer_html: (full as any).footer_html,
-    }).select().single();
+      is_modelo: asModelo,
+      owner_user_id: asModelo ? null : usuarioId,
+    } as any).select().single();
     if (error) { toast.error(error.message); return; }
-    toast.success("Modelo duplicado");
+    toast.success(asModelo ? "Modelo duplicado" : "Arquivo pessoal criado");
     if (estabId) void load(estabId);
   };
 
@@ -124,10 +141,16 @@ export default function ModelosLista() {
 
   return (
     <div className="p-4 sm:p-6 space-y-4">
+      <Tabs value={aba} onValueChange={(v) => setAba(v as "modelos" | "meus")}>
+        <TabsList>
+          <TabsTrigger value="modelos">Modelos</TabsTrigger>
+          <TabsTrigger value="meus">Meus arquivos</TabsTrigger>
+        </TabsList>
+      </Tabs>
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="h-4 w-4 absolute left-2 top-2.5 text-muted-foreground" />
-          <Input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar modelo…" className="pl-8" />
+          <Input value={busca} onChange={e => setBusca(e.target.value)} placeholder={aba === "modelos" ? "Buscar modelo…" : "Buscar meus arquivos…"} className="pl-8" />
         </div>
         <Select value={filtroCat} onValueChange={setFiltroCat}>
           <SelectTrigger className="w-[200px]"><SelectValue placeholder="Categoria" /></SelectTrigger>
@@ -136,9 +159,14 @@ export default function ModelosLista() {
             {cats.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Button variant="outline" onClick={() => setOpenCat(true)}><Plus className="h-4 w-4 mr-1" /> Categoria</Button>
-        <Button onClick={() => setOpenNovo(true)}><Plus className="h-4 w-4 mr-1" /> Novo modelo</Button>
+        {isAdmin && <Button variant="outline" onClick={() => setOpenCat(true)}><Plus className="h-4 w-4 mr-1" /> Categoria</Button>}
+        {(aba === "meus" || isAdmin) && (
+          <Button onClick={() => setOpenNovo(true)}>
+            <Plus className="h-4 w-4 mr-1" /> {aba === "modelos" ? "Novo modelo" : "Novo arquivo"}
+          </Button>
+        )}
       </div>
+
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
