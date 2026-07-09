@@ -268,6 +268,23 @@ export function TiptapEditor({
         .doc-editor-content .ProseMirror[contenteditable="false"] .doc-fillable .fillable-ctrl {
           display: none !important;
         }
+        /* Campos personalizados só ficam interativos com o documento bloqueado
+           (ou seja, quando o ProseMirror não é editável). Ao editar a estrutura,
+           os inputs ficam apenas visíveis, não preenchíveis. */
+        .doc-editor-content .ProseMirror[contenteditable="true"] .doc-fillable input,
+        .doc-editor-content .ProseMirror[contenteditable="true"] .doc-fillable select,
+        .doc-editor-content .ProseMirror[contenteditable="true"] .doc-fillable textarea {
+          pointer-events: none !important;
+          opacity: 0.65;
+          background: repeating-linear-gradient(
+            45deg,
+            rgba(0,0,0,0.02),
+            rgba(0,0,0,0.02) 4px,
+            transparent 4px,
+            transparent 8px
+          );
+        }
+
         .doc-editor-content .ProseMirror .doc-field-chip.ProseMirror-selectednode {
           outline: 2px solid #2563eb;
         }
