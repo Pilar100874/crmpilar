@@ -329,7 +329,18 @@ export const FillableField = Node.create({
       };
 
       const inputStyle =
-        "border:1px solid #cbd5e1;border-radius:4px;padding:2px 6px;font:inherit;background:#fefce8;min-width:120px";
+        "border:1px solid #cbd5e1;border-radius:4px;padding:2px 6px;font:inherit;background:#fefce8;min-width:60px;width:auto;box-sizing:content-box";
+
+      // Ajusta a largura do input ao conteúdo (baseado no placeholder ou valor).
+      const autosize = (i: HTMLInputElement | HTMLTextAreaElement) => {
+        const measure = () => {
+          const v = (i as any).value || i.getAttribute("placeholder") || "";
+          const ch = Math.max(4, Math.min(80, v.length + 1));
+          i.style.width = `${ch}ch`;
+        };
+        measure();
+        i.addEventListener("input", measure);
+      };
 
       const buildInput = (): HTMLElement => {
         const wrap = document.createElement("span");
@@ -341,6 +352,7 @@ export const FillableField = Node.create({
             t.placeholder = label; t.rows = 2; t.style.cssText = inputStyle;
             t.value = currentValue;
             t.addEventListener("input", () => { currentValue = t.value; });
+            autosize(t);
             el = t; break;
           }
           case "data": {
@@ -355,6 +367,7 @@ export const FillableField = Node.create({
             i.type = "number"; i.setAttribute("data-fillable", token); i.placeholder = label; i.style.cssText = inputStyle;
             i.value = currentValue;
             i.addEventListener("input", () => { currentValue = i.value; });
+            autosize(i);
             el = i; break;
           }
           case "check": {
@@ -438,6 +451,7 @@ export const FillableField = Node.create({
               }
             });
             attachCnpjGroupFocus(i);
+            autosize(i);
             el = i; break;
           }
           default: {
@@ -446,6 +460,7 @@ export const FillableField = Node.create({
             i.value = currentValue;
             i.addEventListener("input", () => { currentValue = i.value; });
             attachCnpjGroupFocus(i);
+            autosize(i);
             el = i;
           }
         }
