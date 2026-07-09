@@ -16,6 +16,7 @@ import { QuickFillDialog } from "@/components/editores/QuickFillDialog";
 import { EmpresaSearchDialog } from "@/components/editores/EmpresaSearchDialog";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
 import { renderTemplate, applyFillables } from "@/lib/editores/mergeEngine";
+import { parseCnpjGroupPayload, buildCnpjGroupFields } from "@/lib/editores/cnpjGroup";
 import { setFillableValues as setFillableStore } from "@/lib/editores/fillableValuesStore";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
 import { runMergeConfig } from "@/lib/editores/runMergeConfig";
@@ -267,6 +268,21 @@ export default function ModeloEditor() {
         ed.chain().focus().insertContent({ type: "fillableField", attrs }).insertContent(" ").run();
       } catch (e) {
         console.error("[ModeloEditor] payload __FIELD__ inválido", e);
+      }
+      return;
+    }
+    if (chave.startsWith("__CNPJ_GROUP__:")) {
+      try {
+        const parsed = parseCnpjGroupPayload(chave);
+        if (!parsed) return;
+        const fields = buildCnpjGroupFields(parsed.group, parsed.keys);
+        let chain = ed.chain().focus();
+        for (const attrs of fields) {
+          chain = chain.insertContent({ type: "fillableField", attrs }).insertContent(" ");
+        }
+        chain.run();
+      } catch (e) {
+        console.error("[ModeloEditor] payload __CNPJ_GROUP__ inválido", e);
       }
       return;
     }

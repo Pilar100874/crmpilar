@@ -24,6 +24,7 @@ import { MergeField } from "./MergeFieldNode";
 import { MergeTable } from "./MergeTableNode";
 import { promptTableRows } from "@/lib/editores/tableRowsPrompt";
 import { FillableField } from "./FillableFieldNode";
+import { parseCnpjGroupPayload, buildCnpjGroupFields } from "@/lib/editores/cnpjGroup";
 import { Table } from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
@@ -106,6 +107,26 @@ export function TiptapEditor({
             view.dispatch(view.state.tr.insert(pos, node));
           } catch (e) {
             console.error("[TiptapEditor] payload __FIELD__ inválido", e);
+          }
+          return true;
+        }
+        if (docPayload && docPayload.startsWith("__CNPJ_GROUP__:")) {
+          event.preventDefault();
+          try {
+            const parsed = parseCnpjGroupPayload(docPayload);
+            if (!parsed) return true;
+            const fields = buildCnpjGroupFields(parsed.group, parsed.keys);
+            let tr = view.state.tr;
+            let insertPos = pos;
+            for (const attrs of fields) {
+              const n = view.state.schema.nodes.fillableField?.create(attrs);
+              if (!n) continue;
+              tr = tr.insert(insertPos, n);
+              insertPos += n.nodeSize;
+            }
+            view.dispatch(tr);
+          } catch (e) {
+            console.error("[TiptapEditor] payload __CNPJ_GROUP__ inválido", e);
           }
           return true;
         }

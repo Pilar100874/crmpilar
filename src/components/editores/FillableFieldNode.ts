@@ -15,45 +15,87 @@ const maskCnpj = (v: string) => {
     .replace(/(\d{4})(\d)/, "$1-$2");
 };
 
+// Estado por grupo de CNPJ: evita múltiplos prompts simultâneos e re-perguntar
+// depois de já ter carregado.
+const cnpjGroupState = new Map<string, "asking" | "loaded">();
+
 // Dispara autofill dos demais campos preenchíveis a partir dos dados da Receita.
-async function autofillCnpj(cnpjLimpo: string) {
+// Se `group` for informado, apenas os campos com o mesmo data-cnpj-group são afetados.
+async function autofillCnpj(cnpjLimpo: string, group?: string) {
   const resp = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
   if (!resp.ok) throw new Error("CNPJ não encontrado");
   const d: any = await resp.json();
-  // Aliases (rótulos normalizados) → valor
-  const src: Record<string, string> = {};
-  const put = (aliases: string[], val: any) => {
-    const v = val == null ? "" : String(val);
-    for (const a of aliases) src[norm(a)] = v;
+  const byKey: Record<string, string> = {
+    cnpj: cnpjLimpo,
+    razao_social: d.razao_social || d.nome || "",
+    nome_fantasia: d.nome_fantasia || d.fantasia || "",
+    logradouro: d.logradouro || "",
+    numero: d.numero || "",
+    complemento: d.complemento || "",
+    bairro: d.bairro || "",
+    cep: d.cep || "",
+    municipio: d.municipio || "",
+    uf: d.uf || "",
+    ddd_telefone_1: d.ddd_telefone_1 || "",
+    email: d.email || "",
+    inscricao_estadual: d.inscricoes_estaduais?.[0]?.inscricao_estadual || "",
+    descricao_situacao_cadastral: d.descricao_situacao_cadastral || "",
+    data_inicio_atividade: d.data_inicio_atividade || "",
+    cnae_fiscal_descricao: d.cnae_fiscal_descricao || "",
   };
-  put(["cnpj"], cnpjLimpo);
-  put(["razao social", "nome", "razaosocial"], d.razao_social || d.nome);
-  put(["nome fantasia", "fantasia"], d.nome_fantasia || d.fantasia);
-  put(["logradouro", "endereco", "rua"], d.logradouro);
-  put(["numero", "num"], d.numero);
-  put(["complemento"], d.complemento);
-  put(["bairro"], d.bairro);
-  put(["municipio", "cidade"], d.municipio);
-  put(["uf", "estado"], d.uf);
-  put(["cep"], d.cep);
-  put(["telefone", "fone"], d.ddd_telefone_1);
-  put(["email", "e mail"], d.email);
-  put(["inscricao estadual", "ie"], d.inscricoes_estaduais?.[0]?.inscricao_estadual);
-  put(["situacao", "situacao cadastral"], d.descricao_situacao_cadastral);
-  put(["abertura", "data abertura", "data de abertura"], d.data_inicio_atividade);
-  put(["cnae principal", "cnae"], d.cnae_fiscal_descricao);
+  // Aliases por label (fallback para campos legados sem data-cnpj-subfield)
+  const src: Record<string, string> = {};
+  const put = (aliases: string[], val: string) => { for (const a of aliases) src[norm(a)] = val; };
+  put(["cnpj"], byKey.cnpj);
+  put(["razao social", "nome", "razaosocial"], byKey.razao_social);
+  put(["nome fantasia", "fantasia"], byKey.nome_fantasia);
+  put(["logradouro", "endereco", "rua"], byKey.logradouro);
+  put(["numero", "num"], byKey.numero);
+  put(["complemento"], byKey.complemento);
+  put(["bairro"], byKey.bairro);
+  put(["municipio", "cidade"], byKey.municipio);
+  put(["uf", "estado"], byKey.uf);
+  put(["cep"], byKey.cep);
+  put(["telefone", "fone"], byKey.ddd_telefone_1);
+  put(["email", "e mail"], byKey.email);
+  put(["inscricao estadual", "ie"], byKey.inscricao_estadual);
+  put(["situacao", "situacao cadastral"], byKey.descricao_situacao_cadastral);
+  put(["abertura", "data abertura", "data de abertura"], byKey.data_inicio_atividade);
+  put(["cnae principal", "cnae"], byKey.cnae_fiscal_descricao);
 
-  // Percorre todos os fillables no documento e casa pelo label
   const updates: Record<string, string> = {};
   document.querySelectorAll<HTMLElement>("[data-fillable-field]").forEach((el) => {
+    const elGroup = el.getAttribute("data-cnpj-group") || "";
+    if (group && elGroup && elGroup !== group) return;
     const token = el.getAttribute("data-fillable-field") || "";
     const label = el.getAttribute("data-label") || "";
-    const tipo = el.getAttribute("data-tipo") || "";
-    if (tipo === "cnpj") return;
-    const key = norm(label || token);
-    if (key && key in src && src[key]) updates[token] = src[key];
+    const sub = el.getAttribute("data-cnpj-subfield") || "";
+    let val = "";
+    if (sub && byKey[sub] != null) val = byKey[sub];
+    else {
+      const key = norm(label || token);
+      if (key && src[key]) val = src[key];
+    }
+    if (val) updates[token] = val;
   });
   if (Object.keys(updates).length) mergeFillableValues(updates);
+}
+
+/** Pergunta o CNPJ ao usuário (uma vez por grupo) e dispara o autofill. */
+async function askCnpjForGroup(group: string) {
+  if (!group) return;
+  if (cnpjGroupState.get(group)) return;
+  cnpjGroupState.set(group, "asking");
+  const raw = window.prompt(`Informe o CNPJ para preencher automaticamente "${group}":`, "");
+  const clean = (raw || "").replace(/\D/g, "");
+  if (clean.length !== 14) { cnpjGroupState.delete(group); return; }
+  try {
+    await autofillCnpj(clean, group);
+    cnpjGroupState.set(group, "loaded");
+  } catch (e) {
+    console.warn("[cnpj autofill]", e);
+    cnpjGroupState.delete(group);
+  }
 }
 
 
@@ -79,6 +121,16 @@ export const FillableField = Node.create({
       token: { default: "" },
       label: { default: "" },
       opcoes: { default: "" }, // csv
+      cnpjSubfield: {
+        default: "",
+        parseHTML: (el: HTMLElement) => el.getAttribute("data-cnpj-subfield") || "",
+        renderHTML: (attrs: any) => attrs.cnpjSubfield ? { "data-cnpj-subfield": attrs.cnpjSubfield } : {},
+      },
+      cnpjGroup: {
+        default: "",
+        parseHTML: (el: HTMLElement) => el.getAttribute("data-cnpj-group") || "",
+        renderHTML: (attrs: any) => attrs.cnpjGroup ? { "data-cnpj-group": attrs.cnpjGroup } : {},
+      },
     };
   },
 
@@ -94,12 +146,19 @@ export const FillableField = Node.create({
     const label = String(node.attrs.label || "");
     const opcoes = String(node.attrs.opcoes || "")
       .split(",").map(s => s.trim()).filter(Boolean);
+    const cnpjSubfield = String(node.attrs.cnpjSubfield || "");
+    const cnpjGroup = String(node.attrs.cnpjGroup || "");
+
+    const extra: Record<string, string> = {};
+    if (cnpjSubfield) extra["data-cnpj-subfield"] = cnpjSubfield;
+    if (cnpjGroup) extra["data-cnpj-group"] = cnpjGroup;
 
     const wrapAttrs = mergeAttributes(HTMLAttributes, {
       "data-fillable-field": token,
       "data-tipo": tipo,
       "data-label": label,
       "data-opcoes": opcoes.join(","),
+      ...extra,
       contenteditable: "false",
       class: "doc-fillable",
       style: "display:inline-block;vertical-align:middle;margin:0 2px",
@@ -158,17 +217,33 @@ export const FillableField = Node.create({
       const label = String(node.attrs.label || "");
       const opcoes = String(node.attrs.opcoes || "")
         .split(",").map(s => s.trim()).filter(Boolean);
+      const cnpjSubfield = String(node.attrs.cnpjSubfield || "");
+      const cnpjGroup = String(node.attrs.cnpjGroup || "");
 
       const dom = document.createElement("span");
       dom.setAttribute("data-fillable-field", token);
       dom.setAttribute("data-tipo", tipo);
       dom.setAttribute("data-label", label);
       dom.setAttribute("data-opcoes", opcoes.join(","));
+      if (cnpjSubfield) dom.setAttribute("data-cnpj-subfield", cnpjSubfield);
+      if (cnpjGroup) dom.setAttribute("data-cnpj-group", cnpjGroup);
       dom.contentEditable = "false";
       dom.className = "doc-fillable";
       dom.style.cssText = "display:inline-block;vertical-align:middle;margin:0 2px";
 
       let currentValue = getFillableValue(token, label);
+
+      // Hook: no primeiro foco de um sub-campo do grupo CNPJ ainda vazio,
+      // pergunta o CNPJ e autopreenche todos os sub-campos vazios do grupo.
+      const attachCnpjGroupFocus = (input: HTMLElement) => {
+        if (!cnpjGroup || !cnpjSubfield) return;
+        input.addEventListener("focus", () => {
+          const v = (input as HTMLInputElement | HTMLTextAreaElement).value;
+          if (v && v.trim()) return;
+          if (cnpjGroupState.get(cnpjGroup)) return;
+          void askCnpjForGroup(cnpjGroup);
+        }, { once: false });
+      };
 
       const inputStyle =
         "border:1px solid #cbd5e1;border-radius:4px;padding:2px 6px;font:inherit;background:#fefce8;min-width:120px";
@@ -275,13 +350,15 @@ export const FillableField = Node.create({
               const prev = i.style.background;
               i.style.background = "#fef3c7";
               try {
-                await autofillCnpj(clean);
+                await autofillCnpj(clean, cnpjGroup || undefined);
+                if (cnpjGroup) cnpjGroupState.set(cnpjGroup, "loaded");
               } catch (e) {
                 console.warn("[cnpj autofill]", e);
               } finally {
                 i.style.background = prev;
               }
             });
+            attachCnpjGroupFocus(i);
             el = i; break;
           }
           default: {
@@ -289,6 +366,7 @@ export const FillableField = Node.create({
             i.type = "text"; i.setAttribute("data-fillable", token); i.placeholder = label; i.style.cssText = inputStyle;
             i.value = currentValue;
             i.addEventListener("input", () => { currentValue = i.value; });
+            attachCnpjGroupFocus(i);
             el = i;
           }
         }
