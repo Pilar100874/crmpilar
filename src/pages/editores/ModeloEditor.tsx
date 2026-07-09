@@ -348,6 +348,8 @@ export default function ModeloEditor() {
           sidebarOpen={sidebarOpen}
           hasFormFields={/data-fillable-field=|data-fillable=/i.test(html)}
           onQuickFill={() => setQuickFillOpen(true)}
+          onSearchEmpresa={() => setEmpresaSearchOpen(true)}
+          onSearchEstoque={() => setEstoqueSearchOpen(true)}
           onGeneratePdf={gerarPdf}
           onPrint={imprimir}
         />
