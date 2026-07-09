@@ -204,7 +204,8 @@ export function PreviewModal({
   };
 
 
-  const [mode, setMode] = useState<"pdf" | "print">("pdf");
+  const [mode, setMode] = useState<"pdf" | "print">(initialMode);
+  useEffect(() => { if (open) setMode(initialMode); }, [open, initialMode]);
 
   const renderPages = () => {
     if (pages && pages.length > 0) {
