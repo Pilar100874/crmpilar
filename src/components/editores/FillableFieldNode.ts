@@ -155,23 +155,31 @@ export const FillableField = Node.create({
             s.setAttribute("data-fillable", token); s.style.cssText = inputStyle;
             const opt0 = document.createElement("option"); opt0.value = ""; opt0.textContent = label || "Selecione";
             s.appendChild(opt0);
-            for (const o of opcoes) { const op = document.createElement("option"); op.value = o; op.textContent = o; s.appendChild(op); }
-            s.value = currentValue;
+            const fill = (list: string[]) => {
+              for (const o of list) { const op = document.createElement("option"); op.value = o; op.textContent = o; s.appendChild(op); }
+              s.value = currentValue;
+            };
+            const dyn = parseDynamic(opcoes);
+            if (dyn) { fetchDynamicOptions(dyn.tabela, dyn.coluna).then(fill); } else { fill(opcoes); }
             s.addEventListener("change", () => { currentValue = s.value; });
             el = s; break;
           }
           case "radio": {
             const span = document.createElement("span");
-            for (const o of opcoes) {
-              const lab = document.createElement("label");
-              lab.style.cssText = "display:inline-flex;align-items:center;gap:4px;margin-right:8px";
-              const i = document.createElement("input");
-              i.type = "radio"; i.name = token; i.value = o; i.setAttribute("data-fillable", token);
-              i.checked = currentValue === o;
-              i.addEventListener("change", () => { if (i.checked) currentValue = o; });
-              lab.appendChild(i); lab.appendChild(document.createTextNode(" " + o));
-              span.appendChild(lab);
-            }
+            const fill = (list: string[]) => {
+              for (const o of list) {
+                const lab = document.createElement("label");
+                lab.style.cssText = "display:inline-flex;align-items:center;gap:4px;margin-right:8px";
+                const i = document.createElement("input");
+                i.type = "radio"; i.name = token; i.value = o; i.setAttribute("data-fillable", token);
+                i.checked = currentValue === o;
+                i.addEventListener("change", () => { if (i.checked) currentValue = o; });
+                lab.appendChild(i); lab.appendChild(document.createTextNode(" " + o));
+                span.appendChild(lab);
+              }
+            };
+            const dyn = parseDynamic(opcoes);
+            if (dyn) { fetchDynamicOptions(dyn.tabela, dyn.coluna).then(fill); } else { fill(opcoes); }
             el = span; break;
           }
           default: {
