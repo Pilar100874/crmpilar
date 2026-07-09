@@ -55,7 +55,7 @@ export function TiptapEditor({
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       Underline,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
-      TextStyle,
+      TextStyleWithFontSize,
       Color,
       Highlight.configure({ multicolor: true }),
       FontFamily,
