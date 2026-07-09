@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
@@ -46,6 +46,30 @@ export function FormFieldPicker({ onInsert, triggerClassName, triggerLabel = "In
   const [tabela, setTabela] = useState("");
   const [coluna, setColuna] = useState("");
   const [loading, setLoading] = useState(false);
+  const [colunas, setColunas] = useState<string[]>([]);
+  const [loadingCols, setLoadingCols] = useState(false);
+
+  // Ao selecionar a tabela, carrega dinamicamente as colunas disponíveis
+  useEffect(() => {
+    if (!tabela) { setColunas([]); setColuna(""); return; }
+    let cancel = false;
+    (async () => {
+      setLoadingCols(true);
+      try {
+        const { data, error } = await supabase.from(tabela as any).select("*").limit(1);
+        if (error) throw error;
+        if (cancel) return;
+        const cols = data && data[0] ? Object.keys(data[0]) : [];
+        setColunas(cols);
+        setColuna("");
+      } catch (e: any) {
+        if (!cancel) { setColunas([]); toast.error(e?.message || "Falha ao ler colunas"); }
+      } finally {
+        if (!cancel) setLoadingCols(false);
+      }
+    })();
+    return () => { cancel = true; };
+  }, [tabela]);
 
   const cfg = TIPOS.find(t => t.value === tipo)!;
 
@@ -158,10 +182,17 @@ export function FormFieldPicker({ onInsert, triggerClassName, triggerLabel = "In
                   </div>
                   <div>
                     <label className="text-[11px] text-muted-foreground">Coluna</label>
-                    <Input className="h-8" value={coluna} onChange={e => setColuna(e.target.value)} placeholder="ex: cidade" />
+                    <Select value={coluna} onValueChange={setColuna} disabled={!tabela || loadingCols}>
+                      <SelectTrigger className="h-8">
+                        <SelectValue placeholder={loadingCols ? "Carregando…" : (tabela ? "Selecionar coluna…" : "Escolha a tabela")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {colunas.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="col-span-2">
-                    <Button size="sm" variant="outline" onClick={carregarValores} disabled={loading} className="w-full h-8">
+                    <Button size="sm" variant="outline" onClick={carregarValores} disabled={loading || !tabela || !coluna} className="w-full h-8">
                       {loading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
                       Carregar valores únicos
                     </Button>
