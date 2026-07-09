@@ -33,6 +33,7 @@ interface Props {
   onConfigsChange?: (configs: MergeConfig[]) => void;
   savedTables?: { name: string; alias: string; cols: string[] }[];
   onSavedTablesChange?: (list: { name: string; alias: string; cols: string[] }[]) => void;
+  onImportedDataset?: (ds: import("@/lib/editores/importedDatasetStore").ImportedDataset) => void;
 }
 
 // Resolve caminho "a.b.c" em objeto aninhado
