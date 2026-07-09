@@ -58,9 +58,11 @@ interface ConsultaEstoqueDialogProps {
   onOpenChange: (open: boolean) => void;
   estabelecimentoId: string;
   onEnviarParaConversa: (texto: string) => void;
+  actionLabel?: string;
+  actionLabelShort?: string;
 }
 
-export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, onEnviarParaConversa }: ConsultaEstoqueDialogProps) {
+export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, onEnviarParaConversa, actionLabel, actionLabelShort }: ConsultaEstoqueDialogProps) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -565,8 +567,8 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
           </span>
           <Button onClick={handleEnviar} disabled={selectedIds.size === 0} size="sm" className="gap-1.5 h-8">
             <Send className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Enviar para conversa</span>
-            <span className="sm:hidden">Enviar</span>
+            <span className="hidden sm:inline">{actionLabel ?? "Enviar para conversa"}</span>
+            <span className="sm:hidden">{actionLabelShort ?? actionLabel ?? "Enviar"}</span>
           </Button>
         </div>
       </DialogContent>
