@@ -262,6 +262,25 @@ export default function GerarDocumento() {
           )}
         </div>
       </div>
+
+      <Dialog open={pdfDialogOpen} onOpenChange={setPdfDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Gerar PDF de {registroIds.length} vínculos</DialogTitle>
+            <DialogDescription>
+              Você selecionou vários registros. Deseja um PDF único com todos ou um arquivo separado para cada vínculo?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button variant="outline" disabled={gerando} onClick={() => gerarPdf("individual")}>
+              1 PDF por vínculo
+            </Button>
+            <Button disabled={gerando} onClick={() => gerarPdf("unico")}>
+              PDF único
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
