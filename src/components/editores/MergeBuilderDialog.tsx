@@ -56,6 +56,7 @@ interface Props {
   onOpenChange?: (o: boolean) => void;
   triggerLabel?: string;
   triggerAsIcon?: boolean;
+  onImportedDataset?: (ds: ImportedDataset) => void;
 }
 
 
