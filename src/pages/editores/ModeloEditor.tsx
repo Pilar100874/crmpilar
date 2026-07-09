@@ -377,17 +377,13 @@ export default function ModeloEditor() {
   };
 
   const gerarPdf = async () => {
-    const page = await renderToTemporaryPage();
-    try {
-      await downloadPdf(page, { filename: modelo?.titulo || "documento" });
-    } finally {
-      page.remove();
-    }
+    // Abre a prévia antes — o usuário confirma o PDF dentro do PreviewModal.
+    await abrirPreview();
   };
 
   const imprimir = async () => {
-    const finalHtml = await buildFinalHtml();
-    printHtml(finalHtml);
+    // Abre a prévia antes — o usuário confirma a impressão dentro do PreviewModal.
+    await abrirPreview();
   };
 
   if (!modelo) return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
