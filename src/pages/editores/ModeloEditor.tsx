@@ -235,8 +235,37 @@ export default function ModeloEditor() {
     if (data?.id) nav(`/editores/modelos/${data.id}`);
   };
 
-  const salvar = async (auto = false) => {
-    if (!id || !modelo) return;
+  const salvar = async (auto = false): Promise<boolean> => {
+    if (!id || !modelo) return false;
+    // Documento novo — insere agora e navega para o id real
+    if (isNew) {
+      if (auto) return false; // não auto-cria
+      if (!estabId) { toast.error("Estabelecimento não encontrado"); return false; }
+      setSaving(true);
+      const criarComoModelo = tipoNovo === "modelo" && isAdmin;
+      const { data, error } = await supabase.from("doc_modelos").insert({
+        estabelecimento_id: estabId,
+        titulo: modelo.titulo || (tipoNovo === "modelo" ? "Novo modelo" : "Novo documento"),
+        descricao: modelo.descricao,
+        content_html: html,
+        content_json: json,
+        header_html: modelo.header_html,
+        footer_html: modelo.footer_html,
+        merge_config: modelo.merge_config ?? {},
+        categoria_id: modelo.categoria_id,
+        bloqueado: false,
+        campos_bloqueados: false,
+        is_modelo: criarComoModelo,
+        owner_user_id: criarComoModelo ? null : usuarioId,
+      } as any).select("id").single();
+      setSaving(false);
+      if (error) { toast.error(error.message); return false; }
+      setDirty(false);
+      toast.success("Salvo");
+      if (data?.id) nav(`/editores/modelos/${data.id}`, { replace: true });
+      return true;
+    }
+
     // Usuário comum vendo um modelo: salvar cria um arquivo pessoal
     if (modelo.is_modelo && !isAdmin) {
       if (auto) return; // não auto-cria cópias
