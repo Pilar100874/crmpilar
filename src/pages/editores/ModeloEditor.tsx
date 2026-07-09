@@ -16,6 +16,7 @@ import { QuickFillDialog } from "@/components/editores/QuickFillDialog";
 import { EmpresaSearchDialog } from "@/components/editores/EmpresaSearchDialog";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
 import { renderTemplate, applyFillables } from "@/lib/editores/mergeEngine";
+import { parseCnpjGroupPayload, buildCnpjGroupFields } from "@/lib/editores/cnpjGroup";
 import { setFillableValues as setFillableStore } from "@/lib/editores/fillableValuesStore";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
 import { runMergeConfig } from "@/lib/editores/runMergeConfig";
