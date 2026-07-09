@@ -47,6 +47,9 @@ interface Props {
   onToggleSidebar?: () => void;
   sidebarOpen?: boolean;
   hasFormFields?: boolean;
+  onQuickFill?: () => void;
+  onGeneratePdf?: () => void;
+  onPrint?: () => void;
 }
 
 
