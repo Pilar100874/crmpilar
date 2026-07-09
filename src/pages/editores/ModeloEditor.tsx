@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
+import { isEstabelecimentoAdmin, getUserIdFromAuth } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
 import { TiptapEditor } from "@/components/editores/TiptapEditor";
 
