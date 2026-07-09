@@ -73,41 +73,17 @@ export function FormFieldPicker({ onInsert, triggerClassName, triggerLabel = "In
 
   const cfg = TIPOS.find(t => t.value === tipo)!;
 
-  const carregarValores = async () => {
-    if (!tabela || !coluna.trim()) {
-      toast.error("Escolha a tabela e informe a coluna");
-      return;
-    }
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from(tabela as any)
-        .select(coluna.trim())
-        .not(coluna.trim(), "is", null)
-        .limit(2000);
-      if (error) throw error;
-      const set = new Set<string>();
-      for (const row of (data ?? []) as any[]) {
-        const v = row?.[coluna.trim()];
-        if (v == null) continue;
-        const s = String(v).trim();
-        if (s) set.add(s);
-      }
-      const uniq = Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR"));
-      if (uniq.length === 0) { toast.error("Nenhum valor encontrado"); return; }
-      setOpcoes(uniq.join(", "));
-      toast.success(`${uniq.length} valor(es) únicos carregados`);
-    } catch (e: any) {
-      toast.error(e?.message || "Falha ao carregar valores");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const inserir = () => {
     if (!label.trim()) return;
-    const opcoesArr = cfg.hasOpcoes ? opcoes.split(",").map(s => s.trim()).filter(Boolean) : undefined;
-    // Para "check" com múltiplas opções, mantemos como radio-style (múltiplas caixas).
+    let opcoesArr: string[] | undefined;
+    if (cfg.hasOpcoes) {
+      if (fonte === "tabela") {
+        if (!tabela || !coluna) { toast.error("Selecione tabela e coluna"); return; }
+        opcoesArr = [`__DYN__:${tabela}:${coluna}`];
+      } else {
+        opcoesArr = opcoes.split(",").map(s => s.trim()).filter(Boolean);
+      }
+    }
     const tipoFinal: FillableTipo =
       tipo === "check" && opcoesArr && opcoesArr.length > 0 ? "radio" : tipo;
     const token = serializeFillable({ tipo: tipoFinal, label: label.trim(), opcoes: opcoesArr });
@@ -116,6 +92,7 @@ export function FormFieldPicker({ onInsert, triggerClassName, triggerLabel = "In
     setOpen(false);
     setLabel(""); setOpcoes(""); setTipo("texto"); setFonte("manual"); setTabela(""); setColuna("");
   };
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -191,21 +168,18 @@ export function FormFieldPicker({ onInsert, triggerClassName, triggerLabel = "In
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="col-span-2">
-                    <Button size="sm" variant="outline" onClick={carregarValores} disabled={loading || !tabela || !coluna} className="w-full h-8">
-                      {loading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
-                      Carregar valores únicos
-                    </Button>
+                  <div className="col-span-2 text-[11px] text-muted-foreground">
+                    Os valores serão buscados em tempo real ao preencher o formulário.
                   </div>
                 </div>
               )}
 
-              <div>
-                <label className="text-xs text-muted-foreground">
-                  Opções {fonte === "tabela" ? "(carregadas da tabela — pode editar)" : "(separadas por vírgula)"}
-                </label>
-                <Input value={opcoes} onChange={e => setOpcoes(e.target.value)} placeholder="SP, RJ, MG" />
-              </div>
+              {fonte === "manual" && (
+                <div>
+                  <label className="text-xs text-muted-foreground">Opções (separadas por vírgula)</label>
+                  <Input value={opcoes} onChange={e => setOpcoes(e.target.value)} placeholder="SP, RJ, MG" />
+                </div>
+              )}
             </div>
           )}
         </div>

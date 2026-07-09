@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { extractFillableTokens } from "@/lib/editores/mergeEngine";
+import { fetchDynamicOptions, isDynamicOpcoes, parseDynamic } from "@/lib/editores/dynamicOptions";
 
 interface Props {
   open: boolean;
@@ -20,13 +21,27 @@ interface Props {
 export function QuickFillDialog({ open, onOpenChange, html, values, onApply }: Props) {
   const tokens = useMemo(() => extractFillableTokens(html), [html]);
   const [draft, setDraft] = useState<Record<string, string>>({});
+  const [dynOpts, setDynOpts] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     if (!open) return;
     const d: Record<string, string> = {};
     tokens.forEach(t => { d[t.raw] = values[t.raw] ?? values[t.label] ?? ""; });
     setDraft(d);
+    // Busca em tempo real as opções dinâmicas de cada token vinculado a tabela
+    tokens.forEach(t => {
+      const dyn = parseDynamic(t.opcoes || []);
+      if (dyn) {
+        fetchDynamicOptions(dyn.tabela, dyn.coluna).then(opts => {
+          setDynOpts(prev => ({ ...prev, [t.raw]: opts }));
+        });
+      }
+    });
   }, [open, tokens, values]);
+
+  const optionsFor = (tok: (typeof tokens)[number]): string[] =>
+    isDynamicOpcoes(tok.opcoes) ? (dynOpts[tok.raw] ?? []) : (tok.opcoes || []);
+
 
   const setV = (k: string, v: string) => setDraft(d => ({ ...d, [k]: v }));
 
@@ -63,12 +78,12 @@ export function QuickFillDialog({ open, onOpenChange, html, values, onApply }: P
                   <Select value={v} onValueChange={(nv) => setV(tok.raw, nv)}>
                     <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>
-                      {(tok.opcoes || []).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                      {optionsFor(tok).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 ) : tok.tipo === "radio" ? (
                   <div className="flex flex-wrap gap-3">
-                    {(tok.opcoes || []).map(o => (
+                    {optionsFor(tok).map(o => (
                       <label key={o} className="flex items-center gap-1 text-sm">
                         <input type="radio" name={tok.raw} checked={v === o} onChange={() => setV(tok.raw, o)} />
                         {o}
