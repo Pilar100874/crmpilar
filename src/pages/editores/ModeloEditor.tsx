@@ -291,18 +291,19 @@ export default function ModeloEditor() {
       }
       return;
     }
-    if (chave.startsWith("__CNPJ_GROUP__:")) {
+    if (chave.startsWith("__CNPJ_GROUP__:") || chave.startsWith("__CEP_GROUP__:")) {
       try {
-        const parsed = parseCnpjGroupPayload(chave);
+        const isCep = chave.startsWith("__CEP_GROUP__:");
+        const parsed = isCep ? parseCepGroupPayload(chave) : parseCnpjGroupPayload(chave);
         if (!parsed) return;
-        const fields = buildCnpjGroupFields(parsed.group, parsed.keys);
+        const fields = isCep ? buildCepGroupFields(parsed.group, parsed.keys) : buildCnpjGroupFields(parsed.group, parsed.keys);
         let chain = ed.chain().focus();
         for (const attrs of fields) {
           chain = chain.insertContent({ type: "fillableField", attrs }).insertContent(" ");
         }
         chain.run();
       } catch (e) {
-        console.error("[ModeloEditor] payload __CNPJ_GROUP__ inválido", e);
+        console.error("[ModeloEditor] payload GROUP inválido", e);
       }
       return;
     }
