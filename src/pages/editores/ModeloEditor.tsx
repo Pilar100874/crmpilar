@@ -11,7 +11,7 @@ import { PreviewModal } from "@/components/editores/PreviewModal";
 import type { Editor } from "@tiptap/react";
 import { QuickFillDialog } from "@/components/editores/QuickFillDialog";
 import { EmpresaSearchDialog } from "@/components/editores/EmpresaSearchDialog";
-import { EstoqueSearchDialog } from "@/components/editores/EstoqueSearchDialog";
+import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
 import { renderTemplate, applyFillables } from "@/lib/editores/mergeEngine";
 import { setFillableValues as setFillableStore } from "@/lib/editores/fillableValuesStore";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
