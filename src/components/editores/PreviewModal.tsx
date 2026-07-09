@@ -89,36 +89,53 @@ export function PreviewModal({
     [rows, idx, templateHtml, html, effectiveMerge?.alias],
   );
 
-  // ---------- Ações ----------
-  const pdfAtual = async () => {
-    if (!pageRef.current) return;
-    setBusy(true);
-    try { await downloadPdf(pageRef.current, { filename: `${titulo}${rows.length ? `_${idx + 1}` : ""}` }); }
-    finally { setBusy(false); }
+  // ---------- Fonte unificada de páginas ----------
+  const totalItems = pages && pages.length > 0 ? pages.length : rows.length;
+  const getCleanHtml = (i: number): string => {
+    if (pages && pages.length > 0) return pages[Math.min(i, pages.length - 1)] ?? "";
+    if (rows.length) return renderCleanForRow(rows[Math.min(i, rows.length - 1)]);
+    return html;
   };
 
-  const pdfTodos = async () => {
-    if (!rows.length) return pdfAtual();
+  const [pageIdx, setPageIdx] = useState(0);
+  useEffect(() => { setPageIdx(0); }, [pages, rows.length]);
+  const currentIdx = pages && pages.length > 0 ? pageIdx : idx;
+
+  const buildPageEl = (html: string): HTMLDivElement => {
+    const el = document.createElement("div");
+    el.style.cssText = "width:210mm;min-height:297mm;padding:20mm;box-sizing:border-box;font-family:Arial,sans-serif;font-size:12pt;line-height:1.5;color:#000;background:#fff;";
+    el.innerHTML = html;
+    return el;
+  };
+
+  // ---------- Ações ----------
+  const pdfAtual = async () => {
+    setBusy(true);
+    const host = document.createElement("div");
+    host.style.cssText = "position:fixed;left:-99999px;top:0;background:#fff;";
+    document.body.appendChild(host);
+    try {
+      const el = buildPageEl(getCleanHtml(currentIdx));
+      host.appendChild(el);
+      await downloadPdf(el, { filename: `${titulo}${totalItems > 1 ? `_${currentIdx + 1}` : ""}` });
+    } finally {
+      document.body.removeChild(host);
+      setBusy(false);
+    }
+  };
+
+  const pdfUnico = async () => {
+    if (totalItems <= 1) return pdfAtual();
     setBusy(true);
     const { default: jsPDF } = await import("jspdf");
+    const html2canvas = (await import("html2canvas")).default;
     const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
     const host = document.createElement("div");
     host.style.cssText = "position:fixed;left:-99999px;top:0;background:#fff;";
     document.body.appendChild(host);
     try {
-      for (let i = 0; i < rows.length; i++) {
-        const el = document.createElement("div");
-        el.style.cssText = "width:210mm;min-height:297mm;padding:20mm;box-sizing:border-box;font-family:Arial,sans-serif;font-size:12pt;line-height:1.5;color:#000;background:#fff;";
-        el.innerHTML = renderCleanForRow(rows[i]);
-        host.appendChild(el);
-        const blob = await elementToPdf(el);
-        // Anexa páginas do blob individual ao pdf principal
-        const bytes = new Uint8Array(await blob.arrayBuffer());
-        // Fallback simples: gera cada registro como PDF independente e baixa concatenado via imagem
-        // Para manter simples, usamos html2canvas por registro:
-        host.removeChild(el);
-        // Adiciona página no PDF principal usando canvas
-        const html2canvas = (await import("html2canvas")).default;
+      for (let i = 0; i < totalItems; i++) {
+        const el = buildPageEl(getCleanHtml(i));
         host.appendChild(el);
         const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#fff", logging: false });
         const imgData = canvas.toDataURL("image/jpeg", 0.95);
@@ -137,13 +154,12 @@ export function PreviewModal({
           heightLeft -= pageH;
         }
         host.removeChild(el);
-        void bytes;
       }
       const url = URL.createObjectURL(pdf.output("blob"));
       const a = document.createElement("a");
       a.href = url; a.download = `${titulo}_todos.pdf`; a.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-      toast.success(`PDF gerado com ${rows.length} registros`);
+      toast.success(`PDF único gerado com ${totalItems} registros`);
     } catch (e: any) {
       toast.error("Erro ao gerar PDF: " + (e?.message ?? ""));
     } finally {
@@ -152,15 +168,38 @@ export function PreviewModal({
     }
   };
 
-  const imprimirAtual = () => printHtml(renderCleanForRow(rows[idx] ?? null));
+  const pdfSeparados = async () => {
+    if (totalItems <= 1) return pdfAtual();
+    setBusy(true);
+    const host = document.createElement("div");
+    host.style.cssText = "position:fixed;left:-99999px;top:0;background:#fff;";
+    document.body.appendChild(host);
+    try {
+      for (let i = 0; i < totalItems; i++) {
+        const el = buildPageEl(getCleanHtml(i));
+        host.appendChild(el);
+        await downloadPdf(el, { filename: `${titulo}_${i + 1}` });
+        host.removeChild(el);
+      }
+      toast.success(`${totalItems} PDFs gerados`);
+    } catch (e: any) {
+      toast.error("Erro ao gerar PDFs: " + (e?.message ?? ""));
+    } finally {
+      document.body.removeChild(host);
+      setBusy(false);
+    }
+  };
+
+  const imprimirAtual = () => printHtml(getCleanHtml(currentIdx));
 
   const imprimirTodos = () => {
-    if (!rows.length) return imprimirAtual();
-    const paginas = rows.map((r, i) =>
-      `<section style="page-break-after:${i < rows.length - 1 ? "always" : "auto"};padding:20mm;">${renderCleanForRow(r)}</section>`
+    if (totalItems <= 1) return imprimirAtual();
+    const paginas = Array.from({ length: totalItems }, (_, i) =>
+      `<section style="page-break-after:${i < totalItems - 1 ? "always" : "auto"};padding:20mm;">${getCleanHtml(i)}</section>`
     ).join("");
     printHtml(paginas);
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
