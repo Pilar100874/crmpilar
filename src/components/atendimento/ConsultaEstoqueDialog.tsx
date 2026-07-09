@@ -560,6 +560,12 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
                           <p className="text-[10px] text-muted-foreground">estoque</p>
                         </div>
                       )}
+                      {visibleCols.has('preco') && p.preco_tabela != null && (
+                        <div className="text-right shrink-0">
+                          <span className="text-sm tabular-nums">{fmtMoney(p.preco_tabela)}</span>
+                          <p className="text-[10px] text-muted-foreground">preço</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
