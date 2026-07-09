@@ -329,7 +329,18 @@ export const FillableField = Node.create({
       };
 
       const inputStyle =
-        "border:1px solid #cbd5e1;border-radius:4px;padding:2px 6px;font:inherit;background:#fefce8;min-width:120px";
+        "border:1px solid #cbd5e1;border-radius:4px;padding:2px 6px;font:inherit;background:#fefce8;min-width:60px;width:auto;box-sizing:content-box";
+
+      // Ajusta a largura do input ao conteúdo (baseado no placeholder ou valor).
+      const autosize = (i: HTMLInputElement | HTMLTextAreaElement) => {
+        const measure = () => {
+          const v = (i as any).value || i.getAttribute("placeholder") || "";
+          const ch = Math.max(4, Math.min(80, v.length + 1));
+          i.style.width = `${ch}ch`;
+        };
+        measure();
+        i.addEventListener("input", measure);
+      };
 
       const buildInput = (): HTMLElement => {
         const wrap = document.createElement("span");
