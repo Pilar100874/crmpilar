@@ -7,6 +7,7 @@ import { TiptapEditor } from "@/components/editores/TiptapEditor";
 
 import { EditorToolbar, type EditorMode } from "@/components/editores/EditorToolbar";
 import { CamposSidebar } from "@/components/editores/CamposSidebar";
+import { FloatingPanel } from "@/components/editores/FloatingPanel";
 import { PreviewModal } from "@/components/editores/PreviewModal";
 import type { Editor } from "@tiptap/react";
 import { QuickFillDialog } from "@/components/editores/QuickFillDialog";
