@@ -10,6 +10,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { evalCalculados, type CampoCalculado } from "@/lib/editores/mergeEngine";
+import { ImportSpreadsheetWizard } from "./ImportSpreadsheetWizard";
+import {
+  getAllDatasets, getDataset, registerDataset, subscribeDatasets,
+  type ImportedDataset,
+} from "@/lib/editores/importedDatasetStore";
+import { FileSpreadsheet } from "lucide-react";
+import { useSyncExternalStore } from "react";
 
 export interface MergeConfigFiltro {
   campo: string;
@@ -49,6 +56,7 @@ interface Props {
   onOpenChange?: (o: boolean) => void;
   triggerLabel?: string;
   triggerAsIcon?: boolean;
+  onImportedDataset?: (ds: ImportedDataset) => void;
 }
 
 
@@ -121,6 +129,10 @@ function parseSelectColumns(sql: string): string[] {
 
 async function fetchColumns(tabela: string): Promise<string[]> {
   try {
+    if (tabela.startsWith("xlsx:")) {
+      const ds = getDataset(tabela);
+      return ds?.columns ?? [];
+    }
     if (tabela.startsWith("api:")) {
       const id = tabela.slice(4);
       try {
@@ -145,7 +157,7 @@ async function fetchColumns(tabela: string): Promise<string[]> {
 }
 
 
-export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFields, onSaveTable, initialSelected, hideTrigger, open: openProp, onOpenChange, triggerLabel = "Vincular dados", triggerAsIcon }: Props) {
+export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFields, onSaveTable, initialSelected, hideTrigger, open: openProp, onOpenChange, triggerLabel = "Vincular dados", triggerAsIcon, onImportedDataset }: Props) {
   const [openInternal, setOpenInternal] = useState(false);
   const open = openProp !== undefined ? openProp : openInternal;
   const setOpen = (o: boolean) => { onOpenChange?.(o); if (openProp === undefined) setOpenInternal(o); };
@@ -171,6 +183,9 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
   const [loading, setLoading] = useState(false);
   const [busca, setBusca] = useState("");
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set(initialSelected ?? []));
+  const [importOpen, setImportOpen] = useState(false);
+
+  const importedDatasets = useSyncExternalStore(subscribeDatasets, getAllDatasets, getAllDatasets);
 
   // Load API endpoints on mount
   useEffect(() => {
@@ -180,7 +195,14 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
     })();
   }, []);
 
-  const tabelasDisponiveis = useMemo(() => [...TABELAS, ...apiEndpoints], [apiEndpoints]);
+  const tabelasDisponiveis = useMemo(
+    () => [
+      ...TABELAS,
+      ...apiEndpoints,
+      ...importedDatasets.map((d) => ({ value: d.id, label: `📄 ${d.name}` })),
+    ],
+    [apiEndpoints, importedDatasets],
+  );
 
   const todasTabelas = useMemo(() => {
     const arr: { tabela: string; alias: string; isMain: boolean }[] = [];
@@ -242,25 +264,32 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
       if (!cfg.tabela) throw new Error("Selecione a tabela principal");
       const camposMain = getSel(cfg.tabela);
       let list: any[] = [];
-      if (cfg.tabela.startsWith("api:")) {
+      const applyFilter = (r: any, f: MergeConfigFiltro) => {
+        if (!f.campo || !f.valor) return true;
+        const rawCampo = f.campo.includes(".") ? f.campo.split(".").slice(1).join(".") : f.campo;
+        const v = r?.[rawCampo];
+        const val = f.valor;
+        switch (f.op) {
+          case "eq": return String(v) === val;
+          case "neq": return String(v) !== val;
+          case "ilike": return String(v ?? "").toLowerCase().includes(val.toLowerCase());
+          case "gt": return Number(v) > Number(val);
+          case "gte": return Number(v) >= Number(val);
+          case "lt": return Number(v) < Number(val);
+          case "lte": return Number(v) <= Number(val);
+          default: return true;
+        }
+      };
+      if (cfg.tabela.startsWith("xlsx:")) {
+        const ds = getDataset(cfg.tabela);
+        const src = ds?.rows ?? [];
+        let all = src.filter((r) => cfg.filtros.every((f) => applyFilter(r, f)));
+        if (cfg.limite && cfg.limite > 0) all = all.slice(0, Math.min(cfg.limite, 500));
+        list = camposMain.length ? all.map((r) => Object.fromEntries(camposMain.map((c) => [c, r?.[c]]))) : all;
+      } else if (cfg.tabela.startsWith("api:")) {
         // Fonte é uma API do sistema
         const all = await fetchApiEndpointRows(cfg.tabela.slice(4), cfg.limite && cfg.limite > 0 ? Math.min(cfg.limite, 500) : 0);
-        list = all.filter(r => cfg.filtros.every(f => {
-          if (!f.campo || !f.valor) return true;
-          const rawCampo = f.campo.includes(".") ? f.campo.split(".").slice(1).join(".") : f.campo;
-          const v = r?.[rawCampo];
-          const val = f.valor;
-          switch (f.op) {
-            case "eq": return String(v) === val;
-            case "neq": return String(v) !== val;
-            case "ilike": return String(v ?? "").toLowerCase().includes(val.toLowerCase());
-            case "gt": return Number(v) > Number(val);
-            case "gte": return Number(v) >= Number(val);
-            case "lt": return Number(v) < Number(val);
-            case "lte": return Number(v) <= Number(val);
-            default: return true;
-          }
-        }));
+        list = all.filter((r) => cfg.filtros.every((f) => applyFilter(r, f)));
         if (camposMain.length) list = list.map(r => Object.fromEntries(camposMain.map(c => [c, r?.[c]])));
       } else {
         const selectCols = camposMain.length ? camposMain.join(",") : "*";
@@ -416,9 +445,9 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                   <Badge variant="default">Principal</Badge>
                   <Select value={cfg.tabela} onValueChange={v => {
                     let novoAlias = cfg.alias;
-                    if (v.startsWith("api:")) {
+                    if (v.startsWith("api:") || v.startsWith("xlsx:")) {
                       const found = tabelasDisponiveis.find(t => t.value === v);
-                      const nome = (found?.label ?? "").replace(/^🔌\s*/, "").trim();
+                      const nome = (found?.label ?? "").replace(/^(🔌|📄)\s*/, "").trim();
                       const sane = nome.replace(/[^a-z0-9_]/gi, "_").replace(/_+/g, "_").replace(/^_|_$/g, "").toLowerCase();
                       if (sane) novoAlias = sane;
                     }
@@ -427,6 +456,9 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                     <SelectTrigger className="h-8 max-w-xs"><SelectValue placeholder="Escolha a tabela principal" /></SelectTrigger>
                     <SelectContent>{tabelasDisponiveis.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
                   </Select>
+                  <Button size="sm" variant="outline" onClick={() => setImportOpen(true)} title="Importar dados de um arquivo Excel ou CSV">
+                    <FileSpreadsheet className="h-3.5 w-3.5 mr-1" /> Importar Excel/CSV
+                  </Button>
                   {cfg.tabela && (
                     <>
                       <span className="text-xs text-muted-foreground">alias:</span>
@@ -732,6 +764,21 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
           {step === 3 && <Button onClick={aprovarSelecao} disabled={selecionados.size === 0}><Check className="h-4 w-4 mr-1" /> Aprovar ({selecionados.size})</Button>}
         </DialogFooter>
       </DialogContent>
+      <ImportSpreadsheetWizard
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImport={(ds) => {
+          registerDataset(ds);
+          onImportedDataset?.(ds);
+          // Pre-seleciona como tabela principal
+          setCfg((prev) => ({
+            ...prev,
+            tabela: ds.id,
+            alias: ds.id.replace(/^xlsx:/, "").slice(0, 20) || "planilha",
+            camposSelecionados: { ...(prev.camposSelecionados ?? {}), [ds.id]: [...ds.columns] },
+          }));
+        }}
+      />
     </Dialog>
   );
 }

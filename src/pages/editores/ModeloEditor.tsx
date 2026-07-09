@@ -18,6 +18,7 @@ import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueD
 import { renderTemplate, applyFillables } from "@/lib/editores/mergeEngine";
 import { parseCnpjGroupPayload, buildCnpjGroupFields } from "@/lib/editores/cnpjGroup";
 import { setFillableValues as setFillableStore } from "@/lib/editores/fillableValuesStore";
+import { hydrateDatasets, registerDataset, getAllDatasets, type ImportedDataset } from "@/lib/editores/importedDatasetStore";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
 import { runMergeConfig } from "@/lib/editores/runMergeConfig";
 import { setPreviewValues, setPreviewRows, setPreviewActive } from "@/lib/editores/mergePreviewStore";
@@ -145,6 +146,8 @@ export default function ModeloEditor() {
       setModelo(data);
       setHtml((data as any).content_html || "");
       setJson((data as any).content_json || {});
+      const imp = (data as any)?.merge_config?.importedDatasets;
+      hydrateDatasets(Array.isArray(imp) ? imp : []);
     })();
   }, [id, nav]);
 
@@ -382,6 +385,11 @@ export default function ModeloEditor() {
     setModelo({ ...modelo, merge_config: { ...baseMc(), configs, mergeFields: list } });
     setDirty(true);
   };
+  const handleImportedDataset = (_ds: ImportedDataset) => {
+    // Store já foi atualizada pelo diálogo; persistimos o snapshot completo.
+    setModelo({ ...modelo, merge_config: { ...baseMc(), configs, importedDatasets: getAllDatasets() } });
+    setDirty(true);
+  };
 
   return (
     <div className={fullscreen ? "fixed inset-0 z-50 bg-background flex flex-col" : "absolute inset-0 flex flex-col bg-background"}>
@@ -458,6 +466,7 @@ export default function ModeloEditor() {
                   onSavedTablesChange={setSavedTables}
                   mergeFields={mergeFields}
                   onMergeFieldsChange={setMergeFields}
+                  onImportedDataset={handleImportedDataset}
                 />
               </FloatingPanel>
               <FloatingPanel

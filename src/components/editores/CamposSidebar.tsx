@@ -33,6 +33,7 @@ interface Props {
   onConfigsChange?: (configs: MergeConfig[]) => void;
   savedTables?: { name: string; alias: string; cols: string[] }[];
   onSavedTablesChange?: (list: { name: string; alias: string; cols: string[] }[]) => void;
+  onImportedDataset?: (ds: import("@/lib/editores/importedDatasetStore").ImportedDataset) => void;
 }
 
 // Resolve caminho "a.b.c" em objeto aninhado
@@ -66,7 +67,7 @@ const makeDragHandler =
     e.dataTransfer.effectAllowed = "copy";
   };
 
-export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeFields: mergeFieldsProp, onMergeFieldsChange, configs: configsProp, onConfigsChange, savedTables: savedTablesProp, onSavedTablesChange }: Props) {
+export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeFields: mergeFieldsProp, onMergeFieldsChange, configs: configsProp, onConfigsChange, savedTables: savedTablesProp, onSavedTablesChange, onImportedDataset }: Props) {
   const [mergeFieldsInternal, setMergeFieldsInternal] = useState<string[]>([]);
   const mergeFields = mergeFieldsProp ?? mergeFieldsInternal;
   const setMergeFields = (chaves: string[]) => {
@@ -270,6 +271,7 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
                 }}
                 initialSelected={mergeFields.filter(k => c.alias && k.startsWith(`${c.alias}.`))}
                 onSaveTable={addSavedTable}
+                onImportedDataset={onImportedDataset}
               />
             ))}
           </div>
