@@ -345,7 +345,20 @@ export const MergeTable = Node.create({
         });
         setTimeout(() => document.addEventListener("mousedown", onDocDown, true), 0);
       };
-      dom.addEventListener("click", (e) => { e.stopPropagation(); openToolbar(); });
+      dom.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (editor.isEditable) {
+          const pos = typeof getPos === "function" ? getPos() : null;
+          if (pos != null) {
+            const { view } = editor;
+            try {
+              view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, pos)));
+              view.focus();
+            } catch { /* noop */ }
+          }
+        }
+        openToolbar();
+      });
 
       wrapper.appendChild(dom);
       return {
