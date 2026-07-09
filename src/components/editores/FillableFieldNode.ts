@@ -87,6 +87,48 @@ async function autofillCnpj(cnpjLimpo: string, group?: string, applyAll = true) 
   if (Object.keys(updates).length) mergeFillableValues(updates);
 }
 
+// Autofill via ViaCEP para grupos de CEP.
+async function autofillCep(cepLimpo: string, group?: string, applyAll = true) {
+  const resp = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+  if (!resp.ok) throw new Error("CEP não encontrado");
+  const d: any = await resp.json();
+  if (d.erro) throw new Error("CEP não encontrado");
+  const byKey: Record<string, string> = {
+    cep: maskCep(cepLimpo),
+    logradouro: d.logradouro || "",
+    complemento: d.complemento || "",
+    bairro: d.bairro || "",
+    localidade: d.localidade || "",
+    uf: d.uf || "",
+  };
+  const src: Record<string, string> = {};
+  const put = (aliases: string[], val: string) => { for (const a of aliases) src[norm(a)] = val; };
+  put(["cep"], byKey.cep);
+  put(["logradouro", "endereco", "rua"], byKey.logradouro);
+  put(["complemento"], byKey.complemento);
+  put(["bairro"], byKey.bairro);
+  put(["municipio", "cidade", "localidade"], byKey.localidade);
+  put(["uf", "estado"], byKey.uf);
+
+  const updates: Record<string, string> = {};
+  document.querySelectorAll<HTMLElement>("[data-fillable-field]").forEach((el) => {
+    const elGroup = el.getAttribute("data-cep-group") || "";
+    if (group && elGroup && elGroup !== group) return;
+    const sub = el.getAttribute("data-cep-subfield") || "";
+    if (!applyAll && sub !== "cep") return;
+    const token = el.getAttribute("data-fillable-field") || "";
+    const label = el.getAttribute("data-label") || "";
+    let val = "";
+    if (sub && byKey[sub] != null) val = byKey[sub];
+    else {
+      const key = norm(label || token);
+      if (key && src[key]) val = src[key];
+    }
+    if (val) updates[token] = val;
+  });
+  if (Object.keys(updates).length) mergeFillableValues(updates);
+}
+
 // Pequeno popover inline, ancorado a um input. Fecha ao clicar fora ou ESC.
 function showInlinePopover(anchor: HTMLElement, buildContent: (close: () => void) => HTMLElement): () => void {
   const pop = document.createElement("div");
