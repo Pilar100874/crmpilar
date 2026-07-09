@@ -34,9 +34,13 @@ import { Button } from "@/components/ui/button";
 
 export default function ModeloEditor() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const isNew = id === "new";
+  const tipoNovo = searchParams.get("tipo") === "modelo" ? "modelo" : "documento";
   const nav = useNavigate();
   const [estabId, setEstabId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+
   const [usuarioId, setUsuarioId] = useState<string | null>(null);
   const [modelo, setModelo] = useState<any>(null);
   const [html, setHtml] = useState<string>("");
