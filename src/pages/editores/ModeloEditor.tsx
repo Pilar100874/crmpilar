@@ -325,7 +325,39 @@ export default function ModeloEditor() {
 
   return (
     <div className={fullscreen ? "fixed inset-0 z-50 bg-background flex flex-col" : "h-full flex flex-col"}>
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="sticky top-0 z-30 bg-card shadow-sm">
+        <EditorToolbar
+          editor={editorInstance}
+          zoom={zoom}
+          setZoom={setZoom}
+          onFullscreen={() => setFullscreen(f => !f)}
+          onPreviewMerge={abrirPreview}
+          previewActive={showResolved}
+          estabelecimentoId={estabId}
+          onBack={() => nav("/editores")}
+          onSave={() => salvar()}
+          onSalvarComo={salvarComo}
+          onToggleLock={alternarBloqueio}
+          locked={!!modelo.bloqueado}
+          dirty={dirty}
+          saving={saving}
+          mode={modo}
+          onModeChange={setModo}
+          onInsertFormField={(tok) => inserirCampo(tok)}
+          onToggleSidebar={() => setSidebarOpen(o => !o)}
+          sidebarOpen={sidebarOpen}
+          hasFormFields={/data-fillable-field=|data-fillable=/i.test(html)}
+          onQuickFill={() => setQuickFillOpen(true)}
+          onSearchEmpresa={() => setEmpresaSearchOpen(true)}
+          onSearchEstoque={() => setEstoqueSearchOpen(true)}
+          onGeneratePdf={gerarPdf}
+          onPrint={imprimir}
+        />
+        </div>
+        {/* placeholder removed below */}
+        <div className="hidden">
+
         <EditorToolbar
           editor={editorInstance}
           zoom={zoom}
