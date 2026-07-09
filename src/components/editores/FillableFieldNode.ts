@@ -238,11 +238,13 @@ export const FillableField = Node.create({
       // pergunta o CNPJ e autopreenche todos os sub-campos vazios do grupo.
       const attachCnpjGroupFocus = (input: HTMLElement) => {
         if (!cnpjGroup || !cnpjSubfield) return;
+        // Não redireciona se este próprio campo é o CNPJ do grupo
+        if (cnpjSubfield === "cnpj") return;
         input.addEventListener("focus", () => {
           const v = (input as HTMLInputElement | HTMLTextAreaElement).value;
           if (v && v.trim()) return;
           if (cnpjGroupState.get(cnpjGroup)) return;
-          void askCnpjForGroup(cnpjGroup);
+          focusCnpjInputForGroup(cnpjGroup);
         }, { once: false });
       };
 
