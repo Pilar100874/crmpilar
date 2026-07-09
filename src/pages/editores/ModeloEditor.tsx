@@ -258,6 +258,49 @@ export default function ModeloEditor() {
     setShowResolved((v) => !v);
   };
 
+  // Gera o HTML final com dados do vínculo primário + valores dos fillables preenchidos.
+  const buildFinalHtml = async (): Promise<string> => {
+    let dados: Record<string, any> = { data_atual: new Date().toLocaleDateString("pt-BR") };
+    try {
+      const base = await resolveMergeData("livre", null);
+      dados = { ...dados, ...base };
+    } catch {}
+    for (const c of configs) {
+      if (!c?.alias) continue;
+      const rows = rowsByAlias[c.alias] || [];
+      if (!rows.length) continue;
+      const i = c.alias === primaryAlias ? recordIndex : 0;
+      const row = rows[Math.min(i, rows.length - 1)];
+      dados[c.alias] = row;
+      Object.assign(dados, row);
+    }
+    const step1 = renderTemplate(html, dados, { highlightMissing: false }).html;
+    return applyFillables(step1, fillableValues, { highlightEmpty: false });
+  };
+
+  const renderToTemporaryPage = async (): Promise<HTMLDivElement> => {
+    const finalHtml = await buildFinalHtml();
+    const page = document.createElement("div");
+    page.style.cssText = "width:210mm;min-height:297mm;padding:20mm;box-sizing:border-box;background:#fff;color:#000;font-family:Arial,sans-serif;font-size:12pt;line-height:1.5;position:fixed;left:-99999px;top:0;";
+    page.innerHTML = finalHtml;
+    document.body.appendChild(page);
+    return page;
+  };
+
+  const gerarPdf = async () => {
+    const page = await renderToTemporaryPage();
+    try {
+      await downloadPdf(page, { filename: modelo?.titulo || "documento" });
+    } finally {
+      page.remove();
+    }
+  };
+
+  const imprimir = async () => {
+    const finalHtml = await buildFinalHtml();
+    printHtml(finalHtml);
+  };
+
   if (!modelo) return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
 
   const mc = modelo.merge_config;
