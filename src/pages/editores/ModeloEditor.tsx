@@ -45,6 +45,8 @@ export default function ModeloEditor() {
   const [primaryAlias, setPrimaryAlias] = useState<string | null>(null);
   const [showResolved, setShowResolved] = useState(false);
   const [quickFillOpen, setQuickFillOpen] = useState(false);
+  const [empresaSearchOpen, setEmpresaSearchOpen] = useState(false);
+  const [estoqueSearchOpen, setEstoqueSearchOpen] = useState(false);
   const [fillableValues, setFillableValues] = useState<Record<string, string>>({});
 
   // Normaliza merge_config para array de configs (aceita objeto legado)
