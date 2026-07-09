@@ -141,10 +141,16 @@ export default function ModelosLista() {
 
   return (
     <div className="p-4 sm:p-6 space-y-4">
+      <Tabs value={aba} onValueChange={(v) => setAba(v as "modelos" | "meus")}>
+        <TabsList>
+          <TabsTrigger value="modelos">Modelos</TabsTrigger>
+          <TabsTrigger value="meus">Meus arquivos</TabsTrigger>
+        </TabsList>
+      </Tabs>
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="h-4 w-4 absolute left-2 top-2.5 text-muted-foreground" />
-          <Input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar modelo…" className="pl-8" />
+          <Input value={busca} onChange={e => setBusca(e.target.value)} placeholder={aba === "modelos" ? "Buscar modelo…" : "Buscar meus arquivos…"} className="pl-8" />
         </div>
         <Select value={filtroCat} onValueChange={setFiltroCat}>
           <SelectTrigger className="w-[200px]"><SelectValue placeholder="Categoria" /></SelectTrigger>
@@ -153,9 +159,14 @@ export default function ModelosLista() {
             {cats.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Button variant="outline" onClick={() => setOpenCat(true)}><Plus className="h-4 w-4 mr-1" /> Categoria</Button>
-        <Button onClick={() => setOpenNovo(true)}><Plus className="h-4 w-4 mr-1" /> Novo modelo</Button>
+        {isAdmin && <Button variant="outline" onClick={() => setOpenCat(true)}><Plus className="h-4 w-4 mr-1" /> Categoria</Button>}
+        {(aba === "meus" || isAdmin) && (
+          <Button onClick={() => setOpenNovo(true)}>
+            <Plus className="h-4 w-4 mr-1" /> {aba === "modelos" ? "Novo modelo" : "Novo arquivo"}
+          </Button>
+        )}
       </div>
+
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
