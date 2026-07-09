@@ -16,6 +16,8 @@ interface Props {
   templateHtml?: string;
   /** HTML já renderizado (fallback quando não há mergeConfig). */
   html?: string;
+  /** Páginas já renderizadas (uma por registro). Se fornecido, ignora mergeConfig/rows. */
+  pages?: string[];
   titulo: string;
   missing?: string[];
   mergeConfig?: MergeConfig | null;
@@ -23,7 +25,7 @@ interface Props {
 }
 
 export function PreviewModal({
-  open, onOpenChange, templateHtml, html = "", titulo,
+  open, onOpenChange, templateHtml, html = "", pages, titulo,
   missing = [], mergeConfig, onSave,
 }: Props) {
   const pageRef = useRef<HTMLDivElement>(null);
