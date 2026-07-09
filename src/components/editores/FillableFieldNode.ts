@@ -455,30 +455,35 @@ export const FillableField = Node.create({
 
       const render = () => {
         dom.innerHTML = "";
-        const grip = document.createElement("span");
-        grip.setAttribute("data-drag-handle", "");
-        grip.className = "fillable-ctrl fillable-grip";
-        grip.title = "Arraste para mover";
-        grip.style.cssText = "cursor:grab;user-select:none;color:#94a3b8;font-size:12px;padding:0 2px;line-height:1";
-        grip.textContent = "⋮⋮";
-        dom.appendChild(grip);
+        const canEdit = editor?.isEditable !== false;
+        if (canEdit) {
+          const grip = document.createElement("span");
+          grip.setAttribute("data-drag-handle", "");
+          grip.className = "fillable-ctrl fillable-grip";
+          grip.title = "Arraste para mover";
+          grip.style.cssText = "cursor:grab;user-select:none;color:#94a3b8;font-size:12px;padding:0 2px;line-height:1";
+          grip.textContent = "⋮⋮";
+          dom.appendChild(grip);
+        }
         dom.appendChild(buildInput());
-        const del = document.createElement("button");
-        del.type = "button";
-        del.className = "fillable-ctrl fillable-del";
-        del.title = "Remover campo";
-        del.textContent = "×";
-        del.style.cssText = "cursor:pointer;border:none;background:transparent;color:#dc2626;font-size:14px;line-height:1;padding:0 4px";
-        del.addEventListener("mousedown", (ev) => ev.preventDefault());
-        del.addEventListener("click", (ev) => {
-          ev.preventDefault();
-          ev.stopPropagation();
-          if (editor?.isEditable === false) return;
-          const pos = typeof getPos === "function" ? getPos() : null;
-          if (pos == null || !editor) return;
-          editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).run();
-        });
-        dom.appendChild(del);
+        if (canEdit) {
+          const del = document.createElement("button");
+          del.type = "button";
+          del.className = "fillable-ctrl fillable-del";
+          del.title = "Remover campo";
+          del.textContent = "×";
+          del.style.cssText = "cursor:pointer;border:none;background:transparent;color:#dc2626;font-size:14px;line-height:1;padding:0 4px";
+          del.addEventListener("mousedown", (ev) => ev.preventDefault());
+          del.addEventListener("click", (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            if (editor?.isEditable === false) return;
+            const pos = typeof getPos === "function" ? getPos() : null;
+            if (pos == null || !editor) return;
+            editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).run();
+          });
+          dom.appendChild(del);
+        }
       };
       render();
       const unsub = subscribeFillable(() => {
