@@ -62,11 +62,12 @@ interface ConsultaEstoqueDialogProps {
   onOpenChange: (open: boolean) => void;
   estabelecimentoId: string;
   onEnviarParaConversa: (texto: string) => void;
+  onInsertHtml?: (html: string) => void;
   actionLabel?: string;
   actionLabelShort?: string;
 }
 
-export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, onEnviarParaConversa, actionLabel, actionLabelShort }: ConsultaEstoqueDialogProps) {
+export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, onEnviarParaConversa, onInsertHtml, actionLabel, actionLabelShort }: ConsultaEstoqueDialogProps) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -282,6 +283,29 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
     if (selected.length === 0) { toast.warning('Selecione ao menos um produto'); return; }
 
     const visCols = ALL_COLUMNS.filter(c => visibleCols.has(c.key));
+
+    if (onInsertHtml) {
+      const esc = (v: any) => String(v ?? '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!));
+      const cell = (p: Produto, key: ColumnKey) => {
+        switch (key) {
+          case 'nome': return esc(p.nome);
+          case 'codigo': return esc(p.codigo ?? '');
+          case 'grupo': return esc(grupoName(p.grupo_id));
+          case 'estoque': return String(p.estoque ?? 0);
+          case 'preco': return esc(fmtMoney(p.preco_tabela));
+        }
+      };
+      const th = visCols.map(c => `<th style="border:1px solid #ccc;padding:6px;background:#f4f4f5;text-align:left;">${esc(c.label)}</th>`).join('');
+      const trs = selected.map(p =>
+        `<tr>${visCols.map(c => `<td style="border:1px solid #ccc;padding:6px;">${cell(p, c.key)}</td>`).join('')}</tr>`
+      ).join('');
+      const html = `<table style="border-collapse:collapse;width:100%;margin:8px 0;"><thead><tr>${th}</tr></thead><tbody>${trs}</tbody></table>`;
+      onInsertHtml(html);
+      onOpenChange(false);
+      toast.success(`${selected.length} produto(s) inserido(s)`);
+      return;
+    }
+
     const lines = selected.map(p => {
       const parts: string[] = [];
       for (const col of visCols) {

@@ -422,17 +422,11 @@ export default function ModeloEditor() {
             estabelecimentoId={estabId}
             actionLabel="Inserir no documento"
             actionLabelShort="Inserir"
-            onEnviarParaConversa={(texto) => {
-              const html = texto
-                .split("\n")
-                .map((l) => {
-                  const bold = l.replace(/\*(.+?)\*/g, "<strong>$1</strong>");
-                  return `<p>${bold || "&nbsp;"}</p>`;
-                })
-                .join("");
+            onInsertHtml={(html) => {
               editorRef.current?.chain().focus().insertContent(html).run();
               setDirty(true);
             }}
+            onEnviarParaConversa={() => { /* editor usa onInsertHtml */ }}
           />
         )}
 
