@@ -271,6 +271,7 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
                 }}
                 initialSelected={mergeFields.filter(k => c.alias && k.startsWith(`${c.alias}.`))}
                 onSaveTable={addSavedTable}
+                onImportedDataset={onImportedDataset}
               />
             ))}
           </div>
