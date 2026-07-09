@@ -65,6 +65,8 @@ export default function ModeloEditor() {
   const [empresaSearchOpen, setEmpresaSearchOpen] = useState(false);
   const [estoqueSearchOpen, setEstoqueSearchOpen] = useState(false);
   const [fillableValues, setFillableValues] = useState<Record<string, string>>({});
+  const [exitPromptOpen, setExitPromptOpen] = useState(false);
+
 
   // Normaliza merge_config para array de configs (aceita objeto legado)
   const configs = useMemo<any[]>(() => {
