@@ -355,36 +355,6 @@ export default function ModeloEditor() {
           onPrint={imprimir}
         />
         </div>
-        {/* placeholder removed below */}
-        <div className="hidden">
-
-        <EditorToolbar
-          editor={editorInstance}
-          zoom={zoom}
-          setZoom={setZoom}
-          onFullscreen={() => setFullscreen(f => !f)}
-          onPreviewMerge={abrirPreview}
-          previewActive={showResolved}
-          estabelecimentoId={estabId}
-          onBack={() => nav("/editores")}
-          onSave={() => salvar()}
-          onSalvarComo={salvarComo}
-          onToggleLock={alternarBloqueio}
-          locked={!!modelo.bloqueado}
-          dirty={dirty}
-          saving={saving}
-          mode={modo}
-          onModeChange={setModo}
-          onInsertFormField={(tok) => inserirCampo(tok)}
-          onToggleSidebar={() => setSidebarOpen(o => !o)}
-          sidebarOpen={sidebarOpen}
-          hasFormFields={/data-fillable-field=|data-fillable=/i.test(html)}
-          onQuickFill={() => setQuickFillOpen(true)}
-          onSearchEmpresa={() => setEmpresaSearchOpen(true)}
-          onSearchEstoque={() => setEstoqueSearchOpen(true)}
-          onGeneratePdf={gerarPdf}
-          onPrint={imprimir}
-        />
 
         {primaryRows.length > 0 && (
           <div className="border-b bg-muted/30 px-3 py-1 flex items-center gap-2">
