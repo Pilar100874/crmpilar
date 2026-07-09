@@ -113,11 +113,9 @@ export function TiptapEditor({
         if (docPayload && docPayload.startsWith("__CNPJ_GROUP__:")) {
           event.preventDefault();
           try {
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const mod = require("@/lib/editores/cnpjGroup");
-            const parsed = mod.parseCnpjGroupPayload(docPayload);
+            const parsed = parseCnpjGroupPayload(docPayload);
             if (!parsed) return true;
-            const fields = mod.buildCnpjGroupFields(parsed.group, parsed.keys);
+            const fields = buildCnpjGroupFields(parsed.group, parsed.keys);
             let tr = view.state.tr;
             let insertPos = pos;
             for (const attrs of fields) {
