@@ -372,22 +372,22 @@ export default function ModeloEditor() {
   if (!modelo) return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
 
   const mc = modelo.merge_config;
-  const baseMc = () => (mc && typeof mc === "object" && !Array.isArray(mc) ? { ...mc } : {});
+  const baseMcFrom = (m: any) => (m && typeof m === "object" && !Array.isArray(m) ? { ...m } : {});
+  const baseMc = () => baseMcFrom(mc);
   const setConfigs = (list: any[]) => {
-    setModelo({ ...modelo, merge_config: { ...baseMc(), configs: list } });
+    setModelo((prev: any) => ({ ...prev, merge_config: { ...baseMcFrom(prev?.merge_config), configs: list } }));
     setDirty(true);
   };
   const setSavedTables = (list: { name: string; alias: string; cols: string[] }[]) => {
-    setModelo({ ...modelo, merge_config: { ...baseMc(), configs, savedTables: list } });
+    setModelo((prev: any) => ({ ...prev, merge_config: { ...baseMcFrom(prev?.merge_config), savedTables: list } }));
     setDirty(true);
   };
   const setMergeFields = (list: string[]) => {
-    setModelo({ ...modelo, merge_config: { ...baseMc(), configs, mergeFields: list } });
+    setModelo((prev: any) => ({ ...prev, merge_config: { ...baseMcFrom(prev?.merge_config), mergeFields: list } }));
     setDirty(true);
   };
   const handleImportedDataset = (_ds: ImportedDataset) => {
-    // Store já foi atualizada pelo diálogo; persistimos o snapshot completo.
-    setModelo({ ...modelo, merge_config: { ...baseMc(), configs, importedDatasets: getAllDatasets() } });
+    setModelo((prev: any) => ({ ...prev, merge_config: { ...baseMcFrom(prev?.merge_config), importedDatasets: getAllDatasets() } }));
     setDirty(true);
   };
 
