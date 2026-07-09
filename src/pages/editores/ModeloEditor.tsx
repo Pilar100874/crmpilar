@@ -15,7 +15,7 @@ import type { Editor } from "@tiptap/react";
 import { QuickFillDialog } from "@/components/editores/QuickFillDialog";
 import { EmpresaSearchDialog } from "@/components/editores/EmpresaSearchDialog";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
-import { renderTemplate, applyFillables } from "@/lib/editores/mergeEngine";
+import { renderTemplate, applyFillables, extractFillableTokens } from "@/lib/editores/mergeEngine";
 import { parseCnpjGroupPayload, buildCnpjGroupFields } from "@/lib/editores/cnpjGroup";
 import { setFillableValues as setFillableStore } from "@/lib/editores/fillableValuesStore";
 import { hydrateDatasets, registerDataset, getAllDatasets, type ImportedDataset } from "@/lib/editores/importedDatasetStore";
