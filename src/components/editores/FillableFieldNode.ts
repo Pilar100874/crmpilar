@@ -27,7 +27,7 @@ async function autofillCnpj(cnpjLimpo: string, group?: string) {
   if (!resp.ok) throw new Error("CNPJ não encontrado");
   const d: any = await resp.json();
   const byKey: Record<string, string> = {
-    cnpj: cnpjLimpo,
+    cnpj: maskCnpj(cnpjLimpo),
     razao_social: d.razao_social || d.nome || "",
     nome_fantasia: d.nome_fantasia || d.fantasia || "",
     logradouro: d.logradouro || "",
