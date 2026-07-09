@@ -1,5 +1,6 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { getFillableValue, subscribeFillable } from "@/lib/editores/fillableValuesStore";
+import { fetchDynamicOptions, isDynamicOpcoes, parseDynamic } from "@/lib/editores/dynamicOptions";
 
 /**
  * Nó inline atômico que representa um campo preenchível de formulário
