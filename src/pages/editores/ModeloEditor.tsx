@@ -403,6 +403,18 @@ export default function ModeloEditor() {
                   onMergeFieldsChange={setMergeFields}
                 />
               </FloatingPanel>
+              <FloatingPanel
+                open={formFieldsOpen}
+                onClose={() => setFormFieldsOpen(false)}
+                title="Campos personalizados"
+                initialX={420}
+                initialY={80}
+              >
+                <CamposFormularioSidebar
+                  estabelecimentoId={estabId}
+                  onInsert={inserirCampo}
+                />
+              </FloatingPanel>
             </div>
           )}
         </div>
