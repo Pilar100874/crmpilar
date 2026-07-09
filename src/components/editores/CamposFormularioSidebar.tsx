@@ -60,11 +60,13 @@ const TABELAS = [
 ];
 
 function buildFieldPayload(f: CustomField): string {
-  // Campo do tipo CNPJ gera um grupo de sub-campos (Razão Social, Endereço, etc.)
-  // que serão preenchidos automaticamente ao informar o CNPJ.
   if (f.tipo === "cnpj") {
     const keys = f.opcoes.length > 0 ? f.opcoes : CNPJ_SUBFIELDS.map(s => s.key);
     return buildCnpjGroupPayload(f.label, keys);
+  }
+  if (f.tipo === "cep") {
+    const keys = f.opcoes.length > 0 ? f.opcoes : CEP_SUBFIELDS.map(s => s.key);
+    return buildCepGroupPayload(f.label, keys);
   }
   const tipoFinal: FillableTipo =
     f.tipo === "check" && f.opcoes.length > 0 ? "radio" : f.tipo;
