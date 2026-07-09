@@ -350,6 +350,8 @@ export default function ModeloEditor() {
           onInsertFormField={(tok) => inserirCampo(tok)}
           onToggleSidebar={() => setSidebarOpen(o => !o)}
           sidebarOpen={sidebarOpen}
+          onToggleFormFields={() => setFormFieldsOpen(o => !o)}
+          formFieldsOpen={formFieldsOpen}
           hasFormFields={/data-fillable-field=|data-fillable=/i.test(html)}
           onQuickFill={() => setQuickFillOpen(true)}
           onSearchEmpresa={() => setEmpresaSearchOpen(true)}
