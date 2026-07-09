@@ -126,7 +126,7 @@ export default function GerarDocumento() {
           </div>
           <div>
             <label className="text-xs text-muted-foreground">Origem dos dados</label>
-            <Select value={tipo} onValueChange={(v: RegistroTipo) => { setTipo(v); setRegistroId(null); }}>
+            <Select value={tipo} onValueChange={(v: RegistroTipo) => { setTipo(v); setRegistroIds([]); }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {REGISTRO_TIPOS.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
