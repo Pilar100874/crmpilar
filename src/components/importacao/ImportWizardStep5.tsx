@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -28,6 +28,9 @@ interface Props {
 
 export function ImportWizardStep5({ data, selectedFields, filters, fieldMapping, onFinalDataChange }: Props) {
   const [processedData, setProcessedData] = useState<any[]>([]);
+  const onFinalDataChangeRef = useRef(onFinalDataChange);
+  const lastSerializedRef = useRef<string>("");
+  useEffect(() => { onFinalDataChangeRef.current = onFinalDataChange; }, [onFinalDataChange]);
 
   const applyFormat = (value: any, format?: string): any => {
     if (!format || format === "none" || !value) return value;
@@ -109,8 +112,12 @@ export function ImportWizardStep5({ data, selectedFields, filters, fieldMapping,
     });
 
     setProcessedData(mappedData);
-    onFinalDataChange(mappedData);
-  }, [data, filters, fieldMapping, onFinalDataChange]);
+    const serialized = JSON.stringify(mappedData);
+    if (serialized !== lastSerializedRef.current) {
+      lastSerializedRef.current = serialized;
+      onFinalDataChangeRef.current(mappedData);
+    }
+  }, [data, filters, fieldMapping]);
 
   const fixedFields = Object.keys(fieldMapping);
 
