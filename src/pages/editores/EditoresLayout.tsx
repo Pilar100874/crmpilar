@@ -12,7 +12,7 @@ export default function EditoresLayout() {
           Documentos e modelos — editor Word-like, campos dinâmicos, PDF
         </p>
       </div>
-      <main className="flex-1 min-w-0 overflow-auto">
+      <main className="flex-1 min-w-0 min-h-0 overflow-hidden">
         <Outlet />
       </main>
     </div>
