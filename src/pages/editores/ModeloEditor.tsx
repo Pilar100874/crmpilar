@@ -273,8 +273,6 @@ export default function ModeloEditor() {
     }
     if (chave.startsWith("__CNPJ_GROUP__:")) {
       try {
-        // Import dinâmico para evitar ciclo
-        const { parseCnpjGroupPayload, buildCnpjGroupFields } = require("@/lib/editores/cnpjGroup");
         const parsed = parseCnpjGroupPayload(chave);
         if (!parsed) return;
         const fields = buildCnpjGroupFields(parsed.group, parsed.keys);
