@@ -28,7 +28,8 @@ function extractFillableMeta(html: string): Map<string, { group: string; subfiel
     const tag = m[0];
     const token = m[1]
       .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+      .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+      .replace(/^\[\[/, "").replace(/\]\]$/, "").trim();
     const g = /data-cnpj-group\s*=\s*"([^"]*)"/i.exec(tag)?.[1] || "";
     const s = /data-cnpj-subfield\s*=\s*"([^"]*)"/i.exec(tag)?.[1] || "";
     if (!map.has(token)) map.set(token, { group: g, subfield: s });
