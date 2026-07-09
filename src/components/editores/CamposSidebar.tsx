@@ -198,10 +198,10 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
     setConfigs([...configs, { mode: "visual", tabela: "", alias: `reg${configs.length + 1}`, filtros: [], limite: 50, calculados: [], relations: [], camposSelecionados: {} }]);
     setEditIdx(configs.length);
   };
+  const [confirmDeleteIdx, setConfirmDeleteIdx] = useState<number | null>(null);
   const removeConfig = (i: number) => {
     const removed = configs[i];
     setConfigs(configs.filter((_, k) => k !== i));
-    // remove campos ligados a esse alias
     if (removed?.alias) setMergeFields(mergeFields.filter(k => !k.startsWith(`${removed.alias}.`)));
   };
   const updateConfig = (i: number, cfg: MergeConfig) => {
