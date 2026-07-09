@@ -183,6 +183,9 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
   const [loading, setLoading] = useState(false);
   const [busca, setBusca] = useState("");
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set(initialSelected ?? []));
+  const [importOpen, setImportOpen] = useState(false);
+
+  const importedDatasets = useSyncExternalStore(subscribeDatasets, getAllDatasets, getAllDatasets);
 
   // Load API endpoints on mount
   useEffect(() => {
@@ -192,7 +195,14 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
     })();
   }, []);
 
-  const tabelasDisponiveis = useMemo(() => [...TABELAS, ...apiEndpoints], [apiEndpoints]);
+  const tabelasDisponiveis = useMemo(
+    () => [
+      ...TABELAS,
+      ...apiEndpoints,
+      ...importedDatasets.map((d) => ({ value: d.id, label: `📄 ${d.name}` })),
+    ],
+    [apiEndpoints, importedDatasets],
+  );
 
   const todasTabelas = useMemo(() => {
     const arr: { tabela: string; alias: string; isMain: boolean }[] = [];
