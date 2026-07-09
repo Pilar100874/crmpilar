@@ -39,6 +39,7 @@ export default function ModelosLista() {
   const [cats, setCats] = useState<Categoria[]>([]);
   const [busca, setBusca] = useState("");
   const [filtroCat, setFiltroCat] = useState<string>("__all");
+  const [aba, setAba] = useState<"modelos" | "meus">("modelos");
   const [loading, setLoading] = useState(true);
   const [toDelete, setToDelete] = useState<Modelo | null>(null);
   const [openNovo, setOpenNovo] = useState(false);
@@ -59,15 +60,19 @@ export default function ModelosLista() {
 
   useEffect(() => {
     getEstabelecimentoId().then(id => { setEstabId(id); void load(id); }).catch(() => toast.error("Estabelecimento não encontrado"));
+    isEstabelecimentoAdmin().then((v) => { setIsAdmin(v); if (!v) setAba("modelos"); });
+    getUserIdFromAuth().then(setUsuarioId);
   }, []);
 
   const filtered = useMemo(() => modelos.filter(m =>
-    (!busca || m.titulo.toLowerCase().includes(busca.toLowerCase()))
+    (aba === "modelos" ? m.is_modelo : (!m.is_modelo && m.owner_user_id === usuarioId))
+    && (!busca || m.titulo.toLowerCase().includes(busca.toLowerCase()))
     && (filtroCat === "__all" || m.categoria_id === filtroCat)
-  ), [modelos, busca, filtroCat]);
+  ), [modelos, busca, filtroCat, aba, usuarioId]);
 
   const criarModelo = async () => {
     if (!estabId || !novo.titulo.trim()) { toast.error("Informe o título"); return; }
+    const criarComoModelo = isAdmin && aba === "modelos";
     const { data, error } = await supabase.from("doc_modelos").insert({
       estabelecimento_id: estabId,
       titulo: novo.titulo.trim(),
@@ -75,7 +80,9 @@ export default function ModelosLista() {
       categoria_id: novo.categoria_id === "__none" ? null : novo.categoria_id,
       content_html: "<h1>Novo Documento</h1><p>Comece a escrever aqui…</p>",
       content_json: {},
-    }).select().single();
+      is_modelo: criarComoModelo,
+      owner_user_id: criarComoModelo ? null : usuarioId,
+    } as any).select().single();
     if (error) { toast.error(error.message); return; }
     setOpenNovo(false);
     setNovo({ titulo: "", descricao: "", categoria_id: "__none" });
@@ -86,6 +93,8 @@ export default function ModelosLista() {
     if (!estabId) return;
     const { data: full } = await supabase.from("doc_modelos").select("*").eq("id", m.id).single();
     if (!full) return;
+    // Admin duplicando um modelo => cria outro modelo; caso contrário vira arquivo pessoal.
+    const asModelo = isAdmin && (full as any).is_modelo;
     const { data, error } = await supabase.from("doc_modelos").insert({
       estabelecimento_id: estabId,
       titulo: (full as any).titulo + " (cópia)",
@@ -95,9 +104,11 @@ export default function ModelosLista() {
       content_json: (full as any).content_json,
       header_html: (full as any).header_html,
       footer_html: (full as any).footer_html,
-    }).select().single();
+      is_modelo: asModelo,
+      owner_user_id: asModelo ? null : usuarioId,
+    } as any).select().single();
     if (error) { toast.error(error.message); return; }
-    toast.success("Modelo duplicado");
+    toast.success(asModelo ? "Modelo duplicado" : "Arquivo pessoal criado");
     if (estabId) void load(estabId);
   };
 
