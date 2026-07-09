@@ -247,7 +247,7 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
                   <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditIdx(i)} title="Editar">
                     <Pencil className="h-3 w-3" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeConfig(i)} title="Remover">
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setConfirmDeleteIdx(i)} title="Remover">
                     <Trash2 className="h-3 w-3 text-destructive" />
                   </Button>
                 </div>
