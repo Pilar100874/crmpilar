@@ -71,6 +71,11 @@ export async function runMergeConfig(cfg: MergeConfig | null | undefined): Promi
       });
       if (error) throw error;
       rows = Array.isArray(data?.rows) ? data.rows : [];
+    } else if (cfg.tabela?.startsWith("xlsx:")) {
+      const ds = getDataset(cfg.tabela);
+      let all = (ds?.rows ?? []).filter((r) => (cfg.filtros ?? []).every((f) => applyFilter(r, f)));
+      if (cfg.limite && cfg.limite > 0) all = all.slice(0, Math.min(cfg.limite, 500));
+      rows = all;
     } else if (cfg.tabela) {
       let q = supabase.from(cfg.tabela as any).select("*").limit(Math.min(cfg.limite || 50, 500));
       for (const f of cfg.filtros ?? []) {
