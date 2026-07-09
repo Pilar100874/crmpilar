@@ -307,6 +307,31 @@ export default function GerarDocumento() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-5xl max-h-[95vh] p-0 flex flex-col">
+          <DialogHeader className="p-4 border-b">
+            <DialogTitle>Prévia — {previewMode === "pdf" ? "Gerar PDF" : "Imprimir"}</DialogTitle>
+            <DialogDescription>
+              Revise o conteúdo abaixo antes de {previewMode === "pdf" ? "gerar o PDF" : "imprimir"}.
+              {previewHtmls.length > 1 && ` ${previewHtmls.length} documentos.`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto bg-muted/20 p-6 space-y-6">
+            {previewHtmls.map((h, i) => (
+              <div key={i} className="bg-white text-black shadow-xl mx-auto"
+                style={{ width: "210mm", minHeight: "297mm", padding: "20mm", boxSizing: "border-box", fontFamily: "Arial, sans-serif", fontSize: "12pt", lineHeight: 1.5 }}
+                dangerouslySetInnerHTML={{ __html: h }} />
+            ))}
+          </div>
+          <DialogFooter className="p-4 border-t gap-2 sm:justify-end">
+            <Button variant="outline" disabled={gerando} onClick={() => setPreviewOpen(false)}>Cancelar</Button>
+            <Button disabled={gerando} onClick={confirmarPreview}>
+              {previewMode === "pdf" ? <><FileDown className="h-4 w-4 mr-1" /> Confirmar e gerar PDF</> : <><Printer className="h-4 w-4 mr-1" /> Confirmar e imprimir</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
