@@ -445,9 +445,9 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                   <Badge variant="default">Principal</Badge>
                   <Select value={cfg.tabela} onValueChange={v => {
                     let novoAlias = cfg.alias;
-                    if (v.startsWith("api:")) {
+                    if (v.startsWith("api:") || v.startsWith("xlsx:")) {
                       const found = tabelasDisponiveis.find(t => t.value === v);
-                      const nome = (found?.label ?? "").replace(/^🔌\s*/, "").trim();
+                      const nome = (found?.label ?? "").replace(/^(🔌|📄)\s*/, "").trim();
                       const sane = nome.replace(/[^a-z0-9_]/gi, "_").replace(/_+/g, "_").replace(/^_|_$/g, "").toLowerCase();
                       if (sane) novoAlias = sane;
                     }
@@ -456,6 +456,9 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
                     <SelectTrigger className="h-8 max-w-xs"><SelectValue placeholder="Escolha a tabela principal" /></SelectTrigger>
                     <SelectContent>{tabelasDisponiveis.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
                   </Select>
+                  <Button size="sm" variant="outline" onClick={() => setImportOpen(true)} title="Importar dados de um arquivo Excel ou CSV">
+                    <FileSpreadsheet className="h-3.5 w-3.5 mr-1" /> Importar Excel/CSV
+                  </Button>
                   {cfg.tabela && (
                     <>
                       <span className="text-xs text-muted-foreground">alias:</span>
