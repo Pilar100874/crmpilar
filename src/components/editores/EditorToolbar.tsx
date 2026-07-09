@@ -84,7 +84,7 @@ export function EditorToolbar({
   editor, onFullscreen, zoom, setZoom, onPreviewMerge, previewActive, estabelecimentoId,
   onBack, onSave, onSalvarComo, onToggleLock, locked, dirty, saving,
   titulo, onTituloChange, mode = "editar", onModeChange,
-  onInsertFormField, onToggleSidebar, sidebarOpen, hasFormFields = false,
+  onInsertFormField, onToggleSidebar, sidebarOpen, onToggleFormFields, formFieldsOpen, hasFormFields = false,
   onQuickFill, onGeneratePdf, onPrint, onSearchEmpresa, onSearchEstoque,
 }: Props) {
 
