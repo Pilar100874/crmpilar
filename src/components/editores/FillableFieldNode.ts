@@ -402,6 +402,9 @@ export const FillableField = Node.create({
       case "cnpj":
         child = ["input", { type: "text", "data-fillable": token, "data-cnpj-autofill": "1", placeholder: label || "CNPJ", style: inputStyle + ";min-width:180px" }];
         break;
+      case "cep":
+        child = ["input", { type: "text", "data-fillable": token, "data-cep-autofill": "1", placeholder: label || "CEP", style: inputStyle + ";min-width:120px" }];
+        break;
       default:
         child = ["input", { type: "text", "data-fillable": token, placeholder: label, style: inputStyle }];
     }
