@@ -14,6 +14,7 @@ export const FillableField = Node.create({
   atom: true,
   selectable: true,
   draggable: true,
+  marks: "_",
 
   addAttributes() {
     return {
