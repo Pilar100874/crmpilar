@@ -41,7 +41,7 @@ interface CustomFieldFilters {
 
 const emptyFilters: CustomFieldFilters = { range: {}, text: {}, select: {}, checkbox: {}, number: {} };
 
-type ColumnKey = 'nome' | 'codigo' | 'grupo' | 'estoque';
+type ColumnKey = 'nome' | 'codigo' | 'grupo' | 'estoque' | 'preco';
 interface ColumnDef { key: ColumnKey; label: string; defaultWidth: number; minWidth: number; }
 
 const ALL_COLUMNS: ColumnDef[] = [
@@ -49,7 +49,11 @@ const ALL_COLUMNS: ColumnDef[] = [
   { key: 'codigo', label: 'Código', defaultWidth: 90, minWidth: 60 },
   { key: 'grupo', label: 'Grupo', defaultWidth: 110, minWidth: 70 },
   { key: 'estoque', label: 'Estoque', defaultWidth: 80, minWidth: 50 },
+  { key: 'preco', label: 'Preço', defaultWidth: 100, minWidth: 70 },
 ];
+
+const fmtMoney = (v: number | null | undefined) =>
+  v == null ? '' : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 type SortDir = 'asc' | 'desc' | null;
 
