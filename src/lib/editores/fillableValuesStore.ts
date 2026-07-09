@@ -11,6 +11,11 @@ export function setFillableValues(v: Record<string, string>) {
   listeners.forEach((l) => l());
 }
 
+export function mergeFillableValues(partial: Record<string, string>) {
+  values = { ...values, ...partial };
+  listeners.forEach((l) => l());
+}
+
 export function getFillableValues(): Record<string, string> {
   return values;
 }
