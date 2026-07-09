@@ -343,10 +343,14 @@ export const FillableField = Node.create({
       .split(",").map(s => s.trim()).filter(Boolean);
     const cnpjSubfield = String(node.attrs.cnpjSubfield || "");
     const cnpjGroup = String(node.attrs.cnpjGroup || "");
+    const cepSubfield = String(node.attrs.cepSubfield || "");
+    const cepGroup = String(node.attrs.cepGroup || "");
 
     const extra: Record<string, string> = {};
     if (cnpjSubfield) extra["data-cnpj-subfield"] = cnpjSubfield;
     if (cnpjGroup) extra["data-cnpj-group"] = cnpjGroup;
+    if (cepSubfield) extra["data-cep-subfield"] = cepSubfield;
+    if (cepGroup) extra["data-cep-group"] = cepGroup;
 
     const wrapAttrs = mergeAttributes(HTMLAttributes, {
       "data-fillable-field": token,
