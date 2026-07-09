@@ -160,6 +160,28 @@ export default function ModeloEditor() {
 
   useEffect(() => {
     if (!id) return;
+    if (isNew) {
+      // Documento novo — não persiste no banco até o usuário salvar
+      setModelo({
+        id: null,
+        titulo: tipoNovo === "modelo" ? "Novo modelo" : "Novo documento",
+        descricao: null,
+        content_html: "",
+        content_json: {},
+        header_html: null,
+        footer_html: null,
+        merge_config: {},
+        bloqueado: false,
+        campos_bloqueados: false,
+        is_modelo: false,
+        owner_user_id: null,
+        categoria_id: null,
+      });
+      setHtml("");
+      setJson({});
+      hydrateDatasets([]);
+      return;
+    }
     (async () => {
       const { data } = await supabase.from("doc_modelos").select("*").eq("id", id).single();
       if (!data) { toast.error("Modelo não encontrado"); nav("/editores"); return; }
@@ -169,11 +191,19 @@ export default function ModeloEditor() {
       const imp = (data as any)?.merge_config?.importedDatasets;
       hydrateDatasets(Array.isArray(imp) ? imp : []);
     })();
-  }, [id, nav]);
+  }, [id, isNew, tipoNovo, nav]);
+
+  // Aviso ao fechar/atualizar a aba
+  useEffect(() => {
+    const h = (e: BeforeUnloadEvent) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } };
+    window.addEventListener("beforeunload", h);
+    return () => window.removeEventListener("beforeunload", h);
+  }, [dirty]);
 
   // Autosave (2s debounce) — só quando o registro atual é editável pelo usuário
   useEffect(() => {
-    if (!dirty || !id || !modelo) return;
+    if (!dirty || !id || isNew || !modelo) return;
+
     const podeEditar = modelo.is_modelo ? isAdmin : modelo.owner_user_id === usuarioId;
     if (!podeEditar) return; // não faz autosave em modelo de admin sendo visto por usuário comum
     const t = setTimeout(() => { void salvar(true); }, 2000);
