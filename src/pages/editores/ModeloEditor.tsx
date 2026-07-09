@@ -389,6 +389,14 @@ export default function ModeloEditor() {
           )}
         </div>
 
+        <QuickFillDialog
+          open={quickFillOpen}
+          onOpenChange={setQuickFillOpen}
+          html={html}
+          values={fillableValues}
+          onApply={(v) => setFillableValues(v)}
+        />
+
 
         {/* Barra inferior — nome do documento */}
         <div className="border-t bg-card px-3 py-2 flex items-center gap-2">
