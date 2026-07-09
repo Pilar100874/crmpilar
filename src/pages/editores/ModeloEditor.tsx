@@ -9,12 +9,13 @@ import { EditorToolbar, type EditorMode } from "@/components/editores/EditorTool
 import { CamposSidebar } from "@/components/editores/CamposSidebar";
 import { PreviewModal } from "@/components/editores/PreviewModal";
 import type { Editor } from "@tiptap/react";
-import { SimuladorInline } from "@/components/editores/SimuladorInline";
-import { renderTemplate } from "@/lib/editores/mergeEngine";
+import { QuickFillDialog } from "@/components/editores/QuickFillDialog";
+import { renderTemplate, applyFillables } from "@/lib/editores/mergeEngine";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
 import { runMergeConfig } from "@/lib/editores/runMergeConfig";
 import { setPreviewValues, setPreviewRows, setPreviewActive } from "@/lib/editores/mergePreviewStore";
 import { RegistroNavigator } from "@/components/editores/RegistroNavigator";
+import { downloadPdf, printHtml } from "@/lib/editores/pdfExport";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
@@ -40,6 +41,8 @@ export default function ModeloEditor() {
   const [rowsByAlias, setRowsByAlias] = useState<Record<string, any[]>>({});
   const [primaryAlias, setPrimaryAlias] = useState<string | null>(null);
   const [showResolved, setShowResolved] = useState(false);
+  const [quickFillOpen, setQuickFillOpen] = useState(false);
+  const [fillableValues, setFillableValues] = useState<Record<string, string>>({});
 
   // Normaliza merge_config para array de configs (aceita objeto legado)
   const configs = useMemo<any[]>(() => {
@@ -255,6 +258,49 @@ export default function ModeloEditor() {
     setShowResolved((v) => !v);
   };
 
+  // Gera o HTML final com dados do vínculo primário + valores dos fillables preenchidos.
+  const buildFinalHtml = async (): Promise<string> => {
+    let dados: Record<string, any> = { data_atual: new Date().toLocaleDateString("pt-BR") };
+    try {
+      const base = await resolveMergeData("livre", null);
+      dados = { ...dados, ...base };
+    } catch {}
+    for (const c of configs) {
+      if (!c?.alias) continue;
+      const rows = rowsByAlias[c.alias] || [];
+      if (!rows.length) continue;
+      const i = c.alias === primaryAlias ? recordIndex : 0;
+      const row = rows[Math.min(i, rows.length - 1)];
+      dados[c.alias] = row;
+      Object.assign(dados, row);
+    }
+    const step1 = renderTemplate(html, dados, { highlightMissing: false }).html;
+    return applyFillables(step1, fillableValues, { highlightEmpty: false });
+  };
+
+  const renderToTemporaryPage = async (): Promise<HTMLDivElement> => {
+    const finalHtml = await buildFinalHtml();
+    const page = document.createElement("div");
+    page.style.cssText = "width:210mm;min-height:297mm;padding:20mm;box-sizing:border-box;background:#fff;color:#000;font-family:Arial,sans-serif;font-size:12pt;line-height:1.5;position:fixed;left:-99999px;top:0;";
+    page.innerHTML = finalHtml;
+    document.body.appendChild(page);
+    return page;
+  };
+
+  const gerarPdf = async () => {
+    const page = await renderToTemporaryPage();
+    try {
+      await downloadPdf(page, { filename: modelo?.titulo || "documento" });
+    } finally {
+      page.remove();
+    }
+  };
+
+  const imprimir = async () => {
+    const finalHtml = await buildFinalHtml();
+    printHtml(finalHtml);
+  };
+
   if (!modelo) return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
 
   const mc = modelo.merge_config;
@@ -296,6 +342,9 @@ export default function ModeloEditor() {
           onToggleSidebar={() => setSidebarOpen(o => !o)}
           sidebarOpen={sidebarOpen}
           hasFormFields={/data-fillable-field=|data-fillable=/i.test(html)}
+          onQuickFill={() => setQuickFillOpen(true)}
+          onGeneratePdf={gerarPdf}
+          onPrint={imprimir}
         />
 
         {primaryRows.length > 0 && (
@@ -312,26 +361,7 @@ export default function ModeloEditor() {
 
         <div className="flex-1 overflow-hidden">
 
-          {modo !== "editar" ? (
-            <div className="h-full flex flex-col overflow-hidden">
-              <div className="px-3 py-1.5 border-b bg-muted/40 text-xs flex items-center gap-2">
-                <span className="font-semibold">Preenchimento rápido — preencher campos</span>
-              </div>
-              <div className="flex-1 overflow-hidden">
-                <SimuladorInline
-                  html={html}
-                  titulo={modelo.titulo}
-                  soPreenchimento={modo === "form"}
-                  mergeConfig={configs[0] ?? modelo.merge_config ?? null}
-                  onMergeConfigChange={(cfg) => {
-                    const next = [...configs];
-                    if (next.length) next[0] = cfg; else next.push(cfg);
-                    setConfigs(next);
-                  }}
-                />
-              </div>
-            </div>
-          ) : (
+          {(
             <div className="h-full flex overflow-hidden">
               <div className="flex-1 overflow-auto">
                 <TiptapEditor
@@ -358,6 +388,14 @@ export default function ModeloEditor() {
             </div>
           )}
         </div>
+
+        <QuickFillDialog
+          open={quickFillOpen}
+          onOpenChange={setQuickFillOpen}
+          html={html}
+          values={fillableValues}
+          onApply={(v) => setFillableValues(v)}
+        />
 
 
         {/* Barra inferior — nome do documento */}

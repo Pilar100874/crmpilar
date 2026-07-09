@@ -9,7 +9,7 @@ import {
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   List, ListOrdered, Undo, Redo, Link as LinkIcon,
   Table as TableIcon, Rows, Columns, Trash2, Eraser, Maximize2, ZoomIn, ZoomOut,
-  ScanSearch, ArrowLeft, Save, Eye, Lock, Unlock, Copy,
+  ScanSearch, ArrowLeft, Save, Eye, Lock, Unlock, Copy, Printer, FileDown,
   Database, ClipboardList, Pencil, PanelRightOpen, PanelRightClose,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -47,6 +47,9 @@ interface Props {
   onToggleSidebar?: () => void;
   sidebarOpen?: boolean;
   hasFormFields?: boolean;
+  onQuickFill?: () => void;
+  onGeneratePdf?: () => void;
+  onPrint?: () => void;
 }
 
 
@@ -74,6 +77,7 @@ export function EditorToolbar({
   onBack, onSave, onSalvarComo, onToggleLock, locked, dirty, saving,
   titulo, onTituloChange, mode = "editar", onModeChange,
   onInsertFormField, onToggleSidebar, sidebarOpen, hasFormFields = false,
+  onQuickFill, onGeneratePdf, onPrint,
 }: Props) {
 
   const [color, setColor] = useState("#111111");
@@ -108,21 +112,24 @@ export function EditorToolbar({
           </TB>
         )}
 
-        {onModeChange && (
+        {(onQuickFill || onGeneratePdf || onPrint) && (
           <>
             <Separator orientation="vertical" className="h-6 mx-1" />
-            <TB
-              onClick={() => onModeChange(mode === "form" ? "editar" : "form")}
-              active={mode === "form"}
-              disabled={!hasFormFields && mode !== "form"}
-              title={
-                hasFormFields
-                  ? (mode === "form" ? "Sair do preenchimento rápido" : "Preenchimento rápido")
-                  : "Insira ao menos um campo de formulário para habilitar"
-              }
-            >
-              <ClipboardList className="h-4 w-4" />
-            </TB>
+            {onQuickFill && (
+              <TB
+                onClick={onQuickFill}
+                disabled={!hasFormFields}
+                title={hasFormFields ? "Preenchimento rápido" : "Insira ao menos um campo de formulário para habilitar"}
+              >
+                <ClipboardList className="h-4 w-4" />
+              </TB>
+            )}
+            {onGeneratePdf && (
+              <TB onClick={onGeneratePdf} title="Gerar PDF"><FileDown className="h-4 w-4" /></TB>
+            )}
+            {onPrint && (
+              <TB onClick={onPrint} title="Imprimir"><Printer className="h-4 w-4" /></TB>
+            )}
           </>
         )}
 
