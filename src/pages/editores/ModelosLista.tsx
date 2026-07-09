@@ -78,7 +78,7 @@ export default function ModelosLista() {
       titulo: novo.titulo.trim(),
       descricao: novo.descricao.trim() || null,
       categoria_id: novo.categoria_id === "__none" ? null : novo.categoria_id,
-      content_html: "<h1>Novo Documento</h1><p>Comece a escrever aqui…</p>",
+      content_html: "<p></p>",
       content_json: {},
       is_modelo: criarComoModelo,
       owner_user_id: criarComoModelo ? null : usuarioId,

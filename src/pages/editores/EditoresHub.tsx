@@ -62,7 +62,7 @@ export default function EditoresHub() {
     const { data, error } = await supabase.from("doc_modelos").insert({
       estabelecimento_id: estabId,
       titulo: "Novo modelo",
-      content_html: "<h1>Novo Modelo</h1><p>Comece a escrever aqui…</p>",
+      content_html: "<p></p>",
       content_json: {},
     }).select().single();
     if (error) { toast.error(error.message); return; }
@@ -74,7 +74,7 @@ export default function EditoresHub() {
     const { data, error } = await supabase.from("doc_modelos").insert({
       estabelecimento_id: estabId,
       titulo: "Novo documento",
-      content_html: "<h1>Novo Documento</h1><p>Comece a escrever aqui…</p>",
+      content_html: "<p></p>",
       content_json: {},
     }).select().single();
     if (error) { toast.error(error.message); return; }
