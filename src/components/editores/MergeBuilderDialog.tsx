@@ -129,6 +129,10 @@ function parseSelectColumns(sql: string): string[] {
 
 async function fetchColumns(tabela: string): Promise<string[]> {
   try {
+    if (tabela.startsWith("xlsx:")) {
+      const ds = getDataset(tabela);
+      return ds?.columns ?? [];
+    }
     if (tabela.startsWith("api:")) {
       const id = tabela.slice(4);
       try {
@@ -153,7 +157,7 @@ async function fetchColumns(tabela: string): Promise<string[]> {
 }
 
 
-export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFields, onSaveTable, initialSelected, hideTrigger, open: openProp, onOpenChange, triggerLabel = "Vincular dados", triggerAsIcon }: Props) {
+export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFields, onSaveTable, initialSelected, hideTrigger, open: openProp, onOpenChange, triggerLabel = "Vincular dados", triggerAsIcon, onImportedDataset }: Props) {
   const [openInternal, setOpenInternal] = useState(false);
   const open = openProp !== undefined ? openProp : openInternal;
   const setOpen = (o: boolean) => { onOpenChange?.(o); if (openProp === undefined) setOpenInternal(o); };
