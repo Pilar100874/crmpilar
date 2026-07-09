@@ -284,6 +284,16 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
                 onImportedDataset={onImportedDataset}
               />
             ))}
+            <DeleteConfirmDialog
+              open={confirmDeleteIdx !== null}
+              onOpenChange={(o) => { if (!o) setConfirmDeleteIdx(null); }}
+              onConfirm={() => {
+                if (confirmDeleteIdx !== null) removeConfig(confirmDeleteIdx);
+                setConfirmDeleteIdx(null);
+              }}
+              title="Excluir vínculo de dados"
+              itemName={confirmDeleteIdx !== null ? (configs[confirmDeleteIdx]?.tabela || configs[confirmDeleteIdx]?.alias || "vínculo") : undefined}
+            />
           </div>
 
           {/* Tabelas salvas — subgrupo */}
