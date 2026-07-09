@@ -404,6 +404,24 @@ export default function ModeloEditor() {
           onApply={(v) => { setFillableValues(v); setFillableStore(v); }}
         />
 
+        <EmpresaSearchDialog
+          open={empresaSearchOpen}
+          onOpenChange={setEmpresaSearchOpen}
+          onInsert={(h) => {
+            editorRef.current?.chain().focus().insertContent(h).run();
+            setDirty(true);
+          }}
+        />
+
+        <EstoqueSearchDialog
+          open={estoqueSearchOpen}
+          onOpenChange={setEstoqueSearchOpen}
+          onInsert={(h) => {
+            editorRef.current?.chain().focus().insertContent(h).run();
+            setDirty(true);
+          }}
+        />
+
 
         {/* Barra inferior — nome do documento */}
         <div className="border-t bg-card px-3 py-2 flex items-center gap-2">
