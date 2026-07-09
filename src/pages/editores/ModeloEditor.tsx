@@ -15,7 +15,7 @@ import type { Editor } from "@tiptap/react";
 import { QuickFillDialog } from "@/components/editores/QuickFillDialog";
 import { EmpresaSearchDialog } from "@/components/editores/EmpresaSearchDialog";
 import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
-import { renderTemplate, applyFillables } from "@/lib/editores/mergeEngine";
+import { renderTemplate, applyFillables, extractFillableTokens } from "@/lib/editores/mergeEngine";
 import { parseCnpjGroupPayload, buildCnpjGroupFields } from "@/lib/editores/cnpjGroup";
 import { setFillableValues as setFillableStore } from "@/lib/editores/fillableValuesStore";
 import { hydrateDatasets, registerDataset, getAllDatasets, type ImportedDataset } from "@/lib/editores/importedDatasetStore";
@@ -75,6 +75,17 @@ export default function ModeloEditor() {
   );
 
   const configsKey = JSON.stringify(configs);
+
+  // Contagem de campos de formulário pendentes (sem valor preenchido)
+  const fillablesInfo = useMemo(() => {
+    const tokens = extractFillableTokens(html);
+    const total = tokens.length;
+    const pendentes = tokens.filter(t => {
+      const v = fillableValues[t.raw] ?? fillableValues[t.label] ?? "";
+      return !String(v).trim();
+    }).length;
+    return { total, pendentes };
+  }, [html, fillableValues]);
 
   // Carrega registros de cada vínculo para o preview inline dos chips
   useEffect(() => {
@@ -543,6 +554,20 @@ export default function ModeloEditor() {
           <span className="text-[11px] text-muted-foreground">
             {dirty && "não salvo"} {saving && "salvando…"}
             {modelo.bloqueado && <span className="ml-2 px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700">🔒 bloqueado</span>}
+            {fillablesInfo.total > 0 && (
+              <span
+                className={`ml-2 px-1.5 py-0.5 rounded ${
+                  fillablesInfo.pendentes > 0
+                    ? "bg-orange-500/20 text-orange-700"
+                    : "bg-emerald-500/20 text-emerald-700"
+                }`}
+                title="Campos de formulário pendentes"
+              >
+                {fillablesInfo.pendentes > 0
+                  ? `${fillablesInfo.pendentes} de ${fillablesInfo.total} campo(s) a preencher`
+                  : `Todos os ${fillablesInfo.total} campo(s) preenchidos`}
+              </span>
+            )}
           </span>
         </div>
       </div>
