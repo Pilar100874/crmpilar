@@ -264,25 +264,32 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
       if (!cfg.tabela) throw new Error("Selecione a tabela principal");
       const camposMain = getSel(cfg.tabela);
       let list: any[] = [];
-      if (cfg.tabela.startsWith("api:")) {
+      const applyFilter = (r: any, f: MergeConfigFiltro) => {
+        if (!f.campo || !f.valor) return true;
+        const rawCampo = f.campo.includes(".") ? f.campo.split(".").slice(1).join(".") : f.campo;
+        const v = r?.[rawCampo];
+        const val = f.valor;
+        switch (f.op) {
+          case "eq": return String(v) === val;
+          case "neq": return String(v) !== val;
+          case "ilike": return String(v ?? "").toLowerCase().includes(val.toLowerCase());
+          case "gt": return Number(v) > Number(val);
+          case "gte": return Number(v) >= Number(val);
+          case "lt": return Number(v) < Number(val);
+          case "lte": return Number(v) <= Number(val);
+          default: return true;
+        }
+      };
+      if (cfg.tabela.startsWith("xlsx:")) {
+        const ds = getDataset(cfg.tabela);
+        const src = ds?.rows ?? [];
+        let all = src.filter((r) => cfg.filtros.every((f) => applyFilter(r, f)));
+        if (cfg.limite && cfg.limite > 0) all = all.slice(0, Math.min(cfg.limite, 500));
+        list = camposMain.length ? all.map((r) => Object.fromEntries(camposMain.map((c) => [c, r?.[c]]))) : all;
+      } else if (cfg.tabela.startsWith("api:")) {
         // Fonte é uma API do sistema
         const all = await fetchApiEndpointRows(cfg.tabela.slice(4), cfg.limite && cfg.limite > 0 ? Math.min(cfg.limite, 500) : 0);
-        list = all.filter(r => cfg.filtros.every(f => {
-          if (!f.campo || !f.valor) return true;
-          const rawCampo = f.campo.includes(".") ? f.campo.split(".").slice(1).join(".") : f.campo;
-          const v = r?.[rawCampo];
-          const val = f.valor;
-          switch (f.op) {
-            case "eq": return String(v) === val;
-            case "neq": return String(v) !== val;
-            case "ilike": return String(v ?? "").toLowerCase().includes(val.toLowerCase());
-            case "gt": return Number(v) > Number(val);
-            case "gte": return Number(v) >= Number(val);
-            case "lt": return Number(v) < Number(val);
-            case "lte": return Number(v) <= Number(val);
-            default: return true;
-          }
-        }));
+        list = all.filter((r) => cfg.filtros.every((f) => applyFilter(r, f)));
         if (camposMain.length) list = list.map(r => Object.fromEntries(camposMain.map(c => [c, r?.[c]])));
       } else {
         const selectCols = camposMain.length ? camposMain.join(",") : "*";
