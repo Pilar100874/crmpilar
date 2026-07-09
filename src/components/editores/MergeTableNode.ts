@@ -1,5 +1,5 @@
 import { Node, mergeAttributes } from "@tiptap/core";
-import { getPreviewRows, subscribePreview } from "@/lib/editores/mergePreviewStore";
+import { getPreviewRows, subscribePreview, getSystemFieldKeys } from "@/lib/editores/mergePreviewStore";
 
 /**
  * Nó de bloco que renderiza uma tabela vinculada a um alias de dados.
@@ -202,26 +202,71 @@ export const MergeTable = Node.create({
           return true;
         }).run();
       };
+      const openFormulaPicker = (
+        initial: string,
+        target: "extra" | "row",
+        idx: number,
+        onSave: (v: string) => void,
+      ) => {
+        const cols = (node.attrs.cols || []) as string[];
+        const sysKeys = getSystemFieldKeys();
+        const overlay = document.createElement("div");
+        overlay.contentEditable = "false";
+        overlay.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;";
+        overlay.innerHTML = `
+          <div style="background:#fff;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,0.2);padding:16px;width:560px;max-width:92vw;max-height:80vh;overflow:auto;font-size:13px;">
+            <div style="font-weight:600;margin-bottom:8px;">Editor de fórmula</div>
+            <textarea data-f style="width:100%;height:80px;border:1px solid #d1d5db;border-radius:6px;padding:6px 8px;font-family:monospace;font-size:12px;">${esc(initial)}</textarea>
+            <div style="color:#6b7280;font-size:11px;margin:6px 0 10px;">Ex.: <code>preco * qtd</code> · use <code>+ - * / ()</code> · <code>Math.round(x*100)/100</code></div>
+            <div style="margin-bottom:6px;font-weight:600;color:#374151;">Colunas da tabela</div>
+            <div data-cols style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;">
+              ${cols.map((c) => `<button type="button" data-ins="${esc(c)}" style="padding:2px 8px;background:#dbeafe;border:1px solid #93c5fd;border-radius:4px;font-family:monospace;font-size:11px;cursor:pointer;">${esc(c)}</button>`).join("")}
+              ${cols.length ? "" : '<span style="color:#9ca3af;font-size:11px;">Sem colunas.</span>'}
+            </div>
+            <div style="margin-bottom:6px;font-weight:600;color:#374151;">Campos do sistema (registro atual)</div>
+            <div data-sys style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;max-height:160px;overflow:auto;">
+              ${sysKeys.length ? sysKeys.map((k) => `<button type="button" data-ins="${esc(k)}" style="padding:2px 8px;background:#dcfce7;border:1px solid #86efac;border-radius:4px;font-family:monospace;font-size:11px;cursor:pointer;">${esc(k)}</button>`).join("") : '<span style="color:#9ca3af;font-size:11px;">Ative a visualização para listar campos.</span>'}
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:6px;">
+              <button type="button" data-a="cancel" style="padding:4px 12px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;">Cancelar</button>
+              <button type="button" data-a="ok" style="padding:4px 12px;background:#2563eb;color:#fff;border:none;border-radius:4px;cursor:pointer;">OK</button>
+            </div>
+          </div>`;
+        document.body.appendChild(overlay);
+        const ta = overlay.querySelector("[data-f]") as HTMLTextAreaElement;
+        ta.focus();
+        const insertAtCursor = (text: string) => {
+          const s = ta.selectionStart ?? ta.value.length;
+          const e = ta.selectionEnd ?? ta.value.length;
+          ta.value = ta.value.slice(0, s) + text + ta.value.slice(e);
+          ta.selectionStart = ta.selectionEnd = s + text.length;
+          ta.focus();
+        };
+        overlay.addEventListener("click", (ev) => {
+          const t = ev.target as HTMLElement;
+          const ins = t.getAttribute("data-ins");
+          if (ins) { insertAtCursor(ins); return; }
+          const act = t.getAttribute("data-a");
+          if (act === "cancel" || t === overlay) { overlay.remove(); return; }
+          if (act === "ok") { onSave(ta.value); overlay.remove(); }
+        });
+        // referencia target/idx para futuras extensões (não usadas por enquanto)
+        void target; void idx;
+      };
+
       const openToolbar = () => {
         closeToolbar();
         const a = node.attrs as MergeTableAttrs;
         toolbar = document.createElement("div");
         toolbar.contentEditable = "false";
-        toolbar.style.cssText = "position:absolute;top:-44px;left:0;z-index:50;display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:4px 8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:12px;max-width:720px;";
+        toolbar.style.cssText = "position:absolute;top:-40px;left:0;z-index:50;display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:4px 8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:12px;max-width:720px;";
         toolbar.innerHTML = `
+          <span style="color:#6b7280;">Formatação: use a barra superior</span>
+          <span style="width:1px;height:18px;background:#e5e7eb;"></span>
           <span style="color:#555;">Linhas:</span>
           <input type="number" min="1" value="${a.from ?? 1}" style="width:52px;padding:2px 4px;border:1px solid #ccc;border-radius:4px;" data-k="from" />
           <span style="color:#555;">até</span>
           <input type="number" min="0" value="${a.to ?? 0}" placeholder="todas" style="width:52px;padding:2px 4px;border:1px solid #ccc;border-radius:4px;" data-k="to" />
-          <span style="width:1px;height:18px;background:#e5e7eb;"></span>
-          <input type="color" value="${a.color || "#111111"}" data-a="color" title="Cor" style="width:26px;height:22px;padding:0;border:1px solid #ccc;border-radius:4px;" />
-          <input type="text" value="${a.fontSize || ""}" placeholder="12pt" data-a="size" title="Tamanho" style="width:50px;padding:2px 4px;border:1px solid #ccc;border-radius:4px;" />
-          <input type="text" value="${a.fontFamily || ""}" placeholder="Fonte" data-a="font" title="Fonte" style="width:80px;padding:2px 4px;border:1px solid #ccc;border-radius:4px;" />
-          <select data-a="align" title="Alinhamento" style="padding:2px 4px;border:1px solid #ccc;border-radius:4px;">
-            <option value="left" ${a.align==="left"?"selected":""}>Esq</option>
-            <option value="center" ${a.align==="center"?"selected":""}>Centro</option>
-            <option value="right" ${a.align==="right"?"selected":""}>Dir</option>
-          </select>
           <span style="width:1px;height:18px;background:#e5e7eb;"></span>
           <button type="button" data-a="addcol" style="padding:2px 8px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;">+ Coluna fórmula</button>
           <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" data-a="totals" ${a.totalsRow?"checked":""}/> Totais</label>
@@ -239,7 +284,7 @@ export const MergeTable = Node.create({
           box.innerHTML = extras.map((e, i) => `
             <div style="display:flex;gap:4px;align-items:center;">
               <input data-ex="h" data-i="${i}" value="${esc(e.header)}" placeholder="Cabeçalho" style="width:110px;padding:2px 4px;border:1px solid #ccc;border-radius:4px;" />
-              <input data-ex="f" data-i="${i}" value="${esc(e.formula)}" placeholder="ex: preco * qtd" style="flex:1;padding:2px 4px;border:1px solid #ccc;border-radius:4px;font-family:monospace;" />
+              <button type="button" data-ex="edit" data-i="${i}" style="flex:1;text-align:left;padding:2px 8px;background:#f9fafb;border:1px dashed #9ca3af;border-radius:4px;cursor:pointer;font-family:monospace;color:${e.formula ? "#111" : "#9ca3af"};">${e.formula ? esc(e.formula) : "clique para montar a fórmula"}</button>
               <button type="button" data-ex="rm" data-i="${i}" style="padding:2px 6px;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;border-radius:4px;cursor:pointer;">×</button>
             </div>
           `).join("");
@@ -257,23 +302,29 @@ export const MergeTable = Node.create({
             setTimeout(() => openToolbar(), 0);
             return;
           }
+          if (ex === "edit") {
+            const i = Number(t.getAttribute("data-i"));
+            const list = [...(node.attrs.extraCols || [])] as ExtraCol[];
+            openFormulaPicker(list[i]?.formula || "", "extra", i, (val) => {
+              list[i] = { ...list[i], formula: val };
+              update({ extraCols: list });
+              setTimeout(() => openToolbar(), 0);
+            });
+            return;
+          }
           const act = t.getAttribute("data-a");
           if (!act) return;
           if (act === "apply") {
             const from = Number((toolbar!.querySelector('[data-k="from"]') as HTMLInputElement).value) || 1;
             const to = Number((toolbar!.querySelector('[data-k="to"]') as HTMLInputElement).value) || 0;
-            const color = (toolbar!.querySelector('[data-a="color"]') as HTMLInputElement).value || null;
-            const fontSize = (toolbar!.querySelector('[data-a="size"]') as HTMLInputElement).value || null;
-            const fontFamily = (toolbar!.querySelector('[data-a="font"]') as HTMLInputElement).value || null;
-            const align = (toolbar!.querySelector('[data-a="align"]') as HTMLSelectElement).value as any;
             const totalsRow = (toolbar!.querySelector('[data-a="totals"]') as HTMLInputElement).checked;
             const extras: ExtraCol[] = [];
+            const existing = (node.attrs.extraCols || []) as ExtraCol[];
             toolbar!.querySelectorAll('[data-ex="h"]').forEach((el, i) => {
               const h = (el as HTMLInputElement).value;
-              const f = (toolbar!.querySelector(`[data-ex="f"][data-i="${i}"]`) as HTMLInputElement)?.value || "";
-              extras.push({ header: h, formula: f });
+              extras.push({ header: h, formula: existing[i]?.formula || "" });
             });
-            update({ from, to, color, fontSize, fontFamily, align, totalsRow, extraCols: extras });
+            update({ from, to, totalsRow, extraCols: extras });
             closeToolbar();
           } else if (act === "addcol") {
             const list = [...(node.attrs.extraCols || []), { header: "Total", formula: "" }];
