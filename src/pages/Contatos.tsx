@@ -2331,6 +2331,22 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* Confirmação de exclusão de campo personalizado */}
+        <AlertDialog open={!!fieldToDelete} onOpenChange={(o) => !o && setFieldToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir campo personalizado</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir o campo <strong>{fieldToDelete?.label}</strong>? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmRemoveField}>Excluir</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* Dialog de contato duplicado */}
         <AlertDialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
           <AlertDialogContent>
