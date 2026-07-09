@@ -378,7 +378,33 @@ export const FillableField = Node.create({
 
       const render = () => {
         dom.innerHTML = "";
+        // Handle de mover (usa o draggable nativo do nó via data-drag-handle)
+        const canEdit = editor?.isEditable !== false;
+        if (canEdit) {
+          const grip = document.createElement("span");
+          grip.setAttribute("data-drag-handle", "");
+          grip.title = "Arraste para mover";
+          grip.style.cssText = "cursor:grab;user-select:none;color:#94a3b8;font-size:12px;padding:0 2px;line-height:1";
+          grip.textContent = "⋮⋮";
+          dom.appendChild(grip);
+        }
         dom.appendChild(buildInput());
+        if (canEdit) {
+          const del = document.createElement("button");
+          del.type = "button";
+          del.title = "Remover campo";
+          del.textContent = "×";
+          del.style.cssText = "cursor:pointer;border:none;background:transparent;color:#dc2626;font-size:14px;line-height:1;padding:0 4px";
+          del.addEventListener("mousedown", (ev) => ev.preventDefault());
+          del.addEventListener("click", (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            const pos = typeof getPos === "function" ? getPos() : null;
+            if (pos == null || !editor) return;
+            editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).run();
+          });
+          dom.appendChild(del);
+        }
       };
       render();
       const unsub = subscribeFillable(() => {
