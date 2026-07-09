@@ -42,6 +42,9 @@ export default function GerarDocumento() {
   const registroId = registroIds[0] ?? null;
   const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
   const [gerando, setGerando] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewMode, setPreviewMode] = useState<"pdf" | "print">("pdf");
+  const [previewHtmls, setPreviewHtmls] = useState<string[]>([]);
   const [dados, setDados] = useState<Record<string, any>>({});
   const [overrides, setOverrides] = useState<Record<string, string>>({});
   const [fillables, setFillables] = useState<Record<string, string>>({});
