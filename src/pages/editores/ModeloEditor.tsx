@@ -599,6 +599,7 @@ export default function ModeloEditor() {
         onOpenChange={setShowPreview}
         templateHtml={html}
         html={previewHtml}
+        pages={previewPages}
         titulo={modelo.titulo}
         missing={previewMissing}
         mergeConfig={modelo.merge_config ?? null}
