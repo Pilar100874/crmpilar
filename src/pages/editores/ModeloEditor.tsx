@@ -377,8 +377,9 @@ export default function ModeloEditor() {
   };
 
   const [previewPages, setPreviewPages] = useState<string[]>([]);
+  const [previewMode, setPreviewMode] = useState<"pdf" | "print">("pdf");
 
-  const abrirPreviewModal = async () => {
+  const abrirPreviewModal = async (mode: "pdf" | "print" = "pdf") => {
     if (dirty) { try { await salvar(true); } catch {} }
     try {
       const total = primaryRows.length;
@@ -397,16 +398,18 @@ export default function ModeloEditor() {
       setPreviewPages([html]);
       setPreviewHtml(html);
     }
+    setPreviewMode(mode);
     setShowPreview(true);
   };
 
   const gerarPdf = async () => {
-    await abrirPreviewModal();
+    await abrirPreviewModal("pdf");
   };
 
   const imprimir = async () => {
-    await abrirPreviewModal();
+    await abrirPreviewModal("print");
   };
+
 
   if (!modelo) return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
 
@@ -603,6 +606,7 @@ export default function ModeloEditor() {
         titulo={modelo.titulo}
         missing={previewMissing}
         mergeConfig={modelo.merge_config ?? null}
+        initialMode={previewMode}
         onSave={async () => { await salvar(); toast.success("Rascunho salvo"); }}
       />
     </div>
