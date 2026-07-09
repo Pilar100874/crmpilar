@@ -41,6 +41,8 @@ export default function ModeloEditor() {
   const [rowsByAlias, setRowsByAlias] = useState<Record<string, any[]>>({});
   const [primaryAlias, setPrimaryAlias] = useState<string | null>(null);
   const [showResolved, setShowResolved] = useState(false);
+  const [quickFillOpen, setQuickFillOpen] = useState(false);
+  const [fillableValues, setFillableValues] = useState<Record<string, string>>({});
 
   // Normaliza merge_config para array de configs (aceita objeto legado)
   const configs = useMemo<any[]>(() => {
