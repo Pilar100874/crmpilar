@@ -15,6 +15,7 @@ export const MergeField = Node.create({
   atom: true,
   selectable: true,
   draggable: true,
+  marks: "_",
 
   addAttributes() {
     return {
