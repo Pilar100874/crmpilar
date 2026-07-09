@@ -423,8 +423,14 @@ export default function ModeloEditor() {
             actionLabel="Inserir no documento"
             actionLabelShort="Inserir"
             onInsertHtml={(html) => {
-              editorRef.current?.chain().focus().insertContent(html).run();
-              setDirty(true);
+              const ed = editorRef.current;
+              if (!ed) { console.warn("[estoque] editor não pronto"); return; }
+              setTimeout(() => {
+                ed.chain().focus().insertContent(html, {
+                  parseOptions: { preserveWhitespace: "full" },
+                }).run();
+                setDirty(true);
+              }, 50);
             }}
             onEnviarParaConversa={() => { /* editor usa onInsertHtml */ }}
           />
