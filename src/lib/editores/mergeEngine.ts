@@ -287,7 +287,7 @@ export function evalCalculados(row: Record<string, any>, calc: CampoCalculado[])
 
 const FILLABLE_RE = /\[\[([^\[\]\n]{1,200})\]\]/g;
 
-export type FillableTipo = "texto" | "textarea" | "data" | "numero" | "check" | "lista" | "radio";
+export type FillableTipo = "texto" | "textarea" | "data" | "numero" | "check" | "lista" | "radio" | "cnpj";
 
 export interface FillableToken {
   raw: string;
@@ -296,7 +296,7 @@ export interface FillableToken {
   opcoes?: string[];
 }
 
-const TIPOS: FillableTipo[] = ["texto", "textarea", "data", "numero", "check", "lista", "radio"];
+const TIPOS: FillableTipo[] = ["texto", "textarea", "data", "numero", "check", "lista", "radio", "cnpj"];
 
 export function parseFillable(raw: string): FillableToken {
   const trimmed = raw.trim();
