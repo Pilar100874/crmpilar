@@ -87,8 +87,9 @@ async function askCnpjForGroup(group: string) {
   if (!group) return;
   if (cnpjGroupState.get(group)) return;
   cnpjGroupState.set(group, "asking");
-  const raw = window.prompt(`Informe o CNPJ para preencher automaticamente "${group}":`, "");
-  const clean = (raw || "").replace(/\D/g, "");
+  const masked = await askCnpjModal(`Informe o CNPJ para preencher "${group}"`);
+  if (!masked) { cnpjGroupState.delete(group); return; }
+  const clean = masked.replace(/\D/g, "");
   if (clean.length !== 14) { cnpjGroupState.delete(group); return; }
   try {
     await autofillCnpj(clean, group);
