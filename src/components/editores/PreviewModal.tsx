@@ -207,10 +207,26 @@ export function PreviewModal({
   const [mode, setMode] = useState<"pdf" | "print">(initialMode);
   useEffect(() => { if (open) setMode(initialMode); }, [open, initialMode]);
 
+  const pageRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const scrollToPage = (i: number) => {
+    const el = pageRefs.current[i];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  useEffect(() => {
+    if (!open) return;
+    const id = setTimeout(() => scrollToPage(currentIdx), 50);
+    return () => clearTimeout(id);
+  }, [currentIdx, open, mode]);
+
+  const setPageRef = (i: number) => (el: HTMLDivElement | null) => {
+    pageRefs.current[i] = el;
+    if (i === 0) (pageRef as any).current = el;
+  };
+
   const renderPages = () => {
     if (pages && pages.length > 0) {
       return pages.map((pHtml, i) => (
-        <PagePaper key={i} index={i} total={pages.length} html={pHtml} refEl={i === 0 ? pageRef : undefined} />
+        <PagePaper key={i} index={i} total={pages.length} html={pHtml} refEl={setPageRef(i)} />
       ));
     }
     if (rows.length > 1) {
@@ -221,7 +237,7 @@ export function PreviewModal({
           total={rows.length}
           label={registroLabel(r)}
           html={renderForRow(r)}
-          refEl={i === idx ? pageRef : undefined}
+          refEl={setPageRef(i)}
         />
       ));
     }
@@ -230,7 +246,7 @@ export function PreviewModal({
         index={0}
         total={1}
         html={currentHtml || '<p style="color:#999;text-align:center;padding:40px;">Documento vazio. Adicione conteúdo no editor.</p>'}
-        refEl={pageRef}
+        refEl={setPageRef(0)}
         single
       />
     );
@@ -350,7 +366,7 @@ interface PagePaperProps {
   total: number;
   html: string;
   label?: string;
-  refEl?: React.RefObject<HTMLDivElement>;
+  refEl?: React.Ref<HTMLDivElement>;
   single?: boolean;
 }
 function PagePaper({ index, total, html, label, refEl, single }: PagePaperProps) {
