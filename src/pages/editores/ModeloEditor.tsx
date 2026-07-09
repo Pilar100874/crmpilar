@@ -606,6 +606,7 @@ export default function ModeloEditor() {
         titulo={modelo.titulo}
         missing={previewMissing}
         mergeConfig={modelo.merge_config ?? null}
+        initialMode={previewMode}
         onSave={async () => { await salvar(); toast.success("Rascunho salvo"); }}
       />
     </div>
