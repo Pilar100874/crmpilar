@@ -10,6 +10,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { evalCalculados, type CampoCalculado } from "@/lib/editores/mergeEngine";
+import { ImportSpreadsheetWizard } from "./ImportSpreadsheetWizard";
+import {
+  getAllDatasets, getDataset, registerDataset, subscribeDatasets,
+  type ImportedDataset,
+} from "@/lib/editores/importedDatasetStore";
+import { FileSpreadsheet } from "lucide-react";
+import { useSyncExternalStore } from "react";
 
 export interface MergeConfigFiltro {
   campo: string;
