@@ -119,12 +119,14 @@ export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) 
     if (cfg.hasOpcoes && editing.fonte === "tabela" && (!editing.tabela || !editing.coluna)) {
       toast.error("Escolha tabela e coluna"); return;
     }
+    const isCnpj = editing.tipo === "cnpj";
+    if (isCnpj && editing.opcoes.length === 0) { toast.error("Selecione ao menos um sub-campo"); return; }
     const payload = {
       estabelecimento_id: estabelecimentoId,
       label: editing.label.trim(),
       tipo: editing.tipo,
       fonte: cfg.hasOpcoes ? editing.fonte : "manual",
-      opcoes: cfg.hasOpcoes && editing.fonte === "manual" ? editing.opcoes : [],
+      opcoes: isCnpj ? editing.opcoes : (cfg.hasOpcoes && editing.fonte === "manual" ? editing.opcoes : []),
       tabela: cfg.hasOpcoes && editing.fonte === "tabela" ? editing.tabela : null,
       coluna: cfg.hasOpcoes && editing.fonte === "tabela" ? editing.coluna : null,
     };
