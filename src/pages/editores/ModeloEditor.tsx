@@ -361,26 +361,7 @@ export default function ModeloEditor() {
 
         <div className="flex-1 overflow-hidden">
 
-          {modo !== "editar" ? (
-            <div className="h-full flex flex-col overflow-hidden">
-              <div className="px-3 py-1.5 border-b bg-muted/40 text-xs flex items-center gap-2">
-                <span className="font-semibold">Preenchimento rápido — preencher campos</span>
-              </div>
-              <div className="flex-1 overflow-hidden">
-                <SimuladorInline
-                  html={html}
-                  titulo={modelo.titulo}
-                  soPreenchimento={modo === "form"}
-                  mergeConfig={configs[0] ?? modelo.merge_config ?? null}
-                  onMergeConfigChange={(cfg) => {
-                    const next = [...configs];
-                    if (next.length) next[0] = cfg; else next.push(cfg);
-                    setConfigs(next);
-                  }}
-                />
-              </div>
-            </div>
-          ) : (
+          {(
             <div className="h-full flex overflow-hidden">
               <div className="flex-1 overflow-auto">
                 <TiptapEditor
