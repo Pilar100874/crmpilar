@@ -41,7 +41,7 @@ interface CustomFieldFilters {
 
 const emptyFilters: CustomFieldFilters = { range: {}, text: {}, select: {}, checkbox: {}, number: {} };
 
-type ColumnKey = 'nome' | 'codigo' | 'grupo' | 'estoque';
+type ColumnKey = 'nome' | 'codigo' | 'grupo' | 'estoque' | 'preco';
 interface ColumnDef { key: ColumnKey; label: string; defaultWidth: number; minWidth: number; }
 
 const ALL_COLUMNS: ColumnDef[] = [
@@ -49,7 +49,11 @@ const ALL_COLUMNS: ColumnDef[] = [
   { key: 'codigo', label: 'Código', defaultWidth: 90, minWidth: 60 },
   { key: 'grupo', label: 'Grupo', defaultWidth: 110, minWidth: 70 },
   { key: 'estoque', label: 'Estoque', defaultWidth: 80, minWidth: 50 },
+  { key: 'preco', label: 'Preço', defaultWidth: 100, minWidth: 70 },
 ];
+
+const fmtMoney = (v: number | null | undefined) =>
+  v == null ? '' : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 type SortDir = 'asc' | 'desc' | null;
 
@@ -182,6 +186,7 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
       case 'codigo': return p.codigo || '';
       case 'grupo': return grupoName(p.grupo_id);
       case 'estoque': return p.estoque ?? 0;
+      case 'preco': return p.preco_tabela ?? 0;
     }
   };
 
@@ -285,6 +290,7 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
           case 'codigo': if (p.codigo) parts.push(`(${p.codigo})`); break;
           case 'grupo': parts.push(grupoName(p.grupo_id)); break;
           case 'estoque': parts.push(`Estoque: *${p.estoque ?? 0}*`); break;
+          case 'preco': if (p.preco_tabela != null) parts.push(`Preço: *${fmtMoney(p.preco_tabela)}*`); break;
         }
       }
       return `📦 ${parts.join(' — ')}`;
@@ -531,6 +537,8 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
                             return <span key={col.key} className="text-xs text-muted-foreground truncate px-1 text-center" style={cellStyle}>{grupoName(p.grupo_id)}</span>;
                           case 'estoque':
                             return <span key={col.key} className={`text-sm px-1 text-right ${estoqueColor}`} style={cellStyle}>{estoque}</span>;
+                          case 'preco':
+                            return <span key={col.key} className="text-sm px-1 text-right tabular-nums" style={cellStyle}>{fmtMoney(p.preco_tabela)}</span>;
                           default:
                             return null;
                         }
@@ -550,6 +558,12 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
                         <div className="text-right shrink-0">
                           <span className={`text-sm ${estoqueColor}`}>{estoque}</span>
                           <p className="text-[10px] text-muted-foreground">estoque</p>
+                        </div>
+                      )}
+                      {visibleCols.has('preco') && p.preco_tabela != null && (
+                        <div className="text-right shrink-0">
+                          <span className="text-sm tabular-nums">{fmtMoney(p.preco_tabela)}</span>
+                          <p className="text-[10px] text-muted-foreground">preço</p>
                         </div>
                       )}
                     </div>
