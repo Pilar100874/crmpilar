@@ -667,7 +667,30 @@ export default function ModeloEditor() {
               </span>
             )}
           </span>
+          <div className="ml-auto">
+            {!isNew && isAdmin && !modelo.is_modelo && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  if (!id) return;
+                  if (!window.confirm("Transformar este documento em modelo? Ele ficará disponível para todos os usuários do estabelecimento.")) return;
+                  if (dirty) { const ok = await salvar(); if (!ok) return; }
+                  const { error } = await supabase.from("doc_modelos").update({ is_modelo: true, owner_user_id: null } as any).eq("id", id);
+                  if (error) { toast.error(error.message); return; }
+                  setModelo({ ...modelo, is_modelo: true, owner_user_id: null });
+                  toast.success("Transformado em modelo");
+                }}
+              >
+                Transformar em modelo
+              </Button>
+            )}
+            {!isNew && modelo.is_modelo && (
+              <span className="text-[11px] px-2 py-0.5 rounded bg-primary/10 text-primary">Modelo</span>
+            )}
+          </div>
         </div>
+
       </div>
 
       <PreviewModal
