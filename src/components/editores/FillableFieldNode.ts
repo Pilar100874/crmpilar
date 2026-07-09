@@ -217,17 +217,33 @@ export const FillableField = Node.create({
       const label = String(node.attrs.label || "");
       const opcoes = String(node.attrs.opcoes || "")
         .split(",").map(s => s.trim()).filter(Boolean);
+      const cnpjSubfield = String(node.attrs.cnpjSubfield || "");
+      const cnpjGroup = String(node.attrs.cnpjGroup || "");
 
       const dom = document.createElement("span");
       dom.setAttribute("data-fillable-field", token);
       dom.setAttribute("data-tipo", tipo);
       dom.setAttribute("data-label", label);
       dom.setAttribute("data-opcoes", opcoes.join(","));
+      if (cnpjSubfield) dom.setAttribute("data-cnpj-subfield", cnpjSubfield);
+      if (cnpjGroup) dom.setAttribute("data-cnpj-group", cnpjGroup);
       dom.contentEditable = "false";
       dom.className = "doc-fillable";
       dom.style.cssText = "display:inline-block;vertical-align:middle;margin:0 2px";
 
       let currentValue = getFillableValue(token, label);
+
+      // Hook: no primeiro foco de um sub-campo do grupo CNPJ ainda vazio,
+      // pergunta o CNPJ e autopreenche todos os sub-campos vazios do grupo.
+      const attachCnpjGroupFocus = (input: HTMLElement) => {
+        if (!cnpjGroup || !cnpjSubfield) return;
+        input.addEventListener("focus", () => {
+          const v = (input as HTMLInputElement | HTMLTextAreaElement).value;
+          if (v && v.trim()) return;
+          if (cnpjGroupState.get(cnpjGroup)) return;
+          void askCnpjForGroup(cnpjGroup);
+        }, { once: false });
+      };
 
       const inputStyle =
         "border:1px solid #cbd5e1;border-radius:4px;padding:2px 6px;font:inherit;background:#fefce8;min-width:120px";
