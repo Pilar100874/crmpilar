@@ -1,5 +1,5 @@
 import { Node, mergeAttributes } from "@tiptap/core";
-import { getPreviewRows, subscribePreview } from "@/lib/editores/mergePreviewStore";
+import { getPreviewRows, subscribePreview, getSystemFieldKeys } from "@/lib/editores/mergePreviewStore";
 
 /**
  * Nó de bloco que renderiza uma tabela vinculada a um alias de dados.
