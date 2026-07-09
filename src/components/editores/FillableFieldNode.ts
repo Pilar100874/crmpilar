@@ -352,6 +352,7 @@ export const FillableField = Node.create({
             t.placeholder = label; t.rows = 2; t.style.cssText = inputStyle;
             t.value = currentValue;
             t.addEventListener("input", () => { currentValue = t.value; });
+            autosize(t);
             el = t; break;
           }
           case "data": {
@@ -366,6 +367,7 @@ export const FillableField = Node.create({
             i.type = "number"; i.setAttribute("data-fillable", token); i.placeholder = label; i.style.cssText = inputStyle;
             i.value = currentValue;
             i.addEventListener("input", () => { currentValue = i.value; });
+            autosize(i);
             el = i; break;
           }
           case "check": {
