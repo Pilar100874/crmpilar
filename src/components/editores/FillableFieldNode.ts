@@ -184,27 +184,15 @@ export const FillableField = Node.create({
         return wrap;
       };
 
-      const buildChip = (): HTMLElement => {
-        const chip = document.createElement("span");
-        chip.className = "doc-field-chip";
-        if (currentValue && currentValue !== "true") {
-          chip.classList.add("doc-field-chip-live");
-          chip.textContent = currentValue;
-        } else if (currentValue === "true") {
-          chip.classList.add("doc-field-chip-live");
-          chip.textContent = "✓ " + label;
-        } else {
-          chip.textContent = `[[${label || token}]]`;
-        }
-        return chip;
-      };
-
       const render = () => {
         dom.innerHTML = "";
-        dom.appendChild(isPreviewActive() ? buildChip() : buildInput());
+        dom.appendChild(buildInput());
       };
       render();
-      const unsub = subscribePreview(render);
+      const unsub = subscribeFillable(() => {
+        currentValue = getFillableValue(token, label);
+        render();
+      });
 
       return { dom, destroy: () => unsub() };
     };
