@@ -4700,6 +4700,45 @@ export type Database = {
         }
         Relationships: []
       }
+      doc_form_fields: {
+        Row: {
+          coluna: string | null
+          created_at: string
+          estabelecimento_id: string
+          fonte: string
+          id: string
+          label: string
+          opcoes: string[]
+          tabela: string | null
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          coluna?: string | null
+          created_at?: string
+          estabelecimento_id: string
+          fonte?: string
+          id?: string
+          label: string
+          opcoes?: string[]
+          tabela?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          coluna?: string | null
+          created_at?: string
+          estabelecimento_id?: string
+          fonte?: string
+          id?: string
+          label?: string
+          opcoes?: string[]
+          tabela?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       doc_gerados: {
         Row: {
           content_html: string | null
