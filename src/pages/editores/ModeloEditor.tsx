@@ -466,6 +466,7 @@ export default function ModeloEditor() {
                   onSavedTablesChange={setSavedTables}
                   mergeFields={mergeFields}
                   onMergeFieldsChange={setMergeFields}
+                  onImportedDataset={handleImportedDataset}
                 />
               </FloatingPanel>
               <FloatingPanel
