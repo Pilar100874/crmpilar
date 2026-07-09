@@ -350,13 +350,15 @@ export const FillableField = Node.create({
               const prev = i.style.background;
               i.style.background = "#fef3c7";
               try {
-                await autofillCnpj(clean);
+                await autofillCnpj(clean, cnpjGroup || undefined);
+                if (cnpjGroup) cnpjGroupState.set(cnpjGroup, "loaded");
               } catch (e) {
                 console.warn("[cnpj autofill]", e);
               } finally {
                 i.style.background = prev;
               }
             });
+            attachCnpjGroupFocus(i);
             el = i; break;
           }
           default: {
@@ -364,6 +366,7 @@ export const FillableField = Node.create({
             i.type = "text"; i.setAttribute("data-fillable", token); i.placeholder = label; i.style.cssText = inputStyle;
             i.value = currentValue;
             i.addEventListener("input", () => { currentValue = i.value; });
+            attachCnpjGroupFocus(i);
             el = i;
           }
         }
