@@ -175,8 +175,8 @@ export function EditorToolbar({
             <TB active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()} title="Lista numerada"><ListOrdered className="h-4 w-4" /></TB>
 
             <Separator orientation="vertical" className="h-6 mx-1" />
-            <Input type="color" title="Cor do texto" value={color} onChange={(e) => { setColor(e.target.value); editor.chain().focus().setColor(e.target.value).run(); }} className="h-8 w-8 p-0.5 cursor-pointer" />
-            <Input type="color" title="Cor de fundo" value={bgColor} onChange={(e) => { setBgColor(e.target.value); editor.chain().focus().toggleHighlight({ color: e.target.value }).run(); }} className="h-8 w-8 p-0.5 cursor-pointer" />
+            <Input type="color" onMouseDown={(e) => e.preventDefault()} title="Cor do texto" value={color} onChange={(e) => { setColor(e.target.value); editor.chain().focus().setColor(e.target.value).run(); }} className="h-8 w-8 p-0.5 cursor-pointer" />
+            <Input type="color" onMouseDown={(e) => e.preventDefault()} title="Cor de fundo" value={bgColor} onChange={(e) => { setBgColor(e.target.value); editor.chain().focus().toggleHighlight({ color: e.target.value }).run(); }} className="h-8 w-8 p-0.5 cursor-pointer" />
 
             <Separator orientation="vertical" className="h-6 mx-1" />
             <TB onClick={() => {
