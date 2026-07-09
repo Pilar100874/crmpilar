@@ -537,6 +537,8 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
                             return <span key={col.key} className="text-xs text-muted-foreground truncate px-1 text-center" style={cellStyle}>{grupoName(p.grupo_id)}</span>;
                           case 'estoque':
                             return <span key={col.key} className={`text-sm px-1 text-right ${estoqueColor}`} style={cellStyle}>{estoque}</span>;
+                          case 'preco':
+                            return <span key={col.key} className="text-sm px-1 text-right tabular-nums" style={cellStyle}>{fmtMoney(p.preco_tabela)}</span>;
                           default:
                             return null;
                         }
