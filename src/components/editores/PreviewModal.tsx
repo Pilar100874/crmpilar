@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, Printer, FileDown, Layers } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Download, Printer, FileDown, Layers, FileText, Files } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { downloadPdf, downloadHtml, printHtml, elementToPdf } from "@/lib/editores/pdfExport";
 import { renderTemplate } from "@/lib/editores/mergeEngine";
@@ -201,119 +202,179 @@ export function PreviewModal({
   };
 
 
+  const [mode, setMode] = useState<"pdf" | "print">("pdf");
+
+  const renderPages = () => {
+    if (pages && pages.length > 0) {
+      return pages.map((pHtml, i) => (
+        <PagePaper key={i} index={i} total={pages.length} html={pHtml} refEl={i === 0 ? pageRef : undefined} />
+      ));
+    }
+    if (rows.length > 1) {
+      return rows.map((r, i) => (
+        <PagePaper
+          key={i}
+          index={i}
+          total={rows.length}
+          label={registroLabel(r)}
+          html={renderForRow(r)}
+          refEl={i === idx ? pageRef : undefined}
+        />
+      ));
+    }
+    return (
+      <PagePaper
+        index={0}
+        total={1}
+        html={currentHtml || '<p style="color:#999;text-align:center;padding:40px;">Documento vazio. Adicione conteúdo no editor.</p>'}
+        refEl={pageRef}
+        single
+      />
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[95vh] p-0 flex flex-col">
-        <DialogHeader className="p-4 border-b">
-          <DialogTitle>Pré-visualização — {titulo}</DialogTitle>
-          <DialogDescription>
-            {rows.length > 0
-              ? `Navegue entre os ${rows.length} registro(s) e imprima/gere PDF.`
-              : "Confira o documento. Campos vazios ficam destacados em amarelo."}
+      <DialogContent className="max-w-6xl max-h-[95vh] p-0 flex flex-col overflow-hidden">
+        <DialogHeader className="px-5 py-3 border-b bg-gradient-to-r from-background to-muted/40">
+          <DialogTitle className="text-base flex items-center gap-2">
+            <FileText className="h-4 w-4 text-primary" />
+            Pré-visualização — <span className="text-muted-foreground font-normal">{titulo}</span>
+          </DialogTitle>
+          <DialogDescription className="text-xs">
+            {totalItems > 1
+              ? `${totalItems} registro(s) prontos para exportar ou imprimir.`
+              : "Confira o documento antes de exportar."}
+            {missing.length > 0 && (
+              <span className="ml-2 text-amber-600">
+                ⚠ Campos vazios: {missing.slice(0, 5).join(", ")}{missing.length > 5 ? "…" : ""}
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-wrap items-center gap-2 p-3 border-b bg-muted/30">
-          <Button size="sm" onClick={pdfAtual} disabled={busy}>
-            <FileDown className="h-4 w-4 mr-1" /> PDF {totalItems > 1 ? `página ${currentIdx + 1}` : ""}
-          </Button>
-          <Button size="sm" variant="outline" onClick={imprimirAtual} disabled={busy}>
-            <Printer className="h-4 w-4 mr-1" /> Imprimir {totalItems > 1 ? `página ${currentIdx + 1}` : ""}
-          </Button>
-          {totalItems > 1 && (
-            <>
-              <Button size="sm" variant="secondary" onClick={pdfUnico} disabled={busy}>
-                <Layers className="h-4 w-4 mr-1" /> PDF único ({totalItems})
-              </Button>
-              <Button size="sm" variant="secondary" onClick={pdfSeparados} disabled={busy}>
-                <FileDown className="h-4 w-4 mr-1" /> PDFs separados ({totalItems})
-              </Button>
-              <Button size="sm" variant="secondary" onClick={imprimirTodos} disabled={busy}>
-                <Printer className="h-4 w-4 mr-1" /> Imprimir todas
-              </Button>
-            </>
-          )}
-          <Button size="sm" variant="ghost" onClick={() => downloadHtml(getCleanHtml(currentIdx), titulo)}>
-            <Download className="h-4 w-4 mr-1" /> HTML
-          </Button>
-          {onSave && (
-            <Button size="sm" variant="secondary" onClick={onSave}>Salvar no histórico</Button>
-          )}
-          {missing.length > 0 && (
-            <span className="ml-auto text-xs text-amber-600">
-              ⚠ Vazios: {missing.slice(0, 5).join(", ")}{missing.length > 5 ? "…" : ""}
-            </span>
-          )}
-        </div>
+        <Tabs value={mode} onValueChange={(v) => setMode(v as "pdf" | "print")} className="flex-1 flex flex-col min-h-0">
+          <div className="flex items-center justify-between gap-3 px-4 py-2 border-b bg-background">
+            <TabsList className="h-9">
+              <TabsTrigger value="pdf" className="gap-1.5">
+                <FileDown className="h-4 w-4" /> PDF
+              </TabsTrigger>
+              <TabsTrigger value="print" className="gap-1.5">
+                <Printer className="h-4 w-4" /> Imprimir
+              </TabsTrigger>
+            </TabsList>
 
-        {(loadingRows || totalItems > 1) && (
-          <div className="flex items-center gap-3 border-b p-2 bg-background">
-            {loadingRows ? (
-              <span className="text-xs text-muted-foreground">Carregando registros…</span>
-            ) : pages && pages.length > 0 ? (
-              <RegistroNavigator
-                total={pages.length}
-                index={pageIdx}
-                onChange={setPageIdx}
-                label={`Página ${pageIdx + 1} de ${pages.length}`}
-              />
-            ) : (
-              <RegistroNavigator
-                total={rows.length}
-                index={idx}
-                onChange={setIdx}
-                label={registroLabel(rows[idx])}
-              />
-            )}
-          </div>
-        )}
-
-
-        <div className="flex-1 overflow-auto bg-muted/20 p-6 space-y-6">
-          {pages && pages.length > 0 ? (
-            pages.map((pHtml, i) => (
-              <div key={i} className="mx-auto" style={{ width: "210mm" }}>
-                {pages.length > 1 && (
-                  <div className="text-[11px] text-muted-foreground mb-1 px-1">
-                    Página {i + 1} de {pages.length}
-                  </div>
+            {(loadingRows || totalItems > 1) && (
+              <div className="flex-1 flex justify-center">
+                {loadingRows ? (
+                  <span className="text-xs text-muted-foreground">Carregando registros…</span>
+                ) : pages && pages.length > 0 ? (
+                  <RegistroNavigator total={pages.length} index={pageIdx} onChange={setPageIdx} label={`Página ${pageIdx + 1}`} />
+                ) : (
+                  <RegistroNavigator total={rows.length} index={idx} onChange={setIdx} label={registroLabel(rows[idx])} />
                 )}
-                <div
-                  ref={i === 0 ? pageRef : undefined}
-                  data-pdf-section
-                  className="bg-white text-black shadow-xl"
-                  style={{ width: "210mm", minHeight: "297mm", padding: "20mm", boxSizing: "border-box", fontFamily: "Arial, sans-serif", fontSize: "12pt", lineHeight: 1.5, pageBreakAfter: "always", breakAfter: "page" }}
-                  dangerouslySetInnerHTML={{ __html: pHtml }}
-                />
               </div>
-            ))
-          ) : rows.length > 1 ? (
-            rows.map((r, i) => (
-              <div key={i} className="mx-auto" style={{ width: "210mm" }}>
-                <div className="text-[11px] text-muted-foreground mb-1 flex items-center justify-between px-1">
-                  <span>Página {i + 1} de {rows.length}</span>
-                  <span className="truncate max-w-[60%] text-right">{registroLabel(r)}</span>
-                </div>
-                <div
-                  ref={i === idx ? pageRef : undefined}
-                  data-pdf-section
-                  className="bg-white text-black shadow-xl"
-                  style={{ width: "210mm", minHeight: "297mm", padding: "20mm", boxSizing: "border-box", fontFamily: "Arial, sans-serif", fontSize: "12pt", lineHeight: 1.5, pageBreakAfter: "always", breakAfter: "page" }}
-                  dangerouslySetInnerHTML={{ __html: renderForRow(r) }}
-                />
-              </div>
-            ))
-          ) : (
-            <div
-              ref={pageRef}
-              data-pdf-section
-              className="bg-white text-black shadow-xl mx-auto"
-              style={{ width: "210mm", minHeight: "297mm", padding: "20mm", boxSizing: "border-box", fontFamily: "Arial, sans-serif", fontSize: "12pt", lineHeight: 1.5 }}
-              dangerouslySetInnerHTML={{ __html: currentHtml || '<p style="color:#999;text-align:center;padding:40px;">Documento vazio. Adicione conteúdo no editor.</p>' }}
-            />
-          )}
-        </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="ghost" onClick={() => downloadHtml(getCleanHtml(currentIdx), titulo)}>
+                <Download className="h-4 w-4 mr-1" /> HTML
+              </Button>
+              {onSave && (
+                <Button size="sm" variant="outline" onClick={onSave}>Salvar histórico</Button>
+              )}
+            </div>
+          </div>
+
+          {/* ===== PDF ===== */}
+          <TabsContent value="pdf" className="flex-1 flex flex-col min-h-0 m-0 data-[state=inactive]:hidden">
+            <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b bg-gradient-to-r from-rose-50 to-amber-50 dark:from-rose-950/20 dark:to-amber-950/20">
+              <span className="text-[11px] uppercase tracking-wide font-semibold text-rose-700 dark:text-rose-300 mr-2">
+                Exportar PDF
+              </span>
+              <Button size="sm" onClick={pdfAtual} disabled={busy} className="bg-rose-600 hover:bg-rose-700 text-white">
+                <FileDown className="h-4 w-4 mr-1" />
+                {totalItems > 1 ? `Página ${currentIdx + 1}` : "Baixar PDF"}
+              </Button>
+              {totalItems > 1 && (
+                <>
+                  <Button size="sm" variant="outline" onClick={pdfUnico} disabled={busy}>
+                    <Layers className="h-4 w-4 mr-1" /> 1 PDF único ({totalItems})
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={pdfSeparados} disabled={busy}>
+                    <Files className="h-4 w-4 mr-1" /> {totalItems} PDFs separados
+                  </Button>
+                </>
+              )}
+            </div>
+            <div className="flex-1 overflow-auto bg-[radial-gradient(circle_at_20%_20%,hsl(var(--muted))_0%,hsl(var(--background))_60%)] p-8 space-y-8">
+              {renderPages()}
+            </div>
+          </TabsContent>
+
+          {/* ===== Imprimir ===== */}
+          <TabsContent value="print" className="flex-1 flex flex-col min-h-0 m-0 data-[state=inactive]:hidden">
+            <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b bg-gradient-to-r from-sky-50 to-indigo-50 dark:from-sky-950/20 dark:to-indigo-950/20">
+              <span className="text-[11px] uppercase tracking-wide font-semibold text-sky-700 dark:text-sky-300 mr-2">
+                Impressão
+              </span>
+              <Button size="sm" onClick={imprimirAtual} disabled={busy} className="bg-sky-600 hover:bg-sky-700 text-white">
+                <Printer className="h-4 w-4 mr-1" />
+                {totalItems > 1 ? `Imprimir página ${currentIdx + 1}` : "Imprimir"}
+              </Button>
+              {totalItems > 1 && (
+                <Button size="sm" variant="outline" onClick={imprimirTodos} disabled={busy}>
+                  <Printer className="h-4 w-4 mr-1" /> Imprimir todas ({totalItems})
+                </Button>
+              )}
+              <span className="text-[11px] text-muted-foreground ml-2">
+                A caixa de diálogo do navegador permitirá escolher páginas específicas.
+              </span>
+            </div>
+            <div className="flex-1 overflow-auto bg-neutral-200 dark:bg-neutral-900 p-8 space-y-8">
+              {renderPages()}
+            </div>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
+  );
+}
+
+interface PagePaperProps {
+  index: number;
+  total: number;
+  html: string;
+  label?: string;
+  refEl?: React.RefObject<HTMLDivElement>;
+  single?: boolean;
+}
+function PagePaper({ index, total, html, label, refEl, single }: PagePaperProps) {
+  return (
+    <div className="mx-auto" style={{ width: "210mm" }}>
+      {!single && (
+        <div className="text-[11px] text-muted-foreground mb-1.5 flex items-center justify-between px-1">
+          <span className="font-medium">Página {index + 1} de {total}</span>
+          {label && <span className="truncate max-w-[60%] text-right opacity-80">{label}</span>}
+        </div>
+      )}
+      <div
+        ref={refEl}
+        data-pdf-section
+        className="bg-white text-black shadow-2xl ring-1 ring-black/5 rounded-sm"
+        style={{
+          width: "210mm",
+          minHeight: "297mm",
+          padding: "20mm",
+          boxSizing: "border-box",
+          fontFamily: "Arial, sans-serif",
+          fontSize: "12pt",
+          lineHeight: 1.5,
+          pageBreakAfter: "always",
+          breakAfter: "page",
+        }}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    </div>
   );
 }
