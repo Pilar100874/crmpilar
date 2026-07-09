@@ -198,10 +198,10 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
     setConfigs([...configs, { mode: "visual", tabela: "", alias: `reg${configs.length + 1}`, filtros: [], limite: 50, calculados: [], relations: [], camposSelecionados: {} }]);
     setEditIdx(configs.length);
   };
+  const [confirmDeleteIdx, setConfirmDeleteIdx] = useState<number | null>(null);
   const removeConfig = (i: number) => {
     const removed = configs[i];
     setConfigs(configs.filter((_, k) => k !== i));
-    // remove campos ligados a esse alias
     if (removed?.alias) setMergeFields(mergeFields.filter(k => !k.startsWith(`${removed.alias}.`)));
   };
   const updateConfig = (i: number, cfg: MergeConfig) => {
@@ -247,7 +247,7 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
                   <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditIdx(i)} title="Editar">
                     <Pencil className="h-3 w-3" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeConfig(i)} title="Remover">
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setConfirmDeleteIdx(i)} title="Remover">
                     <Trash2 className="h-3 w-3 text-destructive" />
                   </Button>
                 </div>
@@ -284,6 +284,16 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
                 onImportedDataset={onImportedDataset}
               />
             ))}
+            <DeleteConfirmDialog
+              open={confirmDeleteIdx !== null}
+              onOpenChange={(o) => { if (!o) setConfirmDeleteIdx(null); }}
+              onConfirm={() => {
+                if (confirmDeleteIdx !== null) removeConfig(confirmDeleteIdx);
+                setConfirmDeleteIdx(null);
+              }}
+              title="Excluir vínculo de dados"
+              itemName={confirmDeleteIdx !== null ? (configs[confirmDeleteIdx]?.tabela || configs[confirmDeleteIdx]?.alias || "vínculo") : undefined}
+            />
           </div>
 
           {/* Tabelas salvas — subgrupo */}
