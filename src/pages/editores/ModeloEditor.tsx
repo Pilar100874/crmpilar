@@ -516,7 +516,7 @@ export default function ModeloEditor() {
           onPreviewMerge={abrirPreview}
           previewActive={showResolved}
           estabelecimentoId={estabId}
-          onBack={() => nav("/editores")}
+          onBack={() => { if (dirty) setExitPromptOpen(true); else nav("/editores"); }}
           onSave={() => salvar()}
           onSalvarComo={salvarComo}
           onToggleLock={alternarBloqueio}
