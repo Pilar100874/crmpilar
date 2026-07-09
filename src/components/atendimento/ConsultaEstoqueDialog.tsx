@@ -290,6 +290,7 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
           case 'codigo': if (p.codigo) parts.push(`(${p.codigo})`); break;
           case 'grupo': parts.push(grupoName(p.grupo_id)); break;
           case 'estoque': parts.push(`Estoque: *${p.estoque ?? 0}*`); break;
+          case 'preco': if (p.preco_tabela != null) parts.push(`Preço: *${fmtMoney(p.preco_tabela)}*`); break;
         }
       }
       return `📦 ${parts.join(' — ')}`;
