@@ -175,6 +175,13 @@ export function TiptapEditor({
     }
   }, [initialContent, editor]);
 
+  // Mantém contenteditable sincronizado com a prop `editable`
+  useEffect(() => {
+    if (!editor) return;
+    if (editor.isEditable !== editable) editor.setEditable(editable);
+  }, [editable, editor]);
+
+
   return (
     <div
       className={cn("bg-muted/30 flex justify-center p-6 overflow-auto", className)}
