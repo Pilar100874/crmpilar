@@ -348,7 +348,7 @@ export default function ModeloEditor() {
   };
 
   // Gera o HTML final com dados do vínculo primário + valores dos fillables preenchidos.
-  const buildFinalHtml = async (): Promise<string> => {
+  const buildFinalHtml = async (overrideIndex?: number): Promise<string> => {
     let dados: Record<string, any> = { data_atual: new Date().toLocaleDateString("pt-BR") };
     try {
       const base = await resolveMergeData("livre", null);
@@ -358,7 +358,7 @@ export default function ModeloEditor() {
       if (!c?.alias) continue;
       const rows = rowsByAlias[c.alias] || [];
       if (!rows.length) continue;
-      const i = c.alias === primaryAlias ? recordIndex : 0;
+      const i = c.alias === primaryAlias ? (overrideIndex ?? recordIndex) : 0;
       const row = rows[Math.min(i, rows.length - 1)];
       dados[c.alias] = row;
       Object.assign(dados, row);
@@ -376,25 +376,35 @@ export default function ModeloEditor() {
     return page;
   };
 
+  const [previewPages, setPreviewPages] = useState<string[]>([]);
+
   const abrirPreviewModal = async () => {
     if (dirty) { try { await salvar(true); } catch {} }
     try {
-      const finalHtml = await buildFinalHtml();
-      setPreviewHtml(finalHtml);
+      const total = primaryRows.length;
+      if (total > 1) {
+        const pages: string[] = [];
+        for (let i = 0; i < total; i++) pages.push(await buildFinalHtml(i));
+        setPreviewPages(pages);
+        setPreviewHtml(pages[0]);
+      } else {
+        const finalHtml = await buildFinalHtml();
+        setPreviewPages([finalHtml]);
+        setPreviewHtml(finalHtml);
+      }
       setPreviewMissing([]);
     } catch (e) {
+      setPreviewPages([html]);
       setPreviewHtml(html);
     }
     setShowPreview(true);
   };
 
   const gerarPdf = async () => {
-    // Sempre abre a prévia — usuário confirma o PDF dentro do PreviewModal.
     await abrirPreviewModal();
   };
 
   const imprimir = async () => {
-    // Sempre abre a prévia — usuário confirma a impressão dentro do PreviewModal.
     await abrirPreviewModal();
   };
 
