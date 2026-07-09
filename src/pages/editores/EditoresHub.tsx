@@ -57,29 +57,9 @@ export default function EditoresHub() {
     [documentos, busca],
   );
 
-  const criarModelo = async () => {
-    if (!estabId) return;
-    const { data, error } = await supabase.from("doc_modelos").insert({
-      estabelecimento_id: estabId,
-      titulo: "Novo modelo",
-      content_html: "<p></p>",
-      content_json: {},
-    }).select().single();
-    if (error) { toast.error(error.message); return; }
-    nav(`/editores/modelos/${data.id}`);
-  };
+  const criarModelo = () => nav(`/editores/modelos/new?tipo=modelo`);
+  const criarDocumento = () => nav(`/editores/modelos/new?tipo=documento`);
 
-  const criarDocumento = async () => {
-    if (!estabId) return;
-    const { data, error } = await supabase.from("doc_modelos").insert({
-      estabelecimento_id: estabId,
-      titulo: "Novo documento",
-      content_html: "<p></p>",
-      content_json: {},
-    }).select().single();
-    if (error) { toast.error(error.message); return; }
-    nav(`/editores/modelos/${data.id}`);
-  };
 
   const duplicarModelo = async (m: Modelo) => {
     if (!estabId) return;

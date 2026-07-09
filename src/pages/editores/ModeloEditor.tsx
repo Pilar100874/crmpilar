@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { isEstabelecimentoAdmin, getUserIdFromAuth } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
@@ -27,12 +28,19 @@ import { RegistroNavigator } from "@/components/editores/RegistroNavigator";
 import { downloadPdf, printHtml } from "@/lib/editores/pdfExport";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+
 
 export default function ModeloEditor() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const isNew = id === "new";
+  const tipoNovo = searchParams.get("tipo") === "modelo" ? "modelo" : "documento";
   const nav = useNavigate();
   const [estabId, setEstabId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+
   const [usuarioId, setUsuarioId] = useState<string | null>(null);
   const [modelo, setModelo] = useState<any>(null);
   const [html, setHtml] = useState<string>("");
@@ -57,6 +65,8 @@ export default function ModeloEditor() {
   const [empresaSearchOpen, setEmpresaSearchOpen] = useState(false);
   const [estoqueSearchOpen, setEstoqueSearchOpen] = useState(false);
   const [fillableValues, setFillableValues] = useState<Record<string, string>>({});
+  const [exitPromptOpen, setExitPromptOpen] = useState(false);
+
 
   // Normaliza merge_config para array de configs (aceita objeto legado)
   const configs = useMemo<any[]>(() => {
@@ -152,6 +162,28 @@ export default function ModeloEditor() {
 
   useEffect(() => {
     if (!id) return;
+    if (isNew) {
+      // Documento novo — não persiste no banco até o usuário salvar
+      setModelo({
+        id: null,
+        titulo: tipoNovo === "modelo" ? "Novo modelo" : "Novo documento",
+        descricao: null,
+        content_html: "",
+        content_json: {},
+        header_html: null,
+        footer_html: null,
+        merge_config: {},
+        bloqueado: false,
+        campos_bloqueados: false,
+        is_modelo: false,
+        owner_user_id: null,
+        categoria_id: null,
+      });
+      setHtml("");
+      setJson({});
+      hydrateDatasets([]);
+      return;
+    }
     (async () => {
       const { data } = await supabase.from("doc_modelos").select("*").eq("id", id).single();
       if (!data) { toast.error("Modelo não encontrado"); nav("/editores"); return; }
@@ -161,11 +193,19 @@ export default function ModeloEditor() {
       const imp = (data as any)?.merge_config?.importedDatasets;
       hydrateDatasets(Array.isArray(imp) ? imp : []);
     })();
-  }, [id, nav]);
+  }, [id, isNew, tipoNovo, nav]);
+
+  // Aviso ao fechar/atualizar a aba
+  useEffect(() => {
+    const h = (e: BeforeUnloadEvent) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } };
+    window.addEventListener("beforeunload", h);
+    return () => window.removeEventListener("beforeunload", h);
+  }, [dirty]);
 
   // Autosave (2s debounce) — só quando o registro atual é editável pelo usuário
   useEffect(() => {
-    if (!dirty || !id || !modelo) return;
+    if (!dirty || !id || isNew || !modelo) return;
+
     const podeEditar = modelo.is_modelo ? isAdmin : modelo.owner_user_id === usuarioId;
     if (!podeEditar) return; // não faz autosave em modelo de admin sendo visto por usuário comum
     const t = setTimeout(() => { void salvar(true); }, 2000);
@@ -197,15 +237,44 @@ export default function ModeloEditor() {
     if (data?.id) nav(`/editores/modelos/${data.id}`);
   };
 
-  const salvar = async (auto = false) => {
-    if (!id || !modelo) return;
+  const salvar = async (auto = false): Promise<boolean> => {
+    if (!id || !modelo) return false;
+    // Documento novo — insere agora e navega para o id real
+    if (isNew) {
+      if (auto) return false; // não auto-cria
+      if (!estabId) { toast.error("Estabelecimento não encontrado"); return false; }
+      setSaving(true);
+      const criarComoModelo = tipoNovo === "modelo" && isAdmin;
+      const { data, error } = await supabase.from("doc_modelos").insert({
+        estabelecimento_id: estabId,
+        titulo: modelo.titulo || (tipoNovo === "modelo" ? "Novo modelo" : "Novo documento"),
+        descricao: modelo.descricao,
+        content_html: html,
+        content_json: json,
+        header_html: modelo.header_html,
+        footer_html: modelo.footer_html,
+        merge_config: modelo.merge_config ?? {},
+        categoria_id: modelo.categoria_id,
+        bloqueado: false,
+        campos_bloqueados: false,
+        is_modelo: criarComoModelo,
+        owner_user_id: criarComoModelo ? null : usuarioId,
+      } as any).select("id").single();
+      setSaving(false);
+      if (error) { toast.error(error.message); return false; }
+      setDirty(false);
+      toast.success("Salvo");
+      if (data?.id) nav(`/editores/modelos/${data.id}`, { replace: true });
+      return true;
+    }
+
     // Usuário comum vendo um modelo: salvar cria um arquivo pessoal
     if (modelo.is_modelo && !isAdmin) {
-      if (auto) return; // não auto-cria cópias
+      if (auto) return false; // não auto-cria cópias
       await salvarComoArquivoPessoal();
-      return;
+      return true;
     }
-    if (modelo.bloqueado && !auto) { toast.error("Modelo bloqueado — desbloqueie para editar."); return; }
+    if (modelo.bloqueado && !auto) { toast.error("Modelo bloqueado — desbloqueie para editar."); return false; }
     setSaving(true);
     const { error } = await supabase.from("doc_modelos").update({
       titulo: modelo.titulo,
@@ -219,10 +288,12 @@ export default function ModeloEditor() {
       campos_bloqueados: modelo.campos_bloqueados ?? false,
     } as any).eq("id", id);
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(error.message); return false; }
     setDirty(false);
     if (!auto) toast.success("Salvo");
+    return true;
   };
+
 
   const alternarBloqueio = async () => {
     if (!id || !modelo) return;
@@ -447,7 +518,7 @@ export default function ModeloEditor() {
           onPreviewMerge={abrirPreview}
           previewActive={showResolved}
           estabelecimentoId={estabId}
-          onBack={() => nav("/editores")}
+          onBack={() => { if (dirty) setExitPromptOpen(true); else nav("/editores"); }}
           onSave={() => salvar()}
           onSalvarComo={salvarComo}
           onToggleLock={alternarBloqueio}
@@ -611,7 +682,37 @@ export default function ModeloEditor() {
         initialMode={previewMode}
         onSave={async () => { await salvar(); toast.success("Rascunho salvo"); }}
       />
+
+      <AlertDialog open={exitPromptOpen} onOpenChange={setExitPromptOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alterações não salvas</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem alterações não salvas neste documento. Deseja salvá-las antes de sair?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <Button
+              variant="outline"
+              onClick={() => { setExitPromptOpen(false); setDirty(false); nav("/editores"); }}
+            >
+              Sair sem salvar
+            </Button>
+            <AlertDialogAction
+              onClick={async () => {
+                const ok = await salvar();
+                setExitPromptOpen(false);
+                if (ok) nav("/editores");
+              }}
+            >
+              Salvar e sair
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+
   );
 }
 
