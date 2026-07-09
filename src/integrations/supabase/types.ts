@@ -4878,7 +4878,9 @@ export type Database = {
           footer_html: string | null
           header_html: string | null
           id: string
+          is_modelo: boolean
           merge_config: Json
+          owner_user_id: string | null
           page_size: string | null
           titulo: string
           updated_at: string
@@ -4899,7 +4901,9 @@ export type Database = {
           footer_html?: string | null
           header_html?: string | null
           id?: string
+          is_modelo?: boolean
           merge_config?: Json
+          owner_user_id?: string | null
           page_size?: string | null
           titulo: string
           updated_at?: string
@@ -4920,7 +4924,9 @@ export type Database = {
           footer_html?: string | null
           header_html?: string | null
           id?: string
+          is_modelo?: boolean
           merge_config?: Json
+          owner_user_id?: string | null
           page_size?: string | null
           titulo?: string
           updated_at?: string
@@ -4933,6 +4939,13 @@ export type Database = {
             columns: ["categoria_id"]
             isOneToOne: false
             referencedRelation: "doc_categorias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doc_modelos_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
             referencedColumns: ["id"]
           },
         ]
