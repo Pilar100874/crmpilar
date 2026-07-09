@@ -215,22 +215,25 @@ export function PreviewModal({
 
         <div className="flex flex-wrap items-center gap-2 p-3 border-b bg-muted/30">
           <Button size="sm" onClick={pdfAtual} disabled={busy}>
-            <FileDown className="h-4 w-4 mr-1" /> PDF {rows.length ? "atual" : ""}
+            <FileDown className="h-4 w-4 mr-1" /> PDF {totalItems > 1 ? `página ${currentIdx + 1}` : ""}
           </Button>
           <Button size="sm" variant="outline" onClick={imprimirAtual} disabled={busy}>
-            <Printer className="h-4 w-4 mr-1" /> Imprimir {rows.length ? "atual" : ""}
+            <Printer className="h-4 w-4 mr-1" /> Imprimir {totalItems > 1 ? `página ${currentIdx + 1}` : ""}
           </Button>
-          {rows.length > 1 && (
+          {totalItems > 1 && (
             <>
-              <Button size="sm" variant="secondary" onClick={pdfTodos} disabled={busy}>
-                <Layers className="h-4 w-4 mr-1" /> PDF de todos ({rows.length})
+              <Button size="sm" variant="secondary" onClick={pdfUnico} disabled={busy}>
+                <Layers className="h-4 w-4 mr-1" /> PDF único ({totalItems})
+              </Button>
+              <Button size="sm" variant="secondary" onClick={pdfSeparados} disabled={busy}>
+                <FileDown className="h-4 w-4 mr-1" /> PDFs separados ({totalItems})
               </Button>
               <Button size="sm" variant="secondary" onClick={imprimirTodos} disabled={busy}>
-                <Printer className="h-4 w-4 mr-1" /> Imprimir todos
+                <Printer className="h-4 w-4 mr-1" /> Imprimir todas
               </Button>
             </>
           )}
-          <Button size="sm" variant="ghost" onClick={() => downloadHtml(currentHtml, titulo)}>
+          <Button size="sm" variant="ghost" onClick={() => downloadHtml(getCleanHtml(currentIdx), titulo)}>
             <Download className="h-4 w-4 mr-1" /> HTML
           </Button>
           {onSave && (
@@ -243,10 +246,17 @@ export function PreviewModal({
           )}
         </div>
 
-        {(loadingRows || rows.length > 0) && (
+        {(loadingRows || totalItems > 1) && (
           <div className="flex items-center gap-3 border-b p-2 bg-background">
             {loadingRows ? (
               <span className="text-xs text-muted-foreground">Carregando registros…</span>
+            ) : pages && pages.length > 0 ? (
+              <RegistroNavigator
+                total={pages.length}
+                index={pageIdx}
+                onChange={setPageIdx}
+                label={`Página ${pageIdx + 1} de ${pages.length}`}
+              />
             ) : (
               <RegistroNavigator
                 total={rows.length}
@@ -257,6 +267,7 @@ export function PreviewModal({
             )}
           </div>
         )}
+
 
         <div className="flex-1 overflow-auto bg-muted/20 p-6 space-y-6">
           {pages && pages.length > 0 ? (
