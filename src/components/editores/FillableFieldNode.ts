@@ -451,6 +451,7 @@ export const FillableField = Node.create({
               }
             });
             attachCnpjGroupFocus(i);
+            autosize(i);
             el = i; break;
           }
           default: {
@@ -459,6 +460,7 @@ export const FillableField = Node.create({
             i.value = currentValue;
             i.addEventListener("input", () => { currentValue = i.value; });
             attachCnpjGroupFocus(i);
+            autosize(i);
             el = i;
           }
         }
