@@ -107,7 +107,7 @@ export const FillableField = Node.create({
       dom.className = "doc-fillable";
       dom.style.cssText = "display:inline-block;vertical-align:middle;margin:0 2px";
 
-      let currentValue = "";
+      let currentValue = getFillableValue(token, label);
 
       const inputStyle =
         "border:1px solid #cbd5e1;border-radius:4px;padding:2px 6px;font:inherit;background:#fefce8;min-width:120px";
