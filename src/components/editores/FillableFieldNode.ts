@@ -225,6 +225,64 @@ function askApplyAll(anchor: HTMLElement, group: string, cnpjLimpo: string) {
   });
 }
 
+/** Escolha inicial ao focar um sub-campo do grupo CEP. */
+function askCepGroupMethod(anchor: HTMLElement, group: string) {
+  showInlinePopover(anchor, (close) => {
+    const wrap = document.createElement("div");
+    const title = document.createElement("div");
+    title.textContent = "Como deseja preencher os campos deste endereço?";
+    title.style.cssText = "font-weight:600;margin-bottom:8px;";
+    const auto = makeBtn("Buscar pelo CEP", true);
+    const manual = makeBtn("Digitar manualmente");
+    auto.addEventListener("click", () => {
+      close();
+      const cepEl = document.querySelector<HTMLInputElement>(
+        `[data-cep-group="${CSS.escape(group)}"][data-cep-subfield="cep"] input[data-cep-autofill="1"]`
+      );
+      if (cepEl) {
+        const prev = cepEl.style.background;
+        cepEl.style.background = "#fde68a";
+        cepEl.focus();
+        try { cepEl.scrollIntoView({ block: "center", behavior: "smooth" }); } catch {}
+        setTimeout(() => { cepEl.style.background = prev; }, 1200);
+      }
+    });
+    manual.addEventListener("click", () => {
+      cepGroupState.set(group, "manual");
+      close();
+      (anchor as HTMLInputElement).focus();
+    });
+    wrap.appendChild(title);
+    wrap.appendChild(auto);
+    wrap.appendChild(manual);
+    return wrap;
+  });
+}
+
+function askCepApplyAll(anchor: HTMLElement, group: string, cepLimpo: string) {
+  showInlinePopover(anchor, (close) => {
+    const wrap = document.createElement("div");
+    const title = document.createElement("div");
+    title.textContent = "Aplicar dados do CEP em todos os campos deste grupo?";
+    title.style.cssText = "font-weight:600;margin-bottom:8px;";
+    const yes = makeBtn("Sim, preencher todos", true);
+    const no = makeBtn("Não, só o CEP");
+    const finish = async (applyAll: boolean) => {
+      close();
+      try {
+        await autofillCep(cepLimpo, group, applyAll);
+        cepGroupState.set(group, applyAll ? "loaded" : "manual");
+      } catch (e) { console.warn("[cep autofill]", e); }
+    };
+    yes.addEventListener("click", () => void finish(true));
+    no.addEventListener("click", () => void finish(false));
+    wrap.appendChild(title);
+    wrap.appendChild(yes);
+    wrap.appendChild(no);
+    return wrap;
+  });
+}
+
 
 
 /**
