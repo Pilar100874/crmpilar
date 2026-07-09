@@ -205,18 +205,22 @@ export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) 
           )}
           {filtrados.map(f => {
             const isCnpj = f.tipo === "cnpj";
+            const isCep = f.tipo === "cep";
+            const isGroup = isCnpj || isCep;
+            const isSystem = isSystemField(f);
             const isOpen = expanded.has(f.id);
-            const subKeys = isCnpj ? (f.opcoes.length ? f.opcoes : CNPJ_SUBFIELDS.map(s => s.key)) : [];
+            const allSubs = isCnpj ? CNPJ_SUBFIELDS : isCep ? CEP_SUBFIELDS : [];
+            const subKeys = isGroup ? (f.opcoes.length ? f.opcoes : allSubs.map(s => s.key)) : [];
             return (
               <div key={f.id}>
                 <div
                   draggable
                   onDragStart={(e) => onDrag(e, f)}
-                  onClick={() => isCnpj ? toggleExpand(f.id) : onInsert(buildFieldPayload(f))}
+                  onClick={() => isGroup ? toggleExpand(f.id) : onInsert(buildFieldPayload(f))}
                   className="group flex items-center gap-2 p-2 rounded border bg-card hover:bg-accent cursor-grab active:cursor-grabbing"
-                  title={isCnpj ? "Clique para ver sub-campos · arraste para inserir todos" : "Arraste para o documento ou clique para inserir"}
+                  title={isGroup ? "Clique para ver sub-campos · arraste para inserir todos" : "Arraste para o documento ou clique para inserir"}
                 >
-                  {isCnpj ? (
+                  {isGroup ? (
                     <button type="button" onClick={(e) => { e.stopPropagation(); toggleExpand(f.id); }} className="shrink-0">
                       {isOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                     </button>
@@ -225,7 +229,10 @@ export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) 
                   )}
                   <FormInput className="h-3.5 w-3.5 text-primary shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium truncate">{f.label}</div>
+                    <div className="text-xs font-medium truncate flex items-center gap-1">
+                      {f.label}
+                      {isSystem && <Badge variant="outline" className="h-4 px-1 text-[9px] border-primary/40 text-primary">sistema</Badge>}
+                    </div>
                     <div className="flex items-center gap-1 mt-0.5">
                       <Badge variant="outline" className="h-4 px-1 text-[9px]">{f.tipo}</Badge>
                       {f.fonte === "tabela" && (
@@ -233,21 +240,23 @@ export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) 
                           {f.tabela}.{f.coluna}
                         </Badge>
                       )}
-                      {isCnpj && (
+                      {isGroup && (
                         <Badge variant="secondary" className="h-4 px-1 text-[9px]">{subKeys.length} sub-campos</Badge>
                       )}
                     </div>
                   </div>
-                  <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); editar(f); }}>
-                      <Pencil className="h-3 w-3" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={(e) => { e.stopPropagation(); setToDelete(f); }}>
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
+                  {!isSystem && (
+                    <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); editar(f); }}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={(e) => { e.stopPropagation(); setToDelete(f); }}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
-                {isCnpj && isOpen && (
+                {isGroup && isOpen && (
                   <div className="ml-5 mt-1 space-y-0.5 border-l pl-2">
                     {subKeys.map(k => (
                       <div
