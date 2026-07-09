@@ -342,6 +342,9 @@ export default function ModeloEditor() {
           onToggleSidebar={() => setSidebarOpen(o => !o)}
           sidebarOpen={sidebarOpen}
           hasFormFields={/data-fillable-field=|data-fillable=/i.test(html)}
+          onQuickFill={() => setQuickFillOpen(true)}
+          onGeneratePdf={gerarPdf}
+          onPrint={imprimir}
         />
 
         {primaryRows.length > 0 && (
