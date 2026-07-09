@@ -3,6 +3,18 @@ import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
+const TextStyleWithFontSize = TextStyle.extend({
+  addAttributes() {
+    return {
+      ...(this.parent?.() || {}),
+      fontSize: {
+        default: null,
+        parseHTML: (el) => (el as HTMLElement).style.fontSize || null,
+        renderHTML: (attrs) => attrs.fontSize ? { style: `font-size: ${attrs.fontSize}` } : {},
+      },
+    };
+  },
+});
 import Color from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
 import FontFamily from "@tiptap/extension-font-family";
