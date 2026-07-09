@@ -3,7 +3,25 @@
 // relações) e modo "sql" (SELECT livre via edge function).
 import { supabase } from "@/integrations/supabase/client";
 import { evalCalculados } from "@/lib/editores/mergeEngine";
-import type { MergeConfig, MergeRelation } from "@/components/editores/MergeBuilderDialog";
+import { getDataset } from "@/lib/editores/importedDatasetStore";
+import type { MergeConfig, MergeRelation, MergeConfigFiltro } from "@/components/editores/MergeBuilderDialog";
+
+function applyFilter(r: any, f: MergeConfigFiltro): boolean {
+  if (!f.campo || !f.valor) return true;
+  const campo = f.campo.includes(".") ? f.campo.split(".").slice(1).join(".") : f.campo;
+  const v = r?.[campo];
+  const val = f.valor;
+  switch (f.op) {
+    case "eq": return String(v) === val;
+    case "neq": return String(v) !== val;
+    case "ilike": return String(v ?? "").toLowerCase().includes(val.toLowerCase());
+    case "gt": return Number(v) > Number(val);
+    case "gte": return Number(v) >= Number(val);
+    case "lt": return Number(v) < Number(val);
+    case "lte": return Number(v) <= Number(val);
+    default: return true;
+  }
+}
 
 async function resolveRelations(
   rows: any[],
