@@ -30,6 +30,26 @@ export function getPreviewRows(alias: string): any[] {
   return rowsByAlias[alias] || [];
 }
 
+export function getPreviewValues(): Record<string, any> {
+  return values;
+}
+
+/** Retorna as chaves "de sistema" (flatten dot-path) do registro atualmente carregado. */
+export function getSystemFieldKeys(): string[] {
+  const out: string[] = [];
+  const walk = (obj: any, prefix: string) => {
+    if (obj == null || typeof obj !== "object") return;
+    for (const k of Object.keys(obj)) {
+      const path = prefix ? `${prefix}.${k}` : k;
+      const v = obj[k];
+      if (v && typeof v === "object" && !Array.isArray(v)) walk(v, path);
+      else out.push(path);
+    }
+  };
+  walk(values, "");
+  return out;
+}
+
 export function subscribePreview(cb: Listener): () => void {
   listeners.add(cb);
   return () => {
