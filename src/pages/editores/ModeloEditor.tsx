@@ -42,6 +42,7 @@ export default function ModeloEditor() {
   const [fullscreen, setFullscreen] = useState(false);
   const [modo, setModo] = useState<EditorMode>("editar");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [formFieldsOpen, setFormFieldsOpen] = useState(false);
   const [recordIndex, setRecordIndex] = useState(0);
   const [rowsByAlias, setRowsByAlias] = useState<Record<string, any[]>>({});
   const [primaryAlias, setPrimaryAlias] = useState<string | null>(null);
