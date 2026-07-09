@@ -220,7 +220,24 @@ export function PreviewModal({
         )}
 
         <div className="flex-1 overflow-auto bg-muted/20 p-6 space-y-6">
-          {rows.length > 1 ? (
+          {pages && pages.length > 0 ? (
+            pages.map((pHtml, i) => (
+              <div key={i} className="mx-auto" style={{ width: "210mm" }}>
+                {pages.length > 1 && (
+                  <div className="text-[11px] text-muted-foreground mb-1 px-1">
+                    Página {i + 1} de {pages.length}
+                  </div>
+                )}
+                <div
+                  ref={i === 0 ? pageRef : undefined}
+                  data-pdf-section
+                  className="bg-white text-black shadow-xl"
+                  style={{ width: "210mm", minHeight: "297mm", padding: "20mm", boxSizing: "border-box", fontFamily: "Arial, sans-serif", fontSize: "12pt", lineHeight: 1.5, pageBreakAfter: "always", breakAfter: "page" }}
+                  dangerouslySetInnerHTML={{ __html: pHtml }}
+                />
+              </div>
+            ))
+          ) : rows.length > 1 ? (
             rows.map((r, i) => (
               <div key={i} className="mx-auto" style={{ width: "210mm" }}>
                 <div className="text-[11px] text-muted-foreground mb-1 flex items-center justify-between px-1">
