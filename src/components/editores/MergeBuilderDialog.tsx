@@ -764,6 +764,21 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
           {step === 3 && <Button onClick={aprovarSelecao} disabled={selecionados.size === 0}><Check className="h-4 w-4 mr-1" /> Aprovar ({selecionados.size})</Button>}
         </DialogFooter>
       </DialogContent>
+      <ImportSpreadsheetWizard
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImport={(ds) => {
+          registerDataset(ds);
+          onImportedDataset?.(ds);
+          // Pre-seleciona como tabela principal
+          setCfg((prev) => ({
+            ...prev,
+            tabela: ds.id,
+            alias: ds.id.replace(/^xlsx:/, "").slice(0, 20) || "planilha",
+            camposSelecionados: { ...(prev.camposSelecionados ?? {}), [ds.id]: [...ds.columns] },
+          }));
+        }}
+      />
     </Dialog>
   );
 }
