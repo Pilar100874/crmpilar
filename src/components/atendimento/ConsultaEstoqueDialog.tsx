@@ -186,6 +186,7 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
       case 'codigo': return p.codigo || '';
       case 'grupo': return grupoName(p.grupo_id);
       case 'estoque': return p.estoque ?? 0;
+      case 'preco': return p.preco_tabela ?? 0;
     }
   };
 
