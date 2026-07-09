@@ -258,13 +258,20 @@ export function PreviewModal({
 
         <Tabs value={mode} onValueChange={(v) => setMode(v as "pdf" | "print")} className="flex-1 flex flex-col min-h-0">
           <div className="flex items-center justify-between gap-3 px-4 py-2 border-b bg-background">
-            <TabsList className="h-9">
-              <TabsTrigger value="pdf" className="gap-1.5">
-                <FileDown className="h-4 w-4" /> PDF
-              </TabsTrigger>
-              <TabsTrigger value="print" className="gap-1.5">
-                <Printer className="h-4 w-4" /> Imprimir
-              </TabsTrigger>
+            <div className="flex items-center gap-2">
+              {mode === "pdf" ? (
+                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-rose-600 dark:text-rose-400">
+                  <FileDown className="h-4 w-4" /> Exportar PDF
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-600 dark:text-sky-400">
+                  <Printer className="h-4 w-4" /> Imprimir
+                </span>
+              )}
+            </div>
+            <TabsList className="hidden">
+              <TabsTrigger value="pdf" />
+              <TabsTrigger value="print" />
             </TabsList>
 
             {(loadingRows || totalItems > 1) && (
