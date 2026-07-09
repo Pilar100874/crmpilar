@@ -421,6 +421,8 @@ export const FillableField = Node.create({
         .split(",").map(s => s.trim()).filter(Boolean);
       const cnpjSubfield = String(node.attrs.cnpjSubfield || "");
       const cnpjGroup = String(node.attrs.cnpjGroup || "");
+      const cepSubfield = String(node.attrs.cepSubfield || "");
+      const cepGroup = String(node.attrs.cepGroup || "");
 
       const dom = document.createElement("span");
       dom.setAttribute("data-fillable-field", token);
@@ -429,23 +431,33 @@ export const FillableField = Node.create({
       dom.setAttribute("data-opcoes", opcoes.join(","));
       if (cnpjSubfield) dom.setAttribute("data-cnpj-subfield", cnpjSubfield);
       if (cnpjGroup) dom.setAttribute("data-cnpj-group", cnpjGroup);
+      if (cepSubfield) dom.setAttribute("data-cep-subfield", cepSubfield);
+      if (cepGroup) dom.setAttribute("data-cep-group", cepGroup);
       dom.contentEditable = "false";
       dom.className = "doc-fillable group/fillable";
       dom.style.cssText = "display:inline-flex;align-items:center;gap:2px;vertical-align:middle;margin:0 2px;position:relative";
 
       let currentValue = getFillableValue(token, label);
 
-      // Hook: no primeiro foco de um sub-campo do grupo CNPJ ainda vazio,
-      // pergunta o CNPJ e autopreenche todos os sub-campos vazios do grupo.
       const attachCnpjGroupFocus = (input: HTMLElement) => {
         if (!cnpjGroup || !cnpjSubfield) return;
-        // Não redireciona se este próprio campo é o CNPJ do grupo
         if (cnpjSubfield === "cnpj") return;
         input.addEventListener("focus", () => {
           const v = (input as HTMLInputElement | HTMLTextAreaElement).value;
           if (v && v.trim()) return;
           if (cnpjGroupState.get(cnpjGroup)) return;
           askGroupMethod(input, cnpjGroup);
+        }, { once: false });
+      };
+
+      const attachCepGroupFocus = (input: HTMLElement) => {
+        if (!cepGroup || !cepSubfield) return;
+        if (cepSubfield === "cep") return;
+        input.addEventListener("focus", () => {
+          const v = (input as HTMLInputElement | HTMLTextAreaElement).value;
+          if (v && v.trim()) return;
+          if (cepGroupState.get(cepGroup)) return;
+          askCepGroupMethod(input, cepGroup);
         }, { once: false });
       };
 
