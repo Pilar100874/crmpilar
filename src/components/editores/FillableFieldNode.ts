@@ -427,18 +427,14 @@ export const FillableField = Node.create({
               i.value = maskCnpj(i.value);
               currentValue = i.value;
             });
-            i.addEventListener("blur", async () => {
+            i.addEventListener("blur", () => {
               const clean = i.value.replace(/\D/g, "");
               if (clean.length !== 14) return;
-              const prev = i.style.background;
-              i.style.background = "#fef3c7";
-              try {
-                await autofillCnpj(clean, cnpjGroup || undefined);
-                if (cnpjGroup) cnpjGroupState.set(cnpjGroup, "loaded");
-              } catch (e) {
-                console.warn("[cnpj autofill]", e);
-              } finally {
-                i.style.background = prev;
+              if (cnpjGroup) {
+                if (cnpjGroupState.get(cnpjGroup) === "loaded") return;
+                askApplyAll(i, cnpjGroup, clean);
+              } else {
+                void autofillCnpj(clean, undefined, true);
               }
             });
             attachCnpjGroupFocus(i);
