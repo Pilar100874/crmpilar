@@ -8,18 +8,35 @@ interface Props {
   children: ReactNode;
   initialX?: number;
   initialY?: number;
+  width?: number;
+  height?: number;
 }
 
-export function FloatingPanel({ open, onClose, title = "Painel", children, initialX = 40, initialY = 40 }: Props) {
+export function FloatingPanel({
+  open,
+  onClose,
+  title = "Painel",
+  children,
+  initialX = 80,
+  initialY = 80,
+  width = 320,
+  height = 600,
+}: Props) {
   const [pos, setPos] = useState({ x: initialX, y: initialY });
   const dragRef = useRef<{ dx: number; dy: number } | null>(null);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
       if (!dragRef.current) return;
-      setPos({ x: e.clientX - dragRef.current.dx, y: e.clientY - dragRef.current.dy });
+      e.preventDefault();
+      setPos({
+        x: Math.max(0, Math.min(window.innerWidth - 60, e.clientX - dragRef.current.dx)),
+        y: Math.max(0, Math.min(window.innerHeight - 40, e.clientY - dragRef.current.dy)),
+      });
     };
-    const onUp = () => { dragRef.current = null; };
+    const onUp = () => {
+      dragRef.current = null;
+    };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
     return () => {
@@ -32,14 +49,13 @@ export function FloatingPanel({ open, onClose, title = "Painel", children, initi
 
   return (
     <div
-      className="absolute z-40 bg-card border rounded-lg shadow-2xl flex flex-col overflow-hidden"
-      style={{ left: pos.x, top: pos.y, width: 300, maxHeight: "80%" }}
+      className="fixed z-50 bg-card border rounded-lg shadow-2xl flex flex-col overflow-hidden"
+      style={{ left: pos.x, top: pos.y, width, height }}
     >
       <div
-        className="flex items-center justify-between gap-2 px-2 py-1.5 border-b bg-muted/50 cursor-move select-none"
+        className="flex items-center justify-between gap-2 px-2 py-1.5 border-b bg-muted/50 cursor-move select-none shrink-0"
         onMouseDown={(e) => {
-          const rect = (e.currentTarget.parentElement as HTMLElement).getBoundingClientRect();
-          dragRef.current = { dx: e.clientX - rect.left, dy: e.clientY - rect.top };
+          dragRef.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y };
         }}
       >
         <div className="flex items-center gap-1 text-xs font-medium">
@@ -55,7 +71,7 @@ export function FloatingPanel({ open, onClose, title = "Painel", children, initi
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
-      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">{children}</div>
+      <div className="flex-1 min-h-0 overflow-auto flex flex-col">{children}</div>
     </div>
   );
 }
