@@ -42,6 +42,9 @@ export default function GerarDocumento() {
   const registroId = registroIds[0] ?? null;
   const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
   const [gerando, setGerando] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewMode, setPreviewMode] = useState<"pdf" | "print">("pdf");
+  const [previewHtmls, setPreviewHtmls] = useState<string[]>([]);
   const [dados, setDados] = useState<Record<string, any>>({});
   const [overrides, setOverrides] = useState<Record<string, string>>({});
   const [fillables, setFillables] = useState<Record<string, string>>({});
@@ -115,12 +118,44 @@ export default function GerarDocumento() {
     return applyFillables(step1.html, fillables, { highlightEmpty: false });
   };
 
-  const gerarPdf = async (modo: "unico" | "individual") => {
+  const abrirPreview = async (mode: "pdf" | "print") => {
     if (!modelo) { toast.error("Escolha um modelo"); return; }
     const ids = registroIds.length > 0 ? registroIds : [null as any];
     setGerando(true);
     try {
       const htmls = await Promise.all(ids.map(id => renderHtmlPara(id)));
+      setPreviewHtmls(htmls);
+      setPreviewMode(mode);
+      setPreviewOpen(true);
+    } finally { setGerando(false); }
+  };
+
+  const confirmarPreview = async () => {
+    if (previewMode === "print") {
+      printHtml(previewHtmls.join('<div style="page-break-before:always"></div>'));
+      setPreviewOpen(false);
+      return;
+    }
+    // pdf
+    if (previewHtmls.length > 1) {
+      setPreviewOpen(false);
+      setPdfDialogOpen(true);
+      return;
+    }
+    setGerando(true);
+    try {
+      await downloadHtmlsPdf(previewHtmls, { filename: modelo?.titulo ?? "documento" });
+      await salvarNoHistorico();
+      setPreviewOpen(false);
+    } finally { setGerando(false); }
+  };
+
+  const gerarPdf = async (modo: "unico" | "individual") => {
+    if (!modelo) { toast.error("Escolha um modelo"); return; }
+    setGerando(true);
+    try {
+      const htmls = previewHtmls.length ? previewHtmls
+        : await Promise.all((registroIds.length ? registroIds : [null as any]).map(id => renderHtmlPara(id)));
       if (modo === "unico") {
         await downloadHtmlsPdf(htmls, { filename: modelo.titulo });
       } else {
@@ -222,19 +257,10 @@ export default function GerarDocumento() {
           )}
 
           <div className="border-t pt-3 space-y-2">
-            <Button className="w-full" disabled={gerando} onClick={async () => {
-              if (registroIds.length > 1) { setPdfDialogOpen(true); return; }
-              if (pageRef.current) {
-                setGerando(true);
-                try {
-                  await downloadPdf(pageRef.current, { filename: modelo?.titulo ?? "documento" });
-                  await salvarNoHistorico();
-                } finally { setGerando(false); }
-              }
-            }}>
-              <FileDown className="h-4 w-4 mr-1" /> {gerando ? "Gerando…" : `Gerar PDF e salvar${registroIds.length > 1 ? ` (${registroIds.length})` : ""}`}
+            <Button className="w-full" disabled={gerando} onClick={() => abrirPreview("pdf")}>
+              <FileDown className="h-4 w-4 mr-1" /> {gerando ? "Preparando…" : `Gerar PDF${registroIds.length > 1 ? ` (${registroIds.length})` : ""}`}
             </Button>
-            <Button variant="outline" className="w-full" onClick={() => printHtml(renderTemplate(modelo?.content_html ?? "", dados).html)}>
+            <Button variant="outline" className="w-full" disabled={gerando} onClick={() => abrirPreview("print")}>
               <Printer className="h-4 w-4 mr-1" /> Imprimir
             </Button>
             <Button variant="outline" className="w-full" onClick={() => downloadHtml(renderTemplate(modelo?.content_html ?? "", dados).html, modelo?.titulo ?? "documento")}>
@@ -277,6 +303,31 @@ export default function GerarDocumento() {
             </Button>
             <Button disabled={gerando} onClick={() => gerarPdf("unico")}>
               PDF único
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-5xl max-h-[95vh] p-0 flex flex-col">
+          <DialogHeader className="p-4 border-b">
+            <DialogTitle>Prévia — {previewMode === "pdf" ? "Gerar PDF" : "Imprimir"}</DialogTitle>
+            <DialogDescription>
+              Revise o conteúdo abaixo antes de {previewMode === "pdf" ? "gerar o PDF" : "imprimir"}.
+              {previewHtmls.length > 1 && ` ${previewHtmls.length} documentos.`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto bg-muted/20 p-6 space-y-6">
+            {previewHtmls.map((h, i) => (
+              <div key={i} className="bg-white text-black shadow-xl mx-auto"
+                style={{ width: "210mm", minHeight: "297mm", padding: "20mm", boxSizing: "border-box", fontFamily: "Arial, sans-serif", fontSize: "12pt", lineHeight: 1.5 }}
+                dangerouslySetInnerHTML={{ __html: h }} />
+            ))}
+          </div>
+          <DialogFooter className="p-4 border-t gap-2 sm:justify-end">
+            <Button variant="outline" disabled={gerando} onClick={() => setPreviewOpen(false)}>Cancelar</Button>
+            <Button disabled={gerando} onClick={confirmarPreview}>
+              {previewMode === "pdf" ? <><FileDown className="h-4 w-4 mr-1" /> Confirmar e gerar PDF</> : <><Printer className="h-4 w-4 mr-1" /> Confirmar e imprimir</>}
             </Button>
           </DialogFooter>
         </DialogContent>
