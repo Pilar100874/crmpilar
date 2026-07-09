@@ -119,6 +119,11 @@ export function EditorToolbar({
             {sidebarOpen ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
           </TB>
         )}
+        {onToggleFormFields && (
+          <TB onClick={onToggleFormFields} active={!!formFieldsOpen} title={formFieldsOpen ? "Fechar campos personalizados" : "Abrir campos personalizados"}>
+            <FormInput className="h-4 w-4" />
+          </TB>
+        )}
 
         {(onQuickFill || onGeneratePdf || onPrint || onSearchEmpresa || onSearchEstoque) && (
           <>
