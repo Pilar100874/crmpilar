@@ -82,22 +82,21 @@ async function autofillCnpj(cnpjLimpo: string, group?: string) {
   if (Object.keys(updates).length) mergeFillableValues(updates);
 }
 
-/** Pergunta o CNPJ ao usuário (uma vez por grupo) e dispara o autofill. */
-async function askCnpjForGroup(group: string) {
-  if (!group) return;
-  if (cnpjGroupState.get(group)) return;
+/** Sem popup: foca o sub-campo CNPJ do grupo (que tem máscara + autofill no blur). */
+function focusCnpjInputForGroup(group: string): boolean {
+  if (!group) return false;
+  if (cnpjGroupState.get(group)) return false;
+  const cnpjEl = document.querySelector<HTMLInputElement>(
+    `[data-cnpj-group="${CSS.escape(group)}"][data-cnpj-subfield="cnpj"] input[data-cnpj-autofill="1"]`
+  );
+  if (!cnpjEl) return false;
   cnpjGroupState.set(group, "asking");
-  const masked = await askCnpjModal(`Informe o CNPJ para preencher "${group}"`);
-  if (!masked) { cnpjGroupState.delete(group); return; }
-  const clean = masked.replace(/\D/g, "");
-  if (clean.length !== 14) { cnpjGroupState.delete(group); return; }
-  try {
-    await autofillCnpj(clean, group);
-    cnpjGroupState.set(group, "loaded");
-  } catch (e) {
-    console.warn("[cnpj autofill]", e);
-    cnpjGroupState.delete(group);
-  }
+  const prevBg = cnpjEl.style.background;
+  cnpjEl.style.background = "#fde68a";
+  cnpjEl.focus();
+  try { cnpjEl.scrollIntoView({ block: "center", behavior: "smooth" }); } catch {}
+  setTimeout(() => { cnpjEl.style.background = prevBg; }, 1200);
+  return true;
 }
 
 
