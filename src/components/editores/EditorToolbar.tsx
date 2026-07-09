@@ -11,6 +11,7 @@ import {
   Table as TableIcon, Rows, Columns, Trash2, Eraser, Maximize2, ZoomIn, ZoomOut,
   ScanSearch, ArrowLeft, Save, Eye, Lock, Unlock, Copy, Printer, FileDown,
   Database, ClipboardList, Pencil, PanelRightOpen, PanelRightClose,
+  Building2, Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -50,6 +51,8 @@ interface Props {
   onQuickFill?: () => void;
   onGeneratePdf?: () => void;
   onPrint?: () => void;
+  onSearchEmpresa?: () => void;
+  onSearchEstoque?: () => void;
 }
 
 
@@ -80,7 +83,7 @@ export function EditorToolbar({
   onBack, onSave, onSalvarComo, onToggleLock, locked, dirty, saving,
   titulo, onTituloChange, mode = "editar", onModeChange,
   onInsertFormField, onToggleSidebar, sidebarOpen, hasFormFields = false,
-  onQuickFill, onGeneratePdf, onPrint,
+  onQuickFill, onGeneratePdf, onPrint, onSearchEmpresa, onSearchEstoque,
 }: Props) {
 
   const [color, setColor] = useState("#111111");
@@ -115,9 +118,19 @@ export function EditorToolbar({
           </TB>
         )}
 
-        {(onQuickFill || onGeneratePdf || onPrint) && (
+        {(onQuickFill || onGeneratePdf || onPrint || onSearchEmpresa || onSearchEstoque) && (
           <>
             <Separator orientation="vertical" className="h-6 mx-1" />
+            {onSearchEmpresa && (
+              <TB onClick={onSearchEmpresa} title="Buscar empresa e inserir dados no documento">
+                <Building2 className="h-4 w-4" />
+              </TB>
+            )}
+            {onSearchEstoque && (
+              <TB onClick={onSearchEstoque} title="Consultar estoque e inserir tabela de produtos">
+                <Package className="h-4 w-4" />
+              </TB>
+            )}
             {onQuickFill && (
               <TB
                 onClick={onQuickFill}

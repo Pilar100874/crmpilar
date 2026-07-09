@@ -10,6 +10,8 @@ import { CamposSidebar } from "@/components/editores/CamposSidebar";
 import { PreviewModal } from "@/components/editores/PreviewModal";
 import type { Editor } from "@tiptap/react";
 import { QuickFillDialog } from "@/components/editores/QuickFillDialog";
+import { EmpresaSearchDialog } from "@/components/editores/EmpresaSearchDialog";
+import { EstoqueSearchDialog } from "@/components/editores/EstoqueSearchDialog";
 import { renderTemplate, applyFillables } from "@/lib/editores/mergeEngine";
 import { setFillableValues as setFillableStore } from "@/lib/editores/fillableValuesStore";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
@@ -43,6 +45,8 @@ export default function ModeloEditor() {
   const [primaryAlias, setPrimaryAlias] = useState<string | null>(null);
   const [showResolved, setShowResolved] = useState(false);
   const [quickFillOpen, setQuickFillOpen] = useState(false);
+  const [empresaSearchOpen, setEmpresaSearchOpen] = useState(false);
+  const [estoqueSearchOpen, setEstoqueSearchOpen] = useState(false);
   const [fillableValues, setFillableValues] = useState<Record<string, string>>({});
 
   // Normaliza merge_config para array de configs (aceita objeto legado)
@@ -344,6 +348,8 @@ export default function ModeloEditor() {
           sidebarOpen={sidebarOpen}
           hasFormFields={/data-fillable-field=|data-fillable=/i.test(html)}
           onQuickFill={() => setQuickFillOpen(true)}
+          onSearchEmpresa={() => setEmpresaSearchOpen(true)}
+          onSearchEstoque={() => setEstoqueSearchOpen(true)}
           onGeneratePdf={gerarPdf}
           onPrint={imprimir}
         />
@@ -396,6 +402,24 @@ export default function ModeloEditor() {
           html={html}
           values={fillableValues}
           onApply={(v) => { setFillableValues(v); setFillableStore(v); }}
+        />
+
+        <EmpresaSearchDialog
+          open={empresaSearchOpen}
+          onOpenChange={setEmpresaSearchOpen}
+          onInsert={(h) => {
+            editorRef.current?.chain().focus().insertContent(h).run();
+            setDirty(true);
+          }}
+        />
+
+        <EstoqueSearchDialog
+          open={estoqueSearchOpen}
+          onOpenChange={setEstoqueSearchOpen}
+          onInsert={(h) => {
+            editorRef.current?.chain().focus().insertContent(h).run();
+            setDirty(true);
+          }}
         />
 
 
