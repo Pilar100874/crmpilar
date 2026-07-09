@@ -366,7 +366,7 @@ interface PagePaperProps {
   total: number;
   html: string;
   label?: string;
-  refEl?: React.RefObject<HTMLDivElement>;
+  refEl?: React.Ref<HTMLDivElement>;
   single?: boolean;
 }
 function PagePaper({ index, total, html, label, refEl, single }: PagePaperProps) {
