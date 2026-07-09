@@ -9,9 +9,11 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { REGISTRO_TIPOS, RegistroTipo, resolveMergeData } from "@/lib/editores/dataResolvers";
 import { extractFieldKeys, extractFillables, renderTemplate, applyFillables } from "@/lib/editores/mergeEngine";
-import { downloadPdf, downloadHtml, printHtml } from "@/lib/editores/pdfExport";
+import { downloadPdf, downloadHtml, printHtml, downloadHtmlsPdf } from "@/lib/editores/pdfExport";
 import { FileDown, Printer, Download, Save, Search, ArrowLeft, Lock } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 interface Modelo {
   id: string; titulo: string; content_html: string; versao_atual: number;
@@ -36,7 +38,10 @@ export default function GerarDocumento() {
   const [tipo, setTipo] = useState<RegistroTipo>("livre");
   const [registroBusca, setRegistroBusca] = useState("");
   const [registros, setRegistros] = useState<any[]>([]);
-  const [registroId, setRegistroId] = useState<string | null>(null);
+  const [registroIds, setRegistroIds] = useState<string[]>([]);
+  const registroId = registroIds[0] ?? null;
+  const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
+  const [gerando, setGerando] = useState(false);
   const [dados, setDados] = useState<Record<string, any>>({});
   const [overrides, setOverrides] = useState<Record<string, string>>({});
   const [fillables, setFillables] = useState<Record<string, string>>({});
@@ -101,6 +106,35 @@ export default function GerarDocumento() {
     return (data as any).id;
   };
 
+  /** Renderiza o HTML final para um determinado registro. */
+  const renderHtmlPara = async (rid: string | null): Promise<string> => {
+    if (!modelo) return "";
+    const d = await resolveMergeData(tipo, rid);
+    const merged = { ...d, ...overrides };
+    const step1 = renderTemplate(modelo.content_html, merged, { highlightMissing: false });
+    return applyFillables(step1.html, fillables, { highlightEmpty: false });
+  };
+
+  const gerarPdf = async (modo: "unico" | "individual") => {
+    if (!modelo) { toast.error("Escolha um modelo"); return; }
+    const ids = registroIds.length > 0 ? registroIds : [null as any];
+    setGerando(true);
+    try {
+      const htmls = await Promise.all(ids.map(id => renderHtmlPara(id)));
+      if (modo === "unico") {
+        await downloadHtmlsPdf(htmls, { filename: modelo.titulo });
+      } else {
+        for (let i = 0; i < htmls.length; i++) {
+          await downloadHtmlsPdf([htmls[i]], { filename: `${modelo.titulo}-${i + 1}` });
+        }
+      }
+      await salvarNoHistorico();
+    } finally {
+      setGerando(false);
+      setPdfDialogOpen(false);
+    }
+  };
+
   return (
     <div className="p-4 sm:p-6 space-y-4">
       <div className="flex items-center gap-2">
@@ -121,7 +155,7 @@ export default function GerarDocumento() {
           </div>
           <div>
             <label className="text-xs text-muted-foreground">Origem dos dados</label>
-            <Select value={tipo} onValueChange={(v: RegistroTipo) => { setTipo(v); setRegistroId(null); }}>
+            <Select value={tipo} onValueChange={(v: RegistroTipo) => { setTipo(v); setRegistroIds([]); }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {REGISTRO_TIPOS.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
@@ -139,11 +173,15 @@ export default function GerarDocumento() {
                 {registros.map((r: any) => {
                   const cfg = TABELA_POR_TIPO[tipo as Exclude<RegistroTipo,"livre">];
                   const label = r[cfg.label] || r.id;
+                  const checked = registroIds.includes(r.id);
                   return (
-                    <button key={r.id} onClick={() => setRegistroId(r.id)}
-                      className={`block w-full text-left text-xs px-2 py-1.5 hover:bg-muted/50 ${registroId === r.id ? "bg-primary/10" : ""}`}>
-                      {label}
-                    </button>
+                    <label key={r.id}
+                      className={`flex items-center gap-2 w-full text-left text-xs px-2 py-1.5 hover:bg-muted/50 cursor-pointer ${checked ? "bg-primary/10" : ""}`}>
+                      <Checkbox checked={checked} onCheckedChange={(v) => {
+                        setRegistroIds(prev => v ? [...prev, r.id] : prev.filter(x => x !== r.id));
+                      }} />
+                      <span className="flex-1">{label}</span>
+                    </label>
                   );
                 })}
                 {registros.length === 0 && <div className="text-xs text-muted-foreground p-2">Nenhum registro.</div>}
@@ -184,8 +222,17 @@ export default function GerarDocumento() {
           )}
 
           <div className="border-t pt-3 space-y-2">
-            <Button className="w-full" onClick={async () => { if (pageRef.current) { await downloadPdf(pageRef.current, { filename: modelo?.titulo ?? "documento" }); await salvarNoHistorico(); } }}>
-              <FileDown className="h-4 w-4 mr-1" /> Gerar PDF e salvar
+            <Button className="w-full" disabled={gerando} onClick={async () => {
+              if (registroIds.length > 1) { setPdfDialogOpen(true); return; }
+              if (pageRef.current) {
+                setGerando(true);
+                try {
+                  await downloadPdf(pageRef.current, { filename: modelo?.titulo ?? "documento" });
+                  await salvarNoHistorico();
+                } finally { setGerando(false); }
+              }
+            }}>
+              <FileDown className="h-4 w-4 mr-1" /> {gerando ? "Gerando…" : `Gerar PDF e salvar${registroIds.length > 1 ? ` (${registroIds.length})` : ""}`}
             </Button>
             <Button variant="outline" className="w-full" onClick={() => printHtml(renderTemplate(modelo?.content_html ?? "", dados).html)}>
               <Printer className="h-4 w-4 mr-1" /> Imprimir
@@ -215,6 +262,25 @@ export default function GerarDocumento() {
           )}
         </div>
       </div>
+
+      <Dialog open={pdfDialogOpen} onOpenChange={setPdfDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Gerar PDF de {registroIds.length} vínculos</DialogTitle>
+            <DialogDescription>
+              Você selecionou vários registros. Deseja um PDF único com todos ou um arquivo separado para cada vínculo?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button variant="outline" disabled={gerando} onClick={() => gerarPdf("individual")}>
+              1 PDF por vínculo
+            </Button>
+            <Button disabled={gerando} onClick={() => gerarPdf("unico")}>
+              PDF único
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
