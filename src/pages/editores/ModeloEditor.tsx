@@ -11,7 +11,7 @@ import { PreviewModal } from "@/components/editores/PreviewModal";
 import type { Editor } from "@tiptap/react";
 import { QuickFillDialog } from "@/components/editores/QuickFillDialog";
 import { EmpresaSearchDialog } from "@/components/editores/EmpresaSearchDialog";
-import { EstoqueSearchDialog } from "@/components/editores/EstoqueSearchDialog";
+import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
 import { renderTemplate, applyFillables } from "@/lib/editores/mergeEngine";
 import { setFillableValues as setFillableStore } from "@/lib/editores/fillableValuesStore";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
@@ -413,14 +413,24 @@ export default function ModeloEditor() {
           }}
         />
 
-        <EstoqueSearchDialog
-          open={estoqueSearchOpen}
-          onOpenChange={setEstoqueSearchOpen}
-          onInsert={(h) => {
-            editorRef.current?.chain().focus().insertContent(h).run();
-            setDirty(true);
-          }}
-        />
+        {estabId && (
+          <ConsultaEstoqueDialog
+            open={estoqueSearchOpen}
+            onOpenChange={setEstoqueSearchOpen}
+            estabelecimentoId={estabId}
+            onEnviarParaConversa={(texto) => {
+              const html = texto
+                .split("\n")
+                .map((l) => {
+                  const bold = l.replace(/\*(.+?)\*/g, "<strong>$1</strong>");
+                  return `<p>${bold || "&nbsp;"}</p>`;
+                })
+                .join("");
+              editorRef.current?.chain().focus().insertContent(html).run();
+              setDirty(true);
+            }}
+          />
+        )}
 
 
         {/* Barra inferior — nome do documento */}
