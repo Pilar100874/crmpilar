@@ -152,21 +152,36 @@ export const FillableField = Node.create({
           }
           case "lista": {
             const s = document.createElement("select");
-            s.setAttribute("data-fillable", token); s.style.cssText = inputStyle;
-            const opt0 = document.createElement("option"); opt0.value = ""; opt0.textContent = label || "Selecione";
-            s.appendChild(opt0);
-            const fill = (list: string[]) => {
+            s.setAttribute("data-fillable", token); s.style.cssText = inputStyle + ";pointer-events:auto";
+            s.addEventListener("mousedown", (ev) => ev.stopPropagation());
+            const rebuild = (list: string[], loading = false) => {
+              s.innerHTML = "";
+              const opt0 = document.createElement("option");
+              opt0.value = "";
+              opt0.textContent = loading ? "Carregando…" : (label || "Selecione");
+              s.appendChild(opt0);
               for (const o of list) { const op = document.createElement("option"); op.value = o; op.textContent = o; s.appendChild(op); }
               s.value = currentValue;
             };
             const dyn = parseDynamic(opcoes);
-            if (dyn) { fetchDynamicOptions(dyn.tabela, dyn.coluna).then(fill); } else { fill(opcoes); }
+            if (dyn) {
+              rebuild([], true);
+              fetchDynamicOptions(dyn.tabela, dyn.coluna).then(list => rebuild(list));
+              s.addEventListener("focus", () => {
+                fetchDynamicOptions(dyn.tabela, dyn.coluna).then(list => rebuild(list));
+              });
+            } else {
+              rebuild(opcoes);
+            }
             s.addEventListener("change", () => { currentValue = s.value; });
             el = s; break;
           }
           case "radio": {
             const span = document.createElement("span");
+            span.style.cssText = "pointer-events:auto";
+            span.addEventListener("mousedown", (ev) => ev.stopPropagation());
             const fill = (list: string[]) => {
+              span.innerHTML = "";
               for (const o of list) {
                 const lab = document.createElement("label");
                 lab.style.cssText = "display:inline-flex;align-items:center;gap:4px;margin-right:8px";
