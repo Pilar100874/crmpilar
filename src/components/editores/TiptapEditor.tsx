@@ -111,12 +111,13 @@ export function TiptapEditor({
           }
           return true;
         }
-        if (docPayload && docPayload.startsWith("__CNPJ_GROUP__:")) {
+        if (docPayload && (docPayload.startsWith("__CNPJ_GROUP__:") || docPayload.startsWith("__CEP_GROUP__:"))) {
           event.preventDefault();
           try {
-            const parsed = parseCnpjGroupPayload(docPayload);
+            const isCep = docPayload.startsWith("__CEP_GROUP__:");
+            const parsed = isCep ? parseCepGroupPayload(docPayload) : parseCnpjGroupPayload(docPayload);
             if (!parsed) return true;
-            const fields = buildCnpjGroupFields(parsed.group, parsed.keys);
+            const fields = isCep ? buildCepGroupFields(parsed.group, parsed.keys) : buildCnpjGroupFields(parsed.group, parsed.keys);
             let tr = view.state.tr;
             let insertPos = pos;
             for (const attrs of fields) {
@@ -127,7 +128,7 @@ export function TiptapEditor({
             }
             view.dispatch(tr);
           } catch (e) {
-            console.error("[TiptapEditor] payload __CNPJ_GROUP__ inválido", e);
+            console.error("[TiptapEditor] payload GROUP inválido", e);
           }
           return true;
         }
