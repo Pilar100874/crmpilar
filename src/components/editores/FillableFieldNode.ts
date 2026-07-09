@@ -1,7 +1,7 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { getFillableValue, subscribeFillable, mergeFillableValues } from "@/lib/editores/fillableValuesStore";
 import { fetchDynamicOptions, isDynamicOpcoes, parseDynamic } from "@/lib/editores/dynamicOptions";
-import { askCnpjModal } from "@/lib/editores/cnpjPrompt";
+
 
 // Normaliza label (sem acento, minúsculo, sem pontuação) para casar campos do formulário
 // com as chaves retornadas pela BrasilAPI de CNPJ.
@@ -82,22 +82,20 @@ async function autofillCnpj(cnpjLimpo: string, group?: string) {
   if (Object.keys(updates).length) mergeFillableValues(updates);
 }
 
-/** Pergunta o CNPJ ao usuário (uma vez por grupo) e dispara o autofill. */
-async function askCnpjForGroup(group: string) {
-  if (!group) return;
-  if (cnpjGroupState.get(group)) return;
-  cnpjGroupState.set(group, "asking");
-  const masked = await askCnpjModal(`Informe o CNPJ para preencher "${group}"`);
-  if (!masked) { cnpjGroupState.delete(group); return; }
-  const clean = masked.replace(/\D/g, "");
-  if (clean.length !== 14) { cnpjGroupState.delete(group); return; }
-  try {
-    await autofillCnpj(clean, group);
-    cnpjGroupState.set(group, "loaded");
-  } catch (e) {
-    console.warn("[cnpj autofill]", e);
-    cnpjGroupState.delete(group);
-  }
+/** Sem popup: foca o sub-campo CNPJ do grupo (que tem máscara + autofill no blur). */
+function focusCnpjInputForGroup(group: string): boolean {
+  if (!group) return false;
+  const cnpjEl = document.querySelector<HTMLInputElement>(
+    `[data-cnpj-group="${CSS.escape(group)}"][data-cnpj-subfield="cnpj"] input[data-cnpj-autofill="1"]`
+  );
+  if (!cnpjEl) return false;
+  if (cnpjEl.value && cnpjEl.value.replace(/\D/g, "").length === 14) return false;
+  const prevBg = cnpjEl.style.background;
+  cnpjEl.style.background = "#fde68a";
+  cnpjEl.focus();
+  try { cnpjEl.scrollIntoView({ block: "center", behavior: "smooth" }); } catch {}
+  setTimeout(() => { cnpjEl.style.background = prevBg; }, 1200);
+  return true;
 }
 
 
@@ -239,11 +237,13 @@ export const FillableField = Node.create({
       // pergunta o CNPJ e autopreenche todos os sub-campos vazios do grupo.
       const attachCnpjGroupFocus = (input: HTMLElement) => {
         if (!cnpjGroup || !cnpjSubfield) return;
+        // Não redireciona se este próprio campo é o CNPJ do grupo
+        if (cnpjSubfield === "cnpj") return;
         input.addEventListener("focus", () => {
           const v = (input as HTMLInputElement | HTMLTextAreaElement).value;
           if (v && v.trim()) return;
           if (cnpjGroupState.get(cnpjGroup)) return;
-          void askCnpjForGroup(cnpjGroup);
+          focusCnpjInputForGroup(cnpjGroup);
         }, { once: false });
       };
 
