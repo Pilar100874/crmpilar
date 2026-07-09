@@ -20,6 +20,7 @@ const TIPOS: { value: FillableTipo; label: string; hasOpcoes?: boolean }[] = [
   { value: "textarea", label: "Texto longo (parágrafo)" },
   { value: "data", label: "Data" },
   { value: "numero", label: "Número" },
+  { value: "cnpj", label: "CNPJ (auto-preenche pela Receita)" },
   { value: "check", label: "Caixa de seleção (checkbox)", hasOpcoes: true },
   { value: "lista", label: "Lista suspensa (select)", hasOpcoes: true },
   { value: "radio", label: "Opções (radio)", hasOpcoes: true },
