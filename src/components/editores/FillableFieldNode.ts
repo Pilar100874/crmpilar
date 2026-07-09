@@ -256,6 +256,34 @@ export const FillableField = Node.create({
             if (dyn) { fetchDynamicOptions(dyn.tabela, dyn.coluna).then(fill); } else { fill(opcoes); }
             el = span; break;
           }
+          case "cnpj": {
+            const i = document.createElement("input");
+            i.type = "text";
+            i.setAttribute("data-fillable", token);
+            i.setAttribute("data-cnpj-autofill", "1");
+            i.placeholder = label || "CNPJ";
+            i.style.cssText = inputStyle + ";min-width:180px;pointer-events:auto";
+            i.value = currentValue ? maskCnpj(currentValue) : "";
+            i.addEventListener("mousedown", (ev) => ev.stopPropagation());
+            i.addEventListener("input", () => {
+              i.value = maskCnpj(i.value);
+              currentValue = i.value;
+            });
+            i.addEventListener("blur", async () => {
+              const clean = i.value.replace(/\D/g, "");
+              if (clean.length !== 14) return;
+              const prev = i.style.background;
+              i.style.background = "#fef3c7";
+              try {
+                await autofillCnpj(clean);
+              } catch (e) {
+                console.warn("[cnpj autofill]", e);
+              } finally {
+                i.style.background = prev;
+              }
+            });
+            el = i; break;
+          }
           default: {
             const i = document.createElement("input");
             i.type = "text"; i.setAttribute("data-fillable", token); i.placeholder = label; i.style.cssText = inputStyle;
