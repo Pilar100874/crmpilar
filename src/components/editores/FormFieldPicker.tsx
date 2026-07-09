@@ -168,21 +168,18 @@ export function FormFieldPicker({ onInsert, triggerClassName, triggerLabel = "In
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="col-span-2">
-                    <Button size="sm" variant="outline" onClick={carregarValores} disabled={loading || !tabela || !coluna} className="w-full h-8">
-                      {loading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
-                      Carregar valores únicos
-                    </Button>
+                  <div className="col-span-2 text-[11px] text-muted-foreground">
+                    Os valores serão buscados em tempo real ao preencher o formulário.
                   </div>
                 </div>
               )}
 
-              <div>
-                <label className="text-xs text-muted-foreground">
-                  Opções {fonte === "tabela" ? "(carregadas da tabela — pode editar)" : "(separadas por vírgula)"}
-                </label>
-                <Input value={opcoes} onChange={e => setOpcoes(e.target.value)} placeholder="SP, RJ, MG" />
-              </div>
+              {fonte === "manual" && (
+                <div>
+                  <label className="text-xs text-muted-foreground">Opções (separadas por vírgula)</label>
+                  <Input value={opcoes} onChange={e => setOpcoes(e.target.value)} placeholder="SP, RJ, MG" />
+                </div>
+              )}
             </div>
           )}
         </div>
