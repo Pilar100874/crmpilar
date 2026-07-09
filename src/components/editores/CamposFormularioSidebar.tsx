@@ -11,6 +11,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Search, Plus, Pencil, Trash2, GripVertical, FormInput, ChevronRight, ChevronDown } from "lucide-react";
 import { serializeFillable, type FillableTipo } from "@/lib/editores/mergeEngine";
 import { CNPJ_SUBFIELDS, buildCnpjGroupPayload } from "@/lib/editores/cnpjGroup";
+import { CEP_SUBFIELDS, buildCepGroupPayload } from "@/lib/editores/cepGroup";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface CustomField {
