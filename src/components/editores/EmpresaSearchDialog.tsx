@@ -240,6 +240,33 @@ export function EmpresaSearchDialog({ open, onOpenChange, onInsert }: Props) {
                 );
               })}
             </div>
+
+            {contatos.length > 0 && (
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground px-1">
+                  Contatos vinculados ({contatos.length})
+                </div>
+                <div className="space-y-1 max-h-40 overflow-y-auto border rounded p-1">
+                  {contatos.map(c => (
+                    <label
+                      key={c.id}
+                      className="flex items-start gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer"
+                    >
+                      <Checkbox
+                        checked={selectedContatos.has(c.id)}
+                        onCheckedChange={() => toggleContato(c.id)}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium truncate">{c.nome}</div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {[c.email, c.telefone || c.tel].filter(Boolean).join(" — ") || "—"}
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -248,6 +275,9 @@ export function EmpresaSearchDialog({ open, onOpenChange, onInsert }: Props) {
             <>
               <Button variant="outline" onClick={() => setSelectedEmp(null)}>
                 <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
+              </Button>
+              <Button variant="outline" onClick={clearAll}>
+                <Eraser className="h-4 w-4 mr-1" /> Limpar
               </Button>
               <Button onClick={confirmInsert}>Inserir no documento</Button>
             </>
