@@ -465,7 +465,7 @@ export default function ModeloEditor() {
                   onChange={(h, j) => { setHtml(h); setJson(j); setDirty(true); }}
                   editorRef={(e) => { editorRef.current = e; setEditorInstance(e); }}
                   zoom={zoom}
-                  editable={!modelo.bloqueado && !modelo.campos_bloqueados}
+                  editable={!modelo.bloqueado}
                 />
               </div>
               <FloatingPanel
