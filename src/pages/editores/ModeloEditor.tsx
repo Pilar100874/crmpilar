@@ -381,7 +381,7 @@ export default function ModeloEditor() {
                   editable={!modelo.bloqueado && !modelo.campos_bloqueados}
                 />
               </div>
-              <div className={sidebarOpen ? "" : "hidden"}>
+              <div className={sidebarOpen ? "h-full shrink-0" : "hidden"}>
                 <CamposSidebar
                   estabelecimentoId={estabId}
                   onInsert={inserirCampo}
