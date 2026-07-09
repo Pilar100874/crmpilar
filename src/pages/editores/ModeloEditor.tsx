@@ -228,7 +228,8 @@ export default function ModeloEditor() {
 
   const salvarComo = async () => {
     if (!modelo || !estabId) return;
-    const novoTitulo = window.prompt("Nome do novo modelo:", `${modelo.titulo} (cópia)`);
+    const label = isAdmin ? "modelo" : "arquivo";
+    const novoTitulo = window.prompt(`Nome do novo ${label}:`, `${modelo.titulo} (cópia)`);
     if (!novoTitulo) return;
     const { data, error } = await supabase.from("doc_modelos").insert({
       estabelecimento_id: estabId,
@@ -242,10 +243,12 @@ export default function ModeloEditor() {
       categoria_id: modelo.categoria_id,
       bloqueado: false,
       campos_bloqueados: false,
+      is_modelo: isAdmin,
+      owner_user_id: isAdmin ? null : usuarioId,
     } as any).select("id").single();
     if (error) { toast.error(error.message); return; }
     toast.success("Cópia criada");
-    if (data?.id) nav(`/editores/modelo/${data.id}`);
+    if (data?.id) nav(`/editores/modelos/${data.id}`);
   };
 
 
