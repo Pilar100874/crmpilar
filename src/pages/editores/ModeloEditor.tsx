@@ -268,11 +268,11 @@ export default function ModeloEditor() {
 
     // Usuário comum vendo um modelo: salvar cria um arquivo pessoal
     if (modelo.is_modelo && !isAdmin) {
-      if (auto) return; // não auto-cria cópias
+      if (auto) return false; // não auto-cria cópias
       await salvarComoArquivoPessoal();
-      return;
+      return true;
     }
-    if (modelo.bloqueado && !auto) { toast.error("Modelo bloqueado — desbloqueie para editar."); return; }
+    if (modelo.bloqueado && !auto) { toast.error("Modelo bloqueado — desbloqueie para editar."); return false; }
     setSaving(true);
     const { error } = await supabase.from("doc_modelos").update({
       titulo: modelo.titulo,
@@ -286,10 +286,12 @@ export default function ModeloEditor() {
       campos_bloqueados: modelo.campos_bloqueados ?? false,
     } as any).eq("id", id);
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(error.message); return false; }
     setDirty(false);
     if (!auto) toast.success("Salvo");
+    return true;
   };
+
 
   const alternarBloqueio = async () => {
     if (!id || !modelo) return;
