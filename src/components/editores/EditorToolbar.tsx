@@ -59,6 +59,9 @@ function TB({ active, onClick, disabled, title, children }: any) {
       type="button"
       size="sm"
       variant={active ? "secondary" : "ghost"}
+      // Preserva a seleção do editor (Word-like): impede que o clique no botão
+      // roube o foco antes de o comando de formatação ser aplicado.
+      onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       disabled={disabled}
       title={title}
@@ -141,11 +144,11 @@ export function EditorToolbar({
             <Separator orientation="vertical" className="h-6 mx-1" />
 
             <Select value="" onValueChange={(v) => editor.chain().focus().setFontFamily(v).run()}>
-              <SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue placeholder="Fonte" /></SelectTrigger>
+              <SelectTrigger onMouseDown={(e) => e.preventDefault()} className="h-8 w-[130px] text-xs"><SelectValue placeholder="Fonte" /></SelectTrigger>
               <SelectContent>{FONTS.map(f => <SelectItem key={f} value={f} style={{ fontFamily: f }}>{f}</SelectItem>)}</SelectContent>
             </Select>
             <Select value="" onValueChange={(v) => editor.chain().focus().setMark("textStyle", { fontSize: v } as any).run()}>
-              <SelectTrigger className="h-8 w-[70px] text-xs"><SelectValue placeholder="Tam." /></SelectTrigger>
+              <SelectTrigger onMouseDown={(e) => e.preventDefault()} className="h-8 w-[70px] text-xs"><SelectValue placeholder="Tam." /></SelectTrigger>
               <SelectContent>{SIZES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
 
@@ -172,8 +175,8 @@ export function EditorToolbar({
             <TB active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()} title="Lista numerada"><ListOrdered className="h-4 w-4" /></TB>
 
             <Separator orientation="vertical" className="h-6 mx-1" />
-            <Input type="color" title="Cor do texto" value={color} onChange={(e) => { setColor(e.target.value); editor.chain().focus().setColor(e.target.value).run(); }} className="h-8 w-8 p-0.5 cursor-pointer" />
-            <Input type="color" title="Cor de fundo" value={bgColor} onChange={(e) => { setBgColor(e.target.value); editor.chain().focus().toggleHighlight({ color: e.target.value }).run(); }} className="h-8 w-8 p-0.5 cursor-pointer" />
+            <Input type="color" onMouseDown={(e) => e.preventDefault()} title="Cor do texto" value={color} onChange={(e) => { setColor(e.target.value); editor.chain().focus().setColor(e.target.value).run(); }} className="h-8 w-8 p-0.5 cursor-pointer" />
+            <Input type="color" onMouseDown={(e) => e.preventDefault()} title="Cor de fundo" value={bgColor} onChange={(e) => { setBgColor(e.target.value); editor.chain().focus().toggleHighlight({ color: e.target.value }).run(); }} className="h-8 w-8 p-0.5 cursor-pointer" />
 
             <Separator orientation="vertical" className="h-6 mx-1" />
             <TB onClick={() => {
