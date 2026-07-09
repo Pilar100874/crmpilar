@@ -18,6 +18,7 @@ import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueD
 import { renderTemplate, applyFillables } from "@/lib/editores/mergeEngine";
 import { parseCnpjGroupPayload, buildCnpjGroupFields } from "@/lib/editores/cnpjGroup";
 import { setFillableValues as setFillableStore } from "@/lib/editores/fillableValuesStore";
+import { hydrateDatasets, registerDataset, getAllDatasets, type ImportedDataset } from "@/lib/editores/importedDatasetStore";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
 import { runMergeConfig } from "@/lib/editores/runMergeConfig";
 import { setPreviewValues, setPreviewRows, setPreviewActive } from "@/lib/editores/mergePreviewStore";
