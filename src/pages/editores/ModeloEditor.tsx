@@ -270,6 +270,23 @@ export default function ModeloEditor() {
       }
       return;
     }
+    if (chave.startsWith("__CNPJ_GROUP__:")) {
+      try {
+        // Import dinâmico para evitar ciclo
+        const { parseCnpjGroupPayload, buildCnpjGroupFields } = require("@/lib/editores/cnpjGroup");
+        const parsed = parseCnpjGroupPayload(chave);
+        if (!parsed) return;
+        const fields = buildCnpjGroupFields(parsed.group, parsed.keys);
+        let chain = ed.chain().focus();
+        for (const attrs of fields) {
+          chain = chain.insertContent({ type: "fillableField", attrs }).insertContent(" ");
+        }
+        chain.run();
+      } catch (e) {
+        console.error("[ModeloEditor] payload __CNPJ_GROUP__ inválido", e);
+      }
+      return;
+    }
     if (chave.startsWith("__RAW__:")) {
       ed.chain().focus().insertContent(chave.slice("__RAW__:".length)).run();
       return;
