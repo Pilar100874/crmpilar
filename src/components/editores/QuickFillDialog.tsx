@@ -78,12 +78,12 @@ export function QuickFillDialog({ open, onOpenChange, html, values, onApply }: P
                   <Select value={v} onValueChange={(nv) => setV(tok.raw, nv)}>
                     <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>
-                      {(tok.opcoes || []).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                      {optionsFor(tok).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 ) : tok.tipo === "radio" ? (
                   <div className="flex flex-wrap gap-3">
-                    {(tok.opcoes || []).map(o => (
+                    {optionsFor(tok).map(o => (
                       <label key={o} className="flex items-center gap-1 text-sm">
                         <input type="radio" name={tok.raw} checked={v === o} onChange={() => setV(tok.raw, o)} />
                         {o}
