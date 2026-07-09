@@ -324,7 +324,7 @@ export default function ModeloEditor() {
   };
 
   return (
-    <div className={fullscreen ? "fixed inset-0 z-50 bg-background flex flex-col" : "h-full flex flex-col"}>
+    <div className={fullscreen ? "fixed inset-0 z-50 bg-background flex flex-col" : "fixed inset-x-0 bottom-0 top-[var(--app-header-h,0px)] flex flex-col bg-background"} style={fullscreen ? undefined : { top: 0, height: "100dvh" }}>
       <div className="flex-1 flex flex-col overflow-hidden min-h-0">
         <div className="sticky top-0 z-30 bg-card shadow-sm">
         <EditorToolbar
