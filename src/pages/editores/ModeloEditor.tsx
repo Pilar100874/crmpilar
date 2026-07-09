@@ -226,9 +226,13 @@ export default function ModeloEditor() {
   const alternarBloqueio = async () => {
     if (!id || !modelo) return;
     const novo = !modelo.bloqueado;
-    const { error } = await supabase.from("doc_modelos").update({ bloqueado: novo } as any).eq("id", id);
+    // Ao bloquear o modelo, desativa a trava de estrutura (campos_bloqueados)
+    // para que os campos personalizados fiquem interativos no modo visualização.
+    const patch: any = { bloqueado: novo };
+    if (novo) patch.campos_bloqueados = false;
+    const { error } = await supabase.from("doc_modelos").update(patch).eq("id", id);
     if (error) { toast.error(error.message); return; }
-    setModelo({ ...modelo, bloqueado: novo });
+    setModelo({ ...modelo, ...patch });
     if (novo) setShowResolved(true);
     toast.success(novo ? "Modelo bloqueado para edição" : "Modelo desbloqueado");
   };
