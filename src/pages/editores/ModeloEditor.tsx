@@ -376,14 +376,26 @@ export default function ModeloEditor() {
     return page;
   };
 
+  const abrirPreviewModal = async () => {
+    if (dirty) { try { await salvar(true); } catch {} }
+    try {
+      const finalHtml = await buildFinalHtml();
+      setPreviewHtml(finalHtml);
+      setPreviewMissing([]);
+    } catch (e) {
+      setPreviewHtml(html);
+    }
+    setShowPreview(true);
+  };
+
   const gerarPdf = async () => {
-    // Abre a prévia antes — o usuário confirma o PDF dentro do PreviewModal.
-    await abrirPreview();
+    // Sempre abre a prévia — usuário confirma o PDF dentro do PreviewModal.
+    await abrirPreviewModal();
   };
 
   const imprimir = async () => {
-    // Abre a prévia antes — o usuário confirma a impressão dentro do PreviewModal.
-    await abrirPreview();
+    // Sempre abre a prévia — usuário confirma a impressão dentro do PreviewModal.
+    await abrirPreviewModal();
   };
 
   if (!modelo) return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
