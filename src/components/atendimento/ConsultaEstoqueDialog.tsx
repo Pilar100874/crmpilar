@@ -58,9 +58,11 @@ interface ConsultaEstoqueDialogProps {
   onOpenChange: (open: boolean) => void;
   estabelecimentoId: string;
   onEnviarParaConversa: (texto: string) => void;
+  actionLabel?: string;
+  actionLabelShort?: string;
 }
 
-export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, onEnviarParaConversa }: ConsultaEstoqueDialogProps) {
+export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, onEnviarParaConversa, actionLabel, actionLabelShort }: ConsultaEstoqueDialogProps) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
