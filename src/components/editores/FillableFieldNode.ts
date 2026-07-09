@@ -1,7 +1,7 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { getFillableValue, subscribeFillable, mergeFillableValues } from "@/lib/editores/fillableValuesStore";
 import { fetchDynamicOptions, isDynamicOpcoes, parseDynamic } from "@/lib/editores/dynamicOptions";
-import { askCnpjModal } from "@/lib/editores/cnpjPrompt";
+
 
 // Normaliza label (sem acento, minúsculo, sem pontuação) para casar campos do formulário
 // com as chaves retornadas pela BrasilAPI de CNPJ.
