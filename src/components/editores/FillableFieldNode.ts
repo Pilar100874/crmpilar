@@ -16,13 +16,14 @@ const maskCnpj = (v: string) => {
     .replace(/(\d{4})(\d)/, "$1-$2");
 };
 
-// Estado por grupo de CNPJ: evita múltiplos prompts simultâneos e re-perguntar
-// depois de já ter carregado.
-const cnpjGroupState = new Map<string, "asking" | "loaded">();
+// Estado por grupo de CNPJ:
+// - "manual": usuário escolheu digitar; não perguntar em outros campos do grupo.
+// - "loaded": CNPJ já buscado e aplicado (parcial ou total).
+type GroupState = "manual" | "loaded";
+const cnpjGroupState = new Map<string, GroupState>();
 
 // Dispara autofill dos demais campos preenchíveis a partir dos dados da Receita.
-// Se `group` for informado, apenas os campos com o mesmo data-cnpj-group são afetados.
-async function autofillCnpj(cnpjLimpo: string, group?: string) {
+async function autofillCnpj(cnpjLimpo: string, group?: string, applyAll = true) {
   const resp = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
   if (!resp.ok) throw new Error("CNPJ não encontrado");
   const d: any = await resp.json();
@@ -44,7 +45,6 @@ async function autofillCnpj(cnpjLimpo: string, group?: string) {
     data_inicio_atividade: d.data_inicio_atividade || "",
     cnae_fiscal_descricao: d.cnae_fiscal_descricao || "",
   };
-  // Aliases por label (fallback para campos legados sem data-cnpj-subfield)
   const src: Record<string, string> = {};
   const put = (aliases: string[], val: string) => { for (const a of aliases) src[norm(a)] = val; };
   put(["cnpj"], byKey.cnpj);
@@ -68,9 +68,10 @@ async function autofillCnpj(cnpjLimpo: string, group?: string) {
   document.querySelectorAll<HTMLElement>("[data-fillable-field]").forEach((el) => {
     const elGroup = el.getAttribute("data-cnpj-group") || "";
     if (group && elGroup && elGroup !== group) return;
+    const sub = el.getAttribute("data-cnpj-subfield") || "";
+    if (!applyAll && sub !== "cnpj") return;
     const token = el.getAttribute("data-fillable-field") || "";
     const label = el.getAttribute("data-label") || "";
-    const sub = el.getAttribute("data-cnpj-subfield") || "";
     let val = "";
     if (sub && byKey[sub] != null) val = byKey[sub];
     else {
@@ -82,20 +83,100 @@ async function autofillCnpj(cnpjLimpo: string, group?: string) {
   if (Object.keys(updates).length) mergeFillableValues(updates);
 }
 
-/** Sem popup: foca o sub-campo CNPJ do grupo (que tem máscara + autofill no blur). */
-function focusCnpjInputForGroup(group: string): boolean {
-  if (!group) return false;
-  const cnpjEl = document.querySelector<HTMLInputElement>(
-    `[data-cnpj-group="${CSS.escape(group)}"][data-cnpj-subfield="cnpj"] input[data-cnpj-autofill="1"]`
-  );
-  if (!cnpjEl) return false;
-  if (cnpjEl.value && cnpjEl.value.replace(/\D/g, "").length === 14) return false;
-  const prevBg = cnpjEl.style.background;
-  cnpjEl.style.background = "#fde68a";
-  cnpjEl.focus();
-  try { cnpjEl.scrollIntoView({ block: "center", behavior: "smooth" }); } catch {}
-  setTimeout(() => { cnpjEl.style.background = prevBg; }, 1200);
-  return true;
+// Pequeno popover inline, ancorado a um input. Fecha ao clicar fora ou ESC.
+function showInlinePopover(anchor: HTMLElement, buildContent: (close: () => void) => HTMLElement): () => void {
+  const pop = document.createElement("div");
+  pop.style.cssText =
+    "position:absolute;z-index:9999;background:#fff;border:1px solid #cbd5e1;border-radius:8px;" +
+    "box-shadow:0 8px 24px rgba(0,0,0,.15);padding:10px;min-width:220px;font-size:12px;color:#111;";
+  const rect = anchor.getBoundingClientRect();
+  pop.style.left = `${window.scrollX + rect.left}px`;
+  pop.style.top = `${window.scrollY + rect.bottom + 4}px`;
+  const close = () => {
+    document.removeEventListener("mousedown", onOutside, true);
+    document.removeEventListener("keydown", onKey, true);
+    pop.remove();
+  };
+  const onOutside = (e: MouseEvent) => { if (!pop.contains(e.target as Node)) close(); };
+  const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
+  pop.appendChild(buildContent(close));
+  document.body.appendChild(pop);
+  setTimeout(() => {
+    document.addEventListener("mousedown", onOutside, true);
+    document.addEventListener("keydown", onKey, true);
+  }, 0);
+  return close;
+}
+
+function makeBtn(label: string, primary = false): HTMLButtonElement {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = label;
+  b.style.cssText =
+    "padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer;margin-right:6px;" +
+    (primary
+      ? "background:#2563eb;color:#fff;border:0;"
+      : "background:#fff;color:#111;border:1px solid #cbd5e1;");
+  return b;
+}
+
+/** Escolha inicial ao focar um sub-campo do grupo: auto via CNPJ ou digitar manualmente. */
+function askGroupMethod(anchor: HTMLElement, group: string) {
+  showInlinePopover(anchor, (close) => {
+    const wrap = document.createElement("div");
+    const title = document.createElement("div");
+    title.textContent = "Como deseja preencher os campos deste CNPJ?";
+    title.style.cssText = "font-weight:600;margin-bottom:8px;";
+    const auto = makeBtn("Buscar pelo CNPJ", true);
+    const manual = makeBtn("Digitar manualmente");
+    auto.addEventListener("click", () => {
+      close();
+      const cnpjEl = document.querySelector<HTMLInputElement>(
+        `[data-cnpj-group="${CSS.escape(group)}"][data-cnpj-subfield="cnpj"] input[data-cnpj-autofill="1"]`
+      );
+      if (cnpjEl) {
+        const prev = cnpjEl.style.background;
+        cnpjEl.style.background = "#fde68a";
+        cnpjEl.focus();
+        try { cnpjEl.scrollIntoView({ block: "center", behavior: "smooth" }); } catch {}
+        setTimeout(() => { cnpjEl.style.background = prev; }, 1200);
+      }
+    });
+    manual.addEventListener("click", () => {
+      cnpjGroupState.set(group, "manual");
+      close();
+      (anchor as HTMLInputElement).focus();
+    });
+    wrap.appendChild(title);
+    wrap.appendChild(auto);
+    wrap.appendChild(manual);
+    return wrap;
+  });
+}
+
+/** Após buscar dados do CNPJ, pergunta se aplica em todos os campos do grupo. */
+function askApplyAll(anchor: HTMLElement, group: string, cnpjLimpo: string) {
+  showInlinePopover(anchor, (close) => {
+    const wrap = document.createElement("div");
+    const title = document.createElement("div");
+    title.textContent = "Aplicar dados da Receita em todos os campos deste grupo?";
+    title.style.cssText = "font-weight:600;margin-bottom:8px;";
+    const yes = makeBtn("Sim, preencher todos", true);
+    const no = makeBtn("Não, só o CNPJ");
+    const finish = async (applyAll: boolean) => {
+      close();
+      try {
+        await autofillCnpj(cnpjLimpo, group, applyAll);
+        cnpjGroupState.set(group, applyAll ? "loaded" : "manual");
+      } catch (e) { console.warn("[cnpj autofill]", e); }
+    };
+    yes.addEventListener("click", () => void finish(true));
+    no.addEventListener("click", () => void finish(false));
+    wrap.appendChild(title);
+    wrap.appendChild(yes);
+    wrap.appendChild(no);
+    return wrap;
+  });
 }
 
 
