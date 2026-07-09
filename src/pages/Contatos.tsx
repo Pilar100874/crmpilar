@@ -753,19 +753,27 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const handleRemoveField = (fieldId: string, category: "contact" | "company") => {
     const fields = category === "contact" ? contactFields : companyFields;
     const field = fields.find(f => f.id === fieldId);
-    
+
     // Não permite remover campos bloqueados
     if (field?.locked) {
       toast.error("Este campo é obrigatório e não pode ser removido");
       return;
     }
-    
+
+    // Solicita confirmação antes de excluir
+    setFieldToDelete({ id: fieldId, category, label: field?.label || "campo" });
+  };
+
+  const confirmRemoveField = () => {
+    if (!fieldToDelete) return;
+    const { id, category } = fieldToDelete;
     if (category === "contact") {
-      setContactFields(contactFields.filter(f => f.id !== fieldId));
+      setContactFields(contactFields.filter(f => f.id !== id));
     } else {
-      setCompanyFields(companyFields.filter(f => f.id !== fieldId));
+      setCompanyFields(companyFields.filter(f => f.id !== id));
     }
     toast.success("Campo removido com sucesso");
+    setFieldToDelete(null);
   };
 
   // Buscar dados do CNPJ
