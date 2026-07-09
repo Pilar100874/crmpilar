@@ -21,13 +21,27 @@ interface Props {
 export function QuickFillDialog({ open, onOpenChange, html, values, onApply }: Props) {
   const tokens = useMemo(() => extractFillableTokens(html), [html]);
   const [draft, setDraft] = useState<Record<string, string>>({});
+  const [dynOpts, setDynOpts] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     if (!open) return;
     const d: Record<string, string> = {};
     tokens.forEach(t => { d[t.raw] = values[t.raw] ?? values[t.label] ?? ""; });
     setDraft(d);
+    // Busca em tempo real as opções dinâmicas de cada token vinculado a tabela
+    tokens.forEach(t => {
+      const dyn = parseDynamic(t.opcoes || []);
+      if (dyn) {
+        fetchDynamicOptions(dyn.tabela, dyn.coluna).then(opts => {
+          setDynOpts(prev => ({ ...prev, [t.raw]: opts }));
+        });
+      }
+    });
   }, [open, tokens, values]);
+
+  const optionsFor = (tok: (typeof tokens)[number]): string[] =>
+    isDynamicOpcoes(tok.opcoes) ? (dynOpts[tok.raw] ?? []) : (tok.opcoes || []);
+
 
   const setV = (k: string, v: string) => setDraft(d => ({ ...d, [k]: v }));
 
