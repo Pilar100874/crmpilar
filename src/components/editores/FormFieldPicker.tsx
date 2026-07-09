@@ -182,10 +182,17 @@ export function FormFieldPicker({ onInsert, triggerClassName, triggerLabel = "In
                   </div>
                   <div>
                     <label className="text-[11px] text-muted-foreground">Coluna</label>
-                    <Input className="h-8" value={coluna} onChange={e => setColuna(e.target.value)} placeholder="ex: cidade" />
+                    <Select value={coluna} onValueChange={setColuna} disabled={!tabela || loadingCols}>
+                      <SelectTrigger className="h-8">
+                        <SelectValue placeholder={loadingCols ? "Carregando…" : (tabela ? "Selecionar coluna…" : "Escolha a tabela")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {colunas.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="col-span-2">
-                    <Button size="sm" variant="outline" onClick={carregarValores} disabled={loading} className="w-full h-8">
+                    <Button size="sm" variant="outline" onClick={carregarValores} disabled={loading || !tabela || !coluna} className="w-full h-8">
                       {loading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
                       Carregar valores únicos
                     </Button>
