@@ -57,8 +57,8 @@ export default function EditoresHub() {
     [documentos, busca],
   );
 
-  const criarModelo = () => nav(`/editores/modelos/new?tipo=modelo`);
   const criarDocumento = () => nav(`/editores/modelos/new?tipo=documento`);
+
 
 
   const duplicarModelo = async (m: Modelo) => {
