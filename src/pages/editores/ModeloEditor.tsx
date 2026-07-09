@@ -218,6 +218,7 @@ export default function ModeloEditor() {
     const { error } = await supabase.from("doc_modelos").update({ bloqueado: novo } as any).eq("id", id);
     if (error) { toast.error(error.message); return; }
     setModelo({ ...modelo, bloqueado: novo });
+    if (novo) setShowResolved(true);
     toast.success(novo ? "Modelo bloqueado para edição" : "Modelo desbloqueado");
   };
 
