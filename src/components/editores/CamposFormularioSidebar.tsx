@@ -224,13 +224,44 @@ export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) 
               </div>
               <div>
                 <label className="text-xs text-muted-foreground">Tipo</label>
-                <Select value={editing.tipo} onValueChange={(v: FillableTipo) => setEditing({ ...editing, tipo: v })}>
+                <Select value={editing.tipo} onValueChange={(v: FillableTipo) => setEditing({
+                  ...editing,
+                  tipo: v,
+                  opcoes: v === "cnpj" && editing.opcoes.length === 0 ? CNPJ_SUBFIELDS.map(s => s.key) : editing.opcoes,
+                })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {TIPOS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
+              {editing.tipo === "cnpj" && (
+                <div className="border rounded p-3 space-y-2 bg-muted/20">
+                  <div className="text-xs font-medium">Sub-campos da Receita a inserir</div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Ao inserir, cada item vira um campo no documento. No primeiro foco em qualquer um deles, o CNPJ será solicitado e todos os campos vazios serão preenchidos automaticamente.
+                  </p>
+                  <div className="grid grid-cols-2 gap-1.5 max-h-56 overflow-auto">
+                    {CNPJ_SUBFIELDS.map(sf => {
+                      const checked = editing.opcoes.includes(sf.key);
+                      return (
+                        <label key={sf.key} className="flex items-center gap-2 text-xs cursor-pointer">
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) => {
+                              const next = v
+                                ? [...editing.opcoes, sf.key]
+                                : editing.opcoes.filter(k => k !== sf.key);
+                              setEditing({ ...editing, opcoes: next });
+                            }}
+                          />
+                          {sf.label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               {cfg?.hasOpcoes && (
                 <div className="border rounded p-3 space-y-2 bg-muted/20">
                   <div>
