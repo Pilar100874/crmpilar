@@ -84,8 +84,12 @@ export function CamposFormularioSidebar({ estabelecimentoId, onInsert }: Props) 
   const toggleExpand = (id: string) => setExpanded(prev => {
     const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n;
   });
-  const subLabelMap = new Map(CNPJ_SUBFIELDS.map(s => [s.key, s.label]));
-  const buildSubPayload = (f: CustomField, key: string) => buildCnpjGroupPayload(f.label, [key]);
+  const subLabelMap = new Map<string, string>([
+    ...CNPJ_SUBFIELDS.map(s => [s.key, s.label] as [string, string]),
+    ...CEP_SUBFIELDS.map(s => [s.key, s.label] as [string, string]),
+  ]);
+  const buildSubPayload = (f: CustomField, key: string) =>
+    f.tipo === "cep" ? buildCepGroupPayload(f.label, [key]) : buildCnpjGroupPayload(f.label, [key]);
   const onDragSub = (e: React.DragEvent, f: CustomField, key: string) => {
     const payload = buildSubPayload(f, key);
     e.dataTransfer.setData("application/x-doc-payload", payload);
