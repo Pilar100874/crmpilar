@@ -682,7 +682,37 @@ export default function ModeloEditor() {
         initialMode={previewMode}
         onSave={async () => { await salvar(); toast.success("Rascunho salvo"); }}
       />
+
+      <AlertDialog open={exitPromptOpen} onOpenChange={setExitPromptOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alterações não salvas</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem alterações não salvas neste documento. Deseja salvá-las antes de sair?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <Button
+              variant="outline"
+              onClick={() => { setExitPromptOpen(false); setDirty(false); nav("/editores"); }}
+            >
+              Sair sem salvar
+            </Button>
+            <AlertDialogAction
+              onClick={async () => {
+                const ok = await salvar();
+                setExitPromptOpen(false);
+                if (ok) nav("/editores");
+              }}
+            >
+              Salvar e sair
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+
   );
 }
 
