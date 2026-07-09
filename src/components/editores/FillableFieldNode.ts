@@ -97,7 +97,7 @@ function showInlinePopover(anchor: HTMLElement, buildContent: (close: () => void
     document.removeEventListener("keydown", onKey, true);
     pop.remove();
   };
-  const onOutside = (e: MouseEvent) => { if (!pop.contains(e.target as Node)) close(); };
+  const onOutside = (e: MouseEvent) => { if (!pop.contains(e.target as any)) close(); };
   const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
   pop.appendChild(buildContent(close));
   document.body.appendChild(pop);
@@ -324,7 +324,7 @@ export const FillableField = Node.create({
           const v = (input as HTMLInputElement | HTMLTextAreaElement).value;
           if (v && v.trim()) return;
           if (cnpjGroupState.get(cnpjGroup)) return;
-          focusCnpjInputForGroup(cnpjGroup);
+          askGroupMethod(input, cnpjGroup);
         }, { once: false });
       };
 
