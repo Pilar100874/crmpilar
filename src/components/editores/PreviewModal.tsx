@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, Printer, FileDown, Layers } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Download, Printer, FileDown, Layers, FileText, Files } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { downloadPdf, downloadHtml, printHtml, elementToPdf } from "@/lib/editores/pdfExport";
 import { renderTemplate } from "@/lib/editores/mergeEngine";
