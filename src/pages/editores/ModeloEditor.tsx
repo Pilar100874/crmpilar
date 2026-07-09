@@ -323,6 +323,11 @@ export default function ModeloEditor() {
 
   const abrirPreview = async () => {
     // Toggle inline: mostra valores resolvidos direto no editor (não abre modal).
+    // Com o modelo bloqueado, a visualização deve permanecer sempre ativa.
+    if (modelo?.bloqueado && showResolved) {
+      toast.info("Desbloqueie o modelo para desativar a visualização");
+      return;
+    }
     if (dirty) await salvar(true);
     setShowResolved((v) => !v);
   };
