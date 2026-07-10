@@ -30,7 +30,7 @@ export const SortableFieldItem = ({ field, onRemove, onToggleSearchable }: Sorta
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: field.id });
+  } = useSortable({ id: field.id, disabled: field.locked });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -45,9 +45,9 @@ export const SortableFieldItem = ({ field, onRemove, onToggleSearchable }: Sorta
       className="flex items-center gap-3 p-3 border border-border rounded-lg bg-background"
     >
       <div
-        {...attributes}
-        {...listeners}
-        className="cursor-grab active:cursor-grabbing"
+        {...(field.locked ? {} : attributes)}
+        {...(field.locked ? {} : listeners)}
+        className={field.locked ? "cursor-not-allowed opacity-40" : "cursor-grab active:cursor-grabbing"}
       >
         <GripVertical className="w-4 h-4 text-muted-foreground" />
       </div>
