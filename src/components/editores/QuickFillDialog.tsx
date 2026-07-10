@@ -212,6 +212,8 @@ export function QuickFillDialog({ open, onOpenChange, html, values, onApply }: P
             const m = meta.get(tok.raw);
             // Em grupos CNPJ, exibe apenas o sub-campo CNPJ; os demais são preenchidos automaticamente.
             if (m?.group && m.subfield && m.subfield !== "cnpj") return false;
+            // Em grupos CEP, exibe apenas o sub-campo CEP; os demais são preenchidos automaticamente.
+            if (m?.cepGroup && m.cepSubfield && m.cepSubfield !== "cep") return false;
             return true;
           }).map(tok => {
             const v = draft[tok.raw] ?? "";
