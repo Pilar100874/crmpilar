@@ -9,7 +9,7 @@ import {
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   List, ListOrdered, Undo, Redo, Link as LinkIcon,
   Table as TableIcon, Rows, Columns, Trash2, Eraser, Maximize2, ZoomIn, ZoomOut,
-  ScanSearch, ArrowLeft, Save, Eye, Lock, Unlock, Copy, Printer, FileDown,
+  ScanSearch, ArrowLeft, Save, Eye, Lock, Unlock, Copy, Printer, FileDown, SaveAll,
   Database, ClipboardList, Pencil, PanelRightOpen, PanelRightClose,
   Building2, Package, FormInput,
 } from "lucide-react";
