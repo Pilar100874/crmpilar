@@ -21,7 +21,9 @@ export interface MergeTableAttrs {
   align?: "left" | "center" | "right";
   extraCols?: ExtraCol[];
   totalsRow?: boolean;
+  width?: string; // ex "100%", "560px"
 }
+
 
 function fmt(v: any): string {
   if (v == null) return "";
@@ -117,7 +119,9 @@ export const MergeTable = Node.create({
       align: { default: "left" },
       extraCols: { default: [] },
       totalsRow: { default: false },
+      width: { default: "100%" },
     };
+
   },
 
   parseHTML() {
@@ -140,6 +144,8 @@ export const MergeTable = Node.create({
             align: (e.getAttribute("data-align") as any) || "left",
             extraCols,
             totalsRow: e.getAttribute("data-totals") === "1",
+            width: e.style.width || e.getAttribute("data-width") || "100%",
+
           };
         },
       },
@@ -159,35 +165,74 @@ export const MergeTable = Node.create({
     table.setAttribute("data-font-family", attrs.fontFamily || "");
     table.setAttribute("data-align", attrs.align || "left");
     table.setAttribute("data-extra-cols", JSON.stringify(attrs.extraCols || []));
-    table.setAttribute("data-totals", attrs.totalsRow ? "1" : "0");
-    table.setAttribute("style", "border-collapse:collapse;width:100%;font-size:11pt;");
-    table.innerHTML = buildInner(attrs);
+      table.setAttribute("data-totals", attrs.totalsRow ? "1" : "0");
+      table.setAttribute("data-width", attrs.width || "100%");
+      table.setAttribute("style", `border-collapse:collapse;width:${attrs.width || "100%"};font-size:11pt;`);
+      table.innerHTML = buildInner(attrs);
+
     return table;
   },
 
   addNodeView() {
     return ({ node, editor, getPos }) => {
       const wrapper = document.createElement("div");
-      wrapper.style.cssText = "position:relative;margin:8px 0;";
+      wrapper.style.cssText = "position:relative;margin:8px 0;display:block;";
       const dom = document.createElement("table");
       dom.setAttribute("data-merge-table", "1");
-      dom.style.cssText = "border-collapse:collapse;width:100%;font-size:11pt;cursor:pointer;";
+      const applyWidth = (w?: string) => {
+        const width = w || "100%";
+        dom.style.cssText = `border-collapse:collapse;width:${width};font-size:11pt;cursor:pointer;`;
+        wrapper.style.width = width.endsWith("%") ? width : width;
+      };
+      applyWidth(node.attrs.width);
       const syncAttrs = (n: any) => {
         dom.setAttribute("data-alias", n.attrs.alias);
         dom.setAttribute("data-cols", (n.attrs.cols || []).join(","));
         dom.setAttribute("data-from", String(n.attrs.from ?? 1));
         dom.setAttribute("data-to", String(n.attrs.to ?? 0));
+        dom.setAttribute("data-width", n.attrs.width || "100%");
+        applyWidth(n.attrs.width);
       };
       syncAttrs(node);
       const render = () => { dom.innerHTML = buildInner(node.attrs as MergeTableAttrs); };
       render();
       const unsub = subscribePreview(render);
 
+      // Handle de redimensionamento (canto inferior direito)
+      const resizeHandle = document.createElement("div");
+      resizeHandle.contentEditable = "false";
+      resizeHandle.title = "Arraste para redimensionar";
+      resizeHandle.style.cssText = "position:absolute;right:-6px;bottom:-6px;width:14px;height:14px;background:#2563eb;border:2px solid #fff;border-radius:3px;cursor:nwse-resize;z-index:20;opacity:0;transition:opacity .15s;";
+      wrapper.addEventListener("mouseenter", () => { resizeHandle.style.opacity = "1"; });
+      wrapper.addEventListener("mouseleave", () => { if (!toolbar) resizeHandle.style.opacity = "0"; });
+      resizeHandle.addEventListener("mousedown", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (!editor.isEditable) return;
+        const startX = ev.clientX;
+        const startW = dom.getBoundingClientRect().width;
+        const parentW = (wrapper.parentElement?.getBoundingClientRect().width || startW);
+        const onMove = (m: MouseEvent) => {
+          const w = Math.max(80, startW + (m.clientX - startX));
+          dom.style.width = `${Math.round(w)}px`;
+          wrapper.style.width = `${Math.round(w)}px`;
+          void parentW;
+        };
+        const onUp = () => {
+          window.removeEventListener("mousemove", onMove);
+          window.removeEventListener("mouseup", onUp);
+          update({ width: dom.style.width });
+        };
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onUp);
+      });
+
       let toolbar: HTMLDivElement | null = null;
       const closeToolbar = () => {
         if (toolbar) { toolbar.remove(); toolbar = null; }
         document.removeEventListener("mousedown", onDocDown, true);
       };
+
       const onDocDown = (e: MouseEvent) => {
         if (toolbar && !toolbar.contains(e.target as globalThis.Node) && !dom.contains(e.target as globalThis.Node)) closeToolbar();
       };
@@ -265,6 +310,9 @@ export const MergeTable = Node.create({
           <span style="color:#555;">até</span>
           <input type="number" min="0" value="${a.to ?? 0}" placeholder="todas" style="width:52px;padding:2px 4px;border:1px solid #ccc;border-radius:4px;" data-k="to" />
           <span style="width:1px;height:18px;background:#e5e7eb;"></span>
+          <span style="color:#555;">Largura:</span>
+          <input type="text" value="${esc(a.width || "100%")}" placeholder="100% ou 500px" style="width:72px;padding:2px 4px;border:1px solid #ccc;border-radius:4px;" data-k="width" />
+
           <button type="button" data-a="addcol" style="padding:2px 8px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;">+ Coluna fórmula</button>
           <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" data-a="totals" ${a.totalsRow?"checked":""}/> Totais</label>
           <span style="width:1px;height:18px;background:#e5e7eb;"></span>
@@ -314,6 +362,8 @@ export const MergeTable = Node.create({
           if (act === "apply") {
             const from = Number((toolbar!.querySelector('[data-k="from"]') as HTMLInputElement).value) || 1;
             const to = Number((toolbar!.querySelector('[data-k="to"]') as HTMLInputElement).value) || 0;
+            const widthRaw = ((toolbar!.querySelector('[data-k="width"]') as HTMLInputElement).value || "100%").trim();
+            const width = /^\d+$/.test(widthRaw) ? `${widthRaw}px` : widthRaw;
             const totalsRow = (toolbar!.querySelector('[data-a="totals"]') as HTMLInputElement).checked;
             const extras: ExtraCol[] = [];
             const existing = (node.attrs.extraCols || []) as ExtraCol[];
@@ -321,8 +371,9 @@ export const MergeTable = Node.create({
               const h = (el as HTMLInputElement).value;
               extras.push({ header: h, formula: existing[i]?.formula || "" });
             });
-            update({ from, to, totalsRow, extraCols: extras });
+            update({ from, to, width, totalsRow, extraCols: extras });
             closeToolbar();
+
           } else if (act === "addcol") {
             const list = [...(node.attrs.extraCols || []), { header: "Total", formula: "" }];
             update({ extraCols: list });
@@ -357,6 +408,8 @@ export const MergeTable = Node.create({
       });
 
       wrapper.appendChild(dom);
+      wrapper.appendChild(resizeHandle);
+
       return {
         dom: wrapper,
         update(updated) {
