@@ -19,7 +19,7 @@ import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueD
 import { renderTemplate, applyFillables, extractFillableTokens } from "@/lib/editores/mergeEngine";
 import { parseCnpjGroupPayload, buildCnpjGroupFields } from "@/lib/editores/cnpjGroup";
 import { parseCepGroupPayload, buildCepGroupFields } from "@/lib/editores/cepGroup";
-import { setFillableValues as setFillableStore } from "@/lib/editores/fillableValuesStore";
+import { setFillableValues as setFillableStore, subscribeFillable, getFillableValues } from "@/lib/editores/fillableValuesStore";
 import { hydrateDatasets, registerDataset, getAllDatasets, type ImportedDataset } from "@/lib/editores/importedDatasetStore";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
 import { runMergeConfig } from "@/lib/editores/runMergeConfig";
@@ -97,6 +97,14 @@ export default function ModeloEditor() {
     }).length;
     return { total, pendentes };
   }, [html, fillableValues]);
+
+  // Sincroniza estado local com atualizações feitas diretamente nos inputs inline
+  useEffect(() => {
+    const unsub = subscribeFillable(() => {
+      setFillableValues({ ...getFillableValues() });
+    });
+    return unsub;
+  }, []);
 
   // Carrega registros de cada vínculo para o preview inline dos chips
   useEffect(() => {
