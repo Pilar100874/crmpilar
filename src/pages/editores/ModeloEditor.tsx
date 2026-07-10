@@ -565,7 +565,7 @@ export default function ModeloEditor() {
         />
         </div>
 
-        {primaryRows.length > 0 && (
+        {primaryRows.length > 0 && primaryAlias && new RegExp(`\\{\\{\\s*${primaryAlias}\\.`, "i").test(html) && (
           <div className="border-b bg-muted/30 px-3 py-1 flex items-center gap-2">
             <span className="text-[11px] text-muted-foreground">Registro (vínculo <b>{primaryAlias}</b>):</span>
             <RegistroNavigator
