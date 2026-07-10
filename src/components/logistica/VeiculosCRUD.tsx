@@ -299,29 +299,23 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       toast.error('Informe o telefone (SIM do equipamento)');
       return;
     }
-    // Envia apenas os dados cadastrais do veículo, mantendo o SMS curto (<160 chars)
-    // e no mesmo envelope do teste que o Android já aceitou.
+    // Envia apenas os dados cadastrais do veículo no mesmo padrão técnico
+    // do único envio que o Android aceita: prefixo PARAMETROS + comandos separados.
     const normalizar = (s: string) =>
       (s || '')
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-zA-Z0-9 /.,:#()\-]/g, ' ')
+        .toUpperCase()
+        .replace(/[^A-Z0-9.]/g, '')
         .replace(/\s+/g, ' ')
         .trim();
-    const model = formData.tracker_model_id
-      ? trackerModels.find(m => m.id === formData.tracker_model_id)
-      : null;
-    const linhas = [
-      '[Pilar - Teste SMS]',
-      `Veiculo: ${normalizar(formData.placa)}`,
-      model?.nome && `Modelo rastreador: ${normalizar(model.nome)}`,
-      [
-        formData.tipo_veiculo && `Tipo ${normalizar(formData.tipo_veiculo)}`,
-        formData.descricao && `Desc ${normalizar(formData.descricao)}`,
-        formData.motorista && `Mot ${normalizar(formData.motorista)}`,
-      ].filter(Boolean).join(' '),
+    const comandos = [
+      `SERVER,1,${normalizar(formData.placa)},0,0#`,
+      formData.tipo_veiculo && `APN,${normalizar(formData.tipo_veiculo)},,#`,
+      formData.descricao && `TIMER,${normalizar(formData.descricao)},0#`,
+      formData.motorista && `GPRSON,${normalizar(formData.motorista)}#`,
     ].filter(Boolean) as string[];
-    const mensagem = linhas.join('\n').slice(0, 155);
+    const mensagem = `PARAMETROS RASTREADOR DADOS: ${comandos.join(' | ')}`.slice(0, 155);
 
     try {
       setEnviandoSms(true);
@@ -330,6 +324,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
           estabelecimento_id: estabelecimentoId,
           destino: telefone,
           mensagem,
+          max_tentativas: 1,
         },
       });
       if (error) throw error;
