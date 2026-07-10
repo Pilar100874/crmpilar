@@ -9,6 +9,9 @@ import { Link } from "react-router-dom";
 // Fallback fixo caso version.json esteja indisponível.
 const COLETOR_FALLBACK_URL = "https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Setup.exe";
 const COLETOR_FALLBACK_FILENAME = "ColetorPilar-Setup.exe";
+const SMS_FALLBACK_URL = "https://github.com/Pilar100874/crmpilar/releases/latest/download/pilar-sms-v1.4.0-debug.apk";
+const SMS_FALLBACK_FILENAME = "pilar-sms-v1.4.0-debug.apk";
+const SMS_FALLBACK_VERSION = "1.4.0";
 
 interface BIPEvent extends Event {
   prompt: () => Promise<void>;
@@ -147,16 +150,25 @@ const baixar = (file: string, url: string) => {
 
 export default function AdminApps() {
   const [coletorInfo, setColetorInfo] = useState<{ version: string; downloadUrl: string; notas?: string } | null>(null);
+  const [smsInfo, setSmsInfo] = useState<{ version: string; downloadUrl: string; filename?: string; notas?: string } | null>(null);
 
   useEffect(() => {
     fetch("/coletor/version.json", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => data && setColetorInfo(data))
       .catch(() => {});
+    fetch("/coletor/sms-version.json", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => data && setSmsInfo(data))
+      .catch(() => {});
   }, []);
 
   const coletorFileName = coletorInfo?.downloadUrl?.split("/").pop() || COLETOR_FALLBACK_FILENAME;
   const coletorUrl = coletorInfo?.downloadUrl || COLETOR_FALLBACK_URL;
+  const smsVersion = smsInfo?.version || SMS_FALLBACK_VERSION;
+  const smsFileName = smsInfo?.filename || smsInfo?.downloadUrl?.split("/").pop() || SMS_FALLBACK_FILENAME;
+  const smsUrl = smsInfo?.downloadUrl || SMS_FALLBACK_URL;
+  const smsNotas = smsInfo?.notas;
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 p-3 sm:space-y-6 sm:p-6 md:p-8">
@@ -191,8 +203,9 @@ export default function AdminApps() {
           <div className="flex items-center gap-3 rounded-xl border border-dashed p-4 text-xs text-muted-foreground mb-6 sm:mb-8">
             <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <span>
-              <b className="text-foreground">Versão 1.3.2</b> · SMS via rádio GSM · relatório de entrega ·
+              <b className="text-foreground">Versão {smsVersion}</b> · SMS via rádio GSM · relatório de entrega ·
               usa o SIM padrão de SMS do Android · roda em segundo plano com wake-lock.
+              {smsNotas && <><br /><span className="text-xs">{smsNotas}</span></>}
             </span>
           </div>
 
@@ -201,10 +214,10 @@ export default function AdminApps() {
               <span className="text-[10px] font-bold uppercase tracking-widest text-background/60">
                 Pacote APK
               </span>
-              <span className="truncate font-mono text-xs text-background sm:text-sm">sms-pilar-v1.3.2.apk</span>
+              <span className="truncate font-mono text-xs text-background sm:text-sm">{smsFileName}</span>
             </div>
             <Button
-              onClick={() => baixar("sms-pilar-v1.3.2.apk", "/apps/sms-pilar-v1.3.2.apk")}
+              onClick={() => baixar(smsFileName, smsUrl)}
               className="w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold transition-colors sm:w-auto sm:px-6 bg-blue-500 hover:bg-blue-400 text-white"
             >
               <Download className="mr-2 h-4 w-4" /> Baixar APK
@@ -223,7 +236,7 @@ export default function AdminApps() {
             </li>
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">2</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">Baixe o <b>sms-pilar-v1.3.2.apk</b> acima e toque no arquivo para instalar.</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">Baixe o <b>{smsFileName}</b> acima e toque no arquivo para instalar.</p>
             </li>
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">3</span>

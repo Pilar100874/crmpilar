@@ -5,14 +5,9 @@ on:
     paths:
       - 'pilar-sms-app/**'
       - '.github/workflows/build-pilar-sms.yml'
-    tags:
-      - 'sms-v*'
+    branches:
+      - main
   workflow_dispatch:
-    inputs:
-      release:
-        description: 'Publicar como GitHub Release'
-        type: boolean
-        default: true
 
 permissions:
   contents: write
@@ -25,6 +20,8 @@ jobs:
         working-directory: pilar-sms-app
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -69,28 +66,17 @@ jobs:
           echo "release_apk=$REL_DST" >> "$GITHUB_OUTPUT"
           ls -lh dist/
 
-      - name: Upload Debug APK (artifact)
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: pilar-sms-v${{ steps.version.outputs.version }}-debug
-          path: pilar-sms-app/${{ steps.rename.outputs.debug_apk }}
+          name: pilar-sms-v${{ steps.version.outputs.version }}
+          path: pilar-sms-app/dist/*.apk
 
-      - name: Upload Release APK (artifact)
-        uses: actions/upload-artifact@v4
-        with:
-          name: pilar-sms-v${{ steps.version.outputs.version }}-release-unsigned
-          path: pilar-sms-app/${{ steps.rename.outputs.release_apk }}
-
-      # === Publicação como GitHub Release ===
-      # Roda quando:
-      #  - o push é de uma tag `sms-v*`, ou
-      #  - o workflow foi disparado manualmente com "release=true"
-      - name: Criar/atualizar GitHub Release
-        if: ${{ startsWith(github.ref, 'refs/tags/sms-v') || (github.event_name == 'workflow_dispatch' && inputs.release) }}
+      - name: Criar / atualizar GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/sms-v') && github.ref_name || format('sms-v{0}-build{1}', steps.version.outputs.version, github.run_number) }}
-          name: Pilar SMS v${{ steps.version.outputs.version }} (build ${{ github.run_number }})
+          tag_name: sms-v${{ steps.version.outputs.version }}
+          name: Pilar SMS v${{ steps.version.outputs.version }}
           body: |
             APK do gateway Pilar SMS.
 
@@ -103,5 +89,42 @@ jobs:
           files: |
             pilar-sms-app/dist/pilar-sms-v${{ steps.version.outputs.version }}-debug.apk
             pilar-sms-app/dist/pilar-sms-v${{ steps.version.outputs.version }}-release-unsigned.apk
+          fail_on_unmatched_files: true
+          make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Atualizar public/coletor/sms-version.json
+        working-directory: ${{ github.workspace }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          REPO="${{ github.repository }}"
+          FILENAME="pilar-sms-v${VERSION}-debug.apk"
+          URL="https://github.com/${REPO}/releases/download/sms-v${VERSION}/${FILENAME}"
+          node -e "
+            const fs = require('fs');
+            const p = 'public/coletor/sms-version.json';
+            const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+            j.version = '${VERSION}';
+            j.downloadUrl = '${URL}';
+            j.filename = '${FILENAME}';
+            fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
+          "
+          cat public/coletor/sms-version.json
+
+      - name: Commit sms-version.json bump
+        working-directory: ${{ github.workspace }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet public/coletor/sms-version.json; then
+            echo "sms-version.json unchanged"
+          else
+            git add public/coletor/sms-version.json
+            git commit -m "chore(sms): publish apk v${{ steps.version.outputs.version }} [skip ci]"
+            for i in 1 2 3 4 5; do
+              git pull --rebase --autostash origin main && git push origin HEAD:main && break
+              echo "push retry $i..."
+              sleep 3
+            done
+          fi
