@@ -299,29 +299,10 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       toast.error('Informe o telefone (SIM do equipamento)');
       return;
     }
-    const dispositivo = dispositivos.find(d => d.id === formData.dispositivo_id);
-    const linhas = [
-      `Veiculo: ${formData.placa}`,
-      formData.descricao ? `Descricao: ${formData.descricao}` : null,
-      formData.motorista ? `Motorista: ${formData.motorista}` : null,
-      formData.tipo_veiculo ? `Tipo: ${formData.tipo_veiculo}` : null,
-      dispositivo ? `Equipamento: ${dispositivo.nome_dispositivo || dispositivo.device_uuid}` : null,
-      dispositivo ? `ID: ${dispositivo.device_uuid}` : null,
-      formData.traccar_device_id ? `Traccar ID: ${formData.traccar_device_id}` : null,
-    ].filter(Boolean);
-    // Envio em modo celular normal, mas em texto ultra seguro: sem acentos,
-    // pontuação, pipes, hífen ou quebras de linha. Nos testes reais o conteúdo
-    // já estava sem acento, porém o Android retornou GENERIC_FAILURE; alguns
-    // chips/provedores rejeitam caracteres simples de pontuação dependendo do
-    // destino. Mantemos apenas A-Z, 0-9 e espaço.
-    const normalizarSmsCelular = (s: string) => s
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toUpperCase()
-      .replace(/[^A-Z0-9 ]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-    const mensagem = normalizarSmsCelular(`DADOS VEICULO ${formData.placa} ${linhas.slice(1).join(' ')}`);
+    const model = trackerModels.find(m => m.id === formData.tracker_model_id);
+    const mensagem = model && (model.sms_commands || []).length > 0
+      ? buildTrackerParametersSms(modelComOperadora(model))
+      : `PARAMETROS RASTREADOR ${formData.placa}: ${formData.descricao || formData.tipo_veiculo || 'SEM DADOS'}`;
 
     try {
       setEnviandoSms(true);
