@@ -25,8 +25,8 @@ interface Props {
 }
 
 // Extrai metadados por token (grupo/sub-campo) direto do HTML dos chips.
-function extractFillableMeta(html: string): Map<string, { group: string; subfield: string }> {
-  const map = new Map<string, { group: string; subfield: string }>();
+function extractFillableMeta(html: string): Map<string, { group: string; subfield: string; cepGroup: string; cepSubfield: string }> {
+  const map = new Map<string, { group: string; subfield: string; cepGroup: string; cepSubfield: string }>();
   const re = /<span\b[^>]*\bdata-fillable-field\s*=\s*"([^"]*)"[^>]*>/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(html)) !== null) {
@@ -37,7 +37,9 @@ function extractFillableMeta(html: string): Map<string, { group: string; subfiel
       .replace(/^\[\[/, "").replace(/\]\]$/, "").trim();
     const g = /data-cnpj-group\s*=\s*"([^"]*)"/i.exec(tag)?.[1] || "";
     const s = /data-cnpj-subfield\s*=\s*"([^"]*)"/i.exec(tag)?.[1] || "";
-    if (!map.has(token)) map.set(token, { group: g, subfield: s });
+    const cg = /data-cep-group\s*=\s*"([^"]*)"/i.exec(tag)?.[1] || "";
+    const cs = /data-cep-subfield\s*=\s*"([^"]*)"/i.exec(tag)?.[1] || "";
+    if (!map.has(token)) map.set(token, { group: g, subfield: s, cepGroup: cg, cepSubfield: cs });
   }
   return map;
 }
