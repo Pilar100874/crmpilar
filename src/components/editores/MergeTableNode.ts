@@ -383,7 +383,19 @@ export const MergeTable = Node.create({
         toolbar.contentEditable = "false";
         toolbar.style.cssText = "position:absolute;top:-40px;left:0;z-index:50;display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:4px 8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:12px;max-width:720px;";
         toolbar.innerHTML = `
-          <span style="color:#6b7280;">Formatação: use a barra superior</span>
+          <span style="color:#555;">Alinh.:</span>
+          <button type="button" data-a="al-left" title="Esquerda" style="padding:2px 6px;background:${a.align==="left"?"#dbeafe":"#f9fafb"};border:1px solid #d1d5db;border-radius:4px;cursor:pointer;">⬅</button>
+          <button type="button" data-a="al-center" title="Centro" style="padding:2px 6px;background:${a.align==="center"?"#dbeafe":"#f9fafb"};border:1px solid #d1d5db;border-radius:4px;cursor:pointer;">↔</button>
+          <button type="button" data-a="al-right" title="Direita" style="padding:2px 6px;background:${a.align==="right"?"#dbeafe":"#f9fafb"};border:1px solid #d1d5db;border-radius:4px;cursor:pointer;">➡</button>
+          <span style="width:1px;height:18px;background:#e5e7eb;"></span>
+          <span style="color:#555;">Cor:</span>
+          <input type="color" value="${a.color || "#111111"}" data-k="color" style="width:28px;height:22px;border:1px solid #ccc;border-radius:4px;padding:0;cursor:pointer;" />
+          <span style="color:#555;">Tam.:</span>
+          <input type="text" value="${esc(a.fontSize || "11pt")}" placeholder="11pt" data-k="fontSize" style="width:52px;padding:2px 4px;border:1px solid #ccc;border-radius:4px;" />
+          <span style="color:#555;">Fonte:</span>
+          <select data-k="fontFamily" style="padding:2px 4px;border:1px solid #ccc;border-radius:4px;font-size:11px;">
+            ${["", "Arial", "Helvetica", "Times New Roman", "Georgia", "Courier New", "Verdana", "Tahoma"].map(f => `<option value="${esc(f)}" ${((a.fontFamily||"")===f)?"selected":""}>${f||"Padrão"}</option>`).join("")}
+          </select>
           <span style="width:1px;height:18px;background:#e5e7eb;"></span>
           <span style="color:#555;">Linhas:</span>
           <input type="number" min="1" value="${a.from ?? 1}" style="width:52px;padding:2px 4px;border:1px solid #ccc;border-radius:4px;" data-k="from" />
@@ -392,7 +404,7 @@ export const MergeTable = Node.create({
           <span style="width:1px;height:18px;background:#e5e7eb;"></span>
           <span style="color:#555;">Largura:</span>
           <input type="text" value="${esc(a.width || "100%")}" placeholder="100% ou 500px" style="width:72px;padding:2px 4px;border:1px solid #ccc;border-radius:4px;" data-k="width" />
-
+          <span style="width:1px;height:18px;background:#e5e7eb;"></span>
           <button type="button" data-a="addcol" style="padding:2px 8px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;">+ Coluna fórmula</button>
           <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" data-a="totals" ${a.totalsRow?"checked":""}/> Totais</label>
           <span style="width:1px;height:18px;background:#e5e7eb;"></span>
@@ -439,19 +451,28 @@ export const MergeTable = Node.create({
           }
           const act = t.getAttribute("data-a");
           if (!act) return;
+          if (act === "al-left" || act === "al-center" || act === "al-right") {
+            const align = act.replace("al-", "") as "left" | "center" | "right";
+            update({ align });
+            setTimeout(() => openToolbar(), 0);
+            return;
+          }
           if (act === "apply") {
             const from = Number((toolbar!.querySelector('[data-k="from"]') as HTMLInputElement).value) || 1;
             const to = Number((toolbar!.querySelector('[data-k="to"]') as HTMLInputElement).value) || 0;
             const widthRaw = ((toolbar!.querySelector('[data-k="width"]') as HTMLInputElement).value || "100%").trim();
             const width = /^\d+$/.test(widthRaw) ? `${widthRaw}px` : widthRaw;
             const totalsRow = (toolbar!.querySelector('[data-a="totals"]') as HTMLInputElement).checked;
+            const color = (toolbar!.querySelector('[data-k="color"]') as HTMLInputElement).value || null;
+            const fontSize = ((toolbar!.querySelector('[data-k="fontSize"]') as HTMLInputElement).value || "").trim() || null;
+            const fontFamily = ((toolbar!.querySelector('[data-k="fontFamily"]') as HTMLSelectElement).value || "").trim() || null;
             const extras: ExtraCol[] = [];
             const existing = (node.attrs.extraCols || []) as ExtraCol[];
             toolbar!.querySelectorAll('[data-ex="h"]').forEach((el, i) => {
               const h = (el as HTMLInputElement).value;
               extras.push({ header: h, formula: existing[i]?.formula || "" });
             });
-            update({ from, to, width, totalsRow, extraCols: extras });
+            update({ from, to, width, totalsRow, extraCols: extras, color, fontSize, fontFamily });
             closeToolbar();
 
           } else if (act === "addcol") {
