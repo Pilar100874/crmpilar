@@ -287,7 +287,8 @@ export function evalCalculados(row: Record<string, any>, calc: CampoCalculado[])
 
 const FILLABLE_RE = /\[\[([^\[\]\n]{1,200})\]\]/g;
 
-export type FillableTipo = "texto" | "textarea" | "data" | "numero" | "check" | "lista" | "radio" | "cnpj" | "cep";
+export type FillableTipo = "texto" | "textarea" | "data" | "numero" | "check" | "lista" | "radio" | "cnpj" | "cep" | "imagem";
+
 
 export interface FillableToken {
   raw: string;
@@ -296,7 +297,7 @@ export interface FillableToken {
   opcoes?: string[];
 }
 
-const TIPOS: FillableTipo[] = ["texto", "textarea", "data", "numero", "check", "lista", "radio", "cnpj", "cep"];
+const TIPOS: FillableTipo[] = ["texto", "textarea", "data", "numero", "check", "lista", "radio", "cnpj", "cep", "imagem"];
 
 export function parseFillable(raw: string): FillableToken {
   const trimmed = raw.trim();
@@ -378,6 +379,16 @@ export function applyFillables(
         default:
           return `<input type="text" data-fillable="${name}" value="${escapeAttr(v)}" placeholder="${escapeAttr(tok.label)}" style="${commonStyle}min-width:120px;" />`;
       }
+    }
+
+    if (tok.tipo === "imagem") {
+      if (v && /^(data:image|https?:\/\/)/i.test(v)) {
+        return `<img src="${escapeAttr(v)}" alt="${escapeAttr(tok.label)}" style="max-width:100%;max-height:200px;vertical-align:middle;" />`;
+      }
+      if (opts.highlightEmpty) {
+        return `<span style="background:#fef3c7;border:1px dashed #f59e0b;color:#92400e;padding:0 4px;border-radius:2px;">🖼️ ${escapeHtml(tok.label)}</span>`;
+      }
+      return "";
     }
 
     if (v && v.toString().trim() !== "") {

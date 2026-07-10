@@ -39,6 +39,7 @@ const TIPOS: { value: FillableTipo; label: string; hasOpcoes?: boolean }[] = [
   { value: "check", label: "Caixa de seleção (checkbox)", hasOpcoes: true },
   { value: "lista", label: "Lista suspensa (select)", hasOpcoes: true },
   { value: "radio", label: "Opções (radio)", hasOpcoes: true },
+  { value: "imagem", label: "Imagem (upload de arquivo)" },
 ];
 
 // Campos de sistema (não removíveis, disponíveis para todos os usuários).

@@ -9,7 +9,7 @@ import {
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   List, ListOrdered, Undo, Redo, Link as LinkIcon,
   Table as TableIcon, Rows, Columns, Trash2, Eraser, Maximize2, ZoomIn, ZoomOut,
-  ScanSearch, ArrowLeft, Save, Eye, Lock, Unlock, Copy, Printer, FileDown,
+  ScanSearch, ArrowLeft, Save, Eye, Lock, Unlock, Copy, Printer, FileDown, SaveAll,
   Database, ClipboardList, Pencil, PanelRightOpen, PanelRightClose,
   Building2, Package, FormInput,
 } from "lucide-react";
@@ -101,7 +101,7 @@ export function EditorToolbar({
       <div className={cn("flex flex-wrap items-center gap-1 px-2 py-1")}>
         {onBack && <TB onClick={onBack} title="Voltar"><ArrowLeft className="h-4 w-4" /></TB>}
         {onSave && <TB onClick={onSave} disabled={locked} title="Salvar"><Save className="h-4 w-4" /></TB>}
-        {onSalvarComo && <TB onClick={onSalvarComo} title="Salvar como"><Copy className="h-4 w-4" /></TB>}
+        {onSalvarComo && <TB onClick={onSalvarComo} title="Salvar como"><SaveAll className="h-4 w-4" /></TB>}
         {onPreviewMerge && (
           <TB onClick={onPreviewMerge} active={previewActive} title={previewActive ? "Visualização ATIVA — mostrando valores. Clique para ver variáveis." : "Visualização INATIVA — mostrando variáveis. Clique para ver valores."}>
             <Eye className={cn("h-4 w-4", previewActive && "text-emerald-600")} />

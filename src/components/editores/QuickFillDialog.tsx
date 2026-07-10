@@ -264,6 +264,23 @@ export function QuickFillDialog({ open, onOpenChange, html, values, onApply }: P
                       </label>
                     ))}
                   </div>
+                ) : tok.tipo === "imagem" ? (
+                  <div className="space-y-2">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        const reader = new FileReader();
+                        reader.onload = () => setV(tok.raw, String(reader.result || ""));
+                        reader.readAsDataURL(f);
+                      }}
+                    />
+                    {v && /^(data:image|https?:\/\/)/i.test(v) && (
+                      <img src={v} alt={tok.label} className="max-h-32 rounded border" />
+                    )}
+                  </div>
                 ) : (
                   <Input value={v} onChange={e => setV(tok.raw, e.target.value)} />
                 )}
