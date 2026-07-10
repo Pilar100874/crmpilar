@@ -299,8 +299,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       toast.error('Informe o telefone (SIM do equipamento)');
       return;
     }
-    // Envia os dados cadastrais do veículo (não os parâmetros do rastreador).
-    // Mantém formato simples/ASCII para compatibilidade com o app SmsSender do celular.
+    // Envia os dados cadastrais do veículo usando o mesmo padrão técnico
+    // do SMS de conferência que já é aceito pelo app Pilar SMS.
     const normalizar = (s: string) =>
       (s || '')
         .normalize('NFD')
@@ -309,13 +309,16 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         .replace(/[^A-Z0-9 ]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
-    const partes = [
-      `PLACA ${formData.placa}`,
-      formData.tipo_veiculo && `TIPO ${formData.tipo_veiculo}`,
-      formData.motorista && `MOT ${formData.motorista}`,
-      formData.descricao && `DESC ${formData.descricao}`,
-    ].filter(Boolean) as string[];
-    const mensagem = normalizar(`DADOS VEICULO ${partes.join(' ')}`);
+    const comandos = [
+      ['PLACA', formData.placa],
+      ['TIPO', formData.tipo_veiculo],
+      ['MOT', formData.motorista],
+      ['DESC', formData.descricao],
+    ]
+      .map(([label, value]) => [label, normalizar(value)] as const)
+      .filter(([, value]) => value)
+      .map(([label, value]) => `${label},${value}#`);
+    const mensagem = `PARAMETROS RASTREADOR DADOS VEICULO: ${comandos.join(' | ')}`;
 
     try {
       setEnviandoSms(true);
