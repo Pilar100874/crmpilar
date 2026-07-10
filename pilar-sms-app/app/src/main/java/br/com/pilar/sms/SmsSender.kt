@@ -79,8 +79,8 @@ object SmsSender {
                 override fun onReceive(c: Context?, intent: Intent?) {
                     val code = resultCode
                     if (code != Activity.RESULT_OK) {
-                        anyFailure = true
-                        worstCode = code
+                        anyFailure.set(true)
+                        worstCode.set(code)
                     }
                     sentLatch.countDown()
                     if (sentLatch.count == 0L) {
