@@ -150,6 +150,34 @@ export function useNormalTableHandles(editor: Editor | null, rootRef: HTMLElemen
       }
     };
 
+    // Redimensionamento de linhas estilo Word (arrastar borda inferior da célula)
+    const onMouseDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const cell = target.closest("td, th") as HTMLTableCellElement | null;
+      if (!cell) return;
+      const table = cell.closest("table") as HTMLTableElement | null;
+      if (!table || table.hasAttribute("data-merge-table") || !editor.isEditable) return;
+      const rect = cell.getBoundingClientRect();
+      if (e.clientY < rect.bottom - 6) return; // só na faixa inferior
+      e.preventDefault();
+      const row = cell.parentElement as HTMLTableRowElement;
+      const startY = e.clientY;
+      const startH = row.getBoundingClientRect().height;
+      const onMove = (m: MouseEvent) => {
+        const nh = Math.max(20, startH + (m.clientY - startY));
+        row.style.height = `${Math.round(nh)}px`;
+        Array.from(row.children).forEach((c) => {
+          (c as HTMLElement).style.height = `${Math.round(nh)}px`;
+        });
+      };
+      const onUp = () => {
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+      };
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+    };
+
     const onScroll = () => position();
 
     rootRef.addEventListener("click", onClick);
