@@ -82,7 +82,12 @@ async function autofillCnpj(cnpjLimpo: string, group?: string, applyAll = true) 
       const key = norm(label || token);
       if (key && src[key]) val = src[key];
     }
-    if (val) updates[token] = val;
+    if (val) {
+      updates[token] = val;
+      const stripped = token.replace(/^\[\[/, "").replace(/\]\]$/, "").trim();
+      if (stripped) updates[stripped] = val;
+      if (label) updates[label] = val;
+    }
   });
   if (Object.keys(updates).length) mergeFillableValues(updates);
 }
