@@ -413,6 +413,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         veiculoId: selectedVeiculo?.id || null,
         telefone: formData.telefone_sms,
         model: modelComOperadora(model),
+        chipType: formData.tipo_chip === 'm2m' ? 'm2m' : 'normal',
       });
       if (result.status === 'configurado') toast.success('Rastreador configurado!');
       else if (result.status === 'parcial') toast.warning('Parcial — alguns SMS falharam');
