@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info, Monitor, Camera, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
-import crmApkAsset from "../../public/coletor/crm-pilar-v1.0.0.apk.asset.json";
+
 import coletorMsiAsset from "../../public/coletor/ColetorPilar-Setup.msi.asset.json";
 
 interface BIPEvent extends Event {
@@ -178,18 +178,19 @@ export default function AdminApps() {
             </span>
           </div>
 
-          <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">CRM Pilar (App Android)</h2>
+          <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">SMS Pilar (App Android)</h2>
           <div className="mb-6 text-sm leading-relaxed text-muted-foreground sm:mb-8">
-            Aplicativo nativo do <b>CRM Pilar</b> para celulares e tablets Android. Abre em tela cheia,
-            com ícone próprio na Home. Toda vez que o CRM é atualizado, o app <b>atualiza automaticamente</b>{" "}
-            sem precisar reinstalar. Suporta <b>notificações push</b> configuradas nos workflows.
+            Aplicativo Android que transforma um celular com chip em <b>gateway de SMS</b> do CRM.
+            Recebe da fila do CRM os SMS a enviar (comandos de rastreadores M2M, alertas, testes) e
+            dispara pelo <b>SMS nativo da operadora</b> — sem RCS, sem internet do destinatário.
+            Agora com <b>relatório de entrega da operadora</b> (status "entregue" na fila).
           </div>
 
           <div className="flex items-center gap-3 rounded-xl border border-dashed p-4 text-xs text-muted-foreground mb-6 sm:mb-8">
             <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <span>
-              <b className="text-foreground">Auto-update</b> · sem necessidade de Play Store · push habilitado ·
-              mesma conta e permissões do CRM web.
+              <b className="text-foreground">Versão 1.2.0</b> · SMS via rádio GSM · relatório de entrega ·
+              suporta dual-SIM · roda em segundo plano com wake-lock.
             </span>
           </div>
 
@@ -198,10 +199,10 @@ export default function AdminApps() {
               <span className="text-[10px] font-bold uppercase tracking-widest text-background/60">
                 Pacote APK
               </span>
-              <span className="truncate font-mono text-xs text-background sm:text-sm">crm-pilar-v1.0.0.apk</span>
+              <span className="truncate font-mono text-xs text-background sm:text-sm">sms-pilar-v1.2.0.apk</span>
             </div>
             <Button
-              onClick={() => baixar("crm-pilar-v1.0.0.apk", crmApkAsset.url)}
+              onClick={() => baixar("sms-pilar-v1.2.0.apk", "/apps/sms-pilar-v1.2.0.apk")}
               className="w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold transition-colors sm:w-auto sm:px-6 bg-blue-500 hover:bg-blue-400 text-white"
             >
               <Download className="mr-2 h-4 w-4" /> Baixar APK
@@ -220,11 +221,11 @@ export default function AdminApps() {
             </li>
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">2</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">Baixe o <b>crm-pilar-v1.0.0.apk</b> acima e toque no arquivo para instalar.</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">Baixe o <b>sms-pilar-v1.2.0.apk</b> acima e toque no arquivo para instalar.</p>
             </li>
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">3</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">Abra o app <b>CRM Pilar</b> na Home. Faça login com sua conta habitual do CRM.</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">Abra o app <b>SMS Pilar</b>, cole o <b>token do dispositivo</b> (gerado em Configurações → SMS Gateway) e conceda a permissão de <b>SMS</b>.</p>
             </li>
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">4</span>
