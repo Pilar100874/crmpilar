@@ -1,6 +1,6 @@
 {
   "version": "1.4.5",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.4.5/pilar-sms-v1.4.5.apk",
-  "filename": "pilar-sms-v1.4.5.apk",
-  "notas": "1.4.5: APK release assinado e compilado sem a biblioteca org.json duplicada, corrigindo falha DuplicatePlatformClasses do lint."
+  "downloadUrl": "/coletor/pilar-sms-v1.4.5-local-debug.apk",
+  "filename": "pilar-sms-v1.4.5-local-debug.apk",
+  "notas": "1.4.5: APK debug compilado localmente, igual ao método inicial, sem depender do GitHub Releases."
 }
