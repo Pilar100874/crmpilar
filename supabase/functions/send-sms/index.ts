@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    const { estabelecimento_id, destino, mensagem, test, max_tentativas } = await req.json();
+    const { estabelecimento_id, destino, mensagem, test } = await req.json();
     if (!estabelecimento_id || !destino || !mensagem) {
       return new Response(JSON.stringify({ error: 'estabelecimento_id, destino e mensagem são obrigatórios' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
             telefone: to,
             mensagem,
             status: 'pendente',
-            max_tentativas: Math.min(Math.max(Number(max_tentativas) || 3, 1), 3),
+            max_tentativas: 1,
           })
           .select('id')
           .single();

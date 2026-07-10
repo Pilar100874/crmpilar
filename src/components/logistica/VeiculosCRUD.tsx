@@ -313,6 +313,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
           estabelecimento_id: estabelecimentoId,
           destino: telefone,
           mensagem,
+          max_tentativas: 1,
         },
       });
       if (error) throw error;
@@ -347,6 +348,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
           estabelecimento_id: estabelecimentoId,
           destino: telefone,
           mensagem,
+          max_tentativas: 1,
         },
       });
       if (error) throw error;
