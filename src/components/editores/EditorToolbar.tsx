@@ -101,7 +101,7 @@ export function EditorToolbar({
       <div className={cn("flex flex-wrap items-center gap-1 px-2 py-1")}>
         {onBack && <TB onClick={onBack} title="Voltar"><ArrowLeft className="h-4 w-4" /></TB>}
         {onSave && <TB onClick={onSave} disabled={locked} title="Salvar"><Save className="h-4 w-4" /></TB>}
-        {onSalvarComo && <TB onClick={onSalvarComo} title="Salvar como"><Copy className="h-4 w-4" /></TB>}
+        {onSalvarComo && <TB onClick={onSalvarComo} title="Salvar como"><SaveAll className="h-4 w-4" /></TB>}
         {onPreviewMerge && (
           <TB onClick={onPreviewMerge} active={previewActive} title={previewActive ? "Visualização ATIVA — mostrando valores. Clique para ver variáveis." : "Visualização INATIVA — mostrando variáveis. Clique para ver valores."}>
             <Eye className={cn("h-4 w-4", previewActive && "text-emerald-600")} />
