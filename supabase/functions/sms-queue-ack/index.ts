@@ -19,9 +19,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { id, success, erro } = await req.json();
-    if (!id || typeof success !== 'boolean') {
-      return new Response(JSON.stringify({ error: 'id e success são obrigatórios' }), {
+    const { id, success, erro, delivered } = await req.json();
+    if (!id || (typeof success !== 'boolean' && typeof delivered !== 'boolean')) {
+      return new Response(JSON.stringify({ error: 'id + (success ou delivered) são obrigatórios' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -40,6 +40,24 @@ Deno.serve(async (req) => {
     if (!device) {
       return new Response(JSON.stringify({ error: 'Dispositivo inválido' }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Ack de entrega (delivery report da operadora) — chega depois do ack de envio.
+    if (typeof delivered === 'boolean') {
+      if (delivered) {
+        await supabase.from('sms_queue').update({
+          status: 'entregue',
+          entregue_at: new Date().toISOString(),
+        }).eq('id', id);
+      } else {
+        await supabase.from('sms_queue').update({
+          status: 'nao_entregue',
+          erro_mensagem: erro || 'Operadora não confirmou entrega',
+        }).eq('id', id);
+      }
+      return new Response(JSON.stringify({ ok: true, delivery: true }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
