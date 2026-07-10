@@ -53,6 +53,7 @@ interface Props {
   onQuickFill?: () => void;
   onGeneratePdf?: () => void;
   onPrint?: () => void;
+  pendingFillables?: number;
   onSearchEmpresa?: () => void;
   onSearchEstoque?: () => void;
 }
