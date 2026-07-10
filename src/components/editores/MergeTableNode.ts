@@ -165,9 +165,11 @@ export const MergeTable = Node.create({
     table.setAttribute("data-font-family", attrs.fontFamily || "");
     table.setAttribute("data-align", attrs.align || "left");
     table.setAttribute("data-extra-cols", JSON.stringify(attrs.extraCols || []));
-    table.setAttribute("data-totals", attrs.totalsRow ? "1" : "0");
-    table.setAttribute("style", "border-collapse:collapse;width:100%;font-size:11pt;");
-    table.innerHTML = buildInner(attrs);
+      table.setAttribute("data-totals", attrs.totalsRow ? "1" : "0");
+      table.setAttribute("data-width", attrs.width || "100%");
+      table.setAttribute("style", `border-collapse:collapse;width:${attrs.width || "100%"};font-size:11pt;`);
+      table.innerHTML = buildInner(attrs);
+
     return table;
   },
 
