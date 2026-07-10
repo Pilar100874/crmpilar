@@ -1,0 +1,1 @@
+ALTER TABLE public.veiculos ADD COLUMN IF NOT EXISTS tipo_chip TEXT NOT NULL DEFAULT 'm2m' CHECK (tipo_chip IN ('normal','m2m'));
