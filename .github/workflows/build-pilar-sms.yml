@@ -32,6 +32,9 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Usar SDK do GitHub Actions
+        run: rm -f local.properties
+
       - name: Grant execute permission to gradlew
         run: chmod +x ./gradlew
 
@@ -108,7 +111,7 @@ jobs:
             j.version = '${VERSION}';
             j.downloadUrl = '${URL}';
             j.filename = '${FILENAME}';
-            j.notas = '${VERSION}: APK recompilado em modo compatível para Android 5+ com assinatura V1+V2+V3, corrigindo erro de análise do pacote em aparelhos antigos.';
+            j.notas = '${VERSION}: APK release assinado e compilado sem a biblioteca org.json duplicada, corrigindo falha DuplicatePlatformClasses do lint.';
             fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
           "
           cat public/coletor/sms-version.json
