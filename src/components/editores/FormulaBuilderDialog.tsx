@@ -60,8 +60,11 @@ export function FormulaBuilderDialog({ open, onOpenChange, value, campos, sample
       setNome(value.nome || "");
       setExpr(value.expressao || "");
       setBusca("");
+      // Sai do modo visualização para não confundir a edição da fórmula
+      try { window.dispatchEvent(new CustomEvent("editor:disable-preview")); } catch {}
     }
   }, [open, value]);
+
 
   const insertAtCursor = (text: string) => {
     const ta = taRef.current;

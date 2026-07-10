@@ -244,9 +244,10 @@ export function CamposSidebar({ estabelecimentoId, onInsert, currentHtml, mergeF
                     <div className="text-[11px] font-medium truncate">{c.tabela || <span className="italic text-muted-foreground">sem tabela</span>}</div>
                     <div className="text-[10px] text-muted-foreground font-mono truncate">alias: {c.alias}</div>
                   </div>
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditIdx(i)} title="Editar">
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => { try { window.dispatchEvent(new CustomEvent("editor:disable-preview")); } catch {} setEditIdx(i); }} title="Editar">
                     <Pencil className="h-3 w-3" />
                   </Button>
+
                   <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setConfirmDeleteIdx(i)} title="Remover">
                     <Trash2 className="h-3 w-3 text-destructive" />
                   </Button>
