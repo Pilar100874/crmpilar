@@ -55,11 +55,22 @@ function evalFormula(expr: string, row: Record<string, any>): any {
 function buildInner(attrs: MergeTableAttrs): string {
   const cols = attrs.cols || [];
   const extras = attrs.extraCols || [];
+  const totalCols = cols.length + extras.length;
+  const cw = attrs.colWidths || [];
+  const rh = attrs.rowHeights || [];
   const cellStyle = `border:1px solid #ccc;padding:4px;text-align:${attrs.align || "left"};` +
     (attrs.color ? `color:${attrs.color};` : "") +
     (attrs.fontSize ? `font-size:${attrs.fontSize};` : "") +
     (attrs.fontFamily ? `font-family:${attrs.fontFamily};` : "");
   const headStyle = cellStyle + "background:#f4f4f4;font-weight:600;";
+  let colgroup = "";
+  if (cw.length) {
+    colgroup = "<colgroup>" + Array.from({ length: totalCols }).map((_, i) => {
+      const w = cw[i];
+      return w ? `<col style="width:${esc(w)};" />` : "<col />";
+    }).join("") + "</colgroup>";
+  }
+  const rowStyle = (idx: number) => rh[idx] ? ` style="height:${esc(rh[idx]!)};"` : "";
   const th = [...cols, ...extras.map((e) => e.header || "calc")]
     .map((c) => `<th style="${headStyle}">${esc(c)}</th>`).join("");
   const rows = getPreviewRows(attrs.alias);
@@ -73,17 +84,17 @@ function buildInner(attrs: MergeTableAttrs): string {
     if (to > total) to = total;
     if (to < from) to = from;
     displayed = rows.slice(from - 1, to);
-    body = displayed.map((r) => {
+    body = displayed.map((r, ri) => {
       const base = cols.map((c) => `<td style="${cellStyle}">${esc(fmt(r?.[c]))}</td>`).join("");
       const calc = extras.map((e) => {
         const v = evalFormula(e.formula, r || {});
         return `<td style="${cellStyle}">${esc(fmt(v))}</td>`;
       }).join("");
-      return `<tr>${base}${calc}</tr>`;
+      return `<tr${rowStyle(ri + 1)}>${base}${calc}</tr>`;
     }).join("");
   } else {
     const tokenStyle = cellStyle + "font-family:monospace;color:#1e40af;";
-    body = `<tr>${cols
+    body = `<tr${rowStyle(1)}>${cols
       .map((c) => `<td style="${tokenStyle}">{{${esc(attrs.alias)}.${esc(c)}}}</td>`)
       .join("")}${extras.map((e) => `<td style="${cellStyle}">= ${esc(e.formula)}</td>`).join("")}</tr>`;
   }
@@ -98,10 +109,11 @@ function buildInner(attrs: MergeTableAttrs): string {
       const sum = displayed.reduce((a, r) => a + num(evalFormula(e.formula, r || {})), 0);
       return `<td style="${totStyle}">${esc(fmt(sum))}</td>`;
     }).join("");
-    body += `<tr>${totBase}${totCalc}</tr>`;
+    body += `<tr${rowStyle(displayed.length + 1)}>${totBase}${totCalc}</tr>`;
   }
-  return `<thead><tr>${th}</tr></thead><tbody>${body}</tbody>`;
+  return `${colgroup}<thead><tr${rowStyle(0)}>${th}</tr></thead><tbody>${body}</tbody>`;
 }
+
 
 export const MergeTable = Node.create({
   name: "mergeTable",
