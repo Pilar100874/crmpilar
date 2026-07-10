@@ -282,7 +282,7 @@ export default function ModeloEditor() {
       await salvarComoArquivoPessoal();
       return true;
     }
-    if (modelo.bloqueado && !auto) { toast.error("Modelo bloqueado — desbloqueie para editar."); return false; }
+    
     setSaving(true);
     const { error } = await supabase.from("doc_modelos").update({
       titulo: modelo.titulo,
