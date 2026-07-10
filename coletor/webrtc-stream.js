@@ -527,13 +527,16 @@ class StreamSession {
       try { await this.pump.start(); } catch (e) { console.error('[pump] start err', e.message); }
     }
 
-    // Guarda: 12s sem offer → fecha (pump não conseguiu vídeo)
+    // Guarda: 25s sem offer → fecha (pump não conseguiu vídeo).
+    // Elevado de 12s para dar folga ao reencode HEVC/perfil incompatível,
+    // que combina 4s de espera em copy + até 8-10s para o libx264 emitir
+    // o primeiro keyframe em CPUs modestas.
     setTimeout(() => {
       if (!this.closed && !this.offerSent) {
         console.log('[webrtc] timeout sem RTP para viewer', this.cam.nome);
         this.close();
       }
-    }, 12000);
+    }, 25000);
   }
 
   async _sendOffer() {

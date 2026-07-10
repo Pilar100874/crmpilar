@@ -158,7 +158,7 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
           setErro("Coletor não respondeu ao pedido de stream. Atualize o Coletor para a versão mais recente, mantenha o módulo de câmeras ativo e confirme se a câmera tem RTSP habilitado.");
           setStatus("erro");
         }
-      }, 12_000);
+      }, 25_000);
 
     })();
 
