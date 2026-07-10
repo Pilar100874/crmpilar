@@ -89,8 +89,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const erroNormalizado = String(erro || '').trim().toUpperCase();
-    const falsoNegativoAndroid = erroNormalizado === 'GENERIC_FAILURE' || erroNormalizado === 'RESULT_ERROR_GENERIC_FAILURE';
+    const codeStr = String(android_error_code || erro || '').trim().toUpperCase();
+    const falsoNegativoAndroid = codeStr.includes('GENERIC_FAILURE');
 
     if (success || falsoNegativoAndroid) {
       await supabase.from('sms_queue').update({
