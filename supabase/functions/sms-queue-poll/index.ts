@@ -55,7 +55,6 @@ Deno.serve(async (req) => {
       .from('sms_queue')
       .select('id, telefone, mensagem, tentativas, max_tentativas')
       .eq('status', 'pendente')
-      .lt('tentativas', 3)
       .order('created_at', { ascending: true })
       .limit(limit);
 
@@ -68,6 +67,7 @@ Deno.serve(async (req) => {
 
     const claimed: any[] = [];
     for (const p of pendentes || []) {
+      if ((p.tentativas || 0) >= (p.max_tentativas || 1)) continue;
       // Claim atômico: só marca se ainda estiver pendente
       const { data: upd } = await supabase
         .from('sms_queue')
@@ -79,6 +79,7 @@ Deno.serve(async (req) => {
         })
         .eq('id', p.id)
         .eq('status', 'pendente')
+        .lt('tentativas', p.max_tentativas || 1)
         .select('id')
         .maybeSingle();
       if (upd) claimed.push(p);

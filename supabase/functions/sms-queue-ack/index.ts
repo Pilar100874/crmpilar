@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
       }).select().maybeSingle().then(() => {}).catch(() => {});
     } else {
       const tentativas = item.tentativas || 0;
-      const max = item.max_tentativas || 3;
+      const max = item.max_tentativas || 1;
       const novoStatus = tentativas >= max ? 'erro' : 'pendente';
       await supabase.from('sms_queue').update({
         status: novoStatus,
