@@ -299,8 +299,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       toast.error('Informe o telefone (SIM do equipamento)');
       return;
     }
-    // Envia apenas os dados cadastrais do veículo. Usa o envelope do SMS de teste
-    // que já foi confirmado no Android, sem enviar parâmetros de conferência.
+    // Envia apenas os dados cadastrais do veículo, mantendo o SMS curto (<160 chars)
+    // e no mesmo envelope do teste que o Android já aceitou.
     const normalizar = (s: string) =>
       (s || '')
         .normalize('NFD')
@@ -315,12 +315,13 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       '[Pilar - Teste SMS]',
       `Veiculo: ${normalizar(formData.placa)}`,
       model?.nome && `Modelo rastreador: ${normalizar(model.nome)}`,
-      formData.tipo_veiculo && `Tipo: ${normalizar(formData.tipo_veiculo)}`,
-      formData.motorista && `Motorista: ${normalizar(formData.motorista)}`,
-      formData.descricao && `Descricao: ${normalizar(formData.descricao)}`,
-      'Se voce recebeu esta mensagem, os dados do veiculo foram enviados.',
+      [
+        formData.tipo_veiculo && `Tipo ${normalizar(formData.tipo_veiculo)}`,
+        formData.descricao && `Desc ${normalizar(formData.descricao)}`,
+        formData.motorista && `Mot ${normalizar(formData.motorista)}`,
+      ].filter(Boolean).join(' '),
     ].filter(Boolean) as string[];
-    const mensagem = linhas.join('\n');
+    const mensagem = linhas.join('\n').slice(0, 155);
 
     try {
       setEnviandoSms(true);
