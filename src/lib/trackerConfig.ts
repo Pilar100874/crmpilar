@@ -61,10 +61,16 @@ export async function configurarRastreador(params: {
 
   const log: ConfigureResult['log'] = [];
   let okCount = 0;
+  let sentAny = false;
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
   for (const cmd of cmds) {
     // Skip fuel-cut commands during initial provisioning
     if (/RELAY,\s*[01]\s*#/i.test(cmd.template)) continue;
+
+    // Espaça envios em 5s para evitar bloqueio anti-flood da operadora
+    if (sentAny) await sleep(5000);
+    sentAny = true;
 
     const rendered = renderTemplate(cmd.template, ctx);
     const at = new Date().toISOString();
