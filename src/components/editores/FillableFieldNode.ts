@@ -438,6 +438,7 @@ export const FillableField = Node.create({
       dom.style.cssText = "display:inline-flex;align-items:center;gap:2px;vertical-align:middle;margin:0 2px;position:relative";
 
       let currentValue = getFillableValue(token, label);
+      const commit = (v: string) => { currentValue = v; if (token) mergeFillableValues({ [token]: v }); };
 
       const attachCnpjGroupFocus = (input: HTMLElement) => {
         if (!cnpjGroup || !cnpjSubfield) return;
