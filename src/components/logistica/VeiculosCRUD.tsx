@@ -255,11 +255,13 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       }
 
       // Configuração automática do rastreador físico via SMS
+      // Só dispara comandos M2M se o chip for de equipamento (m2m).
       if (
         formData.configurar_tracker_ao_salvar &&
         formData.tracker_model_id &&
         formData.telefone_sms &&
-        veiculoId
+        veiculoId &&
+        formData.tipo_chip === 'm2m'
       ) {
         const model = trackerModels.find(m => m.id === formData.tracker_model_id);
         if (model && (model.sms_commands || []).length > 0) {
