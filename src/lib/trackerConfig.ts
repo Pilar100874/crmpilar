@@ -69,7 +69,7 @@ export async function configurarRastreador(params: {
     if (/RELAY,\s*[01]\s*#/i.test(cmd.template)) continue;
 
     // Espaça envios em 5s para evitar bloqueio anti-flood da operadora
-    if (sentAny) await sleep(5000);
+    if (sentAny) await sleep(10000);
     sentAny = true;
 
     const rendered = renderTemplate(cmd.template, ctx);
