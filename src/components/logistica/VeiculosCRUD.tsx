@@ -313,11 +313,16 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       return;
     }
 
-    const nomeParaSms = [nomeVeiculo, tipoVeiculo].filter(Boolean).join(' - ');
-    const mensagem = buildTrackerParametersSms({
-      ...modelComOperadora(model),
-      nome: nomeParaSms,
-    });
+    const modelOper = modelComOperadora(model);
+    const server = (modelOper.host || '').trim();
+    const port = String(modelOper.porta || '').trim();
+    if (!server || !port) {
+      toast.error('Configure host e porta do servidor no modelo do rastreador');
+      return;
+    }
+    const mensagem = `SERVER,1,${server},${port},0#`;
+
+
 
     try {
       setEnviandoSms(true);
