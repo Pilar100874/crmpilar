@@ -66,6 +66,9 @@ export default function ModeloEditor() {
   const [estoqueSearchOpen, setEstoqueSearchOpen] = useState(false);
   const [fillableValues, setFillableValues] = useState<Record<string, string>>({});
   const [exitPromptOpen, setExitPromptOpen] = useState(false);
+  const [salvarComoOpen, setSalvarComoOpen] = useState(false);
+  const [salvarComoTitulo, setSalvarComoTitulo] = useState("");
+  const [salvarComoLoading, setSalvarComoLoading] = useState(false);
 
 
   // Normaliza merge_config para array de configs (aceita objeto legado)
