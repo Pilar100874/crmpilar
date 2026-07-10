@@ -19,7 +19,7 @@ import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueD
 import { renderTemplate, applyFillables, extractFillableTokens } from "@/lib/editores/mergeEngine";
 import { parseCnpjGroupPayload, buildCnpjGroupFields } from "@/lib/editores/cnpjGroup";
 import { parseCepGroupPayload, buildCepGroupFields } from "@/lib/editores/cepGroup";
-import { setFillableValues as setFillableStore } from "@/lib/editores/fillableValuesStore";
+import { setFillableValues as setFillableStore, subscribeFillable, getFillableValues } from "@/lib/editores/fillableValuesStore";
 import { hydrateDatasets, registerDataset, getAllDatasets, type ImportedDataset } from "@/lib/editores/importedDatasetStore";
 import { resolveMergeData } from "@/lib/editores/dataResolvers";
 import { runMergeConfig } from "@/lib/editores/runMergeConfig";
@@ -66,6 +66,13 @@ export default function ModeloEditor() {
   const [estoqueSearchOpen, setEstoqueSearchOpen] = useState(false);
   const [fillableValues, setFillableValues] = useState<Record<string, string>>({});
   const [exitPromptOpen, setExitPromptOpen] = useState(false);
+
+  // Sincroniza estado local com o store para refletir digitação inline nos campos.
+  useEffect(() => {
+    const sync = () => setFillableValues({ ...getFillableValues() });
+    sync();
+    return subscribeFillable(sync);
+  }, []);
 
 
   // Normaliza merge_config para array de configs (aceita objeto legado)
