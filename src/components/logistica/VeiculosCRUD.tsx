@@ -299,23 +299,17 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       toast.error('Informe o telefone (SIM do equipamento)');
       return;
     }
-    const model = trackerModels.find(m => m.id === formData.tracker_model_id);
-    if (!model) {
-      toast.error('Selecione o modelo do rastreador');
-      return;
-    }
-
     const nomeVeiculo = (formData.descricao || formData.placa || '').trim();
+    const tipoVeiculo = (formData.tipo_veiculo || '').trim();
 
     if (!nomeVeiculo) {
-      toast.error('Informe o nome do veículo');
+      toast.error('Informe o nome/placa do veículo');
       return;
     }
 
-    const mensagem = buildTrackerParametersSms({
-      ...modelComOperadora(model),
-      nome: nomeVeiculo,
-    });
+    const partes = [nomeVeiculo];
+    if (tipoVeiculo) partes.push(tipoVeiculo);
+    const mensagem = `PARAMETROS RASTREADOR ${partes.join(' - ')}`;
 
     try {
       setEnviandoSms(true);
