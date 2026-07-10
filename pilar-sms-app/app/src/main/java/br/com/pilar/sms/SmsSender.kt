@@ -9,6 +9,7 @@ import android.content.IntentFilter
 import android.os.Build
 import android.telephony.SmsManager
 import android.telephony.SubscriptionManager
+import android.telephony.SubscriptionManager.INVALID_SUBSCRIPTION_ID
 import java.util.UUID
 
 object SmsSender {
@@ -30,7 +31,7 @@ object SmsSender {
         onDelivered: ((delivered: Boolean, error: String?) -> Unit)? = null,
     ): Result {
         return try {
-            val simIndex = senderHint?.toIntOrNull() ?: 0
+            val simIndex = senderHint?.toIntOrNull()
             val manager: SmsManager = resolveManager(ctx, simIndex)
 
             val parts = manager.divideMessage(message)
@@ -94,7 +95,7 @@ object SmsSender {
 
             // Aguarda no máximo 15s pelo SENT — se estourar, considera enviado (rádio pode estar lento).
             sentLatch.await(15, java.util.concurrent.TimeUnit.SECONDS)
-            Result(sentOk || sentLatch.count > 0, simIndex, sentErr)
+            Result(sentOk || sentLatch.count > 0, simIndex ?: -1, sentErr)
         } catch (e: Exception) {
             Result(false, -1, e.message ?: "unknown error")
         }
@@ -109,23 +110,37 @@ object SmsSender {
         }
     }
 
-    private fun resolveManager(ctx: Context, simIndex: Int): SmsManager {
+    private fun resolveManager(ctx: Context, simIndex: Int?): SmsManager {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val sm = ctx.getSystemService(SmsManager::class.java)
             try {
                 val subMgr = ctx.getSystemService(SubscriptionManager::class.java)
-                val subs = subMgr?.activeSubscriptionInfoList
-                if (subs != null && simIndex in subs.indices) {
+                val defaultSmsSubId = SubscriptionManager.getDefaultSmsSubscriptionId()
+                val subs = subMgr?.activeSubscriptionInfoList.orEmpty()
+                val selectedSubId = if (simIndex != null && simIndex in subs.indices) {
+                    subs[simIndex].subscriptionId
+                } else if (defaultSmsSubId != INVALID_SUBSCRIPTION_ID) {
+                    defaultSmsSubId
+                } else null
+
+                if (selectedSubId != null) {
                     ctx.getSystemService(SmsManager::class.java)
-                        .createForSubscriptionId(subs[simIndex].subscriptionId)
+                        .createForSubscriptionId(selectedSubId)
                 } else sm
             } catch (_: SecurityException) { sm }
         } else {
             @Suppress("DEPRECATION")
             try {
                 val subs = SubscriptionManager.from(ctx).activeSubscriptionInfoList
-                if (subs != null && simIndex in subs.indices) {
-                    SmsManager.getSmsManagerForSubscriptionId(subs[simIndex].subscriptionId)
+                val defaultSmsSubId = SubscriptionManager.getDefaultSmsSubscriptionId()
+                val selectedSubId = if (simIndex != null && subs != null && simIndex in subs.indices) {
+                    subs[simIndex].subscriptionId
+                } else if (defaultSmsSubId != INVALID_SUBSCRIPTION_ID) {
+                    defaultSmsSubId
+                } else null
+
+                if (selectedSubId != null) {
+                    SmsManager.getSmsManagerForSubscriptionId(selectedSubId)
                 } else SmsManager.getDefault()
             } catch (_: SecurityException) { SmsManager.getDefault() }
         }
