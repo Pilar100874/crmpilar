@@ -769,6 +769,30 @@ export default function ModeloEditor() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={salvarComoOpen} onOpenChange={setSalvarComoOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Salvar como {isAdmin ? "novo modelo" : "novo arquivo"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <label className="text-xs text-muted-foreground">Nome</label>
+            <Input
+              autoFocus
+              value={salvarComoTitulo}
+              onChange={(e) => setSalvarComoTitulo(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !salvarComoLoading) confirmarSalvarComo(); }}
+              placeholder="Nome da cópia"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setSalvarComoOpen(false)} disabled={salvarComoLoading}>Cancelar</Button>
+            <Button onClick={confirmarSalvarComo} disabled={salvarComoLoading || !salvarComoTitulo.trim()}>
+              {salvarComoLoading ? "Salvando..." : "Salvar cópia"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
 
   );
