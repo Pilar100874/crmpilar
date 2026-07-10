@@ -491,7 +491,13 @@ export const FillableField = Node.create({
         i.addEventListener("input", measure);
       };
 
-      const publish = (v: string) => { currentValue = v; mergeFillableValues({ [token]: v }); };
+      const strippedToken = token.replace(/^\[\[/, "").replace(/\]\]$/, "").trim();
+      const publish = (v: string) => {
+        currentValue = v;
+        const upd: Record<string, string> = { [token]: v, [strippedToken]: v };
+        if (label) upd[label] = v;
+        mergeFillableValues(upd);
+      };
 
       const buildInput = (): HTMLElement => {
         const wrap = document.createElement("span");
