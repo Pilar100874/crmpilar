@@ -6,7 +6,9 @@ import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
-import coletorMsiAsset from "../../public/coletor/ColetorPilar-Setup.msi.asset.json";
+// Fallback fixo caso version.json esteja indisponível.
+const COLETOR_FALLBACK_URL = "https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Setup.exe";
+const COLETOR_FALLBACK_FILENAME = "ColetorPilar-Setup.exe";
 
 interface BIPEvent extends Event {
   prompt: () => Promise<void>;
