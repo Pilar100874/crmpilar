@@ -199,7 +199,10 @@ export const MergeTable = Node.create({
       dom.setAttribute("data-merge-table", "1");
       const applyWidth = (w?: string) => {
         const width = w || "100%";
-        dom.style.cssText = `border-collapse:collapse;width:${width};font-size:11pt;cursor:pointer;`;
+        dom.style.cssText = `border-collapse:collapse;width:${width};font-size:11pt;cursor:pointer;table-layout:fixed;`;
+        wrapper.style.width = width.endsWith("%") ? width : width;
+      };
+
         wrapper.style.width = width.endsWith("%") ? width : width;
       };
       applyWidth(node.attrs.width);
