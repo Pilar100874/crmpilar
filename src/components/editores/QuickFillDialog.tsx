@@ -11,6 +11,11 @@ import { extractFillableTokens } from "@/lib/editores/mergeEngine";
 import { fetchDynamicOptions, isDynamicOpcoes, parseDynamic } from "@/lib/editores/dynamicOptions";
 import { maskCnpjValue } from "@/lib/editores/cnpjPrompt";
 
+const maskCepValue = (v: string) => {
+  const d = (v || "").replace(/\D/g, "").slice(0, 8);
+  return d.replace(/^(\d{5})(\d)/, "$1-$2");
+};
+
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
