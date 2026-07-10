@@ -184,11 +184,16 @@ export function TiptapEditor({
   }, [editable, editor]);
 
 
+  const [rootEl, setRootEl] = useState<HTMLDivElement | null>(null);
+  useNormalTableHandles(editor, rootEl);
+
   return (
     <div
-      className={cn("bg-muted/30 flex justify-center p-6 overflow-auto", className)}
+      ref={setRootEl}
+      className={cn("bg-muted/30 flex justify-center p-6 overflow-auto relative", className)}
       style={{ minHeight: "100%" }}
     >
+
       <div
         style={{
           transform: `scale(${zoom})`,
