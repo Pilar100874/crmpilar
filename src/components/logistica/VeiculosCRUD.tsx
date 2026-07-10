@@ -254,8 +254,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         await enviarDadosPorSms(veiculoId, formData.telefone_sms);
       }
 
-      // Configuração automática do rastreador físico via SMS
-      // Envia os comandos M2M mesmo em modo "celular normal" (teste de recebimento).
+      // Configuração automática do rastreador físico via SMS.
+      // Em celular normal envia apenas 1 SMS consolidado para conferência dos parâmetros.
       if (
         formData.configurar_tracker_ao_salvar &&
         formData.tracker_model_id &&
@@ -264,6 +264,10 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       ) {
         const model = trackerModels.find(m => m.id === formData.tracker_model_id);
         if (model && (model.sms_commands || []).length > 0) {
+          if (formData.tipo_chip === 'normal') {
+            toast.info('Enviando SMS único de conferência...');
+            await enviarParametrosTrackerSmsUnico(modelComOperadora(model), formData.telefone_sms, veiculoId);
+          } else {
           toast.info('Enviando configuração do rastreador por SMS...');
           const result = await configurarRastreador({
             estabelecimentoId,
@@ -274,6 +278,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
           if (result.status === 'configurado') toast.success('Rastreador configurado com sucesso!');
           else if (result.status === 'parcial') toast.warning('Configuração parcial — alguns SMS falharam. Veja o histórico.');
           else if (result.status === 'falhou') toast.error('Falha na configuração do rastreador');
+          }
         }
       }
 
