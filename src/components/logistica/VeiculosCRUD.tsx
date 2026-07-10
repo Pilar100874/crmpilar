@@ -150,6 +150,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         dispositivo_id: linkedDevice?.id || '',
         tracker_model_id: (veiculo as any).tracker_model_id || '',
         telefone_sms: (veiculo as any).telefone_sms || '',
+        tipo_chip: ((veiculo as any).tipo_chip as 'normal' | 'm2m') || 'm2m',
         operadora_id: findOperadoraByApn((veiculo as any).apn_operadora)?.id || '',
         enviar_sms_automatico: false,
         configurar_tracker_ao_salvar: !(veiculo as any).tracker_model_id ? true : false,
