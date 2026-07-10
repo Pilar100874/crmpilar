@@ -46,25 +46,27 @@ jobs:
           echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
           echo "Versão detectada: ${VERSION} (code ${CODE}) sha ${SHORT_SHA}"
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --no-daemon
+      - name: Build APK release assinado
+        run: ./gradlew clean :app:assembleRelease --no-daemon
 
-      - name: Build Release APK (unsigned)
-        run: ./gradlew assembleRelease --no-daemon
-
-      - name: Renomear APKs com versão
+      - name: Renomear APK com versão
         id: rename
         run: |
           mkdir -p dist
-          DEBUG_SRC=app/build/outputs/apk/debug/app-debug.apk
-          REL_SRC=app/build/outputs/apk/release/app-release-unsigned.apk
-          DEBUG_DST=dist/pilar-sms-v${{ steps.version.outputs.version }}-debug.apk
-          REL_DST=dist/pilar-sms-v${{ steps.version.outputs.version }}-release-unsigned.apk
-          cp "$DEBUG_SRC" "$DEBUG_DST"
-          cp "$REL_SRC" "$REL_DST"
-          echo "debug_apk=$DEBUG_DST" >> "$GITHUB_OUTPUT"
-          echo "release_apk=$REL_DST" >> "$GITHUB_OUTPUT"
+          APK_SRC=app/build/outputs/apk/release/app-release.apk
+          APK_DST=dist/pilar-sms-v${{ steps.version.outputs.version }}.apk
+          test -f "$APK_SRC"
+          cp "$APK_SRC" "$APK_DST"
+          echo "apk=$APK_DST" >> "$GITHUB_OUTPUT"
           ls -lh dist/
+
+      - name: Verificar APK instalável
+        run: |
+          APK="dist/pilar-sms-v${{ steps.version.outputs.version }}.apk"
+          test -s "$APK"
+          unzip -t "$APK" >/dev/null
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n 1)
+          "$APKSIGNER" verify --verbose --print-certs "$APK"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -84,11 +86,9 @@ jobs:
             - versionCode: `${{ steps.version.outputs.code }}`
             - commit: `${{ steps.version.outputs.short_sha }}`
 
-            **Debug** já vem assinado com a chave debug (instalável direto no aparelho).
-            **Release** está sem assinatura — assine antes de distribuir.
+            APK release assinado com chave debug do build, pronto para instalação direta no aparelho.
           files: |
-            pilar-sms-app/dist/pilar-sms-v${{ steps.version.outputs.version }}-debug.apk
-            pilar-sms-app/dist/pilar-sms-v${{ steps.version.outputs.version }}-release-unsigned.apk
+            pilar-sms-app/dist/pilar-sms-v${{ steps.version.outputs.version }}.apk
           fail_on_unmatched_files: true
           make_latest: true
         env:
@@ -99,7 +99,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           REPO="${{ github.repository }}"
-          FILENAME="pilar-sms-v${VERSION}-debug.apk"
+          FILENAME="pilar-sms-v${VERSION}.apk"
           URL="https://github.com/${REPO}/releases/download/sms-v${VERSION}/${FILENAME}"
           node -e "
             const fs = require('fs');
@@ -108,6 +108,7 @@ jobs:
             j.version = '${VERSION}';
             j.downloadUrl = '${URL}';
             j.filename = '${FILENAME}';
+            j.notas = '1.4.3: compilação alterada para APK release assinado e verificado no GitHub Actions antes de publicar.';
             fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
           "
           cat public/coletor/sms-version.json
