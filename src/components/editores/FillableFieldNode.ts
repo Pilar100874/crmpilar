@@ -82,7 +82,12 @@ async function autofillCnpj(cnpjLimpo: string, group?: string, applyAll = true) 
       const key = norm(label || token);
       if (key && src[key]) val = src[key];
     }
-    if (val) updates[token] = val;
+    if (val) {
+      updates[token] = val;
+      const stripped = token.replace(/^\[\[/, "").replace(/\]\]$/, "").trim();
+      if (stripped) updates[stripped] = val;
+      if (label) updates[label] = val;
+    }
   });
   if (Object.keys(updates).length) mergeFillableValues(updates);
 }
@@ -124,7 +129,12 @@ async function autofillCep(cepLimpo: string, group?: string, applyAll = true) {
       const key = norm(label || token);
       if (key && src[key]) val = src[key];
     }
-    if (val) updates[token] = val;
+    if (val) {
+      updates[token] = val;
+      const stripped = token.replace(/^\[\[/, "").replace(/\]\]$/, "").trim();
+      if (stripped) updates[stripped] = val;
+      if (label) updates[label] = val;
+    }
   });
   if (Object.keys(updates).length) mergeFillableValues(updates);
 }
@@ -491,7 +501,13 @@ export const FillableField = Node.create({
         i.addEventListener("input", measure);
       };
 
-      const publish = (v: string) => { currentValue = v; mergeFillableValues({ [token]: v }); };
+      const strippedToken = token.replace(/^\[\[/, "").replace(/\]\]$/, "").trim();
+      const publish = (v: string) => {
+        currentValue = v;
+        const upd: Record<string, string> = { [token]: v, [strippedToken]: v };
+        if (label) upd[label] = v;
+        mergeFillableValues(upd);
+      };
 
       const buildInput = (): HTMLElement => {
         const wrap = document.createElement("span");
