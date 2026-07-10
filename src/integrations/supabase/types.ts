@@ -18638,6 +18638,7 @@ export type Database = {
           claimed_at: string | null
           created_at: string
           device_id: string | null
+          entregue_at: string | null
           enviado_at: string | null
           erro_mensagem: string | null
           estabelecimento_id: string | null
@@ -18653,6 +18654,7 @@ export type Database = {
           claimed_at?: string | null
           created_at?: string
           device_id?: string | null
+          entregue_at?: string | null
           enviado_at?: string | null
           erro_mensagem?: string | null
           estabelecimento_id?: string | null
@@ -18668,6 +18670,7 @@ export type Database = {
           claimed_at?: string | null
           created_at?: string
           device_id?: string | null
+          entregue_at?: string | null
           enviado_at?: string | null
           erro_mensagem?: string | null
           estabelecimento_id?: string | null

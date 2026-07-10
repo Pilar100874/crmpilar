@@ -1,0 +1,1 @@
+ALTER TABLE public.sms_queue ADD COLUMN IF NOT EXISTS entregue_at TIMESTAMPTZ;
