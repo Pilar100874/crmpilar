@@ -11,6 +11,11 @@ import { extractFillableTokens } from "@/lib/editores/mergeEngine";
 import { fetchDynamicOptions, isDynamicOpcoes, parseDynamic } from "@/lib/editores/dynamicOptions";
 import { maskCnpjValue } from "@/lib/editores/cnpjPrompt";
 
+const maskCepValue = (v: string) => {
+  const d = (v || "").replace(/\D/g, "").slice(0, 8);
+  return d.replace(/^(\d{5})(\d)/, "$1-$2");
+};
+
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -20,8 +25,8 @@ interface Props {
 }
 
 // Extrai metadados por token (grupo/sub-campo) direto do HTML dos chips.
-function extractFillableMeta(html: string): Map<string, { group: string; subfield: string }> {
-  const map = new Map<string, { group: string; subfield: string }>();
+function extractFillableMeta(html: string): Map<string, { group: string; subfield: string; cepGroup: string; cepSubfield: string }> {
+  const map = new Map<string, { group: string; subfield: string; cepGroup: string; cepSubfield: string }>();
   const re = /<span\b[^>]*\bdata-fillable-field\s*=\s*"([^"]*)"[^>]*>/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(html)) !== null) {
@@ -32,7 +37,9 @@ function extractFillableMeta(html: string): Map<string, { group: string; subfiel
       .replace(/^\[\[/, "").replace(/\]\]$/, "").trim();
     const g = /data-cnpj-group\s*=\s*"([^"]*)"/i.exec(tag)?.[1] || "";
     const s = /data-cnpj-subfield\s*=\s*"([^"]*)"/i.exec(tag)?.[1] || "";
-    if (!map.has(token)) map.set(token, { group: g, subfield: s });
+    const cg = /data-cep-group\s*=\s*"([^"]*)"/i.exec(tag)?.[1] || "";
+    const cs = /data-cep-subfield\s*=\s*"([^"]*)"/i.exec(tag)?.[1] || "";
+    if (!map.has(token)) map.set(token, { group: g, subfield: s, cepGroup: cg, cepSubfield: cs });
   }
   return map;
 }
@@ -53,6 +60,7 @@ export function QuickFillDialog({ open, onOpenChange, html, values, onApply }: P
     tokens.forEach(t => {
       let v = values[t.raw] ?? values[t.label] ?? "";
       if (t.tipo === "cnpj" && v) v = maskCnpjValue(v);
+      if (t.tipo === "cep" && v) v = maskCepValue(v);
       d[t.raw] = v;
     });
     setDraft(d);
@@ -140,6 +148,53 @@ export function QuickFillDialog({ open, onOpenChange, html, values, onApply }: P
     }
   };
 
+  // Autofill via ViaCEP para grupos de CEP.
+  const autofillFromCep = async (cepRaw: string, sourceToken: string) => {
+    const clean = cepRaw.replace(/\D/g, "");
+    if (clean.length !== 8) return;
+    try {
+      const resp = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
+      if (!resp.ok) return;
+      const d: any = await resp.json();
+      if (d?.erro) return;
+      const byKey: Record<string, string> = {
+        cep: maskCepValue(clean),
+        logradouro: d.logradouro || "",
+        complemento: d.complemento || "",
+        bairro: d.bairro || "",
+        localidade: d.localidade || "",
+        uf: d.uf || "",
+      };
+      const aliases: Record<string, string> = {};
+      const put = (a: string[], v: string) => a.forEach(x => { aliases[norm(x)] = v; });
+      put(["cep"], byKey.cep);
+      put(["logradouro", "endereco", "rua"], byKey.logradouro);
+      put(["complemento"], byKey.complemento);
+      put(["bairro"], byKey.bairro);
+      put(["municipio", "cidade", "localidade"], byKey.localidade);
+      put(["uf", "estado"], byKey.uf);
+
+      const srcMeta = meta.get(sourceToken);
+      const group = srcMeta?.cepGroup || "";
+      setDraft(prev => {
+        const next = { ...prev };
+        tokens.forEach(t => {
+          const m = meta.get(t.raw);
+          if (group && m?.cepGroup && m.cepGroup !== group) return;
+          if (prev[t.raw] && t.raw !== sourceToken) return;
+          let val = "";
+          if (m?.cepSubfield && byKey[m.cepSubfield] != null) val = byKey[m.cepSubfield];
+          else {
+            const key = norm(t.label);
+            if (key && aliases[key]) val = aliases[key];
+          }
+          if (val) next[t.raw] = val;
+        });
+        return next;
+      });
+    } catch {}
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
@@ -157,6 +212,8 @@ export function QuickFillDialog({ open, onOpenChange, html, values, onApply }: P
             const m = meta.get(tok.raw);
             // Em grupos CNPJ, exibe apenas o sub-campo CNPJ; os demais são preenchidos automaticamente.
             if (m?.group && m.subfield && m.subfield !== "cnpj") return false;
+            // Em grupos CEP, exibe apenas o sub-campo CEP; os demais são preenchidos automaticamente.
+            if (m?.cepGroup && m.cepSubfield && m.cepSubfield !== "cep") return false;
             return true;
           }).map(tok => {
             const v = draft[tok.raw] ?? "";
@@ -177,6 +234,14 @@ export function QuickFillDialog({ open, onOpenChange, html, values, onApply }: P
                     onChange={e => setV(tok.raw, maskCnpjValue(e.target.value))}
                     onBlur={e => autofillFromCnpj(e.target.value, tok.raw)}
                     disabled={loadingCnpj === tok.raw}
+                  />
+                ) : tok.tipo === "cep" ? (
+                  <Input
+                    value={v}
+                    placeholder="00000-000"
+                    inputMode="numeric"
+                    onChange={e => setV(tok.raw, maskCepValue(e.target.value))}
+                    onBlur={e => autofillFromCep(e.target.value, tok.raw)}
                   />
                 ) : tok.tipo === "check" ? (
                   <div className="flex items-center gap-2">
