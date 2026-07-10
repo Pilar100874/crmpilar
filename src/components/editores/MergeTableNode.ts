@@ -119,7 +119,9 @@ export const MergeTable = Node.create({
       align: { default: "left" },
       extraCols: { default: [] },
       totalsRow: { default: false },
+      width: { default: "100%" },
     };
+
   },
 
   parseHTML() {
