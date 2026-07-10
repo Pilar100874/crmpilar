@@ -611,35 +611,33 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-sm font-medium flex items-center gap-1"><Calculator className="h-4 w-4" /> Campos calculados</label>
-                    <Button size="sm" variant="outline" onClick={addCalc}><Plus className="h-3.5 w-3.5 mr-1" /> Fórmula</Button>
+                    <label className="text-sm font-medium flex items-center gap-1"><Calculator className="h-4 w-4" /> Campos calculados / totalizadores</label>
+                    <Button size="sm" variant="outline" onClick={() => { setFormulaEditIndex((cfg.calculados ?? []).length); setFormulaOpen(true); }}>
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Nova fórmula
+                    </Button>
                   </div>
                   <div className="space-y-1">
-                    {(cfg.calculados ?? []).map((c, i) => {
-                      const applyExpr = (novo: string) => { const n = [...(cfg.calculados ?? [])]; n[i] = { ...c, expressao: novo }; setCfg({ ...cfg, calculados: n }); };
-                      return (
-                        <div key={i} className="flex gap-1 items-center">
-                          <Input value={c.nome} onChange={e => { const n = [...(cfg.calculados ?? [])]; n[i] = { ...c, nome: e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase() }; setCfg({ ...cfg, calculados: n }); }}
-                            placeholder="nome" className="h-8 text-xs w-32" />
-                          <span className="text-xs">=</span>
-                          <Input value={c.expressao} onChange={e => applyExpr(e.target.value)}
-                            onDragOver={e => e.preventDefault()}
-                            onDrop={e => {
-                              e.preventDefault();
-                              const tok = e.dataTransfer.getData("text/plain");
-                              if (!tok) return;
-                              let insert = "";
-                              if (tok.startsWith("__OP__")) insert = ` ${tok.slice(6)} `;
-                              else if (tok.startsWith("__FN__")) insert = `${tok.slice(6)}()`;
-                              else insert = `{{${tok}}}`;
-                              applyExpr((c.expressao || "") + insert);
-                            }}
-                            placeholder="arraste campos e operadores aqui" className="h-8 text-xs flex-1 font-mono" />
-                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => rmCalc(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                        </div>
-                      );
-                    })}
-                    {(cfg.calculados ?? []).length === 0 && <p className="text-[11px] text-muted-foreground italic">Ex: <code>total</code> = <code>{`{{itens.preco}} * {{itens.quantidade}}`}</code></p>}
+                    {(cfg.calculados ?? []).map((c, i) => (
+                      <div key={i} className="flex gap-2 items-center border rounded px-2 py-1.5 bg-background hover:bg-muted/40">
+                        <button
+                          type="button"
+                          className="flex-1 text-left text-xs flex items-center gap-2 min-w-0"
+                          onClick={() => { setFormulaEditIndex(i); setFormulaOpen(true); }}
+                        >
+                          <Badge variant="secondary" className="font-mono">{c.nome || "sem_nome"}</Badge>
+                          <span className="text-muted-foreground">=</span>
+                          <code className="font-mono text-[11px] truncate flex-1">{c.expressao || "clique para editar"}</code>
+                        </button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => rmCalc(i)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                    {(cfg.calculados ?? []).length === 0 && (
+                      <p className="text-[11px] text-muted-foreground italic">
+                        Nenhuma fórmula. Clique em <b>Nova fórmula</b> para criar somas, médias e cálculos.
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
