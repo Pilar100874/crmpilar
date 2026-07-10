@@ -22,7 +22,10 @@ export interface MergeTableAttrs {
   extraCols?: ExtraCol[];
   totalsRow?: boolean;
   width?: string; // ex "100%", "560px"
+  colWidths?: (string | null)[];
+  rowHeights?: (string | null)[];
 }
+
 
 
 function fmt(v: any): string {
@@ -52,11 +55,22 @@ function evalFormula(expr: string, row: Record<string, any>): any {
 function buildInner(attrs: MergeTableAttrs): string {
   const cols = attrs.cols || [];
   const extras = attrs.extraCols || [];
+  const totalCols = cols.length + extras.length;
+  const cw = attrs.colWidths || [];
+  const rh = attrs.rowHeights || [];
   const cellStyle = `border:1px solid #ccc;padding:4px;text-align:${attrs.align || "left"};` +
     (attrs.color ? `color:${attrs.color};` : "") +
     (attrs.fontSize ? `font-size:${attrs.fontSize};` : "") +
     (attrs.fontFamily ? `font-family:${attrs.fontFamily};` : "");
   const headStyle = cellStyle + "background:#f4f4f4;font-weight:600;";
+  let colgroup = "";
+  if (cw.length) {
+    colgroup = "<colgroup>" + Array.from({ length: totalCols }).map((_, i) => {
+      const w = cw[i];
+      return w ? `<col style="width:${esc(w)};" />` : "<col />";
+    }).join("") + "</colgroup>";
+  }
+  const rowStyle = (idx: number) => rh[idx] ? ` style="height:${esc(rh[idx]!)};"` : "";
   const th = [...cols, ...extras.map((e) => e.header || "calc")]
     .map((c) => `<th style="${headStyle}">${esc(c)}</th>`).join("");
   const rows = getPreviewRows(attrs.alias);
@@ -70,17 +84,17 @@ function buildInner(attrs: MergeTableAttrs): string {
     if (to > total) to = total;
     if (to < from) to = from;
     displayed = rows.slice(from - 1, to);
-    body = displayed.map((r) => {
+    body = displayed.map((r, ri) => {
       const base = cols.map((c) => `<td style="${cellStyle}">${esc(fmt(r?.[c]))}</td>`).join("");
       const calc = extras.map((e) => {
         const v = evalFormula(e.formula, r || {});
         return `<td style="${cellStyle}">${esc(fmt(v))}</td>`;
       }).join("");
-      return `<tr>${base}${calc}</tr>`;
+      return `<tr${rowStyle(ri + 1)}>${base}${calc}</tr>`;
     }).join("");
   } else {
     const tokenStyle = cellStyle + "font-family:monospace;color:#1e40af;";
-    body = `<tr>${cols
+    body = `<tr${rowStyle(1)}>${cols
       .map((c) => `<td style="${tokenStyle}">{{${esc(attrs.alias)}.${esc(c)}}}</td>`)
       .join("")}${extras.map((e) => `<td style="${cellStyle}">= ${esc(e.formula)}</td>`).join("")}</tr>`;
   }
@@ -95,10 +109,11 @@ function buildInner(attrs: MergeTableAttrs): string {
       const sum = displayed.reduce((a, r) => a + num(evalFormula(e.formula, r || {})), 0);
       return `<td style="${totStyle}">${esc(fmt(sum))}</td>`;
     }).join("");
-    body += `<tr>${totBase}${totCalc}</tr>`;
+    body += `<tr${rowStyle(displayed.length + 1)}>${totBase}${totCalc}</tr>`;
   }
-  return `<thead><tr>${th}</tr></thead><tbody>${body}</tbody>`;
+  return `${colgroup}<thead><tr${rowStyle(0)}>${th}</tr></thead><tbody>${body}</tbody>`;
 }
+
 
 export const MergeTable = Node.create({
   name: "mergeTable",
@@ -120,7 +135,10 @@ export const MergeTable = Node.create({
       extraCols: { default: [] },
       totalsRow: { default: false },
       width: { default: "100%" },
+      colWidths: { default: [] },
+      rowHeights: { default: [] },
     };
+
 
   },
 
@@ -181,9 +199,10 @@ export const MergeTable = Node.create({
       dom.setAttribute("data-merge-table", "1");
       const applyWidth = (w?: string) => {
         const width = w || "100%";
-        dom.style.cssText = `border-collapse:collapse;width:${width};font-size:11pt;cursor:pointer;`;
+        dom.style.cssText = `border-collapse:collapse;width:${width};font-size:11pt;cursor:pointer;table-layout:fixed;`;
         wrapper.style.width = width.endsWith("%") ? width : width;
       };
+
       applyWidth(node.attrs.width);
       const syncAttrs = (n: any) => {
         dom.setAttribute("data-alias", n.attrs.alias);
@@ -244,6 +263,67 @@ export const MergeTable = Node.create({
           return true;
         }).run();
       };
+
+      // Redimensionamento de linhas/colunas estilo Word
+      const EDGE = 6;
+      dom.addEventListener("mousemove", (e) => {
+        const cell = (e.target as HTMLElement).closest("td, th") as HTMLTableCellElement | null;
+        if (!cell) { dom.style.cursor = "pointer"; return; }
+        const r = cell.getBoundingClientRect();
+        const nearRight = r.right - e.clientX < EDGE;
+        const nearBottom = r.bottom - e.clientY < EDGE;
+        dom.style.cursor = nearRight ? "col-resize" : nearBottom ? "row-resize" : "pointer";
+      });
+      dom.addEventListener("mousedown", (e) => {
+        if (!editor.isEditable) return;
+        const cell = (e.target as HTMLElement).closest("td, th") as HTMLTableCellElement | null;
+        if (!cell) return;
+        const r = cell.getBoundingClientRect();
+        const nearRight = r.right - e.clientX < EDGE;
+        const nearBottom = r.bottom - e.clientY < EDGE;
+        if (!nearRight && !nearBottom) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const row = cell.parentElement as HTMLTableRowElement;
+        const rowIdx = row.rowIndex;
+        const colIdx = cell.cellIndex;
+        const startX = e.clientX, startY = e.clientY;
+        const startW = r.width, startH = r.height;
+        let lastW = startW, lastH = startH;
+        const onMove = (m: MouseEvent) => {
+          if (nearRight) {
+            lastW = Math.max(30, startW + (m.clientX - startX));
+            Array.from(dom.querySelectorAll("tr")).forEach((tr) => {
+              const c = (tr as HTMLTableRowElement).cells[colIdx];
+              if (c) c.style.width = `${Math.round(lastW)}px`;
+            });
+          }
+          if (nearBottom) {
+            lastH = Math.max(18, startH + (m.clientY - startY));
+            row.style.height = `${Math.round(lastH)}px`;
+          }
+        };
+        const onUp = () => {
+          window.removeEventListener("mousemove", onMove);
+          window.removeEventListener("mouseup", onUp);
+          const patch: Partial<MergeTableAttrs> = {};
+          if (nearRight) {
+            const cw = [...((node.attrs.colWidths || []) as (string | null)[])];
+            cw[colIdx] = `${Math.round(lastW)}px`;
+            patch.colWidths = cw;
+          }
+          if (nearBottom) {
+            const rh = [...((node.attrs.rowHeights || []) as (string | null)[])];
+            rh[rowIdx] = `${Math.round(lastH)}px`;
+            patch.rowHeights = rh;
+          }
+          update(patch);
+        };
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onUp);
+      });
+
+
       const openFormulaPicker = (
         initial: string,
         target: "extra" | "row",
