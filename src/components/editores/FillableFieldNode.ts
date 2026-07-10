@@ -174,15 +174,24 @@ function askGroupMethod(anchor: HTMLElement, group: string) {
   showInlinePopover(anchor, (close) => {
     const wrap = document.createElement("div");
     const title = document.createElement("div");
-    title.textContent = "Como deseja preencher os campos deste CNPJ?";
+    title.textContent = "Deseja alimentar os campos pelo CNPJ?";
     title.style.cssText = "font-weight:600;margin-bottom:8px;";
-    const auto = makeBtn("Buscar pelo CNPJ", true);
-    const manual = makeBtn("Digitar manualmente");
+    const auto = makeBtn("Sim, buscar pelo CNPJ", true);
+    const manual = makeBtn("Não, digitar manualmente");
     auto.addEventListener("click", () => {
       close();
       const cnpjEl = document.querySelector<HTMLInputElement>(
         `[data-cnpj-group="${CSS.escape(group)}"][data-cnpj-subfield="cnpj"] input[data-cnpj-autofill="1"]`
       );
+      const clean = (cnpjEl?.value || "").replace(/\D/g, "");
+      if (clean.length === 14) {
+        // Já tem CNPJ preenchido: busca e aplica imediatamente em todos os campos do grupo.
+        void autofillCnpj(clean, group, true)
+          .then(() => cnpjGroupState.set(group, "loaded"))
+          .catch((e) => console.warn("[cnpj autofill]", e));
+        return;
+      }
+      // Sem CNPJ ainda: envia foco para o campo CNPJ para digitação.
       if (cnpjEl) {
         const prev = cnpjEl.style.background;
         cnpjEl.style.background = "#fde68a";
@@ -233,15 +242,22 @@ function askCepGroupMethod(anchor: HTMLElement, group: string) {
   showInlinePopover(anchor, (close) => {
     const wrap = document.createElement("div");
     const title = document.createElement("div");
-    title.textContent = "Como deseja preencher os campos deste endereço?";
+    title.textContent = "Deseja alimentar os campos pelo CEP?";
     title.style.cssText = "font-weight:600;margin-bottom:8px;";
-    const auto = makeBtn("Buscar pelo CEP", true);
-    const manual = makeBtn("Digitar manualmente");
+    const auto = makeBtn("Sim, buscar pelo CEP", true);
+    const manual = makeBtn("Não, digitar manualmente");
     auto.addEventListener("click", () => {
       close();
       const cepEl = document.querySelector<HTMLInputElement>(
         `[data-cep-group="${CSS.escape(group)}"][data-cep-subfield="cep"] input[data-cep-autofill="1"]`
       );
+      const clean = (cepEl?.value || "").replace(/\D/g, "");
+      if (clean.length === 8) {
+        void autofillCep(clean, group, true)
+          .then(() => cepGroupState.set(group, "loaded"))
+          .catch((e) => console.warn("[cep autofill]", e));
+        return;
+      }
       if (cepEl) {
         const prev = cepEl.style.background;
         cepEl.style.background = "#fde68a";
@@ -446,9 +462,7 @@ export const FillableField = Node.create({
         if (!cnpjGroup || !cnpjSubfield) return;
         if (cnpjSubfield === "cnpj") return;
         input.addEventListener("focus", () => {
-          const v = (input as HTMLInputElement | HTMLTextAreaElement).value;
-          if (v && v.trim()) return;
-          if (cnpjGroupState.get(cnpjGroup)) return;
+          // Sempre pergunta ao entrar em um campo do grupo (documento aberto/desbloqueado).
           askGroupMethod(input, cnpjGroup);
         }, { once: false });
       };
@@ -457,9 +471,6 @@ export const FillableField = Node.create({
         if (!cepGroup || !cepSubfield) return;
         if (cepSubfield === "cep") return;
         input.addEventListener("focus", () => {
-          const v = (input as HTMLInputElement | HTMLTextAreaElement).value;
-          if (v && v.trim()) return;
-          if (cepGroupState.get(cepGroup)) return;
           askCepGroupMethod(input, cepGroup);
         }, { once: false });
       };
