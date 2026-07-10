@@ -138,7 +138,7 @@ export const BloqueioCombustivelDialog: React.FC<BloqueioCombustivelDialogProps>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Fuel className="h-5 w-5 text-primary" />
-            Corte de Combustível
+            Bloqueio de combustível
           </DialogTitle>
           <DialogDescription>
             {veiculo ? <>Veículo <strong>{veiculo.placa}</strong>{veiculo.motorista ? ` — ${veiculo.motorista}` : ''}</> : ''}
