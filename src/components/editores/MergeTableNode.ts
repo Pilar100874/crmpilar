@@ -146,25 +146,23 @@ export const MergeTable = Node.create({
     ];
   },
 
-  renderHTML({ node, HTMLAttributes }) {
+  renderHTML({ node }) {
     const attrs = node.attrs as MergeTableAttrs;
-    return [
-      "table",
-      mergeAttributes(HTMLAttributes, {
-        "data-merge-table": "1",
-        "data-alias": attrs.alias,
-        "data-cols": (attrs.cols || []).join(","),
-        "data-from": String(attrs.from ?? 1),
-        "data-to": String(attrs.to ?? 0),
-        "data-color": attrs.color || "",
-        "data-font-size": attrs.fontSize || "",
-        "data-font-family": attrs.fontFamily || "",
-        "data-align": attrs.align || "left",
-        "data-extra-cols": JSON.stringify(attrs.extraCols || []),
-        "data-totals": attrs.totalsRow ? "1" : "0",
-        style: "border-collapse:collapse;width:100%;font-size:11pt;",
-      }),
-    ];
+    const table = document.createElement("table");
+    table.setAttribute("data-merge-table", "1");
+    table.setAttribute("data-alias", attrs.alias || "");
+    table.setAttribute("data-cols", (attrs.cols || []).join(","));
+    table.setAttribute("data-from", String(attrs.from ?? 1));
+    table.setAttribute("data-to", String(attrs.to ?? 0));
+    table.setAttribute("data-color", attrs.color || "");
+    table.setAttribute("data-font-size", attrs.fontSize || "");
+    table.setAttribute("data-font-family", attrs.fontFamily || "");
+    table.setAttribute("data-align", attrs.align || "left");
+    table.setAttribute("data-extra-cols", JSON.stringify(attrs.extraCols || []));
+    table.setAttribute("data-totals", attrs.totalsRow ? "1" : "0");
+    table.setAttribute("style", "border-collapse:collapse;width:100%;font-size:11pt;");
+    table.innerHTML = buildInner(attrs);
+    return table;
   },
 
   addNodeView() {
