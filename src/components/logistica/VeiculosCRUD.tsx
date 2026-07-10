@@ -307,9 +307,17 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       return;
     }
 
-    const partes = [nomeVeiculo];
-    if (tipoVeiculo) partes.push(tipoVeiculo);
-    const mensagem = `${partes.join(' - ')}#`;
+    const model = trackerModels.find(m => m.id === formData.tracker_model_id);
+    if (!model) {
+      toast.error('Selecione o modelo do rastreador');
+      return;
+    }
+
+    const nomeParaSms = [nomeVeiculo, tipoVeiculo].filter(Boolean).join(' - ');
+    const mensagem = buildTrackerParametersSms({
+      ...modelComOperadora(model),
+      nome: nomeParaSms,
+    });
 
     try {
       setEnviandoSms(true);
