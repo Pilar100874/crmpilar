@@ -146,10 +146,22 @@ export function EditorToolbar({
               </TB>
             )}
             {onGeneratePdf && (
-              <TB onClick={onGeneratePdf} title="Gerar PDF"><FileDown className="h-4 w-4" /></TB>
+              <TB
+                onClick={onGeneratePdf}
+                disabled={pendingFillables > 0}
+                title={pendingFillables > 0 ? `Preencha ${pendingFillables} campo(s) pendente(s) para gerar o PDF` : "Gerar PDF"}
+              >
+                <FileDown className={cn("h-4 w-4", pendingFillables > 0 && "opacity-50")} />
+              </TB>
             )}
             {onPrint && (
-              <TB onClick={onPrint} title="Imprimir"><Printer className="h-4 w-4" /></TB>
+              <TB
+                onClick={onPrint}
+                disabled={pendingFillables > 0}
+                title={pendingFillables > 0 ? `Preencha ${pendingFillables} campo(s) pendente(s) para imprimir` : "Imprimir"}
+              >
+                <Printer className={cn("h-4 w-4", pendingFillables > 0 && "opacity-50")} />
+              </TB>
             )}
           </>
         )}
