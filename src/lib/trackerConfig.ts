@@ -33,8 +33,37 @@ export interface ConfigureResult {
   error?: string;
 }
 
+export interface RenderedTrackerCommand extends SmsCommand {
+  rendered: string;
+}
+
 export function renderTemplate(tpl: string, ctx: Record<string, string>): string {
   return tpl.replace(/\{(\w+)\}/g, (_m, key) => (ctx[key] ?? ''));
+}
+
+function buildTrackerTemplateContext(model: TrackerModelLite): Record<string, string> {
+  return {
+    host: model.host || '',
+    port: String(model.porta || ''),
+    password: model.senha_padrao || '',
+    apn: model.apn || '',
+    apn_user: model.apn_user || '',
+    apn_password: model.apn_password || '',
+  };
+}
+
+export function getTrackerRenderedCommands(model: TrackerModelLite): RenderedTrackerCommand[] {
+  const ctx = buildTrackerTemplateContext(model);
+  const cmds = Array.isArray(model.sms_commands) ? model.sms_commands : [];
+
+  return cmds
+    .filter((cmd) => !/RELAY,\s*[01]\s*#/i.test(cmd.template))
+    .map((cmd) => ({ ...cmd, rendered: renderTemplate(cmd.template, ctx) }));
+}
+
+export function buildTrackerParametersSms(model: TrackerModelLite): string {
+  const comandos = getTrackerRenderedCommands(model).map((cmd) => cmd.rendered).filter(Boolean);
+  return `PARAMETROS RASTREADOR ${model.nome}: ${comandos.join(' | ')}`;
 }
 
 /** Configure a physical GPS tracker by sending its SMS commands to the SIM number */
@@ -45,16 +74,7 @@ export async function configurarRastreador(params: {
   model: TrackerModelLite;
 }): Promise<ConfigureResult> {
   const { estabelecimentoId, veiculoId, telefone, model } = params;
-  const ctx: Record<string, string> = {
-    host: model.host || '',
-    port: String(model.porta || ''),
-    password: model.senha_padrao || '',
-    apn: model.apn || '',
-    apn_user: model.apn_user || '',
-    apn_password: model.apn_password || '',
-  };
-
-  const cmds = Array.isArray(model.sms_commands) ? model.sms_commands : [];
+  const cmds = getTrackerRenderedCommands(model);
   if (cmds.length === 0) {
     return { status: 'sem_comandos', log: [] };
   }
@@ -65,14 +85,11 @@ export async function configurarRastreador(params: {
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
   for (const cmd of cmds) {
-    // Skip fuel-cut commands during initial provisioning
-    if (/RELAY,\s*[01]\s*#/i.test(cmd.template)) continue;
-
-    // Espaça envios em 5s para evitar bloqueio anti-flood da operadora
+    // Espaça envios em 10s para evitar bloqueio anti-flood da operadora
     if (sentAny) await sleep(10000);
     sentAny = true;
 
-    const rendered = renderTemplate(cmd.template, ctx);
+    const rendered = cmd.rendered;
     const at = new Date().toISOString();
     try {
       const { data, error } = await supabase.functions.invoke('send-sms', {
