@@ -22,7 +22,10 @@ export interface MergeTableAttrs {
   extraCols?: ExtraCol[];
   totalsRow?: boolean;
   width?: string; // ex "100%", "560px"
+  colWidths?: (string | null)[];
+  rowHeights?: (string | null)[];
 }
+
 
 
 function fmt(v: any): string {
