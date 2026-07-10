@@ -334,11 +334,17 @@ export default function ModeloEditor() {
     toast.success(novo ? "Estrutura travada — apenas campos de formulário podem ser preenchidos" : "Estrutura liberada");
   };
 
-  const salvarComo = async () => {
+  const salvarComo = () => {
     if (!modelo || !estabId) return;
-    const label = isAdmin ? "modelo" : "arquivo";
-    const novoTitulo = window.prompt(`Nome do novo ${label}:`, `${modelo.titulo} (cópia)`);
-    if (!novoTitulo) return;
+    setSalvarComoTitulo(`${modelo.titulo} (cópia)`);
+    setSalvarComoOpen(true);
+  };
+
+  const confirmarSalvarComo = async () => {
+    if (!modelo || !estabId) return;
+    const novoTitulo = salvarComoTitulo.trim();
+    if (!novoTitulo) { toast.error("Informe um nome"); return; }
+    setSalvarComoLoading(true);
     const { data, error } = await supabase.from("doc_modelos").insert({
       estabelecimento_id: estabId,
       titulo: novoTitulo,
@@ -354,7 +360,9 @@ export default function ModeloEditor() {
       is_modelo: isAdmin,
       owner_user_id: isAdmin ? null : usuarioId,
     } as any).select("id").single();
+    setSalvarComoLoading(false);
     if (error) { toast.error(error.message); return; }
+    setSalvarComoOpen(false);
     toast.success("Cópia criada");
     if (data?.id) nav(`/editores/modelos/${data.id}`);
   };
