@@ -132,6 +132,11 @@ export default function ModeloEditor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [configsKey]);
 
+  // Com o modelo bloqueado, força a visualização ativa (ícone sempre ligado).
+  useEffect(() => {
+    if (modelo?.bloqueado && !showResolved) setShowResolved(true);
+  }, [modelo?.bloqueado, showResolved]);
+
   // Publica valores no store para os chips renderizarem o valor real
   useEffect(() => {
     setPreviewActive(showResolved);
