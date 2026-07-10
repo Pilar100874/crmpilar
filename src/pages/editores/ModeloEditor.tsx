@@ -98,6 +98,14 @@ export default function ModeloEditor() {
     return { total, pendentes };
   }, [html, fillableValues]);
 
+  // Sincroniza estado local com atualizações feitas diretamente nos inputs inline
+  useEffect(() => {
+    const unsub = subscribeFillable(() => {
+      setFillableValues({ ...getFillableValues() });
+    });
+    return unsub;
+  }, []);
+
   // Carrega registros de cada vínculo para o preview inline dos chips
   useEffect(() => {
     let cancelled = false;
