@@ -9,9 +9,9 @@ import { Link } from "react-router-dom";
 // Fallback fixo caso version.json esteja indisponível.
 const COLETOR_FALLBACK_URL = "https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Setup.exe";
 const COLETOR_FALLBACK_FILENAME = "ColetorPilar-Setup.exe";
-const SMS_FALLBACK_URL = "https://github.com/Pilar100874/crmpilar/releases/latest/download/pilar-sms-v1.4.0-debug.apk";
-const SMS_FALLBACK_FILENAME = "pilar-sms-v1.4.0-debug.apk";
-const SMS_FALLBACK_VERSION = "1.4.0";
+const SMS_FALLBACK_URL = "/coletor/pilar-sms-v1.4.5-local-debug.apk";
+const SMS_FALLBACK_FILENAME = "pilar-sms-v1.4.5-local-debug.apk";
+const SMS_FALLBACK_VERSION = "1.4.5";
 
 interface BIPEvent extends Event {
   prompt: () => Promise<void>;
