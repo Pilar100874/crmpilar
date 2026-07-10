@@ -1,12 +1,6 @@
 name: Build Pilar SMS APK
 
 on:
-  push:
-    paths:
-      - 'pilar-sms-app/**'
-      - '.github/workflows/build-pilar-sms.yml'
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
