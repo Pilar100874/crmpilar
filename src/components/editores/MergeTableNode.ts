@@ -451,19 +451,28 @@ export const MergeTable = Node.create({
           }
           const act = t.getAttribute("data-a");
           if (!act) return;
+          if (act === "al-left" || act === "al-center" || act === "al-right") {
+            const align = act.replace("al-", "") as "left" | "center" | "right";
+            update({ align });
+            setTimeout(() => openToolbar(), 0);
+            return;
+          }
           if (act === "apply") {
             const from = Number((toolbar!.querySelector('[data-k="from"]') as HTMLInputElement).value) || 1;
             const to = Number((toolbar!.querySelector('[data-k="to"]') as HTMLInputElement).value) || 0;
             const widthRaw = ((toolbar!.querySelector('[data-k="width"]') as HTMLInputElement).value || "100%").trim();
             const width = /^\d+$/.test(widthRaw) ? `${widthRaw}px` : widthRaw;
             const totalsRow = (toolbar!.querySelector('[data-a="totals"]') as HTMLInputElement).checked;
+            const color = (toolbar!.querySelector('[data-k="color"]') as HTMLInputElement).value || null;
+            const fontSize = ((toolbar!.querySelector('[data-k="fontSize"]') as HTMLInputElement).value || "").trim() || null;
+            const fontFamily = ((toolbar!.querySelector('[data-k="fontFamily"]') as HTMLSelectElement).value || "").trim() || null;
             const extras: ExtraCol[] = [];
             const existing = (node.attrs.extraCols || []) as ExtraCol[];
             toolbar!.querySelectorAll('[data-ex="h"]').forEach((el, i) => {
               const h = (el as HTMLInputElement).value;
               extras.push({ header: h, formula: existing[i]?.formula || "" });
             });
-            update({ from, to, width, totalsRow, extraCols: extras });
+            update({ from, to, width, totalsRow, extraCols: extras, color, fontSize, fontFamily });
             closeToolbar();
 
           } else if (act === "addcol") {
