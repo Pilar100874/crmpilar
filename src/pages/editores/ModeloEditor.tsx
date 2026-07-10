@@ -67,6 +67,13 @@ export default function ModeloEditor() {
   const [fillableValues, setFillableValues] = useState<Record<string, string>>({});
   const [exitPromptOpen, setExitPromptOpen] = useState(false);
 
+  // Sincroniza estado local com o store para refletir digitação inline nos campos.
+  useEffect(() => {
+    const sync = () => setFillableValues({ ...getFillableValues() });
+    sync();
+    return subscribeFillable(sync);
+  }, []);
+
 
   // Normaliza merge_config para array de configs (aceita objeto legado)
   const configs = useMemo<any[]>(() => {
