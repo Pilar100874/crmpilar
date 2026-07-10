@@ -185,6 +185,8 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
   const [busca, setBusca] = useState("");
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set(initialSelected ?? []));
   const [importOpen, setImportOpen] = useState(false);
+  const [formulaOpen, setFormulaOpen] = useState(false);
+  const [formulaEditIndex, setFormulaEditIndex] = useState<number>(-1);
 
   const importedDatasets = useSyncExternalStore(subscribeDatasets, getAllDatasets, getAllDatasets);
 
