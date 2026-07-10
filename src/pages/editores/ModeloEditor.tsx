@@ -558,6 +558,7 @@ export default function ModeloEditor() {
           onSearchEstoque={() => setEstoqueSearchOpen(true)}
           onGeneratePdf={gerarPdf}
           onPrint={imprimir}
+          pendingFillables={fillablesInfo.pendentes}
         />
         </div>
 
