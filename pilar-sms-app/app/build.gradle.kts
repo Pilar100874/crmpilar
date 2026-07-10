@@ -11,8 +11,8 @@ android {
         applicationId = "br.com.pilar.sms"
         minSdk = 21
         targetSdk = 34
-        versionCode = 12
-        versionName = "1.4.4"
+        versionCode = 13
+        versionName = "1.4.5"
     }
 
     signingConfigs {
@@ -47,7 +47,4 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     // Coroutines para o polling em background
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
-    // JSON
-    implementation("org.json:json:20240303")
-
 }
