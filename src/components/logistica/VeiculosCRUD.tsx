@@ -720,7 +720,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             </div>
 
             {/* Telefone único usado pelos dois blocos */}
-            <div className="border rounded-lg p-3 bg-muted/30">
+            <div className="border rounded-lg p-3 bg-muted/30 space-y-2">
               <Label className="text-xs">Telefone do chip / SIM do equipamento</Label>
               <Input
                 value={formData.telefone_sms}
@@ -728,9 +728,25 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 placeholder="+5511999999999"
                 className="mt-1"
               />
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Usado tanto para configurar o rastreador quanto para enviar os dados do veículo por SMS.
-              </p>
+              <div>
+                <Label className="text-xs">Tipo do chip</Label>
+                <Select
+                  value={formData.tipo_chip}
+                  onValueChange={(v) => setFormData(prev => ({ ...prev, tipo_chip: v as 'normal' | 'm2m' }))}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="m2m">M2M / Equipamento rastreador</SelectItem>
+                    <SelectItem value="normal">Celular normal (teste — Android/iOS)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Use <b>Celular normal</b> para testes: o SMS será enviado a um telefone comum via app Pilar SMS (Android/iOS).
+                  Selecione <b>M2M</b> quando o chip estiver no equipamento rastreador em campo.
+                </p>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
