@@ -122,9 +122,9 @@ object SmsSender {
             }
 
             val finished = sentLatch.await(20, TimeUnit.SECONDS)
-            val finalCode = if (!finished) Activity.RESULT_OK else worstCode
+            val finalCode = if (!finished) Activity.RESULT_OK else worstCode.get()
             val (errName, errDesc) = describe(finalCode)
-            val ok = !anyFailure || finalCode == Activity.RESULT_OK
+            val ok = !anyFailure.get() || finalCode == Activity.RESULT_OK
             Log.i(TAG, "DONE send to=$to len=${text.length} parts=${parts.size} code=$finalCode ok=$ok")
             return Result(
                 ok = ok || finalCode == Activity.RESULT_OK,
