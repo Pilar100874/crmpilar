@@ -181,10 +181,12 @@ export function useNormalTableHandles(editor: Editor | null, rootRef: HTMLElemen
     const onScroll = () => position();
 
     rootRef.addEventListener("click", onClick);
+    rootRef.addEventListener("mousedown", onMouseDown);
     rootRef.addEventListener("scroll", onScroll, true);
     window.addEventListener("resize", onScroll);
     return () => {
       rootRef.removeEventListener("click", onClick);
+      rootRef.removeEventListener("mousedown", onMouseDown);
       rootRef.removeEventListener("scroll", onScroll, true);
       window.removeEventListener("resize", onScroll);
       cleanup();
