@@ -546,7 +546,16 @@ export default function ModeloEditor() {
   };
 
 
-  if (!modelo) return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
+  if (!modelo) return (
+    <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center">
+      <div className="w-[360px] max-w-[90vw] rounded-lg border bg-card shadow-lg p-5 space-y-3">
+        <div className="text-sm font-medium">{loadMsg}</div>
+        <Progress value={loadProgress ?? 10} />
+        <div className="text-xs text-muted-foreground text-right">{Math.round(loadProgress ?? 10)}%</div>
+      </div>
+    </div>
+  );
+
 
   const mc = modelo.merge_config;
   const baseMcFrom = (m: any) => (m && typeof m === "object" && !Array.isArray(m) ? { ...m } : {});
