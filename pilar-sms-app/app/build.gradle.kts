@@ -11,12 +11,26 @@ android {
         applicationId = "br.com.pilar.sms"
         minSdk = 21
         targetSdk = 34
-        versionCode = 13
-        versionName = "1.4.5"
+        versionCode = 14
+        versionName = "1.4.6"
     }
 
     signingConfigs {
+        create("pilar") {
+            storeFile = file("pilar-release.keystore")
+            storePassword = "pilarsms"
+            keyAlias = "pilar"
+            keyPassword = "pilarsms"
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = false
+        }
         getByName("debug") {
+            storeFile = file("pilar-release.keystore")
+            storePassword = "pilarsms"
+            keyAlias = "pilar"
+            keyPassword = "pilarsms"
             enableV1Signing = true
             enableV2Signing = true
             enableV3Signing = true
@@ -25,8 +39,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("pilar")
+        }
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("pilar")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
