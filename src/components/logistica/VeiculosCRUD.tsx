@@ -243,6 +243,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
           .from('veiculos')
           .update({
             telefone_sms: formData.telefone_sms || null,
+            tipo_chip: formData.tipo_chip || 'm2m',
             tracker_model_id: formData.tracker_model_id || null,
           } as any)
           .eq('id', veiculoId);
