@@ -15,9 +15,19 @@ android {
         versionName = "1.3.1"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("pilar-release.jks")
+            storePassword = "pilar123"
+            keyAlias = "pilar"
+            keyPassword = "pilar123"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
