@@ -148,6 +148,53 @@ export function QuickFillDialog({ open, onOpenChange, html, values, onApply }: P
     }
   };
 
+  // Autofill via ViaCEP para grupos de CEP.
+  const autofillFromCep = async (cepRaw: string, sourceToken: string) => {
+    const clean = cepRaw.replace(/\D/g, "");
+    if (clean.length !== 8) return;
+    try {
+      const resp = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
+      if (!resp.ok) return;
+      const d: any = await resp.json();
+      if (d?.erro) return;
+      const byKey: Record<string, string> = {
+        cep: maskCepValue(clean),
+        logradouro: d.logradouro || "",
+        complemento: d.complemento || "",
+        bairro: d.bairro || "",
+        localidade: d.localidade || "",
+        uf: d.uf || "",
+      };
+      const aliases: Record<string, string> = {};
+      const put = (a: string[], v: string) => a.forEach(x => { aliases[norm(x)] = v; });
+      put(["cep"], byKey.cep);
+      put(["logradouro", "endereco", "rua"], byKey.logradouro);
+      put(["complemento"], byKey.complemento);
+      put(["bairro"], byKey.bairro);
+      put(["municipio", "cidade", "localidade"], byKey.localidade);
+      put(["uf", "estado"], byKey.uf);
+
+      const srcMeta = meta.get(sourceToken);
+      const group = srcMeta?.cepGroup || "";
+      setDraft(prev => {
+        const next = { ...prev };
+        tokens.forEach(t => {
+          const m = meta.get(t.raw);
+          if (group && m?.cepGroup && m.cepGroup !== group) return;
+          if (prev[t.raw] && t.raw !== sourceToken) return;
+          let val = "";
+          if (m?.cepSubfield && byKey[m.cepSubfield] != null) val = byKey[m.cepSubfield];
+          else {
+            const key = norm(t.label);
+            if (key && aliases[key]) val = aliases[key];
+          }
+          if (val) next[t.raw] = val;
+        });
+        return next;
+      });
+    } catch {}
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
