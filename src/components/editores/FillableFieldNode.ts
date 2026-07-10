@@ -242,15 +242,22 @@ function askCepGroupMethod(anchor: HTMLElement, group: string) {
   showInlinePopover(anchor, (close) => {
     const wrap = document.createElement("div");
     const title = document.createElement("div");
-    title.textContent = "Como deseja preencher os campos deste endereço?";
+    title.textContent = "Deseja alimentar os campos pelo CEP?";
     title.style.cssText = "font-weight:600;margin-bottom:8px;";
-    const auto = makeBtn("Buscar pelo CEP", true);
-    const manual = makeBtn("Digitar manualmente");
+    const auto = makeBtn("Sim, buscar pelo CEP", true);
+    const manual = makeBtn("Não, digitar manualmente");
     auto.addEventListener("click", () => {
       close();
       const cepEl = document.querySelector<HTMLInputElement>(
         `[data-cep-group="${CSS.escape(group)}"][data-cep-subfield="cep"] input[data-cep-autofill="1"]`
       );
+      const clean = (cepEl?.value || "").replace(/\D/g, "");
+      if (clean.length === 8) {
+        void autofillCep(clean, group, true)
+          .then(() => cepGroupState.set(group, "loaded"))
+          .catch((e) => console.warn("[cep autofill]", e));
+        return;
+      }
       if (cepEl) {
         const prev = cepEl.style.background;
         cepEl.style.background = "#fde68a";
