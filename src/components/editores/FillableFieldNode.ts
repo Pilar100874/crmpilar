@@ -174,15 +174,24 @@ function askGroupMethod(anchor: HTMLElement, group: string) {
   showInlinePopover(anchor, (close) => {
     const wrap = document.createElement("div");
     const title = document.createElement("div");
-    title.textContent = "Como deseja preencher os campos deste CNPJ?";
+    title.textContent = "Deseja alimentar os campos pelo CNPJ?";
     title.style.cssText = "font-weight:600;margin-bottom:8px;";
-    const auto = makeBtn("Buscar pelo CNPJ", true);
-    const manual = makeBtn("Digitar manualmente");
+    const auto = makeBtn("Sim, buscar pelo CNPJ", true);
+    const manual = makeBtn("Não, digitar manualmente");
     auto.addEventListener("click", () => {
       close();
       const cnpjEl = document.querySelector<HTMLInputElement>(
         `[data-cnpj-group="${CSS.escape(group)}"][data-cnpj-subfield="cnpj"] input[data-cnpj-autofill="1"]`
       );
+      const clean = (cnpjEl?.value || "").replace(/\D/g, "");
+      if (clean.length === 14) {
+        // Já tem CNPJ preenchido: busca e aplica imediatamente em todos os campos do grupo.
+        void autofillCnpj(clean, group, true)
+          .then(() => cnpjGroupState.set(group, "loaded"))
+          .catch((e) => console.warn("[cnpj autofill]", e));
+        return;
+      }
+      // Sem CNPJ ainda: envia foco para o campo CNPJ para digitação.
       if (cnpjEl) {
         const prev = cnpjEl.style.background;
         cnpjEl.style.background = "#fde68a";
