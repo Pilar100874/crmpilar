@@ -73,11 +73,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (success) {
+    const erroNormalizado = String(erro || '').trim().toUpperCase();
+    const falsoNegativoAndroid = erroNormalizado === 'GENERIC_FAILURE' || erroNormalizado === 'RESULT_ERROR_GENERIC_FAILURE';
+
+    if (success || falsoNegativoAndroid) {
       await supabase.from('sms_queue').update({
         status: 'enviado',
         enviado_at: new Date().toISOString(),
-        erro_mensagem: null,
+        erro_mensagem: falsoNegativoAndroid ? 'Envio confirmado apesar do retorno GENERIC_FAILURE do Android' : null,
       }).eq('id', id);
 
       // Registra em sms_envios para histórico
