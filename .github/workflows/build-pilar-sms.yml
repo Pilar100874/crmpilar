@@ -46,7 +46,7 @@ jobs:
           echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
           echo "Versão detectada: ${VERSION} (code ${CODE}) sha ${SHORT_SHA}"
 
-      - name: Build APK release assinado
+      - name: Build APK release compatível assinado
         run: ./gradlew clean :app:assembleRelease --no-daemon
 
       - name: Renomear APK com versão
@@ -66,7 +66,7 @@ jobs:
           test -s "$APK"
           unzip -t "$APK" >/dev/null
           APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n 1)
-          "$APKSIGNER" verify --verbose --print-certs "$APK"
+          "$APKSIGNER" verify --min-sdk-version 21 --verbose --print-certs "$APK"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -86,7 +86,7 @@ jobs:
             - versionCode: `${{ steps.version.outputs.code }}`
             - commit: `${{ steps.version.outputs.short_sha }}`
 
-            APK release assinado com chave debug do build, pronto para instalação direta no aparelho.
+            APK release compatível assinado com V1+V2+V3, pronto para instalação direta no aparelho.
           files: |
             pilar-sms-app/dist/pilar-sms-v${{ steps.version.outputs.version }}.apk
           fail_on_unmatched_files: true
@@ -108,7 +108,7 @@ jobs:
             j.version = '${VERSION}';
             j.downloadUrl = '${URL}';
             j.filename = '${FILENAME}';
-            j.notas = '1.4.3: compilação alterada para APK release assinado e verificado no GitHub Actions antes de publicar.';
+            j.notas = '${VERSION}: APK recompilado em modo compatível para Android 5+ com assinatura V1+V2+V3, corrigindo erro de análise do pacote em aparelhos antigos.';
             fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
           "
           cat public/coletor/sms-version.json

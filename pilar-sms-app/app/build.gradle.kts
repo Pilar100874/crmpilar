@@ -9,10 +9,19 @@ android {
 
     defaultConfig {
         applicationId = "br.com.pilar.sms"
-        minSdk = 24
+        minSdk = 21
         targetSdk = 34
-        versionCode = 11
-        versionName = "1.4.3"
+        versionCode = 12
+        versionName = "1.4.4"
+    }
+
+    signingConfigs {
+        getByName("debug") {
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = false
+        }
     }
 
     buildTypes {
