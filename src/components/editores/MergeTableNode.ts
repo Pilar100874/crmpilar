@@ -176,26 +176,63 @@ export const MergeTable = Node.create({
   addNodeView() {
     return ({ node, editor, getPos }) => {
       const wrapper = document.createElement("div");
-      wrapper.style.cssText = "position:relative;margin:8px 0;";
+      wrapper.style.cssText = "position:relative;margin:8px 0;display:block;";
       const dom = document.createElement("table");
       dom.setAttribute("data-merge-table", "1");
-      dom.style.cssText = "border-collapse:collapse;width:100%;font-size:11pt;cursor:pointer;";
+      const applyWidth = (w?: string) => {
+        const width = w || "100%";
+        dom.style.cssText = `border-collapse:collapse;width:${width};font-size:11pt;cursor:pointer;`;
+        wrapper.style.width = width.endsWith("%") ? width : width;
+      };
+      applyWidth(node.attrs.width);
       const syncAttrs = (n: any) => {
         dom.setAttribute("data-alias", n.attrs.alias);
         dom.setAttribute("data-cols", (n.attrs.cols || []).join(","));
         dom.setAttribute("data-from", String(n.attrs.from ?? 1));
         dom.setAttribute("data-to", String(n.attrs.to ?? 0));
+        dom.setAttribute("data-width", n.attrs.width || "100%");
+        applyWidth(n.attrs.width);
       };
       syncAttrs(node);
       const render = () => { dom.innerHTML = buildInner(node.attrs as MergeTableAttrs); };
       render();
       const unsub = subscribePreview(render);
 
+      // Handle de redimensionamento (canto inferior direito)
+      const resizeHandle = document.createElement("div");
+      resizeHandle.contentEditable = "false";
+      resizeHandle.title = "Arraste para redimensionar";
+      resizeHandle.style.cssText = "position:absolute;right:-6px;bottom:-6px;width:14px;height:14px;background:#2563eb;border:2px solid #fff;border-radius:3px;cursor:nwse-resize;z-index:20;opacity:0;transition:opacity .15s;";
+      wrapper.addEventListener("mouseenter", () => { resizeHandle.style.opacity = "1"; });
+      wrapper.addEventListener("mouseleave", () => { if (!toolbar) resizeHandle.style.opacity = "0"; });
+      resizeHandle.addEventListener("mousedown", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (!editor.isEditable) return;
+        const startX = ev.clientX;
+        const startW = dom.getBoundingClientRect().width;
+        const parentW = (wrapper.parentElement?.getBoundingClientRect().width || startW);
+        const onMove = (m: MouseEvent) => {
+          const w = Math.max(80, startW + (m.clientX - startX));
+          dom.style.width = `${Math.round(w)}px`;
+          wrapper.style.width = `${Math.round(w)}px`;
+          void parentW;
+        };
+        const onUp = () => {
+          window.removeEventListener("mousemove", onMove);
+          window.removeEventListener("mouseup", onUp);
+          update({ width: dom.style.width });
+        };
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onUp);
+      });
+
       let toolbar: HTMLDivElement | null = null;
       const closeToolbar = () => {
         if (toolbar) { toolbar.remove(); toolbar = null; }
         document.removeEventListener("mousedown", onDocDown, true);
       };
+
       const onDocDown = (e: MouseEvent) => {
         if (toolbar && !toolbar.contains(e.target as globalThis.Node) && !dom.contains(e.target as globalThis.Node)) closeToolbar();
       };
