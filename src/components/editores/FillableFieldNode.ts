@@ -131,7 +131,10 @@ async function autofillCep(cepLimpo: string, group?: string, applyAll = true) {
 
 // Pequeno popover inline, ancorado a um input. Fecha ao clicar fora ou ESC.
 function showInlinePopover(anchor: HTMLElement, buildContent: (close: () => void) => HTMLElement): () => void {
+  // Fecha qualquer popover inline anterior para evitar sobreposição
+  document.querySelectorAll("[data-fillable-popover]").forEach((el) => el.remove());
   const pop = document.createElement("div");
+  pop.setAttribute("data-fillable-popover", "1");
   pop.style.cssText =
     "position:absolute;z-index:9999;background:#fff;border:1px solid #cbd5e1;border-radius:8px;" +
     "box-shadow:0 8px 24px rgba(0,0,0,.15);padding:10px;min-width:220px;font-size:12px;color:#111;";
