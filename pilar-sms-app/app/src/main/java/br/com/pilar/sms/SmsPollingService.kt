@@ -191,6 +191,30 @@ class SmsPollingService : Service() {
         }
     }
 
+    private fun ackDelivery(token: String, id: String, delivered: Boolean, error: String?) {
+        try {
+            val url = URL("$SUPABASE_URL/functions/v1/sms-queue-ack")
+            val conn = url.openConnection() as HttpURLConnection
+            conn.requestMethod = "POST"
+            conn.doOutput = true
+            conn.connectTimeout = 10_000
+            conn.readTimeout = 15_000
+            conn.setRequestProperty("Content-Type", "application/json")
+            conn.setRequestProperty("apikey", ANON_KEY)
+            conn.setRequestProperty("Authorization", "Bearer $ANON_KEY")
+            conn.setRequestProperty("X-Device-Token", token)
+            val body = JSONObject().apply {
+                put("id", id)
+                put("delivered", delivered)
+                if (error != null) put("erro", error)
+            }.toString()
+            conn.outputStream.use { it.write(body.toByteArray()) }
+            conn.responseCode
+        } catch (e: Exception) {
+            Log.w(TAG, "Falha no ack de entrega de $id", e)
+        }
+    }
+
     private fun batteryLevel(): Int {
         return try {
             val bm = getSystemService(Context.BATTERY_SERVICE) as BatteryManager
