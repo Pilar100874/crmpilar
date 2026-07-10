@@ -30,6 +30,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+
 
 
 export default function ModeloEditor() {
@@ -69,6 +71,10 @@ export default function ModeloEditor() {
   const [salvarComoOpen, setSalvarComoOpen] = useState(false);
   const [salvarComoTitulo, setSalvarComoTitulo] = useState("");
   const [salvarComoLoading, setSalvarComoLoading] = useState(false);
+  const [loadProgress, setLoadProgress] = useState<number | null>(null);
+  const [loadMsg, setLoadMsg] = useState<string>("Carregando documento...");
+
+
 
 
   // Normaliza merge_config para array de configs (aceita objeto legado)
@@ -209,14 +215,30 @@ export default function ModeloEditor() {
       return;
     }
     (async () => {
+      setLoadProgress(5);
+      setLoadMsg("Buscando documento...");
       const { data } = await supabase.from("doc_modelos").select("*").eq("id", id).single();
       if (!data) { toast.error("Modelo não encontrado"); nav("/editores"); return; }
+      setLoadProgress(35);
+      setLoadMsg("Preparando conteúdo...");
+      // yield ao browser para pintar o progresso antes do parse pesado
+      await new Promise((r) => setTimeout(r, 30));
       setModelo(data);
-      setHtml((data as any).content_html || "");
+      const contentHtml = (data as any).content_html || "";
+      const sizeKb = Math.round(contentHtml.length / 1024);
+      setLoadMsg(sizeKb > 200 ? `Renderizando tabelas grandes (${sizeKb} KB)...` : "Renderizando conteúdo...");
+      setLoadProgress(65);
+      await new Promise((r) => setTimeout(r, 30));
+      setHtml(contentHtml);
       setJson((data as any).content_json || {});
+      setLoadProgress(90);
+      await new Promise((r) => setTimeout(r, 30));
       const imp = (data as any)?.merge_config?.importedDatasets;
       hydrateDatasets(Array.isArray(imp) ? imp : []);
+      setLoadProgress(100);
+      setTimeout(() => setLoadProgress(null), 250);
     })();
+
   }, [id, isNew, tipoNovo, nav]);
 
   // Aviso ao fechar/atualizar a aba
@@ -526,7 +548,16 @@ export default function ModeloEditor() {
   };
 
 
-  if (!modelo) return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
+  if (!modelo) return (
+    <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center">
+      <div className="w-[360px] max-w-[90vw] rounded-lg border bg-card shadow-lg p-5 space-y-3">
+        <div className="text-sm font-medium">{loadMsg}</div>
+        <Progress value={loadProgress ?? 10} />
+        <div className="text-xs text-muted-foreground text-right">{Math.round(loadProgress ?? 10)}%</div>
+      </div>
+    </div>
+  );
+
 
   const mc = modelo.merge_config;
   const baseMcFrom = (m: any) => (m && typeof m === "object" && !Array.isArray(m) ? { ...m } : {});
