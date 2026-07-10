@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Veiculo } from '@/types/logistica';
-import { configurarRastreador, renderTemplate, TrackerModelLite } from '@/lib/trackerConfig';
+import { buildTrackerParametersSms, configurarRastreador, getTrackerRenderedCommands, TrackerModelLite } from '@/lib/trackerConfig';
 import { OPERADORAS_APN, findOperadoraByApn } from '@/lib/operadorasSms';
 
 interface VeiculosCRUDProps {
@@ -324,6 +324,61 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     }
   };
 
+  const enviarParametrosTrackerSmsUnico = async (
+    model: TrackerModelLite,
+    telefoneOverride?: string,
+    veiculoId?: string | null,
+  ) => {
+    const telefone = telefoneOverride || formData.telefone_sms;
+    if (!telefone) {
+      toast.error('Informe o telefone do chip do rastreador');
+      return false;
+    }
+
+    const mensagem = buildTrackerParametersSms(model);
+    const at = new Date().toISOString();
+
+    try {
+      const { data, error } = await supabase.functions.invoke('send-sms', {
+        body: {
+          estabelecimento_id: estabelecimentoId,
+          destino: telefone,
+          mensagem,
+        },
+      });
+      if (error) throw error;
+
+      const ok = !!(data as any)?.success;
+      if (veiculoId) {
+        await supabase
+          .from('veiculos')
+          .update({
+            tracker_model_id: model.id,
+            tracker_config_status: ok ? 'configurado' : 'falhou',
+            tracker_config_at: at,
+            tracker_config_log: [{
+              label: 'Conferência em celular normal',
+              template: 'sms_unico_parametros',
+              rendered: mensagem,
+              ok,
+              provider_message_id: (data as any)?.provider_message_id ?? null,
+              erro: ok ? null : ((data as any)?.erro || 'Falha ao enviar SMS'),
+              at,
+            }] as any,
+            tracker_config_error: ok ? null : ((data as any)?.erro || 'Falha ao enviar SMS'),
+          } as any)
+          .eq('id', veiculoId);
+      }
+
+      if (ok) toast.success('SMS único de conferência enviado');
+      else toast.error((data as any)?.erro || 'Falha ao enviar SMS');
+      return ok;
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao enviar SMS');
+      return false;
+    }
+  };
+
   const configurarTrackerAgora = async () => {
     if (!formData.telefone_sms) {
       toast.error('Informe o telefone do chip do rastreador');
@@ -341,6 +396,12 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     }
     setConfigurandoTracker(true);
     try {
+      if (formData.tipo_chip === 'normal') {
+        await enviarParametrosTrackerSmsUnico(modelComOperadora(model), formData.telefone_sms, selectedVeiculo?.id || null);
+        fetchVeiculos();
+        return;
+      }
+
       const result = await configurarRastreador({
         estabelecimentoId,
         veiculoId: selectedVeiculo?.id || null,
@@ -810,23 +871,24 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   const baseModel = trackerModels.find(m => m.id === formData.tracker_model_id);
                   if (!baseModel) return null;
                   const model = modelComOperadora(baseModel);
-                  const ctx: Record<string, string> = {
-                    host: model.host || '', port: String(model.porta),
-                    password: model.senha_padrao || '', apn: model.apn || '',
-                    apn_user: model.apn_user || '', apn_password: model.apn_password || '',
-                  };
-                  const cmds = (model.sms_commands || []).filter(c => !/RELAY,\s*[01]\s*#/i.test(c.template));
+                  const cmds = getTrackerRenderedCommands(model);
                   return (
                     <div className="rounded-md border bg-background p-2 space-y-1 max-h-32 overflow-y-auto">
                       <p className="text-[11px] text-muted-foreground mb-1">
-                        SMS que serão enviados ({cmds.length}):
+                        {formData.tipo_chip === 'normal'
+                          ? 'Texto que será enviado em 1 SMS de conferência:'
+                          : `SMS que serão enviados (${cmds.length}):`}
                       </p>
                       {cmds.length === 0 ? (
                         <p className="text-xs text-muted-foreground italic">Sem comandos — configure pelo app.</p>
+                      ) : formData.tipo_chip === 'normal' ? (
+                        <div className="text-[11px] leading-tight break-words">
+                          <code className="text-[10px] break-all">{buildTrackerParametersSms(model)}</code>
+                        </div>
                       ) : cmds.map((c, i) => (
                         <div key={i} className="text-[11px] leading-tight break-words">
                           <span className="font-medium">{c.label}:</span>{' '}
-                          <code className="text-[10px] break-all">{renderTemplate(c.template, ctx)}</code>
+                          <code className="text-[10px] break-all">{c.rendered}</code>
                         </div>
                       ))}
                     </div>
@@ -848,7 +910,9 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 >
                   {configurandoTracker
                     ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Configurando...</>
-                    : <><Radio className="h-4 w-4 mr-2" />Configurar agora</>}
+                    : formData.tipo_chip === 'normal'
+                      ? <><Send className="h-4 w-4 mr-2" />Enviar conferência em 1 SMS</>
+                      : <><Radio className="h-4 w-4 mr-2" />Configurar agora</>}
                 </Button>
 
                 {selectedVeiculo && (selectedVeiculo as any).tracker_config_status && (
