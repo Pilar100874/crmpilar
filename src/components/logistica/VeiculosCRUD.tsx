@@ -268,16 +268,16 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             toast.info('Enviando SMS único de conferência...');
             await enviarParametrosTrackerSmsUnico(modelComOperadora(model), formData.telefone_sms, veiculoId);
           } else {
-          toast.info('Enviando configuração do rastreador por SMS...');
-          const result = await configurarRastreador({
-            estabelecimentoId,
-            veiculoId,
-            telefone: formData.telefone_sms,
-            model: modelComOperadora(model),
-          });
-          if (result.status === 'configurado') toast.success('Rastreador configurado com sucesso!');
-          else if (result.status === 'parcial') toast.warning('Configuração parcial — alguns SMS falharam. Veja o histórico.');
-          else if (result.status === 'falhou') toast.error('Falha na configuração do rastreador');
+            toast.info('Enviando configuração do rastreador por SMS...');
+            const result = await configurarRastreador({
+              estabelecimentoId,
+              veiculoId,
+              telefone: formData.telefone_sms,
+              model: modelComOperadora(model),
+            });
+            if (result.status === 'configurado') toast.success('Rastreador configurado com sucesso!');
+            else if (result.status === 'parcial') toast.warning('Configuração parcial — alguns SMS falharam. Veja o histórico.');
+            else if (result.status === 'falhou') toast.error('Falha na configuração do rastreador');
           }
         }
       }
@@ -359,7 +359,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
           .from('veiculos')
           .update({
             tracker_model_id: model.id,
-            tracker_config_status: ok ? 'configurado' : 'falhou',
+            tracker_config_status: ok ? 'pendente' : 'falhou',
             tracker_config_at: at,
             tracker_config_log: [{
               label: 'Conferência em celular normal',
