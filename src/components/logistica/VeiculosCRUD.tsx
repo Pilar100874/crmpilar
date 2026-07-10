@@ -299,8 +299,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       toast.error('Informe o telefone (SIM do equipamento)');
       return;
     }
-    // Envia apenas os dados cadastrais do veículo. Evita o prefixo
-    // "PARAMETROS RASTREADOR", que pertence ao botão de conferência.
+    // Envia apenas os dados cadastrais do veículo. Usa o envelope do SMS de teste
+    // que já foi confirmado no Android, sem enviar parâmetros de conferência.
     const normalizar = (s: string) =>
       (s || '')
         .normalize('NFD')
@@ -308,12 +308,17 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         .replace(/[^a-zA-Z0-9 /.,:#()\-]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
+    const model = formData.tracker_model_id
+      ? trackerModels.find(m => m.id === formData.tracker_model_id)
+      : null;
     const linhas = [
-      '[Pilar - Veiculo SMS]',
-      `Placa: ${normalizar(formData.placa)}`,
+      '[Pilar - Teste SMS]',
+      `Veiculo: ${normalizar(formData.placa)}`,
+      model?.nome && `Modelo rastreador: ${normalizar(model.nome)}`,
       formData.tipo_veiculo && `Tipo: ${normalizar(formData.tipo_veiculo)}`,
       formData.motorista && `Motorista: ${normalizar(formData.motorista)}`,
       formData.descricao && `Descricao: ${normalizar(formData.descricao)}`,
+      'Se voce recebeu esta mensagem, os dados do veiculo foram enviados.',
     ].filter(Boolean) as string[];
     const mensagem = linhas.join('\n');
 
@@ -327,8 +332,37 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         },
       });
       if (error) throw error;
-      if ((data as any)?.success) toast.success('SMS enviado ao equipamento');
-      else toast.error((data as any)?.erro || 'Falha ao enviar SMS');
+      const providerMessageId = (data as any)?.provider_message_id as string | undefined;
+      if (!(data as any)?.success) {
+        toast.error((data as any)?.erro || 'Falha ao enfileirar SMS');
+        return;
+      }
+
+      if (!providerMessageId) {
+        toast.success('SMS enviado ao equipamento');
+        return;
+      }
+
+      const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+      for (let tentativa = 0; tentativa < 8; tentativa++) {
+        await sleep(2500);
+        const { data: fila } = await supabase
+          .from('sms_queue' as any)
+          .select('status, erro_mensagem')
+          .eq('id', providerMessageId)
+          .maybeSingle();
+        const status = (fila as any)?.status as string | undefined;
+        if (status === 'enviado' || status === 'entregue') {
+          toast.success('SMS enviado pelo celular');
+          return;
+        }
+        if (status === 'erro' || status === 'nao_entregue') {
+          toast.error((fila as any)?.erro_mensagem || 'O celular retornou erro ao enviar SMS');
+          return;
+        }
+      }
+
+      toast.info('SMS enfileirado; aguardando confirmação do celular');
     } catch (e: any) {
       toast.error(e.message || 'Erro ao enviar SMS');
     } finally {
