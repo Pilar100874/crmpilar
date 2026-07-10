@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/editores/editorPopup";
 import { evalCalculados, type CampoCalculado } from "@/lib/editores/mergeEngine";
 import { ImportSpreadsheetWizard } from "./ImportSpreadsheetWizard";
+import { FormulaBuilderDialog } from "./FormulaBuilderDialog";
 import {
   getAllDatasets, getDataset, registerDataset, subscribeDatasets,
   type ImportedDataset,
