@@ -362,6 +362,8 @@ export const MergeTable = Node.create({
           if (act === "apply") {
             const from = Number((toolbar!.querySelector('[data-k="from"]') as HTMLInputElement).value) || 1;
             const to = Number((toolbar!.querySelector('[data-k="to"]') as HTMLInputElement).value) || 0;
+            const widthRaw = ((toolbar!.querySelector('[data-k="width"]') as HTMLInputElement).value || "100%").trim();
+            const width = /^\d+$/.test(widthRaw) ? `${widthRaw}px` : widthRaw;
             const totalsRow = (toolbar!.querySelector('[data-a="totals"]') as HTMLInputElement).checked;
             const extras: ExtraCol[] = [];
             const existing = (node.attrs.extraCols || []) as ExtraCol[];
@@ -369,8 +371,9 @@ export const MergeTable = Node.create({
               const h = (el as HTMLInputElement).value;
               extras.push({ header: h, formula: existing[i]?.formula || "" });
             });
-            update({ from, to, totalsRow, extraCols: extras });
+            update({ from, to, width, totalsRow, extraCols: extras });
             closeToolbar();
+
           } else if (act === "addcol") {
             const list = [...(node.attrs.extraCols || []), { header: "Total", formula: "" }];
             update({ extraCols: list });
