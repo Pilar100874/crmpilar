@@ -69,6 +69,10 @@ export default function ModeloEditor() {
   const [salvarComoOpen, setSalvarComoOpen] = useState(false);
   const [salvarComoTitulo, setSalvarComoTitulo] = useState("");
   const [salvarComoLoading, setSalvarComoLoading] = useState(false);
+  const [loadProgress, setLoadProgress] = useState<number | null>(null);
+  const [loadMsg, setLoadMsg] = useState<string>("Carregando documento...");
+
+
 
 
   // Normaliza merge_config para array de configs (aceita objeto legado)
