@@ -309,7 +309,9 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       dispositivo ? `ID: ${dispositivo.device_uuid}` : null,
       formData.traccar_device_id ? `Traccar ID: ${formData.traccar_device_id}` : null,
     ].filter(Boolean);
-    const mensagem = linhas.join('\n');
+    // Mesmo formato do "modo celular" (SMS único com separador " | ") — evita
+    // quebras de linha que alguns provedores/chips rejeitam.
+    const mensagem = `DADOS VEICULO ${formData.placa}: ${linhas.slice(1).join(' | ')}`;
 
     try {
       setEnviandoSms(true);
