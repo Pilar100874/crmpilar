@@ -561,8 +561,6 @@ export const FillableField = Node.create({
             el = span; break;
           }
           case "cnpj": {
-            const box = document.createElement("span");
-            box.style.cssText = "display:inline-flex;align-items:center;gap:2px";
             const i = document.createElement("input");
             i.type = "text";
             i.setAttribute("data-fillable", token);
@@ -587,32 +585,9 @@ export const FillableField = Node.create({
             });
             attachCnpjGroupFocus(i);
             autosize(i);
-            const search = document.createElement("button");
-            search.type = "button";
-            search.title = "Digitar CNPJ para buscar";
-            search.textContent = "🔍";
-            search.style.cssText = "cursor:pointer;border:1px solid #cbd5e1;background:#fff;border-radius:4px;padding:1px 6px;font-size:12px;line-height:1;pointer-events:auto";
-            search.addEventListener("mousedown", (ev) => ev.stopPropagation());
-            search.addEventListener("click", async (ev) => {
-              ev.preventDefault();
-              const { askCnpjModal } = await import("@/lib/editores/cnpjPrompt");
-              const val = await askCnpjModal();
-              if (!val) return;
-              i.value = val;
-              currentValue = val;
-              const clean = val.replace(/\D/g, "");
-              try {
-                await autofillCnpj(clean, cnpjGroup || undefined, true);
-                if (cnpjGroup) cnpjGroupState.set(cnpjGroup, "loaded");
-              } catch (e) { console.warn("[cnpj autofill]", e); }
-            });
-            box.appendChild(i);
-            box.appendChild(search);
-            el = box; break;
+            el = i; break;
           }
           case "cep": {
-            const box = document.createElement("span");
-            box.style.cssText = "display:inline-flex;align-items:center;gap:2px";
             const i = document.createElement("input");
             i.type = "text";
             i.setAttribute("data-fillable", token);
@@ -636,28 +611,7 @@ export const FillableField = Node.create({
               }
             });
             autosize(i);
-            const search = document.createElement("button");
-            search.type = "button";
-            search.title = "Digitar CEP para buscar";
-            search.textContent = "🔍";
-            search.style.cssText = "cursor:pointer;border:1px solid #cbd5e1;background:#fff;border-radius:4px;padding:1px 6px;font-size:12px;line-height:1;pointer-events:auto";
-            search.addEventListener("mousedown", (ev) => ev.stopPropagation());
-            search.addEventListener("click", async (ev) => {
-              ev.preventDefault();
-              const raw = window.prompt("Informe o CEP (8 dígitos):", "");
-              if (!raw) return;
-              const clean = raw.replace(/\D/g, "");
-              if (clean.length !== 8) { alert("CEP inválido."); return; }
-              i.value = maskCep(clean);
-              currentValue = i.value;
-              try {
-                await autofillCep(clean, cepGroup || undefined, true);
-                if (cepGroup) cepGroupState.set(cepGroup, "loaded");
-              } catch (e) { console.warn("[cep autofill]", e); alert("CEP não encontrado."); }
-            });
-            box.appendChild(i);
-            box.appendChild(search);
-            el = box; break;
+            el = i; break;
           }
           default: {
             const i = document.createElement("input");
