@@ -874,12 +874,18 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
 
                 <Button
                   type="button" variant="outline" size="sm" className="w-full"
-                  disabled={configurandoTracker || !formData.tracker_model_id || !formData.telefone_sms}
+                  disabled={
+                    configurandoTracker ||
+                    !formData.telefone_sms ||
+                    (formData.tipo_chip === 'm2m' && !formData.tracker_model_id)
+                  }
                   onClick={configurarTrackerAgora}
                 >
                   {configurandoTracker
-                    ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Configurando...</>
-                    : <><Radio className="h-4 w-4 mr-2" />Configurar agora</>}
+                    ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Enviando...</>
+                    : formData.tipo_chip === 'normal'
+                      ? <><Send className="h-4 w-4 mr-2" />Enviar SMS de teste</>
+                      : <><Radio className="h-4 w-4 mr-2" />Configurar agora</>}
                 </Button>
 
                 {selectedVeiculo && (selectedVeiculo as any).tracker_config_status && (
