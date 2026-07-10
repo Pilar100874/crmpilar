@@ -116,7 +116,10 @@ class SmsPollingService : Service() {
                     val id = m.getString("id")
                     val to = m.getString("telefone")
                     val msg = m.getString("mensagem")
-                    val result = SmsSender.send(this@SmsPollingService, to, msg, null)
+                    val result = SmsSender.send(this@SmsPollingService, to, msg, null) { delivered, derr ->
+                        // Callback assíncrono do relatório de entrega da operadora.
+                        scope.launch { ackDelivery(token, id, delivered, derr) }
+                    }
                     ack(token, id, result.ok, result.error)
                     if (result.ok) enviados++ else falhas++
                     addHistory(SendEvent(to, msg, result.ok, result.error, System.currentTimeMillis()))
@@ -185,6 +188,30 @@ class SmsPollingService : Service() {
             conn.responseCode
         } catch (e: Exception) {
             Log.w(TAG, "Falha no ack de $id", e)
+        }
+    }
+
+    private fun ackDelivery(token: String, id: String, delivered: Boolean, error: String?) {
+        try {
+            val url = URL("$SUPABASE_URL/functions/v1/sms-queue-ack")
+            val conn = url.openConnection() as HttpURLConnection
+            conn.requestMethod = "POST"
+            conn.doOutput = true
+            conn.connectTimeout = 10_000
+            conn.readTimeout = 15_000
+            conn.setRequestProperty("Content-Type", "application/json")
+            conn.setRequestProperty("apikey", ANON_KEY)
+            conn.setRequestProperty("Authorization", "Bearer $ANON_KEY")
+            conn.setRequestProperty("X-Device-Token", token)
+            val body = JSONObject().apply {
+                put("id", id)
+                put("delivered", delivered)
+                if (error != null) put("erro", error)
+            }.toString()
+            conn.outputStream.use { it.write(body.toByteArray()) }
+            conn.responseCode
+        } catch (e: Exception) {
+            Log.w(TAG, "Falha no ack de entrega de $id", e)
         }
     }
 
