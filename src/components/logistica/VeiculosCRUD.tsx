@@ -309,12 +309,19 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       dispositivo ? `ID: ${dispositivo.device_uuid}` : null,
       formData.traccar_device_id ? `Traccar ID: ${formData.traccar_device_id}` : null,
     ].filter(Boolean);
-    // Mesmo formato do "modo celular" (SMS único com separador " | ") — evita
-    // quebras de linha que alguns provedores/chips rejeitam. Também removemos
-    // acentos (ex.: "Caminhão", "Descrição") porque vários gateways/APK SMS
-    // rejeitam caracteres fora do alfabeto GSM-7.
-    const semAcento = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const mensagem = semAcento(`DADOS VEICULO ${formData.placa}: ${linhas.slice(1).join(' | ')}`);
+    // Envio em modo celular normal, mas em texto ultra seguro: sem acentos,
+    // pontuação, pipes, hífen ou quebras de linha. Nos testes reais o conteúdo
+    // já estava sem acento, porém o Android retornou GENERIC_FAILURE; alguns
+    // chips/provedores rejeitam caracteres simples de pontuação dependendo do
+    // destino. Mantemos apenas A-Z, 0-9 e espaço.
+    const normalizarSmsCelular = (s: string) => s
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toUpperCase()
+      .replace(/[^A-Z0-9 ]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const mensagem = normalizarSmsCelular(`DADOS VEICULO ${formData.placa} ${linhas.slice(1).join(' ')}`);
 
     try {
       setEnviandoSms(true);

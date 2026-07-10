@@ -13,11 +13,25 @@ function normalizePhone(raw: string): string {
   return plus ? `+${digits}` : digits;
 }
 
+function normalizeDadosVeiculoSms(raw: string): string {
+  return raw
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    const { estabelecimento_id, destino, mensagem, test } = await req.json();
+    const { estabelecimento_id, destino, mensagem: mensagemOriginal, test } = await req.json();
+    let mensagem = String(mensagemOriginal || '');
+    if (mensagem.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').startsWith('DADOS VEICULO')) {
+      mensagem = normalizeDadosVeiculoSms(mensagem);
+    }
     if (!estabelecimento_id || !destino || !mensagem) {
       return new Response(JSON.stringify({ error: 'estabelecimento_id, destino e mensagem são obrigatórios' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
