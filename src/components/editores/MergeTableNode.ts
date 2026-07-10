@@ -21,7 +21,9 @@ export interface MergeTableAttrs {
   align?: "left" | "center" | "right";
   extraCols?: ExtraCol[];
   totalsRow?: boolean;
+  width?: string; // ex "100%", "560px"
 }
+
 
 function fmt(v: any): string {
   if (v == null) return "";
