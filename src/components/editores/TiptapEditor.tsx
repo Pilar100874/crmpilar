@@ -32,8 +32,10 @@ import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import Placeholder from "@tiptap/extension-placeholder";
 import CharacterCount from "@tiptap/extension-character-count";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useNormalTableHandles } from "./NormalTableHandles";
+
 
 interface Props {
   initialContent?: string;
@@ -182,11 +184,16 @@ export function TiptapEditor({
   }, [editable, editor]);
 
 
+  const [rootEl, setRootEl] = useState<HTMLDivElement | null>(null);
+  useNormalTableHandles(editor, rootEl);
+
   return (
     <div
-      className={cn("bg-muted/30 flex justify-center p-6 overflow-auto", className)}
+      ref={setRootEl}
+      className={cn("bg-muted/30 flex justify-center p-6 overflow-auto relative", className)}
       style={{ minHeight: "100%" }}
     >
+
       <div
         style={{
           transform: `scale(${zoom})`,
