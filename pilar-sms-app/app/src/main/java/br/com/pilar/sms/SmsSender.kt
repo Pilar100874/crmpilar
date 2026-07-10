@@ -72,8 +72,8 @@ object SmsSender {
             val deliveredAction = "br.com.pilar.sms.SMS_DELIVERED_${UUID.randomUUID()}"
 
             val sentLatch = CountDownLatch(parts.size)
-            @Volatile var worstCode = Activity.RESULT_OK
-            @Volatile var anyFailure = false
+            val worstCode = java.util.concurrent.atomic.AtomicInteger(Activity.RESULT_OK)
+            val anyFailure = java.util.concurrent.atomic.AtomicBoolean(false)
 
             val sentReceiver = object : BroadcastReceiver() {
                 override fun onReceive(c: Context?, intent: Intent?) {
