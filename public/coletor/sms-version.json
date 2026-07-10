@@ -1,6 +1,6 @@
 {
-  "version": "1.4.1",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.4.1/pilar-sms-v1.4.1-debug.apk",
-  "filename": "pilar-sms-v1.4.1-debug.apk",
-  "notas": "1.4.1: build automático publicado como GitHub Release. Gateway SMS envia mensagem exatamente como recebida (vírgula, #, hífen, acentos, quebras de linha); tela de diagnóstico."
+  "version": "1.4.2",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.4.2/pilar-sms-v1.4.2-debug.apk",
+  "filename": "pilar-sms-v1.4.2-debug.apk",
+  "notas": "1.4.2: build corrigido (Kotlin @Volatile em variáveis locais substituído por AtomicInteger/AtomicBoolean). APK debug assinado, instalável direto no aparelho."
 }
