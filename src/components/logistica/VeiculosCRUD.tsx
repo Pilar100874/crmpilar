@@ -314,13 +314,14 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     }
 
     const modelOper = modelComOperadora(model);
-    const server = (modelOper.server_host || '').trim();
-    const port = String(modelOper.server_port || '').trim();
+    const server = (modelOper.host || '').trim();
+    const port = String(modelOper.porta || '').trim();
     if (!server || !port) {
       toast.error('Configure host e porta do servidor no modelo do rastreador');
       return;
     }
     const mensagem = `SERVER,1,${server},${port},0#`;
+
 
 
     try {
