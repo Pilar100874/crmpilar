@@ -2,10 +2,14 @@ import { useEffect } from "react";
 import type { Editor } from "@tiptap/react";
 
 /**
- * Overlay leve para tabelas normais do Tiptap:
- * - Botão de excluir tabela
- * - Campo de largura (%/px)
- * - Handle de arrasto no canto inferior direito para redimensionar
+ * Overlay estilo Word para tabelas normais do Tiptap.
+ * Aparece ao clicar dentro de uma tabela e oferece:
+ *  - Inserir linha acima/abaixo
+ *  - Inserir coluna à esquerda/direita
+ *  - Excluir linha / coluna / tabela
+ *  - Mesclar / dividir células
+ *  - Alternar cabeçalho
+ *  - Redimensionar largura (handle no canto inferior direito)
  */
 export function useNormalTableHandles(editor: Editor | null, rootRef: HTMLElement | null) {
   useEffect(() => {
@@ -14,6 +18,10 @@ export function useNormalTableHandles(editor: Editor | null, rootRef: HTMLElemen
     let currentTable: HTMLTableElement | null = null;
     let toolbar: HTMLDivElement | null = null;
     let handle: HTMLDivElement | null = null;
+
+    const btn = (label: string, action: string, title: string, danger = false) =>
+      `<button type="button" data-a="${action}" title="${title}" style="padding:3px 8px;background:${danger ? "#fee2e2" : "#f9fafb"};color:${danger ? "#b91c1c" : "#111"};border:1px solid ${danger ? "#fecaca" : "#d1d5db"};border-radius:4px;cursor:pointer;font-size:12px;">${label}</button>`;
+    const sep = `<span style="width:1px;height:18px;background:#e5e7eb;"></span>`;
 
     const cleanup = () => {
       toolbar?.remove();
@@ -29,19 +37,32 @@ export function useNormalTableHandles(editor: Editor | null, rootRef: HTMLElemen
       currentTable.setAttribute("data-width", w);
     };
 
-    const deleteTable = () => {
-      editor.chain().focus().deleteTable().run();
-      cleanup();
-    };
-
     const position = () => {
       if (!currentTable || !toolbar || !handle) return;
       const r = currentTable.getBoundingClientRect();
       const pr = rootRef.getBoundingClientRect();
       toolbar.style.left = `${r.left - pr.left + rootRef.scrollLeft}px`;
-      toolbar.style.top = `${r.top - pr.top + rootRef.scrollTop - 34}px`;
+      toolbar.style.top = `${r.top - pr.top + rootRef.scrollTop - 40}px`;
       handle.style.left = `${r.right - pr.left + rootRef.scrollLeft - 8}px`;
       handle.style.top = `${r.bottom - pr.top + rootRef.scrollTop - 8}px`;
+    };
+
+    const runAction = (act: string) => {
+      const c = editor.chain().focus();
+      switch (act) {
+        case "row-above": c.addRowBefore().run(); break;
+        case "row-below": c.addRowAfter().run(); break;
+        case "col-left": c.addColumnBefore().run(); break;
+        case "col-right": c.addColumnAfter().run(); break;
+        case "del-row": c.deleteRow().run(); break;
+        case "del-col": c.deleteColumn().run(); break;
+        case "merge": c.mergeCells().run(); break;
+        case "split": c.splitCell().run(); break;
+        case "header-row": c.toggleHeaderRow().run(); break;
+        case "header-col": c.toggleHeaderColumn().run(); break;
+        case "del-table": c.deleteTable().run(); cleanup(); return;
+      }
+      setTimeout(position, 0);
     };
 
     const mount = (table: HTMLTableElement) => {
@@ -52,16 +73,31 @@ export function useNormalTableHandles(editor: Editor | null, rootRef: HTMLElemen
       toolbar = document.createElement("div");
       toolbar.contentEditable = "false";
       toolbar.style.cssText =
-        "position:absolute;z-index:40;display:flex;gap:6px;align-items:center;background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:3px 6px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:12px;";
-      toolbar.innerHTML = `
-        <span style="color:#555;">Largura:</span>
-        <input type="text" value="${w}" style="width:70px;padding:2px 4px;border:1px solid #ccc;border-radius:4px;" data-k="w" />
-        <button type="button" data-a="del" style="padding:2px 8px;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;border-radius:4px;cursor:pointer;">Excluir</button>
-      `;
+        "position:absolute;z-index:40;display:flex;gap:4px;align-items:center;background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:4px 6px;box-shadow:0 2px 10px rgba(0,0,0,0.12);font-size:12px;flex-wrap:wrap;max-width:720px;";
+      toolbar.innerHTML = [
+        btn("↑ Linha", "row-above", "Inserir linha acima"),
+        btn("↓ Linha", "row-below", "Inserir linha abaixo"),
+        btn("← Coluna", "col-left", "Inserir coluna à esquerda"),
+        btn("→ Coluna", "col-right", "Inserir coluna à direita"),
+        sep,
+        btn("− Linha", "del-row", "Excluir linha", true),
+        btn("− Coluna", "del-col", "Excluir coluna", true),
+        sep,
+        btn("Mesclar", "merge", "Mesclar células selecionadas"),
+        btn("Dividir", "split", "Dividir célula"),
+        sep,
+        btn("Cab. linha", "header-row", "Alternar cabeçalho da linha"),
+        btn("Cab. coluna", "header-col", "Alternar cabeçalho da coluna"),
+        sep,
+        `<span style="color:#555;">Larg.:</span><input type="text" value="${w}" style="width:64px;padding:2px 4px;border:1px solid #ccc;border-radius:4px;" data-k="w" />`,
+        sep,
+        btn("Excluir tabela", "del-table", "Excluir tabela inteira", true),
+      ].join("");
+
       toolbar.addEventListener("mousedown", (e) => e.stopPropagation());
       toolbar.addEventListener("click", (e) => {
-        const t = e.target as HTMLElement;
-        if (t.getAttribute("data-a") === "del") deleteTable();
+        const act = (e.target as HTMLElement).getAttribute("data-a");
+        if (act) runAction(act);
       });
       toolbar.addEventListener("change", (e) => {
         const t = e.target as HTMLInputElement;
