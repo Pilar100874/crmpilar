@@ -320,8 +320,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       toast.error('Configure host e porta do servidor no modelo do rastreador');
       return;
     }
-    const nomeParaSms = [nomeVeiculo, tipoVeiculo].filter(Boolean).join(' - ');
-    const mensagem = `${nomeParaSms} SERVER,1,${server},${port},0#`;
+    const mensagem = 'Fusca';
+
 
 
 
