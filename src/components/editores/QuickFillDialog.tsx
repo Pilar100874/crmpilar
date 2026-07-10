@@ -60,6 +60,7 @@ export function QuickFillDialog({ open, onOpenChange, html, values, onApply }: P
     tokens.forEach(t => {
       let v = values[t.raw] ?? values[t.label] ?? "";
       if (t.tipo === "cnpj" && v) v = maskCnpjValue(v);
+      if (t.tipo === "cep" && v) v = maskCepValue(v);
       d[t.raw] = v;
     });
     setDraft(d);
