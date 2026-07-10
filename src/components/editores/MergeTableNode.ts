@@ -144,6 +144,8 @@ export const MergeTable = Node.create({
             align: (e.getAttribute("data-align") as any) || "left",
             extraCols,
             totalsRow: e.getAttribute("data-totals") === "1",
+            width: e.style.width || e.getAttribute("data-width") || "100%",
+
           };
         },
       },
