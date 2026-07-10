@@ -221,11 +221,11 @@ export default function AdminApps() {
             </li>
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">2</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">Baixe o <b>crm-pilar-v1.0.0.apk</b> acima e toque no arquivo para instalar.</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">Baixe o <b>sms-pilar-v1.2.0.apk</b> acima e toque no arquivo para instalar.</p>
             </li>
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">3</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">Abra o app <b>CRM Pilar</b> na Home. Faça login com sua conta habitual do CRM.</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">Abra o app <b>SMS Pilar</b>, cole o <b>token do dispositivo</b> (gerado em Configurações → SMS Gateway) e conceda a permissão de <b>SMS</b>.</p>
             </li>
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">4</span>
