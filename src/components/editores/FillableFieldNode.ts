@@ -491,6 +491,8 @@ export const FillableField = Node.create({
         i.addEventListener("input", measure);
       };
 
+      const publish = (v: string) => { currentValue = v; mergeFillableValues({ [token]: v }); };
+
       const buildInput = (): HTMLElement => {
         const wrap = document.createElement("span");
         let el: HTMLElement;
@@ -500,7 +502,7 @@ export const FillableField = Node.create({
             t.setAttribute("data-fillable", token);
             t.placeholder = label; t.rows = 2; t.style.cssText = inputStyle;
             t.value = currentValue;
-            t.addEventListener("input", () => { currentValue = t.value; });
+            t.addEventListener("input", () => { publish(t.value); });
             autosize(t);
             el = t; break;
           }
@@ -508,14 +510,14 @@ export const FillableField = Node.create({
             const i = document.createElement("input");
             i.type = "date"; i.setAttribute("data-fillable", token); i.style.cssText = inputStyle;
             i.value = currentValue;
-            i.addEventListener("input", () => { currentValue = i.value; });
+            i.addEventListener("input", () => { publish(i.value); });
             el = i; break;
           }
           case "numero": {
             const i = document.createElement("input");
             i.type = "number"; i.setAttribute("data-fillable", token); i.placeholder = label; i.style.cssText = inputStyle;
             i.value = currentValue;
-            i.addEventListener("input", () => { currentValue = i.value; });
+            i.addEventListener("input", () => { publish(i.value); });
             autosize(i);
             el = i; break;
           }
@@ -525,7 +527,7 @@ export const FillableField = Node.create({
             const i = document.createElement("input");
             i.type = "checkbox"; i.setAttribute("data-fillable", token);
             i.checked = currentValue === "true";
-            i.addEventListener("change", () => { currentValue = i.checked ? "true" : ""; });
+            i.addEventListener("change", () => { publish(i.checked ? "true" : ""); });
             lab.appendChild(i); lab.appendChild(document.createTextNode(" " + label));
             el = lab; break;
           }
@@ -552,7 +554,7 @@ export const FillableField = Node.create({
             } else {
               rebuild(opcoes);
             }
-            s.addEventListener("change", () => { currentValue = s.value; });
+            s.addEventListener("change", () => { publish(s.value); });
             el = s; break;
           }
           case "radio": {
@@ -567,7 +569,7 @@ export const FillableField = Node.create({
                 const i = document.createElement("input");
                 i.type = "radio"; i.name = token; i.value = o; i.setAttribute("data-fillable", token);
                 i.checked = currentValue === o;
-                i.addEventListener("change", () => { if (i.checked) currentValue = o; });
+                i.addEventListener("change", () => { if (i.checked) publish(o); });
                 lab.appendChild(i); lab.appendChild(document.createTextNode(" " + o));
                 span.appendChild(lab);
               }
@@ -587,7 +589,7 @@ export const FillableField = Node.create({
             i.addEventListener("mousedown", (ev) => ev.stopPropagation());
             i.addEventListener("input", () => {
               i.value = maskCnpj(i.value);
-              currentValue = i.value;
+              publish(i.value);
             });
             i.addEventListener("blur", () => {
               const clean = i.value.replace(/\D/g, "");
@@ -614,7 +616,7 @@ export const FillableField = Node.create({
             i.addEventListener("mousedown", (ev) => ev.stopPropagation());
             i.addEventListener("input", () => {
               i.value = maskCep(i.value);
-              currentValue = i.value;
+              publish(i.value);
             });
             i.addEventListener("blur", () => {
               const clean = i.value.replace(/\D/g, "");
@@ -633,7 +635,7 @@ export const FillableField = Node.create({
             const i = document.createElement("input");
             i.type = "text"; i.setAttribute("data-fillable", token); i.placeholder = label; i.style.cssText = inputStyle;
             i.value = currentValue;
-            i.addEventListener("input", () => { currentValue = i.value; });
+            i.addEventListener("input", () => { publish(i.value); });
             attachCnpjGroupFocus(i);
             attachCepGroupFocus(i);
             autosize(i);
