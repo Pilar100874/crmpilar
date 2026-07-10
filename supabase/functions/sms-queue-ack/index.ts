@@ -114,7 +114,9 @@ Deno.serve(async (req) => {
       const novoStatus = tentativas >= max ? 'erro' : 'pendente';
       await supabase.from('sms_queue').update({
         status: novoStatus,
-        erro_mensagem: erro || 'Falha desconhecida',
+        erro_mensagem: android_error_description
+          ? `${android_error_code || 'ERRO'}: ${android_error_description}`
+          : (erro || 'Falha desconhecida'),
         claimed_at: null,
       }).eq('id', id);
     }
