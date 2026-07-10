@@ -438,7 +438,6 @@ export const FillableField = Node.create({
       dom.style.cssText = "display:inline-flex;align-items:center;gap:2px;vertical-align:middle;margin:0 2px;position:relative";
 
       let currentValue = getFillableValue(token, label);
-      const commit = (v: string) => { currentValue = v; if (token) mergeFillableValues({ [token]: v }); };
 
       const attachCnpjGroupFocus = (input: HTMLElement) => {
         if (!cnpjGroup || !cnpjSubfield) return;
@@ -485,7 +484,7 @@ export const FillableField = Node.create({
             t.setAttribute("data-fillable", token);
             t.placeholder = label; t.rows = 2; t.style.cssText = inputStyle;
             t.value = currentValue;
-            t.addEventListener("input", () => { commit(t.value); });
+            t.addEventListener("input", () => { currentValue = t.value; });
             autosize(t);
             el = t; break;
           }
@@ -493,14 +492,14 @@ export const FillableField = Node.create({
             const i = document.createElement("input");
             i.type = "date"; i.setAttribute("data-fillable", token); i.style.cssText = inputStyle;
             i.value = currentValue;
-            i.addEventListener("input", () => { commit(i.value); });
+            i.addEventListener("input", () => { currentValue = i.value; });
             el = i; break;
           }
           case "numero": {
             const i = document.createElement("input");
             i.type = "number"; i.setAttribute("data-fillable", token); i.placeholder = label; i.style.cssText = inputStyle;
             i.value = currentValue;
-            i.addEventListener("input", () => { commit(i.value); });
+            i.addEventListener("input", () => { currentValue = i.value; });
             autosize(i);
             el = i; break;
           }
@@ -510,7 +509,7 @@ export const FillableField = Node.create({
             const i = document.createElement("input");
             i.type = "checkbox"; i.setAttribute("data-fillable", token);
             i.checked = currentValue === "true";
-            i.addEventListener("change", () => { commit(i.checked ? "true" : ""); });
+            i.addEventListener("change", () => { currentValue = i.checked ? "true" : ""; });
             lab.appendChild(i); lab.appendChild(document.createTextNode(" " + label));
             el = lab; break;
           }
@@ -537,7 +536,7 @@ export const FillableField = Node.create({
             } else {
               rebuild(opcoes);
             }
-            s.addEventListener("change", () => { commit(s.value); });
+            s.addEventListener("change", () => { currentValue = s.value; });
             el = s; break;
           }
           case "radio": {
@@ -552,7 +551,7 @@ export const FillableField = Node.create({
                 const i = document.createElement("input");
                 i.type = "radio"; i.name = token; i.value = o; i.setAttribute("data-fillable", token);
                 i.checked = currentValue === o;
-                i.addEventListener("change", () => { if (i.checked) commit(o); });
+                i.addEventListener("change", () => { if (i.checked) currentValue = o; });
                 lab.appendChild(i); lab.appendChild(document.createTextNode(" " + o));
                 span.appendChild(lab);
               }
@@ -574,7 +573,7 @@ export const FillableField = Node.create({
             i.addEventListener("mousedown", (ev) => ev.stopPropagation());
             i.addEventListener("input", () => {
               i.value = maskCnpj(i.value);
-              commit(i.value);
+              currentValue = i.value;
             });
             i.addEventListener("blur", () => {
               const clean = i.value.replace(/\D/g, "");
@@ -600,7 +599,7 @@ export const FillableField = Node.create({
               const val = await askCnpjModal();
               if (!val) return;
               i.value = val;
-              commit(val);
+              currentValue = val;
               const clean = val.replace(/\D/g, "");
               try {
                 await autofillCnpj(clean, cnpjGroup || undefined, true);
@@ -624,7 +623,7 @@ export const FillableField = Node.create({
             i.addEventListener("mousedown", (ev) => ev.stopPropagation());
             i.addEventListener("input", () => {
               i.value = maskCep(i.value);
-              commit(i.value);
+              currentValue = i.value;
             });
             i.addEventListener("blur", () => {
               const clean = i.value.replace(/\D/g, "");
@@ -650,7 +649,7 @@ export const FillableField = Node.create({
               const clean = raw.replace(/\D/g, "");
               if (clean.length !== 8) { alert("CEP inválido."); return; }
               i.value = maskCep(clean);
-              commit(i.value);
+              currentValue = i.value;
               try {
                 await autofillCep(clean, cepGroup || undefined, true);
                 if (cepGroup) cepGroupState.set(cepGroup, "loaded");
@@ -664,7 +663,7 @@ export const FillableField = Node.create({
             const i = document.createElement("input");
             i.type = "text"; i.setAttribute("data-fillable", token); i.placeholder = label; i.style.cssText = inputStyle;
             i.value = currentValue;
-            i.addEventListener("input", () => { commit(i.value); });
+            i.addEventListener("input", () => { currentValue = i.value; });
             attachCnpjGroupFocus(i);
             attachCepGroupFocus(i);
             autosize(i);
