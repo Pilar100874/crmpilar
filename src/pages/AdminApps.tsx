@@ -155,8 +155,8 @@ export default function AdminApps() {
       .catch(() => {});
   }, []);
 
-  const coletorFileName = coletorInfo?.downloadUrl?.split("/").pop() || "ColetorPilar-Setup.msi";
-  const coletorUrl = coletorInfo?.downloadUrl || coletorMsiAsset.url;
+  const coletorFileName = coletorInfo?.downloadUrl?.split("/").pop() || COLETOR_FALLBACK_FILENAME;
+  const coletorUrl = coletorInfo?.downloadUrl || COLETOR_FALLBACK_URL;
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 p-3 sm:space-y-6 sm:p-6 md:p-8">
