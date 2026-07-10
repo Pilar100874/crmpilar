@@ -11,23 +11,13 @@ android {
         applicationId = "br.com.pilar.sms"
         minSdk = 24
         targetSdk = 34
-        versionCode = 6
-        versionName = "1.3.1"
-    }
-
-    signingConfigs {
-        create("release") {
-            storeFile = file("pilar-release.jks")
-            storePassword = "pilar123"
-            keyAlias = "pilar"
-            keyPassword = "pilar123"
-        }
+        versionCode = 7
+        versionName = "1.3.2"
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }

@@ -6,7 +6,7 @@
     maven="PilarSms:app:unspecified"
     agpVersion="8.5.2"
     buildFolder="build"
-    bootClassPath="/root/android-sdk/platforms/android-34/android.jar:/root/android-sdk/build-tools/34.0.0/core-lambda-stubs.jar"
+    bootClassPath="/tmp/android-sdk/platforms/android-34/android.jar:/tmp/android-sdk/build-tools/34.0.0/core-lambda-stubs.jar"
     javaSourceLevel="17"
     compileTarget="android-34"
     neverShrinking="true">
