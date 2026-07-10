@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info, Monitor, Camera, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
-import crmApkAsset from "../../public/coletor/crm-pilar-v1.0.0.apk.asset.json";
+
 import coletorMsiAsset from "../../public/coletor/ColetorPilar-Setup.msi.asset.json";
 
 interface BIPEvent extends Event {
