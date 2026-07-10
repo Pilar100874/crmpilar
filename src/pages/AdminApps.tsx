@@ -191,7 +191,7 @@ export default function AdminApps() {
           <div className="flex items-center gap-3 rounded-xl border border-dashed p-4 text-xs text-muted-foreground mb-6 sm:mb-8">
             <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <span>
-              <b className="text-foreground">Versão 1.3.1</b> · SMS via rádio GSM · relatório de entrega ·
+              <b className="text-foreground">Versão 1.3.2</b> · SMS via rádio GSM · relatório de entrega ·
               usa o SIM padrão de SMS do Android · roda em segundo plano com wake-lock.
             </span>
           </div>
@@ -201,10 +201,10 @@ export default function AdminApps() {
               <span className="text-[10px] font-bold uppercase tracking-widest text-background/60">
                 Pacote APK
               </span>
-              <span className="truncate font-mono text-xs text-background sm:text-sm">sms-pilar-v1.3.1.apk</span>
+              <span className="truncate font-mono text-xs text-background sm:text-sm">sms-pilar-v1.3.2.apk</span>
             </div>
             <Button
-              onClick={() => baixar("sms-pilar-v1.3.1.apk", "/apps/sms-pilar-v1.3.1.apk")}
+              onClick={() => baixar("sms-pilar-v1.3.2.apk", "/apps/sms-pilar-v1.3.2.apk")}
               className="w-full flex-shrink-0 rounded-xl px-5 py-3 text-sm font-bold transition-colors sm:w-auto sm:px-6 bg-blue-500 hover:bg-blue-400 text-white"
             >
               <Download className="mr-2 h-4 w-4" /> Baixar APK
@@ -219,11 +219,11 @@ export default function AdminApps() {
           <ol className="space-y-4">
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">1</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">No Android, ative <b>Fontes desconhecidas</b> em <b>Configurações → Segurança</b> (ou permita a instalação quando o navegador perguntar).</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">No Android, remova qualquer versão anterior do <b>SMS Pilar</b> e permita a instalação quando o navegador perguntar.</p>
             </li>
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">2</span>
-              <p className="text-sm leading-relaxed text-muted-foreground">Baixe o <b>sms-pilar-v1.3.1.apk</b> acima e toque no arquivo para instalar.</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">Baixe o <b>sms-pilar-v1.3.2.apk</b> acima e toque no arquivo para instalar.</p>
             </li>
             <li className="flex gap-3 sm:gap-4">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border bg-background text-xs font-bold text-foreground">3</span>
