@@ -320,7 +320,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       toast.error('Configure host e porta do servidor no modelo do rastreador');
       return;
     }
-    const mensagem = 'Fusca';
+    const mensagem = 'Fusca,1#';
 
 
 
