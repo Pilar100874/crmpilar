@@ -408,6 +408,8 @@ export const MergeTable = Node.create({
       });
 
       wrapper.appendChild(dom);
+      wrapper.appendChild(resizeHandle);
+
       return {
         dom: wrapper,
         update(updated) {
