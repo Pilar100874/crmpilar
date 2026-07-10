@@ -5,7 +5,17 @@ on:
     paths:
       - 'pilar-sms-app/**'
       - '.github/workflows/build-pilar-sms.yml'
+    tags:
+      - 'sms-v*'
   workflow_dispatch:
+    inputs:
+      release:
+        description: 'Publicar como GitHub Release'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -28,20 +38,70 @@ jobs:
       - name: Grant execute permission to gradlew
         run: chmod +x ./gradlew
 
+      - name: Ler versionName do build.gradle.kts
+        id: version
+        run: |
+          VERSION=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts | head -n1)
+          CODE=$(grep -oP 'versionCode\s*=\s*\K[0-9]+' app/build.gradle.kts | head -n1)
+          SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "code=${CODE}" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "Versão detectada: ${VERSION} (code ${CODE}) sha ${SHORT_SHA}"
+
       - name: Build Debug APK
         run: ./gradlew assembleDebug --no-daemon
 
       - name: Build Release APK (unsigned)
         run: ./gradlew assembleRelease --no-daemon
 
-      - name: Upload Debug APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: pilar-sms-debug
-          path: pilar-sms-app/app/build/outputs/apk/debug/app-debug.apk
+      - name: Renomear APKs com versão
+        id: rename
+        run: |
+          mkdir -p dist
+          DEBUG_SRC=app/build/outputs/apk/debug/app-debug.apk
+          REL_SRC=app/build/outputs/apk/release/app-release-unsigned.apk
+          DEBUG_DST=dist/pilar-sms-v${{ steps.version.outputs.version }}-debug.apk
+          REL_DST=dist/pilar-sms-v${{ steps.version.outputs.version }}-release-unsigned.apk
+          cp "$DEBUG_SRC" "$DEBUG_DST"
+          cp "$REL_SRC" "$REL_DST"
+          echo "debug_apk=$DEBUG_DST" >> "$GITHUB_OUTPUT"
+          echo "release_apk=$REL_DST" >> "$GITHUB_OUTPUT"
+          ls -lh dist/
 
-      - name: Upload Release APK
+      - name: Upload Debug APK (artifact)
         uses: actions/upload-artifact@v4
         with:
-          name: pilar-sms-release-unsigned
-          path: pilar-sms-app/app/build/outputs/apk/release/app-release-unsigned.apk
+          name: pilar-sms-v${{ steps.version.outputs.version }}-debug
+          path: pilar-sms-app/${{ steps.rename.outputs.debug_apk }}
+
+      - name: Upload Release APK (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilar-sms-v${{ steps.version.outputs.version }}-release-unsigned
+          path: pilar-sms-app/${{ steps.rename.outputs.release_apk }}
+
+      # === Publicação como GitHub Release ===
+      # Roda quando:
+      #  - o push é de uma tag `sms-v*`, ou
+      #  - o workflow foi disparado manualmente com "release=true"
+      - name: Criar/atualizar GitHub Release
+        if: ${{ startsWith(github.ref, 'refs/tags/sms-v') || (github.event_name == 'workflow_dispatch' && inputs.release) }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/sms-v') && github.ref_name || format('sms-v{0}-build{1}', steps.version.outputs.version, github.run_number) }}
+          name: Pilar SMS v${{ steps.version.outputs.version }} (build ${{ github.run_number }})
+          body: |
+            APK do gateway Pilar SMS.
+
+            - versionName: `${{ steps.version.outputs.version }}`
+            - versionCode: `${{ steps.version.outputs.code }}`
+            - commit: `${{ steps.version.outputs.short_sha }}`
+
+            **Debug** já vem assinado com a chave debug (instalável direto no aparelho).
+            **Release** está sem assinatura — assine antes de distribuir.
+          files: |
+            pilar-sms-app/dist/pilar-sms-v${{ steps.version.outputs.version }}-debug.apk
+            pilar-sms-app/dist/pilar-sms-v${{ steps.version.outputs.version }}-release-unsigned.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
