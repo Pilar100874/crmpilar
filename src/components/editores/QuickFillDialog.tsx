@@ -235,6 +235,14 @@ export function QuickFillDialog({ open, onOpenChange, html, values, onApply }: P
                     onBlur={e => autofillFromCnpj(e.target.value, tok.raw)}
                     disabled={loadingCnpj === tok.raw}
                   />
+                ) : tok.tipo === "cep" ? (
+                  <Input
+                    value={v}
+                    placeholder="00000-000"
+                    inputMode="numeric"
+                    onChange={e => setV(tok.raw, maskCepValue(e.target.value))}
+                    onBlur={e => autofillFromCep(e.target.value, tok.raw)}
+                  />
                 ) : tok.tipo === "check" ? (
                   <div className="flex items-center gap-2">
                     <Checkbox checked={v === "true"} onCheckedChange={ck => setV(tok.raw, ck ? "true" : "")} />
