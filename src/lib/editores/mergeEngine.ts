@@ -381,6 +381,16 @@ export function applyFillables(
       }
     }
 
+    if (tok.tipo === "imagem") {
+      if (v && /^(data:image|https?:\/\/)/i.test(v)) {
+        return `<img src="${escapeAttr(v)}" alt="${escapeAttr(tok.label)}" style="max-width:100%;max-height:200px;vertical-align:middle;" />`;
+      }
+      if (opts.highlightEmpty) {
+        return `<span style="background:#fef3c7;border:1px dashed #f59e0b;color:#92400e;padding:0 4px;border-radius:2px;">🖼️ ${escapeHtml(tok.label)}</span>`;
+      }
+      return "";
+    }
+
     if (v && v.toString().trim() !== "") {
       const disp = tok.tipo === "check" ? (v === "true" || v === "1" ? "☑" : "☐") : v;
       return `<span style="background:#dcfce7;border-radius:2px;padding:0 2px;">${escapeHtml(String(disp))}</span>`;
