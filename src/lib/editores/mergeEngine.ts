@@ -297,7 +297,7 @@ export interface FillableToken {
   opcoes?: string[];
 }
 
-const TIPOS: FillableTipo[] = ["texto", "textarea", "data", "numero", "check", "lista", "radio", "cnpj", "cep"];
+const TIPOS: FillableTipo[] = ["texto", "textarea", "data", "numero", "check", "lista", "radio", "cnpj", "cep", "imagem"];
 
 export function parseFillable(raw: string): FillableToken {
   const trimmed = raw.trim();
