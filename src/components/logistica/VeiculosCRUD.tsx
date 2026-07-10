@@ -299,10 +299,23 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       toast.error('Informe o telefone (SIM do equipamento)');
       return;
     }
-    const model = trackerModels.find(m => m.id === formData.tracker_model_id);
-    const mensagem = model && (model.sms_commands || []).length > 0
-      ? buildTrackerParametersSms(modelComOperadora(model))
-      : `PARAMETROS RASTREADOR ${formData.placa}: ${formData.descricao || formData.tipo_veiculo || 'SEM DADOS'}`;
+    // Envia os dados cadastrais do veículo (não os parâmetros do rastreador).
+    // Mantém formato simples/ASCII para compatibilidade com o app SmsSender do celular.
+    const normalizar = (s: string) =>
+      (s || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toUpperCase()
+        .replace(/[^A-Z0-9 ]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    const partes = [
+      `PLACA ${formData.placa}`,
+      formData.tipo_veiculo && `TIPO ${formData.tipo_veiculo}`,
+      formData.motorista && `MOT ${formData.motorista}`,
+      formData.descricao && `DESC ${formData.descricao}`,
+    ].filter(Boolean) as string[];
+    const mensagem = normalizar(`DADOS VEICULO ${partes.join(' ')}`);
 
     try {
       setEnviandoSms(true);
