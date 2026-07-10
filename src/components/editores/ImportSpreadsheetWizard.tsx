@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Upload, FileSpreadsheet, X, ChevronLeft, ChevronRight, Check } from "lucide-react";
-import { toast } from "@/lib/toast-config";
+import { toast } from "@/lib/editores/editorPopup";
 import { newDatasetId, type ImportedDataset } from "@/lib/editores/importedDatasetStore";
 
 interface Props {

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { isEstabelecimentoAdmin, getUserIdFromAuth } from "@/lib/estabelecimentoUtils";
-import { toast } from "@/lib/toast-config";
+import { toast } from "@/lib/editores/editorPopup";
 import { TiptapEditor } from "@/components/editores/TiptapEditor";
 
 import { EditorToolbar, type EditorMode } from "@/components/editores/EditorToolbar";
