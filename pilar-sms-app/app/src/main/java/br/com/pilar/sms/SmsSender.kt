@@ -72,15 +72,15 @@ object SmsSender {
             val deliveredAction = "br.com.pilar.sms.SMS_DELIVERED_${UUID.randomUUID()}"
 
             val sentLatch = CountDownLatch(parts.size)
-            @Volatile var worstCode = Activity.RESULT_OK
-            @Volatile var anyFailure = false
+            val worstCode = java.util.concurrent.atomic.AtomicInteger(Activity.RESULT_OK)
+            val anyFailure = java.util.concurrent.atomic.AtomicBoolean(false)
 
             val sentReceiver = object : BroadcastReceiver() {
                 override fun onReceive(c: Context?, intent: Intent?) {
                     val code = resultCode
                     if (code != Activity.RESULT_OK) {
-                        anyFailure = true
-                        worstCode = code
+                        anyFailure.set(true)
+                        worstCode.set(code)
                     }
                     sentLatch.countDown()
                     if (sentLatch.count == 0L) {
@@ -122,9 +122,9 @@ object SmsSender {
             }
 
             val finished = sentLatch.await(20, TimeUnit.SECONDS)
-            val finalCode = if (!finished) Activity.RESULT_OK else worstCode
+            val finalCode = if (!finished) Activity.RESULT_OK else worstCode.get()
             val (errName, errDesc) = describe(finalCode)
-            val ok = !anyFailure || finalCode == Activity.RESULT_OK
+            val ok = !anyFailure.get() || finalCode == Activity.RESULT_OK
             Log.i(TAG, "DONE send to=$to len=${text.length} parts=${parts.size} code=$finalCode ok=$ok")
             return Result(
                 ok = ok || finalCode == Activity.RESULT_OK,
