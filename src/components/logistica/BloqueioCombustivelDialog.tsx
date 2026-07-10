@@ -11,7 +11,9 @@ import { ptBR } from 'date-fns/locale';
 interface BloqueioCombustivelDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  veiculo: { id: string; placa: string; motorista?: string | null } | null;
+  veiculo:
+    | ({ id: string; placa: string; motorista?: string | null } & Record<string, any>)
+    | null;
   estabelecimentoId: string;
 }
 
@@ -82,9 +84,45 @@ export const BloqueioCombustivelDialog: React.FC<BloqueioCombustivelDialogProps>
         criado_por: userData.user?.id ?? null,
       });
       if (error) throw error;
+
+      // Bloqueio de combustível SEMPRE é enviado como comando real ao rastreador
+      // (modo M2M), independente do tipo do chip — precisa que o rastreador execute
+      // o RELAY,1#/RELAY,0# de fato.
+      const telefone = (veiculo as any).telefone_sms as string | null;
+      const modelId = (veiculo as any).tracker_model_id as string | null;
+      if (telefone && modelId) {
+        const { data: model } = await supabase
+          .from('tracker_device_models')
+          .select('sms_commands, senha_padrao, host, porta, apn, apn_user, apn_password, nome, protocolo')
+          .eq('id', modelId)
+          .maybeSingle();
+        const cmds = Array.isArray((model as any)?.sms_commands) ? (model as any).sms_commands : [];
+        const isBloq = comando === 'bloquear_combustivel';
+        const cmd = cmds.find((c: any) => {
+          const t = String(c?.template || '');
+          return isBloq ? /RELAY,\s*1\s*#/i.test(t) : /RELAY,\s*0\s*#/i.test(t);
+        });
+        if (cmd) {
+          const ctx: Record<string, string> = {
+            host: (model as any)?.host || '',
+            port: String((model as any)?.porta || ''),
+            password: (model as any)?.senha_padrao || '',
+            apn: (model as any)?.apn || '',
+            apn_user: (model as any)?.apn_user || '',
+            apn_password: (model as any)?.apn_password || '',
+          };
+          const rendered = String(cmd.template).replace(/\{(\w+)\}/g, (_m, k) => ctx[k] ?? '');
+          await supabase.functions.invoke('send-sms', {
+            body: { estabelecimento_id: estabelecimentoId, destino: telefone, mensagem: rendered },
+          });
+        } else {
+          toast.warning('Modelo do rastreador não tem comando de bloqueio configurado');
+        }
+      }
+
       toast.success(comando === 'bloquear_combustivel'
-        ? 'Comando de bloqueio registrado. Aguarde execução.'
-        : 'Comando de liberação registrado. Aguarde execução.');
+        ? 'Comando de bloqueio enviado. Aguarde execução.'
+        : 'Comando de liberação enviado. Aguarde execução.');
       fetchHistorico();
     } catch (e: any) {
       console.error(e);
@@ -100,7 +138,7 @@ export const BloqueioCombustivelDialog: React.FC<BloqueioCombustivelDialogProps>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Fuel className="h-5 w-5 text-primary" />
-            Corte de Combustível
+            Bloqueio de combustível
           </DialogTitle>
           <DialogDescription>
             {veiculo ? <>Veículo <strong>{veiculo.placa}</strong>{veiculo.motorista ? ` — ${veiculo.motorista}` : ''}</> : ''}

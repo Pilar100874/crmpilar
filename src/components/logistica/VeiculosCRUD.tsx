@@ -568,7 +568,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                     <Button
                       variant="ghost"
                       size="icon"
-                      title="Bloquear/Liberar combustível"
+                      title="Bloqueio de combustível"
                       onClick={() => {
                         setVeiculoBloqueio(veiculo);
                         setBloqueioOpen(true);
