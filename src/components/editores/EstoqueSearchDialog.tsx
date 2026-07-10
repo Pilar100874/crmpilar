@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/lib/toast-config";
+import { toast } from "@/lib/editores/editorPopup";
 import { resolveProductPricesBatch } from "@/hooks/useProductPrice";
 
 interface Props {

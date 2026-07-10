@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Database, Play, Plus, Trash2, Search, Image as ImageIcon, Link2, Repeat, Sigma, Check, ChevronRight, ChevronLeft, Table2, Filter, Calculator, GripVertical } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/lib/toast-config";
+import { toast } from "@/lib/editores/editorPopup";
 import { evalCalculados, type CampoCalculado } from "@/lib/editores/mergeEngine";
 import { ImportSpreadsheetWizard } from "./ImportSpreadsheetWizard";
 import {

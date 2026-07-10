@@ -8,7 +8,7 @@ import { renderTemplate } from "@/lib/editores/mergeEngine";
 import { runMergeConfig } from "@/lib/editores/runMergeConfig";
 import type { MergeConfig } from "@/components/editores/MergeBuilderDialog";
 import { RegistroNavigator } from "@/components/editores/RegistroNavigator";
-import { toast } from "@/lib/toast-config";
+import { toast } from "@/lib/editores/editorPopup";
 
 interface Props {
   open: boolean;
