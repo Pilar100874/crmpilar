@@ -11,7 +11,9 @@ import { ptBR } from 'date-fns/locale';
 interface BloqueioCombustivelDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  veiculo: { id: string; placa: string; motorista?: string | null } | null;
+  veiculo:
+    | ({ id: string; placa: string; motorista?: string | null } & Record<string, any>)
+    | null;
   estabelecimentoId: string;
 }
 
