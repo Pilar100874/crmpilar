@@ -213,14 +213,30 @@ export default function ModeloEditor() {
       return;
     }
     (async () => {
+      setLoadProgress(5);
+      setLoadMsg("Buscando documento...");
       const { data } = await supabase.from("doc_modelos").select("*").eq("id", id).single();
       if (!data) { toast.error("Modelo não encontrado"); nav("/editores"); return; }
+      setLoadProgress(35);
+      setLoadMsg("Preparando conteúdo...");
+      // yield ao browser para pintar o progresso antes do parse pesado
+      await new Promise((r) => setTimeout(r, 30));
       setModelo(data);
-      setHtml((data as any).content_html || "");
+      const contentHtml = (data as any).content_html || "";
+      const sizeKb = Math.round(contentHtml.length / 1024);
+      setLoadMsg(sizeKb > 200 ? `Renderizando tabelas grandes (${sizeKb} KB)...` : "Renderizando conteúdo...");
+      setLoadProgress(65);
+      await new Promise((r) => setTimeout(r, 30));
+      setHtml(contentHtml);
       setJson((data as any).content_json || {});
+      setLoadProgress(90);
+      await new Promise((r) => setTimeout(r, 30));
       const imp = (data as any)?.merge_config?.importedDatasets;
       hydrateDatasets(Array.isArray(imp) ? imp : []);
+      setLoadProgress(100);
+      setTimeout(() => setLoadProgress(null), 250);
     })();
+
   }, [id, isNew, tipoNovo, nav]);
 
   // Aviso ao fechar/atualizar a aba
