@@ -167,6 +167,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         dispositivo_id: '',
         tracker_model_id: '',
         telefone_sms: '',
+        tipo_chip: 'm2m',
         operadora_id: '',
         enviar_sms_automatico: false,
         configurar_tracker_ao_salvar: true,
