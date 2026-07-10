@@ -255,11 +255,13 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       }
 
       // Configuração automática do rastreador físico via SMS
+      // Só dispara comandos M2M se o chip for de equipamento (m2m).
       if (
         formData.configurar_tracker_ao_salvar &&
         formData.tracker_model_id &&
         formData.telefone_sms &&
-        veiculoId
+        veiculoId &&
+        formData.tipo_chip === 'm2m'
       ) {
         const model = trackerModels.find(m => m.id === formData.tracker_model_id);
         if (model && (model.sms_commands || []).length > 0) {
@@ -326,6 +328,36 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const configurarTrackerAgora = async () => {
     if (!formData.telefone_sms) {
       toast.error('Informe o telefone do chip do rastreador');
+      return;
+    }
+    // Em modo "celular normal" (teste), não envia comandos técnicos ao rastreador.
+    // Envia um SMS de teste legível para o celular Android/iOS.
+    if (formData.tipo_chip === 'normal') {
+      const model = trackerModels.find(m => m.id === formData.tracker_model_id);
+      const mensagemTeste = [
+        `[Pilar - Teste SMS]`,
+        `Veiculo: ${formData.placa || '(sem placa)'}`,
+        formData.motorista ? `Motorista: ${formData.motorista}` : null,
+        model ? `Modelo rastreador: ${model.nome}` : null,
+        `Se voce recebeu esta mensagem, o envio de SMS esta funcionando.`,
+      ].filter(Boolean).join('\n');
+      setConfigurandoTracker(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('send-sms', {
+          body: {
+            estabelecimento_id: estabelecimentoId,
+            destino: formData.telefone_sms,
+            mensagem: mensagemTeste,
+          },
+        });
+        if (error) throw error;
+        if ((data as any)?.success) toast.success('SMS de teste enviado ao celular');
+        else toast.error((data as any)?.erro || 'Falha ao enviar SMS de teste');
+      } catch (e: any) {
+        toast.error(e.message || 'Erro ao enviar SMS de teste');
+      } finally {
+        setConfigurandoTracker(false);
+      }
       return;
     }
     if (!formData.tracker_model_id) {
@@ -842,12 +874,18 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
 
                 <Button
                   type="button" variant="outline" size="sm" className="w-full"
-                  disabled={configurandoTracker || !formData.tracker_model_id || !formData.telefone_sms}
+                  disabled={
+                    configurandoTracker ||
+                    !formData.telefone_sms ||
+                    (formData.tipo_chip === 'm2m' && !formData.tracker_model_id)
+                  }
                   onClick={configurarTrackerAgora}
                 >
                   {configurandoTracker
-                    ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Configurando...</>
-                    : <><Radio className="h-4 w-4 mr-2" />Configurar agora</>}
+                    ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Enviando...</>
+                    : formData.tipo_chip === 'normal'
+                      ? <><Send className="h-4 w-4 mr-2" />Enviar SMS de teste</>
+                      : <><Radio className="h-4 w-4 mr-2" />Configurar agora</>}
                 </Button>
 
                 {selectedVeiculo && (selectedVeiculo as any).tracker_config_status && (
