@@ -466,6 +466,13 @@ export default function ModeloEditor() {
   const [previewMode, setPreviewMode] = useState<"pdf" | "print">("pdf");
 
   const abrirPreviewModal = async (mode: "pdf" | "print" = "pdf") => {
+    if (fillablesInfo.pendentes > 0) {
+      toast.error(
+        `Preencha os ${fillablesInfo.pendentes} campo(s) pendente(s) antes de ${mode === "pdf" ? "gerar o PDF" : "imprimir"}.`
+      );
+      setFormFieldsOpen(true);
+      return;
+    }
     if (dirty) { try { await salvar(true); } catch {} }
     try {
       const total = primaryRows.length;
