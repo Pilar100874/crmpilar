@@ -3861,6 +3861,7 @@ export type Database = {
           ativo: boolean
           coletor_id: string | null
           created_at: string
+          estabelecimento_id: string | null
           filial_id: string | null
           grupo_id: string | null
           host: string
@@ -3898,6 +3899,7 @@ export type Database = {
           ativo?: boolean
           coletor_id?: string | null
           created_at?: string
+          estabelecimento_id?: string | null
           filial_id?: string | null
           grupo_id?: string | null
           host: string
@@ -3935,6 +3937,7 @@ export type Database = {
           ativo?: boolean
           coletor_id?: string | null
           created_at?: string
+          estabelecimento_id?: string | null
           filial_id?: string | null
           grupo_id?: string | null
           host?: string
@@ -3969,6 +3972,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "cv_cameras_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cv_cameras_filial_id_fkey"
             columns: ["filial_id"]
             isOneToOne: false
@@ -3995,6 +4005,7 @@ export type Database = {
         Row: {
           cameras_habilitado: boolean
           created_at: string
+          estabelecimento_id: string | null
           id: string
           intervalo_poll_segundos: number
           ponto_habilitado: boolean
@@ -4003,6 +4014,7 @@ export type Database = {
         Insert: {
           cameras_habilitado?: boolean
           created_at?: string
+          estabelecimento_id?: string | null
           id?: string
           intervalo_poll_segundos?: number
           ponto_habilitado?: boolean
@@ -4011,12 +4023,21 @@ export type Database = {
         Update: {
           cameras_habilitado?: boolean
           created_at?: string
+          estabelecimento_id?: string | null
           id?: string
           intervalo_poll_segundos?: number
           ponto_habilitado?: boolean
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cv_coletor_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cv_defect_reports: {
         Row: {
@@ -4238,6 +4259,7 @@ export type Database = {
           created_at: string
           entry_photos: Json
           entry_photos_required: boolean
+          estabelecimento_id: string | null
           exit_photos: Json
           exit_photos_required: boolean
           id: string
@@ -4249,6 +4271,7 @@ export type Database = {
           created_at?: string
           entry_photos?: Json
           entry_photos_required?: boolean
+          estabelecimento_id?: string | null
           exit_photos?: Json
           exit_photos_required?: boolean
           id?: string
@@ -4260,13 +4283,22 @@ export type Database = {
           created_at?: string
           entry_photos?: Json
           entry_photos_required?: boolean
+          estabelecimento_id?: string | null
           exit_photos?: Json
           exit_photos_required?: boolean
           id?: string
           name?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cv_inspection_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cv_movement_photos: {
         Row: {
@@ -20515,6 +20547,7 @@ export type Database = {
           contact_person_id: string | null
           contact_person_name: string
           entry_date: string
+          estabelecimento_id: string | null
           exit_date: string | null
           id: string
           notes: string | null
@@ -20527,6 +20560,7 @@ export type Database = {
           contact_person_id?: string | null
           contact_person_name: string
           entry_date?: string
+          estabelecimento_id?: string | null
           exit_date?: string | null
           id?: string
           notes?: string | null
@@ -20539,6 +20573,7 @@ export type Database = {
           contact_person_id?: string | null
           contact_person_name?: string
           entry_date?: string
+          estabelecimento_id?: string | null
           exit_date?: string | null
           id?: string
           notes?: string | null
@@ -20556,6 +20591,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "vis_access_records_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "vis_access_records_visitor_id_fkey"
             columns: ["visitor_id"]
             isOneToOne: false
@@ -20568,6 +20610,7 @@ export type Database = {
         Row: {
           cpf: string
           created_at: string
+          estabelecimento_id: string | null
           id: string
           name: string
           updated_at: string
@@ -20576,6 +20619,7 @@ export type Database = {
         Insert: {
           cpf: string
           created_at?: string
+          estabelecimento_id?: string | null
           id?: string
           name: string
           updated_at?: string
@@ -20584,12 +20628,21 @@ export type Database = {
         Update: {
           cpf?: string
           created_at?: string
+          estabelecimento_id?: string | null
           id?: string
           name?: string
           updated_at?: string
           whatsapp?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "vis_contact_persons_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vis_pending_visitors: {
         Row: {
@@ -20598,6 +20651,7 @@ export type Database = {
           contact_person_id: string
           contact_person_name: string
           created_at: string
+          estabelecimento_id: string | null
           id: string
           notes: string | null
           purpose: string | null
@@ -20611,6 +20665,7 @@ export type Database = {
           contact_person_id: string
           contact_person_name: string
           created_at?: string
+          estabelecimento_id?: string | null
           id?: string
           notes?: string | null
           purpose?: string | null
@@ -20624,6 +20679,7 @@ export type Database = {
           contact_person_id?: string
           contact_person_name?: string
           created_at?: string
+          estabelecimento_id?: string | null
           id?: string
           notes?: string | null
           purpose?: string | null
@@ -20637,6 +20693,13 @@ export type Database = {
             columns: ["contact_person_id"]
             isOneToOne: false
             referencedRelation: "vis_contact_persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vis_pending_visitors_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
             referencedColumns: ["id"]
           },
           {
@@ -20654,6 +20717,7 @@ export type Database = {
           cpf: string
           created_at: string
           email: string | null
+          estabelecimento_id: string | null
           id: string
           name: string
           phone: string | null
@@ -20666,6 +20730,7 @@ export type Database = {
           cpf: string
           created_at?: string
           email?: string | null
+          estabelecimento_id?: string | null
           id?: string
           name: string
           phone?: string | null
@@ -20678,6 +20743,7 @@ export type Database = {
           cpf?: string
           created_at?: string
           email?: string | null
+          estabelecimento_id?: string | null
           id?: string
           name?: string
           phone?: string | null
@@ -20685,7 +20751,15 @@ export type Database = {
           updated_at?: string
           whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "vis_visitors_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       visita_formulario_campos: {
         Row: {
