@@ -135,7 +135,10 @@ export const MergeTable = Node.create({
       extraCols: { default: [] },
       totalsRow: { default: false },
       width: { default: "100%" },
+      colWidths: { default: [] },
+      rowHeights: { default: [] },
     };
+
 
   },
 
