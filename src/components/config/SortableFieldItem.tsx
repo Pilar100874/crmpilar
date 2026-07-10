@@ -30,7 +30,7 @@ export const SortableFieldItem = ({ field, onRemove, onToggleSearchable }: Sorta
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: field.id });
+  } = useSortable({ id: field.id, disabled: field.locked });
 
   const style = {
     transform: CSS.Transform.toString(transform),
