@@ -227,9 +227,26 @@ export function TiptapEditor({
         .doc-editor-content .ProseMirror h3 { font-size: 14pt; font-weight: 700; margin: 8pt 0 4pt; }
         .doc-editor-content .ProseMirror p { margin: 0 0 8pt; }
         .doc-editor-content .ProseMirror ul, .doc-editor-content .ProseMirror ol { padding-left: 24pt; margin: 0 0 8pt; }
-        .doc-editor-content .ProseMirror table { border-collapse: collapse; width: 100%; margin: 8pt 0; }
-        .doc-editor-content .ProseMirror th, .doc-editor-content .ProseMirror td { border: 1px solid #ccc; padding: 4pt 6pt; }
+        .doc-editor-content .ProseMirror table { border-collapse: collapse; width: 100%; margin: 8pt 0; table-layout: fixed; position: relative; }
+        .doc-editor-content .ProseMirror th, .doc-editor-content .ProseMirror td { border: 1px solid #ccc; padding: 4pt 6pt; position: relative; vertical-align: top; }
         .doc-editor-content .ProseMirror th { background: #f3f4f6; font-weight: 600; }
+        /* Handles de redimensionamento de coluna (Tiptap) — estilo Word */
+        .doc-editor-content .ProseMirror .column-resize-handle {
+          position: absolute; right: -2px; top: 0; bottom: -2px; width: 4px;
+          background-color: #2563eb; pointer-events: none; z-index: 20;
+        }
+        .doc-editor-content .ProseMirror.resize-cursor { cursor: col-resize; }
+        .doc-editor-content .ProseMirror th:hover::after,
+        .doc-editor-content .ProseMirror td:hover::after {
+          content: ""; position: absolute; right: -2px; top: 0; bottom: 0; width: 4px;
+          background: rgba(37,99,235,0.35); cursor: col-resize; pointer-events: none;
+        }
+        /* Handle de redimensionamento de linha (custom) */
+        .doc-editor-content .ProseMirror tr { position: relative; }
+        .doc-editor-content .ProseMirror td::before {
+          content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 6px;
+          cursor: row-resize; z-index: 15;
+        }
         .doc-editor-content .ProseMirror img { max-width: 100%; height: auto; }
         .doc-editor-content .ProseMirror a { color: #2563eb; text-decoration: underline; }
         .doc-editor-content .ProseMirror .doc-img-wrap { position: relative; display: inline-block; line-height: 0; }
