@@ -330,6 +330,36 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       toast.error('Informe o telefone do chip do rastreador');
       return;
     }
+    // Em modo "celular normal" (teste), não envia comandos técnicos ao rastreador.
+    // Envia um SMS de teste legível para o celular Android/iOS.
+    if (formData.tipo_chip === 'normal') {
+      const model = trackerModels.find(m => m.id === formData.tracker_model_id);
+      const mensagemTeste = [
+        `[Pilar - Teste SMS]`,
+        `Veiculo: ${formData.placa || '(sem placa)'}`,
+        formData.motorista ? `Motorista: ${formData.motorista}` : null,
+        model ? `Modelo rastreador: ${model.nome}` : null,
+        `Se voce recebeu esta mensagem, o envio de SMS esta funcionando.`,
+      ].filter(Boolean).join('\n');
+      setConfigurandoTracker(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('send-sms', {
+          body: {
+            estabelecimento_id: estabelecimentoId,
+            destino: formData.telefone_sms,
+            mensagem: mensagemTeste,
+          },
+        });
+        if (error) throw error;
+        if ((data as any)?.success) toast.success('SMS de teste enviado ao celular');
+        else toast.error((data as any)?.erro || 'Falha ao enviar SMS de teste');
+      } catch (e: any) {
+        toast.error(e.message || 'Erro ao enviar SMS de teste');
+      } finally {
+        setConfigurandoTracker(false);
+      }
+      return;
+    }
     if (!formData.tracker_model_id) {
       toast.error('Selecione o modelo do rastreador');
       return;
