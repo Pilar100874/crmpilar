@@ -678,7 +678,9 @@ export const FillableField = Node.create({
       };
       render();
       const unsub = subscribeFillable(() => {
-        currentValue = getFillableValue(token, label);
+        const next = getFillableValue(token, label);
+        if (next === currentValue) return; // evita re-render (e perda de foco) em updates originados aqui
+        currentValue = next;
         render();
       });
 
