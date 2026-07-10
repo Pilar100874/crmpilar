@@ -42,6 +42,12 @@ class MainActivity : AppCompatActivity() {
         b.btnSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
+        b.btnSettings.setOnLongClickListener {
+            startActivity(Intent(this, DiagnosticActivity::class.java)); true
+        }
+        b.tvStatus.setOnClickListener {
+            startActivity(Intent(this, DiagnosticActivity::class.java))
+        }
         b.btnStart.setOnClickListener {
             val token = getSharedPreferences("pilar_sms", Context.MODE_PRIVATE)
                 .getString("device_token", "") ?: ""
