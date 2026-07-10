@@ -19,7 +19,23 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { id, success, erro, delivered } = await req.json();
+    const payload = await req.json();
+    const {
+      id,
+      success,
+      erro,
+      delivered,
+      status: statusIn,
+      telefone,
+      mensagem,
+      tamanho,
+      android_result_code,
+      android_error_code,
+      android_error_description,
+      subscription_id,
+      parts,
+      timestamp,
+    } = payload;
     if (!id || (typeof success !== 'boolean' && typeof delivered !== 'boolean')) {
       return new Response(JSON.stringify({ error: 'id + (success ou delivered) são obrigatórios' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -73,8 +89,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const erroNormalizado = String(erro || '').trim().toUpperCase();
-    const falsoNegativoAndroid = erroNormalizado === 'GENERIC_FAILURE' || erroNormalizado === 'RESULT_ERROR_GENERIC_FAILURE';
+    const codeStr = String(android_error_code || erro || '').trim().toUpperCase();
+    const falsoNegativoAndroid = codeStr.includes('GENERIC_FAILURE');
 
     if (success || falsoNegativoAndroid) {
       await supabase.from('sms_queue').update({
@@ -98,7 +114,9 @@ Deno.serve(async (req) => {
       const novoStatus = tentativas >= max ? 'erro' : 'pendente';
       await supabase.from('sms_queue').update({
         status: novoStatus,
-        erro_mensagem: erro || 'Falha desconhecida',
+        erro_mensagem: android_error_description
+          ? `${android_error_code || 'ERRO'}: ${android_error_description}`
+          : (erro || 'Falha desconhecida'),
         claimed_at: null,
       }).eq('id', id);
     }

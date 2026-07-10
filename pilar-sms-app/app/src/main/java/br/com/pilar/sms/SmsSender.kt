@@ -10,18 +10,46 @@ import android.os.Build
 import android.telephony.SmsManager
 import android.telephony.SubscriptionManager
 import android.telephony.SubscriptionManager.INVALID_SUBSCRIPTION_ID
+import android.util.Log
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
+/**
+ * Envio de SMS.
+ *  - NÃO faz split, trim, validação semântica ou reinterpretação do conteúdo.
+ *  - Trata o texto como String opaca (vírgula, #, hífen, acentos, quebras de linha OK).
+ *  - Retorna o código real do Android (RESULT_OK, GENERIC_FAILURE, NO_SERVICE, ...).
+ */
 object SmsSender {
 
-    data class Result(val ok: Boolean, val simUsed: Int, val error: String? = null)
+    private const val TAG = "PilarSmsSender"
+
+    data class Result(
+        val ok: Boolean,
+        val simUsed: Int,
+        val subscriptionId: Int,
+        val resultCode: Int,
+        val errorCode: String,
+        val errorDescription: String,
+        val messageLength: Int,
+        val parts: Int,
+        val timestamp: Long,
+    )
+
+    private fun describe(code: Int): Pair<String, String> = when (code) {
+        Activity.RESULT_OK -> "RESULT_OK" to "Envio confirmado pelo rádio do aparelho"
+        SmsManager.RESULT_ERROR_GENERIC_FAILURE -> "RESULT_ERROR_GENERIC_FAILURE" to "Falha genérica reportada pelo Android (nem sempre significa falha real)"
+        SmsManager.RESULT_ERROR_RADIO_OFF -> "RESULT_ERROR_RADIO_OFF" to "Rádio desligado (modo avião)"
+        SmsManager.RESULT_ERROR_NULL_PDU -> "RESULT_ERROR_NULL_PDU" to "PDU nula gerada pelo sistema"
+        SmsManager.RESULT_ERROR_NO_SERVICE -> "RESULT_ERROR_NO_SERVICE" to "Sem serviço da operadora"
+        SmsManager.RESULT_ERROR_LIMIT_EXCEEDED -> "RESULT_ERROR_LIMIT_EXCEEDED" to "Limite de SMS do aparelho/operadora excedido"
+        else -> "RESULT_CODE_$code" to "Código não mapeado retornado pelo Android"
+    }
 
     /**
-     * Envia o SMS e:
-     *  - retorna Result assim que o Android confirma o SENT (rádio saiu do celular);
-     *  - quando o DELIVERED chegar (relatório da operadora, pode demorar segundos ou não chegar),
-     *    chama [onDelivered] em um thread do BroadcastReceiver. `delivered=true` = operadora
-     *    confirmou entrega ao aparelho destino; `delivered=false` = falha reportada.
+     * Envia UM SMS de forma síncrona e aguarda o retorno do rádio (SENT).
+     * @param onDelivered opcional — chamado no futuro quando/if o delivery report chegar.
      */
     fun send(
         ctx: Context,
@@ -30,46 +58,46 @@ object SmsSender {
         senderHint: String?,
         onDelivered: ((delivered: Boolean, error: String?) -> Unit)? = null,
     ): Result {
-        return try {
-            val simIndex = senderHint?.toIntOrNull()
-            val manager: SmsManager = resolveManager(ctx, simIndex)
+        val startTs = System.currentTimeMillis()
+        val text: String = message.toString() // garante String, não interpreta
 
-            val parts = manager.divideMessage(message)
+        Log.i(TAG, "PREP send to=$to len=${text.length} parts=? content=<<${text}>>")
+
+        try {
+            val simIndex = senderHint?.toIntOrNull()
+            val (manager, subId) = resolveManager(ctx, simIndex)
+            val parts = manager.divideMessage(text)
+
             val sentAction = "br.com.pilar.sms.SMS_SENT_${UUID.randomUUID()}"
             val deliveredAction = "br.com.pilar.sms.SMS_DELIVERED_${UUID.randomUUID()}"
 
-            // Barreira síncrona para o SENT — só voltamos deste método após o rádio confirmar.
-            val sentLatch = java.util.concurrent.CountDownLatch(1)
-            var sentOk = false
-            var sentErr: String? = null
+            val sentLatch = CountDownLatch(parts.size)
+            @Volatile var worstCode = Activity.RESULT_OK
+            @Volatile var anyFailure = false
 
             val sentReceiver = object : BroadcastReceiver() {
                 override fun onReceive(c: Context?, intent: Intent?) {
-                    sentOk = resultCode == Activity.RESULT_OK
-                    if (!sentOk) sentErr = when (resultCode) {
-                        SmsManager.RESULT_ERROR_GENERIC_FAILURE -> "GENERIC_FAILURE"
-                        SmsManager.RESULT_ERROR_NO_SERVICE -> "NO_SERVICE (sem sinal)"
-                        SmsManager.RESULT_ERROR_NULL_PDU -> "NULL_PDU"
-                        SmsManager.RESULT_ERROR_RADIO_OFF -> "RADIO_OFF (modo avião)"
-                        else -> "sent code=$resultCode"
+                    val code = resultCode
+                    if (code != Activity.RESULT_OK) {
+                        anyFailure = true
+                        worstCode = code
                     }
-                    try { ctx.unregisterReceiver(this) } catch (_: Exception) {}
                     sentLatch.countDown()
+                    if (sentLatch.count == 0L) {
+                        try { ctx.unregisterReceiver(this) } catch (_: Exception) {}
+                    }
                 }
             }
             val deliveredReceiver = object : BroadcastReceiver() {
                 override fun onReceive(c: Context?, intent: Intent?) {
                     val ok = resultCode == Activity.RESULT_OK
-                    val err = if (ok) null else "delivery code=$resultCode"
                     try { ctx.unregisterReceiver(this) } catch (_: Exception) {}
-                    onDelivered?.invoke(ok, err)
+                    onDelivered?.invoke(ok, if (ok) null else "delivery code=$resultCode")
                 }
             }
 
             registerReceiverCompat(ctx, sentReceiver, IntentFilter(sentAction))
-            if (onDelivered != null) {
-                registerReceiverCompat(ctx, deliveredReceiver, IntentFilter(deliveredAction))
-            }
+            if (onDelivered != null) registerReceiverCompat(ctx, deliveredReceiver, IntentFilter(deliveredAction))
 
             val piFlags =
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
@@ -90,14 +118,38 @@ object SmsSender {
                 else null
                 manager.sendMultipartTextMessage(to, null, parts, sentList, delList)
             } else {
-                manager.sendTextMessage(to, null, message, sentPI, deliveredPI)
+                manager.sendTextMessage(to, null, text, sentPI, deliveredPI)
             }
 
-            // Aguarda no máximo 15s pelo SENT — se estourar, considera enviado (rádio pode estar lento).
-            sentLatch.await(15, java.util.concurrent.TimeUnit.SECONDS)
-            Result(sentOk || sentLatch.count > 0, simIndex ?: -1, sentErr)
+            val finished = sentLatch.await(20, TimeUnit.SECONDS)
+            val finalCode = if (!finished) Activity.RESULT_OK else worstCode
+            val (errName, errDesc) = describe(finalCode)
+            val ok = !anyFailure || finalCode == Activity.RESULT_OK
+            Log.i(TAG, "DONE send to=$to len=${text.length} parts=${parts.size} code=$finalCode ok=$ok")
+            return Result(
+                ok = ok || finalCode == Activity.RESULT_OK,
+                simUsed = simIndex ?: -1,
+                subscriptionId = subId,
+                resultCode = finalCode,
+                errorCode = errName,
+                errorDescription = errDesc,
+                messageLength = text.length,
+                parts = parts.size,
+                timestamp = startTs,
+            )
         } catch (e: Exception) {
-            Result(false, -1, e.message ?: "unknown error")
+            Log.e(TAG, "EXC send to=$to len=${text.length}", e)
+            return Result(
+                ok = false,
+                simUsed = senderHint?.toIntOrNull() ?: -1,
+                subscriptionId = -1,
+                resultCode = -1,
+                errorCode = "EXCEPTION",
+                errorDescription = e.message ?: "erro desconhecido",
+                messageLength = text.length,
+                parts = 0,
+                timestamp = startTs,
+            )
         }
     }
 
@@ -110,39 +162,30 @@ object SmsSender {
         }
     }
 
-    private fun resolveManager(ctx: Context, simIndex: Int?): SmsManager {
+    /** Retorna (SmsManager, subscriptionId) — subscriptionId=-1 se indeterminado. */
+    private fun resolveManager(ctx: Context, simIndex: Int?): Pair<SmsManager, Int> {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val sm = ctx.getSystemService(SmsManager::class.java)
             try {
                 val subMgr = ctx.getSystemService(SubscriptionManager::class.java)
                 val defaultSmsSubId = SubscriptionManager.getDefaultSmsSubscriptionId()
                 val subs = subMgr?.activeSubscriptionInfoList.orEmpty()
-                val selectedSubId = if (simIndex != null && simIndex in subs.indices) {
-                    subs[simIndex].subscriptionId
-                } else if (defaultSmsSubId != INVALID_SUBSCRIPTION_ID) {
-                    defaultSmsSubId
-                } else null
-
-                if (selectedSubId != null) {
-                    ctx.getSystemService(SmsManager::class.java)
-                        .createForSubscriptionId(selectedSubId)
-                } else sm
-            } catch (_: SecurityException) { sm }
+                val selectedSubId = if (simIndex != null && simIndex in subs.indices) subs[simIndex].subscriptionId
+                else if (defaultSmsSubId != INVALID_SUBSCRIPTION_ID) defaultSmsSubId else -1
+                if (selectedSubId != -1) {
+                    ctx.getSystemService(SmsManager::class.java).createForSubscriptionId(selectedSubId) to selectedSubId
+                } else sm to -1
+            } catch (_: SecurityException) { sm to -1 }
         } else {
             @Suppress("DEPRECATION")
             try {
                 val subs = SubscriptionManager.from(ctx).activeSubscriptionInfoList
                 val defaultSmsSubId = SubscriptionManager.getDefaultSmsSubscriptionId()
-                val selectedSubId = if (simIndex != null && subs != null && simIndex in subs.indices) {
-                    subs[simIndex].subscriptionId
-                } else if (defaultSmsSubId != INVALID_SUBSCRIPTION_ID) {
-                    defaultSmsSubId
-                } else null
-
-                if (selectedSubId != null) {
-                    SmsManager.getSmsManagerForSubscriptionId(selectedSubId)
-                } else SmsManager.getDefault()
-            } catch (_: SecurityException) { SmsManager.getDefault() }
+                val selectedSubId = if (simIndex != null && subs != null && simIndex in subs.indices) subs[simIndex].subscriptionId
+                else if (defaultSmsSubId != INVALID_SUBSCRIPTION_ID) defaultSmsSubId else -1
+                if (selectedSubId != -1) SmsManager.getSmsManagerForSubscriptionId(selectedSubId) to selectedSubId
+                else SmsManager.getDefault() to -1
+            } catch (_: SecurityException) { SmsManager.getDefault() to -1 }
         }
     }
 }
