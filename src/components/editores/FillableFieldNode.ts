@@ -461,8 +461,9 @@ export const FillableField = Node.create({
       const attachCnpjGroupFocus = (input: HTMLElement) => {
         if (!cnpjGroup || !cnpjSubfield) return;
         if (cnpjSubfield === "cnpj") return;
+        // Só ativa no modo preenchimento (documento bloqueado / editor não editável).
+        if (editor?.isEditable !== false) return;
         input.addEventListener("focus", () => {
-          // Sempre pergunta ao entrar em um campo do grupo (documento aberto/desbloqueado).
           askGroupMethod(input, cnpjGroup);
         }, { once: false });
       };
@@ -470,6 +471,7 @@ export const FillableField = Node.create({
       const attachCepGroupFocus = (input: HTMLElement) => {
         if (!cepGroup || !cepSubfield) return;
         if (cepSubfield === "cep") return;
+        if (editor?.isEditable !== false) return;
         input.addEventListener("focus", () => {
           askCepGroupMethod(input, cepGroup);
         }, { once: false });
