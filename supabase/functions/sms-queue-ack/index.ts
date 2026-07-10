@@ -19,7 +19,23 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { id, success, erro, delivered } = await req.json();
+    const payload = await req.json();
+    const {
+      id,
+      success,
+      erro,
+      delivered,
+      status: statusIn,
+      telefone,
+      mensagem,
+      tamanho,
+      android_result_code,
+      android_error_code,
+      android_error_description,
+      subscription_id,
+      parts,
+      timestamp,
+    } = payload;
     if (!id || (typeof success !== 'boolean' && typeof delivered !== 'boolean')) {
       return new Response(JSON.stringify({ error: 'id + (success ou delivered) são obrigatórios' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
