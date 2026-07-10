@@ -295,6 +295,8 @@ const App = () => (
         
         <Toaster />
         <Sonner />
+        <EditorPopupProvider />
+        
         
         <BrowserRouter>
           <ScrollToTop />
