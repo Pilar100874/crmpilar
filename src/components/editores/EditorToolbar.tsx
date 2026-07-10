@@ -53,6 +53,7 @@ interface Props {
   onQuickFill?: () => void;
   onGeneratePdf?: () => void;
   onPrint?: () => void;
+  pendingFillables?: number;
   onSearchEmpresa?: () => void;
   onSearchEstoque?: () => void;
 }
@@ -85,7 +86,7 @@ export function EditorToolbar({
   onBack, onSave, onSalvarComo, onToggleLock, locked, dirty, saving,
   titulo, onTituloChange, mode = "editar", onModeChange,
   onInsertFormField, onToggleSidebar, sidebarOpen, onToggleFormFields, formFieldsOpen, hasFormFields = false,
-  onQuickFill, onGeneratePdf, onPrint, onSearchEmpresa, onSearchEstoque,
+  onQuickFill, onGeneratePdf, onPrint, pendingFillables = 0, onSearchEmpresa, onSearchEstoque,
 }: Props) {
 
   const [color, setColor] = useState("#111111");
@@ -145,10 +146,22 @@ export function EditorToolbar({
               </TB>
             )}
             {onGeneratePdf && (
-              <TB onClick={onGeneratePdf} title="Gerar PDF"><FileDown className="h-4 w-4" /></TB>
+              <TB
+                onClick={onGeneratePdf}
+                disabled={pendingFillables > 0}
+                title={pendingFillables > 0 ? `Preencha ${pendingFillables} campo(s) pendente(s) para gerar o PDF` : "Gerar PDF"}
+              >
+                <FileDown className={cn("h-4 w-4", pendingFillables > 0 && "opacity-50")} />
+              </TB>
             )}
             {onPrint && (
-              <TB onClick={onPrint} title="Imprimir"><Printer className="h-4 w-4" /></TB>
+              <TB
+                onClick={onPrint}
+                disabled={pendingFillables > 0}
+                title={pendingFillables > 0 ? `Preencha ${pendingFillables} campo(s) pendente(s) para imprimir` : "Imprimir"}
+              >
+                <Printer className={cn("h-4 w-4", pendingFillables > 0 && "opacity-50")} />
+              </TB>
             )}
           </>
         )}
