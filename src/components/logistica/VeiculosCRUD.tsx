@@ -310,8 +310,11 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       formData.traccar_device_id ? `Traccar ID: ${formData.traccar_device_id}` : null,
     ].filter(Boolean);
     // Mesmo formato do "modo celular" (SMS único com separador " | ") — evita
-    // quebras de linha que alguns provedores/chips rejeitam.
-    const mensagem = `DADOS VEICULO ${formData.placa}: ${linhas.slice(1).join(' | ')}`;
+    // quebras de linha que alguns provedores/chips rejeitam. Também removemos
+    // acentos (ex.: "Caminhão", "Descrição") porque vários gateways/APK SMS
+    // rejeitam caracteres fora do alfabeto GSM-7.
+    const semAcento = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const mensagem = semAcento(`DADOS VEICULO ${formData.placa}: ${linhas.slice(1).join(' | ')}`);
 
     try {
       setEnviandoSms(true);
