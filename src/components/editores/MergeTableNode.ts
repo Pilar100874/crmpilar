@@ -164,8 +164,6 @@ export const MergeTable = Node.create({
         "data-totals": attrs.totalsRow ? "1" : "0",
         style: "border-collapse:collapse;width:100%;font-size:11pt;",
       }),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      0 as any,
     ];
   },
 
