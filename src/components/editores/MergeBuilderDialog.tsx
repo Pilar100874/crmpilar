@@ -780,6 +780,19 @@ export function MergeBuilderDialog({ value, onChange, onInsertField, onSelectFie
           }));
         }}
       />
+      <FormulaBuilderDialog
+        open={formulaOpen}
+        onOpenChange={setFormulaOpen}
+        value={(cfg.calculados ?? [])[formulaEditIndex] ?? { nome: "", expressao: "" }}
+        campos={camposDisponiveis}
+        sampleRow={rows[0]}
+        onSave={(novo) => {
+          const arr = [...(cfg.calculados ?? [])];
+          if (formulaEditIndex >= 0 && formulaEditIndex < arr.length) arr[formulaEditIndex] = novo;
+          else arr.push(novo);
+          setCfg({ ...cfg, calculados: arr });
+        }}
+      />
     </Dialog>
   );
 }
