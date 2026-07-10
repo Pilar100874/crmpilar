@@ -310,6 +310,9 @@ export const MergeTable = Node.create({
           <span style="color:#555;">até</span>
           <input type="number" min="0" value="${a.to ?? 0}" placeholder="todas" style="width:52px;padding:2px 4px;border:1px solid #ccc;border-radius:4px;" data-k="to" />
           <span style="width:1px;height:18px;background:#e5e7eb;"></span>
+          <span style="color:#555;">Largura:</span>
+          <input type="text" value="${esc(a.width || "100%")}" placeholder="100% ou 500px" style="width:72px;padding:2px 4px;border:1px solid #ccc;border-radius:4px;" data-k="width" />
+
           <button type="button" data-a="addcol" style="padding:2px 8px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;">+ Coluna fórmula</button>
           <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" data-a="totals" ${a.totalsRow?"checked":""}/> Totais</label>
           <span style="width:1px;height:18px;background:#e5e7eb;"></span>
