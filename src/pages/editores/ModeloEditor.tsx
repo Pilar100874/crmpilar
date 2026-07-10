@@ -140,6 +140,14 @@ export default function ModeloEditor() {
     if (modelo?.bloqueado && !showResolved) setShowResolved(true);
   }, [modelo?.bloqueado, showResolved]);
 
+  // Ao editar tabela/fórmula, sai automaticamente do modo de visualização
+  useEffect(() => {
+    const handler = () => setShowResolved(false);
+    window.addEventListener("editor:disable-preview", handler);
+    return () => window.removeEventListener("editor:disable-preview", handler);
+  }, []);
+
+
   // Publica valores no store para os chips renderizarem o valor real
   useEffect(() => {
     setPreviewActive(showResolved);
