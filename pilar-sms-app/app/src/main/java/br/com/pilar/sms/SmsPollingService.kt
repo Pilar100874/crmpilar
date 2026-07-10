@@ -116,7 +116,10 @@ class SmsPollingService : Service() {
                     val id = m.getString("id")
                     val to = m.getString("telefone")
                     val msg = m.getString("mensagem")
-                    val result = SmsSender.send(this@SmsPollingService, to, msg, null)
+                    val result = SmsSender.send(this@SmsPollingService, to, msg, null) { delivered, derr ->
+                        // Callback assíncrono do relatório de entrega da operadora.
+                        scope.launch { ackDelivery(token, id, delivered, derr) }
+                    }
                     ack(token, id, result.ok, result.error)
                     if (result.ok) enviados++ else falhas++
                     addHistory(SendEvent(to, msg, result.ok, result.error, System.currentTimeMillis()))
