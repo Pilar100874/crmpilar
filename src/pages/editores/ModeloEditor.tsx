@@ -476,7 +476,10 @@ export default function ModeloEditor() {
     if (dirty) { try { await salvar(true); } catch {} }
     try {
       const total = primaryRows.length;
-      if (total > 1) {
+      // Se o documento tem uma tabela de merge (renderiza todas as linhas em 1 elemento),
+      // não gera 1 página por registro — o próprio bloco já mostra todos os dados.
+      const hasMergeTable = /data-merge-table/i.test(html);
+      if (total > 1 && !hasMergeTable) {
         const pages: string[] = [];
         for (let i = 0; i < total; i++) pages.push(await buildFinalHtml(i));
         setPreviewPages(pages);
