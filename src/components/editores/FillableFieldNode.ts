@@ -462,9 +462,7 @@ export const FillableField = Node.create({
         if (!cnpjGroup || !cnpjSubfield) return;
         if (cnpjSubfield === "cnpj") return;
         input.addEventListener("focus", () => {
-          const v = (input as HTMLInputElement | HTMLTextAreaElement).value;
-          if (v && v.trim()) return;
-          if (cnpjGroupState.get(cnpjGroup)) return;
+          // Sempre pergunta ao entrar em um campo do grupo (documento aberto/desbloqueado).
           askGroupMethod(input, cnpjGroup);
         }, { once: false });
       };
@@ -473,9 +471,6 @@ export const FillableField = Node.create({
         if (!cepGroup || !cepSubfield) return;
         if (cepSubfield === "cep") return;
         input.addEventListener("focus", () => {
-          const v = (input as HTMLInputElement | HTMLTextAreaElement).value;
-          if (v && v.trim()) return;
-          if (cepGroupState.get(cepGroup)) return;
           askCepGroupMethod(input, cepGroup);
         }, { once: false });
       };
