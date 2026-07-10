@@ -299,12 +299,23 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       toast.error('Informe o telefone (SIM do equipamento)');
       return;
     }
-    const mensagem = (formData.descricao || formData.placa || '').trim();
+    const model = trackerModels.find(m => m.id === formData.tracker_model_id);
+    if (!model) {
+      toast.error('Selecione o modelo do rastreador');
+      return;
+    }
 
-    if (!mensagem) {
+    const nomeVeiculo = (formData.descricao || formData.placa || '').trim();
+
+    if (!nomeVeiculo) {
       toast.error('Informe o nome do veículo');
       return;
     }
+
+    const mensagem = buildTrackerParametersSms({
+      ...modelComOperadora(model),
+      nome: nomeVeiculo,
+    });
 
     try {
       setEnviandoSms(true);
@@ -955,7 +966,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   Envio de dados por SMS
                 </Label>
                 <p className="text-[11px] text-muted-foreground">
-                  Envia placa, motorista e demais dados do veículo em formato de texto para o telefone acima.
+                  Envia o mesmo SMS de conferência, usando o nome do veículo no texto.
                 </p>
                 <div className="flex items-center justify-between">
                   <Label className="text-xs">Enviar ao salvar</Label>
@@ -969,7 +980,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   variant="outline"
                   size="sm"
                   className="w-full"
-                  disabled={enviandoSms || !formData.telefone_sms}
+                  disabled={enviandoSms || !formData.telefone_sms || !formData.tracker_model_id}
                   onClick={() => enviarDadosPorSms(selectedVeiculo?.id)}
                 >
                   <Send className="h-4 w-4 mr-2" />
