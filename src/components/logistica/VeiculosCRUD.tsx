@@ -320,7 +320,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       toast.error('Configure host e porta do servidor no modelo do rastreador');
       return;
     }
-    const mensagem = 'Fusca,1#';
+    const mensagem = '0–3 dias: ainda são mais vulneráveis.\n4–7 dias: a fixação aumenta bastante.\n7–10 dias: a maioria dos enxertos já está bem presa';
 
 
 
