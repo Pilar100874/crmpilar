@@ -203,8 +203,6 @@ export const MergeTable = Node.create({
         wrapper.style.width = width.endsWith("%") ? width : width;
       };
 
-        wrapper.style.width = width.endsWith("%") ? width : width;
-      };
       applyWidth(node.attrs.width);
       const syncAttrs = (n: any) => {
         dom.setAttribute("data-alias", n.attrs.alias);
