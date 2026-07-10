@@ -687,9 +687,25 @@ export const FillableField = Node.create({
             ev.preventDefault();
             ev.stopPropagation();
             if (editor?.isEditable === false) return;
-            const pos = typeof getPos === "function" ? getPos() : null;
-            if (pos == null || !editor) return;
-            editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).run();
+            showInlinePopover(del, (close) => {
+              const wrap = document.createElement("div");
+              const title = document.createElement("div");
+              title.textContent = `Remover o campo "${label || "sem rótulo"}"?`;
+              title.style.cssText = "font-weight:600;margin-bottom:8px;";
+              const yes = makeBtn("Sim, remover", true);
+              const no = makeBtn("Cancelar");
+              yes.addEventListener("click", () => {
+                close();
+                const pos = typeof getPos === "function" ? getPos() : null;
+                if (pos == null || !editor) return;
+                editor.chain().focus().deleteRange({ from: pos, to: pos + node.nodeSize }).run();
+              });
+              no.addEventListener("click", () => close());
+              wrap.appendChild(title);
+              wrap.appendChild(yes);
+              wrap.appendChild(no);
+              return wrap;
+            });
           });
           dom.appendChild(del);
         }
