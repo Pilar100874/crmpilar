@@ -72,8 +72,9 @@ export async function configurarRastreador(params: {
   veiculoId?: string | null;
   telefone: string;
   model: TrackerModelLite;
+  chipType?: 'm2m' | 'normal';
 }): Promise<ConfigureResult> {
-  const { estabelecimentoId, veiculoId, telefone, model } = params;
+  const { estabelecimentoId, veiculoId, telefone, model, chipType } = params;
   const cmds = getTrackerRenderedCommands(model);
   if (cmds.length === 0) {
     return { status: 'sem_comandos', log: [] };
@@ -83,10 +84,11 @@ export async function configurarRastreador(params: {
   let okCount = 0;
   let sentAny = false;
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  // M2M não tem anti-flood da operadora → 3s basta. Chip normal → 10s.
+  const intervalMs = chipType === 'm2m' ? 3000 : 10000;
 
   for (const cmd of cmds) {
-    // Espaça envios em 10s para evitar bloqueio anti-flood da operadora
-    if (sentAny) await sleep(10000);
+    if (sentAny) await sleep(intervalMs);
     sentAny = true;
 
     const rendered = cmd.rendered;
