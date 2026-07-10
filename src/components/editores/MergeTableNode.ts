@@ -262,6 +262,67 @@ export const MergeTable = Node.create({
           return true;
         }).run();
       };
+
+      // Redimensionamento de linhas/colunas estilo Word
+      const EDGE = 6;
+      dom.addEventListener("mousemove", (e) => {
+        const cell = (e.target as HTMLElement).closest("td, th") as HTMLTableCellElement | null;
+        if (!cell) { dom.style.cursor = "pointer"; return; }
+        const r = cell.getBoundingClientRect();
+        const nearRight = r.right - e.clientX < EDGE;
+        const nearBottom = r.bottom - e.clientY < EDGE;
+        dom.style.cursor = nearRight ? "col-resize" : nearBottom ? "row-resize" : "pointer";
+      });
+      dom.addEventListener("mousedown", (e) => {
+        if (!editor.isEditable) return;
+        const cell = (e.target as HTMLElement).closest("td, th") as HTMLTableCellElement | null;
+        if (!cell) return;
+        const r = cell.getBoundingClientRect();
+        const nearRight = r.right - e.clientX < EDGE;
+        const nearBottom = r.bottom - e.clientY < EDGE;
+        if (!nearRight && !nearBottom) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const row = cell.parentElement as HTMLTableRowElement;
+        const rowIdx = row.rowIndex;
+        const colIdx = cell.cellIndex;
+        const startX = e.clientX, startY = e.clientY;
+        const startW = r.width, startH = r.height;
+        let lastW = startW, lastH = startH;
+        const onMove = (m: MouseEvent) => {
+          if (nearRight) {
+            lastW = Math.max(30, startW + (m.clientX - startX));
+            Array.from(dom.querySelectorAll("tr")).forEach((tr) => {
+              const c = (tr as HTMLTableRowElement).cells[colIdx];
+              if (c) c.style.width = `${Math.round(lastW)}px`;
+            });
+          }
+          if (nearBottom) {
+            lastH = Math.max(18, startH + (m.clientY - startY));
+            row.style.height = `${Math.round(lastH)}px`;
+          }
+        };
+        const onUp = () => {
+          window.removeEventListener("mousemove", onMove);
+          window.removeEventListener("mouseup", onUp);
+          const patch: Partial<MergeTableAttrs> = {};
+          if (nearRight) {
+            const cw = [...((node.attrs.colWidths || []) as (string | null)[])];
+            cw[colIdx] = `${Math.round(lastW)}px`;
+            patch.colWidths = cw;
+          }
+          if (nearBottom) {
+            const rh = [...((node.attrs.rowHeights || []) as (string | null)[])];
+            rh[rowIdx] = `${Math.round(lastH)}px`;
+            patch.rowHeights = rh;
+          }
+          update(patch);
+        };
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onUp);
+      });
+
+
       const openFormulaPicker = (
         initial: string,
         target: "extra" | "row",
