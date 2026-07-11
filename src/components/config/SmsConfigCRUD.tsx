@@ -219,47 +219,6 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base"><BookOpen className="h-4 w-4" /> Manual de configuração dos provedores</CardTitle>
-          <CardDescription>Passo a passo para cada um dos 3 provedores suportados</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="pilar">
-              <AccordionTrigger className="text-sm">
-                <span className="flex items-center gap-2"><Shield className="h-4 w-4 text-primary" /> Pilar SMS — App próprio (Modo Fila) · Gratuito</span>
-              </AccordionTrigger>
-              <AccordionContent className="text-sm space-y-2 text-muted-foreground">
-                <p><b>Como funciona:</b> o CRM grava os SMS numa fila. O APK Pilar SMS instalado no seu celular consulta essa fila a cada 5 segundos e envia as mensagens pelo chip usando o <code>SmsManager</code> nativo. <b>Não precisa de IP público, roteador nem Cloudflare</b> — igual ao Coletor de Ponto e ao Coletor de Câmeras.</p>
-                <div className="flex flex-wrap items-center gap-2 p-3 rounded-md border border-primary/30 bg-primary/5">
-                  <AppWindow className="h-4 w-4 text-primary" />
-                  <span className="text-sm text-foreground"><b>Baixe o APK Pilar SMS</b> e veja o passo a passo em Admin → Apps</span>
-                  <Button asChild size="sm" className="ml-auto">
-                    <Link to="/admin/apps">
-                      <Download className="h-4 w-4 mr-2" /> Ir para Apps
-                    </Link>
-                  </Button>
-                </div>
-                <ol className="list-decimal ml-5 space-y-1">
-                  <li>Na seção <b>Celulares autorizados</b> acima, cadastre um nome (ex: "Celular Recepção") e clique em <b>Cadastrar</b>. Um <b>token</b> será gerado.</li>
-                  <li>Copie o token.</li>
-                  <li>Instale o APK <b>Pilar SMS v1.1.0</b> no Android que ficará ligado com o chip.</li>
-                  <li>Abra o app, conceda permissão de <b>Enviar SMS</b> e desative a otimização de bateria.</li>
-                  <li>Cole o token no campo do app e toque em <b>Conectar</b>. Pronto — o app começa a processar a fila.</li>
-                  <li>O status do celular (último ping, bateria) aparece automaticamente na tabela acima.</li>
-                </ol>
-                <p className="text-xs"><b>Dica:</b> mantenha o celular carregando 24h. Se cair a conexão, os SMS ficam na fila e são reenviados assim que o celular voltar. Pode cadastrar vários celulares — eles dividem a fila automaticamente.</p>
-              </AccordionContent>
-            </AccordionItem>
-
-
-
-
-
-          </Accordion>
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader>
