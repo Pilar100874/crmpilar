@@ -5,13 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info, Monitor, Camera, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import SmsTestePanel from "@/components/admin/SmsTestePanel";
 
 // Fallback fixo caso version.json esteja indisponível.
 const COLETOR_FALLBACK_URL = "https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Setup.exe";
 const COLETOR_FALLBACK_FILENAME = "ColetorPilar-Setup.exe";
-const SMS_FALLBACK_URL = "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.4.7/pilar-sms-v1.4.7.apk";
-const SMS_FALLBACK_FILENAME = "pilar-sms-v1.4.7.apk";
-const SMS_FALLBACK_VERSION = "1.4.7";
+const SMS_FALLBACK_URL = "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.4.8/pilar-sms-v1.4.8.apk";
+const SMS_FALLBACK_FILENAME = "pilar-sms-v1.4.8.apk";
+const SMS_FALLBACK_VERSION = "1.4.8";
 
 interface BIPEvent extends Event {
   prompt: () => Promise<void>;
@@ -261,6 +262,9 @@ export default function AdminApps() {
           </div>
         </div>
       </Card>
+
+      <SmsTestePanel />
+
 
       <Card className="flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
         <CardContent className="flex-1 p-5 sm:p-7 md:p-8">

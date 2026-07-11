@@ -1,6 +1,6 @@
 {
-  "version": "1.4.7",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.4.7/pilar-sms-v1.4.7.apk",
-  "filename": "pilar-sms-v1.4.7.apk",
-  "notas": "1.4.7: APK release assinado e compilado sem a biblioteca org.json duplicada, corrigindo falha DuplicatePlatformClasses do lint."
+  "version": "1.4.8",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.4.8/pilar-sms-v1.4.8.apk",
+  "filename": "pilar-sms-v1.4.8.apk",
+  "notas": "1.4.8: nova tela de diagnóstico permite ENVIAR SMS DE TESTE direto do celular e mostra código exato do Android (RESULT_OK, GENERIC_FAILURE, NO_SERVICE, LIMIT_EXCEEDED...) para descobrir por que algumas mensagens vão e outras não. Toque longo no ícone de Configurações do app para abrir."
 }
