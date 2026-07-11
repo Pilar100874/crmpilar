@@ -118,10 +118,11 @@ Deno.serve(async (req) => {
       }).select().maybeSingle().then(() => {}).catch(() => {});
     } else {
       const tentativas = item.tentativas || 0;
-      const max = item.max_tentativas || 1;
+      const max = Math.max(item.max_tentativas || 3, 3);
       const novoStatus = tentativas >= max ? 'erro' : 'pendente';
       await supabase.from('sms_queue').update({
         status: novoStatus,
+        max_tentativas: max,
         erro_mensagem: android_error_description
           ? `${android_error_code || 'ERRO'}: ${android_error_description}`
           : (erro || 'Falha desconhecida'),
