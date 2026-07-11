@@ -57,6 +57,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const [dispositivoTab, setDispositivoTab] = useState<'selecionar' | 'digitar'>('selecionar');
   const [enviandoSms, setEnviandoSms] = useState(false);
   const [configurandoTracker, setConfigurandoTracker] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [formData, setFormData] = useState({
     placa: '',
     descricao: '',
