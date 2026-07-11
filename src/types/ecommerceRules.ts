@@ -68,7 +68,9 @@ export type EcommerceRuleBlockType =
   | "acao_notificacao_navegador"
   | "acao_destacar_elemento"
   | "acao_enviar_sms"
+  | "acao_disparar_push"
   | "return_response";
+
 
 export interface EcommerceBlockDefinition {
   type: EcommerceRuleBlockType;
@@ -603,7 +605,24 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
       outputVariable: "envio_sms_status",
     },
   },
+  {
+    type: "acao_disparar_push",
+    label: "Disparar Push",
+    description: "Envia notificação push para usuário interno ou cliente",
+    icon: "BellRing",
+    color: "#f97316",
+    category: "acao_recuperacao",
+    defaultData: {
+      destinatario_tipo: "todos_contatos",
+      usuario_ids: [],
+      contato_ids: [],
+      titulo: "Oferta especial pra você",
+      corpo: "",
+      url: "/",
+    },
+  },
 ];
+
 
 export interface EcommerceRuleNode {
   id: string;

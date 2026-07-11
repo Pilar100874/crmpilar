@@ -16,6 +16,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SmsBlockConfig } from "@/components/shared/SmsBlockConfig";
+import { PushBlockConfigEditor } from "@/components/workflows/PushBlockConfig";
+
 
 const ECOMMERCE_ROUTES = [
   { path: "/ecommerce", label: "Home da Loja", group: "Páginas" },
@@ -1492,6 +1494,16 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
 
       case "acao_enviar_sms":
         return <SmsBlockConfig config={config} onChange={(k, v) => updateConfig(k, v)} />;
+
+      case "acao_disparar_push":
+        return (
+          <PushBlockConfigEditor
+            value={config as any}
+            onChange={(patch) => Object.entries(patch).forEach(([k, v]) => updateConfig(k, v))}
+            context="marketing"
+          />
+        );
+
 
       default:
         return <p className="text-xs text-muted-foreground">Sem configurações adicionais para este bloco.</p>;
