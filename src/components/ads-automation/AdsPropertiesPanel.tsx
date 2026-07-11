@@ -621,6 +621,12 @@ export const AdsPropertiesPanel = ({ selectedNode, onUpdateNode, onClose }: AdsP
           context="ads"
         />;
 
+      case 'enviar_sms':
+        return <SmsBlockConfig
+          config={(selectedNode.data as any).config || {}}
+          onChange={(key, value) => handleConfigChange(key, value)}
+        />;
+
       default:
         return (
           <p className="text-sm text-muted-foreground">
