@@ -590,6 +590,19 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
       stopFlow: true,
     },
   },
+  {
+    type: "acao_enviar_sms",
+    label: "Enviar SMS",
+    description: "Dispara SMS para um ou mais números via gateway",
+    icon: "MessageSquareText",
+    color: "#0284c7",
+    category: "acao_recuperacao",
+    defaultData: {
+      phoneNumbers: [""],
+      message: "",
+      outputVariable: "envio_sms_status",
+    },
+  },
 ];
 
 export interface EcommerceRuleNode {
