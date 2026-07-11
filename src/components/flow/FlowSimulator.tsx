@@ -2645,20 +2645,42 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           .map((n) => interpolateVariables(String(n || ""), context).replace(/\D/g, ""))
           .filter(Boolean);
         const msg = interpolateVariables(config.message || "", context);
-        if (numbers.length === 0) {
-          addSystemMessage("📩 SMS não enviado: nenhum número informado.");
-        } else {
-          addSystemMessage(`📩 SMS → ${numbers.join(", ")}`);
-          if (msg) addBotMessage(`[SMS] ${msg}`, node.id);
-        }
         const outputVar = normalizeVarName(config.outputVariable || "envio_sms_status");
-        const newCtx = { ...contextRef.current, [outputVar]: numbers.length ? "enviado" : "sem_destino" };
-        contextRef.current = newCtx;
-        setContext(newCtx);
-        safeSetTimeout(() => {
-          const nextNode = getNextNode(node.id);
-          if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
-        }, 1000);
+
+        (async () => {
+          if (numbers.length === 0 || !msg) {
+            addSystemMessage("📩 SMS não enviado: número ou mensagem vazio.");
+            const newCtx = { ...contextRef.current, [outputVar]: "sem_destino" };
+            contextRef.current = newCtx;
+            setContext(newCtx);
+          } else {
+            addSystemMessage(`📩 Enviando SMS → ${numbers.join(", ")}`);
+            let okCount = 0;
+            let lastError: string | null = null;
+            try {
+              const estabelecimentoId = await getEstabelecimentoId();
+              for (const destino of numbers) {
+                const { data, error } = await supabase.functions.invoke("send-sms", {
+                  body: { estabelecimento_id: estabelecimentoId, destino, mensagem: msg },
+                });
+                if (error) { lastError = error.message; continue; }
+                if ((data as any)?.success) { okCount++; addBotMessage(`[SMS ✓ ${destino}] ${msg}`, node.id); }
+                else { lastError = (data as any)?.erro || "Falha ao enviar SMS"; addSystemMessage(`⚠️ Falha no SMS para ${destino}: ${lastError}`); }
+              }
+            } catch (e: any) {
+              lastError = e?.message || "Erro ao enviar SMS";
+              addSystemMessage(`⚠️ Erro ao enviar SMS: ${lastError}`);
+            }
+            const status = okCount === numbers.length ? "enviado" : okCount === 0 ? "falhou" : "parcial";
+            const newCtx = { ...contextRef.current, [outputVar]: status, [`${outputVar}_erro`]: lastError || "" };
+            contextRef.current = newCtx;
+            setContext(newCtx);
+          }
+          safeSetTimeout(() => {
+            const nextNode = getNextNode(node.id);
+            if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+          }, 500);
+        })();
         break;
       }
 
