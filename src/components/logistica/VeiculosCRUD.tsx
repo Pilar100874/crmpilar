@@ -990,13 +990,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   );
                 })()}
 
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs">Configurar ao salvar</Label>
-                  <Switch
-                    checked={formData.configurar_tracker_ao_salvar}
-                    onCheckedChange={(c) => setFormData(prev => ({ ...prev, configurar_tracker_ao_salvar: c }))}
-                  />
-                </div>
+
+
 
                 <Button
                   type="button" variant="outline" size="sm" className="w-full"
