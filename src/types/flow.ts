@@ -559,6 +559,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       mediaUrl: "",
       waitForReply: false,
       outputVariable: "envio_whatsapp_status",
+    },
   },
   // Envio de SMS
   {
@@ -572,7 +573,6 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       message: "",
       outputVariable: "envio_sms_status",
     },
-  },
   },
   // Loop API
   {
