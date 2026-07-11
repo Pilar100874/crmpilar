@@ -159,6 +159,7 @@ const MAP: Record<string, InteractionKind> = {
   definir_prioridade: SYSTEM,
   publish_social_post: SYSTEM,
   send_whatsapp_to_number: SYSTEM,
+  send_sms: SYSTEM,
   api_loop: SYSTEM,
   product_search_select: LIST,
   crm_cadastro_empresa: SYSTEM,
