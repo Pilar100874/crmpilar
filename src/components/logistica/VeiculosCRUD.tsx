@@ -617,7 +617,10 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   {model ? (
                     <div className="flex flex-col gap-1">
                       <span className="text-xs font-medium">{model.nome}</span>
-                      {renderTrackerStatusBadge(veiculo)}
+                      <div className="flex flex-wrap gap-1">
+                        {renderTrackerStatusBadge(veiculo)}
+                        {renderTrackerOnlineBadge(veiculo)}
+                      </div>
                     </div>
                   ) : (
                     <span className="text-xs text-muted-foreground">—</span>
