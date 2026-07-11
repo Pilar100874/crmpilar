@@ -2637,6 +2637,31 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         break;
       }
 
+      case "send_sms": {
+        const rawNumbers: string[] = Array.isArray(config.phoneNumbers)
+          ? config.phoneNumbers
+          : config.phoneNumber ? [config.phoneNumber] : [];
+        const numbers = rawNumbers
+          .map((n) => interpolateVariables(String(n || ""), context).replace(/\D/g, ""))
+          .filter(Boolean);
+        const msg = interpolateVariables(config.message || "", context);
+        if (numbers.length === 0) {
+          addSystemMessage("📩 SMS não enviado: nenhum número informado.");
+        } else {
+          addSystemMessage(`📩 SMS → ${numbers.join(", ")}`);
+          if (msg) addBotMessage(`[SMS] ${msg}`, node.id);
+        }
+        const outputVar = normalizeVarName(config.outputVariable || "envio_sms_status");
+        const newCtx = { ...contextRef.current, [outputVar]: numbers.length ? "enviado" : "sem_destino" };
+        contextRef.current = newCtx;
+        setContext(newCtx);
+        safeSetTimeout(() => {
+          const nextNode = getNextNode(node.id);
+          if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+        }, 1000);
+        break;
+      }
+
       case "text_content": {
         const blockMode = config.blockMode === "fixed" || config.blockMode === "options" ? config.blockMode : "advanced";
 
