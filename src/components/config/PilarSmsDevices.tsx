@@ -184,7 +184,7 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
               <TableHeader>
                 <TableRow>
                   <TableHead>Celular</TableHead>
-                  <TableHead className="w-[120px]">Token</TableHead>
+                  <TableHead className="w-[260px]">Token</TableHead>
                   <TableHead>Último ping</TableHead>
                   <TableHead>Bateria</TableHead>
                   <TableHead>Ativo</TableHead>
