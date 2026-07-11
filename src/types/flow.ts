@@ -45,6 +45,7 @@ export type NodeType =
   | "publish_social_post"
   | "generate_ai_media"
   | "send_whatsapp_to_number"
+  | "send_sms"
   | "api_loop"
   | "product_search_select"
   | "text_content"
