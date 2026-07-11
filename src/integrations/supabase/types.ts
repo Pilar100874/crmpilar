@@ -20305,6 +20305,7 @@ export type Database = {
       }
       veiculos: {
         Row: {
+          apn_operadora: string | null
           ativo: boolean | null
           created_at: string
           descricao: string | null
@@ -20324,6 +20325,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          apn_operadora?: string | null
           ativo?: boolean | null
           created_at?: string
           descricao?: string | null
@@ -20343,6 +20345,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          apn_operadora?: string | null
           ativo?: boolean | null
           created_at?: string
           descricao?: string | null
