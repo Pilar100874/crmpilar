@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Veiculo } from '@/types/logistica';
 import { buildTrackerParametersSms, configurarRastreador, getTrackerRenderedCommands, TrackerModelLite } from '@/lib/trackerConfig';
 import { OPERADORAS_APN, findOperadoraByApn } from '@/lib/operadorasSms';
+import { VeiculosBulkImportDialog } from './VeiculosBulkImportDialog';
 
 interface VeiculosCRUDProps {
   estabelecimentoId: string;
