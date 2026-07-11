@@ -263,6 +263,9 @@ export default function AdminApps() {
         </div>
       </Card>
 
+      <SmsTestePanel />
+
+
       <Card className="flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">
         <CardContent className="flex-1 p-5 sm:p-7 md:p-8">
           <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
