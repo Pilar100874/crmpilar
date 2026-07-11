@@ -165,35 +165,6 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
             </div>
           </div>
 
-          {cfg.provider === 'twilio' && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
-              <div>
-                <Label>Account SID</Label>
-                <Input value={cfg.twilio_account_sid || ''} onChange={(e) => setCfg({ ...cfg, twilio_account_sid: e.target.value })} placeholder="ACxxxxxxxx" />
-              </div>
-              <div>
-                <Label>Auth Token</Label>
-                <Input type="password" value={cfg.twilio_auth_token || ''} onChange={(e) => setCfg({ ...cfg, twilio_auth_token: e.target.value })} />
-              </div>
-              <div>
-                <Label>Número From (E.164)</Label>
-                <Input value={cfg.twilio_from || ''} onChange={(e) => setCfg({ ...cfg, twilio_from: e.target.value })} placeholder="+15558675310" />
-              </div>
-            </div>
-          )}
-
-          {cfg.provider === 'zenvia' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
-              <div>
-                <Label>API Token (Zenvia)</Label>
-                <Input type="password" value={cfg.zenvia_api_token || ''} onChange={(e) => setCfg({ ...cfg, zenvia_api_token: e.target.value })} />
-              </div>
-              <div>
-                <Label>Número From</Label>
-                <Input value={cfg.zenvia_from || ''} onChange={(e) => setCfg({ ...cfg, zenvia_from: e.target.value })} placeholder="5511999999999" />
-              </div>
-            </div>
-          )}
 
 
           {cfg.provider === 'pilar' && (
