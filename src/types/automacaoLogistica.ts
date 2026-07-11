@@ -10,6 +10,7 @@ export type LogisticaBlockType =
   | 'acao_notificacao'
   | 'acao_email'
   | 'disparar_push'
+  | 'enviar_sms'
   | 'return_response';
 
 export interface CondicaoTempoParado {
