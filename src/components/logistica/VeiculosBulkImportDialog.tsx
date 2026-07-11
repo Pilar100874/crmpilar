@@ -74,7 +74,7 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
         tipo_veiculo: r.tipo_veiculo || null,
         ativo,
         telefone_sms: r.telefone_sms,
-        tracker_model_id: r.tracker_model_id || null,
+        tracker_model_id: globalTrackerId || null,
       } as any)
       .select('id')
       .single();
