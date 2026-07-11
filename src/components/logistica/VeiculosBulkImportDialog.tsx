@@ -315,10 +315,6 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={processing} className="w-full sm:w-auto">
             Fechar
           </Button>
-          <Button variant="secondary" onClick={() => processarTodos('conferencia')} disabled={processing} className="w-full sm:w-auto">
-            {processing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
-            Conferência (1 SMS)
-          </Button>
           <Button onClick={() => processarTodos('m2m')} disabled={processing} className="w-full sm:w-auto">
             {processing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Radio className="h-4 w-4 mr-2" />}
             Enviar dados M2M
