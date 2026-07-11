@@ -2,5 +2,5 @@
   "version": "1.5.1",
   "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.5.1/pilar-sms-v1.5.1.apk",
   "filename": "pilar-sms-v1.5.1.apk",
-  "notas": "v1.5.1: número de retentativas configurável nas Configurações (0 a 10) — cada retentativa reexecuta o envio com o chip escolhido e faz fallback pelos SIMs."
+  "notas": "v1.5.1: retry automático por SIM/fallback, recuperação de fila travada e log detalhado do retorno Android."
 }
