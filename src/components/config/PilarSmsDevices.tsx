@@ -244,16 +244,44 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
                 <div className="flex items-start justify-between gap-2 min-w-0">
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <Smartphone className="h-4 w-4 text-primary shrink-0" />
-                    <div className="min-w-0">
-                      <div className="font-medium text-sm truncate">{d.nome}</div>
-                      {d.versao_app && <div className="text-[10px] text-muted-foreground uppercase">v{d.versao_app}</div>}
+                    <div className="min-w-0 flex-1">
+                      {editingId === d.id ? (
+                        <Input
+                          autoFocus
+                          value={editNome}
+                          onChange={(e) => setEditNome(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') salvarEdit(d); if (e.key === 'Escape') cancelEdit(); }}
+                          className="h-7 text-sm"
+                        />
+                      ) : (
+                        <>
+                          <div className="font-medium text-sm truncate">{d.nome}</div>
+                          {d.versao_app && <div className="text-[10px] text-muted-foreground uppercase">v{d.versao_app}</div>}
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <Switch checked={d.ativo} onCheckedChange={() => toggleAtivo(d)} />
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setToDelete(d)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    {editingId === d.id ? (
+                      <>
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => salvarEdit(d)}>
+                          <Check className="h-4 w-4 text-primary" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={cancelEdit}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Switch checked={d.ativo} onCheckedChange={() => toggleAtivo(d)} />
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => startEdit(d)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setToDelete(d)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs pt-1 border-t">
