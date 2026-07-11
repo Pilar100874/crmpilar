@@ -1230,7 +1230,7 @@ export default function Layout({ children }: LayoutProps) {
           <div className={`border-t border-sidebar-border/50 bg-sidebar py-3 flex flex-col gap-2 ${menuLocked ? 'items-center' : 'px-4'}`}>
 
             {/* Botão de travar/destravar - só aparece em telas maiores que 1024px */}
-            {!isSmallScreen && (
+            {(!isSmallScreen || menuOpen || menuLocked) && (
               <button
                 onClick={handleToggleLock}
                 className={`${
