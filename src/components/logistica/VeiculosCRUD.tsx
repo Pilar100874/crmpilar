@@ -1043,14 +1043,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
 
             </div>
 
-            <div className="flex items-center justify-between border-t pt-3">
-              <Label>Veículo ativo</Label>
-              <Switch
-                checked={formData.ativo}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, ativo: checked }))}
-              />
-            </div>
           </div>
+
 
           <DialogFooter className="px-4 sm:px-6 py-3 border-t bg-muted/30 gap-2">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
