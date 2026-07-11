@@ -36,6 +36,26 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
   const [showToken, setShowToken] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editNome, setEditNome] = useState('');
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+
+  const toggleReveal = (id: string) => setRevealed((r) => ({ ...r, [id]: !r[id] }));
+  const maskToken = (t: string) => (t.length <= 12 ? '•'.repeat(t.length) : `${t.slice(0, 6)}${'•'.repeat(Math.max(6, t.length - 10))}${t.slice(-4)}`);
+
+  const TokenField = ({ d, compact = false }: { d: Device; compact?: boolean }) => {
+    const shown = !!revealed[d.id];
+    return (
+      <div className={`flex items-center gap-1 rounded-md border bg-muted/40 px-2 ${compact ? 'py-0.5' : 'py-1'} font-mono ${compact ? 'text-[10px]' : 'text-xs'} min-w-0`}>
+        <KeyRound className={`${compact ? 'h-3 w-3' : 'h-3.5 w-3.5'} text-muted-foreground shrink-0`} />
+        <span className="truncate select-all">{shown ? d.token : maskToken(d.token)}</span>
+        <Button size="icon" variant="ghost" className={`${compact ? 'h-5 w-5' : 'h-6 w-6'} shrink-0`} onClick={() => toggleReveal(d.id)} title={shown ? 'Ocultar' : 'Mostrar'}>
+          {shown ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+        </Button>
+        <Button size="icon" variant="ghost" className={`${compact ? 'h-5 w-5' : 'h-6 w-6'} shrink-0`} onClick={() => copiar(d.token)} title="Copiar token">
+          <Copy className="h-3 w-3" />
+        </Button>
+      </div>
+    );
+  };
 
   const startEdit = (d: Device) => { setEditingId(d.id); setEditNome(d.nome); };
   const cancelEdit = () => { setEditingId(null); setEditNome(''); };
