@@ -531,6 +531,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             Novo Veículo
           </Button>
         </div>
+      </div>
+
 
       {/* Desktop / tablet grande: tabela */}
       <div className="hidden lg:block border rounded-lg overflow-hidden">
