@@ -34,6 +34,21 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
   const [creating, setCreating] = useState(false);
   const [toDelete, setToDelete] = useState<Device | null>(null);
   const [showToken, setShowToken] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editNome, setEditNome] = useState('');
+
+  const startEdit = (d: Device) => { setEditingId(d.id); setEditNome(d.nome); };
+  const cancelEdit = () => { setEditingId(null); setEditNome(''); };
+  const salvarEdit = async (d: Device) => {
+    const nome = editNome.trim();
+    if (!nome) { toast.error('Nome não pode ficar vazio'); return; }
+    if (nome === d.nome) { cancelEdit(); return; }
+    const { error } = await supabase.from('sms_devices' as any).update({ nome }).eq('id', d.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Celular atualizado');
+    cancelEdit();
+    await load();
+  };
 
   const load = async () => {
     setLoading(true);
