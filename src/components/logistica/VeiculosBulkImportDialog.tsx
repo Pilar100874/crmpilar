@@ -65,6 +65,7 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
   };
 
   const cadastrarVeiculo = async (r: Row) => {
+    const op = OPERADORAS_APN.find(o => o.id === globalOperadoraId);
     const { data, error } = await supabase
       .from('veiculos')
       .insert({
@@ -75,6 +76,8 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
         ativo,
         telefone_sms: r.telefone_sms,
         tracker_model_id: globalTrackerId || null,
+        apn_operadora: op?.apn || null,
+        tipo_chip: 'm2m',
       } as any)
       .select('id')
       .single();
@@ -86,6 +89,14 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
     const validRows = rows.filter(r => r.placa.trim() && r.telefone_sms.trim() && r.status !== 'enviado');
     if (validRows.length === 0) {
       toast.error('Preencha ao menos uma linha com placa e telefone');
+      return;
+    }
+    if (!globalTrackerId) {
+      toast.error('Selecione o modelo do rastreador');
+      return;
+    }
+    if (!globalOperadoraId) {
+      toast.error('Selecione a operadora (APN) antes de enviar');
       return;
     }
     setProcessing(true);
