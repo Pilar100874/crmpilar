@@ -549,7 +549,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   // Disparo direto WhatsApp
   {
     type: "send_whatsapp_to_number",
-    label: "Enviar WhatsApp para número",
+    label: "Enviar WhatsApp",
     description: "Dispara mensagem WhatsApp para um número específico",
     icon: "Send",
     color: "text-emerald-600",
