@@ -213,10 +213,8 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Button size="sm" variant="ghost" onClick={() => copiar(d.token)} className="font-mono text-xs">
-                        {d.token.slice(0, 8)}… <Copy className="h-3 w-3 ml-1" />
-                      </Button>
+                    <TableCell className="min-w-[220px] max-w-[280px]">
+                      <TokenField d={d} />
                     </TableCell>
                     <TableCell className="text-xs">
                       <div className="flex items-center gap-2">
