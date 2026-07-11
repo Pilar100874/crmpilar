@@ -194,6 +194,8 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
 
       <PilarSmsDownloadCard />
 
+      <Card>
+
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base"><Send className="h-4 w-4" /> Enviar SMS de teste</CardTitle>
           <CardDescription>Envie uma mensagem real usando o provedor configurado</CardDescription>
