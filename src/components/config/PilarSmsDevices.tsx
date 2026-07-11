@@ -177,10 +177,20 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Smartphone className="h-4 w-4 text-primary" />
-                        <div>
-                          <div className="font-medium text-sm">{d.nome}</div>
-                          {d.versao_app && <div className="text-[10px] text-muted-foreground uppercase">v{d.versao_app}</div>}
-                        </div>
+                        {editingId === d.id ? (
+                          <Input
+                            autoFocus
+                            value={editNome}
+                            onChange={(e) => setEditNome(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') salvarEdit(d); if (e.key === 'Escape') cancelEdit(); }}
+                            className="h-7 text-sm"
+                          />
+                        ) : (
+                          <div>
+                            <div className="font-medium text-sm">{d.nome}</div>
+                            {d.versao_app && <div className="text-[10px] text-muted-foreground uppercase">v{d.versao_app}</div>}
+                          </div>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
