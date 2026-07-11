@@ -52,12 +52,31 @@ function buildTrackerTemplateContext(model: TrackerModelLite): Record<string, st
   };
 }
 
+// Ordem correta de configuração p/ trackers GT06 e similares:
+// 1) APN (dados)  2) GPRSON (liga transmissão)  3) SERVER (destino)  4) TIMER (frequência)
+// Templates fora dessa lista mantêm a ordem original ao final.
+const COMMAND_PRIORITY: Array<RegExp> = [
+  /^\s*APN[, ]/i,
+  /^\s*GPRSON[, ]/i,
+  /^\s*SERVER[, ]/i,
+  /^\s*TIMER[, ]/i,
+];
+
+function commandPriority(tpl: string): number {
+  for (let i = 0; i < COMMAND_PRIORITY.length; i++) {
+    if (COMMAND_PRIORITY[i].test(tpl)) return i;
+  }
+  return COMMAND_PRIORITY.length;
+}
+
 export function getTrackerRenderedCommands(model: TrackerModelLite): RenderedTrackerCommand[] {
   const ctx = buildTrackerTemplateContext(model);
   const cmds = Array.isArray(model.sms_commands) ? model.sms_commands : [];
 
   return cmds
     .filter((cmd) => !/RELAY,\s*[01]\s*#/i.test(cmd.template))
+    .slice()
+    .sort((a, b) => commandPriority(a.template) - commandPriority(b.template))
     .map((cmd) => ({ ...cmd, rendered: renderTemplate(cmd.template, ctx) }));
 }
 
