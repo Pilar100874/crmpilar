@@ -143,99 +143,183 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
     }
   };
 
+  const enviados = rows.filter(r => r.status === 'enviado').length;
+  const total = rows.length;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Cadastro em massa de veículos</DialogTitle>
-          <DialogDescription>
-            Cadastre vários veículos de uma só vez e dispare os SMS de configuração do rastreador.
+      <DialogContent className="max-w-6xl w-[calc(100vw-1rem)] sm:w-[calc(100vw-2rem)] max-h-[95vh] overflow-hidden flex flex-col p-0 gap-0">
+        <DialogHeader className="p-4 sm:p-6 pb-3 border-b bg-muted/20">
+          <DialogTitle className="text-lg sm:text-xl">Cadastro em massa de veículos</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm">
+            Cadastre vários veículos de uma vez e dispare os SMS de configuração do rastreador.
           </DialogDescription>
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3">
+            <div className="flex items-center gap-3 bg-background border rounded-lg px-3 py-2">
+              <Switch id="bulk-ativo" checked={ativo} onCheckedChange={setAtivo} />
+              <Label htmlFor="bulk-ativo" className="cursor-pointer text-sm">
+                Cadastrar como <strong>ativos</strong>
+              </Label>
+            </div>
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <Badge variant="outline" className="gap-1">
+                <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                {enviados} enviados
+              </Badge>
+              <Badge variant="outline">{total} linhas</Badge>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="flex items-center gap-3 border rounded-lg p-3 bg-muted/30">
-          <Switch id="bulk-ativo" checked={ativo} onCheckedChange={setAtivo} />
-          <Label htmlFor="bulk-ativo" className="cursor-pointer">
-            Cadastrar veículos como <strong>ativos</strong>
-          </Label>
-        </div>
+        {/* Corpo rolável */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3">
+          {/* Desktop / tablet largo: tabela */}
+          <div className="hidden lg:block border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader className="bg-muted/40">
+                <TableRow>
+                  <TableHead className="w-[110px]">Placa</TableHead>
+                  <TableHead className="w-[140px]">Tipo</TableHead>
+                  <TableHead>Descrição</TableHead>
+                  <TableHead className="w-[160px]">Telefone (M2M)</TableHead>
+                  <TableHead className="w-[170px]">Rastreador</TableHead>
+                  <TableHead className="w-[140px]">Operadora</TableHead>
+                  <TableHead className="w-[110px]">Status</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map(r => (
+                  <TableRow key={r.id} className={r.status === 'enviado' ? 'bg-emerald-500/5' : ''}>
+                    <TableCell>
+                      <Input value={r.placa} onChange={e => update(r.id, { placa: e.target.value.toUpperCase() })} placeholder="ABC1D23" className="font-mono h-9" />
+                    </TableCell>
+                    <TableCell>
+                      <Select value={r.tipo_veiculo} onValueChange={v => update(r.id, { tipo_veiculo: v })}>
+                        <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                        <SelectContent>{TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Input value={r.descricao} onChange={e => update(r.id, { descricao: e.target.value })} placeholder="Descrição" className="h-9" />
+                    </TableCell>
+                    <TableCell>
+                      <Input value={r.telefone_sms} onChange={e => update(r.id, { telefone_sms: e.target.value })} placeholder="+5511..." className="h-9" />
+                    </TableCell>
+                    <TableCell>
+                      <Select value={r.tracker_model_id} onValueChange={v => update(r.id, { tracker_model_id: v })}>
+                        <SelectTrigger className="h-9"><SelectValue placeholder="—" /></SelectTrigger>
+                        <SelectContent>
+                          {trackerModels.map(m => <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Select value={r.operadora_id} onValueChange={v => update(r.id, { operadora_id: v })}>
+                        <SelectTrigger className="h-9"><SelectValue placeholder="—" /></SelectTrigger>
+                        <SelectContent>
+                          {OPERADORAS_APN.map(o => <SelectItem key={o.id} value={o.id}>{o.nome}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>{statusBadge(r)}</TableCell>
+                    <TableCell>
+                      <Button size="icon" variant="ghost" onClick={() => remove(r.id)} disabled={processing}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
-        <div className="border rounded-lg overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[110px]">Placa</TableHead>
-                <TableHead className="w-[140px]">Tipo</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead className="w-[150px]">Telefone (M2M)</TableHead>
-                <TableHead className="w-[170px]">Rastreador</TableHead>
-                <TableHead className="w-[140px]">Operadora</TableHead>
-                <TableHead className="w-[110px]">Status</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map(r => (
-                <TableRow key={r.id}>
-                  <TableCell>
-                    <Input value={r.placa} onChange={e => update(r.id, { placa: e.target.value.toUpperCase() })} placeholder="ABC1D23" className="font-mono" />
-                  </TableCell>
-                  <TableCell>
+          {/* Mobile / tablet: cards */}
+          <div className="lg:hidden space-y-3">
+            {rows.map((r, idx) => (
+              <div
+                key={r.id}
+                className={`border rounded-lg p-3 space-y-3 ${r.status === 'enviado' ? 'bg-emerald-500/5 border-emerald-500/30' : 'bg-background'}`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="font-mono">#{idx + 1}</Badge>
+                    {statusBadge(r)}
+                  </div>
+                  <Button size="icon" variant="ghost" onClick={() => remove(r.id)} disabled={processing} className="h-8 w-8">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">Placa</Label>
+                    <Input value={r.placa} onChange={e => update(r.id, { placa: e.target.value.toUpperCase() })} placeholder="ABC1D23" className="font-mono h-9" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">Tipo</Label>
                     <Select value={r.tipo_veiculo} onValueChange={v => update(r.id, { tipo_veiculo: v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                       <SelectContent>{TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                     </Select>
-                  </TableCell>
-                  <TableCell>
-                    <Input value={r.descricao} onChange={e => update(r.id, { descricao: e.target.value })} placeholder="Descrição" />
-                  </TableCell>
-                  <TableCell>
-                    <Input value={r.telefone_sms} onChange={e => update(r.id, { telefone_sms: e.target.value })} placeholder="+5511..." />
-                  </TableCell>
-                  <TableCell>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-[11px] text-muted-foreground">Descrição</Label>
+                  <Input value={r.descricao} onChange={e => update(r.id, { descricao: e.target.value })} placeholder="Descrição" className="h-9" />
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-[11px] text-muted-foreground">Telefone (M2M)</Label>
+                  <Input value={r.telefone_sms} onChange={e => update(r.id, { telefone_sms: e.target.value })} placeholder="+5511..." className="h-9" inputMode="tel" />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">Rastreador</Label>
                     <Select value={r.tracker_model_id} onValueChange={v => update(r.id, { tracker_model_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                      <SelectTrigger className="h-9"><SelectValue placeholder="—" /></SelectTrigger>
                       <SelectContent>
                         {trackerModels.map(m => <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>)}
                       </SelectContent>
                     </Select>
-                  </TableCell>
-                  <TableCell>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">Operadora</Label>
                     <Select value={r.operadora_id} onValueChange={v => update(r.id, { operadora_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                      <SelectTrigger className="h-9"><SelectValue placeholder="—" /></SelectTrigger>
                       <SelectContent>
                         {OPERADORAS_APN.map(o => <SelectItem key={o.id} value={o.id}>{o.nome}</SelectItem>)}
                       </SelectContent>
                     </Select>
-                  </TableCell>
-                  <TableCell>{statusBadge(r)}</TableCell>
-                  <TableCell>
-                    <Button size="icon" variant="ghost" onClick={() => remove(r.id)} disabled={processing}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+                  </div>
+                </div>
 
-        <div className="flex justify-between items-center">
-          <Button variant="outline" onClick={add} disabled={processing}>
+                {r.erro && (
+                  <p className="text-xs text-destructive flex items-start gap-1">
+                    <AlertCircle className="h-3 w-3 mt-0.5 shrink-0" />{r.erro}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <Button variant="outline" onClick={add} disabled={processing} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />Adicionar linha
           </Button>
-          <div className="text-sm text-muted-foreground">
-            {rows.filter(r => r.status === 'enviado').length} enviados / {rows.length} total
-          </div>
         </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={processing}>Fechar</Button>
-          <Button variant="secondary" onClick={() => processarTodos('conferencia')} disabled={processing}>
-            {processing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
-            Enviar conferência (1 SMS)
+        <DialogFooter className="p-4 sm:p-6 pt-3 border-t bg-muted/20 flex-col-reverse sm:flex-row gap-2 sm:gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={processing} className="w-full sm:w-auto">
+            Fechar
           </Button>
-          <Button onClick={() => processarTodos('m2m')} disabled={processing}>
+          <Button variant="secondary" onClick={() => processarTodos('conferencia')} disabled={processing} className="w-full sm:w-auto">
+            {processing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+            Conferência (1 SMS)
+          </Button>
+          <Button onClick={() => processarTodos('m2m')} disabled={processing} className="w-full sm:w-auto">
             {processing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Radio className="h-4 w-4 mr-2" />}
             Enviar dados M2M
           </Button>
@@ -244,3 +328,4 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
     </Dialog>
   );
 };
+
