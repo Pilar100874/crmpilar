@@ -82,7 +82,7 @@ export function getTrackerRenderedCommands(model: TrackerModelLite): RenderedTra
 
 export function buildTrackerParametersSms(model: TrackerModelLite): string {
   const comandos = getTrackerRenderedCommands(model).map((cmd) => cmd.rendered).filter(Boolean);
-  return `PARAMETROS RASTREADOR ${model.nome}: ${comandos.join(' | ')}`;
+  return `Parametros enviados;\n${comandos.join('\n')}`;
 }
 
 /** Configure a physical GPS tracker by sending its SMS commands to the SIM number */
