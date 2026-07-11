@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Send, CheckCircle2, AlertCircle, Loader2, FileText, Radio } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { configurarRastreador, TrackerModelLite } from '@/lib/trackerConfig';
+import { buildTrackerParametersSms, configurarRastreador, TrackerModelLite } from '@/lib/trackerConfig';
 import { OPERADORAS_APN } from '@/lib/operadorasSms';
 
 const TIPOS = ['Celular', 'Carro', 'Van', 'Caminhão Leve', 'Caminhão Médio', 'Caminhão Pesado', 'Moto', 'Bicicleta', 'Outro'];
@@ -19,7 +21,6 @@ interface Row {
   tipo_veiculo: string;
   descricao: string;
   telefone_sms: string;
-  tipo_chip: 'm2m' | 'normal';
   tracker_model_id: string;
   operadora_id: string;
   status: 'pendente' | 'enviando' | 'enviado' | 'falhou';
@@ -32,7 +33,6 @@ const newRow = (): Row => ({
   tipo_veiculo: 'Carro',
   descricao: '',
   telefone_sms: '',
-  tipo_chip: 'm2m',
   tracker_model_id: '',
   operadora_id: '',
   status: 'pendente',
@@ -49,6 +49,7 @@ interface Props {
 export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, estabelecimentoId, trackerModels, onDone }) => {
   const [rows, setRows] = useState<Row[]>([newRow(), newRow(), newRow()]);
   const [processing, setProcessing] = useState(false);
+  const [ativo, setAtivo] = useState(true);
 
   const update = (id: string, patch: Partial<Row>) =>
     setRows(rs => rs.map(r => (r.id === id ? { ...r, ...patch } : r)));
@@ -61,7 +62,25 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
     return { ...model, apn: op.apn, apn_user: op.apn_user, apn_password: op.apn_password };
   };
 
-  const handleEnviarTodos = async () => {
+  const cadastrarVeiculo = async (r: Row) => {
+    const { data, error } = await supabase
+      .from('veiculos')
+      .insert({
+        estabelecimento_id: estabelecimentoId,
+        placa: r.placa.toUpperCase().trim(),
+        descricao: r.descricao || null,
+        tipo_veiculo: r.tipo_veiculo || null,
+        ativo,
+        telefone_sms: r.telefone_sms,
+        tracker_model_id: r.tracker_model_id || null,
+      } as any)
+      .select('id')
+      .single();
+    if (error) throw error;
+    return data?.id as string | undefined;
+  };
+
+  const processarTodos = async (modo: 'conferencia' | 'm2m') => {
     const validRows = rows.filter(r => r.placa.trim() && r.telefone_sms.trim() && r.status !== 'enviado');
     if (validRows.length === 0) {
       toast.error('Preencha ao menos uma linha com placa e telefone');
@@ -72,36 +91,31 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
     for (const r of validRows) {
       update(r.id, { status: 'enviando', erro: undefined });
       try {
-        // Insert veículo (ativo=true)
-        const { data: ins, error: insErr } = await supabase
-          .from('veiculos')
-          .insert({
-            estabelecimento_id: estabelecimentoId,
-            placa: r.placa.toUpperCase().trim(),
-            descricao: r.descricao || null,
-            tipo_veiculo: r.tipo_veiculo || null,
-            ativo: true,
-            telefone_sms: r.telefone_sms,
-            tipo_chip: r.tipo_chip,
-            tracker_model_id: r.tracker_model_id || null,
-          } as any)
-          .select('id')
-          .single();
-        if (insErr) throw insErr;
-        const veiculoId = ins?.id as string | undefined;
+        const veiculoId = await cadastrarVeiculo(r);
 
-        // Se tem modelo de rastreador, envia comandos SMS
         if (r.tracker_model_id) {
           const model = trackerModels.find(m => m.id === r.tracker_model_id);
           if (model) {
-            const res = await configurarRastreador({
-              estabelecimentoId,
-              veiculoId,
-              telefone: r.telefone_sms,
-              model: modelComOperadora(model, r.operadora_id),
-              chipType: r.tipo_chip,
-            });
-            if (res.status === 'falhou') throw new Error(res.error || 'Falha ao enviar SMS');
+            const finalModel = modelComOperadora(model, r.operadora_id);
+            if (modo === 'conferencia') {
+              // 1 SMS consolidado só para conferência dos parâmetros
+              const mensagem = buildTrackerParametersSms(finalModel);
+              const { data, error } = await supabase.functions.invoke('send-sms', {
+                body: { estabelecimento_id: estabelecimentoId, destino: r.telefone_sms, mensagem },
+              });
+              if (error) throw error;
+              if (!(data as any)?.success) throw new Error((data as any)?.erro || 'Falha no SMS');
+            } else {
+              // Envio real dos comandos via M2M (múltiplos SMS)
+              const res = await configurarRastreador({
+                estabelecimentoId,
+                veiculoId,
+                telefone: r.telefone_sms,
+                model: finalModel,
+                chipType: 'm2m',
+              });
+              if (res.status === 'falhou') throw new Error(res.error || 'Falha ao enviar SMS');
+            }
           }
         }
 
@@ -135,10 +149,16 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
         <DialogHeader>
           <DialogTitle>Cadastro em massa de veículos</DialogTitle>
           <DialogDescription>
-            Adicione as linhas com placa, tipo, descrição, telefone (M2M) e modelo do rastreador.
-            Ao enviar, cada veículo é cadastrado (ativo) e os SMS de configuração são disparados.
+            Cadastre vários veículos de uma só vez e dispare os SMS de configuração do rastreador.
           </DialogDescription>
         </DialogHeader>
+
+        <div className="flex items-center gap-3 border rounded-lg p-3 bg-muted/30">
+          <Switch id="bulk-ativo" checked={ativo} onCheckedChange={setAtivo} />
+          <Label htmlFor="bulk-ativo" className="cursor-pointer">
+            Cadastrar veículos como <strong>ativos</strong>
+          </Label>
+        </div>
 
         <div className="border rounded-lg overflow-x-auto">
           <Table>
@@ -148,7 +168,6 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
                 <TableHead className="w-[140px]">Tipo</TableHead>
                 <TableHead>Descrição</TableHead>
                 <TableHead className="w-[150px]">Telefone (M2M)</TableHead>
-                <TableHead className="w-[110px]">Tipo Chip</TableHead>
                 <TableHead className="w-[170px]">Rastreador</TableHead>
                 <TableHead className="w-[140px]">Operadora</TableHead>
                 <TableHead className="w-[110px]">Status</TableHead>
@@ -172,15 +191,6 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
                   </TableCell>
                   <TableCell>
                     <Input value={r.telefone_sms} onChange={e => update(r.id, { telefone_sms: e.target.value })} placeholder="+5511..." />
-                  </TableCell>
-                  <TableCell>
-                    <Select value={r.tipo_chip} onValueChange={(v: 'm2m' | 'normal') => update(r.id, { tipo_chip: v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="m2m">M2M</SelectItem>
-                        <SelectItem value="normal">Normal</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </TableCell>
                   <TableCell>
                     <Select value={r.tracker_model_id} onValueChange={v => update(r.id, { tracker_model_id: v })}>
@@ -219,11 +229,15 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={processing}>Fechar</Button>
-          <Button onClick={handleEnviarTodos} disabled={processing}>
-            {processing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-            Enviar todos
+          <Button variant="secondary" onClick={() => processarTodos('conferencia')} disabled={processing}>
+            {processing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+            Enviar conferência (1 SMS)
+          </Button>
+          <Button onClick={() => processarTodos('m2m')} disabled={processing}>
+            {processing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Radio className="h-4 w-4 mr-2" />}
+            Enviar dados M2M
           </Button>
         </DialogFooter>
       </DialogContent>
