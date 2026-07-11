@@ -11,6 +11,7 @@ import android.telephony.SmsManager
 import android.telephony.SubscriptionManager
 import android.telephony.SubscriptionManager.INVALID_SUBSCRIPTION_ID
 import android.util.Log
+import java.util.LinkedHashMap
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -35,6 +36,15 @@ object SmsSender {
         val messageLength: Int,
         val parts: Int,
         val timestamp: Long,
+        val attemptDetails: String = "",
+        val attemptedSubscriptions: String = "",
+    )
+
+    private data class SmsCandidate(
+        val manager: SmsManager,
+        val simIndex: Int,
+        val subscriptionId: Int,
+        val label: String,
     )
 
     private fun describe(code: Int): Pair<String, String> = when (code) {
@@ -63,9 +73,47 @@ object SmsSender {
 
         Log.i(TAG, "PREP send to=$to len=${text.length} parts=? content=<<${text}>>")
 
+        val attempts = mutableListOf<String>()
+        val candidates = resolveCandidates(ctx, senderHint?.toIntOrNull())
+        var lastResult: Result? = null
+
+        for (candidate in candidates) {
+            val result = sendWithCandidate(ctx, to, text, candidate, startTs, onDelivered)
+            val attempt = "${candidate.label}(sim=${candidate.simIndex},sub=${candidate.subscriptionId})=${result.errorCode}/${result.resultCode}"
+            attempts += attempt
+            lastResult = result.copy(
+                attemptDetails = attempts.joinToString(" | "),
+                attemptedSubscriptions = candidates.joinToString(",") { "${it.label}:sim=${it.simIndex}:sub=${it.subscriptionId}" },
+            )
+            if (result.ok) return lastResult
+            Log.w(TAG, "Tentativa falhou: $attempt")
+        }
+
+        return lastResult ?: Result(
+            ok = false,
+            simUsed = senderHint?.toIntOrNull() ?: -1,
+            subscriptionId = -1,
+            resultCode = -1,
+            errorCode = "SEM_GERENCIADOR_SMS",
+            errorDescription = "Nenhum gerenciador/SIM de SMS disponível no aparelho",
+            messageLength = text.length,
+            parts = 0,
+            timestamp = startTs,
+            attemptDetails = "nenhuma tentativa executada",
+            attemptedSubscriptions = "",
+        )
+    }
+
+    private fun sendWithCandidate(
+        ctx: Context,
+        to: String,
+        text: String,
+        candidate: SmsCandidate,
+        startTs: Long,
+        onDelivered: ((delivered: Boolean, error: String?) -> Unit)?,
+    ): Result {
         try {
-            val simIndex = senderHint?.toIntOrNull()
-            val (manager, subId) = resolveManager(ctx, simIndex)
+            val manager = candidate.manager
             val parts = manager.divideMessage(text)
 
             val sentAction = "br.com.pilar.sms.SMS_SENT_${UUID.randomUUID()}"
@@ -125,11 +173,11 @@ object SmsSender {
             val finalCode = if (!finished) Activity.RESULT_OK else worstCode.get()
             val (errName, errDesc) = describe(finalCode)
             val ok = !anyFailure.get() || finalCode == Activity.RESULT_OK
-            Log.i(TAG, "DONE send to=$to len=${text.length} parts=${parts.size} code=$finalCode ok=$ok")
+            Log.i(TAG, "DONE send to=$to len=${text.length} parts=${parts.size} sub=${candidate.subscriptionId} code=$finalCode ok=$ok")
             return Result(
                 ok = ok || finalCode == Activity.RESULT_OK,
-                simUsed = simIndex ?: -1,
-                subscriptionId = subId,
+                simUsed = candidate.simIndex,
+                subscriptionId = candidate.subscriptionId,
                 resultCode = finalCode,
                 errorCode = errName,
                 errorDescription = errDesc,
@@ -141,8 +189,8 @@ object SmsSender {
             Log.e(TAG, "EXC send to=$to len=${text.length}", e)
             return Result(
                 ok = false,
-                simUsed = senderHint?.toIntOrNull() ?: -1,
-                subscriptionId = -1,
+                simUsed = candidate.simIndex,
+                subscriptionId = candidate.subscriptionId,
                 resultCode = -1,
                 errorCode = "EXCEPTION",
                 errorDescription = e.message ?: "erro desconhecido",
@@ -162,30 +210,60 @@ object SmsSender {
         }
     }
 
-    /** Retorna (SmsManager, subscriptionId) — subscriptionId=-1 se indeterminado. */
-    private fun resolveManager(ctx: Context, simIndex: Int?): Pair<SmsManager, Int> {
+    /** Retorna candidatos em ordem: SIM escolhido, SIM padrão, SIMs ativos e fallback do Android. */
+    private fun resolveCandidates(ctx: Context, simIndex: Int?): List<SmsCandidate> {
+        val candidates = LinkedHashMap<String, SmsCandidate>()
+
+        fun add(candidate: SmsCandidate) {
+            val key = if (candidate.subscriptionId != -1) "sub:${candidate.subscriptionId}" else "fallback:${candidate.label}"
+            if (!candidates.containsKey(key)) candidates[key] = candidate
+        }
+
+        try {
+            val defaultSmsSubId = SubscriptionManager.getDefaultSmsSubscriptionId()
+            val subs = try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                    @Suppress("DEPRECATION")
+                    SubscriptionManager.from(ctx).activeSubscriptionInfoList.orEmpty()
+                } else emptyList()
+            } catch (_: SecurityException) { emptyList() }
+
+            if (simIndex != null && simIndex in subs.indices) {
+                val subId = subs[simIndex].subscriptionId
+                add(SmsCandidate(managerFor(ctx, subId), simIndex, subId, "selecionado"))
+            }
+
+            if (defaultSmsSubId != INVALID_SUBSCRIPTION_ID) {
+                val idx = subs.indexOfFirst { it.subscriptionId == defaultSmsSubId }.takeIf { it >= 0 } ?: -1
+                add(SmsCandidate(managerFor(ctx, defaultSmsSubId), idx, defaultSmsSubId, "padrao"))
+            }
+
+            subs.forEachIndexed { idx, info ->
+                add(SmsCandidate(managerFor(ctx, info.subscriptionId), idx, info.subscriptionId, "sim_$idx"))
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Falha listando SIMs; usando fallback", e)
+        }
+
+        add(SmsCandidate(defaultManager(ctx), -1, -1, "android_default"))
+        return candidates.values.toList()
+    }
+
+    private fun managerFor(ctx: Context, subId: Int): SmsManager {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val sm = ctx.getSystemService(SmsManager::class.java)
-            try {
-                val subMgr = ctx.getSystemService(SubscriptionManager::class.java)
-                val defaultSmsSubId = SubscriptionManager.getDefaultSmsSubscriptionId()
-                val subs = subMgr?.activeSubscriptionInfoList.orEmpty()
-                val selectedSubId = if (simIndex != null && simIndex in subs.indices) subs[simIndex].subscriptionId
-                else if (defaultSmsSubId != INVALID_SUBSCRIPTION_ID) defaultSmsSubId else -1
-                if (selectedSubId != -1) {
-                    ctx.getSystemService(SmsManager::class.java).createForSubscriptionId(selectedSubId) to selectedSubId
-                } else sm to -1
-            } catch (_: SecurityException) { sm to -1 }
+            ctx.getSystemService(SmsManager::class.java).createForSubscriptionId(subId)
         } else {
             @Suppress("DEPRECATION")
-            try {
-                val subs = SubscriptionManager.from(ctx).activeSubscriptionInfoList
-                val defaultSmsSubId = SubscriptionManager.getDefaultSmsSubscriptionId()
-                val selectedSubId = if (simIndex != null && subs != null && simIndex in subs.indices) subs[simIndex].subscriptionId
-                else if (defaultSmsSubId != INVALID_SUBSCRIPTION_ID) defaultSmsSubId else -1
-                if (selectedSubId != -1) SmsManager.getSmsManagerForSubscriptionId(selectedSubId) to selectedSubId
-                else SmsManager.getDefault() to -1
-            } catch (_: SecurityException) { SmsManager.getDefault() to -1 }
+            SmsManager.getSmsManagerForSubscriptionId(subId)
+        }
+    }
+
+    private fun defaultManager(ctx: Context): SmsManager {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ctx.getSystemService(SmsManager::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            SmsManager.getDefault()
         }
     }
 }
