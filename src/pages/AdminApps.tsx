@@ -151,25 +151,16 @@ const baixar = (file: string, url: string) => {
 
 export default function AdminApps() {
   const [coletorInfo, setColetorInfo] = useState<{ version: string; downloadUrl: string; notas?: string } | null>(null);
-  const [smsInfo, setSmsInfo] = useState<{ version: string; downloadUrl: string; filename?: string; notas?: string } | null>(null);
 
   useEffect(() => {
     fetch("/coletor/version.json", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => data && setColetorInfo(data))
       .catch(() => {});
-    fetch("/coletor/sms-version.json", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => data && setSmsInfo(data))
-      .catch(() => {});
   }, []);
 
   const coletorFileName = coletorInfo?.downloadUrl?.split("/").pop() || COLETOR_FALLBACK_FILENAME;
   const coletorUrl = coletorInfo?.downloadUrl || COLETOR_FALLBACK_URL;
-  const smsVersion = smsInfo?.version || SMS_FALLBACK_VERSION;
-  const smsFileName = smsInfo?.filename || smsInfo?.downloadUrl?.split("/").pop() || SMS_FALLBACK_FILENAME;
-  const smsUrl = smsInfo?.downloadUrl || SMS_FALLBACK_URL;
-  const smsNotas = smsInfo?.notas;
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 p-3 sm:space-y-6 sm:p-6 md:p-8">
