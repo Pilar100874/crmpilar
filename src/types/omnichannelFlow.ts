@@ -9,7 +9,8 @@ export type OmnichannelBlockType =
   | 'analytics'
   | 'inicio'
   | 'return_response'
-  | 'disparar_push';
+  | 'disparar_push'
+  | 'enviar_sms';
 
 export interface OmnichannelNode {
   id: string;
