@@ -48,6 +48,7 @@ class SmsPollingService : Service() {
         val subscriptionId: Int = -1,
         val messageLength: Int = 0,
         val parts: Int = 0,
+        val attempts: String = "",
     )
 
     data class DiagSnapshot(
@@ -61,6 +62,7 @@ class SmsPollingService : Service() {
         val androidResultCode: Int,
         val androidErrorCode: String,
         val androidErrorDescription: String,
+        val attempts: String,
         val apiAckPayload: String,
         val apiAckResponse: String,
     )
@@ -77,7 +79,6 @@ class SmsPollingService : Service() {
         const val POLL_INTERVAL_MS = 5_000L
         const val MIN_SEND_INTERVAL_MS = 5_000L
         const val MAX_HISTORY = 30
-        const val DEDUPE_MAX = 500
 
         private val isoFmt = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.US)
 
@@ -94,23 +95,10 @@ class SmsPollingService : Service() {
 
         val historyLock = Any()
         val history = ArrayDeque<SendEvent>()
-        val processedIds = LinkedHashSet<String>()
 
         fun clearHistory() {
             synchronized(historyLock) { history.clear() }
             enviados = 0; falhas = 0
-        }
-
-        fun rememberProcessed(id: String): Boolean {
-            synchronized(processedIds) {
-                if (processedIds.contains(id)) return false
-                processedIds.add(id)
-                while (processedIds.size > DEDUPE_MAX) {
-                    val it = processedIds.iterator()
-                    if (it.hasNext()) { it.next(); it.remove() }
-                }
-                return true
-            }
         }
     }
 
@@ -162,11 +150,6 @@ class SmsPollingService : Service() {
                 for (i in 0 until messages.length()) {
                     val m = messages.getJSONObject(i)
                     val id = m.getString("id")
-                    // Dedupe: se já processamos esse ID nesta sessão, ignora.
-                    if (!rememberProcessed(id)) {
-                        Log.w(TAG, "IGNORADO id=$id (já processado nesta sessão)")
-                        continue
-                    }
 
                     val to: String = m.optString("telefone").ifBlank { m.optString("phone") }
                     // Converte explicitamente para String; não trima, não interpreta.
@@ -179,9 +162,9 @@ class SmsPollingService : Service() {
                     if (to.isBlank() || msg.isBlank()) {
                         Log.w(TAG, "Payload inválido id=$id telefone='$to' msgLen=${msg.length}")
                         val ackResp = ack(token, id, false, msg, "", "PAYLOAD_INVALIDO",
-                            "telefone ou mensagem ausente", -1, -1, 0)
+                            "telefone ou mensagem ausente", -1, -1, 0, "payload inválido")
                         recordDiag(m.toString(), to, msg.length, -1, -1, messages.length() - i - 1,
-                            -1, "PAYLOAD_INVALIDO", "telefone ou mensagem ausente", ackResp.first, ackResp.second)
+                            -1, "PAYLOAD_INVALIDO", "telefone ou mensagem ausente", "payload inválido", ackResp.first, ackResp.second)
                         falhas++
                         addHistory(SendEvent(to, msg, false, "PAYLOAD_INVALIDO", System.currentTimeMillis(),
                             -1, "PAYLOAD_INVALIDO", -1, msg.length, 0))
@@ -216,11 +199,12 @@ class SmsPollingService : Service() {
                         resultCode = result.resultCode,
                         subscriptionId = result.subscriptionId,
                         parts = result.parts,
+                        attempts = result.attemptDetails,
                     )
 
                     recordDiag(m.toString(), to, msg.length, result.simUsed, result.subscriptionId,
                         messages.length() - i - 1, result.resultCode, result.errorCode,
-                        result.errorDescription, ackResp.first, ackResp.second)
+                        result.errorDescription, result.attemptDetails, ackResp.first, ackResp.second)
 
                     if (result.ok) enviados++ else falhas++
                     addHistory(SendEvent(
@@ -229,7 +213,7 @@ class SmsPollingService : Service() {
                         timeMs = System.currentTimeMillis(),
                         resultCode = result.resultCode, errorCode = result.errorCode,
                         subscriptionId = result.subscriptionId, messageLength = msg.length,
-                        parts = result.parts
+                        parts = result.parts, attempts = result.attemptDetails
                     ))
                 }
                 queueSize = 0
@@ -246,7 +230,7 @@ class SmsPollingService : Service() {
     private fun recordDiag(
         requestJson: String, phone: String, len: Int, simIndex: Int, subId: Int,
         queueLeft: Int, resultCode: Int, errorCode: String, errorDesc: String,
-        ackPayload: String, ackResponse: String,
+        attempts: String, ackPayload: String, ackResponse: String,
     ) {
         lastDiag = DiagSnapshot(
             whenMs = System.currentTimeMillis(),
@@ -259,6 +243,7 @@ class SmsPollingService : Service() {
             androidResultCode = resultCode,
             androidErrorCode = errorCode,
             androidErrorDescription = errorDesc,
+            attempts = attempts,
             apiAckPayload = ackPayload,
             apiAckResponse = ackResponse,
         )
@@ -309,6 +294,7 @@ class SmsPollingService : Service() {
         resultCode: Int,
         subscriptionId: Int,
         parts: Int,
+        attempts: String,
     ): Pair<String, String> {
         val body = JSONObject().apply {
             put("id", id)
@@ -322,6 +308,7 @@ class SmsPollingService : Service() {
             put("android_error_description", errorDescription)
             put("subscription_id", subscriptionId)
             put("parts", parts)
+            put("attempts", attempts)
             put("timestamp", isoFmt.format(Date()))
             if (!success) put("erro", "$errorCode: $errorDescription")
         }.toString()

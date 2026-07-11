@@ -149,6 +149,7 @@ class DiagnosticActivity : AppCompatActivity() {
                 appendLine("SIM index: ${result.simUsed}  subId: ${result.subscriptionId}")
                 appendLine("Resultado Android: ${result.resultCode} (${result.errorCode})")
                 appendLine("Descrição: ${result.errorDescription}")
+                appendLine("Tentativas: ${result.attemptDetails}")
                 appendLine("OK: ${result.ok}")
             }
             tvTestResult.text = txt
@@ -165,6 +166,7 @@ class DiagnosticActivity : AppCompatActivity() {
                     subscriptionId = result.subscriptionId,
                     messageLength = result.messageLength,
                     parts = result.parts,
+                    attempts = result.attemptDetails,
                 ))
                 while (SmsPollingService.history.size > SmsPollingService.MAX_HISTORY)
                     SmsPollingService.history.removeLast()
@@ -213,6 +215,7 @@ class DiagnosticActivity : AppCompatActivity() {
             sb.appendLine("resultCode: ${d.androidResultCode}")
             sb.appendLine("errorCode:  ${d.androidErrorCode}")
             sb.appendLine("descrição:  ${d.androidErrorDescription}")
+            sb.appendLine("tentativas: ${d.attempts.ifBlank { "—" }}")
             sb.appendLine()
             sb.appendLine("--- Requisição recebida da API ---")
             sb.appendLine(d.requestJson)
@@ -229,6 +232,9 @@ class DiagnosticActivity : AppCompatActivity() {
             for (ev in SmsPollingService.history) {
                 val tag = if (ev.success) "OK " else "ERR"
                 sb.appendLine("[$tag] ${fmt.format(Date(ev.timeMs))} ${ev.phone} len=${ev.messageLength} parts=${ev.parts} code=${ev.resultCode} ${ev.errorCode}")
+                if (ev.attempts.isNotBlank()) {
+                    sb.appendLine("     tentativas: ${ev.attempts}")
+                }
                 if (!ev.success && !ev.error.isNullOrBlank()) {
                     sb.appendLine("     ↳ ${ev.error}")
                 }

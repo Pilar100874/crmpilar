@@ -1,6 +1,6 @@
 {
-  "version": "1.4.8",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.4.8/pilar-sms-v1.4.8.apk",
-  "filename": "pilar-sms-v1.4.8.apk",
-  "notas": "v1.4.8: nova tela de diagnóstico com envio de SMS de teste direto do celular + código exato do Android por mensagem."
+  "version": "1.4.9",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.4.9/pilar-sms-v1.4.9.apk",
+  "filename": "pilar-sms-v1.4.9.apk",
+  "notas": "v1.4.9: retry automático por SIM/fallback, recuperação de fila travada e log detalhado do retorno Android."
 }
