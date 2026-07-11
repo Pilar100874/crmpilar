@@ -209,9 +209,27 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
                     </TableCell>
                     <TableCell><Switch checked={d.ativo} onCheckedChange={() => toggleAtivo(d)} /></TableCell>
                     <TableCell>
-                      <Button size="icon" variant="ghost" onClick={() => setToDelete(d)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        {editingId === d.id ? (
+                          <>
+                            <Button size="icon" variant="ghost" onClick={() => salvarEdit(d)} title="Salvar">
+                              <Check className="h-4 w-4 text-primary" />
+                            </Button>
+                            <Button size="icon" variant="ghost" onClick={cancelEdit} title="Cancelar">
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button size="icon" variant="ghost" onClick={() => startEdit(d)} title="Editar nome">
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button size="icon" variant="ghost" onClick={() => setToDelete(d)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
