@@ -292,7 +292,7 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
   },
   {
     type: 'action_webhook',
-    label: 'Chamar Webhook',
+    label: 'Webhook',
     description: 'Envia dados para URL externa',
     icon: 'Webhook',
     category: 'action',
@@ -301,7 +301,7 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
   },
   {
     type: 'action_email',
-    label: 'Enviar Email',
+    label: 'Enviar E-mail',
     description: 'Envia email de alerta',
     icon: 'Mail',
     category: 'action',
@@ -382,7 +382,7 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
   },
   {
     type: 'action_aviso_sistema',
-    label: 'Aviso do Sistema',
+    label: 'Enviar Aviso do Sistema',
     description: 'Envia aviso para usuários do sistema',
     icon: 'Bell',
     category: 'action',
@@ -398,7 +398,7 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
   },
   {
     type: 'action_mensagem_interna',
-    label: 'Mensagem Interna',
+    label: 'Enviar Mensagem Interna',
     description: 'Envia mensagem no chat interno',
     icon: 'MessageCircle',
     category: 'action',
