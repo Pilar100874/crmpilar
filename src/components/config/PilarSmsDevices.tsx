@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Copy, Plus, Trash2, Smartphone, RefreshCw, Pencil, Check, X } from 'lucide-react';
+import { Copy, Plus, Trash2, Smartphone, RefreshCw, Pencil, Check, X, Eye, EyeOff, KeyRound } from 'lucide-react';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { StatusPingDot } from '@/components/StatusPingDot';
 
@@ -36,6 +36,26 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
   const [showToken, setShowToken] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editNome, setEditNome] = useState('');
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+
+  const toggleReveal = (id: string) => setRevealed((r) => ({ ...r, [id]: !r[id] }));
+  const maskToken = (t: string) => (t.length <= 12 ? '•'.repeat(t.length) : `${t.slice(0, 6)}${'•'.repeat(Math.max(6, t.length - 10))}${t.slice(-4)}`);
+
+  const TokenField = ({ d, compact = false }: { d: Device; compact?: boolean }) => {
+    const shown = !!revealed[d.id];
+    return (
+      <div className={`flex items-center gap-1 rounded-md border bg-muted/40 px-2 ${compact ? 'py-0.5' : 'py-1'} font-mono ${compact ? 'text-[10px]' : 'text-xs'} min-w-0`}>
+        <KeyRound className={`${compact ? 'h-3 w-3' : 'h-3.5 w-3.5'} text-muted-foreground shrink-0`} />
+        <span className="truncate select-all">{shown ? d.token : maskToken(d.token)}</span>
+        <Button size="icon" variant="ghost" className={`${compact ? 'h-5 w-5' : 'h-6 w-6'} shrink-0`} onClick={() => toggleReveal(d.id)} title={shown ? 'Ocultar' : 'Mostrar'}>
+          {shown ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+        </Button>
+        <Button size="icon" variant="ghost" className={`${compact ? 'h-5 w-5' : 'h-6 w-6'} shrink-0`} onClick={() => copiar(d.token)} title="Copiar token">
+          <Copy className="h-3 w-3" />
+        </Button>
+      </div>
+    );
+  };
 
   const startEdit = (d: Device) => { setEditingId(d.id); setEditNome(d.nome); };
   const cancelEdit = () => { setEditingId(null); setEditNome(''); };
@@ -164,7 +184,7 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
               <TableHeader>
                 <TableRow>
                   <TableHead>Celular</TableHead>
-                  <TableHead className="w-[120px]">Token</TableHead>
+                  <TableHead className="w-[260px]">Token</TableHead>
                   <TableHead>Último ping</TableHead>
                   <TableHead>Bateria</TableHead>
                   <TableHead>Ativo</TableHead>
@@ -193,10 +213,8 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Button size="sm" variant="ghost" onClick={() => copiar(d.token)} className="font-mono text-xs">
-                        {d.token.slice(0, 8)}… <Copy className="h-3 w-3 ml-1" />
-                      </Button>
+                    <TableCell className="min-w-[220px] max-w-[280px]">
+                      <TokenField d={d} />
                     </TableCell>
                     <TableCell className="text-xs">
                       <div className="flex items-center gap-2">
@@ -296,9 +314,9 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
                       <Badge variant={d.bateria > 20 ? 'default' : 'destructive'} className="text-[10px]">{d.bateria}%</Badge>
                     </div>
                   )}
-                  <Button size="sm" variant="ghost" onClick={() => copiar(d.token)} className="font-mono text-[10px] h-6 px-2 ml-auto">
-                    {d.token.slice(0, 8)}… <Copy className="h-3 w-3 ml-1" />
-                  </Button>
+                  <div className="ml-auto min-w-0 max-w-full">
+                    <TokenField d={d} compact />
+                  </div>
                 </div>
               </div>
             ))}
