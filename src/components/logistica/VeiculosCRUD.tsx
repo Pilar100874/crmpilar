@@ -755,6 +755,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   <span className="text-[11px] text-muted-foreground">Rastreador:</span>
                   <span className="text-xs font-medium truncate">{model.nome}</span>
                   {renderTrackerStatusBadge(veiculo)}
+                  {renderTrackerOnlineBadge(veiculo)}
                 </div>
               )}
             </div>
