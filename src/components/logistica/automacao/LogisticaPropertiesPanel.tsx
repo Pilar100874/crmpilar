@@ -13,6 +13,7 @@ import { IconePicker } from './IconePicker';
 import { Plus, Trash2, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { PushBlockConfigEditor } from '@/components/workflows/PushBlockConfig';
+import { SmsBlockConfig } from '@/components/shared/SmsBlockConfig';
 
 interface Usuario {
   id: string;
