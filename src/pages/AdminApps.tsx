@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Smartphone, Apple, Share2, Plus, BellRing, ExternalLink, Info, Monitor, Camera, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
-import SmsTestePanel from "@/components/admin/SmsTestePanel";
+
 
 // Fallback fixo caso version.json esteja indisponível.
 const COLETOR_FALLBACK_URL = "https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Setup.exe";
@@ -263,7 +263,7 @@ export default function AdminApps() {
         </div>
       </Card>
 
-      <SmsTestePanel />
+      
 
 
       <Card className="flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/20">

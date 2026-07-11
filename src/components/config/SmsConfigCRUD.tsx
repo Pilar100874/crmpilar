@@ -11,12 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Send, Save, MessageSquare, BookOpen, Smartphone, Globe, Shield, Download, AppWindow, ArrowRight } from 'lucide-react';
+import { Send, Save, MessageSquare, BookOpen, Shield, Download, AppWindow } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PilarSmsDevices from './PilarSmsDevices';
 
 
-type Provider = 'twilio' | 'zenvia' | 'pilar';
+type Provider = 'pilar';
 
 interface SmsConfig {
   id?: string;
@@ -24,11 +24,6 @@ interface SmsConfig {
   provider: Provider;
   sender: string | null;
   ativo: boolean;
-  twilio_account_sid: string | null;
-  twilio_auth_token: string | null;
-  twilio_from: string | null;
-  zenvia_api_token: string | null;
-  zenvia_from: string | null;
   smsgate_base_url: string | null;
   smsgate_username: string | null;
   smsgate_password: string | null;
@@ -42,8 +37,6 @@ interface SmsConfig {
 
 const PROVIDERS: { value: Provider; label: string; desc: string; icon: any }[] = [
   { value: 'pilar', label: 'Pilar SMS (App próprio)', desc: 'Gateway próprio Pilar — protocolo simplificado, roda no seu Android', icon: Shield },
-  { value: 'twilio', label: 'Twilio', desc: 'Envio global via Twilio Programmable Messaging (pago)', icon: Globe },
-  { value: 'zenvia', label: 'Zenvia', desc: 'Envio via Zenvia (Brasil, créditos grátis para teste)', icon: Globe },
 ];
 
 export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId: string }) {
@@ -59,11 +52,6 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
     provider: 'pilar',
     sender: '',
     ativo: true,
-    twilio_account_sid: '',
-    twilio_auth_token: '',
-    twilio_from: '',
-    zenvia_api_token: '',
-    zenvia_from: '',
     smsgate_base_url: 'https://api.sms-gate.app/3rd/v1',
     smsgate_username: '',
     smsgate_password: '',
@@ -177,35 +165,6 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
             </div>
           </div>
 
-          {cfg.provider === 'twilio' && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
-              <div>
-                <Label>Account SID</Label>
-                <Input value={cfg.twilio_account_sid || ''} onChange={(e) => setCfg({ ...cfg, twilio_account_sid: e.target.value })} placeholder="ACxxxxxxxx" />
-              </div>
-              <div>
-                <Label>Auth Token</Label>
-                <Input type="password" value={cfg.twilio_auth_token || ''} onChange={(e) => setCfg({ ...cfg, twilio_auth_token: e.target.value })} />
-              </div>
-              <div>
-                <Label>Número From (E.164)</Label>
-                <Input value={cfg.twilio_from || ''} onChange={(e) => setCfg({ ...cfg, twilio_from: e.target.value })} placeholder="+15558675310" />
-              </div>
-            </div>
-          )}
-
-          {cfg.provider === 'zenvia' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
-              <div>
-                <Label>API Token (Zenvia)</Label>
-                <Input type="password" value={cfg.zenvia_api_token || ''} onChange={(e) => setCfg({ ...cfg, zenvia_api_token: e.target.value })} />
-              </div>
-              <div>
-                <Label>Número From</Label>
-                <Input value={cfg.zenvia_from || ''} onChange={(e) => setCfg({ ...cfg, zenvia_from: e.target.value })} placeholder="5511999999999" />
-              </div>
-            </div>
-          )}
 
 
           {cfg.provider === 'pilar' && (
@@ -293,36 +252,6 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
 
 
 
-            <AccordionItem value="twilio">
-              <AccordionTrigger className="text-sm">
-                <span className="flex items-center gap-2"><Globe className="h-4 w-4 text-blue-600" /> Twilio — Global · Pago (créditos grátis para teste)</span>
-              </AccordionTrigger>
-              <AccordionContent className="text-sm space-y-2 text-muted-foreground">
-                <ol className="list-decimal ml-5 space-y-1">
-                  <li>Crie conta em <a className="underline" href="https://twilio.com" target="_blank" rel="noreferrer">twilio.com</a> (ganha ~US$15 de crédito).</li>
-                  <li>No console Twilio, compre um número em <b>Phone Numbers → Buy a number</b> com capacidade de SMS.</li>
-                  <li>Copie o <b>Account SID</b> e o <b>Auth Token</b> da página inicial do console.</li>
-                  <li>Aqui, selecione provedor <b>Twilio</b> e cole Account SID, Auth Token e o número comprado no formato E.164 (ex: <code>+15558675310</code>).</li>
-                  <li>Ative <i>SMS Pumping Protection</i> e <i>Geo Permissions</i> (Brasil) no console Twilio antes de ir para produção.</li>
-                  <li>Salve e envie um teste. No plano trial, só é possível enviar para números verificados.</li>
-                </ol>
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="zenvia">
-              <AccordionTrigger className="text-sm">
-                <span className="flex items-center gap-2"><Globe className="h-4 w-4 text-blue-600" /> Zenvia — Brasil · Pago (créditos grátis para teste)</span>
-              </AccordionTrigger>
-              <AccordionContent className="text-sm space-y-2 text-muted-foreground">
-                <ol className="list-decimal ml-5 space-y-1">
-                  <li>Crie conta em <a className="underline" href="https://zenvia.com" target="_blank" rel="noreferrer">zenvia.com</a>.</li>
-                  <li>No painel, acesse <b>Integrações → API</b> e gere um <b>API Token</b>.</li>
-                  <li>Contrate/registre um <b>número de origem</b> (from) para SMS.</li>
-                  <li>Aqui, selecione provedor <b>Zenvia</b> e cole o API Token e o número From (somente dígitos com DDI, ex: <code>5511999999999</code>).</li>
-                  <li>Salve e envie um teste. Créditos gratuitos são consumidos automaticamente.</li>
-                </ol>
-              </AccordionContent>
-            </AccordionItem>
           </Accordion>
         </CardContent>
       </Card>
