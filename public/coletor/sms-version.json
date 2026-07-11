@@ -1,6 +1,6 @@
 {
-  "version": "1.5.0",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.5.0/pilar-sms-v1.5.0.apk",
-  "filename": "pilar-sms-v1.5.0.apk",
-  "notas": "v1.5.0: seletor de chip (SIM físico/eSIM) nas Configurações; envio (fila e teste) usa o chip escolhido, com fallback automático."
+  "version": "1.5.1",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.5.1/pilar-sms-v1.5.1.apk",
+  "filename": "pilar-sms-v1.5.1.apk",
+  "notas": "v1.5.1: número de retentativas configurável nas Configurações (0 a 10) — cada retentativa reexecuta o envio com o chip escolhido e faz fallback pelos SIMs."
 }
