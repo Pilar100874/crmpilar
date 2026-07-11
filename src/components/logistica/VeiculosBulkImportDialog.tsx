@@ -230,22 +230,7 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
                     <TableCell>
                       <Input value={r.telefone_sms} onChange={e => update(r.id, { telefone_sms: e.target.value })} placeholder="+5511..." className="h-9" />
                     </TableCell>
-                    <TableCell>
-                      <Select value={r.tracker_model_id} onValueChange={v => update(r.id, { tracker_model_id: v })}>
-                        <SelectTrigger className="h-9"><SelectValue placeholder="—" /></SelectTrigger>
-                        <SelectContent>
-                          {trackerModels.map(m => <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Select value={r.operadora_id} onValueChange={v => update(r.id, { operadora_id: v })}>
-                        <SelectTrigger className="h-9"><SelectValue placeholder="—" /></SelectTrigger>
-                        <SelectContent>
-                          {OPERADORAS_APN.map(o => <SelectItem key={o.id} value={o.id}>{o.nome}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
+
                     <TableCell>{statusBadge(r)}</TableCell>
                     <TableCell>
                       <Button size="icon" variant="ghost" onClick={() => remove(r.id)} disabled={processing}>
