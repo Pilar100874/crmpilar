@@ -1490,6 +1490,9 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
       case "condicao_primeira_compra":
         return <p className="text-xs text-muted-foreground">Ativa quando o cliente nunca fez uma compra anterior. Sem configurações adicionais.</p>;
 
+      case "acao_enviar_sms":
+        return <SmsBlockConfig config={config} onChange={(k, v) => updateConfig(k, v)} />;
+
       default:
         return <p className="text-xs text-muted-foreground">Sem configurações adicionais para este bloco.</p>;
     }
