@@ -495,6 +495,16 @@ export const AutomacaoPropertiesPanel = ({
             />
           )}
 
+          {(node.data as any).type === "enviar_sms" && (
+            <SmsBlockConfig
+              config={(node.data as any).config || {}}
+              onChange={(key, value) => onUpdate(node.id, {
+                config: { ...((node.data as any).config || {}), [key]: value },
+              })}
+            />
+          )}
+
+
 
           {/* Campos específicos para valida_faixa_faturamento */}
           {(node.data as any).type === "valida_faixa_faturamento" && (
