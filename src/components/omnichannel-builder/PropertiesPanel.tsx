@@ -902,6 +902,10 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
               context="omnichannel"
             />
           )}
+
+          {data.type === 'enviar_sms' && (
+            <SmsBlockConfig config={data.config || {}} onChange={updateConfig} />
+          )}
         </div>
       </ScrollArea>
     </Card>
