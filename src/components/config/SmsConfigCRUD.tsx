@@ -14,6 +14,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Send, Save, MessageSquare, BookOpen, Shield, Download, AppWindow } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PilarSmsDevices from './PilarSmsDevices';
+import PilarSmsDownloadCard from './PilarSmsDownloadCard';
 
 
 type Provider = 'pilar';
