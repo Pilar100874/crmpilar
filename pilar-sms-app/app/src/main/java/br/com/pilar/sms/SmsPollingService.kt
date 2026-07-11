@@ -79,7 +79,6 @@ class SmsPollingService : Service() {
         const val POLL_INTERVAL_MS = 5_000L
         const val MIN_SEND_INTERVAL_MS = 5_000L
         const val MAX_HISTORY = 30
-        const val DEDUPE_MAX = 500
 
         private val isoFmt = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.US)
 
@@ -96,23 +95,10 @@ class SmsPollingService : Service() {
 
         val historyLock = Any()
         val history = ArrayDeque<SendEvent>()
-        val processedIds = LinkedHashSet<String>()
 
         fun clearHistory() {
             synchronized(historyLock) { history.clear() }
             enviados = 0; falhas = 0
-        }
-
-        fun rememberProcessed(id: String): Boolean {
-            synchronized(processedIds) {
-                if (processedIds.contains(id)) return false
-                processedIds.add(id)
-                while (processedIds.size > DEDUPE_MAX) {
-                    val it = processedIds.iterator()
-                    if (it.hasNext()) { it.next(); it.remove() }
-                }
-                return true
-            }
         }
     }
 
@@ -164,11 +150,6 @@ class SmsPollingService : Service() {
                 for (i in 0 until messages.length()) {
                     val m = messages.getJSONObject(i)
                     val id = m.getString("id")
-                    // Dedupe: se já processamos esse ID nesta sessão, ignora.
-                    if (!rememberProcessed(id)) {
-                        Log.w(TAG, "IGNORADO id=$id (já processado nesta sessão)")
-                        continue
-                    }
 
                     val to: String = m.optString("telefone").ifBlank { m.optString("phone") }
                     // Converte explicitamente para String; não trima, não interpreta.
