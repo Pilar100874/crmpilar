@@ -16,7 +16,7 @@ import { Link } from 'react-router-dom';
 import PilarSmsDevices from './PilarSmsDevices';
 
 
-type Provider = 'twilio' | 'zenvia' | 'pilar';
+type Provider = 'pilar';
 
 interface SmsConfig {
   id?: string;
@@ -24,11 +24,6 @@ interface SmsConfig {
   provider: Provider;
   sender: string | null;
   ativo: boolean;
-  twilio_account_sid: string | null;
-  twilio_auth_token: string | null;
-  twilio_from: string | null;
-  zenvia_api_token: string | null;
-  zenvia_from: string | null;
   smsgate_base_url: string | null;
   smsgate_username: string | null;
   smsgate_password: string | null;
@@ -42,8 +37,6 @@ interface SmsConfig {
 
 const PROVIDERS: { value: Provider; label: string; desc: string; icon: any }[] = [
   { value: 'pilar', label: 'Pilar SMS (App próprio)', desc: 'Gateway próprio Pilar — protocolo simplificado, roda no seu Android', icon: Shield },
-  { value: 'twilio', label: 'Twilio', desc: 'Envio global via Twilio Programmable Messaging (pago)', icon: Globe },
-  { value: 'zenvia', label: 'Zenvia', desc: 'Envio via Zenvia (Brasil, créditos grátis para teste)', icon: Globe },
 ];
 
 export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId: string }) {
