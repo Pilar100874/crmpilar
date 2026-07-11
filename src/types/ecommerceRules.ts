@@ -67,6 +67,7 @@ export type EcommerceRuleBlockType =
   | "acao_chat_proativo"
   | "acao_notificacao_navegador"
   | "acao_destacar_elemento"
+  | "acao_enviar_sms"
   | "return_response";
 
 export interface EcommerceBlockDefinition {
