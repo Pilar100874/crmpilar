@@ -968,34 +968,6 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 )}
               </div>
 
-              {/* Bloco Envio de dados por SMS */}
-              <div className="border rounded-lg p-3 space-y-3 bg-muted/30">
-                <Label className="flex items-center gap-2 text-sm font-semibold">
-                  <Send className="h-4 w-4" />
-                  Envio de dados por SMS
-                </Label>
-                <p className="text-[11px] text-muted-foreground">
-                  Envia o mesmo SMS de conferência, usando o nome do veículo no texto.
-                </p>
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs">Enviar ao salvar</Label>
-                  <Switch
-                    checked={formData.enviar_sms_automatico}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, enviar_sms_automatico: checked }))}
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  disabled={enviandoSms || !formData.telefone_sms || !formData.tracker_model_id}
-                  onClick={() => enviarDadosPorSms(selectedVeiculo?.id)}
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  {enviandoSms ? 'Enviando...' : 'Enviar dados agora'}
-                </Button>
-              </div>
             </div>
 
             <div className="flex items-center justify-between border-t pt-3">
