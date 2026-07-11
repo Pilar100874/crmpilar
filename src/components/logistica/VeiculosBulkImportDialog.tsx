@@ -172,6 +172,29 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
               <Badge variant="outline">{total} linhas</Badge>
             </div>
           </div>
+
+          {/* Configuração fixa aplicada a todas as linhas */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Rastreador (aplicado a todos)</Label>
+              <Select value={globalTrackerId} onValueChange={setGlobalTrackerId}>
+                <SelectTrigger className="h-9"><SelectValue placeholder="Selecione o modelo" /></SelectTrigger>
+                <SelectContent>
+                  {trackerModels.map(m => <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Operadora (aplicada a todos)</Label>
+              <Select value={globalOperadoraId} onValueChange={setGlobalOperadoraId}>
+                <SelectTrigger className="h-9"><SelectValue placeholder="Selecione a operadora" /></SelectTrigger>
+                <SelectContent>
+                  {OPERADORAS_APN.map(o => <SelectItem key={o.id} value={o.id}>{o.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
         </DialogHeader>
 
         {/* Corpo rolável */}
