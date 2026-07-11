@@ -140,8 +140,12 @@ class DiagnosticActivity : AppCompatActivity() {
         tvTestResult.text = "Enviando teste para $to (${msg.length} chars)..."
         scope.launch {
             val result = withContext(Dispatchers.IO) {
-                SmsSender.send(this@DiagnosticActivity, to, msg, null, null)
+                val preferredSim = getSharedPreferences("pilar_sms", MODE_PRIVATE)
+                    .getInt("preferred_sim_index", -1)
+                val hint = if (preferredSim >= 0) preferredSim.toString() else null
+                SmsSender.send(this@DiagnosticActivity, to, msg, hint, null)
             }
+
             val txt = buildString {
                 appendLine("=== TESTE ${fmt.format(Date(result.timestamp))} ===")
                 appendLine("Telefone: $to")

@@ -103,6 +103,47 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="CHIP PARA ENVIO DE SMS"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.1"
+                    android:textColor="@color/text_muted"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Selecione qual chip (SIM físico ou eSIM) o app deve usar. Em 'Automático' o app tenta o chip padrão do sistema e faz fallback para os demais."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"/>
+
+                <RadioGroup
+                    android:id="@+id/simGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="vertical"/>
+
+                <TextView
+                    android:id="@+id/tvSimHint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text=""
+                    android:textColor="@color/text_muted"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card"
+                android:padding="16dp"
+                android:layout_marginTop="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="SERVIDOR"
                     android:textSize="11sp"
                     android:letterSpacing="0.1"
