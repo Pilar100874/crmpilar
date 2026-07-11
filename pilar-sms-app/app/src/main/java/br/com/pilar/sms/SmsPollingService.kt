@@ -181,9 +181,9 @@ class SmsPollingService : Service() {
                     if (to.isBlank() || msg.isBlank()) {
                         Log.w(TAG, "Payload inválido id=$id telefone='$to' msgLen=${msg.length}")
                         val ackResp = ack(token, id, false, msg, "", "PAYLOAD_INVALIDO",
-                            "telefone ou mensagem ausente", -1, -1, 0)
+                            "telefone ou mensagem ausente", -1, -1, 0, "payload inválido")
                         recordDiag(m.toString(), to, msg.length, -1, -1, messages.length() - i - 1,
-                            -1, "PAYLOAD_INVALIDO", "telefone ou mensagem ausente", ackResp.first, ackResp.second)
+                            -1, "PAYLOAD_INVALIDO", "telefone ou mensagem ausente", "payload inválido", ackResp.first, ackResp.second)
                         falhas++
                         addHistory(SendEvent(to, msg, false, "PAYLOAD_INVALIDO", System.currentTimeMillis(),
                             -1, "PAYLOAD_INVALIDO", -1, msg.length, 0))
@@ -313,6 +313,7 @@ class SmsPollingService : Service() {
         resultCode: Int,
         subscriptionId: Int,
         parts: Int,
+        attempts: String,
     ): Pair<String, String> {
         val body = JSONObject().apply {
             put("id", id)
