@@ -252,36 +252,6 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
 
 
 
-            <AccordionItem value="twilio">
-              <AccordionTrigger className="text-sm">
-                <span className="flex items-center gap-2"><Globe className="h-4 w-4 text-blue-600" /> Twilio — Global · Pago (créditos grátis para teste)</span>
-              </AccordionTrigger>
-              <AccordionContent className="text-sm space-y-2 text-muted-foreground">
-                <ol className="list-decimal ml-5 space-y-1">
-                  <li>Crie conta em <a className="underline" href="https://twilio.com" target="_blank" rel="noreferrer">twilio.com</a> (ganha ~US$15 de crédito).</li>
-                  <li>No console Twilio, compre um número em <b>Phone Numbers → Buy a number</b> com capacidade de SMS.</li>
-                  <li>Copie o <b>Account SID</b> e o <b>Auth Token</b> da página inicial do console.</li>
-                  <li>Aqui, selecione provedor <b>Twilio</b> e cole Account SID, Auth Token e o número comprado no formato E.164 (ex: <code>+15558675310</code>).</li>
-                  <li>Ative <i>SMS Pumping Protection</i> e <i>Geo Permissions</i> (Brasil) no console Twilio antes de ir para produção.</li>
-                  <li>Salve e envie um teste. No plano trial, só é possível enviar para números verificados.</li>
-                </ol>
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="zenvia">
-              <AccordionTrigger className="text-sm">
-                <span className="flex items-center gap-2"><Globe className="h-4 w-4 text-blue-600" /> Zenvia — Brasil · Pago (créditos grátis para teste)</span>
-              </AccordionTrigger>
-              <AccordionContent className="text-sm space-y-2 text-muted-foreground">
-                <ol className="list-decimal ml-5 space-y-1">
-                  <li>Crie conta em <a className="underline" href="https://zenvia.com" target="_blank" rel="noreferrer">zenvia.com</a>.</li>
-                  <li>No painel, acesse <b>Integrações → API</b> e gere um <b>API Token</b>.</li>
-                  <li>Contrate/registre um <b>número de origem</b> (from) para SMS.</li>
-                  <li>Aqui, selecione provedor <b>Zenvia</b> e cole o API Token e o número From (somente dígitos com DDI, ex: <code>5511999999999</code>).</li>
-                  <li>Salve e envie um teste. Créditos gratuitos são consumidos automaticamente.</li>
-                </ol>
-              </AccordionContent>
-            </AccordionItem>
           </Accordion>
         </CardContent>
       </Card>
