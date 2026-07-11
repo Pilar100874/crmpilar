@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
 import { PushBlockConfigEditor } from "@/components/workflows/PushBlockConfig";
+import { SmsBlockConfig } from "@/components/shared/SmsBlockConfig";
 
 
 interface PropertiesPanelProps {
@@ -900,6 +901,10 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
               }}
               context="omnichannel"
             />
+          )}
+
+          {data.type === 'enviar_sms' && (
+            <SmsBlockConfig config={data.config || {}} onChange={updateConfig} />
           )}
         </div>
       </ScrollArea>

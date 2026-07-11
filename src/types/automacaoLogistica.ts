@@ -10,6 +10,7 @@ export type LogisticaBlockType =
   | 'acao_notificacao'
   | 'acao_email'
   | 'disparar_push'
+  | 'enviar_sms'
   | 'return_response';
 
 export interface CondicaoTempoParado {
@@ -60,6 +61,9 @@ export interface LogisticaBlockConfig {
   corpo?: string;
   url?: string;
   icone?: string;
+  // Para enviar_sms
+  phoneNumbers?: string[];
+  outputVariable?: string;
 }
 
 export interface LogisticaBlock {
@@ -219,6 +223,20 @@ export const LOGISTICA_BLOCKS: LogisticaBlock[] = [
       titulo: 'Alerta de logística',
       corpo: '',
       url: '/logistica-veiculos',
+    },
+    outputs: 1,
+  },
+  {
+    type: 'enviar_sms',
+    label: 'Enviar SMS',
+    category: 'acao',
+    color: '#0284c7',
+    icon: 'MessageSquareText',
+    description: 'Dispara SMS para um ou mais números via gateway',
+    defaultData: {
+      phoneNumbers: [''],
+      mensagem: '',
+      outputVariable: 'envio_sms_status',
     },
     outputs: 1,
   },

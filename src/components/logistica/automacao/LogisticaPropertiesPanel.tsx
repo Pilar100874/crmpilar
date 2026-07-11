@@ -13,6 +13,7 @@ import { IconePicker } from './IconePicker';
 import { Plus, Trash2, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { PushBlockConfigEditor } from '@/components/workflows/PushBlockConfig';
+import { SmsBlockConfig } from '@/components/shared/SmsBlockConfig';
 
 interface Usuario {
   id: string;
@@ -456,6 +457,12 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
           value={config as any}
           onChange={(patch) => Object.entries(patch).forEach(([k, v]) => updateConfig(k, v))}
           context="logistica"
+        />;
+
+      case 'enviar_sms':
+        return <SmsBlockConfig
+          config={{ ...config, message: (config as any).mensagem || (config as any).message || '' }}
+          onChange={(key, value) => updateConfig(key === 'message' ? 'mensagem' : key, value)}
         />;
 
       default:

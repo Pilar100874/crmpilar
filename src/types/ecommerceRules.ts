@@ -67,6 +67,7 @@ export type EcommerceRuleBlockType =
   | "acao_chat_proativo"
   | "acao_notificacao_navegador"
   | "acao_destacar_elemento"
+  | "acao_enviar_sms"
   | "return_response";
 
 export interface EcommerceBlockDefinition {
@@ -587,6 +588,19 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
       payloadJson: "",
       includeAllVariables: false,
       stopFlow: true,
+    },
+  },
+  {
+    type: "acao_enviar_sms",
+    label: "Enviar SMS",
+    description: "Dispara SMS para um ou mais números via gateway",
+    icon: "MessageSquareText",
+    color: "#0284c7",
+    category: "acao_recuperacao",
+    defaultData: {
+      phoneNumbers: [""],
+      message: "",
+      outputVariable: "envio_sms_status",
     },
   },
 ];

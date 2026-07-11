@@ -12,6 +12,7 @@ import * as Icons from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { UserSelector, MultiUserSelector } from "@/components/flow/block-configs/UserSelector";
 import { PushBlockConfigEditor } from "@/components/workflows/PushBlockConfig";
+import { SmsBlockConfig } from "@/components/shared/SmsBlockConfig";
 
 interface AdsPropertiesPanelProps {
   selectedNode: Node | null;
@@ -619,6 +620,12 @@ export const AdsPropertiesPanel = ({ selectedNode, onUpdateNode, onClose }: AdsP
             config: { ...((selectedNode.data as any).config || {}), ...patch },
           })}
           context="ads"
+        />;
+
+      case 'enviar_sms':
+        return <SmsBlockConfig
+          config={(selectedNode.data as any).config || {}}
+          onChange={(key, value) => handleConfigChange(key, value)}
         />;
 
       default:

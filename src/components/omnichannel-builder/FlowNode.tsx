@@ -24,6 +24,7 @@ import {
   HelpCircle,
   Reply,
   Bell,
+  MessageSquareText,
 } from "lucide-react";
 import { BlockHelpDialog } from "@/components/workflow-help/BlockHelpDialog";
 import { getBlockHelp } from "@/components/workflow-help/blockHelpRegistry";
@@ -87,6 +88,7 @@ const nodeIcons: Record<OmnichannelBlockType, any> = {
   analytics: BarChart3,
   return_response: Reply,
   disparar_push: Bell,
+  enviar_sms: MessageSquareText,
 };
 
 // Blocos que têm múltiplas saídas

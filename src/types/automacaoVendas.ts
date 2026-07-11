@@ -26,7 +26,8 @@ export type AutomacaoVendasBlockType =
   | "acao_enviar_alerta"
   | "aplicar_desconto"
   | "return_response"
-  | "disparar_push";
+  | "disparar_push"
+  | "enviar_sms";
 
 // Operadores de comparação
 export type OperadorComparacao = ">" | ">=" | "=" | "<" | "<=" | "!=";
@@ -313,6 +314,19 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
       titulo: "",
       corpo: "",
       url: "/",
+    },
+  },
+  {
+    type: "enviar_sms",
+    label: "Enviar SMS",
+    description: "Dispara SMS para um ou mais números via gateway",
+    icon: "MessageSquareText",
+    color: "#0284c7",
+    category: "acao",
+    defaultData: {
+      phoneNumbers: [""],
+      message: "",
+      outputVariable: "envio_sms_status",
     },
   },
 ];

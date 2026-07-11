@@ -36,6 +36,7 @@ const blocks: BlockItem[] = [
   { type: "analytics", label: "Analytics", description: "Visualiza métricas do fluxo", category: "Fluxo", icon: "BarChart3" },
   { type: "return_response", label: "Retornar Resposta", description: "Devolve payload ao workflow chamador", category: "Integrações", icon: "ArrowLeft" },
   { type: "disparar_push", label: "Disparar Push", description: "Envia notificação push para usuários ou clientes", category: "Integrações", icon: "Bell" },
+  { type: "enviar_sms", label: "Enviar SMS", description: "Dispara SMS para um ou mais números via gateway", category: "Integrações", icon: "MessageSquareText" },
 ];
 
 const blockCategories = [

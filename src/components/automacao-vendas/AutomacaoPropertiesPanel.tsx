@@ -9,6 +9,7 @@ import { Node } from "@xyflow/react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { PushBlockConfigEditor } from "@/components/workflows/PushBlockConfig";
+import { SmsBlockConfig } from "@/components/shared/SmsBlockConfig";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -493,6 +494,16 @@ export const AutomacaoPropertiesPanel = ({
               context="vendas"
             />
           )}
+
+          {(node.data as any).type === "enviar_sms" && (
+            <SmsBlockConfig
+              config={(node.data as any).config || {}}
+              onChange={(key, value) => onUpdate(node.id, {
+                config: { ...((node.data as any).config || {}), [key]: value },
+              })}
+            />
+          )}
+
 
 
           {/* Campos específicos para valida_faixa_faturamento */}
