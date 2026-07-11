@@ -82,7 +82,10 @@ export function getTrackerRenderedCommands(model: TrackerModelLite): RenderedTra
 
 export function buildTrackerParametersSms(model: TrackerModelLite): string {
   const comandos = getTrackerRenderedCommands(model).map((cmd) => cmd.rendered).filter(Boolean);
-  return `Parametros enviados;\n${comandos.join('\n')}`;
+  // Insere zero-width space (U+200B) após cada ponto para que o app de SMS/WhatsApp
+  // não detecte "crm.pilar.com.br" como URL clicável. Visualmente idêntico ao texto original.
+  const texto = `Parametros enviados;\n${comandos.join('\n')}`;
+  return texto.replace(/\./g, '.\u200B');
 }
 
 /** Configure a physical GPS tracker by sending its SMS commands to the SIM number */
