@@ -39,7 +39,8 @@ export type AdsBlockType =
   | 'action_aviso_sistema'
   | 'action_mensagem_interna'
   | 'return_response'
-  | 'disparar_push';
+  | 'disparar_push'
+  | 'enviar_sms';
 
 export interface AdsBlockDefinition {
   type: AdsBlockType;
