@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
 import { PushBlockConfigEditor } from "@/components/workflows/PushBlockConfig";
+import { SmsBlockConfig } from "@/components/shared/SmsBlockConfig";
 
 
 interface PropertiesPanelProps {
