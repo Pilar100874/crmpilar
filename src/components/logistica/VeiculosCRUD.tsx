@@ -112,7 +112,25 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         .order('placa');
 
       if (error) throw error;
-      setVeiculos((data || []) as Veiculo[]);
+      const list = (data || []) as Veiculo[];
+      setVeiculos(list);
+
+      // Última posição por veículo (para flag "Rastreador ativo")
+      const ids = list.map(v => v.id);
+      if (ids.length) {
+        const { data: pos } = await supabase
+          .from('veiculo_posicoes')
+          .select('veiculo_id, data_hora')
+          .in('veiculo_id', ids)
+          .order('data_hora', { ascending: false });
+        const map: Record<string, string> = {};
+        (pos || []).forEach((p: any) => {
+          if (!map[p.veiculo_id]) map[p.veiculo_id] = p.data_hora;
+        });
+        setUltimasPosicoes(map);
+      } else {
+        setUltimasPosicoes({});
+      }
     } catch (error) {
       console.error('Error fetching vehicles:', error);
       toast.error('Erro ao carregar veículos');
