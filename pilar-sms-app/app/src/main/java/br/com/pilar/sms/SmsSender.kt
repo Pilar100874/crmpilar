@@ -81,11 +81,12 @@ object SmsSender {
             val result = sendWithCandidate(ctx, to, text, candidate, startTs, onDelivered)
             val attempt = "${candidate.label}(sim=${candidate.simIndex},sub=${candidate.subscriptionId})=${result.errorCode}/${result.resultCode}"
             attempts += attempt
-            lastResult = result.copy(
+            val enrichedResult = result.copy(
                 attemptDetails = attempts.joinToString(" | "),
                 attemptedSubscriptions = candidates.joinToString(",") { "${it.label}:sim=${it.simIndex}:sub=${it.subscriptionId}" },
             )
-            if (result.ok) return lastResult
+            lastResult = enrichedResult
+            if (result.ok) return enrichedResult
             Log.w(TAG, "Tentativa falhou: $attempt")
         }
 
