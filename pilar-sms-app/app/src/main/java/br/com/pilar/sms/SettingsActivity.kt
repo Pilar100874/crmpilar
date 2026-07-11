@@ -43,8 +43,22 @@ class SettingsActivity : AppCompatActivity() {
             finish()
         }
 
+        // Retentativas
+        val retries = prefs.getInt("max_retries", 3).coerceIn(0, 10)
+        b.etRetries.setText(retries.toString())
+        b.btnSaveRetries.setOnClickListener {
+            val n = b.etRetries.text?.toString()?.trim()?.toIntOrNull()
+            if (n == null || n < 0 || n > 10) {
+                Toast.makeText(this, "Informe um número entre 0 e 10.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            prefs.edit().putInt("max_retries", n).apply()
+            Toast.makeText(this, "Retentativas salvas: $n", Toast.LENGTH_SHORT).show()
+        }
+
         populateSims(prefs)
     }
+
 
     private fun populateSims(prefs: android.content.SharedPreferences) {
         b.simGroup.removeAllViews()

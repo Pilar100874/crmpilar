@@ -183,14 +183,27 @@ class SmsPollingService : Service() {
                     Log.i(TAG, "ENVIAR id=$id telefone=$to tamanho=${msg.length} mensagem=<<${msg}>>")
                     updateStatus("Enviando para $to (${msg.length} chars)")
 
-                    val preferredSim = getSharedPreferences("pilar_sms", Context.MODE_PRIVATE)
-                        .getInt("preferred_sim_index", -1)
+                    val prefsLocal = getSharedPreferences("pilar_sms", Context.MODE_PRIVATE)
+                    val preferredSim = prefsLocal.getInt("preferred_sim_index", -1)
                     val hint = if (preferredSim >= 0) preferredSim.toString() else null
-                    val result = SmsSender.send(this@SmsPollingService, to, msg, hint) { delivered, derr ->
+                    val maxRetries = prefsLocal.getInt("max_retries", 3).coerceIn(0, 10)
 
+                    var result = SmsSender.send(this@SmsPollingService, to, msg, hint) { delivered, derr ->
                         scope.launch { ackDelivery(token, id, delivered, derr) }
                     }
+                    var attemptsExtra = ""
+                    var attemptNum = 1
+                    while (!result.ok && attemptNum <= maxRetries) {
+                        Log.w(TAG, "Retentativa $attemptNum/$maxRetries id=$id last=${result.errorCode}")
+                        updateStatus("Retentativa $attemptNum/$maxRetries para $to")
+                        delay(1500L)
+                        val r = SmsSender.send(this@SmsPollingService, to, msg, hint, null)
+                        attemptsExtra += " || retry#$attemptNum:${r.errorCode}/${r.resultCode}"
+                        result = r.copy(attemptDetails = r.attemptDetails + attemptsExtra)
+                        attemptNum++
+                    }
                     lastSendMs = System.currentTimeMillis()
+
 
                     val ackResp = ack(
                         token = token,

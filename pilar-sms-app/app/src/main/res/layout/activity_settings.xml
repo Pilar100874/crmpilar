@@ -144,6 +144,55 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="NÚMERO DE RETENTATIVAS"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.1"
+                    android:textColor="@color/text_muted"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Se um SMS falhar, o app tentará reenviar até esse número de vezes antes de marcar como erro. Cada tentativa também percorre os SIMs disponíveis."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"/>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:hint="Retentativas (0 a 10)">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etRetries"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number"
+                        android:maxLength="2"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSaveRetries"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="6dp"
+                    app:cornerRadius="14dp"
+                    android:textAllCaps="false"
+                    android:textStyle="bold"
+                    android:text="Salvar retentativas"/>
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card"
+                android:padding="16dp"
+                android:layout_marginTop="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="SERVIDOR"
                     android:textSize="11sp"
                     android:letterSpacing="0.1"
