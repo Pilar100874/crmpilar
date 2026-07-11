@@ -185,8 +185,8 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
           </div>
 
           <div className="mt-3 rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-[11px] text-amber-900 dark:text-amber-200">
-            ⚠️ Os parâmetros só configuram o rastreador quando enviados para um <b>chip M2M</b> instalado no equipamento.
-            Em <b>celular normal</b> os comandos são apenas informativos e são ignorados pelo aparelho.
+            ⚠️ Os parâmetros só configuram o rastreador com segurança quando enviados para um <b>chip M2M</b> instalado no equipamento.
+            O envio para <b>celular normal</b> pode chegar com parâmetros faltando devido a bloqueios da operadora contra SMS em lote.
           </div>
 
 
