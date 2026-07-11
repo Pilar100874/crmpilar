@@ -48,6 +48,7 @@ class SmsPollingService : Service() {
         val subscriptionId: Int = -1,
         val messageLength: Int = 0,
         val parts: Int = 0,
+        val attempts: String = "",
     )
 
     data class DiagSnapshot(
@@ -61,6 +62,7 @@ class SmsPollingService : Service() {
         val androidResultCode: Int,
         val androidErrorCode: String,
         val androidErrorDescription: String,
+        val attempts: String,
         val apiAckPayload: String,
         val apiAckResponse: String,
     )
@@ -216,11 +218,12 @@ class SmsPollingService : Service() {
                         resultCode = result.resultCode,
                         subscriptionId = result.subscriptionId,
                         parts = result.parts,
+                        attempts = result.attemptDetails,
                     )
 
                     recordDiag(m.toString(), to, msg.length, result.simUsed, result.subscriptionId,
                         messages.length() - i - 1, result.resultCode, result.errorCode,
-                        result.errorDescription, ackResp.first, ackResp.second)
+                        result.errorDescription, result.attemptDetails, ackResp.first, ackResp.second)
 
                     if (result.ok) enviados++ else falhas++
                     addHistory(SendEvent(
@@ -229,7 +232,7 @@ class SmsPollingService : Service() {
                         timeMs = System.currentTimeMillis(),
                         resultCode = result.resultCode, errorCode = result.errorCode,
                         subscriptionId = result.subscriptionId, messageLength = msg.length,
-                        parts = result.parts
+                        parts = result.parts, attempts = result.attemptDetails
                     ))
                 }
                 queueSize = 0
@@ -246,7 +249,7 @@ class SmsPollingService : Service() {
     private fun recordDiag(
         requestJson: String, phone: String, len: Int, simIndex: Int, subId: Int,
         queueLeft: Int, resultCode: Int, errorCode: String, errorDesc: String,
-        ackPayload: String, ackResponse: String,
+        attempts: String, ackPayload: String, ackResponse: String,
     ) {
         lastDiag = DiagSnapshot(
             whenMs = System.currentTimeMillis(),
@@ -259,6 +262,7 @@ class SmsPollingService : Service() {
             androidResultCode = resultCode,
             androidErrorCode = errorCode,
             androidErrorDescription = errorDesc,
+            attempts = attempts,
             apiAckPayload = ackPayload,
             apiAckResponse = ackResponse,
         )
@@ -322,6 +326,7 @@ class SmsPollingService : Service() {
             put("android_error_description", errorDescription)
             put("subscription_id", subscriptionId)
             put("parts", parts)
+            put("attempts", attempts)
             put("timestamp", isoFmt.format(Date()))
             if (!success) put("erro", "$errorCode: $errorDescription")
         }.toString()
