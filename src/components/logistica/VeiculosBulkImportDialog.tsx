@@ -50,6 +50,8 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
   const [rows, setRows] = useState<Row[]>([newRow(), newRow(), newRow()]);
   const [processing, setProcessing] = useState(false);
   const [ativo, setAtivo] = useState(true);
+  const [globalTrackerId, setGlobalTrackerId] = useState('');
+  const [globalOperadoraId, setGlobalOperadoraId] = useState('');
 
   const update = (id: string, patch: Partial<Row>) =>
     setRows(rs => rs.map(r => (r.id === id ? { ...r, ...patch } : r)));
@@ -72,7 +74,7 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
         tipo_veiculo: r.tipo_veiculo || null,
         ativo,
         telefone_sms: r.telefone_sms,
-        tracker_model_id: r.tracker_model_id || null,
+        tracker_model_id: globalTrackerId || null,
       } as any)
       .select('id')
       .single();
@@ -93,10 +95,10 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
       try {
         const veiculoId = await cadastrarVeiculo(r);
 
-        if (r.tracker_model_id) {
-          const model = trackerModels.find(m => m.id === r.tracker_model_id);
+        if (globalTrackerId) {
+          const model = trackerModels.find(m => m.id === globalTrackerId);
           if (model) {
-            const finalModel = modelComOperadora(model, r.operadora_id);
+            const finalModel = modelComOperadora(model, globalOperadoraId);
             if (modo === 'conferencia') {
               // 1 SMS consolidado só para conferência dos parâmetros
               const mensagem = buildTrackerParametersSms(finalModel);
@@ -170,6 +172,29 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
               <Badge variant="outline">{total} linhas</Badge>
             </div>
           </div>
+
+          {/* Configuração fixa aplicada a todas as linhas */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Rastreador (aplicado a todos)</Label>
+              <Select value={globalTrackerId} onValueChange={setGlobalTrackerId}>
+                <SelectTrigger className="h-9"><SelectValue placeholder="Selecione o modelo" /></SelectTrigger>
+                <SelectContent>
+                  {trackerModels.map(m => <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Operadora (aplicada a todos)</Label>
+              <Select value={globalOperadoraId} onValueChange={setGlobalOperadoraId}>
+                <SelectTrigger className="h-9"><SelectValue placeholder="Selecione a operadora" /></SelectTrigger>
+                <SelectContent>
+                  {OPERADORAS_APN.map(o => <SelectItem key={o.id} value={o.id}>{o.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
         </DialogHeader>
 
         {/* Corpo rolável */}
@@ -183,8 +208,6 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
                   <TableHead className="w-[140px]">Tipo</TableHead>
                   <TableHead>Descrição</TableHead>
                   <TableHead className="w-[160px]">Telefone (M2M)</TableHead>
-                  <TableHead className="w-[170px]">Rastreador</TableHead>
-                  <TableHead className="w-[140px]">Operadora</TableHead>
                   <TableHead className="w-[110px]">Status</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
@@ -207,22 +230,7 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
                     <TableCell>
                       <Input value={r.telefone_sms} onChange={e => update(r.id, { telefone_sms: e.target.value })} placeholder="+5511..." className="h-9" />
                     </TableCell>
-                    <TableCell>
-                      <Select value={r.tracker_model_id} onValueChange={v => update(r.id, { tracker_model_id: v })}>
-                        <SelectTrigger className="h-9"><SelectValue placeholder="—" /></SelectTrigger>
-                        <SelectContent>
-                          {trackerModels.map(m => <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Select value={r.operadora_id} onValueChange={v => update(r.id, { operadora_id: v })}>
-                        <SelectTrigger className="h-9"><SelectValue placeholder="—" /></SelectTrigger>
-                        <SelectContent>
-                          {OPERADORAS_APN.map(o => <SelectItem key={o.id} value={o.id}>{o.nome}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
+
                     <TableCell>{statusBadge(r)}</TableCell>
                     <TableCell>
                       <Button size="icon" variant="ghost" onClick={() => remove(r.id)} disabled={processing}>
@@ -276,26 +284,8 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
                   <Input value={r.telefone_sms} onChange={e => update(r.id, { telefone_sms: e.target.value })} placeholder="+5511..." className="h-9" inputMode="tel" />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">Rastreador</Label>
-                    <Select value={r.tracker_model_id} onValueChange={v => update(r.id, { tracker_model_id: v })}>
-                      <SelectTrigger className="h-9"><SelectValue placeholder="—" /></SelectTrigger>
-                      <SelectContent>
-                        {trackerModels.map(m => <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">Operadora</Label>
-                    <Select value={r.operadora_id} onValueChange={v => update(r.id, { operadora_id: v })}>
-                      <SelectTrigger className="h-9"><SelectValue placeholder="—" /></SelectTrigger>
-                      <SelectContent>
-                        {OPERADORAS_APN.map(o => <SelectItem key={o.id} value={o.id}>{o.nome}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+
+
 
                 {r.erro && (
                   <p className="text-xs text-destructive flex items-start gap-1">
