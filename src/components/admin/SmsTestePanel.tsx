@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Send, RefreshCw, Bug, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { FunctionsHttpError } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
@@ -78,7 +79,13 @@ export default function SmsTestePanel() {
       const { data, error } = await supabase.functions.invoke("send-sms", {
         body: { estabelecimento_id: estabelecimentoId, destino: telefone, mensagem },
       });
-      if (error) throw error;
+      if (error) {
+        if (error instanceof FunctionsHttpError) {
+          const details = await error.context.text();
+          throw new Error(details || error.message);
+        }
+        throw error;
+      }
       if (data?.success === false) {
         toast.error(`Falhou: ${data?.erro || "erro desconhecido"}`);
       } else {
@@ -97,7 +104,7 @@ export default function SmsTestePanel() {
     if (s === "enviado" || s === "sent" || s === "entregue") {
       return <Badge className="bg-green-100 text-green-700 border-green-300 dark:bg-green-950/40 dark:text-green-300"><CheckCircle2 className="mr-1 h-3 w-3" />{status}</Badge>;
     }
-    if (s === "pendente" || s === "pending") {
+    if (s === "pendente" || s === "pending" || s === "queued") {
       return <Badge variant="outline"><Clock className="mr-1 h-3 w-3" />{status}</Badge>;
     }
     return <Badge variant="destructive"><XCircle className="mr-1 h-3 w-3" />{status || "erro"}</Badge>;

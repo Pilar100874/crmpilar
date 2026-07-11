@@ -133,6 +133,7 @@ Deno.serve(async (req) => {
         if (enqErr) throw new Error(`Falha ao enfileirar SMS: ${enqErr.message}`);
         providerMessageId = enq?.id ?? null;
         responseRaw = { queued: true, id: providerMessageId };
+        status = 'queued';
 
       } else {
         throw new Error(`Provedor desconhecido: ${cfg.provider}`);
@@ -156,8 +157,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ success: status === 'sent', status, provider: cfg.provider, provider_message_id: providerMessageId, erro, response: responseRaw }), {
-      status: status === 'sent' ? 200 : 500,
+    const success = status === 'sent' || status === 'queued';
+    return new Response(JSON.stringify({ success, status, provider: cfg.provider, provider_message_id: providerMessageId, erro, response: responseRaw }), {
+      status: success ? 200 : 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

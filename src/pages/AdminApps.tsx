@@ -10,9 +10,9 @@ import SmsTestePanel from "@/components/admin/SmsTestePanel";
 // Fallback fixo caso version.json esteja indisponível.
 const COLETOR_FALLBACK_URL = "https://github.com/Pilar100874/crmpilar/releases/latest/download/ColetorPilar-Setup.exe";
 const COLETOR_FALLBACK_FILENAME = "ColetorPilar-Setup.exe";
-const SMS_FALLBACK_URL = "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.4.8/pilar-sms-v1.4.8.apk";
-const SMS_FALLBACK_FILENAME = "pilar-sms-v1.4.8.apk";
-const SMS_FALLBACK_VERSION = "1.4.8";
+const SMS_FALLBACK_URL = "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.4.9/pilar-sms-v1.4.9.apk";
+const SMS_FALLBACK_FILENAME = "pilar-sms-v1.4.9.apk";
+const SMS_FALLBACK_VERSION = "1.4.9";
 
 interface BIPEvent extends Event {
   prompt: () => Promise<void>;

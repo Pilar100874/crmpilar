@@ -34,6 +34,7 @@ Deno.serve(async (req) => {
       android_error_description,
       subscription_id,
       parts,
+      attempts,
       timestamp,
     } = payload;
     if (!id || (typeof success !== 'boolean' && typeof delivered !== 'boolean')) {
@@ -89,24 +90,32 @@ Deno.serve(async (req) => {
       });
     }
 
-    const codeStr = String(android_error_code || erro || '').trim().toUpperCase();
-    const falsoNegativoAndroid = codeStr.includes('GENERIC_FAILURE');
+    const responseRaw = {
+      android_result_code,
+      android_error_code,
+      android_error_description,
+      subscription_id,
+      parts,
+      attempts,
+      timestamp,
+    };
 
-    if (success || falsoNegativoAndroid) {
+    if (success) {
       await supabase.from('sms_queue').update({
         status: 'enviado',
         enviado_at: new Date().toISOString(),
-        erro_mensagem: falsoNegativoAndroid ? 'Envio confirmado apesar do retorno GENERIC_FAILURE do Android' : null,
+        erro_mensagem: null,
       }).eq('id', id);
 
       // Registra em sms_envios para histórico
       await supabase.from('sms_envios').insert({
         estabelecimento_id: device.estabelecimento_id,
         provider: 'pilar',
-        destino: '',
-        mensagem: '',
+        destino: telefone || '',
+        mensagem: mensagem || '',
         status: 'sent',
         provider_message_id: id,
+        response_raw: responseRaw,
       }).select().maybeSingle().then(() => {}).catch(() => {});
     } else {
       const tentativas = item.tentativas || 0;
@@ -119,6 +128,19 @@ Deno.serve(async (req) => {
           : (erro || 'Falha desconhecida'),
         claimed_at: null,
       }).eq('id', id);
+
+      await supabase.from('sms_envios').insert({
+        estabelecimento_id: device.estabelecimento_id,
+        provider: 'pilar',
+        destino: telefone || '',
+        mensagem: mensagem || '',
+        status: 'failed',
+        provider_message_id: id,
+        erro: android_error_description
+          ? `${android_error_code || 'ERRO'}: ${android_error_description}`
+          : (erro || 'Falha desconhecida'),
+        response_raw: responseRaw,
+      }).select().maybeSingle().then(() => {}).catch(() => {});
     }
 
     return new Response(JSON.stringify({ ok: true }), {
