@@ -183,7 +183,11 @@ class SmsPollingService : Service() {
                     Log.i(TAG, "ENVIAR id=$id telefone=$to tamanho=${msg.length} mensagem=<<${msg}>>")
                     updateStatus("Enviando para $to (${msg.length} chars)")
 
-                    val result = SmsSender.send(this@SmsPollingService, to, msg, null) { delivered, derr ->
+                    val preferredSim = getSharedPreferences("pilar_sms", Context.MODE_PRIVATE)
+                        .getInt("preferred_sim_index", -1)
+                    val hint = if (preferredSim >= 0) preferredSim.toString() else null
+                    val result = SmsSender.send(this@SmsPollingService, to, msg, hint) { delivered, derr ->
+
                         scope.launch { ackDelivery(token, id, delivered, derr) }
                     }
                     lastSendMs = System.currentTimeMillis()
