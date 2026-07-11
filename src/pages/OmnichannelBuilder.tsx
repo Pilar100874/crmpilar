@@ -284,7 +284,8 @@ export default function OmnichannelBuilder() {
         analytics: "Analytics",
         inicio: "Início",
         return_response: "Retornar Resposta",
-        disparar_push: "Disparar Push"
+        disparar_push: "Disparar Push",
+        enviar_sms: "Enviar SMS"
       };
       const bounds = reactFlowWrapper.current.getBoundingClientRect();
       const position = reactFlowInstance
