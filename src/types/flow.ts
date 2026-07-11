@@ -559,7 +559,20 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       mediaUrl: "",
       waitForReply: false,
       outputVariable: "envio_whatsapp_status",
+  },
+  // Envio de SMS
+  {
+    type: "send_sms",
+    label: "Enviar SMS",
+    description: "Dispara SMS para um ou mais números via gateway configurado",
+    icon: "MessageSquareText",
+    color: "text-sky-600",
+    defaultData: {
+      phoneNumbers: [""],
+      message: "",
+      outputVariable: "envio_sms_status",
     },
+  },
   },
   // Loop API
   {
