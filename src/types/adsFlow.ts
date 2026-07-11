@@ -442,6 +442,19 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
       url: '/ads',
     },
   },
+  {
+    type: 'enviar_sms',
+    label: 'Enviar SMS',
+    description: 'Dispara SMS para um ou mais números via gateway',
+    icon: 'MessageSquareText',
+    category: 'action',
+    color: '#0284c7',
+    defaultData: {
+      phoneNumbers: [''],
+      message: '',
+      outputVariable: 'envio_sms_status',
+    },
+  },
 ];
 
 export interface AdsFlowNodeData {
