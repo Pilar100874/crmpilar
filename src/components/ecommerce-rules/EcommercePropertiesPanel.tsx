@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { SmsBlockConfig } from "@/components/shared/SmsBlockConfig";
 
 const ECOMMERCE_ROUTES = [
   { path: "/ecommerce", label: "Home da Loja", group: "Páginas" },
