@@ -314,9 +314,9 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
                       <Badge variant={d.bateria > 20 ? 'default' : 'destructive'} className="text-[10px]">{d.bateria}%</Badge>
                     </div>
                   )}
-                  <Button size="sm" variant="ghost" onClick={() => copiar(d.token)} className="font-mono text-[10px] h-6 px-2 ml-auto">
-                    {d.token.slice(0, 8)}… <Copy className="h-3 w-3 ml-1" />
-                  </Button>
+                  <div className="ml-auto min-w-0 max-w-full">
+                    <TokenField d={d} compact />
+                  </div>
                 </div>
               </div>
             ))}
