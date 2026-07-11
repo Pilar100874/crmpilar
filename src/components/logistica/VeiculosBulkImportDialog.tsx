@@ -95,10 +95,10 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
       try {
         const veiculoId = await cadastrarVeiculo(r);
 
-        if (r.tracker_model_id) {
-          const model = trackerModels.find(m => m.id === r.tracker_model_id);
+        if (globalTrackerId) {
+          const model = trackerModels.find(m => m.id === globalTrackerId);
           if (model) {
-            const finalModel = modelComOperadora(model, r.operadora_id);
+            const finalModel = modelComOperadora(model, globalOperadoraId);
             if (modo === 'conferencia') {
               // 1 SMS consolidado só para conferência dos parâmetros
               const mensagem = buildTrackerParametersSms(finalModel);
