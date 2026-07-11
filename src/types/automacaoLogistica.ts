@@ -226,4 +226,18 @@ export const LOGISTICA_BLOCKS: LogisticaBlock[] = [
     },
     outputs: 1,
   },
+  {
+    type: 'enviar_sms',
+    label: 'Enviar SMS',
+    category: 'acao',
+    color: '#0284c7',
+    icon: 'MessageSquareText',
+    description: 'Dispara SMS para um ou mais números via gateway',
+    defaultData: {
+      phoneNumbers: [''],
+      mensagem: '',
+      outputVariable: 'envio_sms_status',
+    },
+    outputs: 1,
+  },
 ];
