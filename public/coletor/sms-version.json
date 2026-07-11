@@ -1,6 +1,6 @@
 {
-  "version": "1.4.6",
-  "downloadUrl": "/coletor/pilar-sms-v1.4.6.apk",
-  "filename": "pilar-sms-v1.4.6.apk",
-  "notas": "IMPORTANTE: desinstale a versão anterior antes de instalar. Nova assinatura estável (V1+V2+V3). Android 5+."
+  "version": "1.4.7",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/sms-v1.4.7/pilar-sms-v1.4.7.apk",
+  "filename": "pilar-sms-v1.4.7.apk",
+  "notas": "1.4.7: build via GitHub Actions (release assinado V1+V2+V3). Se der erro ao instalar, verifique o espaço de armazenamento do celular."
 }
