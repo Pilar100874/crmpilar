@@ -1000,7 +1000,12 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   );
                 })()}
 
-
+                {formData.tipo_chip === 'normal' && (
+                  <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-[11px] text-amber-900 dark:text-amber-200">
+                    ⚠️ Em <b>celular normal</b> os parâmetros são apenas informativos — o aparelho não interpreta comandos de rastreador.
+                    Para configurar de verdade, use um <b>chip M2M</b> instalado no equipamento.
+                  </div>
+                )}
 
 
                 <Button
