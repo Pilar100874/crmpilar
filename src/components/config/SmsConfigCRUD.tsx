@@ -14,6 +14,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Send, Save, MessageSquare, BookOpen, Shield, Download, AppWindow } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PilarSmsDevices from './PilarSmsDevices';
+import PilarSmsDownloadCard from './PilarSmsDownloadCard';
 
 
 type Provider = 'pilar';
@@ -190,7 +191,11 @@ export default function SmsConfigCRUD({ estabelecimentoId }: { estabelecimentoId
         </CardContent>
       </Card>
 
+
+      <PilarSmsDownloadCard />
+
       <Card>
+
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base"><Send className="h-4 w-4" /> Enviar SMS de teste</CardTitle>
           <CardDescription>Envie uma mensagem real usando o provedor configurado</CardDescription>
