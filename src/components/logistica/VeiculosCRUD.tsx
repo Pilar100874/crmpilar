@@ -47,6 +47,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
   const [dispositivos, setDispositivos] = useState<DispositivoAprovado[]>([]);
   const [trackerModels, setTrackerModels] = useState<TrackerModelLite[]>([]);
+  const [ultimasPosicoes, setUltimasPosicoes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -111,7 +112,25 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         .order('placa');
 
       if (error) throw error;
-      setVeiculos((data || []) as Veiculo[]);
+      const list = (data || []) as Veiculo[];
+      setVeiculos(list);
+
+      // Última posição por veículo (para flag "Rastreador ativo")
+      const ids = list.map(v => v.id);
+      if (ids.length) {
+        const { data: pos } = await supabase
+          .from('veiculo_posicoes')
+          .select('veiculo_id, data_hora')
+          .in('veiculo_id', ids)
+          .order('data_hora', { ascending: false });
+        const map: Record<string, string> = {};
+        (pos || []).forEach((p: any) => {
+          if (!map[p.veiculo_id]) map[p.veiculo_id] = p.data_hora;
+        });
+        setUltimasPosicoes(map);
+      } else {
+        setUltimasPosicoes({});
+      }
     } catch (error) {
       console.error('Error fetching vehicles:', error);
       toast.error('Erro ao carregar veículos');
@@ -483,6 +502,42 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     }
   };
 
+  // Flag "Rastreador ativo e funcionando": baseado na última posição recebida
+  const renderTrackerOnlineBadge = (v: Veiculo) => {
+    const modelId = (v as any).tracker_model_id as string | undefined;
+    if (!modelId) return null;
+    const last = ultimasPosicoes[v.id];
+    if (!last) {
+      return (
+        <Badge variant="outline" className="gap-1" title="Nenhuma posição recebida ainda">
+          <Radio className="h-3 w-3 text-muted-foreground" />Sem sinal
+        </Badge>
+      );
+    }
+    const diffMin = (Date.now() - new Date(last).getTime()) / 60000;
+    const when = new Date(last).toLocaleString('pt-BR');
+    if (diffMin <= 30) {
+      return (
+        <Badge className="bg-emerald-500 gap-1" title={`Última posição: ${when}`}>
+          <Radio className="h-3 w-3" />Online
+        </Badge>
+      );
+    }
+    if (diffMin <= 24 * 60) {
+      return (
+        <Badge className="bg-amber-500 gap-1" title={`Última posição: ${when}`}>
+          <Radio className="h-3 w-3" />Inativo
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="destructive" className="gap-1" title={`Última posição: ${when}`}>
+        <Radio className="h-3 w-3" />Offline
+      </Badge>
+    );
+  };
+
+
   const handleDelete = async () => {
     if (!selectedVeiculo) return;
 
@@ -562,7 +617,10 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   {model ? (
                     <div className="flex flex-col gap-1">
                       <span className="text-xs font-medium">{model.nome}</span>
-                      {renderTrackerStatusBadge(veiculo)}
+                      <div className="flex flex-wrap gap-1">
+                        {renderTrackerStatusBadge(veiculo)}
+                        {renderTrackerOnlineBadge(veiculo)}
+                      </div>
                     </div>
                   ) : (
                     <span className="text-xs text-muted-foreground">—</span>
@@ -697,6 +755,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   <span className="text-[11px] text-muted-foreground">Rastreador:</span>
                   <span className="text-xs font-medium truncate">{model.nome}</span>
                   {renderTrackerStatusBadge(veiculo)}
+                  {renderTrackerOnlineBadge(veiculo)}
                 </div>
               )}
             </div>
