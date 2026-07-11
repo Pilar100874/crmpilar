@@ -459,6 +459,12 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
           context="logistica"
         />;
 
+      case 'enviar_sms':
+        return <SmsBlockConfig
+          config={{ ...config, message: (config as any).mensagem || (config as any).message || '' }}
+          onChange={(key, value) => updateConfig(key === 'message' ? 'mensagem' : key, value)}
+        />;
+
       default:
         return (
           <p className="text-sm text-muted-foreground">
