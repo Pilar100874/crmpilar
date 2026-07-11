@@ -61,6 +61,9 @@ export interface LogisticaBlockConfig {
   corpo?: string;
   url?: string;
   icone?: string;
+  // Para enviar_sms
+  phoneNumbers?: string[];
+  outputVariable?: string;
 }
 
 export interface LogisticaBlock {
