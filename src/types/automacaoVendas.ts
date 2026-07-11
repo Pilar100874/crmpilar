@@ -26,7 +26,8 @@ export type AutomacaoVendasBlockType =
   | "acao_enviar_alerta"
   | "aplicar_desconto"
   | "return_response"
-  | "disparar_push";
+  | "disparar_push"
+  | "enviar_sms";
 
 // Operadores de comparação
 export type OperadorComparacao = ">" | ">=" | "=" | "<" | "<=" | "!=";
