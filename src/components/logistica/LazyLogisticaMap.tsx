@@ -32,7 +32,16 @@ interface LazyLogisticaMapProps {
   disableInteraction?: boolean;
 }
 
-const LogisticaMapInternal = lazy(() => import('./LogisticaMapInternal'));
+// Retry dynamic import; se o chunk sumiu após novo deploy, força reload uma vez.
+const LogisticaMapInternal = lazy(() =>
+  import('./LogisticaMapInternal').catch((err) => {
+    if (!sessionStorage.getItem('reloadedForChunkError')) {
+      sessionStorage.setItem('reloadedForChunkError', '1');
+      window.location.reload();
+    }
+    throw err;
+  })
+);
 
 const MapFallback = ({ className }: { className?: string }) => (
   <div className={`${className} flex items-center justify-center bg-muted/50`}>
