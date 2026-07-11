@@ -88,6 +88,7 @@ const nodeIcons: Record<OmnichannelBlockType, any> = {
   analytics: BarChart3,
   return_response: Reply,
   disparar_push: Bell,
+  enviar_sms: MessageSquareText,
 };
 
 // Blocos que têm múltiplas saídas
