@@ -284,26 +284,8 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
                   <Input value={r.telefone_sms} onChange={e => update(r.id, { telefone_sms: e.target.value })} placeholder="+5511..." className="h-9" inputMode="tel" />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">Rastreador</Label>
-                    <Select value={r.tracker_model_id} onValueChange={v => update(r.id, { tracker_model_id: v })}>
-                      <SelectTrigger className="h-9"><SelectValue placeholder="—" /></SelectTrigger>
-                      <SelectContent>
-                        {trackerModels.map(m => <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">Operadora</Label>
-                    <Select value={r.operadora_id} onValueChange={v => update(r.id, { operadora_id: v })}>
-                      <SelectTrigger className="h-9"><SelectValue placeholder="—" /></SelectTrigger>
-                      <SelectContent>
-                        {OPERADORAS_APN.map(o => <SelectItem key={o.id} value={o.id}>{o.nome}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+
+
 
                 {r.erro && (
                   <p className="text-xs text-destructive flex items-start gap-1">
