@@ -316,4 +316,17 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
       url: "/",
     },
   },
+  {
+    type: "enviar_sms",
+    label: "Enviar SMS",
+    description: "Dispara SMS para um ou mais números via gateway",
+    icon: "MessageSquareText",
+    color: "#0284c7",
+    category: "acao",
+    defaultData: {
+      phoneNumbers: [""],
+      message: "",
+      outputVariable: "envio_sms_status",
+    },
+  },
 ];
