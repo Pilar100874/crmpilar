@@ -429,6 +429,8 @@ export const PropertiesPanel = ({
       // Disparo direto / Loops
       case "send_whatsapp_to_number":
         return <BlockConfigs.SendWhatsappToNumberConfig {...configProps} />;
+      case "send_sms":
+        return <BlockConfigs.SendSmsConfig {...configProps} />;
       case "api_loop":
         return <BlockConfigs.ApiLoopConfig {...configProps} />;
       case "product_search_select":
