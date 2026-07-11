@@ -47,6 +47,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
   const [dispositivos, setDispositivos] = useState<DispositivoAprovado[]>([]);
   const [trackerModels, setTrackerModels] = useState<TrackerModelLite[]>([]);
+  const [ultimasPosicoes, setUltimasPosicoes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
