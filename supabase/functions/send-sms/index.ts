@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
             telefone: to,
             mensagem,
             status: 'pendente',
-            max_tentativas: 1,
+            max_tentativas: 3,
           })
           .select('id')
           .single();

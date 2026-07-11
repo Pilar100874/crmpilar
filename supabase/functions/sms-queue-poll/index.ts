@@ -50,6 +50,29 @@ Deno.serve(async (req) => {
       sinal,
     }).eq('id', device.id);
 
+    // Recupera mensagens que foram marcadas como "enviando", mas o APK caiu/perdeu rede
+    // antes de confirmar no ack. Sem isso, a fila fica presa para sempre.
+    await supabase
+      .from('sms_queue')
+      .update({
+        status: 'pendente',
+        claimed_at: null,
+        erro_mensagem: 'Reenfileirado automaticamente: sem confirmação do APK em 5 minutos',
+      })
+      .eq('status', 'enviando')
+      .lt('claimed_at', new Date(Date.now() - 5 * 60 * 1000).toISOString())
+      .lt('tentativas', 3);
+
+    await supabase
+      .from('sms_queue')
+      .update({
+        status: 'erro',
+        erro_mensagem: 'Falha: o APK assumiu a mensagem, mas não confirmou o envio em 5 minutos',
+      })
+      .eq('status', 'enviando')
+      .lt('claimed_at', new Date(Date.now() - 5 * 60 * 1000).toISOString())
+      .gte('tentativas', 3);
+
     // Busca pendentes do mesmo estabelecimento
     const query = supabase
       .from('sms_queue')

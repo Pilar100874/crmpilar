@@ -110,7 +110,7 @@ jobs:
             j.version = '${VERSION}';
             j.downloadUrl = '${URL}';
             j.filename = '${FILENAME}';
-            j.notas = 'v${VERSION}: retry automático por SIM/fallback, status enfileirado separado de enviado e log detalhado do retorno Android.';
+            j.notas = 'v${VERSION}: retry automático por SIM/fallback, recuperação de fila travada e log detalhado do retorno Android.';
             fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
           "
           cat public/coletor/sms-version.json

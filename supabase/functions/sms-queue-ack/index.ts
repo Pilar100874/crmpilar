@@ -64,12 +64,11 @@ Deno.serve(async (req) => {
     if (typeof delivered === 'boolean') {
       if (delivered) {
         await supabase.from('sms_queue').update({
-          status: 'entregue',
           entregue_at: new Date().toISOString(),
         }).eq('id', id);
       } else {
         await supabase.from('sms_queue').update({
-          status: 'nao_entregue',
+          status: 'erro',
           erro_mensagem: erro || 'Operadora não confirmou entrega',
         }).eq('id', id);
       }
