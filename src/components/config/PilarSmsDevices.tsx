@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Copy, Plus, Trash2, Smartphone, RefreshCw } from 'lucide-react';
+import { Copy, Plus, Trash2, Smartphone, RefreshCw, Pencil, Check, X } from 'lucide-react';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { StatusPingDot } from '@/components/StatusPingDot';
 
