@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Veiculo } from '@/types/logistica';
 import { buildTrackerParametersSms, configurarRastreador, getTrackerRenderedCommands, TrackerModelLite } from '@/lib/trackerConfig';
 import { OPERADORAS_APN, findOperadoraByApn } from '@/lib/operadorasSms';
+import { VeiculosBulkImportDialog } from './VeiculosBulkImportDialog';
 
 interface VeiculosCRUDProps {
   estabelecimentoId: string;
@@ -56,6 +57,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const [dispositivoTab, setDispositivoTab] = useState<'selecionar' | 'digitar'>('selecionar');
   const [enviandoSms, setEnviandoSms] = useState(false);
   const [configurandoTracker, setConfigurandoTracker] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [formData, setFormData] = useState({
     placa: '',
     descricao: '',
@@ -519,11 +521,18 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             className="pl-9"
           />
         </div>
-        <Button onClick={() => handleOpenDialog()} className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Veículo
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={() => setBulkOpen(true)} className="flex-1 sm:flex-none">
+            <Plus className="h-4 w-4 mr-2" />
+            Cadastro em massa
+          </Button>
+          <Button onClick={() => handleOpenDialog()} className="flex-1 sm:flex-none">
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Veículo
+          </Button>
+        </div>
       </div>
+
 
       {/* Desktop / tablet grande: tabela */}
       <div className="hidden lg:block border rounded-lg overflow-hidden">
@@ -1004,6 +1013,14 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         onOpenChange={setBloqueioOpen}
         veiculo={veiculoBloqueio}
         estabelecimentoId={estabelecimentoId}
+      />
+
+      <VeiculosBulkImportDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        estabelecimentoId={estabelecimentoId}
+        trackerModels={trackerModels}
+        onDone={fetchVeiculos}
       />
     </div>
   );
