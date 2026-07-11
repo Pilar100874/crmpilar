@@ -1014,6 +1014,14 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         veiculo={veiculoBloqueio}
         estabelecimentoId={estabelecimentoId}
       />
+
+      <VeiculosBulkImportDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        estabelecimentoId={estabelecimentoId}
+        trackerModels={trackerModels}
+        onDone={fetchVeiculos}
+      />
     </div>
   );
 };
