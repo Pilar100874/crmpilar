@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Copy, Plus, Trash2, Smartphone, RefreshCw } from 'lucide-react';
+import { Copy, Plus, Trash2, Smartphone, RefreshCw, Pencil, Check, X } from 'lucide-react';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { StatusPingDot } from '@/components/StatusPingDot';
 
@@ -34,6 +34,21 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
   const [creating, setCreating] = useState(false);
   const [toDelete, setToDelete] = useState<Device | null>(null);
   const [showToken, setShowToken] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editNome, setEditNome] = useState('');
+
+  const startEdit = (d: Device) => { setEditingId(d.id); setEditNome(d.nome); };
+  const cancelEdit = () => { setEditingId(null); setEditNome(''); };
+  const salvarEdit = async (d: Device) => {
+    const nome = editNome.trim();
+    if (!nome) { toast.error('Nome não pode ficar vazio'); return; }
+    if (nome === d.nome) { cancelEdit(); return; }
+    const { error } = await supabase.from('sms_devices' as any).update({ nome }).eq('id', d.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Celular atualizado');
+    cancelEdit();
+    await load();
+  };
 
   const load = async () => {
     setLoading(true);
@@ -162,10 +177,20 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Smartphone className="h-4 w-4 text-primary" />
-                        <div>
-                          <div className="font-medium text-sm">{d.nome}</div>
-                          {d.versao_app && <div className="text-[10px] text-muted-foreground uppercase">v{d.versao_app}</div>}
-                        </div>
+                        {editingId === d.id ? (
+                          <Input
+                            autoFocus
+                            value={editNome}
+                            onChange={(e) => setEditNome(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') salvarEdit(d); if (e.key === 'Escape') cancelEdit(); }}
+                            className="h-7 text-sm"
+                          />
+                        ) : (
+                          <div>
+                            <div className="font-medium text-sm">{d.nome}</div>
+                            {d.versao_app && <div className="text-[10px] text-muted-foreground uppercase">v{d.versao_app}</div>}
+                          </div>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -184,9 +209,27 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
                     </TableCell>
                     <TableCell><Switch checked={d.ativo} onCheckedChange={() => toggleAtivo(d)} /></TableCell>
                     <TableCell>
-                      <Button size="icon" variant="ghost" onClick={() => setToDelete(d)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        {editingId === d.id ? (
+                          <>
+                            <Button size="icon" variant="ghost" onClick={() => salvarEdit(d)} title="Salvar">
+                              <Check className="h-4 w-4 text-primary" />
+                            </Button>
+                            <Button size="icon" variant="ghost" onClick={cancelEdit} title="Cancelar">
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button size="icon" variant="ghost" onClick={() => startEdit(d)} title="Editar nome">
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button size="icon" variant="ghost" onClick={() => setToDelete(d)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -201,16 +244,44 @@ export default function PilarSmsDevices({ estabelecimentoId }: { estabelecimento
                 <div className="flex items-start justify-between gap-2 min-w-0">
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <Smartphone className="h-4 w-4 text-primary shrink-0" />
-                    <div className="min-w-0">
-                      <div className="font-medium text-sm truncate">{d.nome}</div>
-                      {d.versao_app && <div className="text-[10px] text-muted-foreground uppercase">v{d.versao_app}</div>}
+                    <div className="min-w-0 flex-1">
+                      {editingId === d.id ? (
+                        <Input
+                          autoFocus
+                          value={editNome}
+                          onChange={(e) => setEditNome(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') salvarEdit(d); if (e.key === 'Escape') cancelEdit(); }}
+                          className="h-7 text-sm"
+                        />
+                      ) : (
+                        <>
+                          <div className="font-medium text-sm truncate">{d.nome}</div>
+                          {d.versao_app && <div className="text-[10px] text-muted-foreground uppercase">v{d.versao_app}</div>}
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <Switch checked={d.ativo} onCheckedChange={() => toggleAtivo(d)} />
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setToDelete(d)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    {editingId === d.id ? (
+                      <>
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => salvarEdit(d)}>
+                          <Check className="h-4 w-4 text-primary" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={cancelEdit}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Switch checked={d.ativo} onCheckedChange={() => toggleAtivo(d)} />
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => startEdit(d)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setToDelete(d)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs pt-1 border-t">
