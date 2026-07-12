@@ -774,7 +774,8 @@ function AdsAutomationContent() {
                     </Button>
                   </div>
                 </DialogContent>
-              </Dialog>
+                </Dialog>
+              </div>
             </div>
 
             {/* Lista de automações */}
