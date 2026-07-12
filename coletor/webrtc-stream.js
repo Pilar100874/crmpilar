@@ -163,9 +163,6 @@ class SignalHub {
       });
       ch.on('broadcast', { event: 'msg' }, ({ payload }) => {
         this._onMsg(payload);
-        if (payload?.type === 'viewer-ping' && payload?.to === 'coletor') {
-          this._sendHeartbeat();
-        }
       });
       ch.subscribe((status) => {
         console.log('[webrtc] signaling', name, status);
