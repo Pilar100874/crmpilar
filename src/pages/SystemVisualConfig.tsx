@@ -196,7 +196,7 @@ export default function SystemVisualConfig() {
 
   const MAIN_MENU_STYLE_OPTIONS: { id: MainMenuStyle; title: string; description: string }[] = [
     { id: "dark", title: "Tradicional", description: "Menu lateral escuro tradicional com destaques na cor primária." },
-    { id: "buttons", title: "Botões na Tela", description: "Menu em tiles grandes tipo botão, ideais para tablet e celular." },
+    { id: "buttons", title: "Botões na Tela", description: "Remove o menu lateral. Navegação via grade de botões grandes (ideal para tablet e celular). Um botão flutuante abre o menu." },
   ];
 
   const handleSelectMenuStyle = (style: MainMenuStyle) => {
