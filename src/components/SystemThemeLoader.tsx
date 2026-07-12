@@ -119,6 +119,9 @@ export default function SystemThemeLoader() {
     // Aplica preset visual salvo
     applyVisualPreset(getCurrentVisualPreset());
 
+    // Aplica estilo do menu principal salvo
+    applyMainMenuStyle(getCurrentMainMenuStyle());
+
 
 
     // Reaplica quando o tema (dark/light) mudar para recalcular --accent
