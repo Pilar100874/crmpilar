@@ -179,6 +179,18 @@ export default function SystemThemeLoader() {
     });
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 
+    // Reaplica configuração visual quando o tamanho da tela cruza um breakpoint (device kind mudou)
+    let lastDevice = getDeviceKind();
+    const onResize = () => {
+      const d = getDeviceKind();
+      if (d === lastDevice) return;
+      lastDevice = d;
+      applyVisualPreset(getCurrentVisualPreset(d));
+      applyMainMenuStyle(getCurrentMainMenuStyle(d));
+      applyMainMenuLayout(getCurrentMainMenuLayout(d));
+    };
+    window.addEventListener("resize", onResize);
+
     (async () => {
       try {
         const estId = await getEstabelecimentoId();
