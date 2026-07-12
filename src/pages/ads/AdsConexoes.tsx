@@ -4,6 +4,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, Key, Link2 } from "lucide-react";
 import AdsPlatformApps from "./AdsPlatformApps";
 import AdsCredentials from "./AdsCredentials";
+import { AdsOAuthButtons } from "@/components/ads/AdsOAuthButtons";
 
 export default function AdsConexoes() {
   const [tab, setTab] = useState("accounts");
