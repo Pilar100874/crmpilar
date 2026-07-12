@@ -316,13 +316,25 @@ export default function PontoEquipamentos() {
                     <span className="break-all">{e.ultimo_erro}</span>
                   </p>
                 )}
-                <div className="flex gap-2 pt-1">
-                  <Button size="sm" variant="ghost" onClick={() => openEdit(e)}>
-                    <Pencil className="mr-1 h-4 w-4" /> Editar
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setDeleting(e)}>
-                    <Trash2 className="mr-1 h-4 w-4 text-destructive" /> Excluir
-                  </Button>
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id={`ativo-${e.id}`}
+                      checked={e.ativo !== false}
+                      onCheckedChange={() => toggleAtivo(e)}
+                    />
+                    <Label htmlFor={`ativo-${e.id}`} className="cursor-pointer text-xs">
+                      {e.ativo !== false ? "Ativo" : "Inativo"}
+                    </Label>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" onClick={() => openEdit(e)}>
+                      <Pencil className="mr-1 h-4 w-4" /> Editar
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setDeleting(e)}>
+                      <Trash2 className="mr-1 h-4 w-4 text-destructive" /> Excluir
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
