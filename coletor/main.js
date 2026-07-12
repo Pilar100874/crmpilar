@@ -298,7 +298,7 @@ ipcMain.handle('test:rtsp', async (_evt, opts) => {
     const args = [
       '-hide_banner', '-loglevel', 'info',
       '-rtsp_transport', transport,
-      '-rw_timeout', '8000000',         // 8s I/O timeout (substitui -stimeout, que foi removido em builds novos do ffmpeg)
+      '-timeout', '8000000',            // 8s I/O timeout em µs (opção válida do demuxer RTSP no ffmpeg atual; substitui -stimeout/-rw_timeout)
       '-analyzeduration', '3000000',
       '-i', url,
       '-t', '1', '-f', 'null', '-',
