@@ -213,47 +213,48 @@ export default function MenuHub() {
       <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-background/90 via-background/70 to-background/95" aria-hidden />
       <div className="max-w-6xl mx-auto">
 
-        <div className="flex items-end gap-3 mb-8">
-          {openItem ? (
-            <button
-              onClick={() => setOpenItem(null)}
-              className="h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center hover:bg-accent"
-              aria-label="Voltar"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-          ) : null}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="h-px w-6 bg-primary/70" aria-hidden />
-              <span className="text-[10px] sm:text-xs font-medium tracking-[0.4em] text-primary/90 uppercase">
-                Premium Collection
-              </span>
-            </div>
-            <h1 className="font-serif text-4xl sm:text-6xl font-normal leading-[1] tracking-[-0.02em] text-foreground">
-              <span className="italic font-light">{title.split(" ")[0]}</span>
-              {title.includes(" ") && (
-                <span className="italic font-medium text-primary"> {title.split(" ").slice(1).join(" ")}</span>
-              )}
-            </h1>
-            <div className="mt-3 flex items-center gap-2">
-              <span className="h-px w-16 bg-gradient-to-r from-primary/70 to-transparent" />
-              <span className="text-[10px] tracking-[0.3em] text-muted-foreground uppercase">Est. Menu</span>
+        <div className="flex items-end justify-between gap-3 mb-8">
+          <div className="flex items-end gap-3 min-w-0">
+            {openItem ? (
+              <button
+                onClick={() => setOpenItem(null)}
+                className="h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center hover:bg-accent"
+                aria-label="Voltar"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+            ) : null}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="h-px w-6 bg-primary/70" aria-hidden />
+                <span className="text-[10px] sm:text-xs font-medium tracking-[0.4em] text-primary/90 uppercase">
+                  Premium Collection
+                </span>
+              </div>
+              <h1 className="font-serif text-4xl sm:text-6xl font-normal leading-[1] tracking-[-0.02em] text-foreground">
+                <span className="italic font-light">{title.split(" ")[0]}</span>
+                {title.includes(" ") && (
+                  <span className="italic font-medium text-primary"> {title.split(" ").slice(1).join(" ")}</span>
+                )}
+              </h1>
+              <div className="mt-3 flex items-center gap-2">
+                <span className="h-px w-16 bg-gradient-to-r from-primary/70 to-transparent" />
+                <span className="text-[10px] tracking-[0.3em] text-muted-foreground uppercase">Est. Menu</span>
+              </div>
             </div>
           </div>
 
-          <button
-            onClick={toggleTheme}
-            className="h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center hover:bg-accent transition-colors"
-            title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
-            aria-label="Alternar tema"
-          >
-            {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </button>
-        </div>
-
-        <div className="mb-4 rounded-xl border border-border bg-card px-3 py-2">
-          <AppsHealthIndicator />
+          <div className="flex items-center gap-2 shrink-0">
+            <AppsHealthIndicator floating />
+            <button
+              onClick={toggleTheme}
+              className="h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center hover:bg-accent transition-colors"
+              title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
+              aria-label="Alternar tema"
+            >
+              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
 
 
