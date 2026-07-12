@@ -516,7 +516,7 @@ function PontoNotificacaoBuilderContent() {
     if (!smartMenu) return [];
     const src = nodes.find(n => n.id === smartMenu.fromId);
     const allowed = smartMenu.handleType === "target"
-      ? BLOCOS.filter(b => b.type !== "trigger").map(b => b.type)
+      ? BLOCOS.filter(b => b.type !== "trigger" && (NEXT_ALLOWED[b.type] || []).includes((src?.data as any)?.type)).map(b => b.type)
       : src ? (NEXT_ALLOWED[(src.data as any).type] || []) : [];
     return BLOCOS.filter(b => allowed.includes(b.type)).map(b => ({
       type: b.type, label: b.label, category: b.grupo,
