@@ -417,55 +417,11 @@ function PontoNotificacaoBuilderContent() {
     return accepted;
   }, [addValidatedEdge, findNodeAtPoint]);
 
-  useEffect(() => {
-    const start = (event: any) => {
-      const point = getPointerPoint(event);
-      const target = event.target as HTMLElement | null;
-      let handle = target?.closest?.(".react-flow__handle") as HTMLElement | null;
-      if (!handle && point && reactFlowWrapper.current) {
-        let nearest: { el: HTMLElement; distance: number } | null = null;
-        reactFlowWrapper.current.querySelectorAll<HTMLElement>(".react-flow__handle").forEach((el) => {
-          const rect = el.getBoundingClientRect();
-          const cx = rect.left + rect.width / 2;
-          const cy = rect.top + rect.height / 2;
-          const distance = Math.hypot(point.x - cx, point.y - cy);
-          if (distance <= 56 && (!nearest || distance < nearest.distance)) nearest = { el, distance };
-        });
-        handle = nearest?.el ?? null;
-      }
-      const nodeEl = handle?.closest?.(".react-flow__node") as HTMLElement | null;
-      const nodeId = nodeEl?.getAttribute("data-id");
-      if (!handle || !nodeId || !reactFlowWrapper.current?.contains(handle)) return;
+  // Fallback de conexão manual (touch/pointer): quando o usuário solta próximo a um bloco,
+  // criamos a aresta mesmo que o React Flow não tenha detectado o alvo.
+  // Observação: os handles usam os eventos nativos do React Flow para arrastar/conectar;
+  // ouvintes globais capturando pointerdown foram removidos por interferirem no drag padrão.
 
-      const handleType = handle.classList.contains("target") ? "target" : "source";
-      const handleId = handle.getAttribute("data-handleid") || handle.dataset.handleid || null;
-      connectSucceededRef.current = false;
-      connectStartRef.current = { nodeId, handleId, handleType };
-    };
-
-    const finish = (event: any) => {
-      const start = connectStartRef.current;
-      if (!start || !start.nodeId) return;
-      const point = getPointerPoint(event);
-      if (!point) return;
-      finishManualConnection(start, point);
-    };
-
-    document.addEventListener("mousedown", start, true);
-    document.addEventListener("touchstart", start, true);
-    document.addEventListener("pointerdown", start, true);
-    document.addEventListener("mouseup", finish, true);
-    document.addEventListener("touchend", finish, true);
-    document.addEventListener("pointerup", finish, true);
-    return () => {
-      document.removeEventListener("mousedown", start, true);
-      document.removeEventListener("touchstart", start, true);
-      document.removeEventListener("pointerdown", start, true);
-      document.removeEventListener("mouseup", finish, true);
-      document.removeEventListener("touchend", finish, true);
-      document.removeEventListener("pointerup", finish, true);
-    };
-  }, [finishManualConnection, getPointerPoint]);
 
   const onConnectEnd = useCallback((event: any, connectionState?: any) => {
     const start = connectStartRef.current;
