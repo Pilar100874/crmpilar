@@ -176,7 +176,7 @@ export function AppsHealthIndicator({
   const tooltipSide = floating || small ? "bottom" : "right";
 
   const indicators = (
-    <div className={`flex items-center ${floating ? "gap-3" : "gap-2"}`}>
+    <div className={`flex items-center ${small ? "gap-2" : floating ? "gap-3" : "gap-2"}`}>
       <Tooltip>
         <TooltipTrigger asChild>
           <span className="relative inline-flex items-center gap-1">
@@ -236,10 +236,10 @@ export function AppsHealthIndicator({
     </div>
   );
 
-  if (floating) {
+  if (floating || small) {
     return (
       <TooltipProvider delayDuration={200}>
-        <div className="flex items-center gap-3 rounded-full bg-card/80 backdrop-blur border border-border px-3 py-2">
+        <div className={`flex items-center rounded-full bg-card/80 backdrop-blur border border-border ${small ? "gap-2 px-2 py-1.5" : "gap-3 px-3 py-2"}`}>
           {indicators}
         </div>
       </TooltipProvider>
