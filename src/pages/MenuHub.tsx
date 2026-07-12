@@ -239,7 +239,7 @@ export default function MenuHub() {
               </button>
             ) : null}
             <div className="flex-1 min-w-0">
-              <div className="flex items-baseline gap-3 flex-wrap">
+              <div className="flex items-center gap-3 flex-wrap">
                 {openItem ? (
                   <h1 className="font-serif text-4xl sm:text-6xl font-normal leading-[1] tracking-[-0.02em] text-foreground">
                     <span className="italic font-light">{title.split(" ")[0]}</span>
@@ -249,16 +249,9 @@ export default function MenuHub() {
                   </h1>
                 ) : (
                   <img
-                    src={logoBranco}
+                    src={isDarkMode ? logoBranco : logoPreto}
                     alt="Logo"
-                    className="h-12 sm:h-16 w-auto object-contain dark:block hidden"
-                  />
-                )}
-                {!openItem && (
-                  <img
-                    src={logoPreto}
-                    alt="Logo"
-                    className="h-12 sm:h-16 w-auto object-contain dark:hidden block"
+                    className="h-12 sm:h-16 w-auto object-contain"
                   />
                 )}
                 <div className="flex items-center gap-2 shrink-0">
@@ -268,11 +261,11 @@ export default function MenuHub() {
                   </span>
                 </div>
               </div>
-              <div className="mt-3 flex items-center gap-2">
-                <span className="h-px w-16 bg-gradient-to-r from-primary/70 to-transparent" />
-                <span className="text-[10px] tracking-[0.3em] text-muted-foreground uppercase">Est. Menu</span>
-              </div>
             </div>
+          </div>
+
+          {!openItem && <AppsHealthIndicator small />}
+        </div>
           </div>
 
           <AppsHealthIndicator small />
