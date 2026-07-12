@@ -204,8 +204,25 @@ export default function MenuHub() {
 
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-10">
+    <div
+      className={
+        menuStyle === "cinema"
+          ? "relative min-h-screen p-4 sm:p-6 lg:p-10 bg-background"
+          : "min-h-screen bg-background p-4 sm:p-6 lg:p-10"
+      }
+    >
+      {menuStyle === "cinema" && (
+        <>
+          <div
+            className="pointer-events-none fixed inset-0 -z-10 bg-center bg-cover"
+            style={{ backgroundImage: `url(${cinemaBg})` }}
+            aria-hidden
+          />
+          <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-background/85 via-background/60 to-background/95" aria-hidden />
+        </>
+      )}
       <div className="max-w-6xl mx-auto">
+
         <div className="flex items-center gap-3 mb-6">
           {openItem ? (
             <button
