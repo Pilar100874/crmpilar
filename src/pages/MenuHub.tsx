@@ -230,18 +230,20 @@ export default function MenuHub() {
               </button>
             ) : null}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="h-px w-6 bg-primary/70" aria-hidden />
-                <span className="text-[10px] sm:text-xs font-medium tracking-[0.4em] text-primary/90 uppercase">
-                  Premium Collection
-                </span>
+              <div className="flex items-baseline gap-3 flex-wrap">
+                <h1 className="font-serif text-4xl sm:text-6xl font-normal leading-[1] tracking-[-0.02em] text-foreground">
+                  <span className="italic font-light">{title.split(" ")[0]}</span>
+                  {title.includes(" ") && (
+                    <span className="italic font-medium text-primary"> {title.split(" ").slice(1).join(" ")}</span>
+                  )}
+                </h1>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="h-px w-4 bg-primary/70" aria-hidden />
+                  <span className="text-[10px] sm:text-xs font-medium tracking-[0.3em] text-primary/90 uppercase">
+                    Premium Collection
+                  </span>
+                </div>
               </div>
-              <h1 className="font-serif text-4xl sm:text-6xl font-normal leading-[1] tracking-[-0.02em] text-foreground">
-                <span className="italic font-light">{title.split(" ")[0]}</span>
-                {title.includes(" ") && (
-                  <span className="italic font-medium text-primary"> {title.split(" ").slice(1).join(" ")}</span>
-                )}
-              </h1>
               <div className="mt-3 flex items-center gap-2">
                 <span className="h-px w-16 bg-gradient-to-r from-primary/70 to-transparent" />
                 <span className="text-[10px] tracking-[0.3em] text-muted-foreground uppercase">Est. Menu</span>
