@@ -32,6 +32,7 @@ import AdsPlatformDashboard from './ads/AdsPlatformDashboard';
 import AdsCredentials from './ads/AdsCredentials';
 import AdsLogs from './ads/AdsLogs';
 import AdsAutomation from './ads/AdsAutomation';
+import AdsSchedulerConfig from './ads/AdsSchedulerConfig';
 
 // Platform icons (using simple colored divs for now)
 const GoogleIcon = () => (
