@@ -26,7 +26,7 @@ import QuickAttachmentsCRUD from "./QuickAttachmentsCRUD";
 import { APIGeneratorCRUD } from "./APIGeneratorCRUD";
 import { WebhooksCRUD } from "./WebhooksCRUD";
 import { WebhooksEntradaCRUD } from "./WebhooksEntradaCRUD";
-import { CanaisAtendimentoCRUD } from "./CanaisAtendimentoCRUD";
+// import removido: CanaisAtendimentoCRUD é gerenciado em Chat → Configuração
 import { NotificacoesCRUD } from "./NotificacoesCRUD";
 import { SegurancaCRUD } from "./SegurancaCRUD";
 import { ProdutosCRUD } from "./ProdutosCRUD";
