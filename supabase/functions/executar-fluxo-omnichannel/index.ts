@@ -154,6 +154,40 @@ async function executeFlow(
       return await executeNextNode(supabase, flowData, currentNode, context);
     }
 
+    case "enviar_sms": {
+      try {
+        const cfg = currentNode.data.config || {};
+        const rawNumbers: string[] = Array.isArray(cfg.phoneNumbers)
+          ? cfg.phoneNumbers
+          : cfg.phoneNumber ? [cfg.phoneNumber] : [];
+        const numbers = rawNumbers
+          .map((n: string) => String(n || "").replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_: string, p: string) => {
+            const parts = p.split(".");
+            let v: any = context?.variaveis || context || {};
+            for (const k of parts) v = v?.[k];
+            return v == null ? "" : String(v);
+          }).replace(/\D/g, ""))
+          .filter(Boolean);
+        const mensagem = String(cfg.message || "").replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_: string, p: string) => {
+          const parts = p.split(".");
+          let v: any = context?.variaveis || context || {};
+          for (const k of parts) v = v?.[k];
+          return v == null ? "" : String(v);
+        });
+        const estId = context?.estabelecimento_id || currentNode.data?.estabelecimento_id;
+        if (estId && mensagem && numbers.length) {
+          for (const destino of numbers) {
+            await supabase.functions.invoke("send-sms", {
+              body: { estabelecimento_id: estId, destino, mensagem },
+            });
+          }
+        }
+      } catch (e) {
+        console.error("[omnichannel] enviar_sms falhou:", e);
+      }
+      return await executeNextNode(supabase, flowData, currentNode, context);
+    }
+
     default:
       console.log("Tipo de nó não implementado:", currentNode.data.type);
       return { success: true, message: "Nó não implementado" };
