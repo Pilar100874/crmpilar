@@ -251,18 +251,13 @@ export default function MenuHub() {
                   <img
                     src={isDarkMode ? logoBranco : logoPreto}
                     alt="Logo"
-                    className="h-12 sm:h-16 w-auto object-contain"
+                    className="h-16 sm:h-20 w-auto object-contain"
                   />
                 )}
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="h-px w-4 bg-primary/70" aria-hidden />
-                  <span className="text-[10px] sm:text-xs font-medium tracking-[0.3em] text-primary/90 uppercase">
-                    Premium Collection
-                  </span>
-                </div>
               </div>
             </div>
           </div>
+
 
           {!openItem && <AppsHealthIndicator small />}
         </div>
