@@ -89,10 +89,6 @@ export default function CamerasAoVivo() {
 
   const totalAtivas = cams?.length ?? 0;
   const totalFiltradas = filtered.length;
-  const startOrder = useMemo(
-    () => Object.fromEntries(filtered.map((c, index) => [c.id, index])),
-    [filtered],
-  );
 
   return (
     <div className="space-y-5">
