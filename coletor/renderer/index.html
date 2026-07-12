@@ -632,7 +632,39 @@
       try { document.getElementById('verLabel').textContent = 'v' + await window.coletor.appVersion(); } catch {}
       verificarAtualizacao(true);
       carregarFiliais();
+      recarregarCamerasTeste();
     })();
+
+    let _camsTeste = [];
+    async function recarregarCamerasTeste(){
+      const sel = document.getElementById('rtspPickCam');
+      if (!sel) return;
+      sel.innerHTML = '<option value="">— carregando câmeras… —</option>';
+      try {
+        const cams = await window.coletor.listCamerasFull();
+        if (cams && cams.error) throw new Error(cams.error);
+        _camsTeste = Array.isArray(cams) ? cams : [];
+        if (!_camsTeste.length) {
+          sel.innerHTML = '<option value="">— nenhuma câmera cadastrada —</option>';
+          return;
+        }
+        sel.innerHTML = '<option value="">— selecione uma câmera —</option>' +
+          _camsTeste.map((c, i) => `<option value="${i}">${escapeHtml(c.nome)} — ${escapeHtml(c.host)}</option>`).join('');
+      } catch (e) {
+        sel.innerHTML = '<option value="">erro: ' + escapeHtml(e.message) + '</option>';
+      }
+    }
+    function preencherRtspDeCam(){
+      const sel = document.getElementById('rtspPickCam');
+      const c = _camsTeste[Number(sel.value)];
+      if (!c) return;
+      document.getElementById('rtspHost').value = c.host || '';
+      document.getElementById('rtspPort').value = c.porta || 554;
+      document.getElementById('rtspUser').value = c.usuario || '';
+      document.getElementById('rtspPass').value = c.senha || '';
+      document.getElementById('rtspPath').value = c.snapshot_path || '';
+      document.getElementById('rtspFullUrl').value = '';
+    }
     setInterval(() => verificarAtualizacao(true), 60 * 60 * 1000);
     let refreshRunning = false;
     async function refreshLoop(){
