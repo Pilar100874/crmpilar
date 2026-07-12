@@ -69,6 +69,11 @@ export type EcommerceRuleBlockType =
   | "acao_destacar_elemento"
   | "acao_enviar_sms"
   | "acao_disparar_push"
+  | "acao_webhook"
+  | "acao_email"
+  | "acao_whatsapp"
+  | "acao_mensagem_interna"
+  | "acao_aviso_sistema"
   | "return_response";
 
 
