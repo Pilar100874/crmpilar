@@ -209,6 +209,31 @@ ipcMain.handle('collector:setFilial', (evt, id, nome) => {
   return getStatus();
 });
 
+// ─── Configurações de vídeo (resolução/fps/bitrate) ───────────────────
+ipcMain.handle('collector:getVideoConfig', () => {
+  const c = loadConfig();
+  return {
+    videoHeight: c.videoHeight,
+    videoFps: c.videoFps,
+    videoBitrateKbps: c.videoBitrateKbps,
+  };
+});
+ipcMain.handle('collector:setVideoConfig', (_evt, payload) => {
+  const p = payload || {};
+  saveConfig({
+    videoHeight: p.videoHeight,
+    videoFps: p.videoFps,
+    videoBitrateKbps: p.videoBitrateKbps,
+  });
+  const c = loadConfig();
+  console.log('[coletor] vídeo config atualizado:', c.videoHeight + 'p', c.videoFps + 'fps', c.videoBitrateKbps + 'kbps');
+  return {
+    videoHeight: c.videoHeight,
+    videoFps: c.videoFps,
+    videoBitrateKbps: c.videoBitrateKbps,
+  };
+});
+
 // ─── Descoberta de câmeras na rede local ──────────────────────────
 const { discover, detectLocalSubnets } = require('./discover-cameras');
 ipcMain.handle('discover:subnet', () => {
