@@ -32,7 +32,7 @@ export default function MenuHub() {
     if (item.url) navigate(item.url);
   };
 
-  const rootItems: MenuItem[] = isAdmin ? [...menuItems, ADMIN_ITEM] : menuItems;
+  const rootItems: MenuItem[] = isAdmin ? [...menuItems, ...ADMIN_ITEMS] : menuItems;
   const items = openItem?.subItems ?? rootItems;
   const title = openItem?.title ?? "Menu Principal";
 
