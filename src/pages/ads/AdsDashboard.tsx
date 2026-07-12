@@ -208,6 +208,8 @@ export default function AdsDashboard() {
           </div>
         </div>
 
+        <AdsHealthScore />
+
         {/* Métricas principais */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <Card className="bg-gradient-to-br from-red-500/10 to-red-600/5 border-red-500/20">
