@@ -33,6 +33,7 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
     const viewerId = crypto.randomUUID();
     let closed = false;
     let liveReached = false;
+    let noFrameTimer: ReturnType<typeof setTimeout> | null = null;
     let coletorSeenAt = 0;
     let coletorServesCamera = false;
     let coletorVersao: string | null = null;
@@ -54,10 +55,13 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
       setStatus("conectando");
       setErro(null);
       pc = new RTCPeerConnection(ICE);
-      let noFrameTimer: ReturnType<typeof setTimeout> | null = null;
       pc.ontrack = (ev) => {
+        if (ev.track.kind !== "video") {
+          log("track ignorado no mosaico", { kind: ev.track.kind });
+          return;
+        }
         if (!videoRef.current) return;
-        const stream = ev.streams[0] || new MediaStream([ev.track]);
+        const stream = new MediaStream([ev.track]);
         videoRef.current.srcObject = stream;
         videoRef.current.play().catch(() => {});
         log("track recebido", { kind: ev.track.kind, muted: ev.track.muted, readyState: ev.track.readyState });
@@ -184,7 +188,7 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
       // (pode ser diferença de filial temporária); o Coletor descarta se não servir.
 
       log("enviando request de stream ao coletor", { viewerId, coletorVersao, coletorServesCamera });
-      sendAll({ type: "request", to: "coletor", viewer_id: viewerId, camera_id: cameraId });
+      sendAll({ type: "request", to: "coletor", viewer_id: viewerId, camera_id: cameraId, want_audio: false });
 
       setTimeout(() => {
         if (!closed && !liveReached) {
@@ -209,6 +213,7 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
         sendAll({ type: "stop", to: "coletor", viewer_id: viewerId, camera_id: cameraId });
       } catch {}
       try { pc?.close(); } catch {}
+      if (noFrameTimer) clearTimeout(noFrameTimer);
       for (const ch of channels) supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
