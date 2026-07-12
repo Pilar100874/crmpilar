@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Loader2, Radio, X, Camera as CameraIcon, ZoomIn, ZoomOut, Maximize2, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { acquireLiveSignalChannels, onLiveSignalHeartbeat, onLiveSignalMessage, requestLiveSignalHeartbeat } from "@/lib/cameras/liveSignalHub";
 
 interface Props {
   cameraId: string;
@@ -29,7 +30,6 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
   useEffect(() => {
     if (!autoStart && nonce === 0) return;
     let pc: RTCPeerConnection | null = null;
-    const channels: ReturnType<typeof supabase.channel>[] = [];
     const viewerId = crypto.randomUUID();
     let closed = false;
     let liveReached = false;
@@ -38,18 +38,11 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
     let coletorServesCamera = false;
     let coletorVersao: string | null = null;
     let coletorCameras: string[] = [];
+    let sendAll: (payload: any) => void = () => {};
+    let releaseChannels: (() => void) | null = null;
+    let offMsg: (() => void) | null = null;
+    let offHeartbeat: (() => void) | null = null;
     const log = (...a: any[]) => console.log(`[CamLive ${cameraNome}]`, ...a);
-
-    // Sempre broadcasta em ambos os canais: plain + filial (caso a câmera
-    // ou o coletor esteja sem filial atribuída em algum dos lados).
-    const chanNames = new Set<string>(["webrtc-signal"]);
-    if (filialId) chanNames.add(`webrtc-signal:${filialId}`);
-
-    const sendAll = (payload: any) => {
-      for (const ch of channels) {
-        try { ch.send({ type: "broadcast", event: "msg", payload }); } catch {}
-      }
-    };
 
     (async () => {
       setStatus("conectando");
@@ -98,19 +91,18 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
         }
       };
 
-      const onMsg = async ({ payload }: any) => {
-        if (!payload) return;
-        // Heartbeat do coletor
-        if (payload.type === "coletor-online" && payload.to === "viewers") {
-          coletorSeenAt = Date.now();
-          coletorVersao = payload.versao || payload.version || null;
-          if (Array.isArray(payload.cameras)) {
-            coletorCameras = payload.cameras;
-            if (payload.cameras.includes(cameraId)) coletorServesCamera = true;
-          }
-          log("heartbeat coletor", { versao: coletorVersao, servesCamera: coletorServesCamera, totalCams: coletorCameras.length });
-          return;
+      const onHeartbeat = (payload: any) => {
+        coletorSeenAt = Date.now();
+        coletorVersao = payload.versao || payload.version || null;
+        if (Array.isArray(payload.cameras)) {
+          coletorCameras = payload.cameras;
+          if (payload.cameras.includes(cameraId)) coletorServesCamera = true;
         }
+        log("heartbeat coletor", { versao: coletorVersao, servesCamera: coletorServesCamera, totalCams: coletorCameras.length });
+      };
+
+      const onMsg = async (payload: any) => {
+        if (!payload) return;
         if (payload.to !== viewerId) return;
         log("msg do coletor", payload.type);
         if (payload.type === "offer") {
@@ -146,18 +138,20 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
         }
       };
 
-      for (const name of chanNames) {
-        const ch = supabase.channel(name, { config: { broadcast: { self: false, ack: false } } });
-        ch.on("broadcast", { event: "msg" }, onMsg);
-        channels.push(ch);
-        await new Promise<void>((resolve) => {
-          ch.subscribe((s) => { if (s === "SUBSCRIBED") resolve(); });
-        });
-      }
+      offHeartbeat = onLiveSignalHeartbeat(onHeartbeat);
+      offMsg = onLiveSignalMessage(onMsg);
+      const signal = await acquireLiveSignalChannels(filialId);
+      sendAll = signal.sendAll;
+      releaseChannels = signal.release;
 
-      // Aguarda até 3s por um heartbeat antes de pedir o stream — se o coletor
-      // estiver online já veremos ele nesse intervalo (heartbeat sai a cada 2s).
-      await new Promise((r) => setTimeout(r, 3000));
+      requestLiveSignalHeartbeat(sendAll, viewerId);
+
+      // Aguarda rapidamente por heartbeat compartilhado; no mosaico, todas as
+      // câmeras usam o mesmo canal para não abrir N WebSockets simultâneos.
+      const deadline = Date.now() + 3500;
+      while (!coletorSeenAt && Date.now() < deadline) {
+        await new Promise((r) => setTimeout(r, 200));
+      }
 
       // Fallback: se o heartbeat de sinalização não chegou, consulta o status
       // reportado no banco (Coletor -> cv-coletor-cameras/report_status).
@@ -214,7 +208,9 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
       } catch {}
       try { pc?.close(); } catch {}
       if (noFrameTimer) clearTimeout(noFrameTimer);
-      for (const ch of channels) supabase.removeChannel(ch);
+      offMsg?.();
+      offHeartbeat?.();
+      releaseChannels?.();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cameraId, filialId, nonce]);

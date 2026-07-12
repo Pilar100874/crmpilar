@@ -215,6 +215,10 @@ class SignalHub {
 
   async _onMsg(m) {
     if (!m || m.to !== 'coletor') return;
+    if (m.type === 'viewer-ping') {
+      this._sendHeartbeat();
+      return;
+    }
     // Snapshot on-demand: força captura+upload imediato (sem esperar ciclo 30s)
     if (m.type === 'snapshot-now') {
       if (!this.myCameraIds.has(m.camera_id)) return;
