@@ -280,9 +280,10 @@ export default function MenuHub() {
                   onClick={() => handleClick(item)}
                   className="group aspect-square flex flex-col items-center justify-center gap-3 rounded-2xl bg-gradient-to-br from-card to-muted border border-border shadow-sm hover:shadow-lg hover:border-primary/60 hover:-translate-y-0.5 transition-all p-4 text-center"
                 >
-                  <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                    {Icon ? <Icon className="h-7 w-7 sm:h-8 sm:w-8" /> : null}
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    {Icon ? <Icon className="h-5 w-5 sm:h-6 sm:w-6" /> : null}
                   </div>
+
                   <span className="text-xs sm:text-sm font-medium leading-tight line-clamp-2">
                     {item.title}
                   </span>
