@@ -5,7 +5,7 @@ import {
   Bell, User as UserIcon, Monitor, Star, Settings, Users, FolderTree,
   ShieldCheck, Store, BellRing, Bot, Workflow, Webhook, CreditCard,
   Paintbrush, Send, FileText, Mail, ListOrdered, Clock, KeyRound,
-  LayoutGrid, Image as ImageIcon, List, ChevronRight, Film,
+  ChevronRight,
 } from "lucide-react";
 import { menuItems, type MenuItem } from "@/components/Layout";
 import { isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
@@ -201,13 +201,6 @@ export default function MenuHub() {
   const items = openItem?.subItems ?? rootItems;
   const title = openItem?.title ?? "Menu Principal";
 
-  const styleOptions: { id: MenuStyle; label: string; Icon: typeof LayoutGrid }[] = [
-    { id: "icons", label: "Ícones", Icon: LayoutGrid },
-    { id: "images", label: "Imagens", Icon: ImageIcon },
-    { id: "list", label: "Lista", Icon: List },
-    { id: "cinema", label: "Cinema", Icon: Film },
-
-  ];
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-10">
@@ -222,7 +215,15 @@ export default function MenuHub() {
               <ChevronLeft className="h-5 w-5" />
             </button>
           ) : null}
-          <h1 className="text-2xl sm:text-3xl font-bold flex-1">{title}</h1>
+          <h1
+            className={
+              menuStyle === "cinema"
+                ? "flex-1 text-3xl sm:text-5xl font-black uppercase tracking-[0.15em] bg-gradient-to-r from-primary via-foreground to-primary bg-clip-text text-transparent drop-shadow-[0_2px_8px_hsl(var(--primary)/0.35)]"
+                : "text-2xl sm:text-3xl font-bold flex-1"
+            }
+          >
+            {title}
+          </h1>
           <button
             onClick={toggleTheme}
             className="h-10 w-10 rounded-full bg-card border border-border flex items-center justify-center hover:bg-accent transition-colors"
@@ -237,23 +238,6 @@ export default function MenuHub() {
           <AppsHealthIndicator />
         </div>
 
-        <div className="mb-4 inline-flex items-center gap-1 rounded-full bg-card border border-border p-1">
-          {styleOptions.map(({ id, label, Icon }) => (
-            <button
-              key={id}
-              onClick={() => setMenuStyle(id)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors ${
-                menuStyle === id
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent"
-              }`}
-              aria-pressed={menuStyle === id}
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </button>
-          ))}
-        </div>
 
         {loadingAdmin && !openItem ? (
           <div className="text-sm text-muted-foreground mb-4">Carregando itens do menu...</div>
