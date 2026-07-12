@@ -112,13 +112,8 @@ const getConfigCategories = (): ConfigCategory[] => [
         icon: Share2,
         component: RedesSociaisCRUD,
       },
-      {
-        id: "canais-atendimento",
-        title: "Canais de Atendimento",
-        description: "WhatsApp, Telegram, WebChat",
-        icon: Globe,
-        component: CanaisAtendimentoCRUD,
-      },
+      // "Canais de Atendimento" removido daqui — gerenciado em Chat → Configuração → Canais
+
       {
         id: "notificacoes",
         title: "Notificações",
