@@ -260,9 +260,10 @@ export default function MenuHub() {
             </div>
 
             {/* Health indicators - bottom right, above grid */}
-            <div className="flex justify-end mt-2">
+            <div className="absolute bottom-0 right-0">
               <AppsHealthIndicator small />
             </div>
+
           </div>
         )}
 
