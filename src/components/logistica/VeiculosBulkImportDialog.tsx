@@ -317,7 +317,7 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
           </Button>
         </div>
 
-        <DialogFooter className="p-4 sm:p-6 pt-3 border-t bg-muted/20 flex-col-reverse sm:flex-row gap-2 sm:gap-2">
+        <DialogFooter className="p-3 sm:p-6 sm:pt-3 border-t bg-muted/20 flex-col-reverse sm:flex-row gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={processing} className="w-full sm:w-auto">
             Fechar
           </Button>
