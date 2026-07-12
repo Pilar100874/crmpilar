@@ -115,12 +115,16 @@ export default function AdsCampaigns() {
   }, []) || [];
 
   // Filtrar campanhas
-  const filteredCampaigns = campaigns.filter(c => {
-    const matchesSearch = c.campanha.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesPlatform = filterPlatform === "all" || c.plataforma?.id === filterPlatform;
-    const matchesStatus = filterStatus === "all" || c.status === filterStatus;
-    return matchesSearch && matchesPlatform && matchesStatus;
-  });
+  const filteredCampaigns = campaigns
+    .filter(c => {
+      const matchesSearch = c.campanha.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesPlatform = filterPlatform === "all" || c.plataforma?.id === filterPlatform;
+      const matchesStatus = filterStatus === "all" || c.status === filterStatus;
+      const matchesFav = !onlyFavs || isFav(c.key);
+      return matchesSearch && matchesPlatform && matchesStatus && matchesFav;
+    })
+    .sort((a, b) => (isFav(b.key) ? 1 : 0) - (isFav(a.key) ? 1 : 0));
+
 
   // Estatísticas
   const stats = {
