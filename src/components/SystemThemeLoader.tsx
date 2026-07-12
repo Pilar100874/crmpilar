@@ -77,6 +77,36 @@ export function applyPrimaryColor(hsl: string) {
   );
 }
 
+/* ====================== DEVICE KIND (desktop/tablet/mobile) ====================== */
+export type DeviceKind = "desktop" | "tablet" | "mobile";
+export const DEVICE_KINDS: DeviceKind[] = ["desktop", "tablet", "mobile"];
+
+export function getDeviceKind(): DeviceKind {
+  if (typeof window === "undefined") return "desktop";
+  const w = window.innerWidth;
+  if (w < 768) return "mobile";
+  if (w < 1024) return "tablet";
+  return "desktop";
+}
+
+function readPerDevice<T extends string>(baseKey: string, device: DeviceKind, allowed: T[], fallback: T): T {
+  try {
+    const perDev = localStorage.getItem(`${baseKey}_${device}`);
+    if (perDev && (allowed as string[]).includes(perDev)) return perDev as T;
+    const legacy = localStorage.getItem(baseKey);
+    if (legacy && (allowed as string[]).includes(legacy)) return legacy as T;
+  } catch {}
+  return fallback;
+}
+
+export function setPerDevice(baseKey: string, device: DeviceKind, value: string) {
+  try {
+    localStorage.setItem(`${baseKey}_${device}`, value);
+    // Also mirror to legacy key for the current device so old readers stay in sync
+    if (device === getDeviceKind()) localStorage.setItem(baseKey, value);
+  } catch {}
+}
+
 /* ====================== VISUAL PRESET (menu/minimal/classic) ====================== */
 export type VisualPreset = "menu" | "minimal" | "classic";
 export const VISUAL_PRESETS: VisualPreset[] = ["menu", "minimal", "classic"];
@@ -87,9 +117,8 @@ export function applyVisualPreset(preset: VisualPreset) {
   document.documentElement.setAttribute("data-visual-preset", preset);
 }
 
-export function getCurrentVisualPreset(): VisualPreset {
-  const v = (localStorage.getItem("system_visual_preset") as VisualPreset) || DEFAULT_VISUAL_PRESET;
-  return VISUAL_PRESETS.includes(v) ? v : DEFAULT_VISUAL_PRESET;
+export function getCurrentVisualPreset(device: DeviceKind = getDeviceKind()): VisualPreset {
+  return readPerDevice<VisualPreset>("system_visual_preset", device, VISUAL_PRESETS, DEFAULT_VISUAL_PRESET);
 }
 
 /* ====================== MAIN MENU STYLE (dark/light/brand/glass) ====================== */
@@ -102,9 +131,8 @@ export function applyMainMenuStyle(style: MainMenuStyle) {
   document.documentElement.setAttribute("data-main-menu-style", style);
 }
 
-export function getCurrentMainMenuStyle(): MainMenuStyle {
-  const v = (localStorage.getItem("system_main_menu_style") as MainMenuStyle) || DEFAULT_MAIN_MENU_STYLE;
-  return MAIN_MENU_STYLES.includes(v) ? v : DEFAULT_MAIN_MENU_STYLE;
+export function getCurrentMainMenuStyle(device: DeviceKind = getDeviceKind()): MainMenuStyle {
+  return readPerDevice<MainMenuStyle>("system_main_menu_style", device, MAIN_MENU_STYLES, DEFAULT_MAIN_MENU_STYLE);
 }
 
 /* ====================== MAIN MENU LAYOUT (MenuHub cards) ====================== */
@@ -117,10 +145,10 @@ export function applyMainMenuLayout(layout: MainMenuLayout) {
   document.documentElement.setAttribute("data-main-menu-layout", layout);
 }
 
-export function getCurrentMainMenuLayout(): MainMenuLayout {
-  const v = (localStorage.getItem("system_main_menu_layout") as MainMenuLayout) || DEFAULT_MAIN_MENU_LAYOUT;
-  return MAIN_MENU_LAYOUTS.includes(v) ? v : DEFAULT_MAIN_MENU_LAYOUT;
+export function getCurrentMainMenuLayout(device: DeviceKind = getDeviceKind()): MainMenuLayout {
+  return readPerDevice<MainMenuLayout>("system_main_menu_layout", device, MAIN_MENU_LAYOUTS, DEFAULT_MAIN_MENU_LAYOUT);
 }
+
 
 
 
