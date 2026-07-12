@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { VeiculoComStatus } from '@/types/logistica';
 import { differenceInMinutes } from 'date-fns';
 import { executarBlocoPush, PushBlockConfig } from '@/lib/pushExecutor';
+import { executarBlocoSms } from '@/lib/smsExecutor';
 
 interface AutomacaoFlowNode {
   id: string;
