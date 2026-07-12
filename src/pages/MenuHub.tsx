@@ -401,15 +401,6 @@ export default function MenuHub() {
                 </button>
               );
             })}
-
-                    </div>
-                    <div className="flex items-center text-white drop-shadow-lg">
-                      <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6 opacity-70 group-hover:translate-x-1 group-hover:opacity-100 transition-all" />
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
           </div>
         )}
 
