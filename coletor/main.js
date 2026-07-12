@@ -275,6 +275,18 @@ ipcMain.handle('discover:create', async (evt, items) => {
 const { spawn } = require('child_process');
 let _ffmpegPath = null;
 try { _ffmpegPath = require('ffmpeg-static'); } catch { _ffmpegPath = null; }
+
+ipcMain.handle('cameras:list', async () => {
+  try {
+    const cfg = loadConfig();
+    const cams = await listarCameras(cfg);
+    return (cams || []).map(c => ({
+      id: c.id, nome: c.nome, host: c.host, porta: c.porta || 554,
+      usuario: c.usuario || '', senha: c.senha || '',
+      snapshot_path: c.snapshot_path || '', marca: c.marca || '',
+    }));
+  } catch (e) { return { error: e.message }; }
+});
 ipcMain.handle('test:rtsp', async (_evt, opts) => {
   const url = String(opts?.url || '').trim();
   const transport = opts?.transport === 'udp' ? 'udp' : 'tcp';
