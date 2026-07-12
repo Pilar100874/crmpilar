@@ -16,10 +16,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import {
-  ArrowLeft, Save, Play, Zap, Bell, MessageSquare, Mail, Smartphone, Webhook,
+  Save, Play, Zap, Bell, MessageSquare, Mail, Smartphone, Webhook,
   GitBranch, MoonStar, FileText, TrendingUp, Timer, ScrollText, Trash2,
   MoreVertical, Copy, Pause, SkipForward, StickyNote, Plus, Download, Upload, Wand2, X,
   FolderOpen, Sparkles,
@@ -29,15 +34,12 @@ import { cn } from "@/lib/utils";
 import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
 import { FloatingAddBlockButton } from "@/components/workflow/FloatingAddBlockButton";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { isSingleEdgePerHandleAllowed, SINGLE_OUTPUT_TOAST } from "@/lib/flow-edge-utils";
+import { getWorkflowBlockCardClass } from "@/components/workflow/workflowBlockStyle";
 import { boxSelectionProps } from "@/lib/flowSelection";
-import { getWorkflowBlockCardClass, WORKFLOW_HANDLE_CLASS } from "@/components/workflow/workflowBlockStyle";
-import { Card } from "@/components/ui/card";
 
+// ============================================================
+// Domínio — Ponto Notificação
+// ============================================================
 const EVENTOS = [
   { key: "atraso", label: "Atrasos" },
   { key: "falta", label: "Faltas" },
@@ -47,24 +49,23 @@ const EVENTOS = [
   { key: "fraude", label: "Alerta de fraude" },
 ];
 
-const BLOCOS = [
-  { type: "trigger",         label: "Gatilho",        icon: Zap,          color: "bg-amber-100 text-amber-700 border-amber-300", grupo: "Início" },
-  { type: "condicao",        label: "Condição",       icon: GitBranch,    color: "bg-orange-100 text-orange-700 border-orange-300", grupo: "Lógica" },
-  { type: "quiet_hours",     label: "Quiet hours",    icon: MoonStar,     color: "bg-indigo-100 text-indigo-700 border-indigo-300", grupo: "Lógica" },
-  { type: "delay",           label: "Aguardar",       icon: Timer,        color: "bg-slate-100 text-slate-700 border-slate-300", grupo: "Lógica" },
-  { type: "template",        label: "Template",       icon: FileText,     color: "bg-teal-100 text-teal-700 border-teal-300", grupo: "Conteúdo" },
-  { type: "canal_push",      label: "Push",           icon: Bell,         color: "bg-violet-100 text-violet-700 border-violet-300", grupo: "Canais" },
-  { type: "canal_whatsapp",  label: "WhatsApp",       icon: MessageSquare,color: "bg-emerald-100 text-emerald-700 border-emerald-300", grupo: "Canais" },
-  { type: "canal_sms",       label: "SMS",            icon: Smartphone,   color: "bg-cyan-100 text-cyan-700 border-cyan-300", grupo: "Canais" },
-  { type: "canal_email",     label: "E-mail",         icon: Mail,         color: "bg-pink-100 text-pink-700 border-pink-300", grupo: "Canais" },
-  { type: "canal_webhook",   label: "Webhook",        icon: Webhook,      color: "bg-gray-100 text-gray-700 border-gray-300", grupo: "Canais" },
-  { type: "escalonamento",   label: "Escalonar",      icon: TrendingUp,   color: "bg-red-100 text-red-700 border-red-300", grupo: "Ações" },
-  { type: "log",             label: "Log",            icon: ScrollText,   color: "bg-neutral-100 text-neutral-700 border-neutral-300", grupo: "Ações" },
+type BlocoDef = { type: string; label: string; icon: any; grupo: string; desc?: string };
+const BLOCOS: BlocoDef[] = [
+  { type: "trigger",         label: "Gatilho",       icon: Zap,           grupo: "Início",   desc: "Evento inicial do ponto" },
+  { type: "condicao",        label: "Condição",      icon: GitBranch,     grupo: "Lógica",   desc: "SIM / NÃO baseado em campo" },
+  { type: "quiet_hours",     label: "Quiet hours",   icon: MoonStar,      grupo: "Lógica",   desc: "Não perturbe em horários" },
+  { type: "delay",           label: "Aguardar",      icon: Timer,         grupo: "Lógica",   desc: "Pausa em minutos" },
+  { type: "template",        label: "Template",      icon: FileText,      grupo: "Conteúdo", desc: "Título + mensagem base" },
+  { type: "canal_push",      label: "Push",          icon: Bell,          grupo: "Canais",   desc: "Notificação no app" },
+  { type: "canal_whatsapp",  label: "WhatsApp",      icon: MessageSquare, grupo: "Canais",   desc: "Mensagem no WhatsApp" },
+  { type: "canal_sms",       label: "SMS",           icon: Smartphone,    grupo: "Canais",   desc: "Mensagem SMS" },
+  { type: "canal_email",     label: "E-mail",        icon: Mail,          grupo: "Canais",   desc: "Envio de e-mail" },
+  { type: "canal_webhook",   label: "Webhook",       icon: Webhook,       grupo: "Canais",   desc: "POST para uma URL" },
+  { type: "escalonamento",   label: "Escalonar",     icon: TrendingUp,    grupo: "Ações",    desc: "Aciona hierarquia" },
+  { type: "log",             label: "Log",           icon: ScrollText,    grupo: "Ações",    desc: "Registra passagem" },
 ];
+const BLOCO_MAP: Record<string, BlocoDef> = Object.fromEntries(BLOCOS.map(b => [b.type, b]));
 
-const BLOCO_MAP = Object.fromEntries(BLOCOS.map(b => [b.type, b]));
-
-// Regras de próximos blocos permitidos (evita conexões sem sentido)
 const NEXT_ALLOWED: Record<string, string[]> = {
   trigger:        ["condicao", "quiet_hours", "delay", "template", "canal_push", "canal_whatsapp", "canal_sms", "canal_email", "canal_webhook", "escalonamento", "log"],
   condicao:       ["condicao", "quiet_hours", "delay", "template", "canal_push", "canal_whatsapp", "canal_sms", "canal_email", "canal_webhook", "escalonamento", "log"],
@@ -80,6 +81,12 @@ const NEXT_ALLOWED: Record<string, string[]> = {
   log:            ["canal_push", "canal_whatsapp", "canal_sms", "canal_email", "canal_webhook", "delay", "condicao"],
 };
 
+// Tipos com múltiplas saídas (só condicao usa handles nomeados)
+const MULTI_OUTPUT = new Set<string>(["condicao"]);
+
+// ============================================================
+// Node visual — mesmo padrão do Bot
+// ============================================================
 type NodeCallbacks = {
   onDuplicate?: (id: string) => void;
   onToggleBreakpoint?: (id: string) => void;
@@ -97,11 +104,12 @@ function CustomNode({ id, data, selected }: any) {
   const isSkipped = !!data.isSkipped;
   const isHighlighted = !!data.isHighlighted;
   const isCondicao = data.type === "condicao";
+  const isTrigger = data.type === "trigger";
   const cbs = useContext(NodeCallbacksContext);
 
   return (
-    <Card className={cn(getWorkflowBlockCardClass({ selected, isBreakpoint, isSkipped, isHighlighted, size: "default" }), "relative group")}>
-      {data.type !== "trigger" && (
+    <Card className={cn(getWorkflowBlockCardClass({ selected, isBreakpoint, isSkipped, isHighlighted, size: "default" }), "relative group min-w-[220px]")}>
+      {!isTrigger && (
         <Handle
           type="target"
           position={Position.Top}
@@ -113,20 +121,20 @@ function CustomNode({ id, data, selected }: any) {
 
       <div className="p-3">
         <div className="flex items-start gap-2 mb-2">
+          <div className="p-1.5 rounded-md bg-primary/10 border border-primary/20 shrink-0">
+            <Icon className="w-4 h-4 text-primary" />
+          </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="p-1 rounded bg-primary/5 border border-primary/20">
-                <Icon className="w-3.5 h-3.5 text-primary" />
-              </div>
+            <div className="flex items-center gap-1.5">
               <span className="font-semibold text-sm text-foreground truncate">{data.label || b.label}</span>
-              {isBreakpoint && <Pause className="w-3 h-3 text-orange-500" />}
-              {isSkipped && <SkipForward className="w-3 h-3 text-muted-foreground" />}
+              {isBreakpoint && <Pause className="w-3 h-3 text-orange-500 shrink-0" />}
+              {isSkipped && <SkipForward className="w-3 h-3 text-muted-foreground shrink-0" />}
             </div>
-            <p className="text-xs text-muted-foreground line-clamp-2">{b.label}</p>
+            <p className="text-[11px] text-muted-foreground truncate">{b.desc || b.label}</p>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-              <button className="p-1 hover:bg-muted rounded transition-colors">
+              <button className="p-1 hover:bg-muted rounded transition-colors shrink-0">
                 <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
@@ -139,17 +147,22 @@ function CustomNode({ id, data, selected }: any) {
                 <SkipForward className="w-3.5 h-3.5 mr-2" />{isSkipped ? "Reativar bloco" : "Pular na execução"}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => cbs.onAddNote?.(id)}><StickyNote className="w-3.5 h-3.5 mr-2" />{data.note ? "Editar nota" : "Adicionar nota"}</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => cbs.onDelete?.(id)} className="text-destructive"><Trash2 className="w-3.5 h-3.5 mr-2" />Excluir</DropdownMenuItem>
+              {!isTrigger && <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => cbs.onDelete?.(id)} className="text-destructive"><Trash2 className="w-3.5 h-3.5 mr-2" />Excluir</DropdownMenuItem>
+              </>}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
 
-        {(data.config?.evento_gatilho || data.config?.mensagem || data.config?.url) && (
-          <div className="space-y-0.5">
-            {data.config?.evento_gatilho && <div className="text-xs text-muted-foreground truncate">Evento: {EVENTOS.find(e => e.key === data.config.evento_gatilho)?.label}</div>}
-            {data.config?.mensagem && <div className="text-xs text-muted-foreground truncate">{data.config.mensagem}</div>}
-            {data.config?.url && <div className="text-xs text-muted-foreground truncate">{data.config.url}</div>}
+        {(data.config?.evento_gatilho || data.config?.mensagem || data.config?.url || data.config?.minutos != null || data.config?.titulo) && (
+          <div className="space-y-0.5 mt-1 border-t border-border pt-2">
+            {data.config?.evento_gatilho && <div className="text-[11px] text-muted-foreground truncate">📌 {EVENTOS.find(e => e.key === data.config.evento_gatilho)?.label}</div>}
+            {data.config?.titulo && <div className="text-[11px] text-foreground font-medium truncate">{data.config.titulo}</div>}
+            {data.config?.mensagem && <div className="text-[11px] text-muted-foreground line-clamp-2">{data.config.mensagem}</div>}
+            {data.config?.url && <div className="text-[11px] text-muted-foreground truncate">🔗 {data.config.url}</div>}
+            {data.type === "delay" && data.config?.minutos != null && <div className="text-[11px] text-muted-foreground">⏱ {data.config.minutos} min</div>}
+            {data.type === "quiet_hours" && (data.config?.inicio || data.config?.fim) && <div className="text-[11px] text-muted-foreground">🌙 {data.config?.inicio || "--"} → {data.config?.fim || "--"}</div>}
           </div>
         )}
 
@@ -163,9 +176,9 @@ function CustomNode({ id, data, selected }: any) {
       {isCondicao ? (
         <>
           <Handle type="source" id="sim" position={Position.Bottom} className="!bg-green-500 !w-5 !h-5 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform" style={{ left: "35%" }} isConnectableStart isConnectableEnd={false} />
-          <div className="absolute bottom-0 left-[35%] -translate-x-1/2 translate-y-full mt-1 text-[10px] font-medium text-green-600">SIM</div>
+          <div className="absolute bottom-0 left-[35%] -translate-x-1/2 translate-y-full mt-1 text-[10px] font-semibold text-green-600">SIM</div>
           <Handle type="source" id="nao" position={Position.Bottom} className="!bg-red-500 !w-5 !h-5 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform" style={{ left: "65%" }} isConnectableStart isConnectableEnd={false} />
-          <div className="absolute bottom-0 left-[65%] -translate-x-1/2 translate-y-full mt-1 text-[10px] font-medium text-red-600">NÃO</div>
+          <div className="absolute bottom-0 left-[65%] -translate-x-1/2 translate-y-full mt-1 text-[10px] font-semibold text-red-600">NÃO</div>
           <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, "sim", e.clientX, e.clientY); }}
             className="absolute -bottom-8 left-[35%] -translate-x-1/2 w-5 h-5 rounded-full bg-green-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
           <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, "nao", e.clientX, e.clientY); }}
@@ -182,7 +195,6 @@ function CustomNode({ id, data, selected }: any) {
   );
 }
 
-
 const nodeTypes: NodeTypes = { custom: CustomNode as any };
 
 function stripCallbacks(data: any) {
@@ -190,15 +202,18 @@ function stripCallbacks(data: any) {
   return rest;
 }
 
+// ============================================================
+// Página
+// ============================================================
 export default function PontoNotificacaoBuilder() {
   return (
     <ReactFlowProvider>
-      <PontoNotificacaoBuilderContent />
+      <Builder />
     </ReactFlowProvider>
   );
 }
 
-function PontoNotificacaoBuilderContent() {
+function Builder() {
   const { id } = useParams();
   const nav = useNavigate();
   const [wf, setWf] = useState<any>(null);
@@ -206,23 +221,27 @@ function PontoNotificacaoBuilderContent() {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [selected, setSelected] = useState<Node | null>(null);
   const [saving, setSaving] = useState(false);
-  const [smartMenu, setSmartMenu] = useState<{ x: number; y: number; flowX?: number; flowY?: number; fromId: string; handle: string | null; handleType: "source" | "target" } | null>(null);
   const [simOpen, setSimOpen] = useState(false);
   const [simData, setSimData] = useState('{\n  "severidade": "alta",\n  "detalhe": "teste",\n  "quantidade": 1\n}');
   const [simRunning, setSimRunning] = useState(false);
   const [simLog, setSimLog] = useState<any[]>([]);
   const [noteFor, setNoteFor] = useState<string | null>(null);
   const [noteText, setNoteText] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [rfInstance, setRfInstance] = useState<any>(null);
   const [isLocked, setIsLocked] = useState(false);
-  const [dirty, setDirty] = useState(false);
   const [isLibExpanded, setIsLibExpanded] = useState(false);
   const [librarySearch, setLibrarySearch] = useState("");
   const [openCategories, setOpenCategories] = useState<string[]>(["Início", "Lógica", "Conteúdo", "Canais", "Ações"]);
-  const initialHashRef = useRef<string>("");
+  const [dirty, setDirty] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; nodeId: string | null }>({ open: false, nodeId: null });
+  const [smartMenu, setSmartMenu] = useState<{ x: number; y: number; flowX?: number; flowY?: number; fromId: string; handle: string | null; handleType: "source" | "target" } | null>(null);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const initialHashRef = useRef<string>("");
+  const connectStartRef = useRef<{ nodeId: string | null; handleId: string | null; handleType: "source" | "target" } | null>(null);
+
+  // ============ Carrega ============
   useEffect(() => {
     (async () => {
       const { data } = await supabase.from("ponto_notif_workflows").select("*").eq("id", id).maybeSingle();
@@ -230,30 +249,30 @@ function PontoNotificacaoBuilderContent() {
       setWf(data);
       const flow = data.flow_data || {};
       const loadedNodes = (flow.nodes || []).map((n: any) => ({ ...n, type: "custom" }));
-      const loadedEdges = (flow.edges || []).map((e: any) => ({ ...e, markerEnd: { type: MarkerType.ArrowClosed } }));
+      const loadedEdges = (flow.edges || []).map((e: any) => ({ ...e }));
       setNodes(loadedNodes);
       setEdges(loadedEdges);
-      initialHashRef.current = JSON.stringify({ n: flow.nodes || [], e: flow.edges || [], nome: data.nome, evento: data.evento_gatilho, ativo: data.ativo });
+      initialHashRef.current = JSON.stringify({ n: loadedNodes.map((n: any) => ({ ...n, data: stripCallbacks(n.data) })), e: loadedEdges, nome: data.nome, evento: data.evento_gatilho, ativo: data.ativo });
       setDirty(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  // Marca dirty quando o grafo/config muda
   useEffect(() => {
-    if (!wf || !initialHashRef.current) return;
+    if (!wf) return;
     const cur = JSON.stringify({
       n: nodes.map(n => ({ ...n, data: stripCallbacks(n.data) })),
-      e: edges.map(({ markerEnd: _m, ...rest }) => rest),
+      e: edges,
       nome: wf.nome, evento: wf.evento_gatilho, ativo: wf.ativo,
     });
     setDirty(cur !== initialHashRef.current);
   }, [nodes, edges, wf]);
 
-  // ============ Handlers passados para os nodes ============
+  // ============ Node ops ============
   const onDuplicate = useCallback((nodeId: string) => {
     setNodes(ns => {
       const orig = ns.find(n => n.id === nodeId); if (!orig) return ns;
+      if ((orig.data as any).type === "trigger") { toast.error("Gatilho não pode ser duplicado"); return ns; }
       const copy: Node = { ...orig, id: crypto.randomUUID(), position: { x: (orig.position.x || 0) + 40, y: (orig.position.y || 0) + 40 }, data: { ...(orig.data as any) } };
       return [...ns, copy];
     });
@@ -268,25 +287,19 @@ function PontoNotificacaoBuilderContent() {
     setNodes(ns => ns.map(n => n.id === nodeId ? { ...n, data: { ...n.data, isSkipped: !(n.data as any).isSkipped } } : n));
   }, [setNodes]);
 
-  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; nodeId: string | null }>({ open: false, nodeId: null });
-
-  const isTriggerNode = useCallback((nodeId: string | null | undefined) => {
+  const isTrigger = useCallback((nodeId: string | null) => {
     if (!nodeId) return false;
     const n = nodes.find(x => x.id === nodeId);
     return (n?.data as any)?.type === "trigger";
   }, [nodes]);
 
   const onDeleteNode = useCallback((nodeId: string) => {
-    if (isTriggerNode(nodeId)) {
-      toast.error("O bloco Gatilho não pode ser excluído.");
-      return;
-    }
+    if (isTrigger(nodeId)) { toast.error("O bloco Gatilho não pode ser excluído."); return; }
     setDeleteConfirm({ open: true, nodeId });
-  }, [isTriggerNode]);
+  }, [isTrigger]);
 
   const confirmDeleteNode = useCallback(() => {
-    const nodeId = deleteConfirm.nodeId;
-    if (!nodeId) return;
+    const nodeId = deleteConfirm.nodeId; if (!nodeId) return;
     setNodes(ns => ns.filter(n => n.id !== nodeId));
     setEdges(es => es.filter(e => e.source !== nodeId && e.target !== nodeId));
     setSelected(s => s?.id === nodeId ? null : s);
@@ -295,73 +308,51 @@ function PontoNotificacaoBuilderContent() {
   }, [deleteConfirm.nodeId, setNodes, setEdges]);
 
   const onAddNote = useCallback((nodeId: string) => {
-    setNodes(ns => {
-      const n = ns.find(x => x.id === nodeId);
-      setNoteText((n?.data as any)?.note || "");
-      return ns;
-    });
+    const n = nodes.find(x => x.id === nodeId);
+    setNoteText((n?.data as any)?.note || "");
     setNoteFor(nodeId);
-  }, [setNodes]);
+  }, [nodes]);
 
   const onAddNext = useCallback((fromId: string, handle: string | null, x: number, y: number) => {
     setSmartMenu({ x, y, fromId, handle, handleType: "source" });
   }, []);
 
-  // ============ Conexões ============
-  const nodesRef = useRef<Node[]>([]);
-  const edgesRef = useRef<Edge[]>([]);
-  const connectStartRef = useRef<{ nodeId: string | null; handleId: string | null; handleType: "source" | "target" } | null>(null);
-  useEffect(() => { nodesRef.current = nodes; }, [nodes]);
-  useEffect(() => { edgesRef.current = edges; }, [edges]);
-
-  const getExistingNodeEdges = useCallback((edgeList: Edge[] = edgesRef.current) => {
-    const nodeIds = new Set(nodesRef.current.map(n => n.id));
-    return edgeList.filter(e => e.source && e.target && nodeIds.has(e.source) && nodeIds.has(e.target));
-  }, []);
-
-  const isSameConnection = useCallback((edge: Edge, conn: Connection) => (
-    edge.source === conn.source &&
-    edge.target === conn.target &&
-    (edge.sourceHandle ?? null) === (conn.sourceHandle ?? null) &&
-    (edge.targetHandle ?? null) === (conn.targetHandle ?? null)
-  ), []);
-
-  const makeWorkflowEdge = useCallback((c: Connection): Edge => ({
+  // ============ Conexões (padrão do Bot) ============
+  const makeEdge = useCallback((c: Connection): Edge => ({
     ...c,
-    id: `e-${c.source}-${c.sourceHandle || "o"}-${c.target}-${c.targetHandle || "t"}-${Date.now()}`,
+    id: `e-${c.source}-${c.sourceHandle || "o"}-${c.target}-${c.targetHandle || "t"}-${Date.now()}-${Math.floor(Math.random()*1000)}`,
     type: "smoothstep",
     animated: true,
     label: c.sourceHandle || undefined,
     style: { stroke: "hsl(var(--primary))", strokeWidth: 2 },
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      width: 20,
-      height: 20,
-      color: "hsl(var(--primary))",
-    },
+    markerEnd: { type: MarkerType.ArrowClosed, width: 20, height: 20, color: "hsl(var(--primary))" },
   } as Edge), []);
 
-  const addValidatedEdge = useCallback((c: Connection, notifyDuplicate = true) => {
+  const canConnect = useCallback((c: Connection, currentEdges: Edge[]) => {
     if (!c.source || !c.target || c.source === c.target) return false;
-    const currentEdges = getExistingNodeEdges(edgesRef.current);
-    if (currentEdges.some((e) => isSameConnection(e, c))) return false;
-    if (!isSingleEdgePerHandleAllowed(c, currentEdges)) {
-      if (notifyDuplicate) toast.error(SINGLE_OUTPUT_TOAST);
-      return false;
+    // Nunca conectar em cima da mesma aresta
+    if (currentEdges.some(e => e.source === c.source && e.target === c.target && (e.sourceHandle ?? null) === (c.sourceHandle ?? null))) return false;
+    // Blocos de saída única: uma saída só
+    const src = nodes.find(n => n.id === c.source);
+    if (src && !MULTI_OUTPUT.has((src.data as any).type)) {
+      if (currentEdges.some(e => e.source === c.source)) return false;
     }
-    setEdges((eds) => {
-      if (eds.some((e) => isSameConnection(e, c))) return eds;
-      if (!isSingleEdgePerHandleAllowed(c, eds)) {
-        return eds;
-      }
-      return addEdge(makeWorkflowEdge(c), eds);
-    });
+    // Se for multi-output (condicao), uma saída por handle
+    if (src && MULTI_OUTPUT.has((src.data as any).type) && c.sourceHandle) {
+      if (currentEdges.some(e => e.source === c.source && e.sourceHandle === c.sourceHandle)) return false;
+    }
     return true;
-  }, [getExistingNodeEdges, isSameConnection, makeWorkflowEdge, setEdges]);
+  }, [nodes]);
 
   const onConnect = useCallback((c: Connection) => {
-    if (addValidatedEdge(c)) toast.success("Blocos vinculados");
-  }, [addValidatedEdge]);
+    setEdges((eds) => {
+      if (!canConnect(c, eds)) { toast.error("Conexão inválida"); return eds; }
+      toast.success("Blocos vinculados");
+      return addEdge(makeEdge(c), eds);
+    });
+  }, [canConnect, makeEdge, setEdges]);
+
+  const isValidConnection = useCallback((c: Connection) => canConnect(c, edges), [canConnect, edges]);
 
   const onConnectStart = useCallback((_: any, params: any) => {
     connectStartRef.current = {
@@ -381,143 +372,64 @@ function PontoNotificacaoBuilderContent() {
       (!target?.closest?.(".react-flow__node") && !target?.closest?.(".react-flow__handle"));
     if (!droppedOnPane) return;
 
-    if (start.handleType === "source" && !isSingleEdgePerHandleAllowed({ source: start.nodeId, sourceHandle: start.handleId ?? null } as Connection, edgesRef.current)) {
-      toast.error(SINGLE_OUTPUT_TOAST);
-      return;
-    }
-
     const clientX = event.clientX ?? event.changedTouches?.[0]?.clientX;
     const clientY = event.clientY ?? event.changedTouches?.[0]?.clientY;
     if (clientX == null || clientY == null) return;
     const flowPos = rfInstance.screenToFlowPosition({ x: clientX, y: clientY });
     setSmartMenu({
-      x: clientX,
-      y: clientY,
-      flowX: flowPos.x,
-      flowY: flowPos.y,
-      fromId: start.nodeId,
-      handle: start.handleId ?? null,
-      handleType: start.handleType,
+      x: clientX, y: clientY, flowX: flowPos.x, flowY: flowPos.y,
+      fromId: start.nodeId, handle: start.handleId ?? null, handleType: start.handleType,
     });
   }, [rfInstance]);
 
   const onReconnect = useCallback((oldEdge: Edge, newConnection: Connection) => {
-    if (!newConnection.source || !newConnection.target || newConnection.source === newConnection.target) return;
     setEdges((eds) => {
       const filtered = eds.filter((e) => e.id !== oldEdge.id);
-      if (!isSingleEdgePerHandleAllowed(newConnection, filtered)) {
-        toast.error(SINGLE_OUTPUT_TOAST);
-        return eds;
-      }
-      return addEdge(makeWorkflowEdge(newConnection), filtered);
+      if (!canConnect(newConnection, filtered)) { toast.error("Conexão inválida"); return eds; }
+      return addEdge(makeEdge(newConnection), filtered);
     });
-    toast.success("Conexão movida");
-  }, [makeWorkflowEdge, setEdges]);
+  }, [canConnect, makeEdge, setEdges]);
 
-  const onEdgesDelete = useCallback((deleted: Edge[]) => {
-    if (deleted.length > 0) toast.success(`${deleted.length} conexão(ões) removida(s)`);
-  }, []);
+  // ============ Adicionar bloco ============
+  const addBlockAt = useCallback((type: string, pos?: { x: number; y: number }, connectFrom?: { id: string; handle: string | null; handleType?: "source" | "target" }) => {
+    const b = BLOCO_MAP[type]; if (!b) return null;
 
-  // Callbacks estáveis para os nodes (evita recriar data em cada render e cancelar conexões)
-  const nodeCallbacks = useMemo<NodeCallbacks>(() => ({
-    onDuplicate, onToggleBreakpoint, onToggleSkip, onDelete: onDeleteNode, onAddNote, onAddNext,
-  }), [onDuplicate, onToggleBreakpoint, onToggleSkip, onDeleteNode, onAddNote, onAddNext]);
-
-  // Validação visual (feedback durante o arrasto do handle)
-  const isValidConnection = useCallback((c: Connection) => {
-    if (!c.source || !c.target) return true;
-    if (c.source === c.target) return false;
-    const existingEdges = getExistingNodeEdges(edgesRef.current);
-    if (existingEdges.some(e => isSameConnection(e, c))) return true;
-    return isSingleEdgePerHandleAllowed(c, existingEdges);
-  }, [getExistingNodeEdges, isSameConnection]);
-
-
-  function addBlockAt(type: string, pos?: { x: number; y: number }, connectFrom?: { id: string; handle: string | null; handleType?: "source" | "target" }) {
-    const b = BLOCO_MAP[type];
-    const existingEdges = getExistingNodeEdges(edgesRef.current);
-    if (connectFrom?.handleType !== "target" && connectFrom && !isSingleEdgePerHandleAllowed({ source: connectFrom.id, sourceHandle: connectFrom.handle ?? null } as Connection, existingEdges)) {
-      toast.error(SINGLE_OUTPUT_TOAST);
-      return null;
+    if (type === "trigger" && nodes.some(n => (n.data as any).type === "trigger")) {
+      toast.error("Só pode haver um Gatilho por workflow"); return null;
     }
+
     const newId = crypto.randomUUID();
     const position = pos || { x: 200 + Math.random() * 240, y: 200 + Math.random() * 200 };
-    const cfgDefault: any = {};
-    if (type === "trigger") cfgDefault.evento_gatilho = wf?.evento_gatilho || "falta";
-    if (type === "quiet_hours") { cfgDefault.inicio = "22:00"; cfgDefault.fim = "07:00"; }
-    if (type === "delay") cfgDefault.minutos = 5;
-    if (type === "template") { cfgDefault.titulo = "Alerta do Ponto"; cfgDefault.mensagem = "Olá {funcionario}, evento em {data}. Ver: {link_aprovacao}"; }
-    if (type === "condicao") { cfgDefault.campo = "severidade"; cfgDefault.operador = "="; cfgDefault.valor = "alta"; }
-    if (type === "canal_webhook") cfgDefault.url = "";
-    if (type.startsWith("canal_")) cfgDefault.destino = "funcionario";
-    const node: Node = { id: newId, type: "custom", position, data: { type, label: b.label, config: cfgDefault } as any };
+    const cfg: any = {};
+    if (type === "trigger") cfg.evento_gatilho = wf?.evento_gatilho || "falta";
+    if (type === "quiet_hours") { cfg.inicio = "22:00"; cfg.fim = "07:00"; }
+    if (type === "delay") cfg.minutos = 5;
+    if (type === "template") { cfg.titulo = "Alerta do Ponto"; cfg.mensagem = "Olá {funcionario}, evento em {data}. Ver: {link_aprovacao}"; }
+    if (type === "condicao") { cfg.campo = "severidade"; cfg.operador = "="; cfg.valor = "alta"; }
+    if (type === "canal_webhook") cfg.url = "";
+    if (type.startsWith("canal_")) cfg.destino = "funcionario";
+
+    const node: Node = { id: newId, type: "custom", position, data: { type, label: b.label, config: cfg } as any };
     setNodes(ns => [...ns, node]);
+
     if (connectFrom) {
       const connection: Connection = connectFrom.handleType === "target"
         ? { source: newId, sourceHandle: null, target: connectFrom.id, targetHandle: connectFrom.handle ?? null }
         : { source: connectFrom.id, sourceHandle: connectFrom.handle ?? null, target: newId, targetHandle: null };
-      setEdges(es => addEdge(makeWorkflowEdge(connection), getExistingNodeEdges(es)));
+      setEdges(es => canConnect(connection, es) ? addEdge(makeEdge(connection), es) : es);
     }
     setSelected(node);
     return node;
-  }
+  }, [wf?.evento_gatilho, nodes, setNodes, setEdges, canConnect, makeEdge]);
 
-  // ============ Drag & drop (desktop) e evento add-block (mobile: 2 cliques) ============
-  const onDragStartBlock = useCallback((event: React.DragEvent, nodeType: string) => {
-    event.dataTransfer.setData("application/reactflow", nodeType);
-    event.dataTransfer.effectAllowed = "move";
-  }, []);
-
-  const onDragOverCanvas = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
-  }, []);
-
-  const onDropCanvas = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (!reactFlowWrapper.current || !rfInstance) return;
-    const type = event.dataTransfer.getData("application/reactflow");
-    if (!type || !BLOCO_MAP[type]) return;
-    const bounds = reactFlowWrapper.current.getBoundingClientRect();
-    const position = rfInstance.screenToFlowPosition({
-      x: event.clientX - bounds.left,
-      y: event.clientY - bounds.top,
-    });
-    addBlockAt(type, position);
-    toast.success(`Bloco "${BLOCO_MAP[type].label}" adicionado!`);
-  }, [rfInstance]);
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const type = (e as CustomEvent).detail?.type;
-      if (!type || !BLOCO_MAP[type]) return;
-      let pos: { x: number; y: number } | undefined;
-      if (reactFlowWrapper.current && rfInstance) {
-        const b = reactFlowWrapper.current.getBoundingClientRect();
-        pos = rfInstance.screenToFlowPosition({ x: b.left + b.width / 2, y: b.top + b.height / 2 });
-      }
-      addBlockAt(type, pos);
-      toast.success(`Bloco "${BLOCO_MAP[type].label}" adicionado!`);
-    };
-    window.addEventListener("ponto-notif:add-block", handler);
-    return () => window.removeEventListener("ponto-notif:add-block", handler);
-  }, [rfInstance]);
-
-
-  function onSmartPick(type: string) {
+  const onSmartPick = useCallback((type: string) => {
     if (!smartMenu) return;
-    const src = nodes.find(n => n.id === smartMenu.fromId);
     const basePos = smartMenu.flowX != null && smartMenu.flowY != null
-      ? { x: smartMenu.flowX - 130, y: smartMenu.flowY - 45 }
-      : src
-        ? smartMenu.handleType === "target"
-          ? { x: src.position.x, y: (src.position.y || 0) - 180 }
-          : { x: src.position.x, y: (src.position.y || 0) + 180 }
-        : undefined;
+      ? { x: smartMenu.flowX - 110, y: smartMenu.flowY - 45 }
+      : undefined;
     addBlockAt(type, basePos, { id: smartMenu.fromId, handle: smartMenu.handle, handleType: smartMenu.handleType });
     setSmartMenu(null);
-  }
+  }, [smartMenu, addBlockAt]);
 
   const smartOptions: SmartBlockOption[] = useMemo(() => {
     if (!smartMenu) return [];
@@ -525,109 +437,85 @@ function PontoNotificacaoBuilderContent() {
     const allowed = smartMenu.handleType === "target"
       ? BLOCOS.filter(b => b.type !== "trigger" && (NEXT_ALLOWED[b.type] || []).includes((src?.data as any)?.type)).map(b => b.type)
       : src ? (NEXT_ALLOWED[(src.data as any).type] || []) : [];
-    return BLOCOS.filter(b => allowed.includes(b.type)).map(b => ({
-      type: b.type, label: b.label, category: b.grupo,
-    }));
+    return BLOCOS.filter(b => allowed.includes(b.type)).map(b => ({ type: b.type, label: b.label, category: b.grupo, description: b.desc }));
   }, [smartMenu, nodes]);
 
+  // ============ Drag & Drop ============
+  const onDragStartBlock = useCallback((event: React.DragEvent, nodeType: string) => {
+    event.dataTransfer.setData("application/reactflow", nodeType);
+    event.dataTransfer.effectAllowed = "move";
+  }, []);
+
+  const onDragOverCanvas = useCallback((event: React.DragEvent) => {
+    event.preventDefault(); event.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const onDropCanvas = useCallback((event: React.DragEvent) => {
+    event.preventDefault(); event.stopPropagation();
+    if (!reactFlowWrapper.current || !rfInstance) return;
+    const type = event.dataTransfer.getData("application/reactflow");
+    if (!type || !BLOCO_MAP[type]) return;
+    const bounds = reactFlowWrapper.current.getBoundingClientRect();
+    const position = rfInstance.screenToFlowPosition({ x: event.clientX - bounds.left, y: event.clientY - bounds.top });
+    if (addBlockAt(type, position)) toast.success(`Bloco "${BLOCO_MAP[type].label}" adicionado`);
+  }, [rfInstance, addBlockAt]);
+
+  const addFromLibrary = useCallback((type: string) => {
+    let pos: { x: number; y: number } | undefined;
+    if (reactFlowWrapper.current && rfInstance) {
+      const b = reactFlowWrapper.current.getBoundingClientRect();
+      pos = rfInstance.screenToFlowPosition({ x: b.left + b.width / 2, y: b.top + b.height / 3 });
+    }
+    if (addBlockAt(type, pos)) toast.success(`Bloco "${BLOCO_MAP[type].label}" adicionado`);
+  }, [rfInstance, addBlockAt]);
+
+  // ============ Propriedades ============
   function updateNode(patch: any) {
     if (!selected) return;
     setNodes(ns => ns.map(n => n.id === selected.id ? { ...n, data: { ...n.data, ...patch, config: { ...(n.data as any).config, ...(patch.config || {}) } } } : n));
     setSelected(s => s ? { ...s, data: { ...s.data, ...patch, config: { ...(s.data as any).config, ...(patch.config || {}) } } as any } : s);
   }
 
+  // ============ Persistência ============
   async function salvar() {
+    if (!wf) return;
+    if (!nodes.some(n => (n.data as any).type === "trigger")) {
+      toast.error("Adicione um bloco Gatilho antes de salvar"); return;
+    }
     setSaving(true);
     const cleanNodes = nodes.map(n => ({ ...n, data: stripCallbacks(n.data) }));
-    const flow_data = { nodes: cleanNodes, edges: edges.map(({ markerEnd: _m, ...rest }) => rest), viewport: { x: 0, y: 0, zoom: 1 } };
+    const flow_data = { nodes: cleanNodes, edges, viewport: { x: 0, y: 0, zoom: 1 } };
     const { error } = await supabase.from("ponto_notif_workflows").update({ flow_data, nome: wf.nome, ativo: wf.ativo, evento_gatilho: wf.evento_gatilho }).eq("id", id);
     setSaving(false);
     if (error) return toast.error(error.message);
-    initialHashRef.current = JSON.stringify({ n: cleanNodes, e: flow_data.edges, nome: wf.nome, evento: wf.evento_gatilho, ativo: wf.ativo });
+    initialHashRef.current = JSON.stringify({ n: cleanNodes, e: edges, nome: wf.nome, evento: wf.evento_gatilho, ativo: wf.ativo });
     setDirty(false);
     toast.success("Workflow salvo");
   }
 
-  // ============ Simulação passo a passo ============
-  async function simularStepByStep() {
-    setSimRunning(true); setSimLog([]);
-    let dados: any = {};
-    try { dados = JSON.parse(simData || "{}"); } catch { toast.error("JSON inválido"); setSimRunning(false); return; }
-
-    const byId: Record<string, Node> = Object.fromEntries(nodes.map(n => [n.id, n]));
-    const targets = new Set(edges.map(e => e.target));
-    const starts = nodes.filter(n => (n.data as any).type === "trigger" || !targets.has(n.id));
-    const visitados = new Set<string>();
-    const logs: any[] = [];
-
-    async function highlight(nodeId: string) {
-      setNodes(ns => ns.map(n => ({ ...n, data: { ...n.data, isHighlighted: n.id === nodeId } })));
-      await new Promise(r => setTimeout(r, 600));
-    }
-
-    async function step(nodeId: string) {
-      if (visitados.has(nodeId)) return;
-      visitados.add(nodeId);
-      const n = byId[nodeId]; if (!n) return;
-      const d: any = n.data;
-
-      if (d.isSkipped) {
-        logs.push({ node: nodeId, tipo: d.type, status: "pulado" });
-        setSimLog([...logs]);
-      } else {
-        await highlight(nodeId);
-        logs.push({ node: nodeId, tipo: d.type, status: "executado", config: d.config });
-        setSimLog([...logs]);
-
-        if (d.isBreakpoint) {
-          logs.push({ node: nodeId, status: "⏸ pausado no breakpoint" });
-          setSimLog([...logs]);
-          return;
-        }
-      }
-
-      // Bifurcação da condição na simulação
-      if (d.type === "condicao") {
-        const cfg = d.config || {};
-        const v = dados[cfg.campo];
-        let ok = false;
-        if (cfg.operador === "=") ok = String(v) === String(cfg.valor);
-        else if (cfg.operador === "!=") ok = String(v) !== String(cfg.valor);
-        else if (cfg.operador === ">") ok = Number(v) > Number(cfg.valor);
-        else if (cfg.operador === "<") ok = Number(v) < Number(cfg.valor);
-        else if (cfg.operador === "in") ok = String(cfg.valor || "").split(",").map(s => s.trim()).includes(String(v));
-        const handle = ok ? "sim" : "nao";
-        logs.push({ node: nodeId, status: `condição → ${handle.toUpperCase()}` });
-        setSimLog([...logs]);
-        for (const e of edges.filter(e => e.source === nodeId && (e.sourceHandle === handle || e.label === handle))) await step(e.target);
-        return;
-      }
-
-      for (const e of edges.filter(e => e.source === nodeId)) await step(e.target);
-    }
-
-    for (const s of starts) await step(s.id);
-    // limpa highlight
-    setNodes(ns => ns.map(n => ({ ...n, data: { ...n.data, isHighlighted: false } })));
-    setSimRunning(false);
-  }
-
-  async function testarReal() {
-    toast.info("Disparando execução real...");
-    const { data, error } = await supabase.functions.invoke("ponto-notif-workflow-exec", {
-      body: { workflow_id: id, dados: JSON.parse(simData || "{}"), forcar: true },
-    });
-    if (error) toast.error(error.message); else toast.success(`Execução ok — ${((data as any)?.resultados || []).length} disparos`);
-  }
-
   function exportar() {
+    if (!wf) return;
     const clean = nodes.map(n => ({ ...n, data: stripCallbacks(n.data) }));
     const blob = new Blob([JSON.stringify({ nome: wf.nome, evento_gatilho: wf.evento_gatilho, nodes: clean, edges }, null, 2)], { type: "application/json" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
     a.download = `${(wf.nome || "workflow").replace(/\W+/g, "_")}.json`; a.click();
   }
 
+  function importar(file: File) {
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const j = JSON.parse(String(r.result));
+        setNodes((j.nodes || []).map((n: any) => ({ ...n, type: "custom" })));
+        setEdges((j.edges || []).map((e: any) => ({ ...e })));
+        toast.success("Workflow importado");
+      } catch { toast.error("Arquivo inválido"); }
+    };
+    r.readAsText(file);
+  }
+
   async function duplicarWorkflow() {
+    if (!wf) return;
     const { data: novo, error } = await supabase.from("ponto_notif_workflows").insert({
       estabelecimento_id: wf.estabelecimento_id,
       nome: `${wf.nome} (cópia)`,
@@ -639,31 +527,88 @@ function PontoNotificacaoBuilderContent() {
     toast.success("Workflow duplicado"); nav(`/ponto/notificacoes/${novo.id}`);
   }
 
-  // Zoom / lock helpers
-  const zoomIn = () => rfInstance?.zoomIn?.();
-  const zoomOut = () => rfInstance?.zoomOut?.();
-  const fitView = () => rfInstance?.fitView?.({ padding: 0.2, duration: 400 });
+  // ============ Simulação ============
+  async function simularStepByStep() {
+    setSimRunning(true); setSimLog([]);
+    let dados: any = {};
+    try { dados = JSON.parse(simData || "{}"); } catch { toast.error("JSON inválido"); setSimRunning(false); return; }
 
-  function importar(file: File) {
-    const r = new FileReader();
-    r.onload = () => {
-      try {
-        const j = JSON.parse(String(r.result));
-        setNodes((j.nodes || []).map((n: any) => ({ ...n, type: "custom" })));
-        setEdges((j.edges || []).map((e: any) => ({ ...e, markerEnd: { type: MarkerType.ArrowClosed } })));
-        toast.success("Workflow importado");
-      } catch { toast.error("Arquivo inválido"); }
+    const byId: Record<string, Node> = Object.fromEntries(nodes.map(n => [n.id, n]));
+    const targets = new Set(edges.map(e => e.target));
+    const starts = nodes.filter(n => (n.data as any).type === "trigger" || !targets.has(n.id));
+    const visitados = new Set<string>();
+    const logs: any[] = [];
+
+    const highlight = async (nodeId: string) => {
+      setNodes(ns => ns.map(n => ({ ...n, data: { ...n.data, isHighlighted: n.id === nodeId } })));
+      await new Promise(r => setTimeout(r, 500));
     };
-    r.readAsText(file);
+
+    const step = async (nodeId: string) => {
+      if (visitados.has(nodeId)) return;
+      visitados.add(nodeId);
+      const n = byId[nodeId]; if (!n) return;
+      const d: any = n.data;
+
+      if (d.isSkipped) {
+        logs.push({ node: nodeId, tipo: d.type, status: "pulado" }); setSimLog([...logs]);
+      } else {
+        await highlight(nodeId);
+        logs.push({ node: nodeId, tipo: d.type, status: "executado", config: d.config });
+        setSimLog([...logs]);
+        if (d.isBreakpoint) { logs.push({ node: nodeId, status: "⏸ pausado no breakpoint" }); setSimLog([...logs]); return; }
+      }
+
+      if (d.type === "condicao") {
+        const cfg = d.config || {};
+        const v = dados[cfg.campo];
+        let ok = false;
+        if (cfg.operador === "=") ok = String(v) === String(cfg.valor);
+        else if (cfg.operador === "!=") ok = String(v) !== String(cfg.valor);
+        else if (cfg.operador === ">") ok = Number(v) > Number(cfg.valor);
+        else if (cfg.operador === "<") ok = Number(v) < Number(cfg.valor);
+        else if (cfg.operador === "in") ok = String(cfg.valor || "").split(",").map(s => s.trim()).includes(String(v));
+        const handle = ok ? "sim" : "nao";
+        logs.push({ node: nodeId, status: `condição → ${handle.toUpperCase()}` }); setSimLog([...logs]);
+        for (const e of edges.filter(e => e.source === nodeId && (e.sourceHandle === handle || e.label === handle))) await step(e.target);
+        return;
+      }
+
+      for (const e of edges.filter(e => e.source === nodeId)) await step(e.target);
+    };
+
+    for (const s of starts) await step(s.id);
+    setNodes(ns => ns.map(n => ({ ...n, data: { ...n.data, isHighlighted: false } })));
+    setSimRunning(false);
   }
 
+  async function testarReal() {
+    toast.info("Disparando execução real...");
+    try {
+      const { data, error } = await supabase.functions.invoke("ponto-notif-workflow-exec", {
+        body: { workflow_id: id, dados: JSON.parse(simData || "{}"), forcar: true },
+      });
+      if (error) toast.error(error.message); else toast.success(`Execução ok — ${((data as any)?.resultados || []).length} disparos`);
+    } catch (e: any) { toast.error(e?.message || "Falha na execução"); }
+  }
+
+  // ============ Callbacks estáveis ============
+  const nodeCallbacks = useMemo<NodeCallbacks>(() => ({
+    onDuplicate, onToggleBreakpoint, onToggleSkip, onDelete: onDeleteNode, onAddNote, onAddNext,
+  }), [onDuplicate, onToggleBreakpoint, onToggleSkip, onDeleteNode, onAddNote, onAddNext]);
+
   const grupos = useMemo(() => {
-    const g: Record<string, typeof BLOCOS> = {};
+    const g: Record<string, BlocoDef[]> = {};
     BLOCOS.forEach(b => { (g[b.grupo] ||= []).push(b); });
     return g;
   }, []);
 
-  if (!wf) return <div className="p-6">Carregando...</div>;
+  // ============ Zoom helpers ============
+  const zoomIn = () => rfInstance?.zoomIn?.();
+  const zoomOut = () => rfInstance?.zoomOut?.();
+  const fitView = () => rfInstance?.fitView?.({ padding: 0.2, duration: 400 });
+
+  if (!wf) return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
 
   return (
     <WorkflowBuilderLayout
@@ -712,7 +657,7 @@ function PontoNotificacaoBuilderContent() {
     >
       <input ref={fileInputRef} type="file" accept="application/json" className="hidden" onChange={e => e.target.files?.[0] && importar(e.target.files[0])} />
 
-      {/* Library — visual idêntico ao BotBuilder */}
+      {/* Biblioteca lateral */}
       {isLibExpanded && (
         <div className="w-60 flex flex-col h-[calc(100%-1rem)] m-2 rounded-2xl shadow-lg border-2 border-white dark:border-white/10 bg-gradient-to-b from-background to-border relative overflow-hidden animate-slide-in flex-shrink-0 z-40 fixed inset-y-0 left-0 lg:static lg:inset-auto">
           <div className="p-4 pb-2">
@@ -721,58 +666,32 @@ function PontoNotificacaoBuilderContent() {
                 <div className="h-6 w-6 rounded-lg bg-foreground text-background flex items-center justify-center">
                   <Sparkles className="h-3.5 w-3.5" />
                 </div>
-                <h3 className="font-bold text-base text-foreground tracking-tight">Menu</h3>
+                <h3 className="font-bold text-base text-foreground tracking-tight">Blocos</h3>
               </div>
               <Button variant="ghost" size="icon" onClick={() => setIsLibExpanded(false)} className="h-7 w-7 rounded-md hover:bg-black/5">
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <div className="relative">
-              <Input
-                placeholder="Buscar..."
-                value={librarySearch}
-                onChange={(e) => setLibrarySearch(e.target.value)}
-                className="h-8 text-xs bg-muted/40 border-0 shadow-sm"
-              />
-            </div>
+            <Input placeholder="Buscar..." value={librarySearch} onChange={e => setLibrarySearch(e.target.value)} className="h-8 text-xs bg-muted/40 border-0 shadow-sm" />
           </div>
 
           <ScrollArea className="flex-1">
             <div className="w-[240px] max-w-full px-2 pb-4 space-y-0.5">
               {Object.entries(grupos)
-                .map(([g, items]) => ({
-                  name: g,
-                  blocks: items.filter(b => b.label.toLowerCase().includes(librarySearch.toLowerCase())),
-                }))
+                .map(([g, items]) => ({ name: g, blocks: items.filter(b => b.label.toLowerCase().includes(librarySearch.toLowerCase())) }))
                 .filter(cat => cat.blocks.length > 0)
                 .map((category) => {
                   const isOpen = openCategories.includes(category.name);
                   return (
-                    <Collapsible
-                      key={category.name}
-                      open={isOpen}
-                      onOpenChange={() =>
-                        setOpenCategories(prev => prev.includes(category.name) ? prev.filter(c => c !== category.name) : [...prev, category.name])
-                      }
-                    >
-                      <CollapsibleTrigger
-                        className={`flex items-center justify-between w-full px-3 py-2 rounded-xl transition-colors duration-100 text-left ${
-                          isOpen ? "bg-foreground text-background" : "hover:bg-black/5 text-foreground"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs font-medium">{category.name}</span>
-                        </div>
+                    <Collapsible key={category.name} open={isOpen}
+                      onOpenChange={() => setOpenCategories(prev => prev.includes(category.name) ? prev.filter(c => c !== category.name) : [...prev, category.name])}>
+                      <CollapsibleTrigger className={`flex items-center justify-between w-full px-3 py-2 rounded-xl transition-colors duration-100 text-left ${isOpen ? "bg-foreground text-background" : "hover:bg-black/5 text-foreground"}`}>
+                        <span className="text-xs font-medium">{category.name}</span>
                         <div className="flex items-center gap-2">
-                          <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-semibold flex items-center justify-center ${isOpen ? "bg-background/20 text-background" : "bg-foreground text-background"}`}>
-                            {category.blocks.length}
-                          </span>
-                          <span className={`text-xs ${isOpen ? "text-background/70" : "text-muted-foreground"}`}>
-                            {isOpen ? "−" : "+"}
-                          </span>
+                          <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-semibold flex items-center justify-center ${isOpen ? "bg-background/20 text-background" : "bg-foreground text-background"}`}>{category.blocks.length}</span>
+                          <span className={`text-xs ${isOpen ? "text-background/70" : "text-muted-foreground"}`}>{isOpen ? "−" : "+"}</span>
                         </div>
                       </CollapsibleTrigger>
-
                       <CollapsibleContent className="animate-accordion-down">
                         <div className="relative ml-5 pl-4 pt-1 pb-1">
                           <div className="absolute left-0 top-0 bottom-0 w-px bg-foreground/40" />
@@ -780,14 +699,11 @@ function PontoNotificacaoBuilderContent() {
                             {category.blocks.map((b) => {
                               const Icon = b.icon;
                               return (
-                                <div
-                                  key={b.type}
-                                  draggable
+                                <div key={b.type} draggable
                                   onDragStart={(e) => onDragStartBlock(e, b.type)}
-                                  onDoubleClick={() => window.dispatchEvent(new CustomEvent("ponto-notif:add-block", { detail: { type: b.type } }))}
-                                  title="Arraste para o canvas ou clique 2x para adicionar"
-                                  className="w-full px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-colors duration-100 select-none text-left"
-                                >
+                                  onDoubleClick={() => addFromLibrary(b.type)}
+                                  title="Arraste para o canvas ou dê 2 cliques"
+                                  className="w-full px-3 py-2 cursor-grab active:cursor-grabbing bg-transparent hover:bg-muted/60 border-0 shadow-none rounded-xl transition-colors duration-100 select-none text-left">
                                   <div className="flex items-center gap-2">
                                     <Icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                                     <h4 className="text-xs font-normal text-foreground truncate">{b.label}</h4>
@@ -806,73 +722,56 @@ function PontoNotificacaoBuilderContent() {
         </div>
       )}
 
-      {/* Canvas — precisa de h-full/min-h-0 dentro do layout flex para o ReactFlow medir */}
+      {/* Canvas */}
       <div ref={reactFlowWrapper} onDrop={onDropCanvas} onDragOver={onDragOverCanvas} className="flex-1 relative min-w-0 min-h-0 h-full w-full" style={{ touchAction: 'none' }}>
         {!isLibExpanded && (
           <FloatingAddBlockButton onClick={() => setIsLibExpanded(true)} />
         )}
 
         <NodeCallbacksContext.Provider value={nodeCallbacks}>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges.map((edge) => ({
-            ...edge,
-            type: "smoothstep",
-            animated: true,
-            style: {
-              stroke: "hsl(var(--primary))",
-              strokeWidth: edge.selected ? 2.5 : 2,
-            },
-            markerEnd: {
-              type: "arrowclosed",
-              width: 20,
-              height: 20,
-              color: "hsl(var(--primary))",
-            },
-          }))}
-          onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          isValidConnection={isValidConnection}
-          onConnectStart={onConnectStart}
-          onConnectEnd={onConnectEnd}
-          onReconnect={onReconnect}
-          onEdgesDelete={onEdgesDelete}
-          onInit={setRfInstance}
-          onNodeClick={(_, n) => setSelected(n)}
-          onPaneClick={() => { setSelected(null); setSmartMenu(null); }}
-          onBeforeDelete={async ({ nodes: nodesToDelete, edges: edgesToDelete }) => {
-            const kept = nodesToDelete.filter(n => (n.data as any)?.type !== "trigger");
-            if (kept.length !== nodesToDelete.length) {
-              toast.error("O bloco Gatilho não pode ser excluído.");
-            }
-            if (kept.length === 0 && edgesToDelete.length === 0) return false;
-            // Se houver mais de um item selecionado, confirma direto (sem dialog individual)
-            return { nodes: kept, edges: edgesToDelete };
-          }}
-          nodeTypes={nodeTypes}
-          fitView
-          nodesDraggable={!isLocked}
-          nodesConnectable={!isLocked}
-          nodesFocusable={!isLocked}
-          edgesFocusable={!isLocked}
-          elementsSelectable={!isLocked}
-          connectionRadius={80}
-          connectOnClick={false}
-          autoPanOnConnect={false}
-          autoPanOnNodeDrag={true}
-          {...boxSelectionProps({ disabled: isLocked })}
-          style={{ width: "100%", height: "100%" }}
-          defaultEdgeOptions={{
-            animated: true,
-            type: "smoothstep",
-            style: { stroke: "hsl(var(--primary))", strokeWidth: 2 },
-            markerEnd: { type: MarkerType.ArrowClosed, width: 20, height: 20, color: "hsl(var(--primary))" } as any,
-          }}
-        >
-          <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-          <Controls showInteractive={false} />
-          <MiniMap pannable className="!bg-card" />
-        </ReactFlow>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            isValidConnection={isValidConnection}
+            onConnectStart={onConnectStart}
+            onConnectEnd={onConnectEnd}
+            onReconnect={onReconnect}
+            onInit={setRfInstance}
+            onNodeClick={(_, n) => setSelected(n)}
+            onPaneClick={() => { setSelected(null); setSmartMenu(null); }}
+            onBeforeDelete={async ({ nodes: nodesToDelete, edges: edgesToDelete }) => {
+              const kept = nodesToDelete.filter(n => (n.data as any)?.type !== "trigger");
+              if (kept.length !== nodesToDelete.length) toast.error("O bloco Gatilho não pode ser excluído.");
+              if (kept.length === 0 && edgesToDelete.length === 0) return false;
+              return { nodes: kept, edges: edgesToDelete };
+            }}
+            nodeTypes={nodeTypes}
+            fitView
+            nodesDraggable={!isLocked}
+            nodesConnectable={!isLocked}
+            nodesFocusable={!isLocked}
+            edgesFocusable={!isLocked}
+            elementsSelectable={!isLocked}
+            connectionRadius={80}
+            connectOnClick={false}
+            autoPanOnConnect={false}
+            autoPanOnNodeDrag={true}
+            {...boxSelectionProps({ disabled: isLocked })}
+            style={{ width: "100%", height: "100%" }}
+            defaultEdgeOptions={{
+              animated: true,
+              type: "smoothstep",
+              style: { stroke: "hsl(var(--primary))", strokeWidth: 2 },
+              markerEnd: { type: MarkerType.ArrowClosed, width: 20, height: 20, color: "hsl(var(--primary))" } as any,
+            }}
+          >
+            <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
+            <Controls showInteractive={false} />
+            <MiniMap pannable className="!bg-card" />
+          </ReactFlow>
         </NodeCallbacksContext.Provider>
 
         {smartMenu && (
@@ -882,7 +781,7 @@ function PontoNotificacaoBuilderContent() {
         )}
       </div>
 
-      {/* Properties — visual idêntico ao BotBuilder (drawer mobile / card desktop) */}
+      {/* Propriedades */}
       {selected ? (
         <div className="workflow-props animate-slide-in-right fixed inset-y-0 right-0 z-40 w-full sm:w-96 lg:static lg:inset-auto lg:z-auto lg:h-[calc(100%-1rem)] lg:w-96 lg:m-2 lg:rounded-2xl lg:border-2 lg:border-white dark:lg:border-white/10 lg:bg-gradient-to-b lg:from-background lg:to-border lg:shadow-lg bg-background border-l border-border flex flex-col h-full shadow-2xl overflow-x-hidden">
           <div className="flex items-center justify-between px-3 py-2 border-b border-border lg:border-b-0 lg:pt-4">
@@ -904,24 +803,18 @@ function PontoNotificacaoBuilderContent() {
           <div className="text-sm text-muted-foreground">
             <div className="font-semibold text-foreground mb-2">Como funciona</div>
             <ul className="list-disc pl-4 space-y-1.5">
-              <li>Abra o <b>Menu</b> (canto superior esquerdo) e clique num bloco para adicioná-lo.</li>
-              <li>Clique no <b>+</b> abaixo de qualquer bloco para escolher o próximo permitido.</li>
-              <li>Menu <b>⋮</b> do bloco: duplicar, pausar (breakpoint), pular, adicionar nota, excluir.</li>
-              <li><b>Simular</b> executa passo a passo com destaque verde; <b>Arquivo → Disparar real</b> executa nos canais reais.</li>
-              <li>Cadeado no topo bloqueia edições acidentais do canvas.</li>
+              <li>Abra o botão flutuante <b>+</b> para acessar a biblioteca de blocos.</li>
+              <li>Arraste blocos para o canvas ou dê 2 cliques.</li>
+              <li>Solte a linha do handle em qualquer área vazia para escolher o próximo bloco.</li>
+              <li>Menu <b>⋮</b> do bloco: duplicar, breakpoint, pular, nota, excluir.</li>
+              <li><b>Simular</b> executa passo a passo; <b>Arquivo → Disparar real</b> envia agora.</li>
               <li>Variáveis: <code>{`{funcionario} {data} {link_aprovacao} {severidade}`}</code>.</li>
             </ul>
           </div>
         </div>
       )}
 
-
-
-      {/* ============ Dialogs ============ */}
-      <></>
-
-
-      {/* Nota dialog */}
+      {/* Dialog Nota */}
       <Dialog open={!!noteFor} onOpenChange={(v) => !v && setNoteFor(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Nota do bloco</DialogTitle></DialogHeader>
@@ -940,7 +833,7 @@ function PontoNotificacaoBuilderContent() {
       <Dialog open={simOpen} onOpenChange={setSimOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle className="flex items-center gap-2"><Wand2 className="w-4 h-4" /> Simulador do workflow</DialogTitle></DialogHeader>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <Label>Dados de entrada (JSON)</Label>
               <Textarea rows={12} value={simData} onChange={e => setSimData(e.target.value)} className="font-mono text-xs" />
@@ -961,7 +854,7 @@ function PontoNotificacaoBuilderContent() {
               </div>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={() => { setSimLog([]); setNodes(ns => ns.map(n => ({ ...n, data: { ...n.data, isHighlighted: false } }))); }}>
               <X className="w-4 h-4 mr-1" /> Limpar
             </Button>
@@ -986,6 +879,9 @@ function PontoNotificacaoBuilderContent() {
   );
 }
 
+// ============================================================
+// Painel de Propriedades
+// ============================================================
 function PropsPanel({ node, onChange, onDelete, onDuplicate, onToggleBreakpoint, onToggleSkip }: {
   node: Node; onChange: (p: any) => void; onDelete: () => void; onDuplicate: () => void; onToggleBreakpoint: () => void; onToggleSkip: () => void;
 }) {
@@ -993,6 +889,7 @@ function PropsPanel({ node, onChange, onDelete, onDuplicate, onToggleBreakpoint,
   const cfg = data.config || {};
   const type = data.type as string;
   const b = BLOCO_MAP[type];
+  const isTrigger = type === "trigger";
 
   return (
     <div className="p-4 space-y-3">
@@ -1002,14 +899,14 @@ function PropsPanel({ node, onChange, onDelete, onDuplicate, onToggleBreakpoint,
           <div className="text-xs text-muted-foreground mt-1">ID {node.id.slice(0, 8)}</div>
         </div>
         <div className="flex items-center gap-1">
-          <Button size="icon" variant="ghost" title="Duplicar" onClick={onDuplicate}><Copy className="w-4 h-4" /></Button>
+          {!isTrigger && <Button size="icon" variant="ghost" title="Duplicar" onClick={onDuplicate}><Copy className="w-4 h-4" /></Button>}
           <Button size="icon" variant="ghost" title={data.isBreakpoint ? "Remover breakpoint" : "Pausar aqui"} onClick={onToggleBreakpoint}>
             <Pause className={cn("w-4 h-4", data.isBreakpoint && "text-orange-500")} />
           </Button>
           <Button size="icon" variant="ghost" title={data.isSkipped ? "Reativar" : "Pular"} onClick={onToggleSkip}>
             <SkipForward className={cn("w-4 h-4", data.isSkipped && "text-muted-foreground")} />
           </Button>
-          <Button size="icon" variant="ghost" title="Excluir" onClick={onDelete}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+          {!isTrigger && <Button size="icon" variant="ghost" title="Excluir" onClick={onDelete}><Trash2 className="w-4 h-4 text-destructive" /></Button>}
         </div>
       </div>
       {(data.isBreakpoint || data.isSkipped) && (
@@ -1049,7 +946,7 @@ function PropsPanel({ node, onChange, onDelete, onDuplicate, onToggleBreakpoint,
                 <SelectItem value="!=">Diferente</SelectItem>
                 <SelectItem value=">">Maior que</SelectItem>
                 <SelectItem value="<">Menor que</SelectItem>
-                <SelectItem value="in">Está em (lista separada por vírgula)</SelectItem>
+                <SelectItem value="in">Está em (lista)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -1057,7 +954,7 @@ function PropsPanel({ node, onChange, onDelete, onDuplicate, onToggleBreakpoint,
             <Label>Valor</Label>
             <Input value={cfg.valor || ""} onChange={e => onChange({ config: { valor: e.target.value } })} />
           </div>
-          <div className="text-xs text-muted-foreground">Saída verde = sim, vermelha = não.</div>
+          <div className="text-xs text-muted-foreground">Saída verde = SIM, vermelha = NÃO.</div>
         </>
       )}
 
@@ -1067,14 +964,14 @@ function PropsPanel({ node, onChange, onDelete, onDuplicate, onToggleBreakpoint,
             <div><Label>Início</Label><Input type="time" value={cfg.inicio || "22:00"} onChange={e => onChange({ config: { inicio: e.target.value } })} /></div>
             <div><Label>Fim</Label><Input type="time" value={cfg.fim || "07:00"} onChange={e => onChange({ config: { fim: e.target.value } })} /></div>
           </div>
-          <div className="text-xs text-muted-foreground">Se estiver dentro da janela, o fluxo para aqui (exceto quando forçado).</div>
+          <div className="text-xs text-muted-foreground">Dentro da janela o fluxo para (exceto quando forçado).</div>
         </>
       )}
 
       {type === "delay" && (
         <div>
           <Label>Minutos</Label>
-          <Input type="number" value={cfg.minutos || 0} onChange={e => onChange({ config: { minutos: Number(e.target.value) } })} />
+          <Input type="number" value={cfg.minutos ?? 0} onChange={e => onChange({ config: { minutos: Number(e.target.value) } })} />
           <div className="text-xs text-muted-foreground">Cap de 25s por execução.</div>
         </div>
       )}
@@ -1105,13 +1002,13 @@ function PropsPanel({ node, onChange, onDelete, onDuplicate, onToggleBreakpoint,
           {cfg.destino === "numeros_fixos" && (
             <div>
               <Label>Números (um por linha)</Label>
-              <Textarea rows={3} value={(cfg.numeros || []).join("\n")} onChange={e => onChange({ config: { numeros: e.target.value.split("\n").map(s => s.trim()).filter(Boolean) } })} />
+              <Textarea rows={3} value={(cfg.numeros || []).join("\n")} onChange={e => onChange({ config: { numeros: e.target.value.split("\n").map((s: string) => s.trim()).filter(Boolean) } })} />
             </div>
           )}
           {cfg.destino === "emails_fixos" && (
             <div>
               <Label>E-mails (um por linha)</Label>
-              <Textarea rows={3} value={(cfg.emails || []).join("\n")} onChange={e => onChange({ config: { emails: e.target.value.split("\n").map(s => s.trim()).filter(Boolean) } })} />
+              <Textarea rows={3} value={(cfg.emails || []).join("\n")} onChange={e => onChange({ config: { emails: e.target.value.split("\n").map((s: string) => s.trim()).filter(Boolean) } })} />
             </div>
           )}
           <div>
@@ -1129,7 +1026,7 @@ function PropsPanel({ node, onChange, onDelete, onDuplicate, onToggleBreakpoint,
       )}
 
       {type === "escalonamento" && (
-        <div className="text-xs text-muted-foreground">Aciona a rotina hierárquica de escalonamento (`ponto-notificar-escalonar`) para o evento atual.</div>
+        <div className="text-xs text-muted-foreground">Aciona a rotina hierárquica de escalonamento (<code>ponto-notificar-escalonar</code>) para o evento atual.</div>
       )}
 
       {type === "log" && (
