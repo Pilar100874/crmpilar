@@ -462,6 +462,16 @@ All colors MUST be HSL.
   stroke-width: 20px;
 }
 
+/* Ensure edges SVG stretches to viewport so paths are visible.
+   Fix for pages where the edges container collapses to 0×0. */
+.react-flow__edges,
+.react-flow__edges > svg {
+  width: 100% !important;
+  height: 100% !important;
+  overflow: visible !important;
+}
+
+
 /* Hide native fullscreen button on studio videos */
 .studio-video-no-fullscreen::-webkit-media-controls-fullscreen-button {
   display: none !important;
