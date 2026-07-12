@@ -2486,9 +2486,6 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         }, 1000);
         break;
 
-      case "webhook":
-        const webhookUrl = interpolateVariables(config.url || "", context);
-        const method = config.method || "POST";
       case "webhook": {
         const webhookUrl = interpolateVariables(config.url || "", context);
         const method = (config.method || "POST").toUpperCase();
