@@ -339,6 +339,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
             {temPtz && <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-medium">PTZ</span>}
             {temAudio && <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-medium">ÁUDIO</span>}
           </DialogTitle>
+          <DialogDescription className="sr-only">Transmissão ao vivo da câmera {cameraNome}</DialogDescription>
         </DialogHeader>
         <div ref={containerRef} className="relative bg-black aspect-video overflow-hidden">
           <video
