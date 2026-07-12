@@ -43,6 +43,7 @@ import Orcamentos from "./pages/Orcamentos";
 import OrcamentoPublico from "./pages/OrcamentoPublico";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
+import MenuHub from "./pages/MenuHub";
 import Relatorios from "./pages/Relatorios";
 import ImportacaoProdutos from "./pages/ImportacaoProdutos";
 import ImportacaoProdutosLista from "./pages/ImportacaoProdutosLista";
