@@ -34,13 +34,20 @@ Deno.serve(async (req) => {
 
     if (contasErr) return json({ error: contasErr.message }, 500);
 
+    // Credenciais de app por estabelecimento (Meta/Google/TikTok)
+    const { data: appCreds } = await supa
+      .from('ads_platform_apps')
+      .select('*')
+      .eq('estabelecimento_id', estabelecimento_id)
+      .maybeSingle();
+
     const resultados: any[] = [];
     for (const conta of contas || []) {
       const plataforma = platById.get(conta.plataforma_id) || '';
       let cred = (conta.credenciais_json || {}) as any;
       try {
         // Refresh token se vencido
-        cred = await refreshIfNeeded(supa, conta, plataforma, cred);
+        cred = await refreshIfNeeded(supa, conta, plataforma, cred, appCreds || {});
         let insights: any[] = [];
         if (plataforma.includes('meta') || plataforma.includes('facebook')) {
           insights = await coletarMeta(cred);
@@ -205,14 +212,14 @@ async function coletarTiktok(cred: any): Promise<any[]> {
 }
 
 // -------- Refresh de tokens --------
-async function refreshIfNeeded(supa: any, conta: any, plataforma: string, cred: any) {
+async function refreshIfNeeded(supa: any, conta: any, plataforma: string, cred: any, apps: any) {
   const expiresAt = cred?.expires_at ? new Date(cred.expires_at).getTime() : 0;
   if (expiresAt && expiresAt - Date.now() > 5 * 60_000) return cred; // >5min de folga
   try {
     let novo: any = null;
-    if (plataforma.includes('meta') || plataforma.includes('facebook')) novo = await refreshMeta(cred);
-    else if (plataforma.includes('google')) novo = await refreshGoogle(cred);
-    else if (plataforma.includes('tiktok')) novo = await refreshTiktok(cred);
+    if (plataforma.includes('meta') || plataforma.includes('facebook')) novo = await refreshMeta(cred, apps);
+    else if (plataforma.includes('google')) novo = await refreshGoogle(cred, apps);
+    else if (plataforma.includes('tiktok')) novo = await refreshTiktok(cred, apps);
     if (novo) {
       const merged = { ...cred, ...novo };
       await supa.from('ad_accounts').update({ credenciais_json: merged }).eq('id', conta.id);
@@ -221,16 +228,18 @@ async function refreshIfNeeded(supa: any, conta: any, plataforma: string, cred: 
   } catch (e) { console.warn('[refresh]', plataforma, e); }
   return cred;
 }
-async function refreshMeta(cred: any) {
-  const appId = Deno.env.get('META_APP_ID'); const appSecret = Deno.env.get('META_APP_SECRET');
+async function refreshMeta(cred: any, apps: any) {
+  const appId = apps?.meta_app_id || Deno.env.get('META_APP_ID');
+  const appSecret = apps?.meta_app_secret || Deno.env.get('META_APP_SECRET');
   if (!appId || !appSecret || !cred?.access_token) return null;
   const url = `https://graph.facebook.com/v19.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${appId}&client_secret=${appSecret}&fb_exchange_token=${cred.access_token}`;
   const r = await fetch(url); const b = await r.json();
   if (!r.ok) return null;
   return { access_token: b.access_token, expires_at: new Date(Date.now() + (b.expires_in || 5184000) * 1000).toISOString() };
 }
-async function refreshGoogle(cred: any) {
-  const cid = Deno.env.get('GOOGLE_CLIENT_ID'); const cs = Deno.env.get('GOOGLE_CLIENT_SECRET');
+async function refreshGoogle(cred: any, apps: any) {
+  const cid = apps?.google_client_id || Deno.env.get('GOOGLE_CLIENT_ID');
+  const cs = apps?.google_client_secret || Deno.env.get('GOOGLE_CLIENT_SECRET');
   if (!cid || !cs || !cred?.refresh_token) return null;
   const r = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -239,8 +248,9 @@ async function refreshGoogle(cred: any) {
   const b = await r.json(); if (!r.ok) return null;
   return { access_token: b.access_token, expires_at: new Date(Date.now() + (b.expires_in || 3600) * 1000).toISOString() };
 }
-async function refreshTiktok(cred: any) {
-  const appId = Deno.env.get('TIKTOK_APP_ID'); const secret = Deno.env.get('TIKTOK_APP_SECRET');
+async function refreshTiktok(cred: any, apps: any) {
+  const appId = apps?.tiktok_app_id || Deno.env.get('TIKTOK_APP_ID');
+  const secret = apps?.tiktok_app_secret || Deno.env.get('TIKTOK_APP_SECRET');
   if (!appId || !secret || !cred?.refresh_token) return null;
   const r = await fetch('https://business-api.tiktok.com/open_api/v1.3/oauth2/refresh_token/', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },

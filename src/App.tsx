@@ -202,6 +202,7 @@ import AdsCredentials from "./pages/ads/AdsCredentials";
 import AdsLogs from "./pages/ads/AdsLogs";
 import AdsAutomation from "./pages/ads/AdsAutomation";
 import AdsSchedulerConfig from "./pages/ads/AdsSchedulerConfig";
+import AdsPlatformApps from "./pages/ads/AdsPlatformApps";
 import AdsPlatformDashboard from "./pages/ads/AdsPlatformDashboard";
 import AdsCampaigns from "./pages/ads/AdsCampaigns";
 import AdsReports from "./pages/ads/AdsReports";
@@ -443,6 +444,7 @@ const App = () => (
               <Route path="/ads/automation" element={<AdsAutomation />} />
               <Route path="/ads/automation/:id" element={<AdsAutomation />} />
               <Route path="/ads/scheduler" element={<AdsSchedulerConfig />} />
+              <Route path="/ads/platform-apps" element={<AdsPlatformApps />} />
               <Route path="/railway-env" element={<RailwayEnvVariables />} />
               <Route path="/admin/support-tickets" element={<SupportTickets />} />
               <Route path="/admin/apps" element={<AdminApps />} />
