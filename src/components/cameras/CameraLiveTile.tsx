@@ -35,6 +35,9 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
     let liveReached = false;
     let coletorSeenAt = 0;
     let coletorServesCamera = false;
+    let coletorVersao: string | null = null;
+    let coletorCameras: string[] = [];
+    const log = (...a: any[]) => console.log(`[CamLive ${cameraNome}]`, ...a);
 
     // Sempre broadcasta em ambos os canais: plain + filial (caso a câmera
     // ou o coletor esteja sem filial atribuída em algum dos lados).
