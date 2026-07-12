@@ -63,7 +63,19 @@ export default function MenuHub() {
               <ChevronLeft className="h-5 w-5" />
             </button>
           ) : null}
-          <h1 className="text-2xl sm:text-3xl font-bold">{title}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold flex-1">{title}</h1>
+          <button
+            onClick={toggleTheme}
+            className="h-10 w-10 rounded-full bg-card border border-border flex items-center justify-center hover:bg-accent transition-colors"
+            title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
+            aria-label="Alternar tema"
+          >
+            {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </button>
+        </div>
+
+        <div className="mb-4 rounded-xl border border-border bg-card px-3 py-2">
+          <AppsHealthIndicator />
         </div>
 
         {loadingAdmin && !openItem ? (
