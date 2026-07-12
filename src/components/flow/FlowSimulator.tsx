@@ -2489,29 +2489,45 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       case "webhook":
         const webhookUrl = interpolateVariables(config.url || "", context);
         const method = config.method || "POST";
-        addSystemMessage(`🌐 Chamando webhook: ${method} ${webhookUrl}`);
-        
-        safeSetTimeout(() => {
-          const mockResponse = {
-            status: 200,
-            data: { success: true, message: "Webhook simulado" },
-          };
-          
+      case "webhook": {
+        const webhookUrl = interpolateVariables(config.url || "", context);
+        const method = (config.method || "POST").toUpperCase();
+        const useReal = realModeRef.current;
+        addSystemMessage(`🌐 ${useReal ? "[MODO REAL] " : ""}Chamando webhook: ${method} ${webhookUrl}`);
+
+        (async () => {
+          let response: any = { success: true, message: "Webhook simulado" };
+          let ok = true;
+          if (useReal && webhookUrl) {
+            try {
+              const headers: Record<string, string> = { "Content-Type": "application/json" };
+              if (config.headers && typeof config.headers === "object") {
+                for (const [k, v] of Object.entries(config.headers)) headers[k] = interpolateVariables(String(v ?? ""), context);
+              }
+              const bodyStr = interpolateVariables(config.body || "", context) || JSON.stringify(context);
+              const { data, error } = await supabase.functions.invoke("execute-dynamic-query", {
+                body: { url: webhookUrl, method, headers, body: bodyStr },
+              });
+              if (error) { ok = false; response = { error: error.message }; }
+              else response = data;
+            } catch (e: any) {
+              ok = false; response = { error: e?.message || String(e) };
+            }
+          }
           if (config.outputVariable) {
-            setContext((prev) => ({
-              ...prev,
-              [config.outputVariable]: mockResponse.data,
-            }));
+            const newCtx = { ...contextRef.current, [config.outputVariable]: response };
+            contextRef.current = newCtx;
+            setContext(newCtx);
           }
-          
-          addSuccessMessage("Webhook respondeu com sucesso");
-          const nextNode = getNextNode(node.id);
-          if (nextNode) {
-            setCurrentNodeId(nextNode.id);
-            executeNode(nextNode);
-          }
-        }, 2000);
+          if (ok) addSuccessMessage(useReal ? "Webhook executado" : "Webhook respondeu com sucesso (simulado)");
+          else addSystemMessage(`⚠️ Webhook falhou: ${response?.error || "erro desconhecido"}`);
+          safeSetTimeout(() => {
+            const nextNode = getNextNode(node.id);
+            if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+          }, useReal ? 300 : 1500);
+        })();
         break;
+      }
 
       case "dynamic_data":
         const source = config.source || "não configurado";
