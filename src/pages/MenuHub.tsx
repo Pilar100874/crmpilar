@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ChevronLeft, Zap, LifeBuoy, AppWindow, Shield, Sun, Moon,
-  Bell, User as UserIcon, Monitor, Star,
+  Bell, User as UserIcon, Monitor, Star, Settings, Users, FolderTree,
+  ShieldCheck, Store, BellRing, Bot, Workflow, Webhook, CreditCard,
+  Paintbrush, Send, FileText, Mail, ListOrdered, Clock, KeyRound,
 } from "lucide-react";
 import { menuItems, type MenuItem } from "@/components/Layout";
 import { isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
@@ -20,9 +22,28 @@ const ADMIN_ITEM: MenuItem = {
   title: "Admin",
   icon: Shield,
   subItems: [
-    { id: "Macros", title: "Macros", url: "/macros", icon: Zap },
-    { id: "Tickets de Suporte", title: "Tickets de Suporte", url: "/admin/support-tickets", icon: LifeBuoy },
-    { id: "Apps", title: "Apps", url: "/admin/apps", icon: AppWindow },
+    { id: "Admin Apps", title: "Apps", url: "/admin/apps", icon: AppWindow },
+    { id: "Admin Tickets", title: "Tickets de Suporte", url: "/admin/support-tickets", icon: LifeBuoy },
+    { id: "Admin Macros", title: "Macros", url: "/macros", icon: Zap },
+    { id: "Admin Config", title: "Configurações", url: "/config", icon: Settings },
+    { id: "Admin Estabelecimentos", title: "Estabelecimentos", url: "/config?secao=cadastro-estabelecimentos", icon: Store },
+    { id: "Admin Usuarios Acessos", title: "Usuários e Acessos", url: "/config?secao=cadastro-estabelecimentos&subsecao=usuarios-acessos", icon: Users },
+    { id: "Admin Grupos Acesso", title: "Grupos de Acesso", url: "/config?secao=cadastro-estabelecimentos&subsecao=usuarios-acessos&subsubsecao=grupos-acesso", icon: FolderTree },
+    { id: "Admin Cadastro Usuarios", title: "Cadastro de Usuários", url: "/config?secao=cadastro-estabelecimentos&subsecao=usuarios-acessos&subsubsecao=cadastro-usuarios", icon: UserIcon },
+    { id: "Admin Cadastro Administradores", title: "Cadastro de Administradores", url: "/config?secao=cadastro-administradores", icon: ShieldCheck },
+    { id: "Admin Notificacoes Sistema", title: "Notificações do Sistema", url: "/config?secao=notificacoes-sistema", icon: BellRing },
+    { id: "Admin Recuperar Senha", title: "Recuperação de Senha", url: "/config?secao=recuperar-senha", icon: KeyRound },
+    { id: "Admin Email Config", title: "Email Config", url: "/email-config", icon: Mail },
+    { id: "Admin Push", title: "Notificações Push", url: "/config/push", icon: Send },
+    { id: "Admin Visual Sistema", title: "Visual do Sistema", url: "/config/visual", icon: Paintbrush },
+    { id: "Admin Variaveis", title: "Variáveis Globais", url: "/config/variaveis", icon: FileText },
+    { id: "Admin Skills", title: "Skills de Atendimento", url: "/config/skills", icon: Bot },
+    { id: "Admin SLA", title: "SLA", url: "/config/sla", icon: Clock },
+    { id: "Admin Omnichannel", title: "Workflow Omnichannel", url: "/omnichannel-builder", icon: Workflow },
+    { id: "Admin Webhooks", title: "Webhooks", url: "/config/webhooks", icon: Webhook },
+    { id: "Admin Pagamentos", title: "Gateways de Pagamento", url: "/config/pagamentos", icon: CreditCard },
+    { id: "Admin Atalhos", title: "Gerenciar Atalhos", url: "/gerenciar-atalhos", icon: Star },
+    { id: "Admin Filas", title: "Filas de Atendimento", url: "/monitor-filas", icon: ListOrdered },
   ],
 };
 
