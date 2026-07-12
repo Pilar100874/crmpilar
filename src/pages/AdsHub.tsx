@@ -11,8 +11,8 @@ import {
   Clock,
   PanelLeft,
   PanelLeftClose,
-  LucideIcon
-
+  LucideIcon,
+  Sparkles,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -34,6 +34,7 @@ import AdsLogs from './ads/AdsLogs';
 import AdsAutomation from './ads/AdsAutomation';
 import AdsSchedulerConfig from './ads/AdsSchedulerConfig';
 import AdsPlatformApps from './ads/AdsPlatformApps';
+import AdsSetupWizard from './ads/AdsSetupWizard';
 
 // Platform icons (using simple colored divs for now)
 const GoogleIcon = () => (
@@ -61,6 +62,7 @@ interface TabItem {
 }
 
 const tabItems: TabItem[] = [
+  { id: 'wizard', label: 'Wizard de Setup', icon: Sparkles, description: 'Assistente guiado para configurar tudo passo a passo' },
   { id: 'campaigns', label: 'Campanhas', icon: Target, description: 'Gerenciar campanhas de anúncios' },
   { id: 'reports', label: 'Relatórios', icon: FileBarChart, description: 'Relatórios personalizados' },
   { id: 'alerts', label: 'Alertas', icon: Bell, description: 'Configurar alertas de performance' },
@@ -149,6 +151,8 @@ const AdsHub: React.FC = () => {
         return <AdsSchedulerConfig />;
       case 'platform-apps':
         return <AdsPlatformApps />;
+      case 'wizard':
+        return <AdsSetupWizard />;
       default:
         return <AdsDashboard />;
     }
