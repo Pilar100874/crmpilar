@@ -200,7 +200,7 @@ function PontoNotificacaoBuilderContent() {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [selected, setSelected] = useState<Node | null>(null);
   const [saving, setSaving] = useState(false);
-  const [smartMenu, setSmartMenu] = useState<{ x: number; y: number; fromId: string; handle: string | null; handleType: "source" | "target" } | null>(null);
+  const [smartMenu, setSmartMenu] = useState<{ x: number; y: number; flowX?: number; flowY?: number; fromId: string; handle: string | null; handleType: "source" | "target" } | null>(null);
   const [simOpen, setSimOpen] = useState(false);
   const [simData, setSimData] = useState('{\n  "severidade": "alta",\n  "detalhe": "teste",\n  "quantidade": 1\n}');
   const [simRunning, setSimRunning] = useState(false);
@@ -379,9 +379,12 @@ function PontoNotificacaoBuilderContent() {
     const clientX = event.clientX ?? event.changedTouches?.[0]?.clientX;
     const clientY = event.clientY ?? event.changedTouches?.[0]?.clientY;
     if (clientX == null || clientY == null) return;
+    const flowPos = rfInstance.screenToFlowPosition({ x: clientX, y: clientY });
     setSmartMenu({
       x: clientX,
       y: clientY,
+      flowX: flowPos.x,
+      flowY: flowPos.y,
       fromId: start.nodeId,
       handle: start.handleId ?? null,
       handleType: start.handleType,
@@ -495,11 +498,13 @@ function PontoNotificacaoBuilderContent() {
   function onSmartPick(type: string) {
     if (!smartMenu) return;
     const src = nodes.find(n => n.id === smartMenu.fromId);
-    const basePos = src
-      ? smartMenu.handleType === "target"
-        ? { x: src.position.x, y: (src.position.y || 0) - 180 }
-        : { x: src.position.x, y: (src.position.y || 0) + 180 }
-      : undefined;
+    const basePos = smartMenu.flowX != null && smartMenu.flowY != null
+      ? { x: smartMenu.flowX - 130, y: smartMenu.flowY - 45 }
+      : src
+        ? smartMenu.handleType === "target"
+          ? { x: src.position.x, y: (src.position.y || 0) - 180 }
+          : { x: src.position.x, y: (src.position.y || 0) + 180 }
+        : undefined;
     addBlockAt(type, basePos, { id: smartMenu.fromId, handle: smartMenu.handle, handleType: smartMenu.handleType });
     setSmartMenu(null);
   }
