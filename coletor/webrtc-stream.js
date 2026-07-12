@@ -277,6 +277,40 @@ class SignalHub {
 // -----------------------------------------------------------------------------
 // CameraPump: uma única captura RTSP por câmera, N viewers.
 // -----------------------------------------------------------------------------
+// Aloca portas UDP sequencialmente para evitar colisão entre pumps quando
+// várias câmeras sobem em paralelo (tela preta / segunda câmera "carregando"
+// eternamente era causado por bind() falhando em EADDRINUSE silenciosamente).
+let NEXT_UDP_PORT = 40000;
+const UDP_PORT_MAX = 59998;
+function nextUdpPort() {
+  const p = NEXT_UDP_PORT;
+  NEXT_UDP_PORT += 2;
+  if (NEXT_UDP_PORT > UDP_PORT_MAX) NEXT_UDP_PORT = 40000;
+  return p;
+}
+
+function bindUdpWithRetry(sock, host) {
+  return new Promise((resolve, reject) => {
+    let tries = 0;
+    const tryBind = () => {
+      const port = nextUdpPort();
+      const onError = (err) => {
+        sock.removeListener('listening', onListening);
+        if (err && err.code === 'EADDRINUSE' && tries++ < 50) return tryBind();
+        reject(err);
+      };
+      const onListening = () => {
+        sock.removeListener('error', onError);
+        resolve(port);
+      };
+      sock.once('error', onError);
+      sock.once('listening', onListening);
+      sock.bind(port, host);
+    };
+    tryBind();
+  });
+}
+
 class CameraPump {
   constructor(cam, onEmpty) {
     this.cam = cam;
@@ -284,9 +318,8 @@ class CameraPump {
     this.subs = new Set(); // { videoTrack, audioTrack, onReady }
     this.videoUdp = null;
     this.audioUdp = null;
-    this.videoUdpPort = 40000 + Math.floor(Math.random() * 20000);
-    this.audioUdpPort = 40000 + Math.floor(Math.random() * 20000);
-    if (this.audioUdpPort === this.videoUdpPort) this.audioUdpPort++;
+    this.videoUdpPort = 0;
+    this.audioUdpPort = 0;
     this.ffmpeg = null;
     this.audioFfmpeg = null;
     this.mode = 'copy';
@@ -312,7 +345,14 @@ class CameraPump {
         for (const s of this.subs) { try { s.onReady?.(); } catch {} }
       }
     });
-    await new Promise((r) => this.videoUdp.bind(this.videoUdpPort, '127.0.0.1', r));
+    try {
+      this.videoUdpPort = await bindUdpWithRetry(this.videoUdp, '127.0.0.1');
+    } catch (e) {
+      console.error('[pump] falha bind UDP vídeo', this.cam.nome, e.message);
+      this.starting = false;
+      this.stop();
+      return;
+    }
 
     if (this.cam.tem_audio) {
       this.audioUdp = dgram.createSocket('udp4');
@@ -322,8 +362,16 @@ class CameraPump {
           if (s.audioTrack) { try { s.audioTrack.writeRtp(buf); } catch {} }
         }
       });
-      await new Promise((r) => this.audioUdp.bind(this.audioUdpPort, '127.0.0.1', r));
-      try { this._spawnAudio(); } catch (e) { console.error('[pump] audio spawn:', e.message); }
+      try {
+        this.audioUdpPort = await bindUdpWithRetry(this.audioUdp, '127.0.0.1');
+      } catch (e) {
+        console.error('[pump] falha bind UDP áudio', this.cam.nome, e.message);
+        try { this.audioUdp.close(); } catch {}
+        this.audioUdp = null;
+      }
+      if (this.audioUdp) {
+        try { this._spawnAudio(); } catch (e) { console.error('[pump] audio spawn:', e.message); }
+      }
     }
     this._spawnVideo();
     this.started = true;
