@@ -142,95 +142,99 @@ export default function Config() {
   // Se há uma seção ativa, mostra o conteúdo dela
   if (activeSection && activeSectionData) {
     return (
-      <div className="min-h-full bg-muted/30">
-        {/* Header com botão voltar */}
-        <div className="sticky top-0 z-10 bg-background border-b shadow-sm">
-          <div className="flex items-center gap-3 p-4">
-            <Button 
-              variant="ghost" 
-              size="icon" 
+      <div className="min-h-full bg-background">
+        {/* Header padrão do sistema */}
+        <div className="sticky top-0 z-10 border-b bg-card/95 backdrop-blur">
+          <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-4 sm:px-6">
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={handleBack}
-              className="shrink-0 -ml-2"
+              className="shrink-0"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", activeSectionData.bgColor)}>
-              <activeSectionData.icon className={cn("w-5 h-5", activeSectionData.iconColor)} />
+            <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg", activeSectionData.bgColor)}>
+              <activeSectionData.icon className={cn("h-5 w-5", activeSectionData.iconColor)} />
             </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="font-bold text-base truncate">{activeSectionData.title}</h1>
-              <p className="text-xs text-muted-foreground truncate">{activeSectionData.description}</p>
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-lg font-bold tracking-tight sm:text-2xl">
+                {activeSectionData.title}
+              </h1>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground sm:text-sm">
+                {activeSectionData.description}
+              </p>
             </div>
           </div>
         </div>
 
         {/* Conteúdo da seção */}
-        <ScrollArea className="h-[calc(100vh-80px)]">
-          <div className="p-4">
-            {renderSectionContent()}
-          </div>
-        </ScrollArea>
+        <div className="mx-auto max-w-6xl p-4 sm:p-6">
+          {renderSectionContent()}
+        </div>
       </div>
     );
   }
 
-  // Menu principal com cards
+  // Menu principal
   return (
-    <div className="min-h-full bg-muted/30">
-      {/* Header */}
-      <div className="bg-background border-b">
-        <div className="p-4">
-          <div className="flex items-center gap-3 mb-1">
-            <SubMenuHeader 
+    <div className="min-h-full bg-background">
+      {/* Header padrão do sistema */}
+      <div className="border-b bg-card">
+        <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
+          <div className="hidden">
+            <SubMenuHeader
               title="Configurações"
               onOpenSubmenu={() => openSubmenu("Configurações")}
             />
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Settings className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <h1 className="font-bold text-lg">Configurações</h1>
-                <p className="text-xs text-muted-foreground">Gerencie a plataforma</p>
-              </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Settings className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-lg font-bold tracking-tight sm:text-2xl">
+                Configurações
+              </h1>
+              <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
+                Gerencie preferências, integrações e a aparência da plataforma
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Cards de navegação */}
-      <div className="p-4 space-y-3">
-        {CONFIG_SECTIONS.map((section) => (
-          <Card 
-            key={section.id}
-            className="overflow-hidden cursor-pointer hover:shadow-md active:scale-[0.99] transition-all border-l-4"
-            style={{ borderLeftColor: section.iconColor.replace('text-', '').includes('500') ? `var(--${section.iconColor.replace('text-', '').replace('-500', '')})` : undefined }}
-            onClick={() => handleSectionClick(section.id)}
-          >
-            <CardContent className="p-0">
-              <div className="flex items-center gap-4 p-4">
-                {/* Ícone */}
-                <div className={cn(
-                  "w-14 h-14 rounded-xl flex items-center justify-center shrink-0",
-                  section.bgColor
-                )}>
-                  <section.icon className={cn("w-7 h-7", section.iconColor)} />
+      {/* Grid de cards */}
+      <div className="mx-auto max-w-6xl p-4 sm:p-6">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {CONFIG_SECTIONS.map((section) => (
+            <Card
+              key={section.id}
+              onClick={() => handleSectionClick(section.id)}
+              className="group relative cursor-pointer overflow-hidden border bg-card shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+            >
+              <CardContent className="p-4 sm:p-5">
+                <div className="flex items-start gap-3">
+                  <div className={cn(
+                    "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ring-1 ring-border/50 transition-transform group-hover:scale-110",
+                    section.bgColor
+                  )}>
+                    <section.icon className={cn("h-5 w-5", section.iconColor)} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-sm font-semibold sm:text-base">
+                      {section.title}
+                    </h3>
+                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
+                      {section.description}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
                 </div>
-                
-                {/* Texto */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-base mb-0.5">{section.title}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {section.description}
-                  </p>
-                </div>
-                
-                {/* Seta */}
-                <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );
