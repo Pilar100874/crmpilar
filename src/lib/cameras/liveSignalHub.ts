@@ -8,6 +8,7 @@ const handlers = new Set<MessageHandler>();
 const heartbeatHandlers = new Set<HeartbeatHandler>();
 const channels = new Map<string, { ch: Channel; ready: Promise<void>; refs: number }>();
 let requestedPingAt = 0;
+let lastHeartbeat: any = null;
 
 function ensureChannel(name: string) {
   const existing = channels.get(name);
@@ -20,6 +21,7 @@ function ensureChannel(name: string) {
   ch.on("broadcast", { event: "msg" }, ({ payload }: any) => {
     if (!payload) return;
     if (payload.type === "coletor-online" && payload.to === "viewers") {
+      lastHeartbeat = payload;
       heartbeatHandlers.forEach((cb) => {
         try { cb(payload); } catch {}
       });
@@ -76,6 +78,9 @@ export function onLiveSignalMessage(handler: MessageHandler) {
 
 export function onLiveSignalHeartbeat(handler: HeartbeatHandler) {
   heartbeatHandlers.add(handler);
+  if (lastHeartbeat && Date.now() - (lastHeartbeat.ts || 0) < 10_000) {
+    try { handler(lastHeartbeat); } catch {}
+  }
   return () => heartbeatHandlers.delete(handler);
 }
 
