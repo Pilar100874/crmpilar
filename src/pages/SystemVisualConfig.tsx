@@ -367,6 +367,90 @@ export default function SystemVisualConfig() {
         </CardContent>
       </Card>
 
+      {/* Layout do Menu Principal (MenuHub) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <LayoutGrid className="h-4 w-4" />
+            Layout do Menu Principal (/menu)
+          </CardTitle>
+          <CardDescription>
+            Escolha como os itens são exibidos na tela inicial do menu principal. Aplicado imediatamente.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {MAIN_MENU_LAYOUT_OPTIONS.map((opt) => {
+              const isSelected = menuLayout === opt.id;
+              const Icon = opt.Icon;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => handleSelectMenuLayout(opt.id)}
+                  className={cn(
+                    "relative text-left rounded-xl border-2 p-3 transition-all hover:shadow-md",
+                    isSelected ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"
+                  )}
+                >
+                  {isSelected && (
+                    <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center z-10">
+                      <Check className="h-3.5 w-3.5" />
+                    </div>
+                  )}
+                  <div className="mb-3 h-24 rounded-lg overflow-hidden bg-muted/40 flex items-center justify-center">
+                    {opt.id === "icons" && (
+                      <div className="grid grid-cols-3 gap-1.5 p-2 w-full h-full">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                          <div key={i} className="rounded-md bg-primary/20 flex items-center justify-center">
+                            <div className="h-2 w-2 rounded bg-primary/70" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {opt.id === "images" && (
+                      <div className="grid grid-cols-2 gap-1.5 p-2 w-full h-full">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                          <div key={i} className="rounded-md bg-gradient-to-br from-primary/40 to-primary/10" />
+                        ))}
+                      </div>
+                    )}
+                    {opt.id === "list" && (
+                      <div className="flex flex-col gap-1 p-2 w-full">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                          <div key={i} className="h-3 rounded bg-primary/20 flex items-center gap-1 px-1">
+                            <div className="h-2 w-2 rounded-sm bg-primary/70" />
+                            <div className="h-1 flex-1 rounded bg-primary/40" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {opt.id === "cinema" && (
+                      <div className="flex flex-col gap-0.5 w-full h-full">
+                        {[0.9, 0.7, 0.5].map((op, i) => (
+                          <div
+                            key={i}
+                            className="flex-1 flex items-center px-2"
+                            style={{ background: `linear-gradient(90deg, hsl(var(--primary)/${op}), hsl(var(--primary)/${op * 0.3}))` }}
+                          >
+                            <div className="h-1.5 w-8 rounded bg-white/80" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Icon className="h-3.5 w-3.5 text-primary" />
+                    <div className="font-semibold text-sm">{opt.title}</div>
+                  </div>
+                  <div className="text-xs text-muted-foreground leading-snug">{opt.description}</div>
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
 
       {/* Splash Screen Video */}
       <Card>
