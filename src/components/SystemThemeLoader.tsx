@@ -139,6 +139,8 @@ export default function SystemThemeLoader() {
 
     // Aplica estilo do menu principal salvo
     applyMainMenuStyle(getCurrentMainMenuStyle());
+    applyMainMenuLayout(getCurrentMainMenuLayout());
+
 
 
 
