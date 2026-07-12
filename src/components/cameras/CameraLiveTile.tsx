@@ -78,7 +78,7 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
         if (noFrameTimer) clearTimeout(noFrameTimer);
         noFrameTimer = setTimeout(() => {
           if (closed || liveReached) return;
-          const msg = "Coletor abriu a conexão mas nenhum frame chegou em 8s. Provável falha no re-encode (HEVC/perfil incompatível), RTSP com credencial errada, ou CPU do Coletor saturada. Atualize o Coletor para v1.7.7+, teste a RTSP no VLC e reduza câmeras simultâneas.";
+          const msg = "Coletor abriu a conexão mas nenhum frame chegou em 8s. Provável falha no re-encode, RTSP com credencial errada, ou CPU do Coletor saturada. Atualize o Coletor para a versão mais recente e teste a RTSP no VLC.";
           log("SEM FRAMES", msg);
           setErro(msg);
           setStatus("erro");
@@ -201,7 +201,7 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
           else detalhes.push("versão do Coletor desconhecida (provavelmente < 1.7.6)");
           if (!coletorServesCamera) detalhes.push("esta câmera NÃO está na lista servida pelo Coletor (verifique filial/ativo)");
           else detalhes.push("Coletor conhece a câmera mas não abriu o stream em 25s — RTSP indisponível, HEVC sem re-encode, ou CPU saturada por muitas câmeras simultâneas");
-          const msg = `Coletor não respondeu ao pedido de stream. ${detalhes.join(" · ")}. Atualize para v1.7.7+, confirme RTSP habilitado (teste no VLC) e reduza câmeras simultâneas se a CPU do Coletor estiver alta.`;
+          const msg = `Coletor não respondeu ao pedido de stream. ${detalhes.join(" · ")}. Atualize o Coletor, confirme RTSP habilitado (teste no VLC) e reduza a resolução/fps se a CPU estiver alta.`;
           log("TIMEOUT", msg);
           setErro(msg);
           setStatus("erro");
