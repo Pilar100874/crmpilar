@@ -1,7 +1,7 @@
 // Live viewer WebRTC: negocia com o Coletor Desktop via canal "webrtc-signal"
 // (Realtime broadcast) e exibe o vídeo H.264 recebido no <video>.
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
   Loader2, Radio, X, Maximize2,
@@ -339,6 +339,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
             {temPtz && <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-medium">PTZ</span>}
             {temAudio && <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-medium">ÁUDIO</span>}
           </DialogTitle>
+          <DialogDescription className="sr-only">Transmissão ao vivo da câmera {cameraNome}</DialogDescription>
         </DialogHeader>
         <div ref={containerRef} className="relative bg-black aspect-video overflow-hidden">
           <video
