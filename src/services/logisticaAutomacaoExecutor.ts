@@ -127,73 +127,68 @@ export async function executarAutomacoesLogistica(
                 automacao_nome: automacao.nome
               });
             }
+          }
         }
 
-        // Handle "disparar_push" - dispara push notification
+        // Contexto comum para ações
+        const wfCtx = {
+          variaveis: { veiculos, automacao: { id: automacao.id, nome: automacao.nome } },
+          estabelecimento_id: estabelecimentoId,
+          workflow_tipo: 'logistica' as const,
+          origem: 'logistica_automacao',
+        };
+
+        // Handle "disparar_push"
         if ((nodeType as string) === 'disparar_push') {
           try {
-            const pushCfg = config as unknown as PushBlockConfig;
-            await executarBlocoPush(pushCfg, {
-              variaveis: { veiculos, automacao: { id: automacao.id, nome: automacao.nome } },
-              workflow_id: automacao.id,
-              workflow_tipo: 'logistica',
-              origem: 'logistica_automacao',
-            });
-          } catch (e) {
-            console.error('[logistica] falha ao disparar push', e);
-          }
+            await executarBlocoPush(config as unknown as PushBlockConfig, { ...wfCtx, workflow_id: automacao.id });
+          } catch (e) { console.error('[logistica] falha ao disparar push', e); }
+        }
 
-        // Handle "enviar_sms" - envia SMS via gateway
+        // Handle "enviar_sms"
         if ((nodeType as string) === 'enviar_sms') {
-          try {
-            await executarBlocoSms(config as any, {
-              variaveis: { veiculos, automacao: { id: automacao.id, nome: automacao.nome } },
-              estabelecimento_id: estabelecimentoId,
-              workflow_tipo: 'logistica',
-              origem: 'logistica_automacao',
-            });
-          } catch (e) {
-            console.error('[logistica] falha ao enviar SMS', e);
-          }
+          try { await executarBlocoSms(config as any, wfCtx); }
+          catch (e) { console.error('[logistica] falha ao enviar SMS', e); }
         }
 
         // Handle "acao_whatsapp"
         if ((nodeType as string) === 'acao_whatsapp') {
-          const telefone = config.usar_telefone_cliente
-            ? (config.telefone || '')
-            : (config.telefone || '');
           try {
-            await executarBlocoWhatsapp({ telefone, mensagem: config.mensagem }, {
-              variaveis: { veiculos, automacao: { id: automacao.id, nome: automacao.nome } },
-              estabelecimento_id: estabelecimentoId,
-              workflow_tipo: 'logistica',
-              origem: 'logistica_automacao',
-            });
-          } catch (e) {
-            console.error('[logistica] falha ao enviar WhatsApp', e);
-          }
+            await executarBlocoWhatsapp(
+              { telefone: config.telefone || '', mensagem: config.mensagem },
+              wfCtx
+            );
+          } catch (e) { console.error('[logistica] falha ao enviar WhatsApp', e); }
         }
 
         // Handle "acao_email"
         if ((nodeType as string) === 'acao_email') {
           try {
-            await executarBlocoEmail({
-              email_destino: config.email_destino,
-              assunto_email: config.assunto_email,
-              corpo_email: config.corpo_email,
-            }, {
-              variaveis: { veiculos, automacao: { id: automacao.id, nome: automacao.nome } },
-              estabelecimento_id: estabelecimentoId,
-              workflow_tipo: 'logistica',
-              origem: 'logistica_automacao',
-            });
-          } catch (e) {
-            console.error('[logistica] falha ao enviar e-mail', e);
-          }
+            await executarBlocoEmail(
+              { email_destino: config.email_destino, assunto_email: config.assunto_email, corpo_email: config.corpo_email },
+              wfCtx
+            );
+          } catch (e) { console.error('[logistica] falha ao enviar e-mail', e); }
+        }
+
+        // Handle "acao_webhook" / "webhook"
+        if ((nodeType as string) === 'acao_webhook' || (nodeType as string) === 'webhook') {
+          try { await executarBlocoWebhook(config as any, wfCtx); }
+          catch (e) { console.error('[logistica] falha no webhook', e); }
+        }
+
+        // Handle "enviar_mensagem_interna" / "acao_mensagem_interna"
+        if ((nodeType as string) === 'enviar_mensagem_interna' || (nodeType as string) === 'acao_mensagem_interna') {
+          try { await executarBlocoMensagemInterna(config as any, wfCtx); }
+          catch (e) { console.error('[logistica] falha na mensagem interna', e); }
+        }
+
+        // Handle "enviar_aviso_sistema" / "acao_aviso_sistema"
+        if ((nodeType as string) === 'enviar_aviso_sistema' || (nodeType as string) === 'acao_aviso_sistema') {
+          try { await executarBlocoAvisoSistema(config as any, wfCtx); }
+          catch (e) { console.error('[logistica] falha no aviso do sistema', e); }
         }
       }
-      }
-    }
     }
 
     // Save markers to database (upsert to avoid duplicates)
