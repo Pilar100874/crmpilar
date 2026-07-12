@@ -241,6 +241,17 @@ export default function PontoEquipamentos() {
     toast.success("Excluído"); setDeleting(null); load();
   };
 
+  const toggleAtivo = async (e: any) => {
+    const novo = !e.ativo;
+    const { error } = await supabase
+      .from("ponto_equipamentos")
+      .update({ ativo: novo })
+      .eq("id", e.id);
+    if (error) return toast.error(error.message);
+    toast.success(novo ? "Equipamento ativado" : "Equipamento desativado");
+    setItems((prev) => prev.map((it) => (it.id === e.id ? { ...it, ativo: novo } : it)));
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
