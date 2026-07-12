@@ -62,6 +62,7 @@ interface TabItem {
 }
 
 const tabItems: TabItem[] = [
+  { id: 'wizard', label: 'Wizard de Setup', icon: Sparkles, description: 'Assistente guiado para configurar tudo passo a passo' },
   { id: 'campaigns', label: 'Campanhas', icon: Target, description: 'Gerenciar campanhas de anúncios' },
   { id: 'reports', label: 'Relatórios', icon: FileBarChart, description: 'Relatórios personalizados' },
   { id: 'alerts', label: 'Alertas', icon: Bell, description: 'Configurar alertas de performance' },
