@@ -1,7 +1,7 @@
 // Live viewer WebRTC: negocia com o Coletor Desktop via canal "webrtc-signal"
 // (Realtime broadcast) e exibe o vídeo H.264 recebido no <video>.
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
   Loader2, Radio, X, Maximize2,
