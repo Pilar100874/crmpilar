@@ -303,9 +303,9 @@ async function execMeta(type: string, cfg: any, cred: any, campaignId: string) {
 }
 
 // -------- Google Ads ----------
-async function execGoogle(type: string, cfg: any, cred: any, campaignId: string) {
-  const developerToken = Deno.env.get('GOOGLE_ADS_DEVELOPER_TOKEN');
-  if (!developerToken) throw new Error('GOOGLE_ADS_DEVELOPER_TOKEN não configurado');
+async function execGoogle(type: string, cfg: any, cred: any, campaignId: string, apps?: any) {
+  const developerToken = apps?.google_ads_developer_token || Deno.env.get('GOOGLE_ADS_DEVELOPER_TOKEN');
+  if (!developerToken) throw new Error('Google Ads Developer Token não configurado (cadastre em Ads > Credenciais de Plataforma)');
   const accessToken = cred?.access_token;
   const customerId = String(cred?.customer_id || '').replace(/-/g, '');
   const loginCustomerId = cred?.login_customer_id ? String(cred.login_customer_id).replace(/-/g, '') : undefined;
