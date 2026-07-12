@@ -154,15 +154,15 @@ const AdsHub: React.FC = () => {
       case 'amazon':
         return <AdsPlatformDashboard platform={currentTab?.platform} />;
       case 'credentials':
-        return <AdsCredentials />;
+      case 'platform-apps':
+      case 'connections':
+        return <AdsConexoes />;
       case 'logs':
         return <AdsLogs />;
       case 'automation':
         return <AdsAutomation />;
       case 'scheduler':
         return <AdsSchedulerConfig />;
-      case 'platform-apps':
-        return <AdsPlatformApps />;
       case 'wizard':
         return <AdsSetupWizard />;
       default:
