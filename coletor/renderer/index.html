@@ -848,6 +848,46 @@
         `/h264Preview_01_sub`,                        // Reolink
       ].map(p => `rtsp://${auth}${host}:${port}${p}`);
     }
+    // Monta a URL que aparece no campo "pronta para copiar" (sem alerts,
+    // mostra vazio se faltar host). Se houver path, usa ela; senão usa
+    // /stream1 como sugestão padrão (mais compatível com TP-Link/Tapo).
+    function _montarUrlVlc(){
+      const full = document.getElementById('rtspFullUrl').value.trim();
+      if (full) return full;
+      const host = document.getElementById('rtspHost').value.trim();
+      if (!host) return '';
+      const port = document.getElementById('rtspPort').value.trim() || '554';
+      const user = document.getElementById('rtspUser').value.trim();
+      const pass = document.getElementById('rtspPass').value;
+      const path = document.getElementById('rtspPath').value.trim() || '/stream1';
+      const auth = user ? `${encodeURIComponent(user)}:${encodeURIComponent(pass)}@` : '';
+      return `rtsp://${auth}${host}:${port}${path.startsWith('/')?'':'/'}${path}`;
+    }
+    function atualizarUrlVlc(){
+      const el = document.getElementById('rtspUrlVlc');
+      const msg = document.getElementById('rtspUrlVlcMsg');
+      if (!el) return;
+      const url = _montarUrlVlc();
+      el.value = url;
+      if (msg) msg.textContent = url
+        ? 'Clique em Copiar ou selecione o texto e Ctrl+C. Cole no VLC em Mídia → Abrir Fluxo de Rede.'
+        : 'Preencha os campos acima ou selecione uma câmera — a URL é atualizada automaticamente.';
+    }
+    async function copiarUrlVlc(){
+      const url = _montarUrlVlc();
+      if (!url) { alert('Preencha host/IP ou a URL completa.'); return; }
+      try {
+        await navigator.clipboard.writeText(url);
+        const msg = document.getElementById('rtspUrlVlcMsg');
+        if (msg) { msg.textContent = '✓ Copiado! Abra o VLC (Ctrl+N) e cole a URL.'; msg.style.color = 'var(--success, #16a34a)'; setTimeout(()=>{ msg.style.color=''; atualizarUrlVlc(); }, 2500); }
+      } catch { const el = document.getElementById('rtspUrlVlc'); el.select(); document.execCommand('copy'); }
+    }
+    function abrirNoVlc(){
+      const url = _montarUrlVlc();
+      if (!url) { alert('Preencha host/IP ou a URL completa.'); return; }
+      // vlc://<url> é reconhecido pelo VLC quando instalado com handler de protocolo
+      window.open('vlc://' + url, '_blank');
+    }
     async function testarRtsp(){
       const urls = _buildRtspUrls();
       if (!urls.length) return;
@@ -863,6 +903,7 @@
           if (r.ok) break; // primeiro sucesso é o que interessa
         }catch(e){ results.push({ url, safe, ok:false, error:String(e.message||e) }); }
       }
+
       const ok = results.find(r => r.ok);
       if (ok){
         box.innerHTML = `
