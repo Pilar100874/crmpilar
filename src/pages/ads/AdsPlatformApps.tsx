@@ -113,7 +113,7 @@ export default function AdsPlatformApps() {
       {fieldGroups.map((g) => (
         <Card key={g.key}>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-md" style={{ backgroundColor: `${g.color}20` }}>
                   <g.Icon className="h-5 w-5" style={{ color: g.color }} />

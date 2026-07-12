@@ -166,7 +166,7 @@ export default function AdsSetupWizard() {
     <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-4xl space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
             <Sparkles className="h-7 w-7 text-primary" /> Wizard de Configuração Ads
           </h1>
           <p className="text-muted-foreground">Siga os 5 passos para deixar o sistema de anúncios rodando ponta-a-ponta.</p>

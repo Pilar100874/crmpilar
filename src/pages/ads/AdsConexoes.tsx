@@ -20,7 +20,7 @@ export default function AdsConexoes() {
       </Alert>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
+        <TabsList className="w-full flex-wrap h-auto">
           <TabsTrigger value="accounts" className="gap-2">
             <Link2 className="h-4 w-4" /> Contas de Anúncio
           </TabsTrigger>

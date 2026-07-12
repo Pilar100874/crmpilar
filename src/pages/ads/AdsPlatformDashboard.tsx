@@ -181,7 +181,7 @@ export default function AdsPlatformDashboard({ platform: platformProp }: AdsPlat
 
   return (
     <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -189,7 +189,7 @@ export default function AdsPlatformDashboard({ platform: platformProp }: AdsPlat
               <Icon className="h-8 w-8" style={{ color: config.color }} />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">{config.name}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold">{config.name}</h1>
               <p className="text-muted-foreground">
                 {accounts?.length || 0} conta(s) conectada(s)
               </p>
