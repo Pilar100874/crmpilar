@@ -214,21 +214,10 @@ export default function MenuHub() {
       />
       <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-background/90 via-background/70 to-background/95" aria-hidden />
 
-      {!openItem && (
-        <button
-          onClick={toggleTheme}
-          className="absolute top-4 right-4 z-50 h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center hover:bg-accent transition-colors"
-          title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
-          aria-label="Alternar tema"
-        >
-          {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-        </button>
-      )}
+      <div className="max-w-6xl mx-auto">
 
-      <div className="max-w-6xl mx-auto pt-12 sm:pt-0">
-
-        <div className="flex items-end justify-between gap-3 mb-8">
-          <div className="flex items-end gap-3 min-w-0">
+        <div className="flex items-center justify-between gap-4 mb-8 pt-2">
+          <div className="flex items-center gap-3 min-w-0">
             {openItem ? (
               <button
                 onClick={() => setOpenItem(null)}
@@ -249,16 +238,27 @@ export default function MenuHub() {
               <img
                 src={isDarkMode ? logoBranco : logoPreto}
                 alt="Logo"
-                style={{ display: "block", height: "64px", width: "auto" }}
-                className="object-contain"
+                style={{ display: "block", height: "96px", width: "auto" }}
+                className="object-contain sm:!h-32"
               />
             )}
-
           </div>
 
-
-          {!openItem && <AppsHealthIndicator small />}
+          {!openItem && (
+            <div className="flex items-center gap-2 shrink-0">
+              <AppsHealthIndicator small />
+              <button
+                onClick={toggleTheme}
+                className="h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center hover:bg-accent transition-colors"
+                title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
+                aria-label="Alternar tema"
+              >
+                {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
+            </div>
+          )}
         </div>
+
 
 
         {loadingAdmin && !openItem ? (
