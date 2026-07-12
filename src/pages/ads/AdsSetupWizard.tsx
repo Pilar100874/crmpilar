@@ -33,7 +33,7 @@ const steps: Step[] = [
     goto: "/ads/platform-apps",
     cta: "Abrir Apps das Plataformas",
     check: async (estabId) => {
-      const { data } = await supabase.from("ads_platform_apps" as any).select("meta_app_id, google_client_id, tiktok_app_id").eq("estabelecimento_id", estabId).maybeSingle();
+      const { data } = await supabase.from("ads_platform_apps" as any).select("meta_app_id, google_client_id, tiktok_app_id").eq("estabelecimento_id", estabId).maybeSingle() as any;
       return !!(data && (data.meta_app_id || data.google_client_id || data.tiktok_app_id));
     },
     body: (
