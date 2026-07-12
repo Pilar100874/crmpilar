@@ -380,7 +380,7 @@ export default function MenuHub() {
                   <div className="relative z-10 flex items-center justify-between h-full px-6 sm:px-10 py-4">
                     <div className="min-w-0">
                       <span className="block text-[9px] sm:text-[10px] tracking-[0.4em] text-white/70 uppercase mb-1">
-                        Presenting
+                        MENU
                       </span>
                       <span className="font-serif italic text-white text-2xl sm:text-4xl font-normal tracking-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] truncate block">
                         {item.title}
