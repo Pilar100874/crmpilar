@@ -1,5 +1,5 @@
 {
-  "version": "1.7.7",
-  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.7.7/ColetorPilar-Setup.exe",
+  "version": "1.8.0",
+  "downloadUrl": "https://github.com/Pilar100874/crmpilar/releases/download/coletor-v1.8.0/ColetorPilar-Setup.exe",
   "notas": "1.7.6: corrige o ao vivo em câmeras que precisam reencodar (HEVC/perfil incompatível) — o handler de exit do ffmpeg antigo não derruba mais o processo novo de libx264 recém-iniciado."
 }
