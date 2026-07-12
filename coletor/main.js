@@ -298,7 +298,7 @@ ipcMain.handle('test:rtsp', async (_evt, opts) => {
     const args = [
       '-hide_banner', '-loglevel', 'info',
       '-rtsp_transport', transport,
-      '-stimeout', '8000000',           // 8s socket timeout
+      '-rw_timeout', '8000000',         // 8s I/O timeout (substitui -stimeout, que foi removido em builds novos do ffmpeg)
       '-analyzeduration', '3000000',
       '-i', url,
       '-t', '1', '-f', 'null', '-',
