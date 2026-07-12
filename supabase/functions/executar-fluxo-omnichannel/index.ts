@@ -188,6 +188,74 @@ async function executeFlow(
       return await executeNextNode(supabase, flowData, currentNode, context);
     }
 
+    case "enviar_email": {
+      try {
+        const cfg = currentNode.data.config || {};
+        const interp = (s: any) => String(s ?? "").replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_: string, p: string) => {
+          const parts = p.split(".");
+          let v: any = context?.variaveis || context || {};
+          for (const k of parts) v = v?.[k];
+          return v == null ? "" : String(v);
+        });
+        const to = interp(cfg.to || cfg.email_destino || cfg.destinatario);
+        const subject = interp(cfg.subject || cfg.assunto || cfg.assunto_email);
+        const body = interp(cfg.body || cfg.corpo_email || cfg.mensagem);
+        if (to && subject) {
+          await supabase.functions.invoke("send-email", { body: { to, subject, html: body, text: body } });
+        }
+      } catch (e) { console.error("[omnichannel] enviar_email falhou:", e); }
+      return await executeNextNode(supabase, flowData, currentNode, context);
+    }
+
+    case "enviar_mensagem_interna": {
+      try {
+        const cfg = currentNode.data.config || {};
+        const interp = (s: any) => String(s ?? "").replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_: string, p: string) => {
+          const parts = p.split(".");
+          let v: any = context?.variaveis || context || {};
+          for (const k of parts) v = v?.[k];
+          return v == null ? "" : String(v);
+        });
+        const estabelecimento_id = context?.estabelecimento_id;
+        const mensagem = interp(cfg.mensagem || cfg.texto);
+        const titulo = interp(cfg.titulo_conversa || cfg.titulo) || null;
+        if (estabelecimento_id && mensagem) {
+          const { data: conv } = await supabase.from("chat_interno_conversas")
+            .insert({ estabelecimento_id, tipo: "workflow", titulo }).select("id").single();
+          if (conv?.id) {
+            await supabase.from("chat_interno_mensagens").insert({
+              conversa_id: conv.id, conteudo: mensagem, tipo: "sistema",
+              metadata: { workflow_tipo: "omnichannel", origem: "omnichannel_flow" },
+            });
+          }
+        }
+      } catch (e) { console.error("[omnichannel] enviar_mensagem_interna falhou:", e); }
+      return await executeNextNode(supabase, flowData, currentNode, context);
+    }
+
+    case "enviar_aviso_sistema": {
+      try {
+        const cfg = currentNode.data.config || {};
+        const interp = (s: any) => String(s ?? "").replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_: string, p: string) => {
+          const parts = p.split(".");
+          let v: any = context?.variaveis || context || {};
+          for (const k of parts) v = v?.[k];
+          return v == null ? "" : String(v);
+        });
+        await supabase.from("avisos_sistema").insert({
+          estabelecimento_id: context?.estabelecimento_id,
+          titulo: interp(cfg.titulo),
+          mensagem: interp(cfg.mensagem),
+          tipo: cfg.tipo || "info",
+          destinatarios_tipo: cfg.destinatarios_tipo || "todos",
+          destinatarios_ids: cfg.destinatarios_ids || null,
+          destinatarios_roles: cfg.destinatarios_roles || null,
+          ativo: true,
+        });
+      } catch (e) { console.error("[omnichannel] enviar_aviso_sistema falhou:", e); }
+      return await executeNextNode(supabase, flowData, currentNode, context);
+    }
+
     default:
       console.log("Tipo de nó não implementado:", currentNode.data.type);
       return { success: true, message: "Nó não implementado" };
