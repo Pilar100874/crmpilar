@@ -342,6 +342,47 @@
         <div id="equips"><div class="empty">Carregando…</div></div>
       </div>
 
+      <!-- Testar RTSP -->
+      <div class="card">
+        <div class="card-title"><span class="ico">🎥</span> Testar RTSP (mesma engine do "Ao Vivo")</div>
+        <p class="muted" style="margin:0 0 10px; font-size:12px;">
+          Simula exatamente o que o coletor faz para transmitir "Ao Vivo": abre o RTSP via ffmpeg por 1s e reporta
+          codec, resolução ou o erro específico (401, 404, timeout, HEVC…). Também substitui o teste no VLC.
+        </p>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px;">
+          <div><label style="font-size:11px;color:var(--text-2);font-weight:600;">Host / IP</label>
+            <input id="rtspHost" placeholder="192.168.68.106" style="width:100%;padding:8px 10px;border:1px solid var(--stroke);border-radius:8px;margin-top:4px;"></div>
+          <div><label style="font-size:11px;color:var(--text-2);font-weight:600;">Porta</label>
+            <input id="rtspPort" value="554" style="width:100%;padding:8px 10px;border:1px solid var(--stroke);border-radius:8px;margin-top:4px;"></div>
+          <div><label style="font-size:11px;color:var(--text-2);font-weight:600;">Usuário</label>
+            <input id="rtspUser" placeholder="admin" style="width:100%;padding:8px 10px;border:1px solid var(--stroke);border-radius:8px;margin-top:4px;"></div>
+          <div><label style="font-size:11px;color:var(--text-2);font-weight:600;">Senha</label>
+            <input id="rtspPass" type="password" style="width:100%;padding:8px 10px;border:1px solid var(--stroke);border-radius:8px;margin-top:4px;"></div>
+          <div style="grid-column:1/-1;"><label style="font-size:11px;color:var(--text-2);font-weight:600;">Caminho (path) — deixe em branco para tentar os mais comuns</label>
+            <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+              <input id="rtspPath" placeholder="/stream1 · /cam/realmonitor?channel=1&subtype=1 · /Streaming/Channels/102" style="flex:1;min-width:220px;padding:8px 10px;border:1px solid var(--stroke);border-radius:8px;">
+              <select id="rtspTransport" style="padding:8px 10px;border:1px solid var(--stroke);border-radius:8px;">
+                <option value="tcp">TCP</option><option value="udp">UDP</option>
+              </select>
+              <button class="btn" style="background:var(--brand);color:#fff;" onclick="testarRtsp()">▶ Testar</button>
+            </div>
+          </div>
+          <div style="grid-column:1/-1;"><label style="font-size:11px;color:var(--text-2);font-weight:600;">— OU cole a URL RTSP completa —</label>
+            <input id="rtspFullUrl" placeholder="rtsp://admin:senha@192.168.0.10:554/stream1" style="width:100%;padding:8px 10px;border:1px solid var(--stroke);border-radius:8px;margin-top:4px;font-family:monospace;">
+          </div>
+        </div>
+        <div id="rtspResult" style="margin-top:12px;"></div>
+        <details style="margin-top:8px;">
+          <summary style="cursor:pointer; font-size:12px; color:var(--text-2);">Como testar no VLC (alternativa manual)</summary>
+          <div style="padding:8px 4px; font-size:12px; color:var(--text-2); line-height:1.6;">
+            1. Abra o VLC → <b>Mídia → Abrir Fluxo de Rede</b> (Ctrl+N).<br>
+            2. Cole a URL RTSP no formato <code>rtsp://usuario:senha@ip:554/path</code>.<br>
+            3. Clique <b>Reproduzir</b>. Se o vídeo aparecer, o RTSP está OK — o problema é do coletor/PC (firewall, HEVC, versão).<br>
+            4. Se der erro no VLC, o problema é da câmera (RTSP desabilitado, path errado, credencial ou HEVC).
+          </div>
+        </details>
+      </div>
+
       <!-- Câmeras -->
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:8px; flex-wrap:wrap;">
@@ -350,6 +391,7 @@
         </div>
         <div id="cameras"><div class="empty">Carregando…</div></div>
       </div>
+
 
       <!-- Modal descoberta -->
       <div id="discoverModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,.55); z-index:9999; align-items:flex-start; justify-content:center; padding:40px 16px; overflow:auto;">
