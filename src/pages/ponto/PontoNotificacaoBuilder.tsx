@@ -326,39 +326,31 @@ function PontoNotificacaoBuilderContent() {
 
   const addValidatedEdge = useCallback((c: Connection, notifyDuplicate = true) => {
     if (!c.source || !c.target || c.source === c.target) return false;
-    const currentEdges = getExistingNodeEdges(edgesRef.current);
-    const removedOrphans = currentEdges.length !== edgesRef.current.length;
-
-    if (currentEdges.some(e => isSameConnection(e, c))) {
-      if (removedOrphans) {
-        edgesRef.current = currentEdges;
-        setEdges(currentEdges);
+    let accepted = true;
+    setEdges((eds) => {
+      if (eds.some((e) => isSameConnection(e, c))) return eds;
+      if (!isSingleEdgePerHandleAllowed(c, eds)) {
+        if (notifyDuplicate) toast.error(SINGLE_OUTPUT_TOAST);
+        accepted = false;
+        return eds;
       }
-      return true;
-    }
-
-    if (!isSingleEdgePerHandleAllowed(c, currentEdges)) {
-      if (notifyDuplicate) toast.error(SINGLE_OUTPUT_TOAST);
-      return false;
-    }
-
-    const edge = {
-      ...c,
-      id: `e-${c.source}-${c.sourceHandle || "o"}-${c.target}-${c.targetHandle || "t"}-${Date.now()}`,
-      type: "smoothstep",
-      markerEnd: { type: MarkerType.ArrowClosed },
-      animated: true,
-      label: c.sourceHandle || undefined,
-    } as Edge;
-    const nextEdges = addEdge(edge, currentEdges);
-    edgesRef.current = nextEdges;
-    setEdges(nextEdges);
-    return true;
-  }, [getExistingNodeEdges, isSameConnection, setEdges]);
+      const edge = {
+        ...c,
+        id: `e-${c.source}-${c.sourceHandle || "o"}-${c.target}-${c.targetHandle || "t"}-${Date.now()}`,
+        type: "smoothstep",
+        markerEnd: { type: MarkerType.ArrowClosed },
+        animated: true,
+        label: c.sourceHandle || undefined,
+      } as Edge;
+      return addEdge(edge, eds);
+    });
+    return accepted;
+  }, [isSameConnection, setEdges]);
 
   const onConnect = useCallback((c: Connection) => {
     connectSucceededRef.current = addValidatedEdge(c);
   }, [addValidatedEdge]);
+
 
   const getPointerPoint = useCallback((event: any) => {
     const touch = event?.changedTouches?.[0] || event?.touches?.[0];
