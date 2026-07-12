@@ -164,17 +164,19 @@ export default function AdsSetupWizard() {
 
   return (
     <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-4xl space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+        <div className="min-w-0">
           <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-            <Sparkles className="h-7 w-7 text-primary" /> Wizard de Configuração Ads
+            <Sparkles className="h-6 w-6 sm:h-7 sm:w-7 text-primary shrink-0" />
+            <span className="truncate">Wizard de Configuração Ads</span>
           </h1>
-          <p className="text-muted-foreground">Siga os 5 passos para deixar o sistema de anúncios rodando ponta-a-ponta.</p>
+          <p className="text-sm sm:text-base text-muted-foreground">Siga os 5 passos para deixar o sistema de anúncios rodando ponta-a-ponta.</p>
         </div>
-        <Button variant="outline" onClick={recheck} disabled={checking}>
+        <Button variant="outline" onClick={recheck} disabled={checking} className="w-full sm:w-auto shrink-0">
           {checking && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Reverificar
         </Button>
       </div>
+
 
       <Card>
         <CardContent className="pt-6 space-y-3">
