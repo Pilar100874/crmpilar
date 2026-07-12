@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, Trash2, Save, Paintbrush, Video, Play, Pause, Palette, RotateCcw, LayoutGrid, Check, PanelLeft, Image as ImageIcon, List as ListIcon, Film } from "lucide-react";
-import { hexToHslString, hslStringToHex, applyPrimaryColor, applyVisualPreset, getCurrentVisualPreset, VISUAL_PRESETS, type VisualPreset, applyMainMenuStyle, getCurrentMainMenuStyle, MAIN_MENU_STYLES, type MainMenuStyle, applyMainMenuLayout, getCurrentMainMenuLayout, type MainMenuLayout } from "@/components/SystemThemeLoader";
+import { ArrowLeft, Upload, Trash2, Save, Paintbrush, Video, Play, Pause, Palette, RotateCcw, LayoutGrid, Check, PanelLeft, Image as ImageIcon, List as ListIcon, Film, Monitor, Tablet, Smartphone } from "lucide-react";
+import { hexToHslString, hslStringToHex, applyPrimaryColor, applyVisualPreset, getCurrentVisualPreset, VISUAL_PRESETS, type VisualPreset, applyMainMenuStyle, getCurrentMainMenuStyle, MAIN_MENU_STYLES, type MainMenuStyle, applyMainMenuLayout, getCurrentMainMenuLayout, type MainMenuLayout, type DeviceKind, getDeviceKind, setPerDevice } from "@/components/SystemThemeLoader";
 
 
 import { Button } from "@/components/ui/button";
