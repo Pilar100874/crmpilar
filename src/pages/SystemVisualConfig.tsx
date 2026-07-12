@@ -367,7 +367,8 @@ export default function SystemVisualConfig() {
         </CardContent>
       </Card>
 
-      {/* Layout do Menu Principal (MenuHub) */}
+      {/* Layout do Menu Principal (MenuHub) - só aparece quando o estilo "Botões na Tela" está ativo */}
+      {menuStyle === "buttons" && (
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
@@ -426,15 +427,9 @@ export default function SystemVisualConfig() {
                       </div>
                     )}
                     {opt.id === "cinema" && (
-                      <div className="flex flex-col gap-0.5 w-full h-full">
-                        {[0.9, 0.7, 0.5].map((op, i) => (
-                          <div
-                            key={i}
-                            className="flex-1 flex items-center px-2"
-                            style={{ background: `linear-gradient(90deg, hsl(var(--primary)/${op}), hsl(var(--primary)/${op * 0.3}))` }}
-                          >
-                            <div className="h-1.5 w-8 rounded bg-white/80" />
-                          </div>
+                      <div className="flex flex-col gap-1 p-2 w-full h-full">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                          <div key={i} className="flex-1 rounded bg-gradient-to-r from-primary/60 via-primary/30 to-primary/10" />
                         ))}
                       </div>
                     )}
@@ -450,6 +445,7 @@ export default function SystemVisualConfig() {
           </div>
         </CardContent>
       </Card>
+      )}
 
 
       {/* Splash Screen Video */}
