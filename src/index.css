@@ -905,43 +905,7 @@ All colors MUST be HSL.
 
 /* dark = padrão atual, já definido no :root */
 
-html[data-main-menu-style="light"] {
-  --sidebar-background: 0 0% 100%;
-  --sidebar-foreground: 220 15% 20%;
-  --sidebar-accent: 210 20% 94%;
-  --sidebar-accent-foreground: 220 15% 15%;
-  --sidebar-border: 220 13% 88%;
-}
-html.dark[data-main-menu-style="light"] {
-  --sidebar-background: 0 0% 98%;
-  --sidebar-foreground: 220 15% 20%;
-  --sidebar-accent: 210 20% 92%;
-  --sidebar-accent-foreground: 220 15% 15%;
-  --sidebar-border: 220 13% 85%;
-}
-
-html[data-main-menu-style="brand"] {
-  --sidebar-background: var(--primary);
-  --sidebar-foreground: 0 0% 100%;
-  --sidebar-accent: var(--primary-glow);
-  --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-border: var(--primary-glow);
-  --sidebar-primary: 0 0% 100%;
-  --sidebar-primary-foreground: var(--primary);
-}
-
-html[data-main-menu-style="glass"] {
-  --sidebar-background: 220 25% 12%;
-  --sidebar-foreground: 0 0% 98%;
-  --sidebar-accent: 220 20% 22%;
-  --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-border: 220 20% 25%;
-}
-html[data-main-menu-style="glass"] .bg-sidebar {
-  background-color: hsl(var(--sidebar-background) / 0.7) !important;
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-}
+/* (estilos light/brand/glass removidos — apenas Tradicional e Botões) */
 
 /* ---- Buttons: tiles grandes tipo touch (ideal p/ tablet e celular) ---- */
 html[data-main-menu-style="buttons"] {
@@ -986,38 +950,6 @@ html[data-main-menu-style="buttons"] .bg-sidebar .bg-sidebar-primary {
   box-shadow: 0 4px 14px hsl(var(--primary) / 0.45);
 }
 
-/* ---- Outline: itens com contorno (visual leve, minimalista) ---- */
-html[data-main-menu-style="outline"] {
-  --sidebar-background: 0 0% 100%;
-  --sidebar-foreground: 220 15% 20%;
-  --sidebar-accent: 210 20% 96%;
-  --sidebar-accent-foreground: 220 15% 15%;
-  --sidebar-border: 220 13% 85%;
-}
-html.dark[data-main-menu-style="outline"] {
-  --sidebar-background: 220 20% 10%;
-  --sidebar-foreground: 0 0% 95%;
-  --sidebar-accent: 220 18% 18%;
-  --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-border: 220 15% 28%;
-}
-html[data-main-menu-style="outline"] .bg-sidebar button[title],
-html[data-main-menu-style="outline"] .bg-sidebar a[title] {
-  border: 1px solid hsl(var(--sidebar-border));
-  border-radius: 0.75rem !important;
-  background: transparent;
-  transition: border-color .15s ease, background .15s ease;
-}
-html[data-main-menu-style="outline"] .bg-sidebar button[title]:hover,
-html[data-main-menu-style="outline"] .bg-sidebar a[title]:hover {
-  border-color: hsl(var(--primary));
-  background: hsl(var(--primary) / 0.08);
-}
-html[data-main-menu-style="outline"] .bg-sidebar .bg-sidebar-primary {
-  border-color: hsl(var(--primary)) !important;
-  background: hsl(var(--primary) / 0.15) !important;
-  color: hsl(var(--primary)) !important;
-}
 
 
 
