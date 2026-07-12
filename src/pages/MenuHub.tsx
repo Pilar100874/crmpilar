@@ -201,13 +201,6 @@ export default function MenuHub() {
   const items = openItem?.subItems ?? rootItems;
   const title = openItem?.title ?? "Menu Principal";
 
-  const styleOptions: { id: MenuStyle; label: string; Icon: typeof LayoutGrid }[] = [
-    { id: "icons", label: "Ícones", Icon: LayoutGrid },
-    { id: "images", label: "Imagens", Icon: ImageIcon },
-    { id: "list", label: "Lista", Icon: List },
-    { id: "cinema", label: "Cinema", Icon: Film },
-
-  ];
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-10">
