@@ -441,8 +441,8 @@ function PontoNotificacaoBuilderContent() {
     setNodes(ns => [...ns, node]);
     if (connectFrom) {
       const connection: Connection = connectFrom.handleType === "target"
-        ? { source: newId, target: connectFrom.id, targetHandle: connectFrom.handle ?? null }
-        : { source: connectFrom.id, sourceHandle: connectFrom.handle ?? null, target: newId };
+        ? { source: newId, sourceHandle: null, target: connectFrom.id, targetHandle: connectFrom.handle ?? null }
+        : { source: connectFrom.id, sourceHandle: connectFrom.handle ?? null, target: newId, targetHandle: null };
       setEdges(es => addEdge(makeWorkflowEdge(connection), getExistingNodeEdges(es)));
     }
     setSelected(node);
