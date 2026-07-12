@@ -40,6 +40,8 @@ import imgCompartilharTela from "@/assets/menu/compartilhar-tela.jpg";
 import imgAtalhos from "@/assets/menu/atalhos.jpg";
 import imgAdmin from "@/assets/menu/admin.jpg";
 import cinemaBg from "@/assets/menu-real/cinema-bg.jpg";
+import logoBranco from "@/assets/logo_branco.png";
+import logoPreto from "@/assets/logo_preto.png";
 
 const IMAGE_MAP: Record<string, string> = {
   Dashboards: imgDashboards, Clientes: imgFunil, Atendimento: imgChats,
@@ -236,12 +238,27 @@ export default function MenuHub() {
             ) : null}
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline gap-3 flex-wrap">
-                <h1 className="font-serif text-4xl sm:text-6xl font-normal leading-[1] tracking-[-0.02em] text-foreground">
-                  <span className="italic font-light">{title.split(" ")[0]}</span>
-                  {title.includes(" ") && (
-                    <span className="italic font-medium text-primary"> {title.split(" ").slice(1).join(" ")}</span>
-                  )}
-                </h1>
+                {openItem ? (
+                  <h1 className="font-serif text-4xl sm:text-6xl font-normal leading-[1] tracking-[-0.02em] text-foreground">
+                    <span className="italic font-light">{title.split(" ")[0]}</span>
+                    {title.includes(" ") && (
+                      <span className="italic font-medium text-primary"> {title.split(" ").slice(1).join(" ")}</span>
+                    )}
+                  </h1>
+                ) : (
+                  <img
+                    src={logoBranco}
+                    alt="Logo"
+                    className="h-12 sm:h-16 w-auto object-contain dark:block hidden"
+                  />
+                )}
+                {!openItem && (
+                  <img
+                    src={logoPreto}
+                    alt="Logo"
+                    className="h-12 sm:h-16 w-auto object-contain dark:hidden block"
+                  />
+                )}
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="h-px w-4 bg-primary/70" aria-hidden />
                   <span className="text-[10px] sm:text-xs font-medium tracking-[0.3em] text-primary/90 uppercase">
@@ -380,7 +397,7 @@ export default function MenuHub() {
                   <div className="relative z-10 flex items-center justify-between h-full px-6 sm:px-10 py-4">
                     <div className="min-w-0">
                       <span className="block text-[9px] sm:text-[10px] tracking-[0.4em] text-white/70 uppercase mb-1">
-                        Presenting
+                        MENU
                       </span>
                       <span className="font-serif italic text-white text-2xl sm:text-4xl font-normal tracking-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] truncate block">
                         {item.title}
