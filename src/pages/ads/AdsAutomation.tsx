@@ -20,6 +20,7 @@ import {
   ZoomIn, ZoomOut, Maximize2, X, Blocks, Minimize2, Copy
 } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { AdsAutomationTemplates } from "@/components/ads/AdsAutomationTemplates";
 import {
   ReactFlow,
   MiniMap,
