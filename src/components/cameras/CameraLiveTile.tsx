@@ -74,12 +74,16 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
         // Heartbeat do coletor
         if (payload.type === "coletor-online" && payload.to === "viewers") {
           coletorSeenAt = Date.now();
-          if (Array.isArray(payload.cameras) && payload.cameras.includes(cameraId)) {
-            coletorServesCamera = true;
+          coletorVersao = payload.versao || payload.version || null;
+          if (Array.isArray(payload.cameras)) {
+            coletorCameras = payload.cameras;
+            if (payload.cameras.includes(cameraId)) coletorServesCamera = true;
           }
+          log("heartbeat coletor", { versao: coletorVersao, servesCamera: coletorServesCamera, totalCams: coletorCameras.length });
           return;
         }
         if (payload.to !== viewerId) return;
+        log("msg do coletor", payload.type);
         if (payload.type === "offer") {
           // Dedupe: o mesmo offer pode chegar em múltiplos canais (plain + filial).
           // Só processa se ainda estivermos em "stable" (antes de setRemoteDescription).
