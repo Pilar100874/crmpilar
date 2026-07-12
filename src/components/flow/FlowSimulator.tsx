@@ -4854,6 +4854,21 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 </button>
               </div>
             )}
+            <button
+              type="button"
+              onClick={() => {
+                setRealMode((v) => {
+                  const nv = !v;
+                  toast[nv ? "warning" : "info"](nv ? "Modo Real ativado: webhooks e ações vão disparar de verdade" : "Modo Real desativado");
+                  return nv;
+                });
+              }}
+              title={realMode ? "Modo Real ativo — clicar desativa" : "Ativar Modo Real (dispara webhooks/ações de verdade)"}
+              className={`inline-flex items-center gap-1 h-8 px-3 rounded-full text-[11px] font-semibold border transition-colors shrink-0 ${realMode ? "bg-red-500 text-white border-red-600 hover:bg-red-600" : "bg-white/10 text-white border-white/20 hover:bg-white/20"}`}
+            >
+              <Zap className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{realMode ? "Modo Real" : "Simulação"}</span>
+            </button>
             <Button size="sm" variant="outline" onClick={handleReset} className="bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-full shrink-0 h-8 w-8 sm:w-auto sm:px-3 p-0" title="Reiniciar simulação">
               <RotateCcw className="w-4 h-4" />
               <span className="hidden sm:inline sm:ml-2">Reiniciar</span>
