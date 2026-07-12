@@ -349,6 +349,15 @@
           Simula exatamente o que o coletor faz para transmitir "Ao Vivo": abre o RTSP via ffmpeg por 1s e reporta
           codec, resolução ou o erro específico (401, 404, timeout, HEVC…). Também substitui o teste no VLC.
         </p>
+        <div style="display:flex; gap:8px; align-items:end; margin-bottom:10px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:240px;">
+            <label style="font-size:11px;color:var(--text-2);font-weight:600;">Preencher a partir de uma câmera já cadastrada</label>
+            <select id="rtspPickCam" onchange="preencherRtspDeCam()" style="width:100%;padding:8px 10px;border:1px solid var(--stroke);border-radius:8px;margin-top:4px;">
+              <option value="">— carregando câmeras… —</option>
+            </select>
+          </div>
+          <button class="btn" onclick="recarregarCamerasTeste()" style="background:var(--stroke);color:var(--text);">↻ Recarregar</button>
+        </div>
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px;">
           <div><label style="font-size:11px;color:var(--text-2);font-weight:600;">Host / IP</label>
             <input id="rtspHost" placeholder="192.168.68.106" style="width:100%;padding:8px 10px;border:1px solid var(--stroke);border-radius:8px;margin-top:4px;"></div>
