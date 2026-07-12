@@ -1,76 +1,88 @@
-# Merge avançado no Editor Playground
 
-## O que vai mudar
+# Ads: Scheduler configurável + Coleta real Meta/Google/TikTok
 
-### 1. Nova sintaxe de template (`src/lib/editores/mergeEngine.ts`)
-Amplia o `renderTemplate` para suportar, além de `{{campo}}`:
+Vou entregar em 3 blocos, todos usando tabelas já existentes (`ads_automacoes`, `ad_accounts`, `ad_insights`, `ads_logs_coleta`, `ad_platforms`) e adicionando o mínimo necessário.
 
-- **Caminhos aninhados**: `{{cliente.nome}}`, `{{pedido.itens.0.descricao}}`
-- **Loops**: `{{#each itens}} ... {{descricao}} — {{valor}} ... {{/each}}` (com `{{@index}}`, `{{@first}}`, `{{@last}}`)
-- **Condicional**: `{{#if valor}} ... {{/if}}` / `{{#unless}}`
-- **Agregações inline**: `{{sum itens.valor}}`, `{{avg itens.valor}}`, `{{count itens}}`, `{{min}}`, `{{max}}`
-- **Fórmulas**: `{{= valor * quantidade * (1 - desconto/100) }}` — avaliador seguro (whitelist de operadores + Math.*)
-- **Formatação**: `{{moeda valor}}`, `{{data data_venda}}`, `{{numero qtd 2}}`
+## Bloco 1 — Configuração do scheduler (tela + tabela)
 
-Compatível com a sintaxe atual (`{{campo}}` continua funcionando).
+**Nova tabela** `ads_scheduler_config` (uma linha por estabelecimento):
 
-### 2. Merge Builder revisado (`src/components/editores/MergeBuilderDialog.tsx`)
-Duas abas:
+| Campo | Tipo | Uso |
+|---|---|---|
+| `estabelecimento_id` | uuid PK | escopo |
+| `ativo` | bool | liga/desliga geral |
+| `frequencia` | text | `desligado` \| `15min` \| `hora` \| `dia` \| `custom` |
+| `cron_expr` | text | usado quando `frequencia='custom'` (ex `*/30 * * * *`) |
+| `ultima_execucao` | timestamptz | telemetria |
+| `proxima_execucao` | timestamptz | telemetria |
 
-**Aba "Visual"**
-- Tabela principal + alias (já existe)
-- **Novo:** botão "Adicionar relação" → escolhe tabela relacionada, campo local, campo remoto, alias, cardinalidade (1:1 ou 1:N). Ex.: `pedidos` + relação `itens` via `pedidos_ecommerce_itens.pedido_id = pedidos.id` (1:N).
-- Filtros e limite (já existem)
-- Preview do JSON resultante
+**Tela** em `src/pages/ads/AdsSchedulerConfig.tsx` (rota `/ads/scheduler`, adicionada ao menu Ads já existente):
 
-**Aba "SQL"**
-- Textarea SQL livre executada via edge function `execute-merge-query` (nova, ver §4). Suporta apenas `SELECT`.
-- Toggle "Usar SQL em vez do visual".
+- Switch **Ativo**
+- Radio **Frequência**: Desligado / A cada 15 min / A cada hora / 1x por dia / Personalizado
+- Campo cron aparece quando "Personalizado" com validador simples e explicação
+- Bloco "Última execução / Próxima execução" (readonly)
+- Botão **Executar agora** (chama a edge function manualmente)
 
-`MergeConfig` ganha campos:
-```ts
-{ tabela, alias, filtros, limite, calculados,
-  relations?: { alias, tabela, localKey, foreignKey, cardinality: '1:1'|'1:N' }[],
-  sql?: string,
-  mode: 'visual' | 'sql'
-}
-```
+**Cron dinâmico**: um único cron job `ads_scheduler_dispatcher` roda a cada minuto e chama uma edge function `ads-scheduler-dispatcher` que decide, por estabelecimento, se é hora de rodar (compara cron_expr / frequencia com `now()`). Isso evita ter que criar/dropar jobs no pg_cron sempre que o usuário mudar a frequência.
 
-### 3. Executor (`src/lib/editores/runMergeConfig.ts`)
-- Modo `visual`: roda query principal, depois para cada relação faz um `select().in(foreignKey, ids)` e agrupa em memória (evita N+1).
-- Modo `sql`: invoca edge function.
-- Aplica `calculados` (já existe) por linha.
+## Bloco 2 — Coleta real de métricas (Meta + Google + TikTok)
 
-### 4. Edge function `execute-merge-query`
-- Aceita `{ sql, params }`, valida que começa com `SELECT`, bloqueia `;`, `INSERT|UPDATE|DELETE|DROP|ALTER|GRANT|TRUNCATE`.
-- Executa via `supabase.rpc` numa função `public.exec_readonly_sql(sql text)` criada por migration (SECURITY DEFINER, `SET default_transaction_read_only = on`, restrita ao role autenticado + filtro por `estabelecimento_id` do usuário).
-- Retorna `{ rows }`.
+**Credenciais por estabelecimento**: já existe `ad_accounts` (`platform`, `account_id`, `access_token`, `refresh_token`, `estabelecimento_id`, `expires_at`). Vou reutilizar.
 
-### 5. UI do Simulador (`src/components/editores/SimuladorInline.tsx`)
-- Detecta variáveis usadas no template (incluindo caminhos e loops) e mostra árvore navegável do registro atual em vez do painel plano atual.
-- Painel "Sobrescrever" só aparece para campos raiz (compat).
-- Botão "Ver dados brutos" (JSON) para debug.
+**Nova edge function** `coletar-metricas-ads`:
+- Recebe `{ estabelecimento_id }`
+- Para cada `ad_account` ativo do estabelecimento, chama a API oficial:
+  - **Meta**: `GET graph.facebook.com/v19.0/act_<id>/insights?fields=spend,cpc,ctr,impressions,actions,reach,frequency&date_preset=today`
+  - **Google Ads**: `POST googleads.googleapis.com/v18/customers/<id>/googleAds:searchStream` com GAQL de métricas do dia (requer developer token via secret)
+  - **TikTok**: `GET business-api.tiktok.com/open_api/v1.3/report/integrated/get/` com dimensões campaign_id
+- Faz refresh do `access_token` quando `expires_at` está vencido (Meta long-lived, Google refresh_token, TikTok refresh flow)
+- Persiste em `ad_insights` (tabela já existe com 19 colunas) e loga em `ads_logs_coleta`
 
-### 6. UI do Editor (barra do Tiptap)
-- Novo menu "Inserir": lista campos das tabelas configuradas (principal + relações), botão "Inserir loop de {{alias}}", botão "Inserir fórmula".
+**Secrets adicionais que precisarei pedir**:
+- `META_APP_ID`, `META_APP_SECRET` (para refresh long-lived tokens)
+- `GOOGLE_ADS_DEVELOPER_TOKEN`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+- `TIKTOK_APP_ID`, `TIKTOK_APP_SECRET`
 
-## Segurança
-- SQL livre roda só via função `SECURITY DEFINER` read-only, escopada ao `estabelecimento_id` do usuário (WHERE injetado obrigatoriamente ou bloqueio).
-- Fórmulas: parser próprio (sem `new Function` sobre string bruta do usuário; whitelist de tokens numéricos, operadores e `Math.*`).
-- RLS das tabelas continua valendo (query roda como usuário autenticado).
+Os `access_token` / `refresh_token` de cada conta ficam em `ad_accounts` (por estabelecimento) e são obtidos via um fluxo OAuth (fora deste plano — assumo que já existe ou virá em iteração seguinte; hoje `ad_accounts` já tem essas colunas).
 
-## Entregáveis
-1. Migration: `exec_readonly_sql` + grants.
-2. Edge function `execute-merge-query`.
-3. `mergeEngine.ts` reescrito com loops/condicionais/agregações/fórmulas + testes manuais no playground.
-4. `MergeBuilderDialog` com abas Visual/SQL e editor de relações.
-5. `runMergeConfig` com resolução de relações.
-6. `SimuladorInline` com árvore de dados.
-7. Menu "Inserir campos/loops" na toolbar do editor.
+## Bloco 3 — Executor server-side + integração fim-a-fim
 
-## Fora de escopo
-- Editor visual de fórmulas tipo Excel (só textarea com autocomplete simples).
-- Cache de queries.
-- Salvar SQL como "view reutilizável" (fica para depois).
+**Nova edge function** `executar-ads-automacoes`:
+- Recebe `{ estabelecimento_id, dry_run? }`
+- Chama `coletar-metricas-ads` primeiro (garante insights frescos)
+- Busca automações ativas em `ads_automacoes`
+- Porta a lógica do `src/services/adsFlowEngine.ts` para Deno (walk de nodes/edges, avaliação de triggers/conditions/actions)
+- Executa ações reais:
+  - **Pause / Resume / Archive / Activate**: chama a API da plataforma correspondente (Meta `POST /<ad_id>?status=PAUSED`, Google `campaign.status`, TikTok `campaign/update/`)
+  - **Budget increase/decrease / Bid adjust**: idem via API oficial
+  - **Notify / Slack / Aviso**: insert em `avisos_sistema`
+  - **Webhook / Email / Msg interna / SMS / Push**: chama edge functions já existentes (`execute-dynamic-query`, `send-email`, `send-sms`, `send-agent-message`, `send-push`)
+- Loga cada execução em `ads_logs_coleta` com `status`, `payload`, `erro`
 
-Confirma para eu começar a implementar?
+**Dispatcher `ads-scheduler-dispatcher`** (chamado pelo cron a cada minuto):
+- Para cada `ads_scheduler_config` com `ativo=true`, avalia se `now() >= proxima_execucao`
+- Se sim: invoca `executar-ads-automacoes` em background e atualiza `ultima_execucao`/`proxima_execucao`
+
+## Ordem de implementação
+
+1. Migration da tabela `ads_scheduler_config` + índices + RLS + GRANT
+2. Edge functions `ads-scheduler-dispatcher`, `executar-ads-automacoes`, `coletar-metricas-ads`
+3. Cron job (via `insert` tool, não migration) chamando dispatcher a cada minuto
+4. Tela `AdsSchedulerConfig.tsx` + rota + entrada no menu
+5. Extensão do simulador Bot (Modo Real) para e-mail, mensagem interna e aviso — só faz sentido se esses blocos existirem no editor Bot; hoje não existem, então este item é **skip** até que sejam adicionados
+
+## Detalhes técnicos
+
+- Toda comunicação com APIs externas passa pelas edge functions (nunca do browser) por causa de CORS/secrets.
+- Refresh de token faz update em `ad_accounts.access_token` + `expires_at`.
+- Timeout de coleta por plataforma: 20s; falha em uma plataforma não impede as outras.
+- Ações destrutivas (pause/archive) respeitam `dry_run` para permitir teste no botão "Executar agora".
+
+## Perguntas antes de codar
+
+1. **Secrets Meta/Google/TikTok**: você já tem esses tokens de desenvolvedor? Vou precisar cadastrá-los via `add_secret` — cada plataforma exige registro prévio no console da empresa (Meta for Developers, Google Ads API access, TikTok for Business Developers). Confirme quais das 3 posso ativar de imediato — se não tiver alguma, deixo o coletor daquela plataforma stub (sem quebrar) e a gente ativa depois.
+
+2. **OAuth por conta**: como cada anunciante conecta a conta dele? Existe hoje algum fluxo em `/ads/contas` que preencha `ad_accounts.access_token`? Se não existir, esse fluxo é um Bloco 4 separado (grande), fora deste plano.
+
+Aprova este plano? Se sim, me confirme também os itens (1) e (2) acima para eu não travar no meio.

@@ -293,6 +293,53 @@ export type Database = {
           },
         ]
       }
+      ads_scheduler_config: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          cron_expr: string | null
+          estabelecimento_id: string
+          frequencia: string
+          proxima_execucao: string | null
+          ultima_execucao: string | null
+          ultimo_erro: string | null
+          ultimo_status: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          cron_expr?: string | null
+          estabelecimento_id: string
+          frequencia?: string
+          proxima_execucao?: string | null
+          ultima_execucao?: string | null
+          ultimo_erro?: string | null
+          ultimo_status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          cron_expr?: string | null
+          estabelecimento_id?: string
+          frequencia?: string
+          proxima_execucao?: string | null
+          ultima_execucao?: string | null
+          ultimo_erro?: string | null
+          ultimo_status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ads_scheduler_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_business_rules: {
         Row: {
           acao: string
