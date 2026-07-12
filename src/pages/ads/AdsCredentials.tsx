@@ -287,7 +287,12 @@ export default function AdsCredentials() {
                       
                       {credentialFields[selectedPlatform.nome]?.map(field => (
                         <div key={field.key} className="space-y-2">
-                          <Label>{field.label} {field.required && "*"}</Label>
+                          <div className="flex items-center gap-1">
+                            <Label>{field.label} {field.required && "*"}</Label>
+                            {fieldHelp[field.key] && (
+                              <HelpHint title={`Como obter: ${field.label}`} steps={fieldHelp[field.key].steps} link={fieldHelp[field.key].link} />
+                            )}
+                          </div>
                           <div className="relative">
                             <Input
                               type={field.type === "password" && !showSecrets[field.key] ? "password" : "text"}
