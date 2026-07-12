@@ -32,7 +32,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
   const [micOn, setMicOn] = useState(false);
   const micStreamRef = useRef<MediaStream | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
-  const controlChannelsRef = useRef<ReturnType<typeof supabase.channel>[]>([]);
+  const sendControlRef = useRef<((payload: any) => void) | null>(null);
 
   useEffect(() => {
     if (!cameraId) return;
@@ -147,9 +147,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
         releaseChannels = null;
         return;
       }
-      controlChannelsRef.current = [
-        { send: ({ payload }: any) => sendAll(payload) } as ReturnType<typeof supabase.channel>,
-      ];
+      sendControlRef.current = sendAll;
 
       // Ping proativo — Coletor responde com heartbeat imediato
       requestLiveSignalHeartbeat(sendAll, viewerId);
@@ -209,7 +207,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
       try { micStreamRef.current?.getTracks().forEach((t) => t.stop()); } catch {}
       micStreamRef.current = null;
       pcRef.current = null;
-      controlChannelsRef.current = [];
+      sendControlRef.current = null;
       offMsg?.();
       offHeartbeat?.();
       releaseChannels?.();
@@ -259,9 +257,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
 
   // ============ CONTROLES PTZ (ONVIF via Coletor) ============
   const sendControl = useCallback((payload: any) => {
-    for (const ch of controlChannelsRef.current) {
-      try { ch.send({ type: "broadcast", event: "msg", payload }); } catch {}
-    }
+    try { sendControlRef.current?.(payload); } catch {}
   }, []);
 
   const ptzMoveStart = (dir: "up" | "down" | "left" | "right" | "zoom_in" | "zoom_out") => {
