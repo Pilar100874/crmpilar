@@ -33,7 +33,7 @@ import AdsCredentials from './ads/AdsCredentials';
 import AdsLogs from './ads/AdsLogs';
 import AdsAutomation from './ads/AdsAutomation';
 import AdsSchedulerConfig from './ads/AdsSchedulerConfig';
-import AdsPlatformApps from './ads/AdsPlatformApps';
+import AdsConexoes from './ads/AdsConexoes';
 import AdsSetupWizard from './ads/AdsSetupWizard';
 import { AdsSetupStatusBanner, useAdsSetupStatus } from '@/components/ads/AdsSetupStatusBanner';
 
