@@ -40,4 +40,6 @@ contextBridge.exposeInMainWorld('coletor', {
   discoverCameras: (opts) => ipcRenderer.invoke('discover:cameras', opts),
   onDiscoverProgress: (cb) => ipcRenderer.on('discover:progress', (_e, p) => cb(p)),
   createCameras: (items) => ipcRenderer.invoke('discover:create', items),
+  // Teste de RTSP local
+  testRtsp: (opts) => ipcRenderer.invoke('test:rtsp', opts),
 });

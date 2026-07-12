@@ -266,4 +266,68 @@ ipcMain.handle('discover:create', async (evt, items) => {
     return { ok: false, error: String(e.message || e) };
   }
 });
+
+// ─── Teste de RTSP local (usa ffmpeg-static) ────────────────────
+// Reproduz o mesmo que o coletor faz internamente para o "ao vivo":
+// tenta abrir o stream por 1s e reporta codec/resolução ou o erro exato
+// (401, 404, timeout, refused, HEVC não suportado etc).
+const { spawn } = require('child_process');
+let _ffmpegPath = null;
+try { _ffmpegPath = require('ffmpeg-static'); } catch { _ffmpegPath = null; }
+ipcMain.handle('test:rtsp', async (_evt, opts) => {
+  const url = String(opts?.url || '').trim();
+  const transport = opts?.transport === 'udp' ? 'udp' : 'tcp';
+  if (!url || !/^rtsp:\/\//i.test(url)) {
+    return { ok: false, error: 'URL RTSP inválida (deve começar com rtsp://)', log: '' };
+  }
+  if (!_ffmpegPath) return { ok: false, error: 'ffmpeg-static não encontrado no coletor', log: '' };
+  return await new Promise((resolve) => {
+    const args = [
+      '-hide_banner', '-loglevel', 'info',
+      '-rtsp_transport', transport,
+      '-stimeout', '8000000',           // 8s socket timeout
+      '-analyzeduration', '3000000',
+      '-i', url,
+      '-t', '1', '-f', 'null', '-',
+    ];
+    let stderr = '';
+    let done = false;
+    const p = spawn(_ffmpegPath, args, { windowsHide: true });
+    p.stderr.on('data', (d) => {
+      stderr += d.toString();
+      if (stderr.length > 40000) stderr = stderr.slice(-40000);
+    });
+    const kill = setTimeout(() => {
+      try { p.kill('SIGKILL'); } catch {}
+    }, 15000);
+    p.on('error', (e) => {
+      if (done) return; done = true; clearTimeout(kill);
+      resolve({ ok: false, error: `ffmpeg não pôde ser iniciado: ${e.message}`, log: '' });
+    });
+    p.on('close', (code) => {
+      if (done) return; done = true; clearTimeout(kill);
+      const hasStream = /Stream #0/i.test(stderr);
+      const ok = hasStream;
+      // extrai info do vídeo
+      const m = stderr.match(/Stream #0[^\n]*Video:\s*([^\s,]+)[^\n]*?(\d{2,4}x\d{2,4})[^\n]*/i);
+      const info = m ? { codec: m[1], resolucao: m[2] } : null;
+      let error = null;
+      if (!ok) {
+        if (/401\s*Unauthorized/i.test(stderr)) error = 'Usuário ou senha rejeitados pela câmera (401 Unauthorized).';
+        else if (/403\s*Forbidden/i.test(stderr)) error = 'Câmera respondeu 403 Forbidden — conta sem permissão RTSP.';
+        else if (/404\s*Not\s*Found/i.test(stderr)) error = 'Caminho RTSP não existe nesta câmera (404 Not Found). Verifique o path do fabricante.';
+        else if (/Connection refused/i.test(stderr)) error = 'Conexão recusada — a porta RTSP (554) está fechada ou o RTSP está desabilitado na câmera.';
+        else if (/Connection timed out|timeout|timed out/i.test(stderr)) error = 'Timeout — a câmera não respondeu. Verifique IP, rede/VLAN e firewall.';
+        else if (/No route to host/i.test(stderr)) error = 'Sem rota até o host — está em outra rede/VLAN?';
+        else if (/method DESCRIBE failed/i.test(stderr)) error = 'Câmera rejeitou o DESCRIBE do RTSP — credencial errada ou path inválido.';
+        else if (/hevc|h265/i.test(stderr) && !hasStream) error = 'A câmera está transmitindo em HEVC/H.265 e o ffmpeg não conseguiu abrir. Configure o stream secundário em H.264.';
+        else {
+          const tail = stderr.split('\n').map(l => l.trim()).filter(Boolean).slice(-4).join(' | ');
+          error = tail || 'Falha desconhecida ao abrir o stream.';
+        }
+      }
+      resolve({ ok, info, transport, error, log: stderr.slice(-6000) });
+    });
+  });
+});
 // trigger build
