@@ -210,7 +210,10 @@ export default function SystemThemeLoader() {
       }
     })();
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", onResize);
+    };
   }, []);
   return null;
 }
