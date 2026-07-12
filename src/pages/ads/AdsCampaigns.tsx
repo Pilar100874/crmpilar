@@ -261,6 +261,11 @@ export default function AdsCampaigns() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-8">
+                        <button onClick={() => setOnlyFavs(v => !v)} title={onlyFavs ? "Mostrar todas" : "Apenas favoritas"}>
+                          <Star className={`h-4 w-4 ${onlyFavs ? "fill-yellow-400 text-yellow-500" : "text-muted-foreground"}`} />
+                        </button>
+                      </TableHead>
                       <TableHead>Campanha</TableHead>
                       <TableHead>Plataforma</TableHead>
                       <TableHead>Status</TableHead>
