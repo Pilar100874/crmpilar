@@ -377,7 +377,8 @@ function PontoNotificacaoBuilderContent() {
     if (!start || !start.nodeId || !rfInstance) return;
 
     const target = event.target as HTMLElement;
-    const droppedOnPane = target?.classList?.contains("react-flow__pane");
+    const droppedOnPane = !!target?.closest?.(".react-flow__pane") ||
+      (!target?.closest?.(".react-flow__node") && !target?.closest?.(".react-flow__handle"));
     if (!droppedOnPane) return;
 
     if (start.handleType === "source" && !isSingleEdgePerHandleAllowed({ source: start.nodeId, sourceHandle: start.handleId ?? null } as Connection, edgesRef.current)) {
