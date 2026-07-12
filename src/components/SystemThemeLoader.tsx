@@ -93,8 +93,8 @@ export function getCurrentVisualPreset(): VisualPreset {
 }
 
 /* ====================== MAIN MENU STYLE (dark/light/brand/glass) ====================== */
-export type MainMenuStyle = "dark" | "light" | "brand" | "glass";
-export const MAIN_MENU_STYLES: MainMenuStyle[] = ["dark", "light", "brand", "glass"];
+export type MainMenuStyle = "dark" | "light" | "brand" | "glass" | "buttons" | "outline";
+export const MAIN_MENU_STYLES: MainMenuStyle[] = ["dark", "light", "brand", "glass", "buttons", "outline"];
 export const DEFAULT_MAIN_MENU_STYLE: MainMenuStyle = "dark";
 
 export function applyMainMenuStyle(style: MainMenuStyle) {

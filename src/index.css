@@ -943,5 +943,82 @@ html[data-main-menu-style="glass"] .bg-sidebar {
   -webkit-backdrop-filter: blur(14px) saturate(140%);
 }
 
+/* ---- Buttons: tiles grandes tipo touch (ideal p/ tablet e celular) ---- */
+html[data-main-menu-style="buttons"] {
+  --sidebar-background: 220 20% 14%;
+  --sidebar-foreground: 0 0% 98%;
+  --sidebar-accent: 220 18% 22%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 220 18% 22%;
+}
+/* Alarga o rail lateral para caber botões maiores */
+html[data-main-menu-style="buttons"] .bg-sidebar {
+  min-width: 5.5rem;
+}
+@media (min-width: 768px) {
+  html[data-main-menu-style="buttons"] .bg-sidebar {
+    min-width: 6.5rem;
+  }
+}
+/* Botões do menu principal viram tiles com fundo, sombra e cantos grandes */
+html[data-main-menu-style="buttons"] .bg-sidebar button[title],
+html[data-main-menu-style="buttons"] .bg-sidebar a[title] {
+  width: 4rem !important;
+  height: 4rem !important;
+  border-radius: 1rem !important;
+  background: hsl(var(--sidebar-accent) / 0.6);
+  box-shadow: 0 2px 6px hsl(0 0% 0% / 0.25), inset 0 1px 0 hsl(0 0% 100% / 0.05);
+  transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
+}
+html[data-main-menu-style="buttons"] .bg-sidebar button[title]:hover,
+html[data-main-menu-style="buttons"] .bg-sidebar a[title]:hover {
+  transform: translateY(-1px) scale(1.03);
+  background: hsl(var(--sidebar-accent));
+}
+html[data-main-menu-style="buttons"] .bg-sidebar button[title] svg,
+html[data-main-menu-style="buttons"] .bg-sidebar a[title] svg {
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+}
+/* Item ativo com fundo primário e leve glow */
+html[data-main-menu-style="buttons"] .bg-sidebar .bg-sidebar-primary {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow))) !important;
+  box-shadow: 0 4px 14px hsl(var(--primary) / 0.45);
+}
+
+/* ---- Outline: itens com contorno (visual leve, minimalista) ---- */
+html[data-main-menu-style="outline"] {
+  --sidebar-background: 0 0% 100%;
+  --sidebar-foreground: 220 15% 20%;
+  --sidebar-accent: 210 20% 96%;
+  --sidebar-accent-foreground: 220 15% 15%;
+  --sidebar-border: 220 13% 85%;
+}
+html.dark[data-main-menu-style="outline"] {
+  --sidebar-background: 220 20% 10%;
+  --sidebar-foreground: 0 0% 95%;
+  --sidebar-accent: 220 18% 18%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 220 15% 28%;
+}
+html[data-main-menu-style="outline"] .bg-sidebar button[title],
+html[data-main-menu-style="outline"] .bg-sidebar a[title] {
+  border: 1px solid hsl(var(--sidebar-border));
+  border-radius: 0.75rem !important;
+  background: transparent;
+  transition: border-color .15s ease, background .15s ease;
+}
+html[data-main-menu-style="outline"] .bg-sidebar button[title]:hover,
+html[data-main-menu-style="outline"] .bg-sidebar a[title]:hover {
+  border-color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.08);
+}
+html[data-main-menu-style="outline"] .bg-sidebar .bg-sidebar-primary {
+  border-color: hsl(var(--primary)) !important;
+  background: hsl(var(--primary) / 0.15) !important;
+  color: hsl(var(--primary)) !important;
+}
+
+
 
 
