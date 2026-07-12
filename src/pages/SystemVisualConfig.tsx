@@ -261,6 +261,58 @@ export default function SystemVisualConfig() {
         </div>
       </div>
 
+      {/* Seletor de dispositivo alvo — as três seções abaixo salvam a configuração para o dispositivo escolhido */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Monitor className="h-4 w-4" />
+            Aplicar visual para qual dispositivo?
+          </CardTitle>
+          <CardDescription>
+            As configurações de <strong>Estilo, Menu Principal e Layout</strong> abaixo são salvas separadamente por dispositivo.
+            O sistema detecta automaticamente o dispositivo do usuário (Desktop &ge; 1024px, Tablet 768&ndash;1023px, Celular &lt; 768px) e aplica a config correspondente.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-3">
+            {([
+              { id: "desktop" as DeviceKind, label: "Desktop", Icon: Monitor, hint: "≥ 1024px" },
+              { id: "tablet" as DeviceKind, label: "Tablet", Icon: Tablet, hint: "768–1023px" },
+              { id: "mobile" as DeviceKind, label: "Celular", Icon: Smartphone, hint: "< 768px" },
+            ]).map(({ id, label, Icon, hint }) => {
+              const active = targetDevice === id;
+              const isCurrent = getDeviceKind() === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setTargetDevice(id)}
+                  className={cn(
+                    "relative rounded-xl border-2 p-3 flex flex-col items-center gap-1 transition-all hover:shadow-md",
+                    active ? "border-primary ring-2 ring-primary/20 bg-primary/5" : "border-border hover:border-primary/50"
+                  )}
+                >
+                  <Icon className={cn("h-6 w-6", active ? "text-primary" : "text-muted-foreground")} />
+                  <div className="font-semibold text-sm">{label}</div>
+                  <div className="text-[10px] text-muted-foreground">{hint}</div>
+                  {isCurrent && (
+                    <span className="absolute top-1.5 right-1.5 text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/15 text-primary font-semibold">
+                      atual
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {!isCurrentDevice && (
+            <p className="text-xs text-muted-foreground mt-3">
+              Você está editando a config de <strong>{deviceLabel(targetDevice)}</strong>, mas o dispositivo atual é <strong>{deviceLabel(getDeviceKind())}</strong>.
+              As mudanças serão aplicadas quando o sistema for aberto em um {deviceLabel(targetDevice).toLowerCase()}.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Estilo Visual: Menus e Cards */}
       <Card>
         <CardHeader>
