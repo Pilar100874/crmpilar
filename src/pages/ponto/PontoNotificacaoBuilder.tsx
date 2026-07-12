@@ -855,7 +855,6 @@ function PontoNotificacaoBuilderContent() {
           nodesFocusable={!isLocked}
           edgesFocusable={!isLocked}
           elementsSelectable={!isLocked}
-          connectionMode={ConnectionMode.Loose}
           connectionRadius={80}
           connectOnClick={false}
           autoPanOnConnect={false}
