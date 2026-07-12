@@ -75,7 +75,7 @@ export default function AdsHealthScore() {
               <Activity className="h-4 w-4" /> Saúde da conta
             </div>
             <div className={`text-5xl font-bold ${color}`}>{score}<span className="text-2xl text-muted-foreground">/100</span></div>
-            <Progress value={score} className="mt-3 h-2" indicatorClassName={bar} />
+            <Progress value={score} className={`mt-3 h-2 [&>div]:${bar}`} />
           </div>
           <div className="space-y-3">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
