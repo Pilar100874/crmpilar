@@ -54,7 +54,51 @@ const IMAGE_MAP: Record<string, string> = {
   Admin: imgAdmin,
 };
 
-type MenuStyle = "icons" | "images" | "list";
+import realDashboards from "@/assets/menu-real/dashboards.jpg";
+import realClientes from "@/assets/menu-real/clientes.jpg";
+import realAtendimento from "@/assets/menu-real/atendimento.jpg";
+import realCampanhas from "@/assets/menu-real/campanhas.jpg";
+import realVendas from "@/assets/menu-real/vendas.jpg";
+import realAssistente from "@/assets/menu-real/assistente.jpg";
+import realConteudos from "@/assets/menu-real/conteudos.jpg";
+import realEmail from "@/assets/menu-real/email.jpg";
+import realDesenho from "@/assets/menu-real/desenho.jpg";
+import realRelatorios from "@/assets/menu-real/relatorios.jpg";
+import realPonto from "@/assets/menu-real/ponto.jpg";
+import realVeiculos from "@/assets/menu-real/veiculos.jpg";
+import realVisitantes from "@/assets/menu-real/visitantes.jpg";
+import realCameras from "@/assets/menu-real/cameras.jpg";
+import realEditores from "@/assets/menu-real/editores.jpg";
+import realLogistica from "@/assets/menu-real/logistica.jpg";
+import realMarketplaces from "@/assets/menu-real/marketplaces.jpg";
+import realEcommerce from "@/assets/menu-real/ecommerce.jpg";
+import realAds from "@/assets/menu-real/ads.jpg";
+import realRoboPrecos from "@/assets/menu-real/robo-precos.jpg";
+import realTV from "@/assets/menu-real/tv.jpg";
+import realMapaCalor from "@/assets/menu-real/mapa-calor.jpg";
+import realConfiguracoes from "@/assets/menu-real/configuracoes.jpg";
+import realAvisos from "@/assets/menu-real/avisos.jpg";
+import realPerfil from "@/assets/menu-real/perfil.jpg";
+import realCompartilharTela from "@/assets/menu-real/compartilhar-tela.jpg";
+import realAtalhos from "@/assets/menu-real/atalhos.jpg";
+import realAdmin from "@/assets/menu-real/admin.jpg";
+
+const REAL_IMAGE_MAP: Record<string, string> = {
+  Dashboards: realDashboards, Clientes: realClientes, Atendimento: realAtendimento,
+  Campanhas: realCampanhas, Vendas: realVendas, Assistente: realAssistente,
+  Conteúdos: realConteudos, Email: realEmail, Desenho: realDesenho,
+  Relatórios: realRelatorios, "Controle de Ponto": realPonto,
+  "Controle de Veículos": realVeiculos, "Controle de Visitantes": realVisitantes,
+  Câmeras: realCameras, Editores: realEditores, Logística: realLogistica,
+  Marketplaces: realMarketplaces, "E-commerce": realEcommerce, Ads: realAds,
+  "Robô de Preços": realRoboPrecos, TV: realTV, "Mapa de Calor": realMapaCalor,
+  Configurações: realConfiguracoes, Avisos: realAvisos, Perfil: realPerfil,
+  "Compartilhar Tela": realCompartilharTela, "Gerenciar Atalhos": realAtalhos,
+  Admin: realAdmin,
+};
+
+type MenuStyle = "icons" | "images" | "list" | "cinema";
+
 
 const EXTRA_ITEMS: MenuItem[] = [
   { id: "Avisos", title: "Avisos", url: "/avisos", icon: Bell },
