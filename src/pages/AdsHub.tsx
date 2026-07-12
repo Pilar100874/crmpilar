@@ -35,6 +35,7 @@ import AdsAutomation from './ads/AdsAutomation';
 import AdsSchedulerConfig from './ads/AdsSchedulerConfig';
 import AdsPlatformApps from './ads/AdsPlatformApps';
 import AdsSetupWizard from './ads/AdsSetupWizard';
+import { AdsSetupStatusBanner, useAdsSetupStatus } from '@/components/ads/AdsSetupStatusBanner';
 
 // Platform icons (using simple colored divs for now)
 const GoogleIcon = () => (
@@ -89,6 +90,19 @@ const AdsHub: React.FC = () => {
   useEffect(() => {
     fetchEstabelecimento();
   }, []);
+
+  const { done, total, complete } = useAdsSetupStatus(estabelecimentoId);
+
+  // Auto-redirect to wizard on first visit when nothing is configured
+  useEffect(() => {
+    if (!loading && estabelecimentoId && total > 0 && done === 0 && activeTab === 'dashboard') {
+      const seen = localStorage.getItem('ads_wizard_auto_opened');
+      if (!seen) {
+        localStorage.setItem('ads_wizard_auto_opened', '1');
+        setActiveTab('wizard');
+      }
+    }
+  }, [loading, estabelecimentoId, done, total, activeTab]);
 
   const fetchEstabelecimento = async () => {
     try {
@@ -173,6 +187,12 @@ const AdsHub: React.FC = () => {
             Gestão unificada de campanhas e anúncios em múltiplas plataformas
           </p>
         </div>
+
+        {estabelecimentoId && (
+          <AdsSetupStatusBanner estabelecimentoId={estabelecimentoId} onGoToWizard={() => setActiveTab('wizard')} />
+        )}
+
+
 
         <div className="flex-1 overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col lg:flex-row">
@@ -312,6 +332,12 @@ const AdsHub: React.FC = () => {
           {currentTabItem?.description || 'Gestão unificada de campanhas e anúncios em múltiplas plataformas'}
         </p>
       </div>
+
+      {estabelecimentoId && activeTab !== 'wizard' && (
+        <AdsSetupStatusBanner estabelecimentoId={estabelecimentoId} onGoToWizard={() => setActiveTab('wizard')} />
+      )}
+
+
 
       <div className="flex-1 overflow-hidden">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col lg:flex-row">
