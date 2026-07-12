@@ -576,12 +576,12 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             className="pl-9"
           />
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <Button variant="outline" onClick={() => setBulkOpen(true)} className="flex-1 sm:flex-none">
+        <div className="grid grid-cols-1 sm:flex sm:flex-row gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={() => setBulkOpen(true)} className="w-full sm:w-auto justify-center">
             <Plus className="h-4 w-4 mr-2" />
             Cadastro em massa
           </Button>
-          <Button onClick={() => handleOpenDialog()} className="flex-1 sm:flex-none">
+          <Button onClick={() => handleOpenDialog()} className="w-full sm:w-auto justify-center">
             <Plus className="h-4 w-4 mr-2" />
             Novo Veículo
           </Button>
