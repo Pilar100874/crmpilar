@@ -71,6 +71,8 @@ const tabItems: TabItem[] = [
   { id: 'credentials', label: 'Credenciais', icon: Key, description: 'Gerenciar credenciais das plataformas' },
   { id: 'logs', label: 'Logs de Coleta', icon: FileText, description: 'Histórico de coleta de dados' },
   { id: 'automation', label: 'Automações', icon: Zap, description: 'Regras de automação de anúncios' },
+  { id: 'scheduler', label: 'Agendamento', icon: Clock, description: 'Configurar frequência de execução das automações' },
+
 ];
 
 const AdsHub: React.FC = () => {
