@@ -266,10 +266,6 @@ export default function MenuHub() {
 
           {!openItem && <AppsHealthIndicator small />}
         </div>
-          </div>
-
-          <AppsHealthIndicator small />
-        </div>
 
 
         {loadingAdmin && !openItem ? (
