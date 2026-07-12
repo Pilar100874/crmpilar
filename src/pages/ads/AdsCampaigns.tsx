@@ -16,8 +16,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus, Search, Loader2, Megaphone, Play, Pause, MoreVertical,
   TrendingUp, TrendingDown, DollarSign, Eye, Target, MousePointerClick,
-  Facebook, Music2, ShoppingBag, Package, Filter, RefreshCw
+  Facebook, Music2, ShoppingBag, Package, Filter, RefreshCw, Star
 } from "lucide-react";
+import { useAdsFavorites } from "@/hooks/useAdsFavorites";
 import {
   DropdownMenu,
   DropdownMenuContent,
