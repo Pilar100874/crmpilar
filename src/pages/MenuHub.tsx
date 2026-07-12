@@ -242,14 +242,32 @@ export default function MenuHub() {
             </div>
           </div>
 
-          <button
-            onClick={toggleTheme}
-            className="h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center hover:bg-accent transition-colors"
-            title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
-            aria-label="Alternar tema"
-          >
-            {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate("/admin/apps")}
+              className="h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center hover:bg-accent transition-colors"
+              title="Coletor Hub"
+              aria-label="Coletor Hub"
+            >
+              <Monitor className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => navigate("/config/push")}
+              className="h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center hover:bg-accent transition-colors"
+              title="Notificações Push"
+              aria-label="Notificações Push"
+            >
+              <Bell className="h-5 w-5" />
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center hover:bg-accent transition-colors"
+              title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
+              aria-label="Alternar tema"
+            >
+              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
 
         <div className="mb-4 rounded-xl border border-border bg-card px-3 py-2">
