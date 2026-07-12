@@ -87,7 +87,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
             if (closed || liveReached) return;
             setErro("Coletor abriu a conexão, mas nenhum frame de vídeo chegou. Atualize o Coletor e reduza câmeras simultâneas se a CPU estiver alta.");
             setStatus("erro");
-          }, 8_000);
+          }, 15_000);
         }
       };
       pc.oniceconnectionstatechange = () => {

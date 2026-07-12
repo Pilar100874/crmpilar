@@ -74,7 +74,7 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
         videoRef.current.onloadeddata = markLive;
         ev.track.onunmute = markLive;
 
-        // Se em 8s nenhum frame chegar, é stream vazio (encoder/RTSP travado).
+        // Se em 15s nenhum frame chegar, é stream vazio (encoder/RTSP travado).
         if (noFrameTimer) clearTimeout(noFrameTimer);
         noFrameTimer = setTimeout(() => {
           if (closed || liveReached) return;
@@ -82,7 +82,7 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
           log("SEM FRAMES", msg);
           setErro(msg);
           setStatus("erro");
-        }, 8_000);
+        }, 15_000);
       };
       pc.oniceconnectionstatechange = () => {
         log("iceState", pc?.iceConnectionState);
