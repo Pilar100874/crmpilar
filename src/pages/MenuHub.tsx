@@ -260,7 +260,7 @@ export default function MenuHub() {
             </div>
 
             {/* Health indicators - bottom right, above grid */}
-            <div className="absolute bottom-0 right-0">
+            <div className="absolute right-0" style={{ bottom: "-8px" }}>
               <AppsHealthIndicator small />
             </div>
 
