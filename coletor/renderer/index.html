@@ -342,9 +342,23 @@
         <div id="equips"><div class="empty">Carregando…</div></div>
       </div>
 
+      <!-- Câmeras -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:8px; flex-wrap:wrap;">
+          <div class="card-title" style="margin:0"><span class="ico">📹</span> Câmeras cadastradas</div>
+          <button class="btn" style="background:var(--brand); color:#fff;" onclick="abrirDescoberta()">🔍 Descobrir câmeras na rede</button>
+        </div>
+        <div id="cameras"><div class="empty">Carregando…</div></div>
+      </div>
+
       <!-- Testar RTSP -->
       <div class="card">
-        <div class="card-title"><span class="ico">🎥</span> Testar RTSP (mesma engine do "Ao Vivo")</div>
+        <details>
+          <summary style="cursor:pointer; list-style:none; display:flex; align-items:center; gap:8px;">
+            <div class="card-title" style="margin:0"><span class="ico">🎥</span> Testar RTSP (mesma engine do "Ao Vivo")</div>
+            <span style="margin-left:auto; font-size:12px; color:var(--text-2);">clique para expandir ▾</span>
+          </summary>
+          <div style="margin-top:12px;">
         <p class="muted" style="margin:0 0 10px; font-size:12px;">
           Simula exatamente o que o coletor faz para transmitir "Ao Vivo": abre o RTSP via ffmpeg por 1s e reporta
           codec, resolução ou o erro específico (401, 404, timeout, HEVC…). Também substitui o teste no VLC.
@@ -405,16 +419,10 @@
             4. Se der erro no VLC, o problema é da câmera (RTSP desabilitado, path errado, credencial ou HEVC).
           </div>
         </details>
+          </div>
+        </details>
       </div>
 
-      <!-- Câmeras -->
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:8px; flex-wrap:wrap;">
-          <div class="card-title" style="margin:0"><span class="ico">📹</span> Câmeras cadastradas</div>
-          <button class="btn" style="background:var(--brand); color:#fff;" onclick="abrirDescoberta()">🔍 Descobrir câmeras na rede</button>
-        </div>
-        <div id="cameras"><div class="empty">Carregando…</div></div>
-      </div>
 
 
       <!-- Modal descoberta -->
