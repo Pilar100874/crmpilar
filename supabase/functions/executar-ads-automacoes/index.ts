@@ -242,12 +242,14 @@ async function executarAcaoPlataforma(supa: any, type: string, cfg: any, ctx: an
   const { data: plat } = platformName ? { data: null as any } : await supa.from('ad_platforms').select('nome').eq('id', conta.plataforma_id).single();
   const plataforma = platformName || String(plat?.nome || '').toLowerCase();
 
+  const { data: apps } = await supa.from('ads_platform_apps').select('*').eq('estabelecimento_id', ctx.estab).maybeSingle();
+
   try {
     let result: any;
     if (plataforma.includes('meta') || plataforma.includes('facebook')) {
       result = await execMeta(type, cfg, cred, campaignId);
     } else if (plataforma.includes('google')) {
-      result = await execGoogle(type, cfg, cred, campaignId);
+      result = await execGoogle(type, cfg, cred, campaignId, apps);
     } else if (plataforma.includes('tiktok')) {
       result = await execTiktok(type, cfg, cred, campaignId);
     } else {
