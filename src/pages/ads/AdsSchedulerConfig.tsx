@@ -94,7 +94,7 @@ export default function AdsSchedulerConfig() {
   }
 
   return (
-    <div className="container max-w-3xl py-8 space-y-6">
+    <div className="container max-w-3xl py-4 sm:py-6 md:py-8 px-3 sm:px-4 space-y-6">
       <div>
         <h1 className="text-2xl font-semibold flex items-center gap-2"><Clock className="w-6 h-6" /> Agendamento das Automações Ads</h1>
         <p className="text-muted-foreground text-sm mt-1">Controle quando o motor de regras Ads roda automaticamente para coletar métricas e executar as ações configuradas.</p>

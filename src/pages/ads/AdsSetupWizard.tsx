@@ -163,7 +163,7 @@ export default function AdsSetupWizard() {
   const StepIcon = step.icon;
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl space-y-6">
+    <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-4xl space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
