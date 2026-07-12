@@ -125,7 +125,7 @@ function getPushState(): PushState {
   return Notification.permission as PushState;
 }
 
-export function AppsHealthIndicator({ compact = false }: { compact?: boolean }) {
+export function AppsHealthIndicator({ compact = false, floating = false }: { compact?: boolean; floating?: boolean }) {
   const [win, setWin] = useState<Health>({ at: null, ago: null });
   const [and, setAnd] = useState<Health>({ at: null, ago: null });
   const [filiais, setFiliais] = useState<FilialHealth[]>([]);
@@ -158,8 +158,83 @@ export function AppsHealthIndicator({ compact = false }: { compact?: boolean }) 
     ? aggregate(filiais.map((f) => f.state))
     : classify(win.ago);
   const andState = classify(and.ago);
-  const filiaisAtivas = filiais.filter((f) => f.state !== "offline").length;
-  const filiaisComEquip = filiais.filter((f) => f.equipamentos > 0).length;
+
+  const iconClass = floating
+    ? "h-5 w-5 text-foreground/70"
+    : "h-3.5 w-3.5 text-sidebar-foreground/60 group-hover:text-sidebar-foreground/80";
+  const dotClassSize = floating ? "h-2 w-2" : "h-1.5 w-1.5";
+  const tooltipSide = floating ? "bottom" : "right";
+
+  const indicators = (
+    <div className={`flex items-center ${floating ? "gap-3" : "gap-2"}`}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="relative inline-flex items-center gap-1">
+            <Monitor className={iconClass} />
+            <span className={`${dotClassSize} rounded-full ${dotClass(winState)}`} />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side={tooltipSide} className="text-xs max-w-[280px]">
+          <div className="font-semibold">Coletor Windows</div>
+          {filiais.length > 0 ? (
+            <div className="flex flex-col gap-1 max-h-56 overflow-auto">
+              {filiais.map((f) => (
+                <div key={f.id} className="flex items-center gap-1.5">
+                  <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotClass(f.state)}`} />
+                  <span className="truncate">{f.nome}</span>
+                  <span className="text-muted-foreground ml-auto text-[10px] whitespace-nowrap">
+                    {f.equipamentos === 0
+                      ? "sem equipamento"
+                      : f.at
+                      ? new Date(f.at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+                      : "nunca"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-muted-foreground">{label(winState, win.at)}</div>
+          )}
+        </TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="relative inline-flex items-center gap-1">
+            <Smartphone className={iconClass} />
+            <span className={`${dotClassSize} rounded-full ${dotClass(andState)}`} />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side={tooltipSide} className="text-xs">
+          <div className="font-semibold">Pilar Hub (Android)</div>
+          <div className="text-muted-foreground">{label(andState, and.at)}</div>
+        </TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="relative inline-flex items-center gap-1">
+            <Bell className={iconClass} />
+            <span className={`${dotClassSize} rounded-full ${pushDotClass(push)}`} />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side={tooltipSide} className="text-xs">
+          <div className="font-semibold">Notificações Push</div>
+          <div className="text-muted-foreground">{pushLabel(push)}</div>
+        </TooltipContent>
+      </Tooltip>
+    </div>
+  );
+
+  if (floating) {
+    return (
+      <TooltipProvider delayDuration={200}>
+        <div className="flex items-center gap-3 rounded-full bg-card/80 backdrop-blur border border-border px-3 py-2">
+          {indicators}
+        </div>
+      </TooltipProvider>
+    );
+  }
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -175,65 +250,7 @@ export function AppsHealthIndicator({ compact = false }: { compact?: boolean }) 
             Apps
           </span>
         )}
-        <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="relative inline-flex items-center gap-1">
-                <Monitor className="h-3.5 w-3.5 text-sidebar-foreground/60 group-hover:text-sidebar-foreground/80" />
-                <span className={`h-1.5 w-1.5 rounded-full ${dotClass(winState)}`} />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="text-xs max-w-[280px]">
-              <div className="font-semibold">Coletor Windows</div>
-              {filiais.length > 0 ? (
-                <>
-              <div className="flex flex-col gap-1 max-h-56 overflow-auto">
-                    {filiais.map((f) => (
-                      <div key={f.id} className="flex items-center gap-1.5">
-                        <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotClass(f.state)}`} />
-                        <span className="truncate">{f.nome}</span>
-                        <span className="text-muted-foreground ml-auto text-[10px] whitespace-nowrap">
-                          {f.equipamentos === 0
-                            ? "sem equipamento"
-                            : f.at
-                            ? new Date(f.at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
-                            : "nunca"}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="text-muted-foreground">{label(winState, win.at)}</div>
-              )}
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="relative inline-flex items-center gap-1">
-                <Smartphone className="h-3.5 w-3.5 text-sidebar-foreground/60 group-hover:text-sidebar-foreground/80" />
-                <span className={`h-1.5 w-1.5 rounded-full ${dotClass(andState)}`} />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="text-xs">
-              <div className="font-semibold">Pilar Hub (Android)</div>
-              <div className="text-muted-foreground">{label(andState, and.at)}</div>
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="relative inline-flex items-center gap-1">
-                <Bell className="h-3.5 w-3.5 text-sidebar-foreground/60 group-hover:text-sidebar-foreground/80" />
-                <span className={`h-1.5 w-1.5 rounded-full ${pushDotClass(push)}`} />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="text-xs">
-              <div className="font-semibold">Notificações Push</div>
-              <div className="text-muted-foreground">{pushLabel(push)}</div>
-            </TooltipContent>
-          </Tooltip>
-        </div>
+        {indicators}
       </NavLink>
     </TooltipProvider>
   );
