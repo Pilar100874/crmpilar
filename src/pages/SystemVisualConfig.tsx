@@ -24,9 +24,17 @@ export default function SystemVisualConfig() {
   const [isPlaying, setIsPlaying] = useState(true);
   const [primaryHex, setPrimaryHex] = useState("#f97316");
   const [savingColor, setSavingColor] = useState(false);
-  const [visualPreset, setVisualPreset] = useState<VisualPreset>(getCurrentVisualPreset());
-  const [menuStyle, setMenuStyle] = useState<MainMenuStyle>(getCurrentMainMenuStyle());
-  const [menuLayout, setMenuLayout] = useState<MainMenuLayout>(getCurrentMainMenuLayout());
+  const [targetDevice, setTargetDevice] = useState<DeviceKind>(getDeviceKind());
+  const [visualPreset, setVisualPreset] = useState<VisualPreset>(getCurrentVisualPreset(getDeviceKind()));
+  const [menuStyle, setMenuStyle] = useState<MainMenuStyle>(getCurrentMainMenuStyle(getDeviceKind()));
+  const [menuLayout, setMenuLayout] = useState<MainMenuLayout>(getCurrentMainMenuLayout(getDeviceKind()));
+
+  // Ao trocar o dispositivo alvo, atualiza os cartões selecionados para refletir a config daquele dispositivo
+  useEffect(() => {
+    setVisualPreset(getCurrentVisualPreset(targetDevice));
+    setMenuStyle(getCurrentMainMenuStyle(targetDevice));
+    setMenuLayout(getCurrentMainMenuLayout(targetDevice));
+  }, [targetDevice]);
 
   const DEFAULT_HSL = "25 95% 53%";
   const videoInputRef = useRef<HTMLInputElement>(null);
