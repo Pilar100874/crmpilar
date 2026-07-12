@@ -474,7 +474,26 @@ class CameraPump {
 
   _spawnVideo() {
     const rtsp = rtspUrlFor(this.cam);
-    console.log('[pump] video start', this.cam.nome, 'mode=', this.mode, 'udp', this.videoUdpPort, 'pumpVer=', APP_VERSION);
+    // Lê config de vídeo (resolução/fps/bitrate) — ajustável no painel do coletor.
+    let vcfg = { videoHeight: 480, videoFps: 12, videoBitrateKbps: 900 };
+    try {
+      const { loadConfig } = require('./collector');
+      const c = loadConfig();
+      vcfg = {
+        videoHeight: c.videoHeight || 480,
+        videoFps: c.videoFps || 12,
+        videoBitrateKbps: c.videoBitrateKbps || 900,
+      };
+    } catch {}
+    const height = vcfg.videoHeight;
+    const fps = vcfg.videoFps;
+    const bitrate = vcfg.videoBitrateKbps;
+    const maxrate = Math.round(bitrate * 1.2);
+    const gop = Math.max(1, Math.round(fps));
+    // Ajusta o normalizador RTP para o fps escolhido (timestamps consistentes).
+    try { this.videoNormalizer = new RtpNormalizer({ payloadType: 96, clockRate: 90000, fps }); } catch {}
+    console.log('[pump] video start', this.cam.nome, 'mode=', this.mode, 'udp', this.videoUdpPort,
+      'res=', `${height}p@${fps}fps`, 'br=', `${bitrate}k`, 'pumpVer=', APP_VERSION);
     const common = [
       '-rtsp_transport', 'tcp',
       '-timeout', '8000000',
@@ -494,18 +513,18 @@ class CameraPump {
           '-preset', 'ultrafast',
           '-tune', 'zerolatency',
           '-threads', '2',
-          '-vf', 'scale=-2:480,fps=12',
+          '-vf', `scale=-2:${height},fps=${fps}`,
           '-profile:v', 'baseline',
           '-level', '3.1',
           '-pix_fmt', 'yuv420p',
-          '-g', '12',
-          '-keyint_min', '12',
+          '-g', String(gop),
+          '-keyint_min', String(gop),
           '-sc_threshold', '0',
           '-bf', '0',
-          '-x264-params', 'keyint=12:min-keyint=12:scenecut=0:repeat-headers=1:force-cfr=1',
-          '-b:v', '900k',
-          '-maxrate', '1100k',
-          '-bufsize', '900k',
+          '-x264-params', `keyint=${gop}:min-keyint=${gop}:scenecut=0:repeat-headers=1:force-cfr=1`,
+          '-b:v', `${bitrate}k`,
+          '-maxrate', `${maxrate}k`,
+          '-bufsize', `${bitrate}k`,
           '-force_key_frames', 'expr:gte(t,n_forced*1)',
         ];
     const args = [
