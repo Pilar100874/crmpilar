@@ -264,6 +264,23 @@ async function executarRegra(
         }
         break;
 
+      case 'enviar_sms':
+        // Envia SMS (fire-and-forget para não travar o cálculo do orçamento)
+        try {
+          const { executarBlocoSms } = await import('@/lib/smsExecutor');
+          executarBlocoSms(configBloco as any, {
+            variaveis: { orcamento, cliente: orcamento.cliente, regra: regra.nome },
+            workflow_tipo: 'vendas',
+            origem: 'automacao_vendas',
+          }).then((r) => {
+            if (!r.ok) console.warn('[vendas] SMS falhou:', r.erro);
+          }).catch((e) => console.error('[vendas] SMS erro:', e));
+          resultado.detalhes.push(`${regra.nome}: SMS disparado`);
+        } catch (e) {
+          console.error('[vendas] SMS erro', e);
+        }
+        break;
+
       default:
         console.warn(`Tipo de bloco não implementado: ${tipoBlo}`);
     }

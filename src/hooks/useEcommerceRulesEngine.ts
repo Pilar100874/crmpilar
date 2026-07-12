@@ -102,6 +102,26 @@ export function useEcommerceRulesEngine(cartContext?: CartContext) {
             descontos.push(actionEntry);
           } else if (nodeType === "acao_desconto_pix" || nodeType === "acao_desconto_boleto" || nodeType === "acao_parcelas_extras" || nodeType === "acao_regra_pagamento") {
             pagamentos.push(actionEntry);
+          } else if (nodeType === "acao_disparar_push") {
+            // Side-effect: dispara push (fire-and-forget)
+            import("@/lib/pushExecutor").then(({ executarBlocoPush }) => {
+              executarBlocoPush(config as any, {
+                variaveis: { carrinho: cartContext, regra: rule.nome },
+                workflow_id: rule.id,
+                workflow_tipo: "marketing",
+                origem: "ecommerce_rules",
+              }).catch((e) => console.error("[ecom-rules] push falhou:", e));
+            });
+          } else if (nodeType === "acao_enviar_sms") {
+            // Side-effect: envia SMS (fire-and-forget)
+            import("@/lib/smsExecutor").then(({ executarBlocoSms }) => {
+              executarBlocoSms(config as any, {
+                variaveis: { carrinho: cartContext, regra: rule.nome },
+                estabelecimento_id: estabId,
+                workflow_tipo: "marketing",
+                origem: "ecommerce_rules",
+              }).catch((e) => console.error("[ecom-rules] SMS falhou:", e));
+            });
           }
         }
       }

@@ -141,6 +141,21 @@ export class FlowEngine {
         for (const next of pushNext) await this.executeNode(next);
         break;
       }
+      case "send_sms": {
+        try {
+          const { executarBlocoSms } = await import("@/lib/smsExecutor");
+          await executarBlocoSms(data as any, {
+            variaveis: (this as any).context?.vars || {},
+            workflow_tipo: "bot",
+            origem: "bot_flow",
+          });
+        } catch (e) {
+          console.error("[flowEngine] send_sms falhou:", e);
+        }
+        const smsNext = this.getNextNodes(node.id);
+        for (const next of smsNext) await this.executeNode(next);
+        break;
+      }
       default:
         console.log(`Node type ${data.type} not implemented yet`);
         const nextNodes = this.getNextNodes(node.id);
