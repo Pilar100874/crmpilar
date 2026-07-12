@@ -216,9 +216,9 @@ export default function MenuHub() {
 
       <div className="max-w-6xl mx-auto">
 
-        <div className="flex items-center justify-between gap-4 mb-8 pt-2">
-          <div className="flex items-center gap-3 min-w-0">
-            {openItem ? (
+        {openItem ? (
+          <div className="flex items-center justify-between gap-4 mb-8 pt-2">
+            <div className="flex items-center gap-3 min-w-0">
               <button
                 onClick={() => setOpenItem(null)}
                 className="h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center hover:bg-accent"
@@ -226,27 +226,18 @@ export default function MenuHub() {
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-            ) : null}
-            {openItem ? (
               <h1 className="font-serif text-4xl sm:text-6xl font-normal leading-[1] tracking-[-0.02em] text-foreground">
                 <span className="italic font-light">{title.split(" ")[0]}</span>
                 {title.includes(" ") && (
                   <span className="italic font-medium text-primary"> {title.split(" ").slice(1).join(" ")}</span>
                 )}
               </h1>
-            ) : (
-              <img
-                src={isDarkMode ? logoBranco : logoPreto}
-                alt="Logo"
-                style={{ display: "block", height: "96px", width: "auto" }}
-                className="object-contain sm:!h-32"
-              />
-            )}
+            </div>
           </div>
-
-          {!openItem && (
-            <div className="flex items-center gap-2 shrink-0">
-              <AppsHealthIndicator small />
+        ) : (
+          <div className="relative mb-6 pt-2">
+            {/* Theme toggle - top right */}
+            <div className="absolute top-0 right-0">
               <button
                 onClick={toggleTheme}
                 className="h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center hover:bg-accent transition-colors"
@@ -256,14 +247,28 @@ export default function MenuHub() {
                 {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </button>
             </div>
-          )}
-        </div>
 
+            {/* Logo centered */}
+            <div className="flex justify-center">
+              <img
+                src={isDarkMode ? logoBranco : logoPreto}
+                alt="Logo"
+                style={{ display: "block", height: "128px", width: "auto" }}
+                className="object-contain sm:!h-40"
+              />
+            </div>
 
+            {/* Health indicators - bottom right, above grid */}
+            <div className="flex justify-end mt-2">
+              <AppsHealthIndicator small />
+            </div>
+          </div>
+        )}
 
         {loadingAdmin && !openItem ? (
           <div className="text-sm text-muted-foreground mb-4">Carregando itens do menu...</div>
         ) : null}
+
 
         {menuStyle === "icons" ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
