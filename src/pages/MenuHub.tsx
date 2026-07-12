@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Zap, LifeBuoy, AppWindow, Shield } from "lucide-react";
+import { ChevronLeft, Zap, LifeBuoy, AppWindow, Shield, Sun, Moon } from "lucide-react";
 import { menuItems, type MenuItem } from "@/components/Layout";
 import { isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
+import { AppsHealthIndicator } from "@/components/AppsHealthIndicator";
 
 const ADMIN_ITEMS: MenuItem[] = [
   { id: "Macros", title: "Macros", url: "/macros", icon: Zap },
@@ -15,6 +16,19 @@ export default function MenuHub() {
   const [openItem, setOpenItem] = useState<MenuItem | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingAdmin, setLoadingAdmin] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved) return saved === "dark";
+    return document.documentElement.classList.contains("dark");
+  });
+
+  useEffect(() => {
+    if (isDarkMode) document.documentElement.classList.add("dark");
+    else document.documentElement.classList.remove("dark");
+    localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+  }, [isDarkMode]);
+
+  const toggleTheme = () => setIsDarkMode((v) => !v);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,7 +63,19 @@ export default function MenuHub() {
               <ChevronLeft className="h-5 w-5" />
             </button>
           ) : null}
-          <h1 className="text-2xl sm:text-3xl font-bold">{title}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold flex-1">{title}</h1>
+          <button
+            onClick={toggleTheme}
+            className="h-10 w-10 rounded-full bg-card border border-border flex items-center justify-center hover:bg-accent transition-colors"
+            title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
+            aria-label="Alternar tema"
+          >
+            {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </button>
+        </div>
+
+        <div className="mb-4 rounded-xl border border-border bg-card px-3 py-2">
+          <AppsHealthIndicator />
         </div>
 
         {loadingAdmin && !openItem ? (
