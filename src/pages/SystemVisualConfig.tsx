@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, Trash2, Save, Paintbrush, Video, Play, Pause, Palette, RotateCcw, LayoutGrid, Check, PanelLeft, Image as ImageIcon, List as ListIcon, Film } from "lucide-react";
-import { hexToHslString, hslStringToHex, applyPrimaryColor, applyVisualPreset, getCurrentVisualPreset, VISUAL_PRESETS, type VisualPreset, applyMainMenuStyle, getCurrentMainMenuStyle, MAIN_MENU_STYLES, type MainMenuStyle, applyMainMenuLayout, getCurrentMainMenuLayout, type MainMenuLayout } from "@/components/SystemThemeLoader";
+import { ArrowLeft, Upload, Trash2, Save, Paintbrush, Video, Play, Pause, Palette, RotateCcw, LayoutGrid, Check, PanelLeft, Image as ImageIcon, List as ListIcon, Film, Monitor, Tablet, Smartphone } from "lucide-react";
+import { hexToHslString, hslStringToHex, applyPrimaryColor, applyVisualPreset, getCurrentVisualPreset, VISUAL_PRESETS, type VisualPreset, applyMainMenuStyle, getCurrentMainMenuStyle, MAIN_MENU_STYLES, type MainMenuStyle, applyMainMenuLayout, getCurrentMainMenuLayout, type MainMenuLayout, type DeviceKind, getDeviceKind, setPerDevice } from "@/components/SystemThemeLoader";
 
 
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,17 @@ export default function SystemVisualConfig() {
   const [isPlaying, setIsPlaying] = useState(true);
   const [primaryHex, setPrimaryHex] = useState("#f97316");
   const [savingColor, setSavingColor] = useState(false);
-  const [visualPreset, setVisualPreset] = useState<VisualPreset>(getCurrentVisualPreset());
-  const [menuStyle, setMenuStyle] = useState<MainMenuStyle>(getCurrentMainMenuStyle());
-  const [menuLayout, setMenuLayout] = useState<MainMenuLayout>(getCurrentMainMenuLayout());
+  const [targetDevice, setTargetDevice] = useState<DeviceKind>(getDeviceKind());
+  const [visualPreset, setVisualPreset] = useState<VisualPreset>(getCurrentVisualPreset(getDeviceKind()));
+  const [menuStyle, setMenuStyle] = useState<MainMenuStyle>(getCurrentMainMenuStyle(getDeviceKind()));
+  const [menuLayout, setMenuLayout] = useState<MainMenuLayout>(getCurrentMainMenuLayout(getDeviceKind()));
+
+  // Ao trocar o dispositivo alvo, atualiza os cartões selecionados para refletir a config daquele dispositivo
+  useEffect(() => {
+    setVisualPreset(getCurrentVisualPreset(targetDevice));
+    setMenuStyle(getCurrentMainMenuStyle(targetDevice));
+    setMenuLayout(getCurrentMainMenuLayout(targetDevice));
+  }, [targetDevice]);
 
   const DEFAULT_HSL = "25 95% 53%";
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -191,11 +199,14 @@ export default function SystemVisualConfig() {
     { id: "classic", title: "Clássico", description: "Cards com borda definida e leve sombra. Menu lateral tradicional com destaque na cor primária." },
   ];
 
+  const deviceLabel = (d: DeviceKind) => d === "desktop" ? "Desktop" : d === "tablet" ? "Tablet" : "Celular";
+  const isCurrentDevice = targetDevice === getDeviceKind();
+
   const handleSelectPreset = async (preset: VisualPreset) => {
     setVisualPreset(preset);
-    applyVisualPreset(preset);
-    localStorage.setItem("system_visual_preset", preset);
-    toast.success(`Estilo "${VISUAL_PRESET_OPTIONS.find(p => p.id === preset)?.title}" aplicado!`);
+    setPerDevice("system_visual_preset", targetDevice, preset);
+    if (isCurrentDevice) applyVisualPreset(preset);
+    toast.success(`Estilo "${VISUAL_PRESET_OPTIONS.find(p => p.id === preset)?.title}" salvo para ${deviceLabel(targetDevice)}`);
   };
 
   const MAIN_MENU_STYLE_OPTIONS: { id: MainMenuStyle; title: string; description: string }[] = [
@@ -205,9 +216,9 @@ export default function SystemVisualConfig() {
 
   const handleSelectMenuStyle = (style: MainMenuStyle) => {
     setMenuStyle(style);
-    applyMainMenuStyle(style);
-    localStorage.setItem("system_main_menu_style", style);
-    toast.success(`Menu "${MAIN_MENU_STYLE_OPTIONS.find(o => o.id === style)?.title}" aplicado!`);
+    setPerDevice("system_main_menu_style", targetDevice, style);
+    if (isCurrentDevice) applyMainMenuStyle(style);
+    toast.success(`Menu "${MAIN_MENU_STYLE_OPTIONS.find(o => o.id === style)?.title}" salvo para ${deviceLabel(targetDevice)}`);
   };
 
   const MAIN_MENU_LAYOUT_OPTIONS: { id: MainMenuLayout; title: string; description: string; Icon: typeof LayoutGrid }[] = [
@@ -219,10 +230,11 @@ export default function SystemVisualConfig() {
 
   const handleSelectMenuLayout = (layout: MainMenuLayout) => {
     setMenuLayout(layout);
-    applyMainMenuLayout(layout);
-    localStorage.setItem("system_main_menu_layout", layout);
-    toast.success(`Layout "${MAIN_MENU_LAYOUT_OPTIONS.find(o => o.id === layout)?.title}" aplicado!`);
+    setPerDevice("system_main_menu_layout", targetDevice, layout);
+    if (isCurrentDevice) applyMainMenuLayout(layout);
+    toast.success(`Layout "${MAIN_MENU_LAYOUT_OPTIONS.find(o => o.id === layout)?.title}" salvo para ${deviceLabel(targetDevice)}`);
   };
+
 
 
 
@@ -248,6 +260,58 @@ export default function SystemVisualConfig() {
           <p className="text-sm text-muted-foreground">Configure a aparência visual do sistema</p>
         </div>
       </div>
+
+      {/* Seletor de dispositivo alvo — as três seções abaixo salvam a configuração para o dispositivo escolhido */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Monitor className="h-4 w-4" />
+            Aplicar visual para qual dispositivo?
+          </CardTitle>
+          <CardDescription>
+            As configurações de <strong>Estilo, Menu Principal e Layout</strong> abaixo são salvas separadamente por dispositivo.
+            O sistema detecta automaticamente o dispositivo do usuário (Desktop &ge; 1024px, Tablet 768&ndash;1023px, Celular &lt; 768px) e aplica a config correspondente.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-3">
+            {([
+              { id: "desktop" as DeviceKind, label: "Desktop", Icon: Monitor, hint: "≥ 1024px" },
+              { id: "tablet" as DeviceKind, label: "Tablet", Icon: Tablet, hint: "768–1023px" },
+              { id: "mobile" as DeviceKind, label: "Celular", Icon: Smartphone, hint: "< 768px" },
+            ]).map(({ id, label, Icon, hint }) => {
+              const active = targetDevice === id;
+              const isCurrent = getDeviceKind() === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setTargetDevice(id)}
+                  className={cn(
+                    "relative rounded-xl border-2 p-3 flex flex-col items-center gap-1 transition-all hover:shadow-md",
+                    active ? "border-primary ring-2 ring-primary/20 bg-primary/5" : "border-border hover:border-primary/50"
+                  )}
+                >
+                  <Icon className={cn("h-6 w-6", active ? "text-primary" : "text-muted-foreground")} />
+                  <div className="font-semibold text-sm">{label}</div>
+                  <div className="text-[10px] text-muted-foreground">{hint}</div>
+                  {isCurrent && (
+                    <span className="absolute top-1.5 right-1.5 text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/15 text-primary font-semibold">
+                      atual
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {!isCurrentDevice && (
+            <p className="text-xs text-muted-foreground mt-3">
+              Você está editando a config de <strong>{deviceLabel(targetDevice)}</strong>, mas o dispositivo atual é <strong>{deviceLabel(getDeviceKind())}</strong>.
+              As mudanças serão aplicadas quando o sistema for aberto em um {deviceLabel(targetDevice).toLowerCase()}.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Estilo Visual: Menus e Cards */}
       <Card>
