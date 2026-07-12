@@ -105,7 +105,7 @@ function CustomNode({ id, data, selected }: any) {
         <Handle
           type="target"
           position={Position.Top}
-          className={WORKFLOW_HANDLE_CLASS}
+          className="!bg-primary !w-3 !h-3 !border-2 !border-white !rounded-full"
           isConnectableStart={false}
           isConnectableEnd
         />
