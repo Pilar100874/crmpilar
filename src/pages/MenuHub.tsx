@@ -39,6 +39,7 @@ import imgPerfil from "@/assets/menu/perfil.jpg";
 import imgCompartilharTela from "@/assets/menu/compartilhar-tela.jpg";
 import imgAtalhos from "@/assets/menu/atalhos.jpg";
 import imgAdmin from "@/assets/menu/admin.jpg";
+import cinemaBg from "@/assets/menu-real/cinema-bg.jpg";
 
 const IMAGE_MAP: Record<string, string> = {
   Dashboards: imgDashboards, Clientes: imgFunil, Atendimento: imgChats,
