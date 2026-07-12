@@ -26,6 +26,8 @@ export default function SystemVisualConfig() {
   const [savingColor, setSavingColor] = useState(false);
   const [visualPreset, setVisualPreset] = useState<VisualPreset>(getCurrentVisualPreset());
   const [menuStyle, setMenuStyle] = useState<MainMenuStyle>(getCurrentMainMenuStyle());
+  const [menuLayout, setMenuLayout] = useState<MainMenuLayout>(getCurrentMainMenuLayout());
+
   const DEFAULT_HSL = "25 95% 53%";
   const videoInputRef = useRef<HTMLInputElement>(null);
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
