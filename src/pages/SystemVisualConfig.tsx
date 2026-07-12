@@ -195,12 +195,8 @@ export default function SystemVisualConfig() {
   };
 
   const MAIN_MENU_STYLE_OPTIONS: { id: MainMenuStyle; title: string; description: string }[] = [
-    { id: "dark", title: "Escuro (Padrão)", description: "Menu lateral escuro com destaques na cor primária." },
-    { id: "light", title: "Claro", description: "Fundo branco com texto escuro. Visual leve e limpo." },
-    { id: "brand", title: "Cor da Marca", description: "Usa a cor primária como fundo do menu. Alta identidade visual." },
-    { id: "glass", title: "Vidro (Glass)", description: "Fundo translúcido com efeito blur. Aparência moderna." },
-    { id: "buttons", title: "Botões (Touch)", description: "Tiles grandes tipo botão, ideais para tablet e celular." },
-    { id: "outline", title: "Contorno", description: "Itens com borda fina, sem preenchimento. Visual minimalista." },
+    { id: "dark", title: "Tradicional", description: "Menu lateral escuro tradicional com destaques na cor primária." },
+    { id: "buttons", title: "Botões na Tela", description: "Menu em tiles grandes tipo botão, ideais para tablet e celular." },
   ];
 
   const handleSelectMenuStyle = (style: MainMenuStyle) => {
