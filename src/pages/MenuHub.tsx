@@ -218,7 +218,7 @@ export default function MenuHub() {
 
       <div className="max-w-6xl mx-auto">
 
-        <div className="flex items-end justify-between gap-3 mb-8">
+        <div className="flex items-end justify-between gap-3 mb-8 pr-14 sm:pr-0">
           <div className="flex items-end gap-3 min-w-0">
             {openItem ? (
               <button
