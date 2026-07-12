@@ -143,6 +143,7 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
       const signal = await acquireLiveSignalChannels(filialId);
       sendAll = signal.sendAll;
       releaseChannels = signal.release;
+      if (closed) return;
 
       requestLiveSignalHeartbeat(sendAll, viewerId);
 
