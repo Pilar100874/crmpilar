@@ -87,7 +87,6 @@ type NodeCallbacks = {
   onDelete?: (id: string) => void;
   onAddNote?: (id: string) => void;
   onAddNext?: (id: string, handle: string | null, x: number, y: number) => void;
-  onManualConnectStart?: (id: string, handle: string | null, handleType: "source" | "target") => void;
 };
 const NodeCallbacksContext = createContext<NodeCallbacks>({});
 
@@ -302,13 +301,10 @@ function PontoNotificacaoBuilderContent() {
     setSmartMenu({ x, y, fromId, handle });
   }, []);
 
-  // Callbacks estáveis para os nodes (evita recriar data em cada render e cancelar conexões)
   // ============ Conexões ============
-  // Ref sempre atualizada com os nós — evita usar `nodes` como dep e recriar onConnect a cada render
   const nodesRef = useRef<Node[]>([]);
   const edgesRef = useRef<Edge[]>([]);
   const connectStartRef = useRef<{ nodeId: string | null; handleId: string | null; handleType: "source" | "target" } | null>(null);
-  const connectSucceededRef = useRef(false);
   useEffect(() => { nodesRef.current = nodes; }, [nodes]);
   useEffect(() => { edgesRef.current = edges; }, [edges]);
 
@@ -324,6 +320,21 @@ function PontoNotificacaoBuilderContent() {
     (edge.targetHandle ?? null) === (conn.targetHandle ?? null)
   ), []);
 
+  const makeWorkflowEdge = useCallback((c: Connection): Edge => ({
+    ...c,
+    id: `e-${c.source}-${c.sourceHandle || "o"}-${c.target}-${c.targetHandle || "t"}-${Date.now()}`,
+    type: "smoothstep",
+    animated: true,
+    label: c.sourceHandle || undefined,
+    style: { stroke: "hsl(var(--primary))", strokeWidth: 2 },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      width: 20,
+      height: 20,
+      color: "hsl(var(--primary))",
+    },
+  } as Edge), []);
+
   const addValidatedEdge = useCallback((c: Connection, notifyDuplicate = true) => {
     if (!c.source || !c.target || c.source === c.target) return false;
     let accepted = true;
@@ -334,52 +345,16 @@ function PontoNotificacaoBuilderContent() {
         accepted = false;
         return eds;
       }
-      const edge = {
-        ...c,
-        id: `e-${c.source}-${c.sourceHandle || "o"}-${c.target}-${c.targetHandle || "t"}-${Date.now()}`,
-        type: "smoothstep",
-        markerEnd: { type: MarkerType.ArrowClosed },
-        animated: true,
-        label: c.sourceHandle || undefined,
-      } as Edge;
-      return addEdge(edge, eds);
+      return addEdge(makeWorkflowEdge(c), eds);
     });
     return accepted;
-  }, [isSameConnection, setEdges]);
+  }, [isSameConnection, makeWorkflowEdge, setEdges]);
 
   const onConnect = useCallback((c: Connection) => {
-    connectSucceededRef.current = addValidatedEdge(c);
+    if (addValidatedEdge(c)) toast.success("Blocos vinculados");
   }, [addValidatedEdge]);
 
-
-  const getPointerPoint = useCallback((event: any) => {
-    const touch = event?.changedTouches?.[0] || event?.touches?.[0];
-    const x = event?.clientX ?? touch?.clientX;
-    const y = event?.clientY ?? touch?.clientY;
-    return x == null || y == null ? null : { x, y };
-  }, []);
-
-  const findNodeAtPoint = useCallback((x: number, y: number, excludeId?: string | null) => {
-    const wrapper = reactFlowWrapper.current;
-    if (!wrapper) return null;
-    const hitPadding = 72;
-    let best: { id: string; distance: number } | null = null;
-    wrapper.querySelectorAll<HTMLElement>(".react-flow__node").forEach((el) => {
-      const nodeId = el.getAttribute("data-id");
-      if (!nodeId || nodeId === excludeId) return;
-      const rect = el.getBoundingClientRect();
-      const inside = x >= rect.left - hitPadding && x <= rect.right + hitPadding && y >= rect.top - hitPadding && y <= rect.bottom + hitPadding;
-      if (!inside) return;
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      const distance = Math.hypot(x - cx, y - cy);
-      if (!best || distance < best.distance) best = { id: nodeId, distance };
-    });
-    return best?.id ?? null;
-  }, []);
-
   const onConnectStart = useCallback((_: any, params: any) => {
-    connectSucceededRef.current = false;
     connectStartRef.current = {
       nodeId: params?.nodeId ?? null,
       handleId: params?.handleId ?? null,
@@ -387,60 +362,47 @@ function PontoNotificacaoBuilderContent() {
     };
   }, []);
 
-  const onManualConnectStart = useCallback((nodeId: string, handleId: string | null, handleType: "source" | "target") => {
-    connectSucceededRef.current = false;
-    connectStartRef.current = { nodeId, handleId, handleType };
-  }, []);
-
-  const finishManualConnection = useCallback((start: { nodeId: string | null; handleId: string | null; handleType: "source" | "target" }, point: { x: number; y: number }) => {
-    if (!start.nodeId || connectSucceededRef.current) return false;
-    const droppedNodeId = findNodeAtPoint(point.x, point.y, start.nodeId);
-    if (!droppedNodeId) return false;
-
-    const connection: Connection = start.handleType === "target"
-      ? { source: droppedNodeId, sourceHandle: null, target: start.nodeId, targetHandle: start.handleId ?? null }
-      : { source: start.nodeId, sourceHandle: start.handleId ?? null, target: droppedNodeId, targetHandle: null };
-
-    const accepted = addValidatedEdge(connection);
-    if (accepted) {
-      connectSucceededRef.current = true;
-      toast.success("Blocos vinculados");
-    }
-    return accepted;
-  }, [addValidatedEdge, findNodeAtPoint]);
-
-  // Fallback de conexão manual (touch/pointer): quando o usuário solta próximo a um bloco,
-  // criamos a aresta mesmo que o React Flow não tenha detectado o alvo.
-  // Observação: os handles usam os eventos nativos do React Flow para arrastar/conectar;
-  // ouvintes globais capturando pointerdown foram removidos por interferirem no drag padrão.
-
-
-  const onConnectEnd = useCallback((event: any, connectionState?: any) => {
+  const onConnectEnd = useCallback((event: any) => {
     const start = connectStartRef.current;
     connectStartRef.current = null;
-    if (!start || !start.nodeId) return;
-    if (connectSucceededRef.current) {
-      connectSucceededRef.current = false;
+    if (!start || !start.nodeId || !rfInstance) return;
+
+    const target = event.target as HTMLElement;
+    const droppedOnPane = target?.classList?.contains("react-flow__pane");
+    if (!droppedOnPane) return;
+
+    if (start.handleType === "source" && !isSingleEdgePerHandleAllowed({ source: start.nodeId, sourceHandle: start.handleId ?? null } as Connection, edgesRef.current)) {
+      toast.error(SINGLE_OUTPUT_TOAST);
       return;
     }
 
-    const stateTargetId = connectionState?.toNode?.id;
-    if (stateTargetId && stateTargetId !== start.nodeId) {
-      const connection: Connection = start.handleType === "target"
-        ? { source: stateTargetId, sourceHandle: null, target: start.nodeId, targetHandle: start.handleId ?? null }
-        : { source: start.nodeId, sourceHandle: start.handleId ?? null, target: stateTargetId, targetHandle: connectionState?.toHandle?.id ?? null };
-      if (addValidatedEdge(connection)) toast.success("Blocos vinculados");
-      return;
-    }
+    const clientX = event.clientX ?? event.changedTouches?.[0]?.clientX;
+    const clientY = event.clientY ?? event.changedTouches?.[0]?.clientY;
+    if (clientX == null || clientY == null) return;
+    setSmartMenu({ x: clientX, y: clientY, fromId: start.nodeId, handle: start.handleType === "source" ? start.handleId ?? null : null });
+  }, [rfInstance]);
 
-    const point = getPointerPoint(event);
-    if (point) finishManualConnection(start, point);
-  }, [addValidatedEdge, finishManualConnection, getPointerPoint]);
+  const onReconnect = useCallback((oldEdge: Edge, newConnection: Connection) => {
+    if (!newConnection.source || !newConnection.target || newConnection.source === newConnection.target) return;
+    setEdges((eds) => {
+      const filtered = eds.filter((e) => e.id !== oldEdge.id);
+      if (!isSingleEdgePerHandleAllowed(newConnection, filtered)) {
+        toast.error(SINGLE_OUTPUT_TOAST);
+        return eds;
+      }
+      return addEdge(makeWorkflowEdge(newConnection), filtered);
+    });
+    toast.success("Conexão movida");
+  }, [makeWorkflowEdge, setEdges]);
+
+  const onEdgesDelete = useCallback((deleted: Edge[]) => {
+    if (deleted.length > 0) toast.success(`${deleted.length} conexão(ões) removida(s)`);
+  }, []);
 
   // Callbacks estáveis para os nodes (evita recriar data em cada render e cancelar conexões)
   const nodeCallbacks = useMemo<NodeCallbacks>(() => ({
-    onDuplicate, onToggleBreakpoint, onToggleSkip, onDelete: onDeleteNode, onAddNote, onAddNext, onManualConnectStart,
-  }), [onDuplicate, onToggleBreakpoint, onToggleSkip, onDeleteNode, onAddNote, onAddNext, onManualConnectStart]);
+    onDuplicate, onToggleBreakpoint, onToggleSkip, onDelete: onDeleteNode, onAddNote, onAddNext,
+  }), [onDuplicate, onToggleBreakpoint, onToggleSkip, onDeleteNode, onAddNote, onAddNext]);
 
   // Validação visual (feedback durante o arrasto do handle)
   const isValidConnection = useCallback((c: Connection) => {
