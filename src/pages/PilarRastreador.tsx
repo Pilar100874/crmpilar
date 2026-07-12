@@ -596,12 +596,12 @@ const PilarRastreador: React.FC = () => {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="bg-muted/30 rounded-lg p-3 text-center">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                  <div className="bg-muted/30 rounded-lg p-3 text-center sm:col-span-2">
                     <div className="text-2xl font-bold text-primary">{totalSent}</div>
                     <div className="text-xs text-muted-foreground">Posições enviadas</div>
                   </div>
-                  <div className="bg-muted/30 rounded-lg p-3 text-center">
+                  <div className="bg-muted/30 rounded-lg p-3 text-center sm:col-span-2">
                     <div className="text-sm font-medium">
                       {lastSentTime ? lastSentTime.toLocaleTimeString() : '--:--:--'}
                     </div>
