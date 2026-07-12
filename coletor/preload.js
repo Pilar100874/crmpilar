@@ -42,4 +42,5 @@ contextBridge.exposeInMainWorld('coletor', {
   createCameras: (items) => ipcRenderer.invoke('discover:create', items),
   // Teste de RTSP local
   testRtsp: (opts) => ipcRenderer.invoke('test:rtsp', opts),
+  listCamerasFull: () => ipcRenderer.invoke('cameras:list'),
 });
