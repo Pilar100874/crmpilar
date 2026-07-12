@@ -5,7 +5,7 @@ import {
   Bell, User as UserIcon, Monitor, Star, Settings, Users, FolderTree,
   ShieldCheck, Store, BellRing, Bot, Workflow, Webhook, CreditCard,
   Paintbrush, Send, FileText, Mail, ListOrdered, Clock, KeyRound,
-  LayoutGrid, Image as ImageIcon, List, ChevronRight, Film,
+  ChevronRight,
 } from "lucide-react";
 import { menuItems, type MenuItem } from "@/components/Layout";
 import { isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
