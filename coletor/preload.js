@@ -43,4 +43,7 @@ contextBridge.exposeInMainWorld('coletor', {
   // Teste de RTSP local
   testRtsp: (opts) => ipcRenderer.invoke('test:rtsp', opts),
   listCamerasFull: () => ipcRenderer.invoke('cameras:list'),
+  // Configurações de vídeo (WebRTC ao vivo)
+  getVideoConfig: () => ipcRenderer.invoke('collector:getVideoConfig'),
+  setVideoConfig: (cfg) => ipcRenderer.invoke('collector:setVideoConfig', cfg),
 });
