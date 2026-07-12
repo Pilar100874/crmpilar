@@ -210,6 +210,21 @@ export default function SystemVisualConfig() {
     toast.success(`Menu "${MAIN_MENU_STYLE_OPTIONS.find(o => o.id === style)?.title}" aplicado!`);
   };
 
+  const MAIN_MENU_LAYOUT_OPTIONS: { id: MainMenuLayout; title: string; description: string; Icon: typeof LayoutGrid }[] = [
+    { id: "icons", title: "Ícones", description: "Grade de cards quadrados com ícone grande e título.", Icon: LayoutGrid },
+    { id: "images", title: "Imagens", description: "Cards com imagem ilustrativa e título/subtítulo.", Icon: ImageIcon },
+    { id: "list", title: "Lista", description: "Linhas compactas com ícone e título, ideal para muitos itens.", Icon: ListIcon },
+    { id: "cinema", title: "Cinema", description: "Faixas full-width com foto realista de fundo e título em destaque.", Icon: Film },
+  ];
+
+  const handleSelectMenuLayout = (layout: MainMenuLayout) => {
+    setMenuLayout(layout);
+    applyMainMenuLayout(layout);
+    localStorage.setItem("system_main_menu_layout", layout);
+    toast.success(`Layout "${MAIN_MENU_LAYOUT_OPTIONS.find(o => o.id === layout)?.title}" aplicado!`);
+  };
+
+
 
   if (loading) {
     return (
