@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Zap, LifeBuoy, AppWindow, Shield } from "lucide-react";
+import { ChevronLeft, Zap, LifeBuoy, AppWindow, Shield, Sun, Moon } from "lucide-react";
 import { menuItems, type MenuItem } from "@/components/Layout";
 import { isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
+import { AppsHealthIndicator } from "@/components/AppsHealthIndicator";
 
 const ADMIN_ITEMS: MenuItem[] = [
   { id: "Macros", title: "Macros", url: "/macros", icon: Zap },
