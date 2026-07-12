@@ -11,6 +11,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { acquireLiveSignalChannels, onLiveSignalHeartbeat, onLiveSignalMessage, requestLiveSignalHeartbeat } from "@/lib/cameras/liveSignalHub";
 
 interface Props {
   cameraId: string | null;
@@ -31,12 +32,11 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
   const [micOn, setMicOn] = useState(false);
   const micStreamRef = useRef<MediaStream | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
-  const controlChannelsRef = useRef<ReturnType<typeof supabase.channel>[]>([]);
+  const sendControlRef = useRef<((payload: any) => void) | null>(null);
 
   useEffect(() => {
     if (!cameraId) return;
     let pc: RTCPeerConnection | null = null;
-    const channels: ReturnType<typeof supabase.channel>[] = [];
     const viewerId = crypto.randomUUID();
     let closed = false;
     let liveReached = false;
@@ -44,15 +44,10 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
     let coletorSeenAt = 0;
     let coletorServesCamera = false;
     const remoteStream = new MediaStream();
-
-    const chanNames = new Set<string>(["webrtc-signal"]);
-    if (filialId) chanNames.add(`webrtc-signal:${filialId}`);
-
-    const sendAll = (payload: any) => {
-      for (const ch of channels) {
-        try { ch.send({ type: "broadcast", event: "msg", payload }); } catch {}
-      }
-    };
+    let sendAll: (payload: any) => void = () => {};
+    let releaseChannels: (() => void) | null = null;
+    let offMsg: (() => void) | null = null;
+    let offHeartbeat: (() => void) | null = null;
 
     (async () => {
       setStatus("conectando");
@@ -92,7 +87,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
             if (closed || liveReached) return;
             setErro("Coletor abriu a conexão, mas nenhum frame de vídeo chegou. Atualize o Coletor e reduza câmeras simultâneas se a CPU estiver alta.");
             setStatus("erro");
-          }, 8_000);
+          }, 15_000);
         }
       };
       pc.oniceconnectionstatechange = () => {
@@ -102,15 +97,15 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
         }
       };
 
-      const onMsg = async ({ payload }: any) => {
-        if (!payload) return;
-        if (payload.type === "coletor-online" && payload.to === "viewers") {
-          coletorSeenAt = Date.now();
-          if (Array.isArray(payload.cameras) && payload.cameras.includes(cameraId)) {
-            coletorServesCamera = true;
-          }
-          return;
+      const onHeartbeat = (payload: any) => {
+        coletorSeenAt = Date.now();
+        if (Array.isArray(payload.cameras) && payload.cameras.includes(cameraId)) {
+          coletorServesCamera = true;
         }
+      };
+
+      const onMsg = async (payload: any) => {
+        if (!payload) return;
         if (payload.to !== viewerId) return;
         if (payload.type === "offer") {
           // Dedupe: mesmo offer pode chegar em canais duplicados (plain + filial).
@@ -142,18 +137,20 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
         }
       };
 
-      for (const name of chanNames) {
-        const ch = supabase.channel(name, { config: { broadcast: { self: false, ack: false } } });
-        ch.on("broadcast", { event: "msg" }, onMsg);
-        channels.push(ch);
-        await new Promise<void>((resolve) => {
-          ch.subscribe((s) => { if (s === "SUBSCRIBED") resolve(); });
-        });
+      offHeartbeat = onLiveSignalHeartbeat(onHeartbeat);
+      offMsg = onLiveSignalMessage(onMsg);
+      const signal = await acquireLiveSignalChannels(filialId);
+      sendAll = signal.sendAll;
+      releaseChannels = signal.release;
+      if (closed) {
+        releaseChannels?.();
+        releaseChannels = null;
+        return;
       }
-      controlChannelsRef.current = channels;
+      sendControlRef.current = sendAll;
 
       // Ping proativo — Coletor responde com heartbeat imediato
-      sendAll({ type: "viewer-ping", to: "coletor", viewer_id: viewerId });
+      requestLiveSignalHeartbeat(sendAll, viewerId);
 
       // Aguarda até 6s por heartbeat (Coletor manda a cada 2s)
       const deadline = Date.now() + 6000;
@@ -210,8 +207,10 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
       try { micStreamRef.current?.getTracks().forEach((t) => t.stop()); } catch {}
       micStreamRef.current = null;
       pcRef.current = null;
-      controlChannelsRef.current = [];
-      for (const ch of channels) supabase.removeChannel(ch);
+      sendControlRef.current = null;
+      offMsg?.();
+      offHeartbeat?.();
+      releaseChannels?.();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cameraId, filialId, temAudio]);
@@ -258,9 +257,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
 
   // ============ CONTROLES PTZ (ONVIF via Coletor) ============
   const sendControl = useCallback((payload: any) => {
-    for (const ch of controlChannelsRef.current) {
-      try { ch.send({ type: "broadcast", event: "msg", payload }); } catch {}
-    }
+    try { sendControlRef.current?.(payload); } catch {}
   }, []);
 
   const ptzMoveStart = (dir: "up" | "down" | "left" | "right" | "zoom_in" | "zoom_out") => {

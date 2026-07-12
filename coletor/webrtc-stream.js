@@ -163,9 +163,6 @@ class SignalHub {
       });
       ch.on('broadcast', { event: 'msg' }, ({ payload }) => {
         this._onMsg(payload);
-        if (payload?.type === 'viewer-ping' && payload?.to === 'coletor') {
-          this._sendHeartbeat();
-        }
       });
       ch.subscribe((status) => {
         console.log('[webrtc] signaling', name, status);
@@ -215,6 +212,10 @@ class SignalHub {
 
   async _onMsg(m) {
     if (!m || m.to !== 'coletor') return;
+    if (m.type === 'viewer-ping') {
+      this._sendHeartbeat();
+      return;
+    }
     // Snapshot on-demand: força captura+upload imediato (sem esperar ciclo 30s)
     if (m.type === 'snapshot-now') {
       if (!this.myCameraIds.has(m.camera_id)) return;
@@ -512,7 +513,9 @@ class CameraPump {
           '-c:v', 'libx264',
           '-preset', 'ultrafast',
           '-tune', 'zerolatency',
-          '-threads', '2',
+          '-threads', '1',
+          '-filter_threads', '1',
+          '-filter_complex_threads', '1',
           '-vf', `scale=-2:${height},fps=${fps}`,
           '-profile:v', 'baseline',
           '-level', '3.1',
