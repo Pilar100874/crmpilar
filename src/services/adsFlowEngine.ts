@@ -140,7 +140,7 @@ async function executeAction(type: string, cfg: any, ctx: {
   const wfCtx = {
     variaveis: { metrics, automacao: { id: automacao.id, nome: automacao.nome } },
     estabelecimento_id: automacao.estabelecimento_id,
-    workflow_tipo: "ads",
+    workflow_tipo: "ads" as const,
     origem: "ads_automacao",
   };
   const campaignId = cfg.campaign_id || metrics.campaign_id;
