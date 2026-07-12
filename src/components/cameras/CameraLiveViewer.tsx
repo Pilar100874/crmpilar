@@ -142,7 +142,11 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
       const signal = await acquireLiveSignalChannels(filialId);
       sendAll = signal.sendAll;
       releaseChannels = signal.release;
-      if (closed) return;
+      if (closed) {
+        releaseChannels?.();
+        releaseChannels = null;
+        return;
+      }
       controlChannelsRef.current = [
         { send: ({ payload }: any) => sendAll(payload) } as ReturnType<typeof supabase.channel>,
       ];
