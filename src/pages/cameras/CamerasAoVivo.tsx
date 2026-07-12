@@ -217,7 +217,6 @@ export default function CamerasAoVivo() {
                                   cameraId={c.id}
                                   cameraNome={c.nome}
                                   filialId={c.filial_id ?? null}
-                                  startDelayMs={Math.min(startOrder[c.id] ?? 0, 8) * 700}
                                   onMaximize={() => setMaximized(c)}
                                 />
                               )}
