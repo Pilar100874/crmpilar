@@ -178,42 +178,8 @@ const menuItems: MenuItem[] = [
   { id: "Email", title: "E-mail", url: "/email", icon: Mail },
   { id: "Desenho", title: "Marketing", url: "/marketing", icon: Target },
   { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: FileText },
-  {
-    id: "Controle de Ponto",
-    title: "Controle de Ponto",
-    icon: Clock,
-    subItems: [
-      { id: "Ponto Dashboard", title: "Dashboard RH", url: "/ponto", icon: LayoutDashboard, group: "Geral" },
-      
-      { id: "Ponto Registro", title: "Registro via App", url: "/ponto/registro", icon: LucideIcons.Smartphone, group: "Operacional" },
-      { id: "Ponto Portal", title: "Portal do Funcionário", url: "/ponto/portal", icon: LucideIcons.User, group: "Operacional" },
-      { id: "Ponto Tratamento", title: "Tratamento", url: "/ponto/tratamento", icon: LucideIcons.Wrench, group: "Operacional" },
-      { id: "Ponto Ajustes", title: "Ajustes", url: "/ponto/ajustes", icon: LucideIcons.FileEdit, group: "Operacional" },
-      { id: "Ponto Espelho", title: "Espelho de Ponto", url: "/ponto/espelho", icon: LucideIcons.FileSignature, group: "Operacional" },
-      { id: "Ponto Mapa", title: "Mapa de Equipes", url: "/ponto/mapa", icon: LucideIcons.MapPin, group: "Operacional" },
-      { id: "Ponto QrCode", title: "QR Code Totem", url: "/ponto/qrcode", icon: LucideIcons.QrCode, group: "Operacional" },
-      
-      { id: "Ponto Pre Fechamento", title: "Pré-Fechamento (Checklist)", url: "/ponto/pre-fechamento", icon: LucideIcons.ClipboardCheck, group: "Fechamento & Banco" },
-      { id: "Ponto Fechamento", title: "Fechamento de Folha", url: "/ponto/fechamento", icon: LucideIcons.Lock, group: "Fechamento & Banco" },
-      { id: "Ponto Banco Horas", title: "Banco de Horas", url: "/ponto/banco-horas", icon: LucideIcons.Clock, group: "Fechamento & Banco" },
-      { id: "Ponto Férias", title: "Férias e Afastamentos", url: "/ponto/ferias", icon: LucideIcons.Plane, group: "Fechamento & Banco" },
-      { id: "Ponto Compensacao", title: "Compensação (Emenda Feriado)", url: "/ponto/compensacao", icon: LucideIcons.Scale, group: "Fechamento & Banco" },
-      { id: "Ponto Compensacao Votacao", title: "Votação de Compensação", url: "/ponto/compensacao-votacao", icon: LucideIcons.Vote, group: "Fechamento & Banco" },
-      { id: "Ponto Atestados Admin", title: "Atestados (RH)", url: "/ponto/atestados-admin", icon: LucideIcons.FileCheck, group: "Fechamento & Banco" },
-      
-      { id: "Ponto Alertas", title: "Antifraude (Alertas)", url: "/ponto/alertas", icon: LucideIcons.ShieldAlert, group: "Compliance & Auditoria" },
-      { id: "Ponto Auditoria", title: "Auditoria", url: "/ponto/auditoria", icon: LucideIcons.ShieldCheck, group: "Compliance & Auditoria" },
-      { id: "Ponto AFD", title: "Arquivos Legais (AFD/AEJ)", url: "/ponto/afd", icon: LucideIcons.FileText, group: "Compliance & Auditoria" },
-      { id: "Ponto eSocial", title: "eSocial", url: "/ponto/esocial", icon: LucideIcons.FileCode, group: "Compliance & Auditoria" },
-      
-      { id: "Ponto Assistente", title: "Assistente RH (IA)", url: "/ponto/assistente", icon: LucideIcons.Sparkles, group: "Inteligência IA" },
-      { id: "Ponto Predições", title: "Inteligência Preditiva", url: "/ponto/predicoes", icon: LucideIcons.TrendingUp, group: "Inteligência IA" },
-      { id: "Ponto Simulador", title: "Simulador de Cenários", url: "/ponto/simulador", icon: LucideIcons.Calculator, group: "Inteligência IA" },
-      
-      { id: "Ponto Config", title: "Configurações", url: "/ponto/config", icon: Settings, group: "Sistema & Ajuda" },
-      { id: "Ponto Manual", title: "Manual de Uso", url: "/ponto/manual", icon: LucideIcons.BookOpen, group: "Sistema & Ajuda" },
-    ],
-  },
+  { id: "Controle de Ponto", title: "Controle de Ponto", url: "/ponto", icon: Clock },
+
   { id: "Controle de Veículos", title: "Controle de Veículos", url: "/controle-veiculos", icon: LucideIcons.Car },
   { id: "Controle de Visitantes", title: "Controle de Visitantes", url: "/controle-visitantes", icon: LucideIcons.Users },
   { id: "Câmeras", title: "Câmeras", url: "/cameras", icon: LucideIcons.Camera },
