@@ -1,5 +1,10 @@
 # Welcome to your Lovable project
 
+## Guias do módulo Ads
+- [Configuração de OAuth (Google / Meta / TikTok)](./ADS-OAUTH-GUIA.md)
+
+
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/d3eeb593-9cb8-44e9-a5f4-6b08bf958230
