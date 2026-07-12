@@ -73,15 +73,16 @@ export default function AdsSchedulerConfig() {
     finally { setSaving(false); }
   };
 
-  const executarAgora = async () => {
+  const executarAgora = async (dryRun = false) => {
     if (!estabId) return;
     setRunningNow(true);
     try {
       const { data, error } = await supabase.functions.invoke("executar-ads-automacoes", {
-        body: { estabelecimento_id: estabId, dry_run: false, coletar_antes: true },
+        body: { estabelecimento_id: estabId, dry_run: dryRun, coletar_antes: !dryRun },
       });
       if (error) throw error;
-      toast.success(`Execução concluída: ${(data as any)?.executadas ?? 0} regra(s) processada(s)`);
+      const n = (data as any)?.executadas ?? 0;
+      toast.success(dryRun ? `Simulação: ${n} regra(s) seriam disparadas` : `Execução concluída: ${n} regra(s) processada(s)`);
     } catch (e: any) { toast.error(e?.message || "Falha na execução"); }
     finally { setRunningNow(false); }
   };
@@ -141,9 +142,13 @@ export default function AdsSchedulerConfig() {
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
               Salvar
             </Button>
-            <Button variant="outline" onClick={executarAgora} disabled={runningNow}>
+            <Button variant="outline" onClick={() => executarAgora(false)} disabled={runningNow}>
               {runningNow ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Play className="w-4 h-4 mr-2" />}
               Executar agora
+            </Button>
+            <Button variant="secondary" onClick={() => executarAgora(true)} disabled={runningNow} title="Simula sem executar ações reais">
+              {runningNow ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Play className="w-4 h-4 mr-2" />}
+              Simular (dry-run)
             </Button>
           </div>
         </CardContent>

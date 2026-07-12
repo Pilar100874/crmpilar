@@ -36,6 +36,7 @@ import AdsSchedulerConfig from './ads/AdsSchedulerConfig';
 import AdsConexoes from './ads/AdsConexoes';
 import AdsSetupWizard from './ads/AdsSetupWizard';
 import { AdsSetupStatusBanner, useAdsSetupStatus } from '@/components/ads/AdsSetupStatusBanner';
+import { AdsCommandPalette } from '@/components/ads/AdsCommandPalette';
 
 // Platform icons (using simple colored divs for now)
 const GoogleIcon = () => (
@@ -195,6 +196,7 @@ const AdsHub: React.FC = () => {
         {estabelecimentoId && (
           <AdsSetupStatusBanner estabelecimentoId={estabelecimentoId} onGoToWizard={() => setActiveTab('wizard')} />
         )}
+        <AdsCommandPalette onNavigate={setActiveTab} />
 
 
 
@@ -340,6 +342,7 @@ const AdsHub: React.FC = () => {
       {estabelecimentoId && activeTab !== 'wizard' && (
         <AdsSetupStatusBanner estabelecimentoId={estabelecimentoId} onGoToWizard={() => setActiveTab('wizard')} />
       )}
+      <AdsCommandPalette onNavigate={setActiveTab} />
 
 
 

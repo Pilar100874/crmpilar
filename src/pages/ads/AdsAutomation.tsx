@@ -20,6 +20,7 @@ import {
   ZoomIn, ZoomOut, Maximize2, X, Blocks, Minimize2, Copy
 } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { AdsAutomationTemplates } from "@/components/ads/AdsAutomationTemplates";
 import {
   ReactFlow,
   MiniMap,
@@ -731,13 +732,15 @@ function AdsAutomationContent() {
                   Crie regras automáticas para gerenciar seus anúncios
                 </p>
               </div>
-              <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-                <DialogTrigger asChild>
-                  <Button className="gap-2 w-full sm:w-auto flex-shrink-0">
-                    <Plus className="h-4 w-4" />
-                    Nova Automação
-                  </Button>
-                </DialogTrigger>
+              <div className="flex flex-wrap gap-2">
+                <AdsAutomationTemplates onCreated={() => queryClient.invalidateQueries({ queryKey: ["ads_automacoes"] })} />
+                <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+                  <DialogTrigger asChild>
+                    <Button className="gap-2 flex-shrink-0">
+                      <Plus className="h-4 w-4" />
+                      Nova Automação
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Nova Automação</DialogTitle>
@@ -772,7 +775,8 @@ function AdsAutomationContent() {
                     </Button>
                   </div>
                 </DialogContent>
-              </Dialog>
+                </Dialog>
+              </div>
             </div>
 
             {/* Lista de automações */}
