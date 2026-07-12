@@ -1,10 +1,19 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Loader2, Zap } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Loader2, Zap, Copy, Check, AlertTriangle, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+
+const REDIRECT_URI = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ads-oauth-callback`;
+
+const PORTALS: Record<string, string> = {
+  google: "https://console.cloud.google.com/apis/credentials",
+  meta: "https://developers.facebook.com/apps/",
+  tiktok: "https://business-api.tiktok.com/portal/apps",
+};
 
 const PLATFORMS = [
   { id: "google", label: "Google Ads", color: "bg-[#4285F4]" },
