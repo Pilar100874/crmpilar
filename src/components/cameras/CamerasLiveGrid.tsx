@@ -61,12 +61,13 @@ export function CamerasLiveGrid({
 
   return (
     <div className={cn("grid gap-3", colClass, className)}>
-      {cams.map((c) => (
+      {cams.map((c, index) => (
         <CameraLiveTile
           key={c.id}
           cameraId={c.id}
           cameraNome={c.nome}
           filialId={c.filial_id ?? filialId ?? null}
+          startDelayMs={Math.min(index, 8) * 700}
         />
       ))}
     </div>
