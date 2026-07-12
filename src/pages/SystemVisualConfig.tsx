@@ -284,6 +284,74 @@ export default function SystemVisualConfig() {
       </Card>
 
 
+      {/* Estilo do Menu Principal */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <PanelLeft className="h-4 w-4" />
+            Estilo do Menu Principal
+          </CardTitle>
+          <CardDescription>
+            Escolha a aparência do menu lateral principal do sistema. A mudança é aplicada imediatamente.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {MAIN_MENU_STYLE_OPTIONS.map((opt) => {
+              const isSelected = menuStyle === opt.id;
+              const previewBg =
+                opt.id === "dark" ? "hsl(220 18% 20%)"
+                : opt.id === "light" ? "hsl(0 0% 100%)"
+                : opt.id === "brand" ? "hsl(var(--primary))"
+                : "hsl(220 25% 12% / 0.7)";
+              const previewItem =
+                opt.id === "light" ? "hsl(210 20% 94%)"
+                : opt.id === "brand" ? "hsl(0 0% 100% / 0.25)"
+                : "hsl(0 0% 100% / 0.12)";
+              const previewActive =
+                opt.id === "light" ? "hsl(var(--primary))"
+                : opt.id === "brand" ? "hsl(0 0% 100%)"
+                : "hsl(var(--primary))";
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => handleSelectMenuStyle(opt.id)}
+                  className={cn(
+                    "relative text-left rounded-xl border-2 p-3 transition-all hover:shadow-md",
+                    isSelected ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"
+                  )}
+                >
+                  {isSelected && (
+                    <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center z-10">
+                      <Check className="h-3.5 w-3.5" />
+                    </div>
+                  )}
+                  <div className="mb-3 h-24 rounded-lg overflow-hidden border border-border/50 flex">
+                    <div
+                      className="w-10 flex flex-col gap-1.5 p-1.5"
+                      style={{
+                        background: previewBg,
+                        backdropFilter: opt.id === "glass" ? "blur(6px)" : undefined,
+                      }}
+                    >
+                      <div className="h-2 rounded-sm" style={{ background: previewActive }} />
+                      <div className="h-2 rounded-sm" style={{ background: previewItem }} />
+                      <div className="h-2 rounded-sm" style={{ background: previewItem }} />
+                      <div className="h-2 rounded-sm" style={{ background: previewItem }} />
+                    </div>
+                    <div className="flex-1 bg-muted/40" />
+                  </div>
+                  <div className="font-semibold text-sm mb-1">{opt.title}</div>
+                  <div className="text-xs text-muted-foreground leading-snug">{opt.description}</div>
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+
       {/* Splash Screen Video */}
       <Card>
         <CardHeader>
