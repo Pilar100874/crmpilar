@@ -50,6 +50,12 @@ let timerCameras = null;
 function loadConfig() {
   let saved = {};
   try { saved = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8')); } catch {}
+  // Vídeo (WebRTC ao vivo) — permite ajustar resolução/fps/bitrate pelo painel.
+  const clamp = (v, min, max, def) => {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return def;
+    return Math.min(max, Math.max(min, Math.round(n)));
+  };
   return {
     url: saved.url || DEFAULT_URL,
     anonKey: saved.anonKey || DEFAULT_ANON_KEY,
@@ -57,6 +63,9 @@ function loadConfig() {
     camerasEnabled: saved.camerasEnabled !== false,
     filialId: saved.filialId || null,
     filialNome: saved.filialNome || null,
+    videoHeight: clamp(saved.videoHeight, 240, 1080, 480),
+    videoFps: clamp(saved.videoFps, 5, 30, 12),
+    videoBitrateKbps: clamp(saved.videoBitrateKbps, 200, 6000, 900),
   };
 }
 function saveConfig(cfg) {
