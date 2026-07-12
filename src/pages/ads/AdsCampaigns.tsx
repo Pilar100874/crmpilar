@@ -359,7 +359,7 @@ export default function AdsCampaigns() {
                     })}
                     {filteredCampaigns.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
+                        <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
                           <Megaphone className="h-12 w-12 mx-auto mb-4 opacity-50" />
                           <p className="text-lg font-medium">Nenhuma campanha encontrada</p>
                           <p className="text-sm">Configure suas contas de anúncios para ver as campanhas</p>
