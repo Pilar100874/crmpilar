@@ -157,7 +157,7 @@ export default function AdsCampaigns() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-1">

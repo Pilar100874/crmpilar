@@ -218,7 +218,7 @@ export default function AdsDashboard() {
 
 
         {/* Métricas principais */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
           <Card className="bg-gradient-to-br from-red-500/10 to-red-600/5 border-red-500/20">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -398,7 +398,7 @@ export default function AdsDashboard() {
         </Card>
 
         {/* Cards de plataformas */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           {platforms?.map(platform => {
             const Icon = platformIcons[platform.nome] || Search;
             const platformInsights = insights?.filter(i => i.plataforma_id === platform.id) || [];
