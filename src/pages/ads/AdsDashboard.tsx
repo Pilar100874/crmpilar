@@ -16,6 +16,7 @@ import { format, subDays, startOfMonth, endOfMonth, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, PieChart as RechartsPie, Pie, Cell } from "recharts";
+import AdsHealthScore from "@/components/ads/AdsHealthScore";
 
 const platformIcons: Record<string, any> = {
   google_ads: Search,
