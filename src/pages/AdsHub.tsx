@@ -91,6 +91,19 @@ const AdsHub: React.FC = () => {
     fetchEstabelecimento();
   }, []);
 
+  const { done, total, complete } = useAdsSetupStatus(estabelecimentoId);
+
+  // Auto-redirect to wizard on first visit when nothing is configured
+  useEffect(() => {
+    if (!loading && estabelecimentoId && total > 0 && done === 0 && activeTab === 'dashboard') {
+      const seen = localStorage.getItem('ads_wizard_auto_opened');
+      if (!seen) {
+        localStorage.setItem('ads_wizard_auto_opened', '1');
+        setActiveTab('wizard');
+      }
+    }
+  }, [loading, estabelecimentoId, done, total, activeTab]);
+
   const fetchEstabelecimento = async () => {
     try {
       const estabId = await getEstabelecimentoId();
