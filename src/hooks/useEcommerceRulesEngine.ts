@@ -122,6 +122,51 @@ export function useEcommerceRulesEngine(cartContext?: CartContext) {
                 origem: "ecommerce_rules",
               }).catch((e) => console.error("[ecom-rules] SMS falhou:", e));
             });
+          } else if (nodeType === "acao_webhook") {
+            import("@/lib/workflowActionsExecutor").then(({ executarBlocoWebhook }) => {
+              executarBlocoWebhook(config as any, {
+                variaveis: { carrinho: cartContext, regra: rule.nome },
+                estabelecimento_id: estabId,
+                workflow_tipo: "marketing",
+                origem: "ecommerce_rules",
+              }).catch((e) => console.error("[ecom-rules] webhook falhou:", e));
+            });
+          } else if (nodeType === "acao_email") {
+            import("@/lib/workflowActionsExecutor").then(({ executarBlocoEmail }) => {
+              executarBlocoEmail(config as any, {
+                variaveis: { carrinho: cartContext, regra: rule.nome },
+                estabelecimento_id: estabId,
+                workflow_tipo: "marketing",
+                origem: "ecommerce_rules",
+              }).catch((e) => console.error("[ecom-rules] e-mail falhou:", e));
+            });
+          } else if (nodeType === "acao_whatsapp") {
+            import("@/lib/workflowActionsExecutor").then(({ executarBlocoWhatsapp }) => {
+              executarBlocoWhatsapp(config as any, {
+                variaveis: { carrinho: cartContext, regra: rule.nome },
+                estabelecimento_id: estabId,
+                workflow_tipo: "marketing",
+                origem: "ecommerce_rules",
+              }).catch((e) => console.error("[ecom-rules] whatsapp falhou:", e));
+            });
+          } else if (nodeType === "acao_mensagem_interna") {
+            import("@/lib/workflowActionsExecutor").then(({ executarBlocoMensagemInterna }) => {
+              executarBlocoMensagemInterna(config as any, {
+                variaveis: { carrinho: cartContext, regra: rule.nome },
+                estabelecimento_id: estabId,
+                workflow_tipo: "marketing",
+                origem: "ecommerce_rules",
+              }).catch((e) => console.error("[ecom-rules] msg interna falhou:", e));
+            });
+          } else if (nodeType === "acao_aviso_sistema") {
+            import("@/lib/workflowActionsExecutor").then(({ executarBlocoAvisoSistema }) => {
+              executarBlocoAvisoSistema(config as any, {
+                variaveis: { carrinho: cartContext, regra: rule.nome },
+                estabelecimento_id: estabId,
+                workflow_tipo: "marketing",
+                origem: "ecommerce_rules",
+              }).catch((e) => console.error("[ecom-rules] aviso falhou:", e));
+            });
           }
         }
       }
