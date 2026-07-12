@@ -17,6 +17,8 @@ import { ptBR } from "date-fns/locale";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, PieChart as RechartsPie, Pie, Cell } from "recharts";
 import AdsHealthScore from "@/components/ads/AdsHealthScore";
+import { AdsBenchmarks } from "@/components/ads/AdsBenchmarks";
+import { AdsPeriodComparison } from "@/components/ads/AdsPeriodComparison";
 
 const platformIcons: Record<string, any> = {
   google_ads: Search,
