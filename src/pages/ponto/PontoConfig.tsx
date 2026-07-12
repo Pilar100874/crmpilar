@@ -13,8 +13,25 @@ import {
   Network,
   Clock,
   Scale,
+  User,
+  MapPin,
+  QrCode,
+  ClipboardCheck,
+  Lock,
+  Plane,
+  Vote,
+  FileCheck,
+  ShieldAlert,
+  FileText,
+  FileCode,
+  Sparkles,
+  TrendingUp,
+  Calculator,
+  BookOpen,
+  Smartphone,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+
 
 const wizard = {
   title: "Assistente de Configuração",
