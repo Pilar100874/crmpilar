@@ -35,6 +35,7 @@ import AdsAutomation from './ads/AdsAutomation';
 import AdsSchedulerConfig from './ads/AdsSchedulerConfig';
 import AdsPlatformApps from './ads/AdsPlatformApps';
 import AdsSetupWizard from './ads/AdsSetupWizard';
+import { AdsSetupStatusBanner, useAdsSetupStatus } from '@/components/ads/AdsSetupStatusBanner';
 
 // Platform icons (using simple colored divs for now)
 const GoogleIcon = () => (
