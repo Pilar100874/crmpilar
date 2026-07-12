@@ -5,10 +5,56 @@ import {
   Bell, User as UserIcon, Monitor, Star, Settings, Users, FolderTree,
   ShieldCheck, Store, BellRing, Bot, Workflow, Webhook, CreditCard,
   Paintbrush, Send, FileText, Mail, ListOrdered, Clock, KeyRound,
+  LayoutGrid, Image as ImageIcon, List, ChevronRight,
 } from "lucide-react";
 import { menuItems, type MenuItem } from "@/components/Layout";
 import { isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
 import { AppsHealthIndicator } from "@/components/AppsHealthIndicator";
+
+import imgDashboards from "@/assets/menu/dashboards.jpg";
+import imgFunil from "@/assets/menu/funil.jpg";
+import imgChats from "@/assets/menu/chats.jpg";
+import imgCalendario from "@/assets/menu/calendario.jpg";
+import imgVendas from "@/assets/menu/vendas.jpg";
+import imgAssistente from "@/assets/menu/assistente.jpg";
+import imgListas from "@/assets/menu/listas.jpg";
+import imgEmail from "@/assets/menu/email.jpg";
+import imgMarketing from "@/assets/menu/marketing.jpg";
+import imgRelatorios from "@/assets/menu/relatorios.jpg";
+import imgPonto from "@/assets/menu/ponto.jpg";
+import imgVeiculos from "@/assets/menu/veiculos.jpg";
+import imgVisitantes from "@/assets/menu/visitantes.jpg";
+import imgCameras from "@/assets/menu/cameras.jpg";
+import imgEditores from "@/assets/menu/editores.jpg";
+import imgLogistica from "@/assets/menu/logistica.jpg";
+import imgMarketplaces from "@/assets/menu/marketplaces.jpg";
+import imgEcommerce from "@/assets/menu/ecommerce.jpg";
+import imgAds from "@/assets/menu/ads.jpg";
+import imgRoboPrecos from "@/assets/menu/robo-precos.jpg";
+import imgTV from "@/assets/menu/tv.jpg";
+import imgMapaCalor from "@/assets/menu/mapa-calor.jpg";
+import imgConfiguracoes from "@/assets/menu/configuracoes.jpg";
+import imgAvisos from "@/assets/menu/avisos.jpg";
+import imgPerfil from "@/assets/menu/perfil.jpg";
+import imgCompartilharTela from "@/assets/menu/compartilhar-tela.jpg";
+import imgAtalhos from "@/assets/menu/atalhos.jpg";
+import imgAdmin from "@/assets/menu/admin.jpg";
+
+const IMAGE_MAP: Record<string, string> = {
+  Dashboards: imgDashboards, Clientes: imgFunil, Atendimento: imgChats,
+  Campanhas: imgCalendario, Vendas: imgVendas, Assistente: imgAssistente,
+  Conteúdos: imgListas, Email: imgEmail, Desenho: imgMarketing,
+  Relatórios: imgRelatorios, "Controle de Ponto": imgPonto,
+  "Controle de Veículos": imgVeiculos, "Controle de Visitantes": imgVisitantes,
+  Câmeras: imgCameras, Editores: imgEditores, Logística: imgLogistica,
+  Marketplaces: imgMarketplaces, "E-commerce": imgEcommerce, Ads: imgAds,
+  "Robô de Preços": imgRoboPrecos, TV: imgTV, "Mapa de Calor": imgMapaCalor,
+  Configurações: imgConfiguracoes, Avisos: imgAvisos, Perfil: imgPerfil,
+  "Compartilhar Tela": imgCompartilharTela, "Gerenciar Atalhos": imgAtalhos,
+  Admin: imgAdmin,
+};
+
+type MenuStyle = "icons" | "images" | "list";
 
 const EXTRA_ITEMS: MenuItem[] = [
   { id: "Avisos", title: "Avisos", url: "/avisos", icon: Bell },
@@ -74,6 +120,11 @@ export default function MenuHub() {
     return () => { cancelled = true; };
   }, []);
 
+  const [menuStyle, setMenuStyle] = useState<MenuStyle>(() => {
+    return (localStorage.getItem("menu-style") as MenuStyle) || "icons";
+  });
+  useEffect(() => { localStorage.setItem("menu-style", menuStyle); }, [menuStyle]);
+
   const handleClick = (item: MenuItem) => {
     if (item.subItems && item.subItems.length) {
       setOpenItem(item);
@@ -89,6 +140,12 @@ export default function MenuHub() {
   ];
   const items = openItem?.subItems ?? rootItems;
   const title = openItem?.title ?? "Menu Principal";
+
+  const styleOptions: { id: MenuStyle; label: string; Icon: typeof LayoutGrid }[] = [
+    { id: "icons", label: "Ícones", Icon: LayoutGrid },
+    { id: "images", label: "Imagens", Icon: ImageIcon },
+    { id: "list", label: "Lista", Icon: List },
+  ];
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-10">
@@ -118,29 +175,113 @@ export default function MenuHub() {
           <AppsHealthIndicator />
         </div>
 
+        <div className="mb-4 inline-flex items-center gap-1 rounded-full bg-card border border-border p-1">
+          {styleOptions.map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              onClick={() => setMenuStyle(id)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors ${
+                menuStyle === id
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent"
+              }`}
+              aria-pressed={menuStyle === id}
+            >
+              <Icon className="h-4 w-4" />
+              {label}
+            </button>
+          ))}
+        </div>
+
         {loadingAdmin && !openItem ? (
           <div className="text-sm text-muted-foreground mb-4">Carregando itens do menu...</div>
         ) : null}
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-          {items.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleClick(item)}
-                className="group aspect-square flex flex-col items-center justify-center gap-3 rounded-2xl bg-gradient-to-br from-card to-muted border border-border shadow-sm hover:shadow-lg hover:border-primary/60 hover:-translate-y-0.5 transition-all p-4 text-center"
-              >
-                <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                  {Icon ? <Icon className="h-7 w-7 sm:h-8 sm:w-8" /> : null}
-                </div>
-                <span className="text-xs sm:text-sm font-medium leading-tight line-clamp-2">
-                  {item.title}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        {menuStyle === "icons" ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+            {items.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleClick(item)}
+                  className="group aspect-square flex flex-col items-center justify-center gap-3 rounded-2xl bg-gradient-to-br from-card to-muted border border-border shadow-sm hover:shadow-lg hover:border-primary/60 hover:-translate-y-0.5 transition-all p-4 text-center"
+                >
+                  <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    {Icon ? <Icon className="h-7 w-7 sm:h-8 sm:w-8" /> : null}
+                  </div>
+                  <span className="text-xs sm:text-sm font-medium leading-tight line-clamp-2">
+                    {item.title}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        ) : menuStyle === "images" ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {items.map((item) => {
+              const image = IMAGE_MAP[item.id] ?? IMAGE_MAP[item.title];
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleClick(item)}
+                  className="group relative overflow-hidden rounded-2xl bg-card border border-border shadow-sm hover:shadow-xl hover:-translate-y-0.5 hover:border-primary/60 transition-all text-left"
+                >
+                  <div className="relative h-36 w-full overflow-hidden bg-muted">
+                    {image ? (
+                      <img
+                        src={image}
+                        alt={item.title}
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/20">
+                        {Icon ? <Icon className="h-14 w-14 text-primary/60" /> : null}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 p-3">
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      {Icon ? <Icon className="h-5 w-5" /> : null}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm leading-tight truncate">{item.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {item.subItems?.length ? `${item.subItems.length} itens` : "Abrir"}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {items.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleClick(item)}
+                  className="group flex items-center gap-3 rounded-xl bg-card border border-border px-4 py-3 hover:border-primary/60 hover:bg-accent transition-colors text-left"
+                >
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    {Icon ? <Icon className="h-5 w-5" /> : null}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm leading-tight truncate">{item.title}</p>
+                    {item.subItems?.length ? (
+                      <p className="text-xs text-muted-foreground">{item.subItems.length} itens</p>
+                    ) : null}
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
