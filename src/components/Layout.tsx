@@ -656,7 +656,8 @@ export default function Layout({ children }: LayoutProps) {
       <div className="min-h-screen flex w-full bg-background relative">
         {sidebarVisible && (
           <div 
-            ref={sidebarRef} 
+            ref={sidebarRef}
+            data-main-sidebar
             className={`${
               menuLocked 
                 ? 'fixed left-0 top-0 bottom-0 w-16 md:w-20 lg:w-16 z-[500]' 
