@@ -4,16 +4,11 @@ import { ChevronLeft, Zap, LifeBuoy, AppWindow, Shield } from "lucide-react";
 import { menuItems, type MenuItem } from "@/components/Layout";
 import { isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
 
-const ADMIN_ITEM: MenuItem = {
-  id: "Admin",
-  title: "Admin",
-  icon: Shield,
-  subItems: [
-    { id: "Macros", title: "Macros", url: "/macros", icon: Zap },
-    { id: "Tickets de Suporte", title: "Tickets de Suporte", url: "/admin/support-tickets", icon: LifeBuoy },
-    { id: "Apps", title: "Apps", url: "/admin/apps", icon: AppWindow },
-  ],
-};
+const ADMIN_ITEMS: MenuItem[] = [
+  { id: "Macros", title: "Macros", url: "/macros", icon: Zap },
+  { id: "Tickets de Suporte", title: "Tickets de Suporte", url: "/admin/support-tickets", icon: LifeBuoy },
+  { id: "Apps", title: "Apps", url: "/admin/apps", icon: AppWindow },
+];
 
 export default function MenuHub() {
   const navigate = useNavigate();
