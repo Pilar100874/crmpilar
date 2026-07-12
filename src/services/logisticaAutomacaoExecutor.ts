@@ -156,6 +156,41 @@ export async function executarAutomacoesLogistica(
             console.error('[logistica] falha ao enviar SMS', e);
           }
         }
+
+        // Handle "acao_whatsapp"
+        if ((nodeType as string) === 'acao_whatsapp') {
+          const telefone = config.usar_telefone_cliente
+            ? (config.telefone || '')
+            : (config.telefone || '');
+          try {
+            await executarBlocoWhatsapp({ telefone, mensagem: config.mensagem }, {
+              variaveis: { veiculos, automacao: { id: automacao.id, nome: automacao.nome } },
+              estabelecimento_id: estabelecimentoId,
+              workflow_tipo: 'logistica',
+              origem: 'logistica_automacao',
+            });
+          } catch (e) {
+            console.error('[logistica] falha ao enviar WhatsApp', e);
+          }
+        }
+
+        // Handle "acao_email"
+        if ((nodeType as string) === 'acao_email') {
+          try {
+            await executarBlocoEmail({
+              email_destino: config.email_destino,
+              assunto_email: config.assunto_email,
+              corpo_email: config.corpo_email,
+            }, {
+              variaveis: { veiculos, automacao: { id: automacao.id, nome: automacao.nome } },
+              estabelecimento_id: estabelecimentoId,
+              workflow_tipo: 'logistica',
+              origem: 'logistica_automacao',
+            });
+          } catch (e) {
+            console.error('[logistica] falha ao enviar e-mail', e);
+          }
+        }
       }
       }
     }
