@@ -418,7 +418,7 @@ class CameraPump {
 
   _spawnVideo() {
     const rtsp = rtspUrlFor(this.cam);
-    console.log('[pump] video start', this.cam.nome, 'mode=', this.mode, 'udp', this.videoUdpPort);
+    console.log('[pump] video start', this.cam.nome, 'mode=', this.mode, 'udp', this.videoUdpPort, 'pumpVer=', APP_VERSION);
     const common = [
       '-rtsp_transport', 'tcp',
       '-timeout', '8000000',
