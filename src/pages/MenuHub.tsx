@@ -1,11 +1,33 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Zap, LifeBuoy, AppWindow, Shield } from "lucide-react";
 import { menuItems, type MenuItem } from "@/components/Layout";
+import { isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
+
+const ADMIN_ITEM: MenuItem = {
+  id: "Admin",
+  title: "Admin",
+  icon: Shield,
+  subItems: [
+    { id: "Macros", title: "Macros", url: "/macros", icon: Zap },
+    { id: "Tickets de Suporte", title: "Tickets de Suporte", url: "/admin/support-tickets", icon: LifeBuoy },
+    { id: "Apps", title: "Apps", url: "/admin/apps", icon: AppWindow },
+  ],
+};
 
 export default function MenuHub() {
   const navigate = useNavigate();
   const [openItem, setOpenItem] = useState<MenuItem | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loadingAdmin, setLoadingAdmin] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    isEstabelecimentoAdmin()
+      .then((r) => { if (!cancelled) setIsAdmin(r); })
+      .finally(() => { if (!cancelled) setLoadingAdmin(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleClick = (item: MenuItem) => {
     if (item.subItems && item.subItems.length) {
@@ -15,7 +37,8 @@ export default function MenuHub() {
     if (item.url) navigate(item.url);
   };
 
-  const items = openItem?.subItems ?? menuItems;
+  const rootItems: MenuItem[] = isAdmin ? [...menuItems, ADMIN_ITEM] : menuItems;
+  const items = openItem?.subItems ?? rootItems;
   const title = openItem?.title ?? "Menu Principal";
 
   return (
@@ -33,6 +56,10 @@ export default function MenuHub() {
           ) : null}
           <h1 className="text-2xl sm:text-3xl font-bold">{title}</h1>
         </div>
+
+        {loadingAdmin && !openItem ? (
+          <div className="text-sm text-muted-foreground mb-4">Carregando itens do menu...</div>
+        ) : null}
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
           {items.map((item: any) => {
