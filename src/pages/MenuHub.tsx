@@ -204,47 +204,37 @@ export default function MenuHub() {
 
 
   return (
-    <div
-      className={
-        menuStyle === "cinema"
-          ? "relative min-h-screen p-4 sm:p-6 lg:p-10 bg-background"
-          : "min-h-screen bg-background p-4 sm:p-6 lg:p-10"
-      }
-    >
-      {menuStyle === "cinema" && (
-        <>
-          <div
-            className="pointer-events-none fixed inset-0 -z-10 bg-center bg-cover"
-            style={{ backgroundImage: `url(${cinemaBg})` }}
-            aria-hidden
-          />
-          <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-background/85 via-background/60 to-background/95" aria-hidden />
-        </>
-      )}
+    <div className="relative min-h-screen p-4 sm:p-6 lg:p-10 bg-background">
+      <div
+        className="pointer-events-none fixed inset-0 -z-10 bg-center bg-cover"
+        style={{ backgroundImage: `url(${cinemaBg})` }}
+        aria-hidden
+      />
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-background/90 via-background/70 to-background/95" aria-hidden />
       <div className="max-w-6xl mx-auto">
 
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-end gap-3 mb-8">
           {openItem ? (
             <button
               onClick={() => setOpenItem(null)}
-              className="h-10 w-10 rounded-full bg-card border border-border flex items-center justify-center hover:bg-accent"
+              className="h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center hover:bg-accent"
               aria-label="Voltar"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
           ) : null}
-          <h1
-            className={
-              menuStyle === "cinema"
-                ? "flex-1 text-3xl sm:text-5xl font-black uppercase tracking-[0.15em] bg-gradient-to-r from-primary via-foreground to-primary bg-clip-text text-transparent drop-shadow-[0_2px_8px_hsl(var(--primary)/0.35)]"
-                : "text-2xl sm:text-3xl font-bold flex-1"
-            }
-          >
-            {title}
-          </h1>
+          <div className="flex-1 min-w-0">
+            <div className="text-[10px] sm:text-xs font-semibold tracking-[0.35em] text-primary/90 uppercase mb-1">
+              Premium
+            </div>
+            <h1 className="font-serif italic text-4xl sm:text-6xl font-bold leading-[0.95] tracking-tight bg-gradient-to-br from-foreground via-foreground to-primary bg-clip-text text-transparent drop-shadow-[0_2px_12px_hsl(var(--background)/0.6)]">
+              {title}
+            </h1>
+            <div className="mt-2 h-px w-24 bg-gradient-to-r from-primary/70 to-transparent" />
+          </div>
           <button
             onClick={toggleTheme}
-            className="h-10 w-10 rounded-full bg-card border border-border flex items-center justify-center hover:bg-accent transition-colors"
+            className="h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center hover:bg-accent transition-colors"
             title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
             aria-label="Alternar tema"
           >
