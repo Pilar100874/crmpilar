@@ -347,21 +347,15 @@ export default function MenuHub() {
           </div>
         ) : (
           <div className="flex flex-col gap-2 -mx-4 sm:-mx-6 lg:-mx-10">
-            {items.map((item, idx) => {
+            {items.map((item) => {
               const image = REAL_IMAGE_MAP[item.id] ?? REAL_IMAGE_MAP[item.title];
               const Icon = item.icon;
               const count = item.subItems?.length;
-              const toRoman = (n: number) => {
-                const map: [number, string][] = [[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]];
-                let s = "", x = n;
-                for (const [v, r] of map) { while (x >= v) { s += r; x -= v; } }
-                return s || "I";
-              };
               return (
                 <button
                   key={item.id}
                   onClick={() => handleClick(item)}
-                  className="group relative w-full h-28 sm:h-36 overflow-hidden text-left"
+                  className="group relative w-full h-28 sm:h-36 overflow-hidden text-left ring-1 ring-black/40 dark:ring-white/10"
                 >
                   {image ? (
                     <img
@@ -371,59 +365,38 @@ export default function MenuHub() {
                       className="absolute inset-0 w-full h-full object-cover scale-105 group-hover:scale-110 transition-transform duration-[1200ms] ease-out"
                     />
                   ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/60" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/40 to-primary/70" />
                   )}
-                  {/* Cinematic vignette + gradient */}
-                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.7)_100%)]" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/30 to-black/60" />
+                  {/* Cinematic vignette + gradient (independent of theme) */}
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(0,0,0,0.75)_100%)]" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/45 to-black/70" />
                   {/* Letterbox bars */}
                   <div className="absolute inset-x-0 top-0 h-3 bg-black" />
                   <div className="absolute inset-x-0 bottom-0 h-3 bg-black" />
-                  {/* Film sprocket dots */}
-                  <div className="absolute left-0 top-0 bottom-0 w-1.5 flex flex-col justify-around py-4 opacity-60">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <span key={i} className="h-1 w-1 rounded-full bg-white/70" />
-                    ))}
-                  </div>
-                  <div className="absolute right-0 top-0 bottom-0 w-1.5 flex flex-col justify-around py-4 opacity-60">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <span key={i} className="h-1 w-1 rounded-full bg-white/70" />
-                    ))}
-                  </div>
 
-                  <div className="relative z-10 flex items-center justify-between h-full px-8 sm:px-14 py-4">
-                    <div className="flex items-center gap-5 sm:gap-7 min-w-0">
-                      <div className="flex flex-col items-center border-r border-white/25 pr-5 sm:pr-7">
-                        <span className="text-[9px] tracking-[0.3em] text-white/60 uppercase">Cap.</span>
-                        <span className="font-serif italic text-2xl sm:text-3xl text-primary/90 leading-none mt-1">
-                          {toRoman(idx + 1)}
-                        </span>
-                      </div>
-                      <div className="min-w-0">
-                        <span className="block text-[9px] sm:text-[10px] tracking-[0.4em] text-white/60 uppercase mb-1">
-                          Presenting
-                        </span>
-                        <span className="font-serif italic text-white text-2xl sm:text-4xl font-normal tracking-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)] truncate block">
-                          {item.title}
-                        </span>
-                        <div className="mt-1.5 flex items-center gap-2">
-                          <span className="h-px w-10 bg-primary" />
-                          {count ? (
-                            <span className="text-white/70 text-[10px] sm:text-xs tracking-[0.2em] uppercase">
-                              {String(count).padStart(2, "0")} cenas
-                            </span>
-                          ) : (
-                            <span className="text-white/70 text-[10px] sm:text-xs tracking-[0.2em] uppercase flex items-center gap-1">
-                              {Icon ? <Icon className="h-3 w-3" /> : null}
-                              Entrar em cena
-                            </span>
-                          )}
-                        </div>
+                  <div className="relative z-10 flex items-center justify-between h-full px-6 sm:px-10 py-4">
+                    <div className="min-w-0">
+                      <span className="block text-[9px] sm:text-[10px] tracking-[0.4em] text-white/70 uppercase mb-1">
+                        Presenting
+                      </span>
+                      <span className="font-serif italic text-white text-2xl sm:text-4xl font-normal tracking-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] truncate block">
+                        {item.title}
+                      </span>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <span className="h-px w-10 bg-primary" />
+                        {count ? (
+                          <span className="text-white/80 text-[10px] sm:text-xs tracking-[0.2em] uppercase">
+                            {String(count).padStart(2, "0")} cenas
+                          </span>
+                        ) : (
+                          <span className="text-white/80 text-[10px] sm:text-xs tracking-[0.2em] uppercase flex items-center gap-1">
+                            {Icon ? <Icon className="h-3 w-3" /> : null}
+                            Entrar em cena
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <div className="flex items-center text-white drop-shadow-lg">
-                      <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6 opacity-70 group-hover:translate-x-1 group-hover:opacity-100 transition-all" />
-                    </div>
+                    <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6 text-white/80 group-hover:translate-x-1 group-hover:text-white transition-all drop-shadow-lg" />
                   </div>
                 </button>
               );
