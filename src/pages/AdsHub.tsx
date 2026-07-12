@@ -80,7 +80,13 @@ const tabItems: TabItem[] = [
 ];
 
 const AdsHub: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' is the default for AdsDashboard
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search).get('tab');
+      if (p) return p;
+    }
+    return 'dashboard';
+  });
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
