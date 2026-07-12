@@ -447,15 +447,15 @@ const PilarRastreador: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4 overflow-x-hidden">
-      <div className="w-full max-w-md mx-auto space-y-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4 sm:p-6 lg:p-10 overflow-x-hidden">
+      <div className="w-full max-w-md sm:max-w-2xl lg:max-w-4xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="text-center pt-4 pb-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground mb-3 shadow-lg">
-            <Navigation className="h-8 w-8" />
+        <div className="text-center pt-2 sm:pt-6 pb-2">
+          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground mb-3 shadow-lg">
+            <Navigation className="h-8 w-8 sm:h-10 sm:w-10" />
           </div>
-          <h1 className="text-2xl font-bold">Pilar Rastreador</h1>
-          <p className="text-muted-foreground text-sm">GPS Tracker para Logística</p>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">Pilar Rastreador</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">GPS Tracker para Logística</p>
         </div>
 
         {/* Device Status Card */}
@@ -596,12 +596,12 @@ const PilarRastreador: React.FC = () => {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="bg-muted/30 rounded-lg p-3 text-center">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                  <div className="bg-muted/30 rounded-lg p-3 text-center sm:col-span-2">
                     <div className="text-2xl font-bold text-primary">{totalSent}</div>
                     <div className="text-xs text-muted-foreground">Posições enviadas</div>
                   </div>
-                  <div className="bg-muted/30 rounded-lg p-3 text-center">
+                  <div className="bg-muted/30 rounded-lg p-3 text-center sm:col-span-2">
                     <div className="text-sm font-medium">
                       {lastSentTime ? lastSentTime.toLocaleTimeString() : '--:--:--'}
                     </div>

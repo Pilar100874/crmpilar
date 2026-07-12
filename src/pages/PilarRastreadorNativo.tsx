@@ -588,15 +588,15 @@ const PilarRastreadorNativo = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4">
-      <div className="max-w-md mx-auto space-y-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4 sm:p-6 lg:p-10">
+      <div className="w-full max-w-md sm:max-w-2xl lg:max-w-4xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="text-center pt-4 pb-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground mb-3 shadow-lg">
-            <Navigation className="h-8 w-8" />
+        <div className="text-center pt-2 sm:pt-6 pb-2">
+          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground mb-3 shadow-lg">
+            <Navigation className="h-8 w-8 sm:h-10 sm:w-10" />
           </div>
-          <h1 className="text-2xl font-bold">Pilar Rastreador</h1>
-          <p className="text-muted-foreground text-sm">GPS Tracker para Logística</p>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">Pilar Rastreador</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">GPS Tracker para Logística</p>
         </div>
 
         {/* Device Status Card */}
