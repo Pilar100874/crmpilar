@@ -39,6 +39,7 @@ import imgPerfil from "@/assets/menu/perfil.jpg";
 import imgCompartilharTela from "@/assets/menu/compartilhar-tela.jpg";
 import imgAtalhos from "@/assets/menu/atalhos.jpg";
 import imgAdmin from "@/assets/menu/admin.jpg";
+import cinemaBg from "@/assets/menu-real/cinema-bg.jpg";
 
 const IMAGE_MAP: Record<string, string> = {
   Dashboards: imgDashboards, Clientes: imgFunil, Atendimento: imgChats,
@@ -203,8 +204,25 @@ export default function MenuHub() {
 
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-10">
+    <div
+      className={
+        menuStyle === "cinema"
+          ? "relative min-h-screen p-4 sm:p-6 lg:p-10 bg-background"
+          : "min-h-screen bg-background p-4 sm:p-6 lg:p-10"
+      }
+    >
+      {menuStyle === "cinema" && (
+        <>
+          <div
+            className="pointer-events-none fixed inset-0 -z-10 bg-center bg-cover"
+            style={{ backgroundImage: `url(${cinemaBg})` }}
+            aria-hidden
+          />
+          <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-background/85 via-background/60 to-background/95" aria-hidden />
+        </>
+      )}
       <div className="max-w-6xl mx-auto">
+
         <div className="flex items-center gap-3 mb-6">
           {openItem ? (
             <button
@@ -353,9 +371,10 @@ export default function MenuHub() {
                   <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-black/70" />
                   <div className="relative z-10 flex items-center justify-between h-full px-6 sm:px-10">
                     <div className="flex flex-col">
-                      <span className="text-white text-2xl sm:text-3xl font-bold tracking-wider uppercase drop-shadow-lg">
+                      <span className="font-serif italic text-white text-3xl sm:text-5xl font-black tracking-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] bg-gradient-to-r from-white via-white to-primary/80 bg-clip-text text-transparent">
                         {item.title}
                       </span>
+                      <span className="mt-1 h-[2px] w-16 bg-gradient-to-r from-primary to-transparent" aria-hidden />
                       {count ? (
                         <span className="text-white/80 text-xs sm:text-sm mt-0.5">
                           {String(count).padStart(2, "0")} itens
