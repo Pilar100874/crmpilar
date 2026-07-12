@@ -371,9 +371,10 @@ export default function MenuHub() {
                   <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-black/70" />
                   <div className="relative z-10 flex items-center justify-between h-full px-6 sm:px-10">
                     <div className="flex flex-col">
-                      <span className="text-white text-2xl sm:text-3xl font-bold tracking-wider uppercase drop-shadow-lg">
+                      <span className="font-serif italic text-white text-3xl sm:text-5xl font-black tracking-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] bg-gradient-to-r from-white via-white to-primary/80 bg-clip-text text-transparent">
                         {item.title}
                       </span>
+                      <span className="mt-1 h-[2px] w-16 bg-gradient-to-r from-primary to-transparent" aria-hidden />
                       {count ? (
                         <span className="text-white/80 text-xs sm:text-sm mt-0.5">
                           {String(count).padStart(2, "0")} itens
