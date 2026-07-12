@@ -51,6 +51,8 @@ export default function AdsCampaigns() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterPlatform, setFilterPlatform] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const { isFav, toggle } = useAdsFavorites();
+  const [onlyFavs, setOnlyFavs] = useState(false);
 
   useEffect(() => {
     getEstabelecimentoId().then(setEstabelecimentoId);
