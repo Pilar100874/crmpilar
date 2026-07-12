@@ -2,7 +2,8 @@
 // - opcionalmente aciona coleta de métricas antes
 // - agrega métricas recentes de `ad_insights`
 // - percorre cada `ads_automacoes.flow_data` avaliando triggers/conditions
-// - executa ações (pause/resume, webhook, e-mail, whatsapp, sms, push, aviso, msg interna)
+// - executa ações reais na Meta / Google Ads / TikTok Ads (pause/resume/archive/budget/bid)
+// - executa ações de notificação (webhook, e-mail, whatsapp, sms, push, aviso, msg interna)
 // - loga tudo em `ads_logs_coleta`
 
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
@@ -19,33 +20,32 @@ Deno.serve(async (req) => {
 
     const supa = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
-    // 1) Coleta métricas frescas (best-effort)
     if (coletar_antes) {
-      try {
-        await supa.functions.invoke('coletar-metricas-ads', { body: { estabelecimento_id } });
-      } catch (e) { console.warn('[ads-exec] coleta falhou (continua):', e); }
+      try { await supa.functions.invoke('coletar-metricas-ads', { body: { estabelecimento_id } }); }
+      catch (e) { console.warn('[ads-exec] coleta falhou (continua):', e); }
     }
 
-    // 2) Métricas agregadas (últimos 1 dia por campanha)
     const { data: insights } = await supa
       .from('ad_insights')
       .select('*')
       .eq('estabelecimento_id', estabelecimento_id)
       .gte('data', new Date(Date.now() - 24 * 3600 * 1000).toISOString().slice(0, 10));
 
+    const { data: platforms } = await supa.from('ad_platforms').select('id, nome');
+    const platById = new Map((platforms || []).map((p: any) => [p.id, String(p.nome).toLowerCase()]));
+
     const metricsList = (insights || []).map((i: any) => ({
       roas: Number(i.roas || 0), spend: Number(i.gastos || 0), cpc: Number(i.cpc || 0),
       ctr: Number(i.ctr || 0), conversions: Number(i.conversoes || 0), impressions: Number(i.impressoes || 0),
-      campaign_id: i.conta_id, campaign_name: i.campanha,
-      platform: i.plataforma_id, hour: new Date().getUTCHours(), day_of_week: new Date().getUTCDay(),
+      campaign_id: i.dados_brutos_json?.campaign_id || i.dados_brutos_json?.campaign?.id || i.dados_brutos_json?.id || null,
+      campaign_name: i.campanha, conta_id: i.conta_id,
+      platform: platById.get(i.plataforma_id) || '', platform_id: i.plataforma_id,
+      hour: new Date().getUTCHours(), day_of_week: new Date().getUTCDay(),
     }));
 
-    // 3) Automações ativas
     const { data: automacoes, error: autoErr } = await supa
-      .from('ads_automacoes')
-      .select('*')
-      .eq('estabelecimento_id', estabelecimento_id)
-      .eq('ativo', true);
+      .from('ads_automacoes').select('*')
+      .eq('estabelecimento_id', estabelecimento_id).eq('ativo', true);
     if (autoErr) return json({ error: autoErr.message }, 500);
 
     const execResultados: any[] = [];
@@ -74,8 +74,7 @@ const cmp = (v: number, op: string, t: number) => {
   switch (op) { case '>': return v > t; case '>=': return v >= t; case '<': return v < t; case '<=': return v <= t; case '==': case '=': return v === t; case '!=': return v !== t; default: return false; }
 };
 function evalTrigger(type: string, cfg: any, m: any): boolean {
-  const op = cfg.operator || cfg.op || '>=';
-  const val = Number(cfg.value ?? cfg.threshold ?? 0);
+  const op = cfg.operator || cfg.op || '>='; const val = Number(cfg.value ?? cfg.threshold ?? 0);
   switch (type) {
     case 'trigger_roas': return cmp(m.roas || 0, op, val);
     case 'trigger_spend': return cmp(m.spend || 0, op, val);
@@ -201,6 +200,7 @@ async function executarAcao(supa: any, type: string, cfg: any, ctx: any): Promis
       });
       return { ok: !error, erro: error?.message, data };
     }
+    // ===== Ações que exigem chamada real na plataforma (Meta / Google / TikTok) =====
     case 'action_pause':
     case 'action_resume':
     case 'action_activate':
@@ -208,20 +208,185 @@ async function executarAcao(supa: any, type: string, cfg: any, ctx: any): Promis
     case 'action_budget_increase':
     case 'action_budget_decrease':
     case 'action_bid_adjust':
+      return await executarAcaoPlataforma(supa, type, cfg, ctx);
+
     case 'action_duplicate':
     case 'action_schedule_change':
     case 'action_create_report':
     case 'action_bid_device':
-      // Integração com Meta/Google/TikTok ficará em iteração futura.
-      // Loga a intenção pra visualizar em ads_logs_coleta.
       await supa.from('ads_logs_coleta').insert({
-        estabelecimento_id: ctx.estab, plataforma_id: null,
-        tipo: 'acao_pendente',
-        mensagem: `Ação ${type} agendada (aguarda integração externa)`,
+        estabelecimento_id: ctx.estab, plataforma_id: null, tipo: 'acao_pendente',
+        mensagem: `Ação ${type} ainda não implementada nativamente`,
         detalhes: { cfg, metrics: ctx.metrics, automacao_id: ctx.automacao.id },
       });
       return { ok: true, pendente_integracao_externa: true };
     default:
       return { ok: false, motivo: `Tipo não implementado: ${type}` };
   }
+}
+
+// ============================================================
+// Conectores de escrita (pause/resume/archive/budget/bid)
+// ============================================================
+async function executarAcaoPlataforma(supa: any, type: string, cfg: any, ctx: any) {
+  const m = ctx.metrics || {};
+  const contaId = cfg.conta_id || m.conta_id;
+  const campaignId = cfg.campaign_id || m.campaign_id;
+  if (!contaId) return { ok: false, erro: 'sem conta_id (defina cfg.conta_id ou colete métricas antes)' };
+  if (!campaignId) return { ok: false, erro: 'sem campaign_id (defina cfg.campaign_id)' };
+
+  const { data: conta, error } = await supa.from('ad_accounts').select('*').eq('id', contaId).single();
+  if (error || !conta) return { ok: false, erro: `conta não encontrada: ${error?.message}` };
+  const cred = (conta.credenciais_json || {}) as any;
+  const platformName = String(m.platform || '').toLowerCase();
+  const { data: plat } = platformName ? { data: null as any } : await supa.from('ad_platforms').select('nome').eq('id', conta.plataforma_id).single();
+  const plataforma = platformName || String(plat?.nome || '').toLowerCase();
+
+  try {
+    let result: any;
+    if (plataforma.includes('meta') || plataforma.includes('facebook')) {
+      result = await execMeta(type, cfg, cred, campaignId);
+    } else if (plataforma.includes('google')) {
+      result = await execGoogle(type, cfg, cred, campaignId);
+    } else if (plataforma.includes('tiktok')) {
+      result = await execTiktok(type, cfg, cred, campaignId);
+    } else {
+      result = { ok: false, erro: `plataforma "${plataforma}" sem conector de escrita` };
+    }
+    await supa.from('ads_logs_coleta').insert({
+      estabelecimento_id: ctx.estab, plataforma_id: conta.plataforma_id,
+      tipo: result.ok ? 'acao_executada' : 'acao_erro',
+      mensagem: `${type} @ ${plataforma} campanha=${campaignId}: ${result.ok ? 'ok' : result.erro}`,
+      detalhes: { type, cfg, campaign_id: campaignId, conta_id: contaId, resultado: result },
+    });
+    return result;
+  } catch (e: any) {
+    await supa.from('ads_logs_coleta').insert({
+      estabelecimento_id: ctx.estab, plataforma_id: conta.plataforma_id,
+      tipo: 'acao_erro', mensagem: `${type} @ ${plataforma}: ${e?.message}`,
+      detalhes: { type, cfg, campaign_id: campaignId, conta_id: contaId, stack: String(e) },
+    });
+    return { ok: false, erro: e?.message || String(e) };
+  }
+}
+
+// -------- Meta Ads ----------
+async function execMeta(type: string, cfg: any, cred: any, campaignId: string) {
+  const token = cred?.access_token;
+  if (!token) throw new Error('Meta: access_token ausente');
+  const base = `https://graph.facebook.com/v19.0/${campaignId}`;
+  let params: Record<string, string> = { access_token: token };
+  if (type === 'action_pause') params.status = 'PAUSED';
+  else if (type === 'action_resume' || type === 'action_activate') params.status = 'ACTIVE';
+  else if (type === 'action_archive') params.status = 'ARCHIVED';
+  else if (type === 'action_budget_increase' || type === 'action_budget_decrease') {
+    // budget em CENTAVOS. Aceita cfg.new_budget ou cfg.adjust_percent.
+    let novoOrcamento: number | null = cfg.new_budget ? Number(cfg.new_budget) * 100 : null;
+    if (!novoOrcamento && cfg.adjust_percent) {
+      const cur = await fetch(`${base}?fields=daily_budget&access_token=${token}`).then((r) => r.json());
+      const atual = Number(cur.daily_budget || 0);
+      const pct = Number(cfg.adjust_percent) / 100;
+      novoOrcamento = Math.round(atual * (type === 'action_budget_increase' ? 1 + pct : 1 - pct));
+    }
+    if (!novoOrcamento) throw new Error('Meta budget: informe new_budget ou adjust_percent');
+    params.daily_budget = String(novoOrcamento);
+  } else if (type === 'action_bid_adjust') {
+    if (!cfg.new_bid) throw new Error('Meta bid: informe new_bid');
+    params.bid_amount = String(Math.round(Number(cfg.new_bid) * 100));
+  }
+  const r = await fetch(base, { method: 'POST', body: new URLSearchParams(params) });
+  const body = await r.json();
+  if (!r.ok || body.error) throw new Error(`Meta ${r.status}: ${JSON.stringify(body)}`);
+  return { ok: true, response: body };
+}
+
+// -------- Google Ads ----------
+async function execGoogle(type: string, cfg: any, cred: any, campaignId: string) {
+  const developerToken = Deno.env.get('GOOGLE_ADS_DEVELOPER_TOKEN');
+  if (!developerToken) throw new Error('GOOGLE_ADS_DEVELOPER_TOKEN não configurado');
+  const accessToken = cred?.access_token;
+  const customerId = String(cred?.customer_id || '').replace(/-/g, '');
+  const loginCustomerId = cred?.login_customer_id ? String(cred.login_customer_id).replace(/-/g, '') : undefined;
+  if (!accessToken || !customerId) throw new Error('Google Ads: access_token/customer_id ausentes');
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${accessToken}`,
+    'developer-token': developerToken,
+    'Content-Type': 'application/json',
+  };
+  if (loginCustomerId) headers['login-customer-id'] = loginCustomerId;
+  const resourceName = `customers/${customerId}/campaigns/${campaignId}`;
+
+  const op: any = { update: { resourceName }, updateMask: '' };
+  const fields: string[] = [];
+  if (type === 'action_pause') { op.update.status = 'PAUSED'; fields.push('status'); }
+  else if (type === 'action_resume' || type === 'action_activate') { op.update.status = 'ENABLED'; fields.push('status'); }
+  else if (type === 'action_archive') { op.update.status = 'REMOVED'; fields.push('status'); }
+  else if (type === 'action_budget_increase' || type === 'action_budget_decrease') {
+    // Google Ads: orçamento é recurso separado (campaign_budget). Precisamos update no budget resource.
+    // Aqui atualizamos via CampaignBudget se cfg.budget_resource_name fornecido, senão usamos amount_micros direto.
+    if (!cfg.new_budget && !cfg.budget_resource_name) throw new Error('Google budget: informe new_budget e opcionalmente budget_resource_name');
+    const amountMicros = String(Math.round(Number(cfg.new_budget) * 1_000_000));
+    const budgetRn = cfg.budget_resource_name; // ex: customers/123/campaignBudgets/456
+    if (budgetRn) {
+      const budgetOp = { update: { resourceName: budgetRn, amountMicros }, updateMask: 'amount_micros' };
+      const r = await fetch(`https://googleads.googleapis.com/v18/customers/${customerId}/campaignBudgets:mutate`, {
+        method: 'POST', headers, body: JSON.stringify({ operations: [budgetOp] }),
+      });
+      const b = await r.json();
+      if (!r.ok) throw new Error(`Google Ads budget ${r.status}: ${JSON.stringify(b)}`);
+      return { ok: true, response: b };
+    }
+    throw new Error('Google budget: forneça cfg.budget_resource_name da campanha');
+  } else if (type === 'action_bid_adjust') {
+    if (!cfg.new_bid) throw new Error('Google bid: informe new_bid');
+    op.update.targetCpaMicros = String(Math.round(Number(cfg.new_bid) * 1_000_000));
+    fields.push('target_cpa_micros');
+  }
+  op.updateMask = fields.join(',');
+  const r = await fetch(`https://googleads.googleapis.com/v18/customers/${customerId}/campaigns:mutate`, {
+    method: 'POST', headers, body: JSON.stringify({ operations: [op] }),
+  });
+  const body = await r.json();
+  if (!r.ok) throw new Error(`Google Ads ${r.status}: ${JSON.stringify(body)}`);
+  return { ok: true, response: body };
+}
+
+// -------- TikTok Ads ----------
+async function execTiktok(type: string, cfg: any, cred: any, campaignId: string) {
+  const token = cred?.access_token;
+  const advertiserId = cred?.advertiser_id;
+  if (!token || !advertiserId) throw new Error('TikTok: access_token/advertiser_id ausentes');
+  const headers: Record<string, string> = { 'Access-Token': token, 'Content-Type': 'application/json' };
+
+  if (type === 'action_pause' || type === 'action_resume' || type === 'action_activate' || type === 'action_archive') {
+    const opTypeMap: Record<string, string> = {
+      action_pause: 'DISABLE', action_resume: 'ENABLE', action_activate: 'ENABLE', action_archive: 'DELETE',
+    };
+    const r = await fetch('https://business-api.tiktok.com/open_api/v1.3/campaign/status/update/', {
+      method: 'POST', headers, body: JSON.stringify({ advertiser_id: advertiserId, campaign_ids: [campaignId], operation_status: opTypeMap[type] }),
+    });
+    const b = await r.json();
+    if (!r.ok || b.code !== 0) throw new Error(`TikTok ${r.status}: ${JSON.stringify(b)}`);
+    return { ok: true, response: b };
+  }
+  if (type === 'action_budget_increase' || type === 'action_budget_decrease') {
+    if (!cfg.new_budget) throw new Error('TikTok budget: informe new_budget');
+    const r = await fetch('https://business-api.tiktok.com/open_api/v1.3/campaign/update/', {
+      method: 'POST', headers, body: JSON.stringify({ advertiser_id: advertiserId, campaign_id: campaignId, budget: Number(cfg.new_budget), budget_mode: cfg.budget_mode || 'BUDGET_MODE_DAY' }),
+    });
+    const b = await r.json();
+    if (!r.ok || b.code !== 0) throw new Error(`TikTok budget ${r.status}: ${JSON.stringify(b)}`);
+    return { ok: true, response: b };
+  }
+  if (type === 'action_bid_adjust') {
+    if (!cfg.new_bid) throw new Error('TikTok bid: informe new_bid (ajuste no adgroup_id via cfg.adgroup_id)');
+    if (!cfg.adgroup_id) throw new Error('TikTok bid: informe cfg.adgroup_id');
+    const r = await fetch('https://business-api.tiktok.com/open_api/v1.3/adgroup/update/', {
+      method: 'POST', headers, body: JSON.stringify({ advertiser_id: advertiserId, adgroup_id: cfg.adgroup_id, bid_price: Number(cfg.new_bid) }),
+    });
+    const b = await r.json();
+    if (!r.ok || b.code !== 0) throw new Error(`TikTok bid ${r.status}: ${JSON.stringify(b)}`);
+    return { ok: true, response: b };
+  }
+  throw new Error(`TikTok: tipo ${type} não suportado`);
 }
