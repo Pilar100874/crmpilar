@@ -15,11 +15,6 @@ const PORTALS: Record<string, string> = {
   tiktok: "https://business-api.tiktok.com/portal/apps",
 };
 
-const PLATFORMS = [
-  { id: "google", label: "Google Ads", color: "bg-[#4285F4]" },
-  { id: "meta", label: "Meta Ads (Facebook/Instagram)", color: "bg-[#1877F2]" },
-  { id: "tiktok", label: "TikTok Ads", color: "bg-black" },
-];
 
 export const AdsOAuthButtons: React.FC = () => {
   const [loading, setLoading] = useState<string | null>(null);
