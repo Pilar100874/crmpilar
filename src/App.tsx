@@ -320,6 +320,7 @@ const App = () => (
             <Route path="/ponto/totem" element={<PontoTotem />} />
             <Route element={<LayoutWrapper />}>
             <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/menu" element={<MenuHub />} />
               <Route path="/atendimento" element={<Atendimento />} />
               <Route path="/email" element={<EmailPage />} />
               <Route path="/email-config" element={<EmailConfig />} />
