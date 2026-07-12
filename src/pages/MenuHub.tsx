@@ -1,9 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Zap, LifeBuoy, AppWindow, Shield, Sun, Moon } from "lucide-react";
+import {
+  ChevronLeft, Zap, LifeBuoy, AppWindow, Shield, Sun, Moon,
+  Bell, User as UserIcon, Monitor, Star,
+} from "lucide-react";
 import { menuItems, type MenuItem } from "@/components/Layout";
 import { isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
 import { AppsHealthIndicator } from "@/components/AppsHealthIndicator";
+
+const EXTRA_ITEMS: MenuItem[] = [
+  { id: "Avisos", title: "Avisos", url: "/avisos", icon: Bell },
+  { id: "Perfil", title: "Perfil", url: "/perfil", icon: UserIcon },
+  { id: "Compartilhar Tela", title: "Compartilhar Tela", url: "/compartilhar-tela", icon: Monitor },
+  { id: "Gerenciar Atalhos", title: "Gerenciar Atalhos", url: "/gerenciar-atalhos", icon: Star },
+];
 
 const ADMIN_ITEM: MenuItem = {
   id: "Admin",
@@ -51,7 +61,11 @@ export default function MenuHub() {
     if (item.url) navigate(item.url);
   };
 
-  const rootItems: MenuItem[] = isAdmin ? [...menuItems, ADMIN_ITEM] : menuItems;
+  const rootItems: MenuItem[] = [
+    ...menuItems,
+    ...EXTRA_ITEMS,
+    ...(isAdmin ? [ADMIN_ITEM] : []),
+  ];
   const items = openItem?.subItems ?? rootItems;
   const title = openItem?.title ?? "Menu Principal";
 
