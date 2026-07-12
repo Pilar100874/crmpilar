@@ -35,6 +35,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { isSingleEdgePerHandleAllowed, SINGLE_OUTPUT_TOAST } from "@/lib/flow-edge-utils";
 import { boxSelectionProps } from "@/lib/flowSelection";
+import { getWorkflowBlockCardClass, WORKFLOW_HANDLE_CLASS } from "@/components/workflow/workflowBlockStyle";
+import { Card } from "@/components/ui/card";
 
 const EVENTOS = [
   { key: "atraso", label: "Atrasos" },
