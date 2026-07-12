@@ -112,7 +112,7 @@ export default function CamerasCameras() {
   const [editing, setEditing] = useState<any>(emptyCam);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
-  const [liveCam, setLiveCam] = useState<{ id: string; nome: string; filial_id: string | null } | null>(null);
+  const [liveCam, setLiveCam] = useState<{ id: string; nome: string; filial_id: string | null; tem_ptz?: boolean; tem_audio?: boolean } | null>(null);
   const [filiais, setFiliais] = useState<any[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
@@ -591,7 +591,7 @@ export default function CamerasCameras() {
                 <Button
                   size="sm"
                   variant="secondary"
-                  onClick={() => setLiveCam({ id: r.id, nome: r.nome, filial_id: r.filial_id ?? null })}
+                  onClick={() => setLiveCam({ id: r.id, nome: r.nome, filial_id: r.filial_id ?? null, tem_ptz: !!r.tem_ptz, tem_audio: !!r.tem_audio })}
                 >
                   <Radio className="h-3 w-3 mr-1" /> Ao vivo
                 </Button>
@@ -608,6 +608,8 @@ export default function CamerasCameras() {
         cameraId={liveCam?.id ?? null}
         cameraNome={liveCam?.nome}
         filialId={liveCam?.filial_id ?? null}
+        temPtz={liveCam?.tem_ptz ?? false}
+        temAudio={liveCam?.tem_audio ?? false}
         onClose={() => setLiveCam(null)}
       />
 

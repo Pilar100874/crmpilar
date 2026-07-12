@@ -40,8 +40,10 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
     const viewerId = crypto.randomUUID();
     let closed = false;
     let liveReached = false;
+    let noFrameTimer: ReturnType<typeof setTimeout> | null = null;
     let coletorSeenAt = 0;
     let coletorServesCamera = false;
+    const remoteStream = new MediaStream();
 
     const chanNames = new Set<string>(["webrtc-signal"]);
     if (filialId) chanNames.add(`webrtc-signal:${filialId}`);
@@ -64,11 +66,33 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
         } catch {}
       }
       pc.ontrack = (ev) => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = ev.streams[0] || new MediaStream([ev.track]);
+        if (!videoRef.current) return;
+        if (ev.track.kind === "audio") {
+          if (temAudio) {
+            remoteStream.addTrack(ev.track);
+            videoRef.current.srcObject = remoteStream;
+          }
+          return;
+        }
+        if (ev.track.kind === "video") {
+          remoteStream.addTrack(ev.track);
+          videoRef.current.srcObject = remoteStream;
           videoRef.current.play().catch(() => {});
+          const markLive = () => {
+            if (liveReached || closed) return;
+            if (noFrameTimer) { clearTimeout(noFrameTimer); noFrameTimer = null; }
           liveReached = true;
           setStatus("ao-vivo");
+          };
+          videoRef.current.onplaying = markLive;
+          videoRef.current.onloadeddata = markLive;
+          ev.track.onunmute = markLive;
+          if (noFrameTimer) clearTimeout(noFrameTimer);
+          noFrameTimer = setTimeout(() => {
+            if (closed || liveReached) return;
+            setErro("Coletor abriu a conexão, mas nenhum frame de vídeo chegou. Atualize o Coletor e reduza câmeras simultâneas se a CPU estiver alta.");
+            setStatus("erro");
+          }, 8_000);
         }
       };
       pc.oniceconnectionstatechange = () => {
@@ -164,7 +188,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
       // Se heartbeat chegou mas a câmera não estava na lista, ainda tenta:
       // pode ser diferença momentânea de filial; o Coletor ignora se não servir.
 
-      sendAll({ type: "request", to: "coletor", viewer_id: viewerId, camera_id: cameraId });
+      sendAll({ type: "request", to: "coletor", viewer_id: viewerId, camera_id: cameraId, want_audio: !!temAudio });
 
       setTimeout(() => {
         if (!closed && !liveReached) {
@@ -182,6 +206,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
         sendAll({ type: "stop", to: "coletor", viewer_id: viewerId, camera_id: cameraId });
       } catch {}
       try { pc?.close(); } catch {}
+      if (noFrameTimer) clearTimeout(noFrameTimer);
       try { micStreamRef.current?.getTracks().forEach((t) => t.stop()); } catch {}
       micStreamRef.current = null;
       pcRef.current = null;
@@ -189,7 +214,7 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
       for (const ch of channels) supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cameraId]);
+  }, [cameraId, filialId, temAudio]);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const toggleFullscreen = async () => {

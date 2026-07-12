@@ -87,6 +87,8 @@ try { ffmpegPath = require('ffmpeg-static'); } catch { ffmpegPath = 'ffmpeg'; }
 if (ffmpegPath && ffmpegPath.includes('app.asar')) {
   ffmpegPath = ffmpegPath.replace('app.asar', 'app.asar.unpacked');
 }
+let APP_VERSION = 'dev';
+try { APP_VERSION = require('./package.json').version || APP_VERSION; } catch {}
 
 const H264 = new RTCRtpCodecParameters({
   mimeType: 'video/H264',
@@ -178,6 +180,7 @@ class SignalHub {
       to: 'viewers',
       filial_id: this.cfg.filialId || null,
       cameras: Array.from(this.myCameraIds),
+      versao: APP_VERSION,
       ts: Date.now(),
     });
   }
@@ -259,10 +262,13 @@ class SignalHub {
 
     const key = `${m.camera_id}:${m.viewer_id}`;
     if (m.type === 'request') {
-      if (this.sessions.has(key)) this.sessions.get(key).close();
+      // O browser envia no canal geral + canal da filial. Sem dedupe, o Coletor
+      // recebia request/answer duplicados; a segunda answer fechava a sessão e
+      // deixava o vídeo preto ou carregando sem erro.
+      if (this.sessions.has(key)) return;
       const cam = (this.cameras || []).find((c) => c.id === m.camera_id);
       if (!cam) return;
-      const sess = new StreamSession(this, cam, m.viewer_id, key);
+      const sess = new StreamSession(this, cam, m.viewer_id, key, !!m.want_audio);
       this.sessions.set(key, sess);
       try { await sess.start(); }
       catch (e) { console.error('[webrtc] session err', e.message); sess.close(); }
@@ -322,10 +328,14 @@ class CameraPump {
     this.audioUdpPort = 0;
     this.ffmpeg = null;
     this.audioFfmpeg = null;
-    this.mode = 'copy';
+    // Reencoda por padrão para H.264 baseline 720p/12fps. O VLC aceita H.264
+    // high/main de 1080p, mas o navegador/WebRTC pode mostrar tela preta quando
+    // o SDP anuncia baseline e o fluxo real vem em perfil incompatível.
+    this.mode = 'encode';
     this.rtpReceived = 0;
     this.audioRtpReceived = 0;
     this.starting = false;
+    this.audioStarting = false;
     this.started = false;
     this.stopped = false;
   }
@@ -354,25 +364,6 @@ class CameraPump {
       return;
     }
 
-    if (this.cam.tem_audio) {
-      this.audioUdp = dgram.createSocket('udp4');
-      this.audioUdp.on('message', (buf) => {
-        this.audioRtpReceived++;
-        for (const s of this.subs) {
-          if (s.audioTrack) { try { s.audioTrack.writeRtp(buf); } catch {} }
-        }
-      });
-      try {
-        this.audioUdpPort = await bindUdpWithRetry(this.audioUdp, '127.0.0.1');
-      } catch (e) {
-        console.error('[pump] falha bind UDP áudio', this.cam.nome, e.message);
-        try { this.audioUdp.close(); } catch {}
-        this.audioUdp = null;
-      }
-      if (this.audioUdp) {
-        try { this._spawnAudio(); } catch (e) { console.error('[pump] audio spawn:', e.message); }
-      }
-    }
     this._spawnVideo();
     this.started = true;
 
@@ -399,6 +390,7 @@ class CameraPump {
   attach(sub) {
     if (this.stopped) return false;
     this.subs.add(sub);
+    if (sub.wantAudio) this._ensureAudio().catch((e) => console.error('[pump] audio start:', e.message));
     // Se o fluxo já está ativo, avisa este sub imediatamente
     if (this.rtpReceived > 3) { try { sub.onReady?.(); } catch {} }
     return true;
@@ -429,6 +421,9 @@ class CameraPump {
     console.log('[pump] video start', this.cam.nome, 'mode=', this.mode, 'udp', this.videoUdpPort);
     const common = [
       '-rtsp_transport', 'tcp',
+      '-timeout', '8000000',
+      '-analyzeduration', '1000000',
+      '-probesize', '1000000',
       '-fflags', 'nobuffer',
       '-flags', 'low_delay',
       '-i', rtsp,
@@ -440,10 +435,17 @@ class CameraPump {
           '-c:v', 'libx264',
           '-preset', 'ultrafast',
           '-tune', 'zerolatency',
+          '-vf', 'scale=-2:720,fps=12',
           '-profile:v', 'baseline',
           '-level', '3.1',
           '-pix_fmt', 'yuv420p',
-          '-g', '30',
+          '-g', '24',
+          '-keyint_min', '24',
+          '-sc_threshold', '0',
+          '-bf', '0',
+          '-b:v', '1600k',
+          '-maxrate', '1800k',
+          '-bufsize', '3600k',
           '-force_key_frames', 'expr:gte(t,n_forced*2)',
         ];
     const args = [
@@ -483,6 +485,29 @@ class CameraPump {
     });
   }
 
+  async _ensureAudio() {
+    if (!this.cam.tem_audio || this.audioUdp || this.audioStarting || this.stopped) return;
+    this.audioStarting = true;
+    const sock = dgram.createSocket('udp4');
+    sock.on('message', (buf) => {
+      this.audioRtpReceived++;
+      for (const s of this.subs) {
+        if (s.wantAudio && s.audioTrack) { try { s.audioTrack.writeRtp(buf); } catch {} }
+      }
+    });
+    try {
+      this.audioUdpPort = await bindUdpWithRetry(sock, '127.0.0.1');
+      if (this.stopped) { try { sock.close(); } catch {}; return; }
+      this.audioUdp = sock;
+      this._spawnAudio();
+    } catch (e) {
+      console.error('[pump] falha bind UDP áudio', this.cam.nome, e.message);
+      try { sock.close(); } catch {}
+    } finally {
+      this.audioStarting = false;
+    }
+  }
+
   _spawnAudio() {
     const rtsp = rtspUrlFor(this.cam);
     console.log('[pump] audio start', this.cam.nome, 'udp', this.audioUdpPort);
@@ -519,20 +544,22 @@ class CameraPump {
 // ao CameraPump da câmera para receber RTP compartilhado.
 // -----------------------------------------------------------------------------
 class StreamSession {
-  constructor(hub, cam, viewerId, key) {
+  constructor(hub, cam, viewerId, key, wantAudio = false) {
     this.hub = hub;
     this.cam = cam;
     this.viewerId = viewerId;
     this.key = key;
+    this.wantAudio = wantAudio;
     this.pc = null;
     this.offerSent = false;
+    this.answerApplied = false;
     this.closed = false;
     this.sub = null;
     this.pump = null;
   }
 
   async start() {
-    const wantAudio = !!this.cam.tem_audio;
+    const wantAudio = !!this.cam.tem_audio && !!this.wantAudio;
     try {
       this.pc = new RTCPeerConnection({
         iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
@@ -564,6 +591,7 @@ class StreamSession {
     this.sub = {
       videoTrack: this.videoTrack,
       audioTrack: this.audioTrack || null,
+      wantAudio,
       onReady: () => {
         if (this.offerSent || this.closed) return;
         this.offerSent = true;
@@ -611,10 +639,13 @@ class StreamSession {
   }
 
   async onAnswer(sdp) {
+    if (this.closed || this.answerApplied) return;
+    this.answerApplied = true;
     try {
       await this.pc.setRemoteDescription({ type: 'answer', sdp });
       console.log('[webrtc] answer aplicado', this.cam.nome);
     } catch (e) {
+      this.answerApplied = false;
       console.error('[webrtc] setRemote err', e.message);
       this.close();
     }
