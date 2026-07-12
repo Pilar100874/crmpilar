@@ -352,7 +352,7 @@ export default function AdsCredentials() {
                 <Card key={account.id} className="overflow-hidden">
                   <CardHeader className="pb-3">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
                         <div 
                           className="p-2 rounded-lg" 
                           style={{ backgroundColor: `${platformColors[account.plataforma?.nome]}20` }}

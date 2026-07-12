@@ -228,7 +228,7 @@ export default function AdsReports() {
                             onClick={() => setNewReport(prev => ({ ...prev, type: type.id }))}
                           >
                             <CardContent className="p-4">
-                              <div className="flex items-center gap-3">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
                                 <Icon className="h-5 w-5 text-primary" />
                                 <div>
                                   <p className="font-medium text-sm">{type.label}</p>
@@ -329,7 +329,7 @@ export default function AdsReports() {
                 }}
               >
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
                     <div className="p-2 rounded-lg bg-primary/10">
                       <Icon className="h-5 w-5 text-primary" />
                     </div>

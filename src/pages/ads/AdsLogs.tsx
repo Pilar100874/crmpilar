@@ -153,7 +153,7 @@ export default function AdsLogs() {
                 />
               </div>
               <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-full sm:w-[150px]">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue />
                 </SelectTrigger>
@@ -166,7 +166,7 @@ export default function AdsLogs() {
                 </SelectContent>
               </Select>
               <Select value={filterPlatform} onValueChange={setFilterPlatform}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Plataforma" />
                 </SelectTrigger>
                 <SelectContent>

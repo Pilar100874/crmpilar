@@ -213,7 +213,7 @@ export default function AdsSetupWizard() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
               <div className="p-2 rounded-md bg-primary/10">
                 <StepIcon className="h-5 w-5 text-primary" />
               </div>

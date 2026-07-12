@@ -114,7 +114,7 @@ export default function AdsPlatformApps() {
         <Card key={g.key}>
           <CardHeader>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
                 <div className="p-2 rounded-md" style={{ backgroundColor: `${g.color}20` }}>
                   <g.Icon className="h-5 w-5" style={{ color: g.color }} />
                 </div>
