@@ -1051,11 +1051,11 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
           </div>
 
 
-          <DialogFooter className="px-4 sm:px-6 py-3 border-t bg-muted/30 gap-2">
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <DialogFooter className="px-4 sm:px-6 py-3 border-t bg-muted/30 gap-2 flex-col-reverse sm:flex-row">
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={handleSave}>
+            <Button onClick={handleSave} className="w-full sm:w-auto">
               Salvar
             </Button>
           </DialogFooter>
