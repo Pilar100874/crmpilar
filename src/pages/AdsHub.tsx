@@ -147,6 +147,8 @@ const AdsHub: React.FC = () => {
         return <AdsAutomation />;
       case 'scheduler':
         return <AdsSchedulerConfig />;
+      case 'platform-apps':
+        return <AdsPlatformApps />;
       default:
         return <AdsDashboard />;
     }
