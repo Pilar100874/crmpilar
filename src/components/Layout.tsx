@@ -103,7 +103,7 @@ interface SubMenuItem {
   group?: string;
 }
 
-interface MenuItem {
+export interface MenuItem {
   id: string;
   title: string;
   url?: string;
@@ -111,7 +111,7 @@ interface MenuItem {
   subItems?: SubMenuItem[];
 }
 
-const menuItems: MenuItem[] = [
+export const menuItems: MenuItem[] = [
   { 
     id: "Dashboards",
     title: "Dashboards", 
@@ -656,7 +656,8 @@ export default function Layout({ children }: LayoutProps) {
       <div className="min-h-screen flex w-full bg-background relative">
         {sidebarVisible && (
           <div 
-            ref={sidebarRef} 
+            ref={sidebarRef}
+            data-main-sidebar
             className={`${
               menuLocked 
                 ? 'fixed left-0 top-0 bottom-0 w-16 md:w-20 lg:w-16 z-[500]' 
@@ -1540,6 +1541,17 @@ export default function Layout({ children }: LayoutProps) {
       <FloatingMacroRecorder />
       <FloatingMacroQuickAccess />
       <SupportTicketFloatingButton />
+
+      {/* FAB Menu (aparece somente no estilo "buttons") */}
+      <button
+        type="button"
+        onClick={() => navigate("/menu")}
+        aria-label="Abrir menu"
+        className="menu-buttons-fab fixed bottom-6 right-6 z-[600] h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center"
+      >
+        <LucideIcons.LayoutGrid className="h-6 w-6" />
+      </button>
+
       <ChangePasswordDialog
         open={showChangePasswordDialog}
         onOpenChange={setShowChangePasswordDialog}
