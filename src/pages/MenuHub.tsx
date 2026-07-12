@@ -253,9 +253,10 @@ export default function MenuHub() {
               <img
                 src={isDarkMode ? logoBranco : logoPreto}
                 alt="Logo"
-                style={{ display: "block", height: "128px", width: "auto" }}
-                className="object-contain sm:!h-40"
+                style={{ display: "block", height: "85px", width: "auto" }}
+                className="object-contain sm:!h-28"
               />
+
             </div>
 
             {/* Health indicators - bottom right, above grid */}
