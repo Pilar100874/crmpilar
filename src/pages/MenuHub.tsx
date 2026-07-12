@@ -5,7 +5,7 @@ import {
   Bell, User as UserIcon, Monitor, Star, Settings, Users, FolderTree,
   ShieldCheck, Store, BellRing, Bot, Workflow, Webhook, CreditCard,
   Paintbrush, Send, FileText, Mail, ListOrdered, Clock, KeyRound,
-  LayoutGrid, Image as ImageIcon, List, ChevronRight,
+  LayoutGrid, Image as ImageIcon, List, ChevronRight, Film,
 } from "lucide-react";
 import { menuItems, type MenuItem } from "@/components/Layout";
 import { isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
@@ -54,7 +54,51 @@ const IMAGE_MAP: Record<string, string> = {
   Admin: imgAdmin,
 };
 
-type MenuStyle = "icons" | "images" | "list";
+import realDashboards from "@/assets/menu-real/dashboards.jpg";
+import realClientes from "@/assets/menu-real/clientes.jpg";
+import realAtendimento from "@/assets/menu-real/atendimento.jpg";
+import realCampanhas from "@/assets/menu-real/campanhas.jpg";
+import realVendas from "@/assets/menu-real/vendas.jpg";
+import realAssistente from "@/assets/menu-real/assistente.jpg";
+import realConteudos from "@/assets/menu-real/conteudos.jpg";
+import realEmail from "@/assets/menu-real/email.jpg";
+import realDesenho from "@/assets/menu-real/desenho.jpg";
+import realRelatorios from "@/assets/menu-real/relatorios.jpg";
+import realPonto from "@/assets/menu-real/ponto.jpg";
+import realVeiculos from "@/assets/menu-real/veiculos.jpg";
+import realVisitantes from "@/assets/menu-real/visitantes.jpg";
+import realCameras from "@/assets/menu-real/cameras.jpg";
+import realEditores from "@/assets/menu-real/editores.jpg";
+import realLogistica from "@/assets/menu-real/logistica.jpg";
+import realMarketplaces from "@/assets/menu-real/marketplaces.jpg";
+import realEcommerce from "@/assets/menu-real/ecommerce.jpg";
+import realAds from "@/assets/menu-real/ads.jpg";
+import realRoboPrecos from "@/assets/menu-real/robo-precos.jpg";
+import realTV from "@/assets/menu-real/tv.jpg";
+import realMapaCalor from "@/assets/menu-real/mapa-calor.jpg";
+import realConfiguracoes from "@/assets/menu-real/configuracoes.jpg";
+import realAvisos from "@/assets/menu-real/avisos.jpg";
+import realPerfil from "@/assets/menu-real/perfil.jpg";
+import realCompartilharTela from "@/assets/menu-real/compartilhar-tela.jpg";
+import realAtalhos from "@/assets/menu-real/atalhos.jpg";
+import realAdmin from "@/assets/menu-real/admin.jpg";
+
+const REAL_IMAGE_MAP: Record<string, string> = {
+  Dashboards: realDashboards, Clientes: realClientes, Atendimento: realAtendimento,
+  Campanhas: realCampanhas, Vendas: realVendas, Assistente: realAssistente,
+  Conteúdos: realConteudos, Email: realEmail, Desenho: realDesenho,
+  Relatórios: realRelatorios, "Controle de Ponto": realPonto,
+  "Controle de Veículos": realVeiculos, "Controle de Visitantes": realVisitantes,
+  Câmeras: realCameras, Editores: realEditores, Logística: realLogistica,
+  Marketplaces: realMarketplaces, "E-commerce": realEcommerce, Ads: realAds,
+  "Robô de Preços": realRoboPrecos, TV: realTV, "Mapa de Calor": realMapaCalor,
+  Configurações: realConfiguracoes, Avisos: realAvisos, Perfil: realPerfil,
+  "Compartilhar Tela": realCompartilharTela, "Gerenciar Atalhos": realAtalhos,
+  Admin: realAdmin,
+};
+
+type MenuStyle = "icons" | "images" | "list" | "cinema";
+
 
 const EXTRA_ITEMS: MenuItem[] = [
   { id: "Avisos", title: "Avisos", url: "/avisos", icon: Bell },
@@ -145,6 +189,8 @@ export default function MenuHub() {
     { id: "icons", label: "Ícones", Icon: LayoutGrid },
     { id: "images", label: "Imagens", Icon: ImageIcon },
     { id: "list", label: "Lista", Icon: List },
+    { id: "cinema", label: "Cinema", Icon: Film },
+
   ];
 
   return (
@@ -257,7 +303,7 @@ export default function MenuHub() {
               );
             })}
           </div>
-        ) : (
+        ) : menuStyle === "list" ? (
           <div className="flex flex-col gap-2">
             {items.map((item) => {
               const Icon = item.icon;
@@ -281,7 +327,63 @@ export default function MenuHub() {
               );
             })}
           </div>
+        ) : (
+          <div className="flex flex-col gap-1 -mx-4 sm:-mx-6 lg:-mx-10">
+            {items.map((item) => {
+              const image = REAL_IMAGE_MAP[item.id] ?? REAL_IMAGE_MAP[item.title];
+              const Icon = item.icon;
+              const count = item.subItems?.length;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleClick(item)}
+                  className="group relative w-full h-24 sm:h-28 overflow-hidden text-left"
+                >
+                  {image ? (
+                    <img
+                      src={image}
+                      alt={item.title}
+                      loading="lazy"
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/60" />
+                  )}
+                  {/* Dark gradient overlay for text contrast */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-black/70" />
+                  <div className="relative z-10 flex items-center justify-between h-full px-6 sm:px-10">
+                    <div className="flex flex-col">
+                      <span className="text-white text-2xl sm:text-3xl font-bold tracking-wider uppercase drop-shadow-lg">
+                        {item.title}
+                      </span>
+                      {count ? (
+                        <span className="text-white/80 text-xs sm:text-sm mt-0.5">
+                          {String(count).padStart(2, "0")} itens
+                        </span>
+                      ) : (
+                        <span className="text-white/70 text-xs sm:text-sm mt-0.5 flex items-center gap-1">
+                          {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
+                          Abrir
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-baseline gap-1 text-white drop-shadow-lg">
+                      {count ? (
+                        <>
+                          <span className="text-3xl sm:text-4xl font-light">{count}</span>
+                          <span className="text-xs sm:text-sm opacity-80">itens</span>
+                        </>
+                      ) : (
+                        <ChevronRight className="h-6 w-6 opacity-80" />
+                      )}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         )}
+
       </div>
     </div>
   );
