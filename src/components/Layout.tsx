@@ -103,7 +103,7 @@ interface SubMenuItem {
   group?: string;
 }
 
-interface MenuItem {
+export interface MenuItem {
   id: string;
   title: string;
   url?: string;
