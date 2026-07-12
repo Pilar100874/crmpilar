@@ -1541,6 +1541,17 @@ export default function Layout({ children }: LayoutProps) {
       <FloatingMacroRecorder />
       <FloatingMacroQuickAccess />
       <SupportTicketFloatingButton />
+
+      {/* FAB Menu (aparece somente no estilo "buttons") */}
+      <button
+        type="button"
+        onClick={() => navigate("/menu")}
+        aria-label="Abrir menu"
+        className="menu-buttons-fab fixed bottom-6 right-6 z-[600] h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center"
+      >
+        <LucideIcons.LayoutGrid className="h-6 w-6" />
+      </button>
+
       <ChangePasswordDialog
         open={showChangePasswordDialog}
         onOpenChange={setShowChangePasswordDialog}
