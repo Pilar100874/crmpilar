@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Send, RotateCcw, User, Bot, AlertCircle, CheckCircle, Instagram, Facebook, Music2, Linkedin, Twitter, Youtube, ExternalLink, CheckCheck, RefreshCw, List as ListIcon, X as XIcon } from "lucide-react";
+import { Send, RotateCcw, User, Bot, AlertCircle, CheckCircle, Instagram, Facebook, Music2, Linkedin, Twitter, Youtube, ExternalLink, CheckCheck, RefreshCw, List as ListIcon, X as XIcon, Zap } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { validateEmail, validatePhone, validatePhoneFormat } from "@/lib/validators";
 import { maskCNPJ } from "@/lib/masks";
