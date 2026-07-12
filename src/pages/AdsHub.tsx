@@ -73,6 +73,8 @@ const tabItems: TabItem[] = [
   { id: 'logs', label: 'Logs de Coleta', icon: FileText, description: 'Histórico de coleta de dados' },
   { id: 'automation', label: 'Automações', icon: Zap, description: 'Regras de automação de anúncios' },
   { id: 'scheduler', label: 'Agendamento', icon: Clock, description: 'Configurar frequência de execução das automações' },
+  { id: 'platform-apps', label: 'Apps das Plataformas', icon: Key, description: 'Credenciais de App (Meta/Google/TikTok) para refresh e ações' },
+
 
 ];
 
