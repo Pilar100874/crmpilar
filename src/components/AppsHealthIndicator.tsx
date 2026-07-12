@@ -21,6 +21,23 @@ function dotClass(state: State) {
   return "bg-muted-foreground/40";
 }
 
+function chipClass(state: State) {
+  if (state === "online")
+    return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.35)]";
+  if (state === "warn")
+    return "bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/40";
+  return "bg-muted/60 text-muted-foreground ring-1 ring-border";
+}
+
+function pushChipClass(state: PushState) {
+  if (state === "granted")
+    return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.35)]";
+  if (state === "denied")
+    return "bg-red-500/10 text-red-600 dark:text-red-400 ring-1 ring-red-500/40";
+  return "bg-muted/60 text-muted-foreground ring-1 ring-border";
+}
+
+
 function label(state: State, at: string | null) {
   const when = at ? new Date(at).toLocaleString("pt-BR") : "nunca";
   if (state === "online") return `Online · último ping ${when}`;
