@@ -196,6 +196,8 @@ const AdsHub: React.FC = () => {
         {estabelecimentoId && (
           <AdsSetupStatusBanner estabelecimentoId={estabelecimentoId} onGoToWizard={() => setActiveTab('wizard')} />
         )}
+        <AdsCommandPalette onNavigate={setActiveTab} />
+        {false && (
 
 
 
