@@ -768,6 +768,77 @@
       }catch(e){ console.error('[discover] exception', e); alert('Erro: ' + e.message); }
       finally{ btn.disabled = false; btn.textContent = '➕ Adicionar selecionadas'; }
     }
+
+    // ─── Teste de RTSP ────────────────────────────────────────────
+    function _buildRtspUrls(){
+      const full = document.getElementById('rtspFullUrl').value.trim();
+      if (full) return [full];
+      const host = document.getElementById('rtspHost').value.trim();
+      const port = document.getElementById('rtspPort').value.trim() || '554';
+      const user = document.getElementById('rtspUser').value.trim();
+      const pass = document.getElementById('rtspPass').value;
+      const path = document.getElementById('rtspPath').value.trim();
+      if (!host) { alert('Informe o host/IP ou a URL completa.'); return []; }
+      const auth = user ? `${encodeURIComponent(user)}:${encodeURIComponent(pass)}@` : '';
+      if (path) return [`rtsp://${auth}${host}:${port}${path.startsWith('/')?'':'/'}${path}`];
+      // paths comuns dos principais fabricantes
+      return [
+        `/stream1`,                                   // TP-Link/Tapo
+        `/cam/realmonitor?channel=1&subtype=1`,       // Intelbras/Dahua sub
+        `/cam/realmonitor?channel=1&subtype=0`,       // Intelbras/Dahua main
+        `/Streaming/Channels/102`,                    // Hikvision sub
+        `/Streaming/Channels/101`,                    // Hikvision main
+        `/live/ch00_0`, `/live/ch01_0`,               // Genéricas
+        `/h264Preview_01_sub`,                        // Reolink
+      ].map(p => `rtsp://${auth}${host}:${port}${p}`);
+    }
+    async function testarRtsp(){
+      const urls = _buildRtspUrls();
+      if (!urls.length) return;
+      const transport = document.getElementById('rtspTransport').value;
+      const box = document.getElementById('rtspResult');
+      box.innerHTML = `<div class="muted">🔄 Testando ${urls.length} URL(s) via ${transport.toUpperCase()}… (até 15s cada)</div>`;
+      const results = [];
+      for (const url of urls){
+        const safe = url.replace(/:\/\/([^:@\/]+):[^@]+@/, '://$1:****@');
+        try{
+          const r = await window.coletor.testRtsp({ url, transport });
+          results.push({ url, safe, ...r });
+          if (r.ok) break; // primeiro sucesso é o que interessa
+        }catch(e){ results.push({ url, safe, ok:false, error:String(e.message||e) }); }
+      }
+      const ok = results.find(r => r.ok);
+      if (ok){
+        box.innerHTML = `
+          <div style="padding:12px 14px;border:1px solid var(--success);background:var(--success-bg);border-radius:10px;">
+            <div style="font-weight:700;color:var(--success);">✓ RTSP funcionando</div>
+            <div style="font-size:12px;margin-top:4px;">URL: <code>${escapeHtml(ok.safe)}</code></div>
+            ${ok.info ? `<div style="font-size:12px;margin-top:2px;">Codec: <b>${escapeHtml(ok.info.codec)}</b> · Resolução: <b>${escapeHtml(ok.info.resolucao)}</b></div>` : ''}
+            <div style="font-size:11px;color:var(--text-2);margin-top:6px;">Se o "Ao Vivo" no CRM continua falhando com esta URL, o problema é do processo do coletor (versão desatualizada, CPU saturada com muitas câmeras simultâneas ou HEVC precisando reencodar).</div>
+          </div>`;
+      } else {
+        const last = results[results.length-1] || { error:'sem resposta' };
+        box.innerHTML = `
+          <div style="padding:12px 14px;border:1px solid var(--danger);background:var(--danger-bg);border-radius:10px;">
+            <div style="font-weight:700;color:var(--danger);">✗ RTSP não abriu</div>
+            <div style="font-size:13px;margin-top:6px;">${escapeHtml(last.error || 'falha desconhecida')}</div>
+            <details style="margin-top:8px;"><summary style="cursor:pointer;font-size:12px;">Ver log completo do ffmpeg (${results.length} tentativa(s))</summary>
+              ${results.map(r => `<div style="margin-top:6px;"><div style="font-size:11px;font-family:monospace;color:var(--text-2);">${escapeHtml(r.safe)}</div><pre style="font-size:10px;white-space:pre-wrap;max-height:200px;overflow:auto;background:#0F172A;color:#E2E8F0;padding:8px;border-radius:6px;">${escapeHtml(r.log || r.error || '')}</pre></div>`).join('')}
+            </details>
+          </div>`;
+      }
+    }
+    // Preenche o formulário de teste ao clicar em uma câmera cadastrada
+    window.testarCameraCadastrada = function(host, port, user){
+      document.getElementById('rtspHost').value = host || '';
+      document.getElementById('rtspPort').value = port || '554';
+      if (user) document.getElementById('rtspUser').value = user;
+      document.getElementById('rtspFullUrl').value = '';
+      document.getElementById('rtspPath').value = '';
+      document.getElementById('rtspHost').scrollIntoView({ behavior:'smooth', block:'center' });
+      document.getElementById('rtspHost').focus();
+    };
   </script>
+
 </body>
 </html>
