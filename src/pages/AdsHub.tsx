@@ -8,9 +8,11 @@ import {
   Key,
   FileText,
   Zap,
+  Clock,
   PanelLeft,
   PanelLeftClose,
   LucideIcon
+
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
