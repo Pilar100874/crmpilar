@@ -337,18 +337,21 @@ function PontoNotificacaoBuilderContent() {
 
   const addValidatedEdge = useCallback((c: Connection, notifyDuplicate = true) => {
     if (!c.source || !c.target || c.source === c.target) return false;
-    let accepted = true;
+    const currentEdges = getExistingNodeEdges(edgesRef.current);
+    if (currentEdges.some((e) => isSameConnection(e, c))) return false;
+    if (!isSingleEdgePerHandleAllowed(c, currentEdges)) {
+      if (notifyDuplicate) toast.error(SINGLE_OUTPUT_TOAST);
+      return false;
+    }
     setEdges((eds) => {
       if (eds.some((e) => isSameConnection(e, c))) return eds;
       if (!isSingleEdgePerHandleAllowed(c, eds)) {
-        if (notifyDuplicate) toast.error(SINGLE_OUTPUT_TOAST);
-        accepted = false;
         return eds;
       }
       return addEdge(makeWorkflowEdge(c), eds);
     });
-    return accepted;
-  }, [isSameConnection, makeWorkflowEdge, setEdges]);
+    return true;
+  }, [getExistingNodeEdges, isSameConnection, makeWorkflowEdge, setEdges]);
 
   const onConnect = useCallback((c: Connection) => {
     if (addValidatedEdge(c)) toast.success("Blocos vinculados");
