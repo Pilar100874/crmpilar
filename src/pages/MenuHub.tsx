@@ -222,7 +222,15 @@ export default function MenuHub() {
               <ChevronLeft className="h-5 w-5" />
             </button>
           ) : null}
-          <h1 className="text-2xl sm:text-3xl font-bold flex-1">{title}</h1>
+          <h1
+            className={
+              menuStyle === "cinema"
+                ? "flex-1 text-3xl sm:text-5xl font-black uppercase tracking-[0.15em] bg-gradient-to-r from-primary via-foreground to-primary bg-clip-text text-transparent drop-shadow-[0_2px_8px_hsl(var(--primary)/0.35)]"
+                : "text-2xl sm:text-3xl font-bold flex-1"
+            }
+          >
+            {title}
+          </h1>
           <button
             onClick={toggleTheme}
             className="h-10 w-10 rounded-full bg-card border border-border flex items-center justify-center hover:bg-accent transition-colors"
