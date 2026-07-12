@@ -200,7 +200,7 @@ function PontoNotificacaoBuilderContent() {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [selected, setSelected] = useState<Node | null>(null);
   const [saving, setSaving] = useState(false);
-  const [smartMenu, setSmartMenu] = useState<{ x: number; y: number; fromId: string; handle: string | null } | null>(null);
+  const [smartMenu, setSmartMenu] = useState<{ x: number; y: number; fromId: string; handle: string | null; handleType: "source" | "target" } | null>(null);
   const [simOpen, setSimOpen] = useState(false);
   const [simData, setSimData] = useState('{\n  "severidade": "alta",\n  "detalhe": "teste",\n  "quantidade": 1\n}');
   const [simRunning, setSimRunning] = useState(false);
@@ -298,7 +298,7 @@ function PontoNotificacaoBuilderContent() {
   }, [setNodes]);
 
   const onAddNext = useCallback((fromId: string, handle: string | null, x: number, y: number) => {
-    setSmartMenu({ x, y, fromId, handle });
+    setSmartMenu({ x, y, fromId, handle, handleType: "source" });
   }, []);
 
   // ============ Conexões ============
@@ -379,7 +379,13 @@ function PontoNotificacaoBuilderContent() {
     const clientX = event.clientX ?? event.changedTouches?.[0]?.clientX;
     const clientY = event.clientY ?? event.changedTouches?.[0]?.clientY;
     if (clientX == null || clientY == null) return;
-    setSmartMenu({ x: clientX, y: clientY, fromId: start.nodeId, handle: start.handleType === "source" ? start.handleId ?? null : null });
+    setSmartMenu({
+      x: clientX,
+      y: clientY,
+      fromId: start.nodeId,
+      handle: start.handleId ?? null,
+      handleType: start.handleType,
+    });
   }, [rfInstance]);
 
   const onReconnect = useCallback((oldEdge: Edge, newConnection: Connection) => {
@@ -414,10 +420,10 @@ function PontoNotificacaoBuilderContent() {
   }, [getExistingNodeEdges, isSameConnection]);
 
 
-  function addBlockAt(type: string, pos?: { x: number; y: number }, connectFrom?: { id: string; handle: string | null }) {
+  function addBlockAt(type: string, pos?: { x: number; y: number }, connectFrom?: { id: string; handle: string | null; handleType?: "source" | "target" }) {
     const b = BLOCO_MAP[type];
     const existingEdges = getExistingNodeEdges(edgesRef.current);
-    if (connectFrom && !isSingleEdgePerHandleAllowed({ source: connectFrom.id, sourceHandle: connectFrom.handle ?? null } as Connection, existingEdges)) {
+    if (connectFrom?.handleType !== "target" && connectFrom && !isSingleEdgePerHandleAllowed({ source: connectFrom.id, sourceHandle: connectFrom.handle ?? null } as Connection, existingEdges)) {
       toast.error(SINGLE_OUTPUT_TOAST);
       return null;
     }
@@ -434,12 +440,10 @@ function PontoNotificacaoBuilderContent() {
     const node: Node = { id: newId, type: "custom", position, data: { type, label: b.label, config: cfgDefault } as any };
     setNodes(ns => [...ns, node]);
     if (connectFrom) {
-      setEdges(es => addEdge({
-        id: `e-${connectFrom.id}-${newId}`, source: connectFrom.id, target: newId,
-        type: "smoothstep",
-        sourceHandle: connectFrom.handle || undefined, label: connectFrom.handle || undefined,
-        markerEnd: { type: MarkerType.ArrowClosed }, animated: true,
-      } as Edge, getExistingNodeEdges(es)));
+      const connection: Connection = connectFrom.handleType === "target"
+        ? { source: newId, target: connectFrom.id, targetHandle: connectFrom.handle ?? null }
+        : { source: connectFrom.id, sourceHandle: connectFrom.handle ?? null, target: newId };
+      setEdges(es => addEdge(makeWorkflowEdge(connection), getExistingNodeEdges(es)));
     }
     setSelected(node);
     return node;
@@ -491,15 +495,21 @@ function PontoNotificacaoBuilderContent() {
   function onSmartPick(type: string) {
     if (!smartMenu) return;
     const src = nodes.find(n => n.id === smartMenu.fromId);
-    const basePos = src ? { x: src.position.x, y: (src.position.y || 0) + 180 } : undefined;
-    addBlockAt(type, basePos, { id: smartMenu.fromId, handle: smartMenu.handle });
+    const basePos = src
+      ? smartMenu.handleType === "target"
+        ? { x: src.position.x, y: (src.position.y || 0) - 180 }
+        : { x: src.position.x, y: (src.position.y || 0) + 180 }
+      : undefined;
+    addBlockAt(type, basePos, { id: smartMenu.fromId, handle: smartMenu.handle, handleType: smartMenu.handleType });
     setSmartMenu(null);
   }
 
   const smartOptions: SmartBlockOption[] = useMemo(() => {
     if (!smartMenu) return [];
     const src = nodes.find(n => n.id === smartMenu.fromId);
-    const allowed = src ? (NEXT_ALLOWED[(src.data as any).type] || []) : [];
+    const allowed = smartMenu.handleType === "target"
+      ? BLOCOS.filter(b => b.type !== "trigger").map(b => b.type)
+      : src ? (NEXT_ALLOWED[(src.data as any).type] || []) : [];
     return BLOCOS.filter(b => allowed.includes(b.type)).map(b => ({
       type: b.type, label: b.label, category: b.grupo,
     }));
