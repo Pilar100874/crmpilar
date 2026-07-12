@@ -245,23 +245,6 @@ export default function MenuHub() {
           <AppsHealthIndicator />
         </div>
 
-        <div className="mb-4 inline-flex items-center gap-1 rounded-full bg-card border border-border p-1">
-          {styleOptions.map(({ id, label, Icon }) => (
-            <button
-              key={id}
-              onClick={() => setMenuStyle(id)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors ${
-                menuStyle === id
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent"
-              }`}
-              aria-pressed={menuStyle === id}
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </button>
-          ))}
-        </div>
 
         {loadingAdmin && !openItem ? (
           <div className="text-sm text-muted-foreground mb-4">Carregando itens do menu...</div>
