@@ -189,6 +189,8 @@ export default function MenuHub() {
     { id: "icons", label: "Ícones", Icon: LayoutGrid },
     { id: "images", label: "Imagens", Icon: ImageIcon },
     { id: "list", label: "Lista", Icon: List },
+    { id: "cinema", label: "Cinema", Icon: Film },
+
   ];
 
   return (
