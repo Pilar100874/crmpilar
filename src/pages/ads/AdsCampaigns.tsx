@@ -285,6 +285,11 @@ export default function AdsCampaigns() {
                       return (
                         <TableRow key={campaign.key}>
                           <TableCell>
+                            <button onClick={() => toggle(campaign.key)} title={isFav(campaign.key) ? "Remover favorito" : "Favoritar"}>
+                              <Star className={`h-4 w-4 ${isFav(campaign.key) ? "fill-yellow-400 text-yellow-500" : "text-muted-foreground hover:text-yellow-500"}`} />
+                            </button>
+                          </TableCell>
+                          <TableCell>
                             <div>
                               <p className="font-medium">{campaign.campanha}</p>
                               {campaign.conta && (
