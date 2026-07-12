@@ -194,6 +194,20 @@ export default function SystemVisualConfig() {
     toast.success(`Estilo "${VISUAL_PRESET_OPTIONS.find(p => p.id === preset)?.title}" aplicado!`);
   };
 
+  const MAIN_MENU_STYLE_OPTIONS: { id: MainMenuStyle; title: string; description: string }[] = [
+    { id: "dark", title: "Escuro (Padrão)", description: "Menu lateral escuro com destaques na cor primária." },
+    { id: "light", title: "Claro", description: "Fundo branco com texto escuro. Visual leve e limpo." },
+    { id: "brand", title: "Cor da Marca", description: "Usa a cor primária como fundo do menu. Alta identidade visual." },
+    { id: "glass", title: "Vidro (Glass)", description: "Fundo translúcido com efeito blur. Aparência moderna." },
+  ];
+
+  const handleSelectMenuStyle = (style: MainMenuStyle) => {
+    setMenuStyle(style);
+    applyMainMenuStyle(style);
+    localStorage.setItem("system_main_menu_style", style);
+    toast.success(`Menu "${MAIN_MENU_STYLE_OPTIONS.find(o => o.id === style)?.title}" aplicado!`);
+  };
+
 
   if (loading) {
     return (
