@@ -113,9 +113,7 @@ function CustomNode({ id, data, selected }: any) {
         <Handle
           type="target"
           position={Position.Top}
-          className="!bg-primary !w-3 !h-3 !border-2 !border-white !rounded-full"
-          isConnectableStart={false}
-          isConnectableEnd
+          className="!bg-primary !w-3 !h-3 !border-2 !border-background"
         />
       )}
 
@@ -175,9 +173,9 @@ function CustomNode({ id, data, selected }: any) {
 
       {isCondicao ? (
         <>
-          <Handle type="source" id="sim" position={Position.Bottom} className="!bg-green-500 !w-5 !h-5 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform" style={{ left: "35%" }} isConnectableStart isConnectableEnd={false} />
+          <Handle type="source" id="sim" position={Position.Bottom} className="!bg-green-500 !w-3 !h-3 !border-2 !border-background" style={{ left: "35%" }} />
           <div className="absolute bottom-0 left-[35%] -translate-x-1/2 translate-y-full mt-1 text-[10px] font-semibold text-green-600">SIM</div>
-          <Handle type="source" id="nao" position={Position.Bottom} className="!bg-red-500 !w-5 !h-5 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform" style={{ left: "65%" }} isConnectableStart isConnectableEnd={false} />
+          <Handle type="source" id="nao" position={Position.Bottom} className="!bg-red-500 !w-3 !h-3 !border-2 !border-background" style={{ left: "65%" }} />
           <div className="absolute bottom-0 left-[65%] -translate-x-1/2 translate-y-full mt-1 text-[10px] font-semibold text-red-600">NÃO</div>
           <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, "sim", e.clientX, e.clientY); }}
             className="absolute -bottom-8 left-[35%] -translate-x-1/2 w-5 h-5 rounded-full bg-green-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
@@ -186,7 +184,7 @@ function CustomNode({ id, data, selected }: any) {
         </>
       ) : (
         <>
-          <Handle type="source" position={Position.Bottom} className="!bg-primary !w-5 !h-5 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform" isConnectableStart isConnectableEnd={false} />
+          <Handle type="source" position={Position.Bottom} className="!bg-primary !w-3 !h-3 !border-2 !border-background" />
           <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, null, e.clientX, e.clientY); }}
             className="absolute -bottom-7 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-primary text-primary-foreground shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
         </>
