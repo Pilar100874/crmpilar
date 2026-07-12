@@ -111,7 +111,7 @@ interface MenuItem {
   subItems?: SubMenuItem[];
 }
 
-const menuItems: MenuItem[] = [
+export const menuItems: MenuItem[] = [
   { 
     id: "Dashboards",
     title: "Dashboards", 
