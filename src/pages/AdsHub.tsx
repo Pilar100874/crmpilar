@@ -29,7 +29,7 @@ import AdsCampaigns from './ads/AdsCampaigns';
 import AdsReports from './ads/AdsReports';
 import AdsAlerts from './ads/AdsAlerts';
 import AdsPlatformDashboard from './ads/AdsPlatformDashboard';
-import AdsCredentials from './ads/AdsCredentials';
+
 import AdsLogs from './ads/AdsLogs';
 import AdsAutomation from './ads/AdsAutomation';
 import AdsSchedulerConfig from './ads/AdsSchedulerConfig';
