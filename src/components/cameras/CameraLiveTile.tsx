@@ -54,15 +54,40 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
       setStatus("conectando");
       setErro(null);
       pc = new RTCPeerConnection(ICE);
+      let noFrameTimer: ReturnType<typeof setTimeout> | null = null;
       pc.ontrack = (ev) => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = ev.streams[0] || new MediaStream([ev.track]);
-          videoRef.current.play().catch(() => {});
+        if (!videoRef.current) return;
+        const stream = ev.streams[0] || new MediaStream([ev.track]);
+        videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {});
+        log("track recebido", { kind: ev.track.kind, muted: ev.track.muted, readyState: ev.track.readyState });
+
+        // Só considera "AO VIVO" quando o vídeo REALMENTE tocar (frame decodado).
+        // Sem isso, um track sem frames (ffmpeg travado no re-encode) mostra
+        // "AO VIVO" com tela preta.
+        const markLive = () => {
+          if (liveReached || closed) return;
           liveReached = true;
+          if (noFrameTimer) { clearTimeout(noFrameTimer); noFrameTimer = null; }
+          log("primeiro frame renderizado — AO VIVO");
           setStatus("ao-vivo");
-        }
+        };
+        videoRef.current.onplaying = markLive;
+        videoRef.current.onloadeddata = markLive;
+        ev.track.onunmute = markLive;
+
+        // Se em 8s nenhum frame chegar, é stream vazio (encoder/RTSP travado).
+        if (noFrameTimer) clearTimeout(noFrameTimer);
+        noFrameTimer = setTimeout(() => {
+          if (closed || liveReached) return;
+          const msg = "Coletor abriu a conexão mas nenhum frame chegou em 8s. Provável falha no re-encode (HEVC/perfil incompatível), RTSP com credencial errada, ou CPU do Coletor saturada. Atualize o Coletor para v1.7.7+, teste a RTSP no VLC e reduza câmeras simultâneas.";
+          log("SEM FRAMES", msg);
+          setErro(msg);
+          setStatus("erro");
+        }, 8_000);
       };
       pc.oniceconnectionstatechange = () => {
+        log("iceState", pc?.iceConnectionState);
         if (pc?.iceConnectionState === "failed" || pc?.iceConnectionState === "disconnected") {
           setStatus("erro");
           setErro("Conexão perdida");
