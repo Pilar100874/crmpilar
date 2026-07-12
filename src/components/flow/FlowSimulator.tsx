@@ -2639,17 +2639,38 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         const phone = interpolateVariables(config.phoneNumber || "", context);
         const msg = interpolateVariables(config.message || "", context);
         const mediaUrl = interpolateVariables(config.mediaUrl || "", context);
-        addSystemMessage(`📱 WhatsApp → ${phone || "(número não informado)"}`);
+        const outputVar = normalizeVarName(config.outputVariable || "envio_whatsapp_status");
+        const useReal = realModeRef.current;
+        addSystemMessage(`📱 ${useReal ? "[MODO REAL] " : ""}WhatsApp → ${phone || "(número não informado)"}`);
         if (mediaUrl) addBotMediaMessage(mediaUrl, "image", msg, node.id);
         else if (msg) addBotMessage(`[para ${phone}] ${msg}`, node.id);
-        const outputVar = normalizeVarName(config.outputVariable || "envio_whatsapp_status");
-        const newCtx = { ...contextRef.current, [outputVar]: "enviado" };
-        contextRef.current = newCtx;
-        setContext(newCtx);
-        safeSetTimeout(() => {
-          const nextNode = getNextNode(node.id);
-          if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
-        }, 1000);
+
+        (async () => {
+          let status = "enviado";
+          if (useReal && phone && msg) {
+            try {
+              const { executarBlocoWhatsapp } = await import("@/lib/workflowActionsExecutor");
+              const r = await executarBlocoWhatsapp({ telefone: phone, mensagem: msg }, {
+                variaveis: context,
+                workflow_tipo: "bot",
+                origem: "flow_simulator",
+              });
+              status = r.ok ? "enviado" : "falhou";
+              if (!r.ok) addSystemMessage(`⚠️ WhatsApp real falhou: ${r.erro || ""}`);
+              else addSuccessMessage("WhatsApp enviado de verdade");
+            } catch (e: any) {
+              status = "falhou";
+              addSystemMessage(`⚠️ Erro no WhatsApp real: ${e?.message || e}`);
+            }
+          }
+          const newCtx = { ...contextRef.current, [outputVar]: status };
+          contextRef.current = newCtx;
+          setContext(newCtx);
+          safeSetTimeout(() => {
+            const nextNode = getNextNode(node.id);
+            if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+          }, useReal ? 300 : 1000);
+        })();
         break;
       }
 
