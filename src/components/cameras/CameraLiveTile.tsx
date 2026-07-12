@@ -12,12 +12,13 @@ interface Props {
   filialId?: string | null;
   className?: string;
   autoStart?: boolean;
+  startDelayMs?: number;
   onMaximize?: () => void;
 }
 
 const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-export function CameraLiveTile({ cameraId, cameraNome, filialId, className, autoStart = true, onMaximize }: Props) {
+export function CameraLiveTile({ cameraId, cameraNome, filialId, className, autoStart = true, startDelayMs = 0, onMaximize }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [status, setStatus] = useState<"idle" | "conectando" | "ao-vivo" | "erro">(autoStart ? "conectando" : "idle");
@@ -181,6 +182,10 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
       }
       // Se o heartbeat chegou mas essa câmera não estava na lista, ainda tenta
       // (pode ser diferença de filial temporária); o Coletor descarta se não servir.
+      if (startDelayMs > 0) {
+        await new Promise((r) => setTimeout(r, startDelayMs));
+        if (closed) return;
+      }
 
       log("enviando request de stream ao coletor", { viewerId, coletorVersao, coletorServesCamera });
       sendAll({ type: "request", to: "coletor", viewer_id: viewerId, camera_id: cameraId, want_audio: false });
@@ -214,7 +219,7 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
       releaseChannels?.();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cameraId, filialId, nonce]);
+  }, [cameraId, filialId, nonce, startDelayMs]);
 
   const zoomIn = () => setScale((s) => Math.min(5, +(s + 0.5).toFixed(2)));
   const zoomOut = () => setScale((s) => {

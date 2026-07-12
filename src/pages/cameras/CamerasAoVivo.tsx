@@ -196,7 +196,7 @@ export default function CamerasAoVivo() {
                         <span>· {list.length}</span>
                       </div>
                       <div className={cn("grid gap-3", colClass)}>
-                        {list.map((c) => {
+                        {list.map((c, index) => {
                           const isMax = maximized?.id === c.id;
                           return (
                             <div
@@ -213,6 +213,7 @@ export default function CamerasAoVivo() {
                                   cameraId={c.id}
                                   cameraNome={c.nome}
                                   filialId={c.filial_id ?? null}
+                                  startDelayMs={Math.min(index, 8) * 700}
                                   onMaximize={() => setMaximized(c)}
                                 />
                               )}
