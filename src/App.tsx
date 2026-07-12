@@ -201,6 +201,7 @@ import AdsDashboard from "./pages/ads/AdsDashboard";
 import AdsCredentials from "./pages/ads/AdsCredentials";
 import AdsLogs from "./pages/ads/AdsLogs";
 import AdsAutomation from "./pages/ads/AdsAutomation";
+import AdsSchedulerConfig from "./pages/ads/AdsSchedulerConfig";
 import AdsPlatformDashboard from "./pages/ads/AdsPlatformDashboard";
 import AdsCampaigns from "./pages/ads/AdsCampaigns";
 import AdsReports from "./pages/ads/AdsReports";
