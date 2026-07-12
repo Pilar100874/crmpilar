@@ -330,6 +330,46 @@
           </div>
           <div class="status-line" id="camerasStatus">—</div>
           <div class="meta">Verifica conectividade das câmeras LAN a cada 30s e serve stream ao vivo via WebRTC.</div>
+
+          <!-- Configuração de vídeo (resolução / FPS / bitrate) -->
+          <details style="margin-top:10px; border-top:1px solid var(--stroke); padding-top:10px;">
+            <summary style="cursor:pointer; font-size:13px; font-weight:600; color:var(--text-2);">⚙️ Qualidade do vídeo ao vivo (resolução e FPS)</summary>
+            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-top:10px;">
+              <div>
+                <label style="font-size:11px; color:var(--text-2);">Resolução</label>
+                <select id="cfgVideoHeight" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;">
+                  <option value="240">240p (baixa)</option>
+                  <option value="360">360p</option>
+                  <option value="480" selected>480p (padrão)</option>
+                  <option value="540">540p</option>
+                  <option value="720">720p (HD)</option>
+                  <option value="1080">1080p (Full HD)</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px; color:var(--text-2);">FPS</label>
+                <select id="cfgVideoFps" style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;">
+                  <option value="5">5 fps</option>
+                  <option value="8">8 fps</option>
+                  <option value="10">10 fps</option>
+                  <option value="12" selected>12 fps</option>
+                  <option value="15">15 fps</option>
+                  <option value="20">20 fps</option>
+                  <option value="24">24 fps</option>
+                  <option value="30">30 fps</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px; color:var(--text-2);">Bitrate (kbps)</label>
+                <input id="cfgVideoBitrate" type="number" min="200" max="6000" step="100" value="900"
+                  style="width:100%; padding:6px 8px; border:1px solid var(--stroke); border-radius:6px; margin-top:2px;">
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+              <button class="btn" style="background:var(--brand); color:#fff; padding:6px 12px; font-size:13px;" onclick="salvarVideoConfig()">Salvar</button>
+              <span id="cfgVideoMsg" style="font-size:11px; color:var(--text-2);">Alterações valem para novas conexões "Ao Vivo".</span>
+            </div>
+          </details>
         </div>
       </div>
 
