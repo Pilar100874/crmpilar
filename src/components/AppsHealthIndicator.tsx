@@ -125,7 +125,15 @@ function getPushState(): PushState {
   return Notification.permission as PushState;
 }
 
-export function AppsHealthIndicator({ compact = false, floating = false }: { compact?: boolean; floating?: boolean }) {
+export function AppsHealthIndicator({
+  compact = false,
+  floating = false,
+  small = false,
+}: {
+  compact?: boolean;
+  floating?: boolean;
+  small?: boolean;
+}) {
   const [win, setWin] = useState<Health>({ at: null, ago: null });
   const [and, setAnd] = useState<Health>({ at: null, ago: null });
   const [filiais, setFiliais] = useState<FilialHealth[]>([]);
@@ -159,11 +167,13 @@ export function AppsHealthIndicator({ compact = false, floating = false }: { com
     : classify(win.ago);
   const andState = classify(and.ago);
 
-  const iconClass = floating
+  const iconClass = small
+    ? "h-4 w-4 text-foreground/70"
+    : floating
     ? "h-5 w-5 text-foreground/70"
     : "h-3.5 w-3.5 text-sidebar-foreground/60 group-hover:text-sidebar-foreground/80";
-  const dotClassSize = floating ? "h-2 w-2" : "h-1.5 w-1.5";
-  const tooltipSide = floating ? "bottom" : "right";
+  const dotClassSize = small || !floating ? "h-1.5 w-1.5" : "h-2 w-2";
+  const tooltipSide = floating || small ? "bottom" : "right";
 
   const indicators = (
     <div className={`flex items-center ${floating ? "gap-3" : "gap-2"}`}>
