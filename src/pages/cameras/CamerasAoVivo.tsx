@@ -89,10 +89,6 @@ export default function CamerasAoVivo() {
 
   const totalAtivas = cams?.length ?? 0;
   const totalFiltradas = filtered.length;
-  const startOrder = useMemo(
-    () => Object.fromEntries(filtered.map((c, index) => [c.id, index])),
-    [filtered],
-  );
 
   return (
     <div className="space-y-5">
@@ -217,7 +213,6 @@ export default function CamerasAoVivo() {
                                   cameraId={c.id}
                                   cameraNome={c.nome}
                                   filialId={c.filial_id ?? null}
-                                  startDelayMs={Math.min(startOrder[c.id] ?? 0, 8) * 700}
                                   onMaximize={() => setMaximized(c)}
                                 />
                               )}

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { Loader2, Radio, X, Camera as CameraIcon, ZoomIn, ZoomOut, Maximize2, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { acquireLiveSignalChannels, onLiveSignalHeartbeat, onLiveSignalMessage, requestLiveSignalHeartbeat } from "@/lib/cameras/liveSignalHub";
 
 interface Props {
   cameraId: string;
@@ -12,13 +11,12 @@ interface Props {
   filialId?: string | null;
   className?: string;
   autoStart?: boolean;
-  startDelayMs?: number;
   onMaximize?: () => void;
 }
 
 const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-export function CameraLiveTile({ cameraId, cameraNome, filialId, className, autoStart = true, startDelayMs = 0, onMaximize }: Props) {
+export function CameraLiveTile({ cameraId, cameraNome, filialId, className, autoStart = true, onMaximize }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [status, setStatus] = useState<"idle" | "conectando" | "ao-vivo" | "erro">(autoStart ? "conectando" : "idle");
@@ -31,6 +29,7 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
   useEffect(() => {
     if (!autoStart && nonce === 0) return;
     let pc: RTCPeerConnection | null = null;
+    const channels: ReturnType<typeof supabase.channel>[] = [];
     const viewerId = crypto.randomUUID();
     let closed = false;
     let liveReached = false;
@@ -39,11 +38,18 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
     let coletorServesCamera = false;
     let coletorVersao: string | null = null;
     let coletorCameras: string[] = [];
-    let sendAll: (payload: any) => void = () => {};
-    let releaseChannels: (() => void) | null = null;
-    let offMsg: (() => void) | null = null;
-    let offHeartbeat: (() => void) | null = null;
     const log = (...a: any[]) => console.log(`[CamLive ${cameraNome}]`, ...a);
+
+    // Sempre broadcasta em ambos os canais: plain + filial (caso a câmera
+    // ou o coletor esteja sem filial atribuída em algum dos lados).
+    const chanNames = new Set<string>(["webrtc-signal"]);
+    if (filialId) chanNames.add(`webrtc-signal:${filialId}`);
+
+    const sendAll = (payload: any) => {
+      for (const ch of channels) {
+        try { ch.send({ type: "broadcast", event: "msg", payload }); } catch {}
+      }
+    };
 
     (async () => {
       setStatus("conectando");
@@ -74,15 +80,15 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
         videoRef.current.onloadeddata = markLive;
         ev.track.onunmute = markLive;
 
-        // Se em 15s nenhum frame chegar, é stream vazio (encoder/RTSP travado).
+        // Se em 8s nenhum frame chegar, é stream vazio (encoder/RTSP travado).
         if (noFrameTimer) clearTimeout(noFrameTimer);
         noFrameTimer = setTimeout(() => {
           if (closed || liveReached) return;
-          const msg = "Coletor abriu a conexão mas nenhum frame chegou em 8s. Provável falha no re-encode, RTSP com credencial errada, ou CPU do Coletor saturada. Atualize o Coletor para a versão mais recente e teste a RTSP no VLC.";
+          const msg = "Coletor abriu a conexão mas nenhum frame chegou em 8s. Provável falha no re-encode (HEVC/perfil incompatível), RTSP com credencial errada, ou CPU do Coletor saturada. Atualize o Coletor para v1.7.7+, teste a RTSP no VLC e reduza câmeras simultâneas.";
           log("SEM FRAMES", msg);
           setErro(msg);
           setStatus("erro");
-        }, 15_000);
+        }, 8_000);
       };
       pc.oniceconnectionstatechange = () => {
         log("iceState", pc?.iceConnectionState);
@@ -92,18 +98,19 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
         }
       };
 
-      const onHeartbeat = (payload: any) => {
-        coletorSeenAt = Date.now();
-        coletorVersao = payload.versao || payload.version || null;
-        if (Array.isArray(payload.cameras)) {
-          coletorCameras = payload.cameras;
-          if (payload.cameras.includes(cameraId)) coletorServesCamera = true;
-        }
-        log("heartbeat coletor", { versao: coletorVersao, servesCamera: coletorServesCamera, totalCams: coletorCameras.length });
-      };
-
-      const onMsg = async (payload: any) => {
+      const onMsg = async ({ payload }: any) => {
         if (!payload) return;
+        // Heartbeat do coletor
+        if (payload.type === "coletor-online" && payload.to === "viewers") {
+          coletorSeenAt = Date.now();
+          coletorVersao = payload.versao || payload.version || null;
+          if (Array.isArray(payload.cameras)) {
+            coletorCameras = payload.cameras;
+            if (payload.cameras.includes(cameraId)) coletorServesCamera = true;
+          }
+          log("heartbeat coletor", { versao: coletorVersao, servesCamera: coletorServesCamera, totalCams: coletorCameras.length });
+          return;
+        }
         if (payload.to !== viewerId) return;
         log("msg do coletor", payload.type);
         if (payload.type === "offer") {
@@ -139,25 +146,18 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
         }
       };
 
-      offHeartbeat = onLiveSignalHeartbeat(onHeartbeat);
-      offMsg = onLiveSignalMessage(onMsg);
-      const signal = await acquireLiveSignalChannels(filialId);
-      sendAll = signal.sendAll;
-      releaseChannels = signal.release;
-      if (closed) {
-        releaseChannels?.();
-        releaseChannels = null;
-        return;
+      for (const name of chanNames) {
+        const ch = supabase.channel(name, { config: { broadcast: { self: false, ack: false } } });
+        ch.on("broadcast", { event: "msg" }, onMsg);
+        channels.push(ch);
+        await new Promise<void>((resolve) => {
+          ch.subscribe((s) => { if (s === "SUBSCRIBED") resolve(); });
+        });
       }
 
-      requestLiveSignalHeartbeat(sendAll, viewerId);
-
-      // Aguarda rapidamente por heartbeat compartilhado; no mosaico, todas as
-      // câmeras usam o mesmo canal para não abrir N WebSockets simultâneos.
-      const deadline = Date.now() + 3500;
-      while (!coletorSeenAt && Date.now() < deadline) {
-        await new Promise((r) => setTimeout(r, 200));
-      }
+      // Aguarda até 3s por um heartbeat antes de pedir o stream — se o coletor
+      // estiver online já veremos ele nesse intervalo (heartbeat sai a cada 2s).
+      await new Promise((r) => setTimeout(r, 3000));
 
       // Fallback: se o heartbeat de sinalização não chegou, consulta o status
       // reportado no banco (Coletor -> cv-coletor-cameras/report_status).
@@ -186,10 +186,6 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
       }
       // Se o heartbeat chegou mas essa câmera não estava na lista, ainda tenta
       // (pode ser diferença de filial temporária); o Coletor descarta se não servir.
-      if (startDelayMs > 0) {
-        await new Promise((r) => setTimeout(r, startDelayMs));
-        if (closed) return;
-      }
 
       log("enviando request de stream ao coletor", { viewerId, coletorVersao, coletorServesCamera });
       sendAll({ type: "request", to: "coletor", viewer_id: viewerId, camera_id: cameraId, want_audio: false });
@@ -201,7 +197,7 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
           else detalhes.push("versão do Coletor desconhecida (provavelmente < 1.7.6)");
           if (!coletorServesCamera) detalhes.push("esta câmera NÃO está na lista servida pelo Coletor (verifique filial/ativo)");
           else detalhes.push("Coletor conhece a câmera mas não abriu o stream em 25s — RTSP indisponível, HEVC sem re-encode, ou CPU saturada por muitas câmeras simultâneas");
-          const msg = `Coletor não respondeu ao pedido de stream. ${detalhes.join(" · ")}. Atualize o Coletor, confirme RTSP habilitado (teste no VLC) e reduza a resolução/fps se a CPU estiver alta.`;
+          const msg = `Coletor não respondeu ao pedido de stream. ${detalhes.join(" · ")}. Atualize para v1.7.7+, confirme RTSP habilitado (teste no VLC) e reduza câmeras simultâneas se a CPU do Coletor estiver alta.`;
           log("TIMEOUT", msg);
           setErro(msg);
           setStatus("erro");
@@ -218,12 +214,10 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
       } catch {}
       try { pc?.close(); } catch {}
       if (noFrameTimer) clearTimeout(noFrameTimer);
-      offMsg?.();
-      offHeartbeat?.();
-      releaseChannels?.();
+      for (const ch of channels) supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cameraId, filialId, nonce, startDelayMs]);
+  }, [cameraId, filialId, nonce]);
 
   const zoomIn = () => setScale((s) => Math.min(5, +(s + 0.5).toFixed(2)));
   const zoomOut = () => setScale((s) => {
