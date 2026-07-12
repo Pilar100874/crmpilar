@@ -1,12 +1,15 @@
 /* Remove TODOS os logos do ReportBro - interface e PDFs gerados */
+/* IMPORTANTE: todos os seletores DEVEM estar escopados a um container
+   ReportBro (ex: .rbroContainer, #rbro_header, #rbro_menu_panel) para
+   não afetar imagens/logos do restante da aplicação. */
 
-/* Seletores gerais de logo */
-.rbroLogo,
-.rbroPro,
-.rbro-logo,
-.rbro-branding,
-[class*="logo" i][class*="reportbro" i],
-[class*="branding" i][class*="reportbro" i],
+/* Seletores gerais de logo dentro do ReportBro */
+.rbroContainer .rbroLogo,
+.rbroContainer .rbroPro,
+.rbroContainer .rbro-logo,
+.rbroContainer .rbro-branding,
+.rbroContainer [class*="logo" i],
+.rbroContainer [class*="branding" i],
 .rbroHeader img,
 #rbro_header img,
 #rbro_menu_panel img[src*="logo"],
@@ -23,13 +26,16 @@
   left: -9999px !important;
 }
 
-/* Remove logos de imagens - PDFs e preview */
-img[src*="logo" i],
-img[src*="reportbro" i],
-img[alt*="reportbro" i],
-img[alt*="logo" i],
-img[title*="reportbro" i],
-img[title*="logo" i] {
+/* Remove logos de imagens dentro do ReportBro apenas */
+.rbroContainer img[src*="logo" i],
+.rbroContainer img[src*="reportbro" i],
+.rbroContainer img[alt*="reportbro" i],
+.rbroContainer img[alt*="logo" i],
+.rbroContainer img[title*="reportbro" i],
+.rbroContainer img[title*="logo" i],
+#rbro_header img,
+#rbro_menu_panel img,
+#rbro_detail_panel img[alt*="logo" i] {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
@@ -42,11 +48,10 @@ img[title*="logo" i] {
   left: -9999px !important;
 }
 
-/* Remove textos de marca/branding */
-*[class*="watermark" i],
-*[class*="powered" i],
-*[data-reportbro-branding],
-*[data-logo] {
+/* Remove textos de marca/branding do ReportBro */
+.rbroContainer *[class*="watermark" i],
+.rbroContainer *[class*="powered" i],
+.rbroContainer *[data-reportbro-branding] {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
@@ -56,24 +61,9 @@ img[title*="logo" i] {
   left: -9999px !important;
 }
 
-/* Remove logos em SVG e backgrounds */
-svg[class*="logo" i],
-svg[class*="branding" i],
-*[style*="logo"],
-*[style*="reportbro"] {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  width: 0 !important;
-  height: 0 !important;
-  position: absolute !important;
-  left: -9999px !important;
-}
-
-/* Adicional: remove qualquer link ou div com texto "ReportBro" */
-a[href*="reportbro" i],
-div:has(> img[src*="logo"]),
-div:has(> img[alt*="reportbro"]) {
+/* Remove links "ReportBro" */
+.rbroContainer a[href*="reportbro" i],
+a[href*="reportbro" i][target="_blank"] {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
