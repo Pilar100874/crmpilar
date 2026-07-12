@@ -303,7 +303,7 @@ export default function MenuHub() {
               );
             })}
           </div>
-        ) : (
+        ) : menuStyle === "list" ? (
           <div className="flex flex-col gap-2">
             {items.map((item) => {
               const Icon = item.icon;
@@ -327,7 +327,63 @@ export default function MenuHub() {
               );
             })}
           </div>
+        ) : (
+          <div className="flex flex-col gap-1 -mx-4 sm:-mx-6 lg:-mx-10">
+            {items.map((item) => {
+              const image = REAL_IMAGE_MAP[item.id] ?? REAL_IMAGE_MAP[item.title];
+              const Icon = item.icon;
+              const count = item.subItems?.length;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleClick(item)}
+                  className="group relative w-full h-24 sm:h-28 overflow-hidden text-left"
+                >
+                  {image ? (
+                    <img
+                      src={image}
+                      alt={item.title}
+                      loading="lazy"
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/60" />
+                  )}
+                  {/* Dark gradient overlay for text contrast */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-black/70" />
+                  <div className="relative z-10 flex items-center justify-between h-full px-6 sm:px-10">
+                    <div className="flex flex-col">
+                      <span className="text-white text-2xl sm:text-3xl font-bold tracking-wider uppercase drop-shadow-lg">
+                        {item.title}
+                      </span>
+                      {count ? (
+                        <span className="text-white/80 text-xs sm:text-sm mt-0.5">
+                          {String(count).padStart(2, "0")} itens
+                        </span>
+                      ) : (
+                        <span className="text-white/70 text-xs sm:text-sm mt-0.5 flex items-center gap-1">
+                          {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
+                          Abrir
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-baseline gap-1 text-white drop-shadow-lg">
+                      {count ? (
+                        <>
+                          <span className="text-3xl sm:text-4xl font-light">{count}</span>
+                          <span className="text-xs sm:text-sm opacity-80">itens</span>
+                        </>
+                      ) : (
+                        <ChevronRight className="h-6 w-6 opacity-80" />
+                      )}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         )}
+
       </div>
     </div>
   );
