@@ -34,13 +34,20 @@ Deno.serve(async (req) => {
 
     if (contasErr) return json({ error: contasErr.message }, 500);
 
+    // Credenciais de app por estabelecimento (Meta/Google/TikTok)
+    const { data: appCreds } = await supa
+      .from('ads_platform_apps')
+      .select('*')
+      .eq('estabelecimento_id', estabelecimento_id)
+      .maybeSingle();
+
     const resultados: any[] = [];
     for (const conta of contas || []) {
       const plataforma = platById.get(conta.plataforma_id) || '';
       let cred = (conta.credenciais_json || {}) as any;
       try {
         // Refresh token se vencido
-        cred = await refreshIfNeeded(supa, conta, plataforma, cred);
+        cred = await refreshIfNeeded(supa, conta, plataforma, cred, appCreds || {});
         let insights: any[] = [];
         if (plataforma.includes('meta') || plataforma.includes('facebook')) {
           insights = await coletarMeta(cred);
