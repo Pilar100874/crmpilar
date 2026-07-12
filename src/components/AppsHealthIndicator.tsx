@@ -192,34 +192,35 @@ export function AppsHealthIndicator({ compact = false }: { compact?: boolean }) 
             Apps
           </span>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="relative inline-flex items-center gap-1">
-                <Monitor className="h-3.5 w-3.5 text-sidebar-foreground/60 group-hover:text-sidebar-foreground/80" />
+              <span className={`inline-flex items-center gap-1.5 rounded-full pl-1 pr-2.5 py-1 transition-all group-hover:scale-[1.03] ${chipClass(winState)}`}>
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-background/60">
+                  <Monitor className="h-3 w-3" />
+                </span>
+                <span className="text-[10px] font-semibold tracking-wide uppercase">Coletor</span>
                 <span className={`h-1.5 w-1.5 rounded-full ${dotClass(winState)}`} />
               </span>
             </TooltipTrigger>
-            <TooltipContent side="right" className="text-xs max-w-[280px]">
+            <TooltipContent side="bottom" className="text-xs max-w-[280px]">
               <div className="font-semibold">Coletor Windows</div>
               {filiais.length > 0 ? (
-                <>
-              <div className="flex flex-col gap-1 max-h-56 overflow-auto">
-                    {filiais.map((f) => (
-                      <div key={f.id} className="flex items-center gap-1.5">
-                        <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotClass(f.state)}`} />
-                        <span className="truncate">{f.nome}</span>
-                        <span className="text-muted-foreground ml-auto text-[10px] whitespace-nowrap">
-                          {f.equipamentos === 0
-                            ? "sem equipamento"
-                            : f.at
-                            ? new Date(f.at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
-                            : "nunca"}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </>
+                <div className="flex flex-col gap-1 max-h-56 overflow-auto">
+                  {filiais.map((f) => (
+                    <div key={f.id} className="flex items-center gap-1.5">
+                      <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotClass(f.state)}`} />
+                      <span className="truncate">{f.nome}</span>
+                      <span className="text-muted-foreground ml-auto text-[10px] whitespace-nowrap">
+                        {f.equipamentos === 0
+                          ? "sem equipamento"
+                          : f.at
+                          ? new Date(f.at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+                          : "nunca"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <div className="text-muted-foreground">{label(winState, win.at)}</div>
               )}
@@ -228,29 +229,37 @@ export function AppsHealthIndicator({ compact = false }: { compact?: boolean }) 
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="relative inline-flex items-center gap-1">
-                <Smartphone className="h-3.5 w-3.5 text-sidebar-foreground/60 group-hover:text-sidebar-foreground/80" />
+              <span className={`inline-flex items-center gap-1.5 rounded-full pl-1 pr-2.5 py-1 transition-all group-hover:scale-[1.03] ${chipClass(andState)}`}>
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-background/60">
+                  <Smartphone className="h-3 w-3" />
+                </span>
+                <span className="text-[10px] font-semibold tracking-wide uppercase">Hub</span>
                 <span className={`h-1.5 w-1.5 rounded-full ${dotClass(andState)}`} />
               </span>
             </TooltipTrigger>
-            <TooltipContent side="right" className="text-xs">
+            <TooltipContent side="bottom" className="text-xs">
               <div className="font-semibold">Pilar Hub (Android)</div>
               <div className="text-muted-foreground">{label(andState, and.at)}</div>
             </TooltipContent>
           </Tooltip>
+
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="relative inline-flex items-center gap-1">
-                <Bell className="h-3.5 w-3.5 text-sidebar-foreground/60 group-hover:text-sidebar-foreground/80" />
+              <span className={`inline-flex items-center gap-1.5 rounded-full pl-1 pr-2.5 py-1 transition-all group-hover:scale-[1.03] ${pushChipClass(push)}`}>
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-background/60">
+                  <Bell className="h-3 w-3" />
+                </span>
+                <span className="text-[10px] font-semibold tracking-wide uppercase">Push</span>
                 <span className={`h-1.5 w-1.5 rounded-full ${pushDotClass(push)}`} />
               </span>
             </TooltipTrigger>
-            <TooltipContent side="right" className="text-xs">
+            <TooltipContent side="bottom" className="text-xs">
               <div className="font-semibold">Notificações Push</div>
               <div className="text-muted-foreground">{pushLabel(push)}</div>
             </TooltipContent>
           </Tooltip>
         </div>
+
       </NavLink>
     </TooltipProvider>
   );
