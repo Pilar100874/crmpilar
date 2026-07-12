@@ -141,7 +141,21 @@ export async function executarAutomacoesLogistica(
           } catch (e) {
             console.error('[logistica] falha ao disparar push', e);
           }
+
+        // Handle "enviar_sms" - envia SMS via gateway
+        if ((nodeType as string) === 'enviar_sms') {
+          try {
+            await executarBlocoSms(config as any, {
+              variaveis: { veiculos, automacao: { id: automacao.id, nome: automacao.nome } },
+              estabelecimento_id: estabelecimentoId,
+              workflow_tipo: 'logistica',
+              origem: 'logistica_automacao',
+            });
+          } catch (e) {
+            console.error('[logistica] falha ao enviar SMS', e);
+          }
         }
+      }
       }
     }
     }
