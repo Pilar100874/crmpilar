@@ -224,14 +224,24 @@ export default function MenuHub() {
             </button>
           ) : null}
           <div className="flex-1 min-w-0">
-            <div className="text-[10px] sm:text-xs font-semibold tracking-[0.35em] text-primary/90 uppercase mb-1">
-              Premium
+            <div className="flex items-center gap-2 mb-2">
+              <span className="h-px w-6 bg-primary/70" aria-hidden />
+              <span className="text-[10px] sm:text-xs font-medium tracking-[0.4em] text-primary/90 uppercase">
+                Premium Collection
+              </span>
             </div>
-            <h1 className="font-serif italic text-4xl sm:text-6xl font-bold leading-[0.95] tracking-tight bg-gradient-to-br from-foreground via-foreground to-primary bg-clip-text text-transparent drop-shadow-[0_2px_12px_hsl(var(--background)/0.6)]">
-              {title}
+            <h1 className="font-serif text-4xl sm:text-6xl font-normal leading-[1] tracking-[-0.02em] text-foreground">
+              <span className="italic font-light">{title.split(" ")[0]}</span>
+              {title.includes(" ") && (
+                <span className="italic font-medium text-primary"> {title.split(" ").slice(1).join(" ")}</span>
+              )}
             </h1>
-            <div className="mt-2 h-px w-24 bg-gradient-to-r from-primary/70 to-transparent" />
+            <div className="mt-3 flex items-center gap-2">
+              <span className="h-px w-16 bg-gradient-to-r from-primary/70 to-transparent" />
+              <span className="text-[10px] tracking-[0.3em] text-muted-foreground uppercase">Est. Menu</span>
+            </div>
           </div>
+
           <button
             onClick={toggleTheme}
             className="h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center hover:bg-accent transition-colors"
