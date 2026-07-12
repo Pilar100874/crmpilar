@@ -908,10 +908,18 @@ All colors MUST be HSL.
 /* (estilos light/brand/glass removidos — apenas Tradicional e Botões) */
 
 /* ---- Buttons: remove o menu lateral e usa navegação por botões na tela (/menu) ---- */
-html[data-main-menu-style="buttons"] .slide-out-menu,
+.menu-buttons-fab { display: none; }
+html[data-main-menu-style="buttons"] [data-main-sidebar],
 html[data-main-menu-style="buttons"] .slide-out-menu-tab {
   display: none !important;
 }
+html[data-main-menu-style="buttons"] main.flex-1 {
+  margin-left: 0 !important;
+}
+html[data-main-menu-style="buttons"] .menu-buttons-fab {
+  display: flex;
+}
+
 
 
 
