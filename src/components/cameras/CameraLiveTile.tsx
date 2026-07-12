@@ -158,11 +158,19 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
       // Se o heartbeat chegou mas essa câmera não estava na lista, ainda tenta
       // (pode ser diferença de filial temporária); o Coletor descarta se não servir.
 
+      log("enviando request de stream ao coletor", { viewerId, coletorVersao, coletorServesCamera });
       sendAll({ type: "request", to: "coletor", viewer_id: viewerId, camera_id: cameraId });
 
       setTimeout(() => {
         if (!closed && !liveReached) {
-          setErro("Coletor não respondeu ao pedido de stream. Atualize o Coletor para a versão mais recente, mantenha o módulo de câmeras ativo e confirme se a câmera tem RTSP habilitado.");
+          const detalhes: string[] = [];
+          if (coletorVersao) detalhes.push(`Coletor v${coletorVersao}`);
+          else detalhes.push("versão do Coletor desconhecida (provavelmente < 1.7.6)");
+          if (!coletorServesCamera) detalhes.push("esta câmera NÃO está na lista servida pelo Coletor (verifique filial/ativo)");
+          else detalhes.push("Coletor conhece a câmera mas não abriu o stream em 25s — RTSP indisponível, HEVC sem re-encode, ou CPU saturada por muitas câmeras simultâneas");
+          const msg = `Coletor não respondeu ao pedido de stream. ${detalhes.join(" · ")}. Atualize para v1.7.7+, confirme RTSP habilitado (teste no VLC) e reduza câmeras simultâneas se a CPU do Coletor estiver alta.`;
+          log("TIMEOUT", msg);
+          setErro(msg);
           setStatus("erro");
         }
       }, 25_000);
