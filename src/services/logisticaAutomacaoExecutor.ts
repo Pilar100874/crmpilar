@@ -3,7 +3,7 @@ import { VeiculoComStatus } from '@/types/logistica';
 import { differenceInMinutes } from 'date-fns';
 import { executarBlocoPush, PushBlockConfig } from '@/lib/pushExecutor';
 import { executarBlocoSms } from '@/lib/smsExecutor';
-import { executarBlocoWhatsapp, executarBlocoEmail } from '@/lib/workflowActionsExecutor';
+import { executarBlocoWhatsapp, executarBlocoEmail, executarBlocoWebhook, executarBlocoMensagemInterna, executarBlocoAvisoSistema } from '@/lib/workflowActionsExecutor';
 
 interface AutomacaoFlowNode {
   id: string;
