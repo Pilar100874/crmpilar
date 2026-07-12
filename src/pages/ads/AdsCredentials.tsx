@@ -18,6 +18,20 @@ import {
   HelpCircle, Link2, Settings
 } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { HelpHint } from "@/components/ads/HelpHint";
+
+const fieldHelp: Record<string, { steps: string[]; link?: { label: string; url: string } }> = {
+  client_id: { steps: ["Google Cloud Console → APIs & Services → Credentials", "Crie um OAuth Client ID (Web app)", "Copie o Client ID gerado"], link: { label: "Abrir Google Cloud Console", url: "https://console.cloud.google.com/apis/credentials" } },
+  client_secret: { steps: ["No mesmo Client ID criado acima", "Copie o Client Secret exibido"], link: { label: "Abrir Google Cloud Console", url: "https://console.cloud.google.com/apis/credentials" } },
+  developer_token: { steps: ["Entre no Google Ads (conta MCC)", "Ferramentas → Configuração → API Center", "Copie o Developer Token"], link: { label: "Abrir Google Ads", url: "https://ads.google.com" } },
+  refresh_token: { steps: ["Use OAuth2 Playground com seus Client ID/Secret", "Autorize o escopo AdWords", "Troque o code por refresh_token"], link: { label: "OAuth Playground", url: "https://developers.google.com/oauthplayground" } },
+  customer_id: { steps: ["Google Ads → topo direito, ao lado do seu email", "Copie o ID sem hifens (ex: 1234567890)"] },
+  access_token: { steps: ["Meta: Business Manager → Configurações → Usuários do sistema → Gerar token", "TikTok: business-api.tiktok.com → seu app → Access Token"], link: { label: "Meta Business", url: "https://business.facebook.com/settings/system-users" } },
+  account_id: { steps: ["Meta Ads Manager → topo esquerdo mostra 'act_XXXXX'", "Copie apenas o número (ou o prefixo completo act_...)"] },
+  advertiser_id: { steps: ["TikTok Ads Manager → topo, ao lado do nome da conta", "Copie o número exibido"] },
+  seller_id: { steps: ["Mercado Livre → Minha Conta → ID de vendedor"] },
+  profile_id: { steps: ["Amazon Ads → Configurações → Perfis → copie o Profile ID"] },
+};
 
 const platformIcons: Record<string, any> = {
   google_ads: Search,
@@ -273,7 +287,12 @@ export default function AdsCredentials() {
                       
                       {credentialFields[selectedPlatform.nome]?.map(field => (
                         <div key={field.key} className="space-y-2">
-                          <Label>{field.label} {field.required && "*"}</Label>
+                          <div className="flex items-center gap-1">
+                            <Label>{field.label} {field.required && "*"}</Label>
+                            {fieldHelp[field.key] && (
+                              <HelpHint title={`Como obter: ${field.label}`} steps={fieldHelp[field.key].steps} link={fieldHelp[field.key].link} />
+                            )}
+                          </div>
                           <div className="relative">
                             <Input
                               type={field.type === "password" && !showSecrets[field.key] ? "password" : "text"}

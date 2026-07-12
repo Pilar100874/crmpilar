@@ -29,11 +29,11 @@ import AdsCampaigns from './ads/AdsCampaigns';
 import AdsReports from './ads/AdsReports';
 import AdsAlerts from './ads/AdsAlerts';
 import AdsPlatformDashboard from './ads/AdsPlatformDashboard';
-import AdsCredentials from './ads/AdsCredentials';
+
 import AdsLogs from './ads/AdsLogs';
 import AdsAutomation from './ads/AdsAutomation';
 import AdsSchedulerConfig from './ads/AdsSchedulerConfig';
-import AdsPlatformApps from './ads/AdsPlatformApps';
+import AdsConexoes from './ads/AdsConexoes';
 import AdsSetupWizard from './ads/AdsSetupWizard';
 import { AdsSetupStatusBanner, useAdsSetupStatus } from '@/components/ads/AdsSetupStatusBanner';
 
@@ -62,27 +62,31 @@ interface TabItem {
   platform?: string;
 }
 
+// Menu reagrupado — grupos lógicos, itens antigos ainda acessíveis via ids
 const tabItems: TabItem[] = [
   { id: 'wizard', label: 'Wizard de Setup', icon: Sparkles, description: 'Assistente guiado para configurar tudo passo a passo' },
   { id: 'campaigns', label: 'Campanhas', icon: Target, description: 'Gerenciar campanhas de anúncios' },
+  { id: 'automation', label: 'Automações', icon: Zap, description: 'Regras de automação de anúncios' },
+  { id: 'scheduler', label: 'Agendamento', icon: Clock, description: 'Frequência de execução das automações' },
+  { id: 'connections', label: 'Conexões', icon: Key, description: 'Contas de anúncio + Apps do Desenvolvedor' },
   { id: 'reports', label: 'Relatórios', icon: FileBarChart, description: 'Relatórios personalizados' },
-  { id: 'alerts', label: 'Alertas', icon: Bell, description: 'Configurar alertas de performance' },
+  { id: 'alerts', label: 'Alertas', icon: Bell, description: 'Alertas de performance' },
+  { id: 'logs', label: 'Logs de Coleta', icon: FileText, description: 'Histórico de coleta de dados' },
   { id: 'google', label: 'Google Ads', icon: GoogleIcon, description: 'Dashboard Google Ads', platform: 'google' },
   { id: 'meta', label: 'Meta Ads', icon: MetaIcon, description: 'Dashboard Meta Ads (Facebook/Instagram)', platform: 'meta' },
   { id: 'tiktok', label: 'TikTok Ads', icon: TikTokIcon, description: 'Dashboard TikTok Ads', platform: 'tiktok' },
   { id: 'mercadolivre', label: 'Mercado Livre Ads', icon: MercadoLivreIcon, description: 'Dashboard Mercado Livre Ads', platform: 'mercado_livre' },
   { id: 'amazon', label: 'Amazon Ads', icon: AmazonIcon, description: 'Dashboard Amazon Ads', platform: 'amazon' },
-  { id: 'credentials', label: 'Credenciais', icon: Key, description: 'Gerenciar credenciais das plataformas' },
-  { id: 'logs', label: 'Logs de Coleta', icon: FileText, description: 'Histórico de coleta de dados' },
-  { id: 'automation', label: 'Automações', icon: Zap, description: 'Regras de automação de anúncios' },
-  { id: 'scheduler', label: 'Agendamento', icon: Clock, description: 'Configurar frequência de execução das automações' },
-  { id: 'platform-apps', label: 'Apps das Plataformas', icon: Key, description: 'Credenciais de App (Meta/Google/TikTok) para refresh e ações' },
-
-
 ];
 
 const AdsHub: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' is the default for AdsDashboard
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search).get('tab');
+      if (p) return p;
+    }
+    return 'dashboard';
+  });
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -156,15 +160,15 @@ const AdsHub: React.FC = () => {
       case 'amazon':
         return <AdsPlatformDashboard platform={currentTab?.platform} />;
       case 'credentials':
-        return <AdsCredentials />;
+      case 'platform-apps':
+      case 'connections':
+        return <AdsConexoes />;
       case 'logs':
         return <AdsLogs />;
       case 'automation':
         return <AdsAutomation />;
       case 'scheduler':
         return <AdsSchedulerConfig />;
-      case 'platform-apps':
-        return <AdsPlatformApps />;
       case 'wizard':
         return <AdsSetupWizard />;
       default:
