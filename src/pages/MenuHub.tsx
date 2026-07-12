@@ -236,12 +236,27 @@ export default function MenuHub() {
             ) : null}
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline gap-3 flex-wrap">
-                <h1 className="font-serif text-4xl sm:text-6xl font-normal leading-[1] tracking-[-0.02em] text-foreground">
-                  <span className="italic font-light">{title.split(" ")[0]}</span>
-                  {title.includes(" ") && (
-                    <span className="italic font-medium text-primary"> {title.split(" ").slice(1).join(" ")}</span>
-                  )}
-                </h1>
+                {openItem ? (
+                  <h1 className="font-serif text-4xl sm:text-6xl font-normal leading-[1] tracking-[-0.02em] text-foreground">
+                    <span className="italic font-light">{title.split(" ")[0]}</span>
+                    {title.includes(" ") && (
+                      <span className="italic font-medium text-primary"> {title.split(" ").slice(1).join(" ")}</span>
+                    )}
+                  </h1>
+                ) : (
+                  <img
+                    src={logoBranco}
+                    alt="Logo"
+                    className="h-12 sm:h-16 w-auto object-contain dark:block hidden"
+                  />
+                )}
+                {!openItem && (
+                  <img
+                    src={logoPreto}
+                    alt="Logo"
+                    className="h-12 sm:h-16 w-auto object-contain dark:hidden block"
+                  />
+                )}
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="h-px w-4 bg-primary/70" aria-hidden />
                   <span className="text-[10px] sm:text-xs font-medium tracking-[0.3em] text-primary/90 uppercase">
