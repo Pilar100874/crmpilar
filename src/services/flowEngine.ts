@@ -141,16 +141,16 @@ export class FlowEngine {
         for (const next of pushNext) await this.executeNode(next);
         break;
       }
-      case "enviar_sms": {
+      case "send_sms": {
         try {
           const { executarBlocoSms } = await import("@/lib/smsExecutor");
           await executarBlocoSms(data as any, {
-            variaveis: (this as any).variables || (this as any).contexto || {},
-            workflow_tipo: "ads",
-            origem: "ads_flow",
+            variaveis: (this as any).context?.vars || {},
+            workflow_tipo: "bot",
+            origem: "bot_flow",
           });
         } catch (e) {
-          console.error("[flowEngine] enviar_sms falhou:", e);
+          console.error("[flowEngine] send_sms falhou:", e);
         }
         const smsNext = this.getNextNodes(node.id);
         for (const next of smsNext) await this.executeNode(next);
