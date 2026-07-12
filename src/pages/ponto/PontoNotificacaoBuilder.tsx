@@ -97,109 +97,86 @@ function CustomNode({ id, data, selected }: any) {
   const isBreakpoint = !!data.isBreakpoint;
   const isSkipped = !!data.isSkipped;
   const isHighlighted = !!data.isHighlighted;
+  const isCondicao = data.type === "condicao";
   const cbs = useContext(NodeCallbacksContext);
 
   return (
-    <div className={cn(
-      "rounded-xl border-2 shadow-md bg-card min-w-[210px] max-w-[260px] transition-all relative group",
-      selected && "ring-2 ring-primary border-primary",
-      isBreakpoint && "border-orange-500 ring-2 ring-orange-400/40",
-      isSkipped && "opacity-50",
-      isHighlighted && "ring-4 ring-green-500/60 border-green-500 scale-[1.02]",
-      !selected && !isBreakpoint && !isHighlighted && "border-border hover:border-primary/40"
-    )}>
-      <Handle
-        type="target"
-        position={Position.Top}
-        onMouseDownCapture={() => cbs.onManualConnectStart?.(id, null, "target")}
-        onTouchStartCapture={() => cbs.onManualConnectStart?.(id, null, "target")}
-        onPointerDownCapture={() => cbs.onManualConnectStart?.(id, null, "target")}
-        className="!bg-primary !w-5 !h-5 !border-2 !border-background !rounded-full !cursor-crosshair !z-50 !pointer-events-auto"
-      />
+    <Card className={cn(getWorkflowBlockCardClass({ selected, isBreakpoint, isSkipped, isHighlighted, size: "default" }), "relative group")}>
+      {data.type !== "trigger" && (
+        <Handle type="target" position={Position.Top} className={WORKFLOW_HANDLE_CLASS} />
+      )}
 
-      <div className={cn("px-3 py-2 rounded-t-lg border-b flex items-center gap-2", b.color)}>
-        <Icon className="w-4 h-4" />
-        <span className="text-xs font-semibold uppercase tracking-wide flex-1">{b.label}</span>
-        {isBreakpoint && <Pause className="w-3 h-3" />}
-        {isSkipped && <SkipForward className="w-3 h-3" />}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-            <button className="p-0.5 hover:bg-black/10 rounded opacity-60 group-hover:opacity-100">
-              <MoreVertical className="w-3.5 h-3.5" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="z-[1001]">
-            <DropdownMenuItem onClick={() => cbs.onDuplicate?.(id)}><Copy className="w-3.5 h-3.5 mr-2" />Duplicar</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => cbs.onToggleBreakpoint?.(id)}>
-              <Pause className="w-3.5 h-3.5 mr-2" />{isBreakpoint ? "Remover breakpoint" : "Pausar aqui"}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => cbs.onToggleSkip?.(id)}>
-              <SkipForward className="w-3.5 h-3.5 mr-2" />{isSkipped ? "Reativar bloco" : "Pular na execução"}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => cbs.onAddNote?.(id)}><StickyNote className="w-3.5 h-3.5 mr-2" />{data.note ? "Editar nota" : "Adicionar nota"}</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => cbs.onDelete?.(id)} className="text-destructive"><Trash2 className="w-3.5 h-3.5 mr-2" />Excluir</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      <div className="px-3 py-2">
-        <div className="text-sm font-medium truncate">{data.label || b.label}</div>
-        {data.config?.evento_gatilho && <div className="text-xs text-muted-foreground truncate">Evento: {EVENTOS.find(e => e.key === data.config.evento_gatilho)?.label}</div>}
-        {data.config?.mensagem && <div className="text-xs text-muted-foreground truncate">{data.config.mensagem}</div>}
-        {data.config?.url && <div className="text-xs text-muted-foreground truncate">{data.config.url}</div>}
-        {data.note && <div className="text-[11px] mt-1 p-1.5 rounded bg-yellow-50 border border-yellow-200 text-yellow-900 truncate">📝 {data.note}</div>}
-      </div>
-
-      {data.type === "condicao" ? (
-        <>
-          <div className="flex justify-around pb-1 text-[10px] font-semibold">
-            <span className="text-green-600">SIM</span>
-            <span className="text-red-600">NÃO</span>
+      <div className="p-3">
+        <div className="flex items-start gap-2 mb-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="p-1 rounded bg-primary/5 border border-primary/20">
+                <Icon className="w-3.5 h-3.5 text-primary" />
+              </div>
+              <span className="font-semibold text-sm text-foreground truncate">{data.label || b.label}</span>
+              {isBreakpoint && <Pause className="w-3 h-3 text-orange-500" />}
+              {isSkipped && <SkipForward className="w-3 h-3 text-muted-foreground" />}
+            </div>
+            <p className="text-xs text-muted-foreground line-clamp-2">{b.label}</p>
           </div>
-          <Handle
-            type="source"
-            id="sim"
-            position={Position.Bottom}
-            onMouseDownCapture={() => cbs.onManualConnectStart?.(id, "sim", "source")}
-            onTouchStartCapture={() => cbs.onManualConnectStart?.(id, "sim", "source")}
-            onPointerDownCapture={() => cbs.onManualConnectStart?.(id, "sim", "source")}
-            style={{ left: "30%" }}
-            className="!bg-green-500 !w-5 !h-5 !border-2 !border-background !rounded-full !cursor-crosshair !z-50 !pointer-events-auto"
-          />
-          <Handle
-            type="source"
-            id="nao"
-            position={Position.Bottom}
-            onMouseDownCapture={() => cbs.onManualConnectStart?.(id, "nao", "source")}
-            onTouchStartCapture={() => cbs.onManualConnectStart?.(id, "nao", "source")}
-            onPointerDownCapture={() => cbs.onManualConnectStart?.(id, "nao", "source")}
-            style={{ left: "70%" }}
-            className="!bg-red-500 !w-5 !h-5 !border-2 !border-background !rounded-full !cursor-crosshair !z-50 !pointer-events-auto"
-          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
+              <button className="p-1 hover:bg-muted rounded transition-colors">
+                <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="z-[1001]">
+              <DropdownMenuItem onClick={() => cbs.onDuplicate?.(id)}><Copy className="w-3.5 h-3.5 mr-2" />Duplicar</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => cbs.onToggleBreakpoint?.(id)}>
+                <Pause className="w-3.5 h-3.5 mr-2" />{isBreakpoint ? "Remover breakpoint" : "Pausar aqui"}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => cbs.onToggleSkip?.(id)}>
+                <SkipForward className="w-3.5 h-3.5 mr-2" />{isSkipped ? "Reativar bloco" : "Pular na execução"}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => cbs.onAddNote?.(id)}><StickyNote className="w-3.5 h-3.5 mr-2" />{data.note ? "Editar nota" : "Adicionar nota"}</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => cbs.onDelete?.(id)} className="text-destructive"><Trash2 className="w-3.5 h-3.5 mr-2" />Excluir</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {(data.config?.evento_gatilho || data.config?.mensagem || data.config?.url) && (
+          <div className="space-y-0.5">
+            {data.config?.evento_gatilho && <div className="text-xs text-muted-foreground truncate">Evento: {EVENTOS.find(e => e.key === data.config.evento_gatilho)?.label}</div>}
+            {data.config?.mensagem && <div className="text-xs text-muted-foreground truncate">{data.config.mensagem}</div>}
+            {data.config?.url && <div className="text-xs text-muted-foreground truncate">{data.config.url}</div>}
+          </div>
+        )}
+
+        {data.note && (
+          <div className="mt-2 pt-2 border-t border-border text-[11px] text-muted-foreground whitespace-pre-wrap">
+            📝 {data.note}
+          </div>
+        )}
+      </div>
+
+      {isCondicao ? (
+        <>
+          <Handle type="source" id="sim" position={Position.Bottom} className="!bg-green-500 !w-3 !h-3 !border-2 !border-background" style={{ left: "35%" }} />
+          <div className="absolute bottom-0 left-[35%] -translate-x-1/2 translate-y-full mt-1 text-[10px] font-medium text-green-600">SIM</div>
+          <Handle type="source" id="nao" position={Position.Bottom} className="!bg-red-500 !w-3 !h-3 !border-2 !border-background" style={{ left: "65%" }} />
+          <div className="absolute bottom-0 left-[65%] -translate-x-1/2 translate-y-full mt-1 text-[10px] font-medium text-red-600">NÃO</div>
           <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, "sim", e.clientX, e.clientY); }}
-            className="absolute -bottom-7 left-[30%] -translate-x-1/2 w-5 h-5 rounded-full bg-green-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
+            className="absolute -bottom-8 left-[35%] -translate-x-1/2 w-5 h-5 rounded-full bg-green-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
           <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, "nao", e.clientX, e.clientY); }}
-            className="absolute -bottom-7 left-[70%] -translate-x-1/2 w-5 h-5 rounded-full bg-red-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
+            className="absolute -bottom-8 left-[65%] -translate-x-1/2 w-5 h-5 rounded-full bg-red-500 text-white shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
         </>
       ) : (
         <>
-          <Handle
-            type="source"
-            position={Position.Bottom}
-            onMouseDownCapture={() => cbs.onManualConnectStart?.(id, null, "source")}
-            onTouchStartCapture={() => cbs.onManualConnectStart?.(id, null, "source")}
-            onPointerDownCapture={() => cbs.onManualConnectStart?.(id, null, "source")}
-            className="!bg-primary !w-5 !h-5 !border-2 !border-background !rounded-full !cursor-crosshair !z-50 !pointer-events-auto"
-          />
+          <Handle type="source" position={Position.Bottom} className={WORKFLOW_HANDLE_CLASS} />
           <button onClick={(e) => { e.stopPropagation(); cbs.onAddNext?.(id, null, e.clientX, e.clientY); }}
             className="absolute -bottom-7 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-primary text-primary-foreground shadow flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:scale-110 transition"><Plus className="w-3 h-3" /></button>
-
         </>
       )}
-    </div>
+    </Card>
   );
 }
+
 
 const nodeTypes: NodeTypes = { custom: CustomNode as any };
 
