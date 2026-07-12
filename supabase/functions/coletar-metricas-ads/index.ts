@@ -37,8 +37,10 @@ Deno.serve(async (req) => {
     const resultados: any[] = [];
     for (const conta of contas || []) {
       const plataforma = platById.get(conta.plataforma_id) || '';
-      const cred = (conta.credenciais_json || {}) as any;
+      let cred = (conta.credenciais_json || {}) as any;
       try {
+        // Refresh token se vencido
+        cred = await refreshIfNeeded(supa, conta, plataforma, cred);
         let insights: any[] = [];
         if (plataforma.includes('meta') || plataforma.includes('facebook')) {
           insights = await coletarMeta(cred);
