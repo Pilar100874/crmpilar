@@ -137,16 +137,16 @@ export default function AdsSchedulerConfig() {
             </div>
           )}
 
-          <div className="flex gap-2">
-            <Button onClick={salvar} disabled={saving || (cfg.frequencia === "custom" && !validCron(cfg.cron_expr || ""))}>
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2">
+            <Button onClick={salvar} disabled={saving || (cfg.frequencia === "custom" && !validCron(cfg.cron_expr || ""))} className="w-full sm:w-auto">
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
               Salvar
             </Button>
-            <Button variant="outline" onClick={() => executarAgora(false)} disabled={runningNow}>
+            <Button variant="outline" onClick={() => executarAgora(false)} disabled={runningNow} className="w-full sm:w-auto">
               {runningNow ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Play className="w-4 h-4 mr-2" />}
               Executar agora
             </Button>
-            <Button variant="secondary" onClick={() => executarAgora(true)} disabled={runningNow} title="Simula sem executar ações reais">
+            <Button variant="secondary" onClick={() => executarAgora(true)} disabled={runningNow} title="Simula sem executar ações reais" className="w-full sm:w-auto">
               {runningNow ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Play className="w-4 h-4 mr-2" />}
               Simular (dry-run)
             </Button>
