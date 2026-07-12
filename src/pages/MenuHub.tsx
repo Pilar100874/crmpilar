@@ -165,9 +165,25 @@ export default function MenuHub() {
   }, []);
 
   const [menuStyle, setMenuStyle] = useState<MenuStyle>(() => {
-    return (localStorage.getItem("menu-style") as MenuStyle) || "icons";
+    return (localStorage.getItem("system_main_menu_layout") as MenuStyle)
+      || (localStorage.getItem("menu-style") as MenuStyle)
+      || "icons";
   });
-  useEffect(() => { localStorage.setItem("menu-style", menuStyle); }, [menuStyle]);
+  useEffect(() => {
+    localStorage.setItem("system_main_menu_layout", menuStyle);
+    document.documentElement.setAttribute("data-main-menu-layout", menuStyle);
+  }, [menuStyle]);
+  // Sincroniza quando alterado no Visual do Sistema (outra aba/rota)
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "system_main_menu_layout" && e.newValue) {
+        setMenuStyle(e.newValue as MenuStyle);
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
 
   const handleClick = (item: MenuItem) => {
     if (item.subItems && item.subItems.length) {

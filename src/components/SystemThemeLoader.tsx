@@ -107,6 +107,24 @@ export function getCurrentMainMenuStyle(): MainMenuStyle {
   return MAIN_MENU_STYLES.includes(v) ? v : DEFAULT_MAIN_MENU_STYLE;
 }
 
+/* ====================== MAIN MENU LAYOUT (MenuHub cards) ====================== */
+export type MainMenuLayout = "icons" | "images" | "list" | "cinema";
+export const MAIN_MENU_LAYOUTS: MainMenuLayout[] = ["icons", "images", "list", "cinema"];
+export const DEFAULT_MAIN_MENU_LAYOUT: MainMenuLayout = "icons";
+
+export function applyMainMenuLayout(layout: MainMenuLayout) {
+  if (!MAIN_MENU_LAYOUTS.includes(layout)) layout = DEFAULT_MAIN_MENU_LAYOUT;
+  document.documentElement.setAttribute("data-main-menu-layout", layout);
+}
+
+export function getCurrentMainMenuLayout(): MainMenuLayout {
+  const v = (localStorage.getItem("system_main_menu_layout") as MainMenuLayout) || DEFAULT_MAIN_MENU_LAYOUT;
+  return MAIN_MENU_LAYOUTS.includes(v) ? v : DEFAULT_MAIN_MENU_LAYOUT;
+}
+
+
+
+
 
 
 
@@ -121,6 +139,8 @@ export default function SystemThemeLoader() {
 
     // Aplica estilo do menu principal salvo
     applyMainMenuStyle(getCurrentMainMenuStyle());
+    applyMainMenuLayout(getCurrentMainMenuLayout());
+
 
 
 
