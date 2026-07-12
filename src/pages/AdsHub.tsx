@@ -33,6 +33,7 @@ import AdsCredentials from './ads/AdsCredentials';
 import AdsLogs from './ads/AdsLogs';
 import AdsAutomation from './ads/AdsAutomation';
 import AdsSchedulerConfig from './ads/AdsSchedulerConfig';
+import AdsPlatformApps from './ads/AdsPlatformApps';
 
 // Platform icons (using simple colored divs for now)
 const GoogleIcon = () => (
@@ -72,6 +73,8 @@ const tabItems: TabItem[] = [
   { id: 'logs', label: 'Logs de Coleta', icon: FileText, description: 'Histórico de coleta de dados' },
   { id: 'automation', label: 'Automações', icon: Zap, description: 'Regras de automação de anúncios' },
   { id: 'scheduler', label: 'Agendamento', icon: Clock, description: 'Configurar frequência de execução das automações' },
+  { id: 'platform-apps', label: 'Apps das Plataformas', icon: Key, description: 'Credenciais de App (Meta/Google/TikTok) para refresh e ações' },
+
 
 ];
 
@@ -144,6 +147,8 @@ const AdsHub: React.FC = () => {
         return <AdsAutomation />;
       case 'scheduler':
         return <AdsSchedulerConfig />;
+      case 'platform-apps':
+        return <AdsPlatformApps />;
       default:
         return <AdsDashboard />;
     }
