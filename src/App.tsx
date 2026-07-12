@@ -444,6 +444,7 @@ const App = () => (
               <Route path="/ads/automation" element={<AdsAutomation />} />
               <Route path="/ads/automation/:id" element={<AdsAutomation />} />
               <Route path="/ads/scheduler" element={<AdsSchedulerConfig />} />
+              <Route path="/ads/platform-apps" element={<AdsPlatformApps />} />
               <Route path="/railway-env" element={<RailwayEnvVariables />} />
               <Route path="/admin/support-tickets" element={<SupportTickets />} />
               <Route path="/admin/apps" element={<AdminApps />} />
