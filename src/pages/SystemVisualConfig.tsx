@@ -199,6 +199,8 @@ export default function SystemVisualConfig() {
     { id: "light", title: "Claro", description: "Fundo branco com texto escuro. Visual leve e limpo." },
     { id: "brand", title: "Cor da Marca", description: "Usa a cor primária como fundo do menu. Alta identidade visual." },
     { id: "glass", title: "Vidro (Glass)", description: "Fundo translúcido com efeito blur. Aparência moderna." },
+    { id: "buttons", title: "Botões (Touch)", description: "Tiles grandes tipo botão, ideais para tablet e celular." },
+    { id: "outline", title: "Contorno", description: "Itens com borda fina, sem preenchimento. Visual minimalista." },
   ];
 
   const handleSelectMenuStyle = (style: MainMenuStyle) => {
