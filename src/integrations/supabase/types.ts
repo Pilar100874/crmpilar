@@ -293,6 +293,48 @@ export type Database = {
           },
         ]
       }
+      ads_platform_apps: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          google_ads_developer_token: string | null
+          google_client_id: string | null
+          google_client_secret: string | null
+          id: string
+          meta_app_id: string | null
+          meta_app_secret: string | null
+          tiktok_app_id: string | null
+          tiktok_app_secret: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          google_ads_developer_token?: string | null
+          google_client_id?: string | null
+          google_client_secret?: string | null
+          id?: string
+          meta_app_id?: string | null
+          meta_app_secret?: string | null
+          tiktok_app_id?: string | null
+          tiktok_app_secret?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          google_ads_developer_token?: string | null
+          google_client_id?: string | null
+          google_client_secret?: string | null
+          id?: string
+          meta_app_id?: string | null
+          meta_app_secret?: string | null
+          tiktok_app_id?: string | null
+          tiktok_app_secret?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ads_scheduler_config: {
         Row: {
           ativo: boolean
