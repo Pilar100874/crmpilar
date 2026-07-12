@@ -380,7 +380,22 @@
             <input id="rtspFullUrl" placeholder="rtsp://admin:senha@192.168.0.10:554/stream1" style="width:100%;padding:8px 10px;border:1px solid var(--stroke);border-radius:8px;margin-top:4px;font-family:monospace;">
           </div>
         </div>
+
+        <!-- URL pronta para copiar/colar no VLC -->
+        <div style="margin-top:12px;padding:10px 12px;border:1px dashed var(--stroke);border-radius:10px;background:var(--bg-2, rgba(0,0,0,0.02));">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
+            <label style="font-size:11px;color:var(--text-2);font-weight:600;">URL RTSP pronta (copie e cole no VLC → Ctrl+N)</label>
+            <div style="display:flex;gap:6px;">
+              <button type="button" class="btn" style="padding:4px 10px;font-size:12px;" onclick="copiarUrlVlc()">📋 Copiar</button>
+              <button type="button" class="btn" style="padding:4px 10px;font-size:12px;" onclick="abrirNoVlc()">▶ Abrir no VLC</button>
+            </div>
+          </div>
+          <input id="rtspUrlVlc" readonly onclick="this.select()" style="width:100%;padding:8px 10px;border:1px solid var(--stroke);border-radius:8px;font-family:monospace;font-size:12px;background:var(--bg,#fff);cursor:text;">
+          <div id="rtspUrlVlcMsg" style="font-size:11px;color:var(--text-2);margin-top:4px;">Preencha os campos acima ou selecione uma câmera — a URL é atualizada automaticamente.</div>
+        </div>
+
         <div id="rtspResult" style="margin-top:12px;"></div>
+
         <details style="margin-top:8px;">
           <summary style="cursor:pointer; font-size:12px; color:var(--text-2);">Como testar no VLC (alternativa manual)</summary>
           <div style="padding:8px 4px; font-size:12px; color:var(--text-2); line-height:1.6;">
