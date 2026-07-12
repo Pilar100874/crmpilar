@@ -257,118 +257,174 @@ export default function AdsCampaigns() {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
-              <ScrollArea className="h-[500px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-8">
-                        <button onClick={() => setOnlyFavs(v => !v)} title={onlyFavs ? "Mostrar todas" : "Apenas favoritas"}>
-                          <Star className={`h-4 w-4 ${onlyFavs ? "fill-yellow-400 text-yellow-500" : "text-muted-foreground"}`} />
-                        </button>
-                      </TableHead>
-                      <TableHead>Campanha</TableHead>
-                      <TableHead>Plataforma</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Gastos</TableHead>
-                      <TableHead className="text-right">Receita</TableHead>
-                      <TableHead className="text-right">ROAS</TableHead>
-                      <TableHead className="text-right">Cliques</TableHead>
-                      <TableHead className="text-right">Conversões</TableHead>
-                      <TableHead></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredCampaigns.map((campaign) => {
-                      const Icon = platformIcons[campaign.plataforma?.nome] || Search;
-                      const roas = campaign.gastos > 0 ? campaign.receita / campaign.gastos : 0;
-                      
-                      return (
-                        <TableRow key={campaign.key}>
-                          <TableCell>
-                            <button onClick={() => toggle(campaign.key)} title={isFav(campaign.key) ? "Remover favorito" : "Favoritar"}>
-                              <Star className={`h-4 w-4 ${isFav(campaign.key) ? "fill-yellow-400 text-yellow-500" : "text-muted-foreground hover:text-yellow-500"}`} />
+              <>
+                {/* Mobile cards */}
+                <div className="md:hidden space-y-3">
+                  {filteredCampaigns.map((campaign) => {
+                    const Icon = platformIcons[campaign.plataforma?.nome] || Search;
+                    const roas = campaign.gastos > 0 ? campaign.receita / campaign.gastos : 0;
+                    return (
+                      <div key={campaign.key} className="rounded-lg border p-3 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-start gap-2 min-w-0 flex-1">
+                            <button onClick={() => toggle(campaign.key)} className="mt-0.5">
+                              <Star className={`h-4 w-4 ${isFav(campaign.key) ? "fill-yellow-400 text-yellow-500" : "text-muted-foreground"}`} />
                             </button>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{campaign.campanha}</p>
-                              {campaign.conta && (
-                                <p className="text-xs text-muted-foreground">{campaign.conta.nome_conta}</p>
-                              )}
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm truncate">{campaign.campanha}</p>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <Icon className="h-3 w-3" style={{ color: platformColors[campaign.plataforma?.nome] }} />
+                                <span className="text-xs text-muted-foreground truncate">{campaign.plataforma?.nome_display}</span>
+                              </div>
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Icon className="h-4 w-4" style={{ color: platformColors[campaign.plataforma?.nome] }} />
-                              <span className="text-sm">{campaign.plataforma?.nome_display}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={campaign.status === 'active' ? 'default' : 'secondary'}>
-                              {campaign.status === 'active' ? 'Ativa' : 'Pausada'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right text-red-500">
-                            R$ {campaign.gastos.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                          </TableCell>
-                          <TableCell className="text-right text-green-500">
-                            R$ {campaign.receita.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Badge variant={roas >= 1 ? "default" : "destructive"}>
-                              {roas.toFixed(2)}x
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">{campaign.cliques.toLocaleString("pt-BR")}</TableCell>
-                          <TableCell className="text-right">{campaign.conversoes.toLocaleString("pt-BR")}</TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  Ver detalhes
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  {campaign.status === 'active' ? (
-                                    <>
-                                      <Pause className="h-4 w-4 mr-2" />
-                                      Pausar
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Play className="h-4 w-4 mr-2" />
-                                      Ativar
-                                    </>
-                                  )}
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem>
-                                  <DollarSign className="h-4 w-4 mr-2" />
-                                  Ajustar orçamento
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                          </div>
+                          <Badge variant={campaign.status === 'active' ? 'default' : 'secondary'} className="text-xs shrink-0">
+                            {campaign.status === 'active' ? 'Ativa' : 'Pausada'}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t">
+                          <div>
+                            <p className="text-muted-foreground">Gastos</p>
+                            <p className="font-medium text-red-500">R$ {campaign.gastos.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Receita</p>
+                            <p className="font-medium text-green-500">R$ {campaign.receita.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">ROAS</p>
+                            <Badge variant={roas >= 1 ? "default" : "destructive"} className="text-xs">{roas.toFixed(2)}x</Badge>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Cliques / Conv.</p>
+                            <p className="font-medium">{campaign.cliques.toLocaleString("pt-BR")} / {campaign.conversoes.toLocaleString("pt-BR")}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {filteredCampaigns.length === 0 && (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Megaphone className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p className="text-base font-medium">Nenhuma campanha encontrada</p>
+                      <p className="text-xs">Configure suas contas de anúncios para ver as campanhas</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Desktop / tablet table */}
+                <ScrollArea className="h-[500px] hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-8">
+                          <button onClick={() => setOnlyFavs(v => !v)} title={onlyFavs ? "Mostrar todas" : "Apenas favoritas"}>
+                            <Star className={`h-4 w-4 ${onlyFavs ? "fill-yellow-400 text-yellow-500" : "text-muted-foreground"}`} />
+                          </button>
+                        </TableHead>
+                        <TableHead>Campanha</TableHead>
+                        <TableHead>Plataforma</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Gastos</TableHead>
+                        <TableHead className="text-right">Receita</TableHead>
+                        <TableHead className="text-right">ROAS</TableHead>
+                        <TableHead className="text-right hidden lg:table-cell">Cliques</TableHead>
+                        <TableHead className="text-right hidden lg:table-cell">Conversões</TableHead>
+                        <TableHead></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredCampaigns.map((campaign) => {
+                        const Icon = platformIcons[campaign.plataforma?.nome] || Search;
+                        const roas = campaign.gastos > 0 ? campaign.receita / campaign.gastos : 0;
+                        return (
+                          <TableRow key={campaign.key}>
+                            <TableCell>
+                              <button onClick={() => toggle(campaign.key)} title={isFav(campaign.key) ? "Remover favorito" : "Favoritar"}>
+                                <Star className={`h-4 w-4 ${isFav(campaign.key) ? "fill-yellow-400 text-yellow-500" : "text-muted-foreground hover:text-yellow-500"}`} />
+                              </button>
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <p className="font-medium">{campaign.campanha}</p>
+                                {campaign.conta && (
+                                  <p className="text-xs text-muted-foreground">{campaign.conta.nome_conta}</p>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Icon className="h-4 w-4" style={{ color: platformColors[campaign.plataforma?.nome] }} />
+                                <span className="text-sm">{campaign.plataforma?.nome_display}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={campaign.status === 'active' ? 'default' : 'secondary'}>
+                                {campaign.status === 'active' ? 'Ativa' : 'Pausada'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right text-red-500">
+                              R$ {campaign.gastos.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell className="text-right text-green-500">
+                              R$ {campaign.receita.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Badge variant={roas >= 1 ? "default" : "destructive"}>
+                                {roas.toFixed(2)}x
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right hidden lg:table-cell">{campaign.cliques.toLocaleString("pt-BR")}</TableCell>
+                            <TableCell className="text-right hidden lg:table-cell">{campaign.conversoes.toLocaleString("pt-BR")}</TableCell>
+                            <TableCell>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem>
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    Ver detalhes
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    {campaign.status === 'active' ? (
+                                      <>
+                                        <Pause className="h-4 w-4 mr-2" />
+                                        Pausar
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Play className="h-4 w-4 mr-2" />
+                                        Ativar
+                                      </>
+                                    )}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem>
+                                    <DollarSign className="h-4 w-4 mr-2" />
+                                    Ajustar orçamento
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                      {filteredCampaigns.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
+                            <Megaphone className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p className="text-lg font-medium">Nenhuma campanha encontrada</p>
+                            <p className="text-sm">Configure suas contas de anúncios para ver as campanhas</p>
                           </TableCell>
                         </TableRow>
-                      );
-                    })}
-                    {filteredCampaigns.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
-                          <Megaphone className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                          <p className="text-lg font-medium">Nenhuma campanha encontrada</p>
-                          <p className="text-sm">Configure suas contas de anúncios para ver as campanhas</p>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
+                      )}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </>
             )}
           </CardContent>
         </Card>
