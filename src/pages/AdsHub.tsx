@@ -188,6 +188,12 @@ const AdsHub: React.FC = () => {
           </p>
         </div>
 
+        {estabelecimentoId && (
+          <AdsSetupStatusBanner estabelecimentoId={estabelecimentoId} onGoToWizard={() => setActiveTab('wizard')} />
+        )}
+
+
+
         <div className="flex-1 overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col lg:flex-row">
             {/* Mobile: Select dropdown */}
