@@ -95,7 +95,7 @@ export default function AdsPlatformApps() {
   );
 
   return (
-    <div className="container mx-auto p-6 space-y-6 max-w-4xl">
+    <div className="container mx-auto p-3 sm:p-4 md:p-6 space-y-6 max-w-4xl">
       <div>
         <h1 className="text-2xl font-bold">Credenciais das Plataformas de Anúncios</h1>
         <p className="text-muted-foreground">
@@ -113,8 +113,8 @@ export default function AdsPlatformApps() {
       {fieldGroups.map((g) => (
         <Card key={g.key}>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
                 <div className="p-2 rounded-md" style={{ backgroundColor: `${g.color}20` }}>
                   <g.Icon className="h-5 w-5" style={{ color: g.color }} />
                 </div>

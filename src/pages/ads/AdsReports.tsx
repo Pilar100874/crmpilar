@@ -175,12 +175,12 @@ export default function AdsReports() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6">
+      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               Relatórios
             </h1>
             <p className="text-muted-foreground mt-1">
@@ -228,7 +228,7 @@ export default function AdsReports() {
                             onClick={() => setNewReport(prev => ({ ...prev, type: type.id }))}
                           >
                             <CardContent className="p-4">
-                              <div className="flex items-center gap-3">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
                                 <Icon className="h-5 w-5 text-primary" />
                                 <div>
                                   <p className="font-medium text-sm">{type.label}</p>
@@ -329,7 +329,7 @@ export default function AdsReports() {
                 }}
               >
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
                     <div className="p-2 rounded-lg bg-primary/10">
                       <Icon className="h-5 w-5 text-primary" />
                     </div>

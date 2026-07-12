@@ -725,7 +725,7 @@ function AdsAutomationContent() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="min-w-0">
-                <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent truncate">
+                <h1 className="text-xl sm:text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent truncate">
                   Automações de Anúncios
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">

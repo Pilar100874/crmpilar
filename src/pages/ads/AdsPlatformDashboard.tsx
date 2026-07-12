@@ -180,8 +180,8 @@ export default function AdsPlatformDashboard({ platform: platformProp }: AdsPlat
   }, []).sort((a, b) => b.gastos - a.gastos) || [];
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -189,15 +189,15 @@ export default function AdsPlatformDashboard({ platform: platformProp }: AdsPlat
               <Icon className="h-8 w-8" style={{ color: config.color }} />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">{config.name}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold">{config.name}</h1>
               <p className="text-muted-foreground">
                 {accounts?.length || 0} conta(s) conectada(s)
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
             <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-full sm:w-[140px]">
                 <Calendar className="h-4 w-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
@@ -209,7 +209,7 @@ export default function AdsPlatformDashboard({ platform: platformProp }: AdsPlat
             </Select>
             {accounts && accounts.length > 1 && (
               <Select value={selectedAccount} onValueChange={setSelectedAccount}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Todas contas" />
                 </SelectTrigger>
                 <SelectContent>
@@ -235,7 +235,7 @@ export default function AdsPlatformDashboard({ platform: platformProp }: AdsPlat
         </div>
 
         {/* Métricas */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -298,7 +298,7 @@ export default function AdsPlatformDashboard({ platform: platformProp }: AdsPlat
         </div>
 
         {/* Métricas calculadas */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <Card className="bg-muted/30">
             <CardContent className="p-4 text-center">
               <p className="text-xs text-muted-foreground mb-1">CPC</p>

@@ -163,10 +163,10 @@ export default function AdsSetupWizard() {
   const StepIcon = step.icon;
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl space-y-6">
+    <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-4xl space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
             <Sparkles className="h-7 w-7 text-primary" /> Wizard de Configuração Ads
           </h1>
           <p className="text-muted-foreground">Siga os 5 passos para deixar o sistema de anúncios rodando ponta-a-ponta.</p>
@@ -188,7 +188,7 @@ export default function AdsSetupWizard() {
         </CardContent>
       </Card>
 
-      <div className="grid md:grid-cols-[280px_1fr] gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-4 md:gap-6">
         <div className="space-y-2">
           {steps.map((s, i) => {
             const ok = status[s.id];
@@ -213,7 +213,7 @@ export default function AdsSetupWizard() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
               <div className="p-2 rounded-md bg-primary/10">
                 <StepIcon className="h-5 w-5 text-primary" />
               </div>

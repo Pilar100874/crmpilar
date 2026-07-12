@@ -171,21 +171,21 @@ export default function AdsDashboard() {
   }, []).sort((a, b) => (b.receita - b.gastos) - (a.receita - a.gastos)).slice(0, 10) || [];
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               Painel Unificado de Anúncios
             </h1>
             <p className="text-muted-foreground mt-1">
               Visão consolidada de todas as plataformas de anúncios
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
             <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-full sm:w-[140px]">
                 <Calendar className="h-4 w-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
@@ -197,7 +197,7 @@ export default function AdsDashboard() {
               </SelectContent>
             </Select>
             <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Todas plataformas" />
               </SelectTrigger>
               <SelectContent>
@@ -218,7 +218,7 @@ export default function AdsDashboard() {
 
 
         {/* Métricas principais */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
           <Card className="bg-gradient-to-br from-red-500/10 to-red-600/5 border-red-500/20">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -398,7 +398,7 @@ export default function AdsDashboard() {
         </Card>
 
         {/* Cards de plataformas */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           {platforms?.map(platform => {
             const Icon = platformIcons[platform.nome] || Search;
             const platformInsights = insights?.filter(i => i.plataforma_id === platform.id) || [];
