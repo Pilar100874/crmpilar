@@ -92,6 +92,21 @@ export function getCurrentVisualPreset(): VisualPreset {
   return VISUAL_PRESETS.includes(v) ? v : DEFAULT_VISUAL_PRESET;
 }
 
+/* ====================== MAIN MENU STYLE (dark/light/brand/glass) ====================== */
+export type MainMenuStyle = "dark" | "light" | "brand" | "glass";
+export const MAIN_MENU_STYLES: MainMenuStyle[] = ["dark", "light", "brand", "glass"];
+export const DEFAULT_MAIN_MENU_STYLE: MainMenuStyle = "dark";
+
+export function applyMainMenuStyle(style: MainMenuStyle) {
+  if (!MAIN_MENU_STYLES.includes(style)) style = DEFAULT_MAIN_MENU_STYLE;
+  document.documentElement.setAttribute("data-main-menu-style", style);
+}
+
+export function getCurrentMainMenuStyle(): MainMenuStyle {
+  const v = (localStorage.getItem("system_main_menu_style") as MainMenuStyle) || DEFAULT_MAIN_MENU_STYLE;
+  return MAIN_MENU_STYLES.includes(v) ? v : DEFAULT_MAIN_MENU_STYLE;
+}
+
 
 
 
