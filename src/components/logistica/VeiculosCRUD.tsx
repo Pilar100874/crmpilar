@@ -766,8 +766,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 sm:w-full">
-          <DialogHeader className="px-6 py-4 border-b bg-muted/30">
-            <DialogTitle className="flex items-center gap-2">
+          <DialogHeader className="px-4 sm:px-6 py-3 sm:py-4 border-b bg-muted/30">
+            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Car className="h-5 w-5 text-primary" />
               {selectedVeiculo ? 'Editar Veículo' : 'Novo Veículo'}
             </DialogTitle>
@@ -1051,11 +1051,11 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
           </div>
 
 
-          <DialogFooter className="px-4 sm:px-6 py-3 border-t bg-muted/30 gap-2">
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <DialogFooter className="px-4 sm:px-6 py-3 border-t bg-muted/30 gap-2 flex-col-reverse sm:flex-row">
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={handleSave}>
+            <Button onClick={handleSave} className="w-full sm:w-auto">
               Salvar
             </Button>
           </DialogFooter>
