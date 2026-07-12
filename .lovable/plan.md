@@ -1,88 +1,60 @@
+## Objetivo
 
-# Ads: Scheduler configurável + Coleta real Meta/Google/TikTok
+Apagar a implementação atual de `PontoNotificacaoBuilder` e criá-la do zero replicando fielmente o padrão do `BotBuilder` (visual, interações, atalhos, painéis) — mantendo o domínio Ponto (eventos: atraso, falta, HE pendente, atestado pendente, banco de horas expirando, fraude; canais: push, WhatsApp, SMS, e-mail, webhook; blocos de condição, quiet hours, delay, template, escalonar, log).
 
-Vou entregar em 3 blocos, todos usando tabelas já existentes (`ads_automacoes`, `ad_accounts`, `ad_insights`, `ads_logs_coleta`, `ad_platforms`) e adicionando o mínimo necessário.
+## O que será apagado
 
-## Bloco 1 — Configuração do scheduler (tela + tabela)
+- `src/pages/ponto/PontoNotificacaoBuilder.tsx` inteiro (1143 linhas) será substituído por um arquivo novo.
+- Rota `notificacoes/:id` em `App.tsx` permanece inalterada.
+- Persistência continua em `ponto_notif_workflows` (`flow_data`, `nome`, `ativo`, `evento_gatilho`) — sem migrações de banco.
 
-**Nova tabela** `ads_scheduler_config` (uma linha por estabelecimento):
+## Estrutura da nova tela (espelhando o BotBuilder)
 
-| Campo | Tipo | Uso |
-|---|---|---|
-| `estabelecimento_id` | uuid PK | escopo |
-| `ativo` | bool | liga/desliga geral |
-| `frequencia` | text | `desligado` \| `15min` \| `hora` \| `dia` \| `custom` |
-| `cron_expr` | text | usado quando `frequencia='custom'` (ex `*/30 * * * *`) |
-| `ultima_execucao` | timestamptz | telemetria |
-| `proxima_execucao` | timestamptz | telemetria |
+1. `WorkflowBuilderLayout` (header padrão com título, nome do fluxo, controles de zoom/lock, testar, salvar, fechar).
+2. Sidebar esquerda: `BlockLibrary`-style customizada com grupos colapsáveis (Início, Lógica, Conteúdo, Canais, Ações) e drag-and-drop.
+3. Canvas central `ReactFlow` com:
+   - `nodeTypes.custom` — nó visual usando `getWorkflowBlockCardClass` (mesmo card do bot).
+   - Handles no estilo bot: alvo `w-3 h-3 rounded-full`, saída `w-5 h-5 rounded-full` com hover-scale.
+   - Edges `smoothstep` animados com stroke primary e `MarkerType.ArrowClosed`.
+   - `Background` (dots), `Controls`, `MiniMap`.
+   - `boxSelectionProps`, autopan on drag.
+4. `SmartConnectMenu` (make.com style) que abre ao soltar o link no pane, filtrando blocos permitidos por `NEXT_ALLOWED`.
+5. Painel direito de propriedades (`PropsPanel`) por tipo de bloco: gatilho, condição, quiet hours, delay, template (com variáveis `{funcionario}`, `{data}`, `{link_aprovacao}`), canais (destino, template ref), escalonar, log.
+6. `FloatingAddBlockButton` mobile (botão flutuante) + biblioteca em drawer.
+7. Simulador passo-a-passo (`FlowSimulator`-like) com JSON de entrada, log de execução e destaque do nó ativo.
+8. Recursos idênticos ao bot: duplicar bloco, breakpoint, pular execução, adicionar nota, excluir com `DeleteConfirmDialog`, exportar/importar JSON, gerador AI (`WorkflowAIGenerator`), controle de dirty state, dialog de saída sem salvar.
 
-**Tela** em `src/pages/ads/AdsSchedulerConfig.tsx` (rota `/ads/scheduler`, adicionada ao menu Ads já existente):
+## Blocos suportados
 
-- Switch **Ativo**
-- Radio **Frequência**: Desligado / A cada 15 min / A cada hora / 1x por dia / Personalizado
-- Campo cron aparece quando "Personalizado" com validador simples e explicação
-- Bloco "Última execução / Próxima execução" (readonly)
-- Botão **Executar agora** (chama a edge function manualmente)
+```text
+Início:    trigger (Gatilho — evento do ponto)
+Lógica:    condicao (SIM/NÃO), quiet_hours, delay
+Conteúdo:  template
+Canais:    canal_push, canal_whatsapp, canal_sms, canal_email, canal_webhook
+Ações:     escalonamento, log
+```
 
-**Cron dinâmico**: um único cron job `ads_scheduler_dispatcher` roda a cada minuto e chama uma edge function `ads-scheduler-dispatcher` que decide, por estabelecimento, se é hora de rodar (compara cron_expr / frequencia com `now()`). Isso evita ter que criar/dropar jobs no pg_cron sempre que o usuário mudar a frequência.
-
-## Bloco 2 — Coleta real de métricas (Meta + Google + TikTok)
-
-**Credenciais por estabelecimento**: já existe `ad_accounts` (`platform`, `account_id`, `access_token`, `refresh_token`, `estabelecimento_id`, `expires_at`). Vou reutilizar.
-
-**Nova edge function** `coletar-metricas-ads`:
-- Recebe `{ estabelecimento_id }`
-- Para cada `ad_account` ativo do estabelecimento, chama a API oficial:
-  - **Meta**: `GET graph.facebook.com/v19.0/act_<id>/insights?fields=spend,cpc,ctr,impressions,actions,reach,frequency&date_preset=today`
-  - **Google Ads**: `POST googleads.googleapis.com/v18/customers/<id>/googleAds:searchStream` com GAQL de métricas do dia (requer developer token via secret)
-  - **TikTok**: `GET business-api.tiktok.com/open_api/v1.3/report/integrated/get/` com dimensões campaign_id
-- Faz refresh do `access_token` quando `expires_at` está vencido (Meta long-lived, Google refresh_token, TikTok refresh flow)
-- Persiste em `ad_insights` (tabela já existe com 19 colunas) e loga em `ads_logs_coleta`
-
-**Secrets adicionais que precisarei pedir**:
-- `META_APP_ID`, `META_APP_SECRET` (para refresh long-lived tokens)
-- `GOOGLE_ADS_DEVELOPER_TOKEN`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
-- `TIKTOK_APP_ID`, `TIKTOK_APP_SECRET`
-
-Os `access_token` / `refresh_token` de cada conta ficam em `ad_accounts` (por estabelecimento) e são obtidos via um fluxo OAuth (fora deste plano — assumo que já existe ou virá em iteração seguinte; hoje `ad_accounts` já tem essas colunas).
-
-## Bloco 3 — Executor server-side + integração fim-a-fim
-
-**Nova edge function** `executar-ads-automacoes`:
-- Recebe `{ estabelecimento_id, dry_run? }`
-- Chama `coletar-metricas-ads` primeiro (garante insights frescos)
-- Busca automações ativas em `ads_automacoes`
-- Porta a lógica do `src/services/adsFlowEngine.ts` para Deno (walk de nodes/edges, avaliação de triggers/conditions/actions)
-- Executa ações reais:
-  - **Pause / Resume / Archive / Activate**: chama a API da plataforma correspondente (Meta `POST /<ad_id>?status=PAUSED`, Google `campaign.status`, TikTok `campaign/update/`)
-  - **Budget increase/decrease / Bid adjust**: idem via API oficial
-  - **Notify / Slack / Aviso**: insert em `avisos_sistema`
-  - **Webhook / Email / Msg interna / SMS / Push**: chama edge functions já existentes (`execute-dynamic-query`, `send-email`, `send-sms`, `send-agent-message`, `send-push`)
-- Loga cada execução em `ads_logs_coleta` com `status`, `payload`, `erro`
-
-**Dispatcher `ads-scheduler-dispatcher`** (chamado pelo cron a cada minuto):
-- Para cada `ads_scheduler_config` com `ativo=true`, avalia se `now() >= proxima_execucao`
-- Se sim: invoca `executar-ads-automacoes` em background e atualiza `ultima_execucao`/`proxima_execucao`
-
-## Ordem de implementação
-
-1. Migration da tabela `ads_scheduler_config` + índices + RLS + GRANT
-2. Edge functions `ads-scheduler-dispatcher`, `executar-ads-automacoes`, `coletar-metricas-ads`
-3. Cron job (via `insert` tool, não migration) chamando dispatcher a cada minuto
-4. Tela `AdsSchedulerConfig.tsx` + rota + entrada no menu
-5. Extensão do simulador Bot (Modo Real) para e-mail, mensagem interna e aviso — só faz sentido se esses blocos existirem no editor Bot; hoje não existem, então este item é **skip** até que sejam adicionados
+Regras `NEXT_ALLOWED` mantidas do arquivo atual.
 
 ## Detalhes técnicos
 
-- Toda comunicação com APIs externas passa pelas edge functions (nunca do browser) por causa de CORS/secrets.
-- Refresh de token faz update em `ad_accounts.access_token` + `expires_at`.
-- Timeout de coleta por plataforma: 20s; falha em uma plataforma não impede as outras.
-- Ações destrutivas (pause/archive) respeitam `dry_run` para permitir teste no botão "Executar agora".
+- Nó `custom` com header (ícone + label + menu `MoreVertical` com Duplicar / Breakpoint / Pular / Nota / Excluir), preview do config (evento, mensagem, url) e nota opcional.
+- Condição renderiza dois handles source (`sim` verde, `nao` vermelho) com labels e botões `+` para Smart Connect por handle.
+- Trigger não tem handle target e não pode ser excluído.
+- `isValidConnection` + `isSingleEdgePerHandleAllowed` para evitar múltiplas saídas em handles single-output e conexões duplicadas.
+- Persistência: `useEffect` calcula hash JSON de nodes/edges/meta para setar `dirty`; ao salvar, roda `update` em `ponto_notif_workflows` e reseta hash.
+- Import/Export: JSON com `{ nodes, edges, meta }` via `<input type="file">` oculto.
+- Toasts via `sonner` (padrão do projeto).
+- Layout responsivo: sidebar vira drawer < lg, painel de propriedades vira drawer full-screen < lg (padrão do bot).
 
-## Perguntas antes de codar
+## Fora de escopo
 
-1. **Secrets Meta/Google/TikTok**: você já tem esses tokens de desenvolvedor? Vou precisar cadastrá-los via `add_secret` — cada plataforma exige registro prévio no console da empresa (Meta for Developers, Google Ads API access, TikTok for Business Developers). Confirme quais das 3 posso ativar de imediato — se não tiver alguma, deixo o coletor daquela plataforma stub (sem quebrar) e a gente ativa depois.
+- Nenhuma alteração no listing `PontoNotificacoes.tsx` nem na tela de entregabilidade.
+- Sem mudanças em edge functions ou schema do banco.
+- Sem mudanças em `App.tsx` (rota reutilizada).
 
-2. **OAuth por conta**: como cada anunciante conecta a conta dele? Existe hoje algum fluxo em `/ads/contas` que preencha `ad_accounts.access_token`? Se não existir, esse fluxo é um Bloco 4 separado (grande), fora deste plano.
+## Riscos
 
-Aprova este plano? Se sim, me confirme também os itens (1) e (2) acima para eu não travar no meio.
+- Workflows já salvos em `ponto_notif_workflows.flow_data` continuam compatíveis pois os tipos de bloco e formato React Flow são mantidos.
+
+Confirma que posso executar essa reescrita completa (arquivo único ~900-1000 linhas) mantendo o schema atual de blocos?
