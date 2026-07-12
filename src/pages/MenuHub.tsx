@@ -238,24 +238,22 @@ export default function MenuHub() {
                 <ChevronLeft className="h-5 w-5" />
               </button>
             ) : null}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 flex-wrap">
-                {openItem ? (
-                  <h1 className="font-serif text-4xl sm:text-6xl font-normal leading-[1] tracking-[-0.02em] text-foreground">
-                    <span className="italic font-light">{title.split(" ")[0]}</span>
-                    {title.includes(" ") && (
-                      <span className="italic font-medium text-primary"> {title.split(" ").slice(1).join(" ")}</span>
-                    )}
-                  </h1>
-                ) : (
-                  <img
-                    src={isDarkMode ? logoBranco : logoPreto}
-                    alt="Logo"
-                    className="h-16 sm:h-20 w-auto object-contain"
-                  />
+            {openItem ? (
+              <h1 className="font-serif text-4xl sm:text-6xl font-normal leading-[1] tracking-[-0.02em] text-foreground">
+                <span className="italic font-light">{title.split(" ")[0]}</span>
+                {title.includes(" ") && (
+                  <span className="italic font-medium text-primary"> {title.split(" ").slice(1).join(" ")}</span>
                 )}
-              </div>
-            </div>
+              </h1>
+            ) : (
+              <img
+                src={isDarkMode ? logoBranco : logoPreto}
+                alt="Logo"
+                style={{ display: "block", height: "64px", width: "auto" }}
+                className="object-contain"
+              />
+            )}
+
           </div>
 
 
