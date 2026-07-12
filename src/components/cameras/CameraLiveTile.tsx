@@ -35,6 +35,9 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
     let liveReached = false;
     let coletorSeenAt = 0;
     let coletorServesCamera = false;
+    let coletorVersao: string | null = null;
+    let coletorCameras: string[] = [];
+    const log = (...a: any[]) => console.log(`[CamLive ${cameraNome}]`, ...a);
 
     // Sempre broadcasta em ambos os canais: plain + filial (caso a câmera
     // ou o coletor esteja sem filial atribuída em algum dos lados).
@@ -71,12 +74,16 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
         // Heartbeat do coletor
         if (payload.type === "coletor-online" && payload.to === "viewers") {
           coletorSeenAt = Date.now();
-          if (Array.isArray(payload.cameras) && payload.cameras.includes(cameraId)) {
-            coletorServesCamera = true;
+          coletorVersao = payload.versao || payload.version || null;
+          if (Array.isArray(payload.cameras)) {
+            coletorCameras = payload.cameras;
+            if (payload.cameras.includes(cameraId)) coletorServesCamera = true;
           }
+          log("heartbeat coletor", { versao: coletorVersao, servesCamera: coletorServesCamera, totalCams: coletorCameras.length });
           return;
         }
         if (payload.to !== viewerId) return;
+        log("msg do coletor", payload.type);
         if (payload.type === "offer") {
           // Dedupe: o mesmo offer pode chegar em múltiplos canais (plain + filial).
           // Só processa se ainda estivermos em "stable" (antes de setRemoteDescription).
@@ -151,11 +158,19 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
       // Se o heartbeat chegou mas essa câmera não estava na lista, ainda tenta
       // (pode ser diferença de filial temporária); o Coletor descarta se não servir.
 
+      log("enviando request de stream ao coletor", { viewerId, coletorVersao, coletorServesCamera });
       sendAll({ type: "request", to: "coletor", viewer_id: viewerId, camera_id: cameraId });
 
       setTimeout(() => {
         if (!closed && !liveReached) {
-          setErro("Coletor não respondeu ao pedido de stream. Atualize o Coletor para a versão mais recente, mantenha o módulo de câmeras ativo e confirme se a câmera tem RTSP habilitado.");
+          const detalhes: string[] = [];
+          if (coletorVersao) detalhes.push(`Coletor v${coletorVersao}`);
+          else detalhes.push("versão do Coletor desconhecida (provavelmente < 1.7.6)");
+          if (!coletorServesCamera) detalhes.push("esta câmera NÃO está na lista servida pelo Coletor (verifique filial/ativo)");
+          else detalhes.push("Coletor conhece a câmera mas não abriu o stream em 25s — RTSP indisponível, HEVC sem re-encode, ou CPU saturada por muitas câmeras simultâneas");
+          const msg = `Coletor não respondeu ao pedido de stream. ${detalhes.join(" · ")}. Atualize para v1.7.7+, confirme RTSP habilitado (teste no VLC) e reduza câmeras simultâneas se a CPU do Coletor estiver alta.`;
+          log("TIMEOUT", msg);
+          setErro(msg);
           setStatus("erro");
         }
       }, 25_000);
