@@ -62,7 +62,12 @@ export default function AdsHealthScore() {
     })();
   }, []);
 
-  if (loading) return null;
+  if (loading) return (
+    <Card><CardContent className="p-6 grid md:grid-cols-[220px_1fr] gap-6">
+      <div className="space-y-2"><Skeleton className="h-4 w-24" /><Skeleton className="h-14 w-32" /><Skeleton className="h-2 w-full" /></div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+    </CardContent></Card>
+  );
   const score = signals.length ? Math.round((signals.filter((s) => s.ok).length / signals.length) * 100) : 0;
   const color = score >= 80 ? "text-green-500" : score >= 50 ? "text-amber-500" : "text-red-500";
   const bar = score >= 80 ? "bg-green-500" : score >= 50 ? "bg-amber-500" : "bg-red-500";
