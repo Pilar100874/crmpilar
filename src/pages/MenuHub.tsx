@@ -5,10 +5,56 @@ import {
   Bell, User as UserIcon, Monitor, Star, Settings, Users, FolderTree,
   ShieldCheck, Store, BellRing, Bot, Workflow, Webhook, CreditCard,
   Paintbrush, Send, FileText, Mail, ListOrdered, Clock, KeyRound,
+  LayoutGrid, Image as ImageIcon, List, ChevronRight,
 } from "lucide-react";
 import { menuItems, type MenuItem } from "@/components/Layout";
 import { isEstabelecimentoAdmin } from "@/lib/estabelecimentoUtils";
 import { AppsHealthIndicator } from "@/components/AppsHealthIndicator";
+
+import imgDashboards from "@/assets/menu/dashboards.jpg";
+import imgFunil from "@/assets/menu/funil.jpg";
+import imgChats from "@/assets/menu/chats.jpg";
+import imgCalendario from "@/assets/menu/calendario.jpg";
+import imgVendas from "@/assets/menu/vendas.jpg";
+import imgAssistente from "@/assets/menu/assistente.jpg";
+import imgListas from "@/assets/menu/listas.jpg";
+import imgEmail from "@/assets/menu/email.jpg";
+import imgMarketing from "@/assets/menu/marketing.jpg";
+import imgRelatorios from "@/assets/menu/relatorios.jpg";
+import imgPonto from "@/assets/menu/ponto.jpg";
+import imgVeiculos from "@/assets/menu/veiculos.jpg";
+import imgVisitantes from "@/assets/menu/visitantes.jpg";
+import imgCameras from "@/assets/menu/cameras.jpg";
+import imgEditores from "@/assets/menu/editores.jpg";
+import imgLogistica from "@/assets/menu/logistica.jpg";
+import imgMarketplaces from "@/assets/menu/marketplaces.jpg";
+import imgEcommerce from "@/assets/menu/ecommerce.jpg";
+import imgAds from "@/assets/menu/ads.jpg";
+import imgRoboPrecos from "@/assets/menu/robo-precos.jpg";
+import imgTV from "@/assets/menu/tv.jpg";
+import imgMapaCalor from "@/assets/menu/mapa-calor.jpg";
+import imgConfiguracoes from "@/assets/menu/configuracoes.jpg";
+import imgAvisos from "@/assets/menu/avisos.jpg";
+import imgPerfil from "@/assets/menu/perfil.jpg";
+import imgCompartilharTela from "@/assets/menu/compartilhar-tela.jpg";
+import imgAtalhos from "@/assets/menu/atalhos.jpg";
+import imgAdmin from "@/assets/menu/admin.jpg";
+
+const IMAGE_MAP: Record<string, string> = {
+  Dashboards: imgDashboards, Clientes: imgFunil, Atendimento: imgChats,
+  Campanhas: imgCalendario, Vendas: imgVendas, Assistente: imgAssistente,
+  Conteúdos: imgListas, Email: imgEmail, Desenho: imgMarketing,
+  Relatórios: imgRelatorios, "Controle de Ponto": imgPonto,
+  "Controle de Veículos": imgVeiculos, "Controle de Visitantes": imgVisitantes,
+  Câmeras: imgCameras, Editores: imgEditores, Logística: imgLogistica,
+  Marketplaces: imgMarketplaces, "E-commerce": imgEcommerce, Ads: imgAds,
+  "Robô de Preços": imgRoboPrecos, TV: imgTV, "Mapa de Calor": imgMapaCalor,
+  Configurações: imgConfiguracoes, Avisos: imgAvisos, Perfil: imgPerfil,
+  "Compartilhar Tela": imgCompartilharTela, "Gerenciar Atalhos": imgAtalhos,
+  Admin: imgAdmin,
+};
+
+type MenuStyle = "icons" | "images" | "list";
 
 const EXTRA_ITEMS: MenuItem[] = [
   { id: "Avisos", title: "Avisos", url: "/avisos", icon: Bell },
