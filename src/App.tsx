@@ -44,6 +44,7 @@ import OrcamentoPublico from "./pages/OrcamentoPublico";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 import MenuHub from "./pages/MenuHub";
+import MenuVisual from "./pages/MenuVisual";
 import Relatorios from "./pages/Relatorios";
 import ImportacaoProdutos from "./pages/ImportacaoProdutos";
 import ImportacaoProdutosLista from "./pages/ImportacaoProdutosLista";
@@ -321,6 +322,7 @@ const App = () => (
             <Route element={<LayoutWrapper />}>
             <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/menu" element={<MenuHub />} />
+              <Route path="/menu-visual" element={<MenuVisual />} />
               <Route path="/atendimento" element={<Atendimento />} />
               <Route path="/email" element={<EmailPage />} />
               <Route path="/email-config" element={<EmailConfig />} />
