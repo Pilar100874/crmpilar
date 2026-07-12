@@ -28,7 +28,8 @@ export default function AdsConexoes() {
             <Key className="h-4 w-4" /> Apps do Desenvolvedor
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="accounts" className="mt-4">
+        <TabsContent value="accounts" className="mt-4 space-y-4">
+          <AdsOAuthButtons />
           <AdsCredentials />
         </TabsContent>
         <TabsContent value="apps" className="mt-4">
