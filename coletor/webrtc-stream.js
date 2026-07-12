@@ -659,27 +659,29 @@ class StreamSession {
       videoTrack: this.videoTrack,
       audioTrack: this.audioTrack || null,
       wantAudio,
-      onReady: () => {
-        if (this.offerSent || this.closed) return;
-        this.offerSent = true;
-        this._sendOffer().catch((e) => console.error('[webrtc] offer err', e.message));
-      },
+      onReady: () => {}, // não bloqueamos mais o offer esperando RTP
     };
     this.pump.attach(this.sub);
     if (!this.pump.started) {
-      try { await this.pump.start(); } catch (e) { console.error('[pump] start err', e.message); }
+      // não aguarda — deixa o ffmpeg subir em paralelo com a negociação WebRTC
+      this.pump.start().catch((e) => console.error('[pump] start err', e.message));
     }
 
-    // Guarda: 25s sem offer → fecha (pump não conseguiu vídeo).
-    // Elevado de 12s para dar folga ao reencode HEVC/perfil incompatível,
-    // que combina 4s de espera em copy + até 8-10s para o libx264 emitir
-    // o primeiro keyframe em CPUs modestas.
+    // Envia offer IMEDIATAMENTE (não espera primeiros RTPs). Quando há
+    // múltiplas câmeras, o libx264 da 2ª briga por CPU e demora >8s para
+    // emitir o 1º pacote — se ficássemos esperando, o browser dava timeout.
+    if (!this.offerSent && !this.closed) {
+      this.offerSent = true;
+      this._sendOffer().catch((e) => console.error('[webrtc] offer err', e.message));
+    }
+
+    // Guarda: 30s sem answer → fecha
     setTimeout(() => {
-      if (!this.closed && !this.offerSent) {
-        console.log('[webrtc] timeout sem RTP para viewer', this.cam.nome);
+      if (!this.closed && !this.answerApplied) {
+        console.log('[webrtc] timeout sem answer', this.cam.nome);
         this.close();
       }
-    }, 25000);
+    }, 30000);
   }
 
   async _sendOffer() {
