@@ -281,6 +281,74 @@ async function executarRegra(
         }
         break;
 
+      case 'acao_webhook':
+      case 'webhook':
+        try {
+          const { executarBlocoWebhook } = await import('@/lib/workflowActionsExecutor');
+          executarBlocoWebhook(configBloco as any, {
+            variaveis: { orcamento, cliente: orcamento.cliente, regra: regra.nome },
+            workflow_tipo: 'vendas',
+            origem: 'automacao_vendas',
+          }).then(r => { if (!r.ok) console.warn('[vendas] webhook falhou:', r.erro); })
+            .catch(e => console.error('[vendas] webhook erro:', e));
+          resultado.detalhes.push(`${regra.nome}: webhook disparado`);
+        } catch (e) { console.error('[vendas] webhook erro', e); }
+        break;
+
+      case 'acao_email':
+      case 'enviar_email':
+        try {
+          const { executarBlocoEmail } = await import('@/lib/workflowActionsExecutor');
+          executarBlocoEmail(configBloco as any, {
+            variaveis: { orcamento, cliente: orcamento.cliente, regra: regra.nome },
+            workflow_tipo: 'vendas',
+            origem: 'automacao_vendas',
+          }).then(r => { if (!r.ok) console.warn('[vendas] e-mail falhou:', r.erro); })
+            .catch(e => console.error('[vendas] e-mail erro:', e));
+          resultado.detalhes.push(`${regra.nome}: e-mail enviado`);
+        } catch (e) { console.error('[vendas] e-mail erro', e); }
+        break;
+
+      case 'acao_whatsapp':
+      case 'enviar_whatsapp':
+        try {
+          const { executarBlocoWhatsapp } = await import('@/lib/workflowActionsExecutor');
+          executarBlocoWhatsapp(configBloco as any, {
+            variaveis: { orcamento, cliente: orcamento.cliente, regra: regra.nome },
+            workflow_tipo: 'vendas',
+            origem: 'automacao_vendas',
+          }).then(r => { if (!r.ok) console.warn('[vendas] whatsapp falhou:', r.erro); })
+            .catch(e => console.error('[vendas] whatsapp erro:', e));
+          resultado.detalhes.push(`${regra.nome}: whatsapp enviado`);
+        } catch (e) { console.error('[vendas] whatsapp erro', e); }
+        break;
+
+      case 'enviar_mensagem_interna':
+      case 'acao_mensagem_interna':
+        try {
+          const { executarBlocoMensagemInterna } = await import('@/lib/workflowActionsExecutor');
+          executarBlocoMensagemInterna(configBloco as any, {
+            variaveis: { orcamento, cliente: orcamento.cliente, regra: regra.nome },
+            workflow_tipo: 'vendas',
+            origem: 'automacao_vendas',
+          }).catch(e => console.error('[vendas] msg interna erro:', e));
+          resultado.detalhes.push(`${regra.nome}: mensagem interna criada`);
+        } catch (e) { console.error('[vendas] msg interna erro', e); }
+        break;
+
+      case 'enviar_aviso_sistema':
+      case 'acao_aviso_sistema':
+        try {
+          const { executarBlocoAvisoSistema } = await import('@/lib/workflowActionsExecutor');
+          executarBlocoAvisoSistema(configBloco as any, {
+            variaveis: { orcamento, cliente: orcamento.cliente, regra: regra.nome },
+            workflow_tipo: 'vendas',
+            origem: 'automacao_vendas',
+          }).catch(e => console.error('[vendas] aviso erro:', e));
+          resultado.detalhes.push(`${regra.nome}: aviso do sistema criado`);
+        } catch (e) { console.error('[vendas] aviso erro', e); }
+        break;
+
       default:
         console.warn(`Tipo de bloco não implementado: ${tipoBlo}`);
     }

@@ -69,6 +69,11 @@ export type EcommerceRuleBlockType =
   | "acao_destacar_elemento"
   | "acao_enviar_sms"
   | "acao_disparar_push"
+  | "acao_webhook"
+  | "acao_email"
+  | "acao_whatsapp"
+  | "acao_mensagem_interna"
+  | "acao_aviso_sistema"
   | "return_response";
 
 
@@ -620,6 +625,51 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
       corpo: "",
       url: "/",
     },
+  },
+  {
+    type: "acao_webhook",
+    label: "Webhook",
+    description: "Chama uma URL externa (POST/GET) enviando dados do carrinho",
+    icon: "Webhook",
+    color: "#6366f1",
+    category: "acao_recuperacao",
+    defaultData: { url: "", method: "POST", headers: {}, body: "" },
+  },
+  {
+    type: "acao_email",
+    label: "Enviar E-mail",
+    description: "Envia um e-mail para o destinatário configurado",
+    icon: "Mail",
+    color: "#0ea5e9",
+    category: "acao_recuperacao",
+    defaultData: { to: "", subject: "", body: "" },
+  },
+  {
+    type: "acao_whatsapp",
+    label: "Enviar WhatsApp",
+    description: "Envia mensagem via WhatsApp para o número configurado",
+    icon: "MessageCircle",
+    color: "#22c55e",
+    category: "acao_recuperacao",
+    defaultData: { telefone: "", mensagem: "" },
+  },
+  {
+    type: "acao_mensagem_interna",
+    label: "Enviar Mensagem Interna",
+    description: "Cria uma conversa/mensagem interna para o time",
+    icon: "MessagesSquare",
+    color: "#8b5cf6",
+    category: "acao_recuperacao",
+    defaultData: { titulo: "", mensagem: "", usuario_id: "" },
+  },
+  {
+    type: "acao_aviso_sistema",
+    label: "Enviar Aviso do Sistema",
+    description: "Publica um aviso do sistema para os destinatários",
+    icon: "BellRing",
+    color: "#f59e0b",
+    category: "acao_recuperacao",
+    defaultData: { titulo: "", mensagem: "", tipo: "info", destinatarios_tipo: "todos" },
   },
 ];
 
