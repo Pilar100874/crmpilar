@@ -11,6 +11,20 @@ const os = require('os');
 const path = require('path');
 const fs = require('fs');
 
+// Câmeras RTSP com WebRTC ativo. Tapo/RTSP costuma aceitar poucas sessões;
+// abrir snapshot via ffmpeg enquanto o Ao Vivo está rodando pode matar o stream.
+const liveRtspCameraIds = new Set();
+
+function markCameraLive(cameraId, active) {
+  if (!cameraId) return;
+  if (active) liveRtspCameraIds.add(cameraId);
+  else liveRtspCameraIds.delete(cameraId);
+}
+
+function isCameraLive(cameraId) {
+  return !!cameraId && liveRtspCameraIds.has(cameraId);
+}
+
 function pathFor(marca, snapshotPath) {
   if (snapshotPath) return snapshotPath;
   switch ((marca || '').toLowerCase()) {
@@ -149,6 +163,9 @@ function findFfmpeg() {
 
 function fetchRtspSnapshot(cam) {
   return new Promise((resolve, reject) => {
+    if (isCameraLive(cam.id)) {
+      return reject(new Error('snapshot RTSP ignorado: câmera está em Ao Vivo'));
+    }
     const ff = findFfmpeg();
     if (!ff) return reject(new Error('ffmpeg não encontrado — instale ffmpeg no PC do Coletor para snapshot RTSP'));
     const host = cam.host;
@@ -158,7 +175,7 @@ function fetchRtspSnapshot(cam) {
     const url = `rtsp://${auth}${host}:${port}${streamPath.startsWith('/') ? streamPath : '/' + streamPath}`;
     const tmp = path.join(os.tmpdir(), `pilar-snap-${cam.id || Date.now()}.jpg`);
     // -rtsp_transport tcp: mais confiável em LAN, evita perda UDP
-    const args = ['-y', '-rtsp_transport', 'tcp', '-i', url, '-frames:v', '1', '-q:v', '3', tmp];
+    const args = ['-y', '-hide_banner', '-loglevel', 'warning', '-rtsp_transport', 'tcp', '-timeout', '8000000', '-i', url, '-frames:v', '1', '-q:v', '3', tmp];
     const proc = spawn(ff, args, { stdio: ['ignore', 'ignore', 'pipe'] });
     let err = '';
     proc.stderr.on('data', d => { err += d.toString(); });
@@ -169,6 +186,7 @@ function fetchRtspSnapshot(cam) {
         try {
           const bytes = fs.readFileSync(tmp);
           fs.unlink(tmp, () => {});
+          if (!bytes.length) return reject(new Error('ffmpeg gerou snapshot vazio'));
           resolve({ bytes, contentType: 'image/jpeg' });
         } catch (e) { reject(e); }
       } else {
@@ -293,13 +311,15 @@ async function verificarCameras(cfg) {
       const probe = await probeStatus(cam);
       // 2) Snapshot: HTTP sempre; RTSP só se ffmpeg presente (não derruba o status)
       if (isRtsp) {
-        if (ffAvailable) {
+        if (ffAvailable && !isCameraLive(cam.id)) {
           try {
             const snap = await fetchRtspSnapshot(cam);
             await enviarSnapshot(cfg, cam, snap);
           } catch (e) {
             console.warn('[cameras] snapshot RTSP falhou (status permanece online):', cam.nome, e.message);
           }
+        } else if (isCameraLive(cam.id)) {
+          console.log('[cameras] snapshot RTSP ignorado: Ao Vivo ativo', cam.nome);
         }
       } else {
         try {
@@ -322,4 +342,4 @@ async function verificarCameras(cfg) {
   return resultados;
 }
 
-module.exports = { verificarCameras, fetchSnapshot, listarCameras, findFfmpeg };
+module.exports = { verificarCameras, fetchSnapshot, listarCameras, findFfmpeg, markCameraLive, isCameraLive };

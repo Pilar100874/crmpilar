@@ -90,6 +90,10 @@ if (ffmpegPath && ffmpegPath.includes('app.asar')) {
 let APP_VERSION = 'dev';
 try { APP_VERSION = require('./package.json').version || APP_VERSION; } catch {}
 
+function isTapoCamera(cam) {
+  return /tapo|tplink/i.test(`${cam?.marca || ''} ${cam?.modelo || ''} ${cam?.nome || ''}`);
+}
+
 const H264 = new RTCRtpCodecParameters({
   mimeType: 'video/H264',
   clockRate: 90000,
@@ -217,6 +221,11 @@ class SignalHub {
       try {
         const cam = (this.cameras || []).find((c) => c.id === m.camera_id);
         if (!cam) return;
+        const activePump = this.pumps.get(cam.id);
+        if (activePump && !activePump.stopped && activePump.subs.size > 0) {
+          console.log('[webrtc] snapshot-now ignorado: Ao Vivo ativo', cam.nome);
+          return;
+        }
         const { fetchSnapshot } = require('./cameras');
         const snap = await fetchSnapshot(cam);
         const resp = await fetch(`${this.cfg.url}/functions/v1/cv-coletor-cameras`, {
@@ -343,6 +352,7 @@ class CameraPump {
   async start() {
     if (this.started || this.starting) return;
     this.starting = true;
+    try { require('./cameras').markCameraLive(this.cam.id, true); } catch {}
 
     this.videoUdp = dgram.createSocket('udp4');
     this.videoUdp.on('message', (buf) => {
@@ -409,6 +419,7 @@ class CameraPump {
   stop() {
     if (this.stopped) return;
     this.stopped = true;
+    try { require('./cameras').markCameraLive(this.cam.id, false); } catch {}
     try { this.ffmpeg?.kill('SIGKILL'); } catch {}
     try { this.audioFfmpeg?.kill('SIGKILL'); } catch {}
     try { this.videoUdp?.close(); } catch {}
@@ -439,14 +450,15 @@ class CameraPump {
           '-profile:v', 'baseline',
           '-level', '3.1',
           '-pix_fmt', 'yuv420p',
-          '-g', '24',
-          '-keyint_min', '24',
+          '-g', '12',
+          '-keyint_min', '12',
           '-sc_threshold', '0',
           '-bf', '0',
+          '-x264-params', 'keyint=12:min-keyint=12:scenecut=0:repeat-headers=1',
           '-b:v', '1600k',
           '-maxrate', '1800k',
           '-bufsize', '3600k',
-          '-force_key_frames', 'expr:gte(t,n_forced*2)',
+          '-force_key_frames', 'expr:gte(t,n_forced*1)',
         ];
     const args = [
       ...common,
@@ -559,7 +571,10 @@ class StreamSession {
   }
 
   async start() {
-    const wantAudio = !!this.cam.tem_audio && !!this.wantAudio;
+    const wantAudio = !!this.cam.tem_audio && !!this.wantAudio && !isTapoCamera(this.cam);
+    if (this.wantAudio && this.cam.tem_audio && !wantAudio) {
+      console.log('[webrtc] áudio RTSP separado desativado para estabilidade', this.cam.nome);
+    }
     try {
       this.pc = new RTCPeerConnection({
         iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
