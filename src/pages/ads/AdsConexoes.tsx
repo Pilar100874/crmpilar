@@ -4,6 +4,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, Key, Link2 } from "lucide-react";
 import AdsPlatformApps from "./AdsPlatformApps";
 import AdsCredentials from "./AdsCredentials";
+import { AdsOAuthButtons } from "@/components/ads/AdsOAuthButtons";
 
 export default function AdsConexoes() {
   const [tab, setTab] = useState("accounts");
@@ -27,7 +28,8 @@ export default function AdsConexoes() {
             <Key className="h-4 w-4" /> Apps do Desenvolvedor
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="accounts" className="mt-4">
+        <TabsContent value="accounts" className="mt-4 space-y-4">
+          <AdsOAuthButtons />
           <AdsCredentials />
         </TabsContent>
         <TabsContent value="apps" className="mt-4">

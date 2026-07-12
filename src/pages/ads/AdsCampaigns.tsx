@@ -16,8 +16,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus, Search, Loader2, Megaphone, Play, Pause, MoreVertical,
   TrendingUp, TrendingDown, DollarSign, Eye, Target, MousePointerClick,
-  Facebook, Music2, ShoppingBag, Package, Filter, RefreshCw
+  Facebook, Music2, ShoppingBag, Package, Filter, RefreshCw, Star
 } from "lucide-react";
+import { useAdsFavorites } from "@/hooks/useAdsFavorites";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +51,8 @@ export default function AdsCampaigns() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterPlatform, setFilterPlatform] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const { isFav, toggle } = useAdsFavorites();
+  const [onlyFavs, setOnlyFavs] = useState(false);
 
   useEffect(() => {
     getEstabelecimentoId().then(setEstabelecimentoId);
@@ -112,12 +115,16 @@ export default function AdsCampaigns() {
   }, []) || [];
 
   // Filtrar campanhas
-  const filteredCampaigns = campaigns.filter(c => {
-    const matchesSearch = c.campanha.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesPlatform = filterPlatform === "all" || c.plataforma?.id === filterPlatform;
-    const matchesStatus = filterStatus === "all" || c.status === filterStatus;
-    return matchesSearch && matchesPlatform && matchesStatus;
-  });
+  const filteredCampaigns = campaigns
+    .filter(c => {
+      const matchesSearch = c.campanha.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesPlatform = filterPlatform === "all" || c.plataforma?.id === filterPlatform;
+      const matchesStatus = filterStatus === "all" || c.status === filterStatus;
+      const matchesFav = !onlyFavs || isFav(c.key);
+      return matchesSearch && matchesPlatform && matchesStatus && matchesFav;
+    })
+    .sort((a, b) => (isFav(b.key) ? 1 : 0) - (isFav(a.key) ? 1 : 0));
+
 
   // Estatísticas
   const stats = {
@@ -254,6 +261,11 @@ export default function AdsCampaigns() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-8">
+                        <button onClick={() => setOnlyFavs(v => !v)} title={onlyFavs ? "Mostrar todas" : "Apenas favoritas"}>
+                          <Star className={`h-4 w-4 ${onlyFavs ? "fill-yellow-400 text-yellow-500" : "text-muted-foreground"}`} />
+                        </button>
+                      </TableHead>
                       <TableHead>Campanha</TableHead>
                       <TableHead>Plataforma</TableHead>
                       <TableHead>Status</TableHead>
@@ -272,6 +284,11 @@ export default function AdsCampaigns() {
                       
                       return (
                         <TableRow key={campaign.key}>
+                          <TableCell>
+                            <button onClick={() => toggle(campaign.key)} title={isFav(campaign.key) ? "Remover favorito" : "Favoritar"}>
+                              <Star className={`h-4 w-4 ${isFav(campaign.key) ? "fill-yellow-400 text-yellow-500" : "text-muted-foreground hover:text-yellow-500"}`} />
+                            </button>
+                          </TableCell>
                           <TableCell>
                             <div>
                               <p className="font-medium">{campaign.campanha}</p>
@@ -342,7 +359,7 @@ export default function AdsCampaigns() {
                     })}
                     {filteredCampaigns.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
+                        <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
                           <Megaphone className="h-12 w-12 mx-auto mb-4 opacity-50" />
                           <p className="text-lg font-medium">Nenhuma campanha encontrada</p>
                           <p className="text-sm">Configure suas contas de anúncios para ver as campanhas</p>
