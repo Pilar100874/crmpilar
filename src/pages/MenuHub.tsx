@@ -211,6 +211,11 @@ export default function MenuHub() {
         aria-hidden
       />
       <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-background/90 via-background/70 to-background/95" aria-hidden />
+
+      <div className="fixed top-4 right-4 z-50">
+        <AppsHealthIndicator floating />
+      </div>
+
       <div className="max-w-6xl mx-auto">
 
         <div className="flex items-end justify-between gap-3 mb-8">
@@ -244,17 +249,14 @@ export default function MenuHub() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <AppsHealthIndicator floating />
-            <button
-              onClick={toggleTheme}
-              className="h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center hover:bg-accent transition-colors"
-              title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
-              aria-label="Alternar tema"
-            >
-              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </button>
-          </div>
+          <button
+            onClick={toggleTheme}
+            className="h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center hover:bg-accent transition-colors"
+            title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
+            aria-label="Alternar tema"
+          >
+            {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </button>
         </div>
 
 
