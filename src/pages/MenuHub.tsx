@@ -140,6 +140,37 @@ export default function MenuHub() {
     <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-10">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
+  const [menuStyle, setMenuStyle] = useState<MenuStyle>(() => {
+    return (localStorage.getItem("menu-style") as MenuStyle) || "icons";
+  });
+  useEffect(() => { localStorage.setItem("menu-style", menuStyle); }, [menuStyle]);
+
+  const handleClick = (item: MenuItem) => {
+    if (item.subItems && item.subItems.length) {
+      setOpenItem(item);
+      return;
+    }
+    if (item.url) navigate(item.url);
+  };
+
+  const rootItems: MenuItem[] = [
+    ...menuItems,
+    ...EXTRA_ITEMS,
+    ...(isAdmin ? [ADMIN_ITEM] : []),
+  ];
+  const items = openItem?.subItems ?? rootItems;
+  const title = openItem?.title ?? "Menu Principal";
+
+  const styleOptions: { id: MenuStyle; label: string; Icon: typeof LayoutGrid }[] = [
+    { id: "icons", label: "Ícones", Icon: LayoutGrid },
+    { id: "images", label: "Imagens", Icon: ImageIcon },
+    { id: "list", label: "Lista", Icon: List },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-10">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center gap-3 mb-6">
           {openItem ? (
             <button
               onClick={() => setOpenItem(null)}
@@ -164,29 +195,113 @@ export default function MenuHub() {
           <AppsHealthIndicator />
         </div>
 
+        <div className="mb-4 inline-flex items-center gap-1 rounded-full bg-card border border-border p-1">
+          {styleOptions.map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              onClick={() => setMenuStyle(id)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors ${
+                menuStyle === id
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent"
+              }`}
+              aria-pressed={menuStyle === id}
+            >
+              <Icon className="h-4 w-4" />
+              {label}
+            </button>
+          ))}
+        </div>
+
         {loadingAdmin && !openItem ? (
           <div className="text-sm text-muted-foreground mb-4">Carregando itens do menu...</div>
         ) : null}
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-          {items.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleClick(item)}
-                className="group aspect-square flex flex-col items-center justify-center gap-3 rounded-2xl bg-gradient-to-br from-card to-muted border border-border shadow-sm hover:shadow-lg hover:border-primary/60 hover:-translate-y-0.5 transition-all p-4 text-center"
-              >
-                <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                  {Icon ? <Icon className="h-7 w-7 sm:h-8 sm:w-8" /> : null}
-                </div>
-                <span className="text-xs sm:text-sm font-medium leading-tight line-clamp-2">
-                  {item.title}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        {menuStyle === "icons" ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+            {items.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleClick(item)}
+                  className="group aspect-square flex flex-col items-center justify-center gap-3 rounded-2xl bg-gradient-to-br from-card to-muted border border-border shadow-sm hover:shadow-lg hover:border-primary/60 hover:-translate-y-0.5 transition-all p-4 text-center"
+                >
+                  <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    {Icon ? <Icon className="h-7 w-7 sm:h-8 sm:w-8" /> : null}
+                  </div>
+                  <span className="text-xs sm:text-sm font-medium leading-tight line-clamp-2">
+                    {item.title}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        ) : menuStyle === "images" ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {items.map((item) => {
+              const image = IMAGE_MAP[item.id] ?? IMAGE_MAP[item.title];
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleClick(item)}
+                  className="group relative overflow-hidden rounded-2xl bg-card border border-border shadow-sm hover:shadow-xl hover:-translate-y-0.5 hover:border-primary/60 transition-all text-left"
+                >
+                  <div className="relative h-36 w-full overflow-hidden bg-muted">
+                    {image ? (
+                      <img
+                        src={image}
+                        alt={item.title}
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/20">
+                        {Icon ? <Icon className="h-14 w-14 text-primary/60" /> : null}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 p-3">
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      {Icon ? <Icon className="h-5 w-5" /> : null}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm leading-tight truncate">{item.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {item.subItems?.length ? `${item.subItems.length} itens` : "Abrir"}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {items.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleClick(item)}
+                  className="group flex items-center gap-3 rounded-xl bg-card border border-border px-4 py-3 hover:border-primary/60 hover:bg-accent transition-colors text-left"
+                >
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    {Icon ? <Icon className="h-5 w-5" /> : null}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm leading-tight truncate">{item.title}</p>
+                    {item.subItems?.length ? (
+                      <p className="text-xs text-muted-foreground">{item.subItems.length} itens</p>
+                    ) : null}
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
