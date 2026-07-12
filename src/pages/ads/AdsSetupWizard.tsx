@@ -215,43 +215,58 @@ export default function AdsSetupWizard() {
 
 
         <Card>
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
-              <div className="p-2 rounded-md bg-primary/10">
+          <CardHeader className="p-4 sm:p-6">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-md bg-primary/10 shrink-0">
                 <StepIcon className="h-5 w-5 text-primary" />
               </div>
-              <div className="flex-1">
-                <CardTitle>{step.title}</CardTitle>
-                <CardDescription>{step.subtitle}</CardDescription>
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-base sm:text-lg">{step.title}</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">{step.subtitle}</CardDescription>
               </div>
-              {status[step.id] && <Badge className="bg-green-500/20 text-green-600 border-green-500/30">Concluído</Badge>}
+              {status[step.id] && (
+                <Badge className="bg-green-500/20 text-green-600 border-green-500/30 shrink-0 hidden sm:inline-flex">
+                  Concluído
+                </Badge>
+              )}
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 space-y-4">
             {step.body}
 
             <Alert>
               <Info className="h-4 w-4" />
-              <AlertDescription>
+              <AlertDescription className="text-xs sm:text-sm">
                 Após terminar esta etapa, clique em <b>Reverificar</b> no topo para atualizar o progresso.
               </AlertDescription>
             </Alert>
 
-            <div className="flex items-center justify-between pt-2">
-              <Button variant="outline" disabled={current === 0} onClick={() => setCurrent(current - 1)}>
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2 pt-2">
+              <Button
+                variant="outline"
+                disabled={current === 0}
+                onClick={() => setCurrent(current - 1)}
+                className="w-full sm:w-auto"
+              >
                 <ArrowLeft className="h-4 w-4 mr-2" /> Anterior
               </Button>
-              <div className="flex gap-2">
-                <Button onClick={() => navigate(step.goto)}>
-                  {step.cta} <ExternalLink className="h-4 w-4 ml-2" />
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Button onClick={() => navigate(step.goto)} className="w-full sm:w-auto">
+                  <span className="truncate">{step.cta}</span> <ExternalLink className="h-4 w-4 ml-2 shrink-0" />
                 </Button>
-                <Button variant="secondary" disabled={current === steps.length - 1} onClick={() => setCurrent(current + 1)}>
+                <Button
+                  variant="secondary"
+                  disabled={current === steps.length - 1}
+                  onClick={() => setCurrent(current + 1)}
+                  className="w-full sm:w-auto"
+                >
                   Próximo <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </div>
             </div>
           </CardContent>
         </Card>
+
       </div>
 
       {done === steps.length && (
