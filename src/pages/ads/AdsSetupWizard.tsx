@@ -191,7 +191,7 @@ export default function AdsSetupWizard() {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-4 md:gap-6">
-        <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible -mx-3 px-3 md:mx-0 md:px-0 pb-2 md:pb-0 snap-x md:snap-none">
+        <div className="flex flex-col gap-2">
           {steps.map((s, i) => {
             const ok = status[s.id];
             const active = i === current;
@@ -199,11 +199,11 @@ export default function AdsSetupWizard() {
               <button
                 key={s.id}
                 onClick={() => setCurrent(i)}
-                className={`shrink-0 md:shrink w-[220px] md:w-full snap-start text-left p-3 rounded-lg border transition-colors ${active ? "bg-primary/10 border-primary" : "hover:bg-muted border-border"}`}
+                className={`w-full text-left p-3 rounded-lg border transition-colors ${active ? "bg-primary/10 border-primary" : "hover:bg-muted border-border"}`}
               >
                 <div className="flex items-start gap-2">
                   {ok ? <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" /> : <Circle className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />}
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium text-sm truncate">{s.title}</div>
                     <div className="text-xs text-muted-foreground truncate">{s.subtitle}</div>
                   </div>
