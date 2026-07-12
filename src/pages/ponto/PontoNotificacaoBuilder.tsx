@@ -799,12 +799,29 @@ function PontoNotificacaoBuilderContent() {
 
         <NodeCallbacksContext.Provider value={nodeCallbacks}>
         <ReactFlow
-          nodes={nodes} edges={edges}
+          nodes={nodes}
+          edges={edges.map((edge) => ({
+            ...edge,
+            type: "smoothstep",
+            animated: true,
+            style: {
+              stroke: "hsl(var(--primary))",
+              strokeWidth: edge.selected ? 2.5 : 2,
+            },
+            markerEnd: {
+              type: "arrowclosed",
+              width: 20,
+              height: 20,
+              color: "hsl(var(--primary))",
+            },
+          }))}
           onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           isValidConnection={isValidConnection}
           onConnectStart={onConnectStart}
           onConnectEnd={onConnectEnd}
+          onReconnect={onReconnect}
+          onEdgesDelete={onEdgesDelete}
           onInit={setRfInstance}
           onNodeClick={(_, n) => setSelected(n)}
           onPaneClick={() => { setSelected(null); setSmartMenu(null); }}
@@ -831,7 +848,12 @@ function PontoNotificacaoBuilderContent() {
           autoPanOnNodeDrag={true}
           {...boxSelectionProps({ disabled: isLocked })}
           style={{ width: "100%", height: "100%" }}
-          defaultEdgeOptions={{ animated: true, style: { strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed } as any }}
+          defaultEdgeOptions={{
+            animated: true,
+            type: "smoothstep",
+            style: { stroke: "hsl(var(--primary))", strokeWidth: 2 },
+            markerEnd: { type: MarkerType.ArrowClosed, width: 20, height: 20, color: "hsl(var(--primary))" } as any,
+          }}
         >
           <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
           <Controls showInteractive={false} />
@@ -841,7 +863,7 @@ function PontoNotificacaoBuilderContent() {
 
         {smartMenu && (
           <SmartConnectMenu x={smartMenu.x} y={smartMenu.y}
-            title={smartMenu.handle ? `Próximo bloco (${smartMenu.handle.toUpperCase()})` : "Escolha o próximo bloco"}
+            title={smartMenu.handleType === "target" ? "Escolha o bloco anterior" : smartMenu.handle ? `Próximo bloco (${smartMenu.handle.toUpperCase()})` : "Escolha o próximo bloco"}
             blocks={smartOptions} onPick={onSmartPick} onClose={() => setSmartMenu(null)} />
         )}
       </div>
