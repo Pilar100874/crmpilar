@@ -298,22 +298,28 @@ export default function SystemVisualConfig() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {MAIN_MENU_STYLE_OPTIONS.map((opt) => {
               const isSelected = menuStyle === opt.id;
               const previewBg =
                 opt.id === "dark" ? "hsl(220 18% 20%)"
                 : opt.id === "light" ? "hsl(0 0% 100%)"
                 : opt.id === "brand" ? "hsl(var(--primary))"
-                : "hsl(220 25% 12% / 0.7)";
+                : opt.id === "glass" ? "hsl(220 25% 12% / 0.7)"
+                : opt.id === "buttons" ? "hsl(220 20% 14%)"
+                : "hsl(0 0% 100%)"; // outline
               const previewItem =
                 opt.id === "light" ? "hsl(210 20% 94%)"
                 : opt.id === "brand" ? "hsl(0 0% 100% / 0.25)"
+                : opt.id === "buttons" ? "hsl(220 18% 26%)"
+                : opt.id === "outline" ? "transparent"
                 : "hsl(0 0% 100% / 0.12)";
               const previewActive =
                 opt.id === "light" ? "hsl(var(--primary))"
                 : opt.id === "brand" ? "hsl(0 0% 100%)"
                 : "hsl(var(--primary))";
+              const isButtons = opt.id === "buttons";
+              const isOutline = opt.id === "outline";
               return (
                 <button
                   key={opt.id}
@@ -331,16 +337,45 @@ export default function SystemVisualConfig() {
                   )}
                   <div className="mb-3 h-24 rounded-lg overflow-hidden border border-border/50 flex">
                     <div
-                      className="w-10 flex flex-col gap-1.5 p-1.5"
+                      className={cn(
+                        "flex flex-col gap-1.5 p-1.5",
+                        isButtons ? "w-14" : "w-10"
+                      )}
                       style={{
                         background: previewBg,
                         backdropFilter: opt.id === "glass" ? "blur(6px)" : undefined,
                       }}
                     >
-                      <div className="h-2 rounded-sm" style={{ background: previewActive }} />
-                      <div className="h-2 rounded-sm" style={{ background: previewItem }} />
-                      <div className="h-2 rounded-sm" style={{ background: previewItem }} />
-                      <div className="h-2 rounded-sm" style={{ background: previewItem }} />
+                      <div
+                        className={isButtons ? "h-5 rounded-md" : isOutline ? "h-4 rounded-md border" : "h-2 rounded-sm"}
+                        style={{
+                          background: isOutline ? "hsl(var(--primary) / 0.15)" : previewActive,
+                          borderColor: isOutline ? "hsl(var(--primary))" : undefined,
+                        }}
+                      />
+                      <div
+                        className={isButtons ? "h-5 rounded-md" : isOutline ? "h-4 rounded-md border" : "h-2 rounded-sm"}
+                        style={{
+                          background: previewItem,
+                          borderColor: isOutline ? "hsl(220 13% 85%)" : undefined,
+                        }}
+                      />
+                      <div
+                        className={isButtons ? "h-5 rounded-md" : isOutline ? "h-4 rounded-md border" : "h-2 rounded-sm"}
+                        style={{
+                          background: previewItem,
+                          borderColor: isOutline ? "hsl(220 13% 85%)" : undefined,
+                        }}
+                      />
+                      {!isButtons && (
+                        <div
+                          className={isOutline ? "h-4 rounded-md border" : "h-2 rounded-sm"}
+                          style={{
+                            background: previewItem,
+                            borderColor: isOutline ? "hsl(220 13% 85%)" : undefined,
+                          }}
+                        />
+                      )}
                     </div>
                     <div className="flex-1 bg-muted/40" />
                   </div>
