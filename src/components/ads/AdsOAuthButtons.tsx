@@ -86,6 +86,13 @@ export const AdsOAuthButtons: React.FC = () => {
                   Portal {k} <ExternalLink className="h-3 w-3" />
                 </a>
               ))}
+              <a
+                href="https://github.com/search?q=ADS-OAUTH-GUIA.md+repo%3Aatual&type=code"
+                onClick={(e) => { e.preventDefault(); window.open("/ADS-OAUTH-GUIA.md", "_blank"); }}
+                className="inline-flex items-center gap-1 text-primary hover:underline ml-auto"
+              >
+                Ver guia completo <ExternalLink className="h-3 w-3" />
+              </a>
             </div>
             <p className="text-muted-foreground">
               Sem isso a plataforma rejeita com <code>redirect_uri_mismatch</code>. A URL deve bater byte-a-byte
