@@ -157,14 +157,14 @@ export default function AdsSchedulerConfig() {
       <Card>
         <CardHeader><CardTitle>Telemetria</CardTitle></CardHeader>
         <CardContent className="space-y-2 text-sm">
-          <div className="flex justify-between"><span className="text-muted-foreground">Última execução</span><span>{cfg.ultima_execucao ? new Date(cfg.ultima_execucao).toLocaleString() : "—"}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Próxima execução</span><span>{cfg.proxima_execucao ? new Date(cfg.proxima_execucao).toLocaleString() : "—"}</span></div>
-          <div className="flex justify-between items-center"><span className="text-muted-foreground">Último status</span>
+          <div className="flex flex-col sm:flex-row sm:justify-between gap-1"><span className="text-muted-foreground">Última execução</span><span className="break-all">{cfg.ultima_execucao ? new Date(cfg.ultima_execucao).toLocaleString() : "—"}</span></div>
+          <div className="flex flex-col sm:flex-row sm:justify-between gap-1"><span className="text-muted-foreground">Próxima execução</span><span className="break-all">{cfg.proxima_execucao ? new Date(cfg.proxima_execucao).toLocaleString() : "—"}</span></div>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1"><span className="text-muted-foreground">Último status</span>
             {cfg.ultimo_status
-              ? <Badge variant={cfg.ultimo_status === "ok" ? "default" : "destructive"}>{cfg.ultimo_status}</Badge>
+              ? <Badge variant={cfg.ultimo_status === "ok" ? "default" : "destructive"} className="w-fit">{cfg.ultimo_status}</Badge>
               : <span>—</span>}
           </div>
-          {cfg.ultimo_erro && <div className="text-destructive text-xs mt-2">{cfg.ultimo_erro}</div>}
+          {cfg.ultimo_erro && <div className="text-destructive text-xs mt-2 break-words">{cfg.ultimo_erro}</div>}
         </CardContent>
       </Card>
     </div>
