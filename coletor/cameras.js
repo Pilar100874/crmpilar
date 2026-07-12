@@ -174,8 +174,9 @@ function fetchRtspSnapshot(cam) {
     const auth = cam.usuario ? `${encodeURIComponent(cam.usuario)}:${encodeURIComponent(cam.senha || '')}@` : '';
     const url = `rtsp://${auth}${host}:${port}${streamPath.startsWith('/') ? streamPath : '/' + streamPath}`;
     const tmp = path.join(os.tmpdir(), `pilar-snap-${cam.id || Date.now()}.jpg`);
+    const cleanErr = (msg) => String(msg || '').replace(/rtsp:\/\/([^\s:@/]+):([^\s@/]+)@/gi, 'rtsp://***:***@');
     // -rtsp_transport tcp: mais confiável em LAN, evita perda UDP
-    const args = ['-y', '-hide_banner', '-loglevel', 'warning', '-rtsp_transport', 'tcp', '-timeout', '8000000', '-i', url, '-frames:v', '1', '-q:v', '3', tmp];
+    const args = ['-y', '-hide_banner', '-loglevel', 'warning', '-rtsp_transport', 'tcp', '-timeout', '8000000', '-i', url, '-frames:v', '1', '-q:v', '3', '-f', 'image2', '-update', '1', tmp];
     const proc = spawn(ff, args, { stdio: ['ignore', 'ignore', 'pipe'] });
     let err = '';
     proc.stderr.on('data', d => { err += d.toString(); });
@@ -190,7 +191,7 @@ function fetchRtspSnapshot(cam) {
           resolve({ bytes, contentType: 'image/jpeg' });
         } catch (e) { reject(e); }
       } else {
-        reject(new Error(`ffmpeg falhou (code=${code}) ${err.split('\n').slice(-3).join(' ').slice(0, 200)}`));
+        reject(new Error(`ffmpeg falhou (code=${code}) ${cleanErr(err).split('\n').slice(-3).join(' ').slice(0, 200)}`));
       }
     });
     proc.on('error', reject);

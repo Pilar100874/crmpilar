@@ -326,6 +326,48 @@ function bindUdpWithRetry(sock, host) {
   });
 }
 
+class RtpNormalizer {
+  constructor({ payloadType, clockRate, fps }) {
+    this.payloadType = payloadType;
+    this.clockRate = clockRate;
+    this.frameTimestampStep = Math.max(1, Math.round(clockRate / fps));
+    this.maxTimestampStep = clockRate * 2;
+    this.nextSequence = Math.floor(Math.random() * 0xffff);
+    this.ssrc = Math.floor(Math.random() * 0xffffffff) >>> 0;
+    this.currentTimestamp = Math.floor(Math.random() * 0xffffffff) >>> 0;
+    this.lastInputTimestamp = null;
+    this.lastPacketAt = 0;
+  }
+
+  normalize(buf) {
+    if (!buf || buf.length < 12) return buf;
+    const out = Buffer.from(buf);
+    const now = Date.now();
+    const inputTimestamp = out.readUInt32BE(4);
+
+    if (this.lastInputTimestamp === null) {
+      // Mantém timestamp inicial aleatório, mas estável para este WebRTC track.
+    } else if (inputTimestamp === this.lastInputTimestamp && now - this.lastPacketAt < 500) {
+      // Mesmo frame fragmentado em múltiplos pacotes RTP: timestamp igual.
+    } else {
+      const inputDiff = (inputTimestamp - this.lastInputTimestamp) >>> 0;
+      const step = inputDiff > 0 && inputDiff <= this.maxTimestampStep
+        ? inputDiff
+        : this.frameTimestampStep;
+      this.currentTimestamp = (this.currentTimestamp + step) >>> 0;
+    }
+
+    this.lastInputTimestamp = inputTimestamp;
+    this.lastPacketAt = now;
+    out[1] = (out[1] & 0x80) | this.payloadType;
+    out.writeUInt16BE(this.nextSequence & 0xffff, 2);
+    out.writeUInt32BE(this.currentTimestamp >>> 0, 4);
+    out.writeUInt32BE(this.ssrc >>> 0, 8);
+    this.nextSequence = (this.nextSequence + 1) & 0xffff;
+    return out;
+  }
+}
+
 class CameraPump {
   constructor(cam, onEmpty) {
     this.cam = cam;
@@ -343,6 +385,8 @@ class CameraPump {
     this.mode = 'encode';
     this.rtpReceived = 0;
     this.audioRtpReceived = 0;
+    this.videoNormalizer = new RtpNormalizer({ payloadType: 96, clockRate: 90000, fps: 15 });
+    this.audioNormalizer = new RtpNormalizer({ payloadType: 111, clockRate: 48000, fps: 50 });
     this.starting = false;
     this.audioStarting = false;
     this.started = false;
@@ -357,8 +401,9 @@ class CameraPump {
     this.videoUdp = dgram.createSocket('udp4');
     this.videoUdp.on('message', (buf) => {
       this.rtpReceived++;
+      const packet = this.videoNormalizer.normalize(buf);
       for (const s of this.subs) {
-        try { s.videoTrack.writeRtp(buf); } catch {}
+        try { s.videoTrack.writeRtp(packet); } catch {}
       }
       if (this.rtpReceived === 4) {
         // Sinaliza subs que já podem gerar offer (temos fluxo)
@@ -433,10 +478,12 @@ class CameraPump {
     const common = [
       '-rtsp_transport', 'tcp',
       '-timeout', '8000000',
-      '-analyzeduration', '1000000',
-      '-probesize', '1000000',
-      '-fflags', 'nobuffer',
+      '-analyzeduration', '500000',
+      '-probesize', '500000',
+      '-fflags', 'nobuffer+discardcorrupt',
       '-flags', 'low_delay',
+      '-max_delay', '500000',
+      '-reorder_queue_size', '0',
       '-i', rtsp,
       '-an',
     ];
@@ -446,23 +493,27 @@ class CameraPump {
           '-c:v', 'libx264',
           '-preset', 'ultrafast',
           '-tune', 'zerolatency',
-          '-vf', 'scale=-2:720,fps=12',
+          '-threads', '2',
+          '-vf', 'scale=-2:720,fps=15',
           '-profile:v', 'baseline',
           '-level', '3.1',
           '-pix_fmt', 'yuv420p',
-          '-g', '12',
-          '-keyint_min', '12',
+          '-g', '15',
+          '-keyint_min', '15',
           '-sc_threshold', '0',
           '-bf', '0',
-          '-x264-params', 'keyint=12:min-keyint=12:scenecut=0:repeat-headers=1',
-          '-b:v', '1600k',
-          '-maxrate', '1800k',
-          '-bufsize', '3600k',
+          '-x264-params', 'keyint=15:min-keyint=15:scenecut=0:repeat-headers=1:force-cfr=1',
+          '-b:v', '1400k',
+          '-maxrate', '1600k',
+          '-bufsize', '1200k',
           '-force_key_frames', 'expr:gte(t,n_forced*1)',
         ];
     const args = [
       ...common,
       ...encArgs,
+      '-flush_packets', '1',
+      '-muxdelay', '0',
+      '-muxpreload', '0',
       '-f', 'rtp',
       '-payload_type', '96',
       `rtp://127.0.0.1:${this.videoUdpPort}?pkt_size=1200`,
@@ -476,8 +527,8 @@ class CameraPump {
       }
     });
     const spawnedMode = this.mode;
-    child.on('exit', (code) => {
-      console.log('[pump] ffmpeg exit', code, this.cam.nome, 'mode=', spawnedMode, 'rtp=', this.rtpReceived);
+    child.on('exit', (code, signal) => {
+      console.log('[pump] ffmpeg exit', code, signal || '', this.cam.nome, 'mode=', spawnedMode, 'rtp=', this.rtpReceived);
       // Ignora exits de processos que matamos de propósito (troca copy→encode)
       if (child._intentionalKill) return;
       // Se este exit é de um processo já substituído, ignora
@@ -503,8 +554,9 @@ class CameraPump {
     const sock = dgram.createSocket('udp4');
     sock.on('message', (buf) => {
       this.audioRtpReceived++;
+      const packet = this.audioNormalizer.normalize(buf);
       for (const s of this.subs) {
-        if (s.wantAudio && s.audioTrack) { try { s.audioTrack.writeRtp(buf); } catch {} }
+        if (s.wantAudio && s.audioTrack) { try { s.audioTrack.writeRtp(packet); } catch {} }
       }
     });
     try {
