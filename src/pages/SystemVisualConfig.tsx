@@ -199,11 +199,14 @@ export default function SystemVisualConfig() {
     { id: "classic", title: "Clássico", description: "Cards com borda definida e leve sombra. Menu lateral tradicional com destaque na cor primária." },
   ];
 
+  const deviceLabel = (d: DeviceKind) => d === "desktop" ? "Desktop" : d === "tablet" ? "Tablet" : "Celular";
+  const isCurrentDevice = targetDevice === getDeviceKind();
+
   const handleSelectPreset = async (preset: VisualPreset) => {
     setVisualPreset(preset);
-    applyVisualPreset(preset);
-    localStorage.setItem("system_visual_preset", preset);
-    toast.success(`Estilo "${VISUAL_PRESET_OPTIONS.find(p => p.id === preset)?.title}" aplicado!`);
+    setPerDevice("system_visual_preset", targetDevice, preset);
+    if (isCurrentDevice) applyVisualPreset(preset);
+    toast.success(`Estilo "${VISUAL_PRESET_OPTIONS.find(p => p.id === preset)?.title}" salvo para ${deviceLabel(targetDevice)}`);
   };
 
   const MAIN_MENU_STYLE_OPTIONS: { id: MainMenuStyle; title: string; description: string }[] = [
@@ -213,9 +216,9 @@ export default function SystemVisualConfig() {
 
   const handleSelectMenuStyle = (style: MainMenuStyle) => {
     setMenuStyle(style);
-    applyMainMenuStyle(style);
-    localStorage.setItem("system_main_menu_style", style);
-    toast.success(`Menu "${MAIN_MENU_STYLE_OPTIONS.find(o => o.id === style)?.title}" aplicado!`);
+    setPerDevice("system_main_menu_style", targetDevice, style);
+    if (isCurrentDevice) applyMainMenuStyle(style);
+    toast.success(`Menu "${MAIN_MENU_STYLE_OPTIONS.find(o => o.id === style)?.title}" salvo para ${deviceLabel(targetDevice)}`);
   };
 
   const MAIN_MENU_LAYOUT_OPTIONS: { id: MainMenuLayout; title: string; description: string; Icon: typeof LayoutGrid }[] = [
@@ -227,10 +230,11 @@ export default function SystemVisualConfig() {
 
   const handleSelectMenuLayout = (layout: MainMenuLayout) => {
     setMenuLayout(layout);
-    applyMainMenuLayout(layout);
-    localStorage.setItem("system_main_menu_layout", layout);
-    toast.success(`Layout "${MAIN_MENU_LAYOUT_OPTIONS.find(o => o.id === layout)?.title}" aplicado!`);
+    setPerDevice("system_main_menu_layout", targetDevice, layout);
+    if (isCurrentDevice) applyMainMenuLayout(layout);
+    toast.success(`Layout "${MAIN_MENU_LAYOUT_OPTIONS.find(o => o.id === layout)?.title}" salvo para ${deviceLabel(targetDevice)}`);
   };
+
 
 
 
