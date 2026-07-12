@@ -679,7 +679,15 @@
       document.getElementById('rtspPass').value = c.senha || '';
       document.getElementById('rtspPath').value = c.snapshot_path || '';
       document.getElementById('rtspFullUrl').value = '';
+      atualizarUrlVlc();
     }
+    // Atualiza a URL "pronta pra colar no VLC" sempre que qualquer campo mudar
+    ['rtspHost','rtspPort','rtspUser','rtspPass','rtspPath','rtspFullUrl'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', atualizarUrlVlc);
+    });
+    atualizarUrlVlc();
+
     setInterval(() => verificarAtualizacao(true), 60 * 60 * 1000);
     let refreshRunning = false;
     async function refreshLoop(){
