@@ -142,9 +142,13 @@ export default function AdsSchedulerConfig() {
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
               Salvar
             </Button>
-            <Button variant="outline" onClick={executarAgora} disabled={runningNow}>
+            <Button variant="outline" onClick={() => executarAgora(false)} disabled={runningNow}>
               {runningNow ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Play className="w-4 h-4 mr-2" />}
               Executar agora
+            </Button>
+            <Button variant="secondary" onClick={() => executarAgora(true)} disabled={runningNow} title="Simula sem executar ações reais">
+              {runningNow ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Play className="w-4 h-4 mr-2" />}
+              Simular (dry-run)
             </Button>
           </div>
         </CardContent>
