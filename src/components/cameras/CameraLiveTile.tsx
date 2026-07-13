@@ -331,9 +331,11 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
           ><Maximize2 className="h-3 w-3" /></button>
         </div>
       )}
-      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent px-2 py-1 text-white text-xs flex items-center gap-1 pointer-events-none">
-        <CameraIcon className="h-3 w-3" /> <span className="truncate">{cameraNome}</span>
-      </div>
+      {!hideOverlays && (
+        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent px-2 py-1 text-white text-xs flex items-center gap-1 pointer-events-none">
+          <CameraIcon className="h-3 w-3" /> <span className="truncate">{cameraNome}</span>
+        </div>
+      )}
       {status !== "ao-vivo" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-white gap-2 pointer-events-none">
           {status === "erro" ? (
