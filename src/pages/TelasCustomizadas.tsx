@@ -31,7 +31,9 @@ import {
   ChevronRight,
   ArrowLeft,
   Copy,
+  Users as UsersIcon,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -217,6 +219,68 @@ export default function TelasCustomizadas() {
   });
 
   const [confirmDel, setConfirmDel] = useState<TelaCustomizada | null>(null);
+
+  // Vincular usuários
+  const [linkDialogFor, setLinkDialogFor] = useState<TelaCustomizada | null>(null);
+  const [usuariosList, setUsuariosList] = useState<{ id: string; nome: string; email: string }[]>([]);
+  const [linkedUserIds, setLinkedUserIds] = useState<Set<string>>(new Set());
+  const [savingLinks, setSavingLinks] = useState(false);
+
+  const openLinkDialog = async (item: TelaCustomizada) => {
+    setLinkDialogFor(item);
+    setLinkedUserIds(new Set());
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) return;
+      const [{ data: users }, { data: links }] = await Promise.all([
+        supabase.from("usuarios").select("id, nome, email").eq("estabelecimento_id", estabId).order("nome"),
+        supabase.from("usuario_telas_customizadas").select("usuario_id").eq("tela_id", item.id),
+      ]);
+      setUsuariosList((users || []) as any);
+      setLinkedUserIds(new Set((links || []).map((l: any) => l.usuario_id)));
+    } catch (e: any) {
+      toast.error("Erro ao carregar usuários: " + e.message);
+    }
+  };
+
+  const toggleLinkedUser = (uid: string) => {
+    setLinkedUserIds((prev) => {
+      const n = new Set(prev);
+      n.has(uid) ? n.delete(uid) : n.add(uid);
+      return n;
+    });
+  };
+
+  const saveLinks = async () => {
+    if (!linkDialogFor) return;
+    setSavingLinks(true);
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) throw new Error("Estabelecimento não encontrado");
+      // Substitui todos os vínculos desta tela
+      const { error: delErr } = await supabase
+        .from("usuario_telas_customizadas")
+        .delete()
+        .eq("tela_id", linkDialogFor.id);
+      if (delErr) throw delErr;
+      const rows = Array.from(linkedUserIds).map((uid) => ({
+        usuario_id: uid,
+        tela_id: linkDialogFor.id,
+        estabelecimento_id: estabId,
+      }));
+      if (rows.length > 0) {
+        const { error: insErr } = await supabase.from("usuario_telas_customizadas").insert(rows);
+        if (insErr) throw insErr;
+      }
+      toast.success("Vínculos atualizados");
+      setLinkDialogFor(null);
+    } catch (e: any) {
+      toast.error("Erro ao salvar vínculos: " + e.message);
+    } finally {
+      setSavingLinks(false);
+    }
+  };
+
 
   const load = async () => {
     setLoading(true);
@@ -462,6 +526,14 @@ export default function TelasCustomizadas() {
                     <Button
                       size="icon"
                       variant="ghost"
+                      onClick={() => openLinkDialog(item)}
+                      title="Vincular usuários"
+                    >
+                      <UsersIcon className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
                       onClick={() => openEdit(item)}
                       title="Editar"
                     >
@@ -633,6 +705,48 @@ export default function TelasCustomizadas() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Vincular usuários */}
+      <Dialog open={!!linkDialogFor} onOpenChange={(o) => !o && setLinkDialogFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Vincular usuários — {linkDialogFor?.nome}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-80 overflow-y-auto">
+            <p className="text-xs text-muted-foreground">
+              Ao logar, os usuários vinculados irão direto para esta tela em vez do sistema completo.
+            </p>
+            {usuariosList.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum usuário encontrado.</p>
+            ) : (
+              usuariosList.map((u) => (
+                <label
+                  key={u.id}
+                  className="flex items-center gap-2 p-2 rounded hover:bg-muted cursor-pointer"
+                >
+                  <Checkbox
+                    checked={linkedUserIds.has(u.id)}
+                    onCheckedChange={() => toggleLinkedUser(u.id)}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{u.nome}</p>
+                    <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                  </div>
+                </label>
+              ))
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLinkDialogFor(null)} disabled={savingLinks}>
+              Cancelar
+            </Button>
+            <Button onClick={saveLinks} disabled={savingLinks}>
+              {savingLinks ? "Salvando..." : "Salvar vínculos"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+

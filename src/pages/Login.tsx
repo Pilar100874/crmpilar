@@ -76,7 +76,8 @@ export default function Login() {
           localStorage.setItem("userType", "user");
           localStorage.setItem("userId", usuario.id);
           localStorage.setItem("estabelecimentoId", usuario.estabelecimento_id);
-          navigate("/dashboard");
+          const { getInitialRouteForUsuario } = await import("@/lib/telaCustomizadaRedirect");
+          navigate(await getInitialRouteForUsuario(usuario.id));
         }
       }
     };
@@ -117,7 +118,8 @@ export default function Login() {
       localStorage.setItem("estabelecimentoId", usuario.estabelecimento_id);
 
       toast.success("Login realizado com sucesso!");
-      navigate("/dashboard");
+      const { getInitialRouteForUsuario } = await import("@/lib/telaCustomizadaRedirect");
+      navigate(await getInitialRouteForUsuario(usuario.id));
     } catch (err) {
       console.error("Erro no login:", err);
       toast.error("Erro inesperado no login");
