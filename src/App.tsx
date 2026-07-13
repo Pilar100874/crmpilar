@@ -286,6 +286,7 @@ import StudioBackgroundIndicator from "./components/marketing/StudioBackgroundIn
 
 import WakeLockManager from "./components/WakeLockManager";
 import GlobalOpenInNewTabButton from "./components/GlobalOpenInNewTabButton";
+import GlobalBackToTelaButton from "./components/GlobalBackToTelaButton";
 
 const queryClient = new QueryClient();
 
