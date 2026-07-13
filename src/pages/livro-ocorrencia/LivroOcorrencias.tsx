@@ -29,7 +29,9 @@ interface Ocorrencia {
   responsavel: string | null;
   status: string;
   observacoes: string | null;
+  anexos?: any;
 }
+
 
 const TIPOS = ["Segurança", "Acesso Indevido", "Furto/Roubo", "Briga/Agressão", "Acidente", "Falha Técnica", "Emergência Médica", "Incêndio", "Manutenção", "Outros"];
 const GRAVIDADES = [
