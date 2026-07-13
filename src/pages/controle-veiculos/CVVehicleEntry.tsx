@@ -154,7 +154,7 @@ export default function CVVehicleEntry() {
         .select("id").eq("category", "bodywork").limit(1).maybeSingle();
       if (!bw) {
         const { data: newT } = await supabase.from("cv_defect_types")
-          .insert({ name: "Avaria de Carroceria", description: "Avarias na vistoria", category: "bodywork" })
+          .insert({ name: "Avaria de Carroceria", description: "Avarias na vistoria", category: "bodywork", estabelecimento_id: estId })
           .select().single();
         bw = newT;
       }
@@ -168,6 +168,7 @@ export default function CVVehicleEntry() {
           reported_by: user?.id ?? null,
           status: "pending",
           is_damage_report: true,
+          estabelecimento_id: estId,
         });
       }
     }
