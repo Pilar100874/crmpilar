@@ -194,7 +194,7 @@ export default function TvCameras() {
 
   return (
     <div className="fixed inset-0 bg-black overflow-hidden">
-      <div className="w-full h-full grid grid-cols-4 grid-rows-4 gap-0">
+      <div className="w-full h-full grid gap-0 grid-cols-2 grid-rows-8 landscape:grid-cols-4 landscape:grid-rows-4 sm:grid-cols-3 sm:grid-rows-[repeat(6,minmax(0,1fr))] md:grid-cols-4 md:grid-rows-4">
         {slots.map((c, i) =>
           c ? (
             <div
@@ -238,20 +238,20 @@ export default function TvCameras() {
       )}
 
       {!zoomed && (
-        <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+        <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex items-center gap-1.5 sm:gap-2 flex-wrap justify-end max-w-[calc(100%-1rem)]">
           <button
             onClick={openMenu}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium shadow-lg"
+            className="flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-xs sm:text-sm font-medium shadow-lg"
             title="Sequência de exibição"
           >
-            <ListOrdered className="h-4 w-4" /> Ordem
+            <ListOrdered className="h-4 w-4" /> <span className="hidden xs:inline sm:inline">Ordem</span>
           </button>
           <button
             onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-white text-black hover:bg-white/90 text-sm font-medium shadow-lg"
+            className="flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 rounded-md bg-white text-black hover:bg-white/90 text-xs sm:text-sm font-medium shadow-lg"
             title="Voltar"
           >
-            <ArrowLeft className="h-4 w-4" /> Voltar
+            <ArrowLeft className="h-4 w-4" /> <span className="hidden xs:inline sm:inline">Voltar</span>
           </button>
         </div>
       )}
