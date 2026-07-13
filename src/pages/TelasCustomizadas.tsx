@@ -566,6 +566,13 @@ export default function TelasCustomizadas() {
                     <Button
                       size="icon"
                       variant="ghost"
+                      onClick={() => setMoveDialogFor(item)}
+                      title="Mover para outro grupo"
+                    >
+                      <Move className="w-4 h-4" />
+                    <Button
+                      size="icon"
+                      variant="ghost"
                       onClick={() => openEdit(item)}
                       title="Editar"
                     >
