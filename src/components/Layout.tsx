@@ -649,6 +649,14 @@ export default function Layout({ children }: LayoutProps) {
       return item;
     });
 
+  if (soloMode) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <main className="min-h-screen">{children}</main>
+      </div>
+    );
+  }
+
   return (
     <LayoutContext.Provider value={{ openSubmenu: setOpenSubmenuId }}>
       <div className="min-h-screen flex w-full bg-background relative">
