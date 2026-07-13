@@ -52,15 +52,15 @@ const toneMap: Record<NonNullable<KPIProps["tone"]>, { text: string; bg: string;
 export function CVKpiCard({ label, value, sub, icon: Icon, tone = "primary" }: KPIProps) {
   const t = toneMap[tone];
   return (
-    <div className="group relative overflow-hidden rounded-xl border bg-card p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-medium text-muted-foreground sm:text-sm">{label}</p>
-          <p className={`mt-1 text-2xl font-bold tracking-tight sm:text-3xl ${t.text}`}>{value}</p>
-          {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
+    <div className="group relative overflow-hidden rounded-xl border bg-card p-3 sm:p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+      <div className="flex items-start justify-between gap-2 sm:gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] leading-tight font-medium text-muted-foreground sm:text-sm">{label}</p>
+          <p className={`mt-1 text-lg sm:text-2xl lg:text-3xl font-bold tracking-tight break-words ${t.text}`}>{value}</p>
+          {sub && <p className="mt-1 text-[10px] sm:text-xs text-muted-foreground line-clamp-2">{sub}</p>}
         </div>
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${t.bg} ring-1 ${t.ring} transition-transform group-hover:scale-110`}>
-          <Icon className={`h-5 w-5 ${t.text}`} />
+        <div className={`flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg sm:rounded-xl ${t.bg} ring-1 ${t.ring} transition-transform group-hover:scale-110`}>
+          <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${t.text}`} />
         </div>
       </div>
     </div>

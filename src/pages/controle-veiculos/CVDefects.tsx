@@ -158,7 +158,7 @@ export default function CVDefects() {
                 <DialogDescription>Registre manualmente um defeito da frota.</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Veículo *</Label>
                     <Select value={newDefect.vehicle_id} onValueChange={(v) => setNewDefect({ ...newDefect, vehicle_id: v })}>
@@ -221,7 +221,7 @@ export default function CVDefects() {
           <CardTitle className="flex items-center gap-2"><Filter className="h-5 w-5" /> Filtros</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Buscar:</label>
               <div className="relative">
@@ -286,10 +286,10 @@ export default function CVDefects() {
           return (
             <Card key={defect.id} className="shadow-sm hover:shadow-md transition-all">
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <AlertTriangle className="h-5 w-5 text-warning" />
-                    {v?.name} — {v?.plate}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg min-w-0">
+                    <AlertTriangle className="h-5 w-5 text-warning shrink-0" />
+                    <span className="truncate">{v?.name} — {v?.plate}</span>
                   </CardTitle>
                   {getStatusBadge(defect.status)}
                 </div>

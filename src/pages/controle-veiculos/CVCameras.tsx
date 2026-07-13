@@ -127,21 +127,21 @@ export default function CVCameras() {
         subtitle="TP-Link Tapo, Hikvision, Intelbras e genéricas · públicas ou via Coletor Desktop"
       />
 
-      <Card className="p-4 flex items-center justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <Wifi className="h-5 w-5 text-primary mt-0.5" />
-          <div>
+      <Card className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-start gap-3 min-w-0">
+          <Wifi className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+          <div className="min-w-0">
             <p className="font-medium">Módulo de câmeras no Coletor Desktop</p>
             <p className="text-xs text-muted-foreground">
               Ao habilitar, o Coletor (o mesmo usado no Ponto) também tira snapshots das câmeras internas quando solicitado.
             </p>
           </div>
         </div>
-        <Switch checked={collectorEnabled} onCheckedChange={toggleCollector} />
+        <Switch checked={collectorEnabled} onCheckedChange={toggleCollector} className="self-end sm:self-center shrink-0" />
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" /> Nova câmera</Button>
+        <Button onClick={openNew} className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-2" /> Nova câmera</Button>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -168,7 +168,7 @@ export default function CVCameras() {
               </div>
               {r.local_descricao && <div className="text-xs">Local: {r.local_descricao}</div>}
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-wrap gap-2 pt-2">
                 <Button size="sm" variant="outline" onClick={() => openEdit(r)}>
                   <Edit className="h-3 w-3 mr-1" /> Editar
                 </Button>
@@ -177,7 +177,7 @@ export default function CVCameras() {
                     <TestTube className="h-3 w-3 mr-1" /> {testing === r.id ? "..." : "Testar"}
                   </Button>
                 )}
-                <Button size="sm" variant="ghost" onClick={() => setDeleteId(r.id)}>
+                <Button size="sm" variant="ghost" onClick={() => setDeleteId(r.id)} className="ml-auto">
                   <Trash2 className="h-3 w-3 text-destructive" />
                 </Button>
               </div>
