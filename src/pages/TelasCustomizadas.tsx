@@ -289,6 +289,8 @@ export default function TelasCustomizadas() {
 
   // Mover item para outro grupo
   const [moveDialogFor, setMoveDialogFor] = useState<TelaCustomizada | null>(null);
+  const [simulateFor, setSimulateFor] = useState<TelaCustomizada | null>(null);
+  const [simDevice, setSimDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
 
   const grupos = useMemo(() => items.filter((i) => i.tipo === "grupo"), [items]);
 
