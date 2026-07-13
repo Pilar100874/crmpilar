@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
 import { CamerasLivePanel } from "@/components/cameras/CamerasLivePanel";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
 const STEPS = ["Veículo", "KM & Defeitos", "Fotos", "Confirmação"] as const;
 
@@ -104,6 +105,8 @@ export default function CVVehicleEntry() {
     if (!form.inspected_all_sides) return toast.error("Confirme a vistoria nos 4 lados");
     setBusy(true);
     const { data: { user } } = await supabase.auth.getUser();
+    const estId = await getEstabelecimentoId();
+
 
     const { error } = await supabase.from("cv_vehicle_movements").update({
       status: "returned",
@@ -142,6 +145,7 @@ export default function CVVehicleEntry() {
         defect_description: form.reported_defects,
         reported_by: user?.id ?? null,
         status: "pending",
+        estabelecimento_id: estId,
       });
     }
 
@@ -150,7 +154,7 @@ export default function CVVehicleEntry() {
         .select("id").eq("category", "bodywork").limit(1).maybeSingle();
       if (!bw) {
         const { data: newT } = await supabase.from("cv_defect_types")
-          .insert({ name: "Avaria de Carroceria", description: "Avarias na vistoria", category: "bodywork" })
+          .insert({ name: "Avaria de Carroceria", description: "Avarias na vistoria", category: "bodywork", estabelecimento_id: estId })
           .select().single();
         bw = newT;
       }
@@ -164,6 +168,7 @@ export default function CVVehicleEntry() {
           reported_by: user?.id ?? null,
           status: "pending",
           is_damage_report: true,
+          estabelecimento_id: estId,
         });
       }
     }

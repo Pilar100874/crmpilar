@@ -12,6 +12,7 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Camera, Plus, Edit, Trash2, Wifi, TestTube, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
 const MARCAS = [
   { value: "tplink_tapo", label: "TP-Link Tapo" },
@@ -71,9 +72,14 @@ export default function CVCameras() {
     const payload: any = { ...editing };
     delete payload.id;
     if (!payload.angulo_key) payload.angulo_key = slugify(payload.nome);
-    const q = editing.id
-      ? supabase.from("cv_cameras").update(payload).eq("id", editing.id)
-      : supabase.from("cv_cameras").insert(payload);
+    let q;
+    if (editing.id) {
+      q = supabase.from("cv_cameras").update(payload).eq("id", editing.id);
+    } else {
+      const estId = await getEstabelecimentoId();
+      if (!estId) return toast.error("Estabelecimento não encontrado");
+      q = supabase.from("cv_cameras").insert({ ...payload, estabelecimento_id: estId });
+    }
     const { error } = await q;
     if (error) return toast.error(error.message);
     toast.success("Câmera salva");
@@ -113,7 +119,8 @@ export default function CVCameras() {
     if (collectorId) {
       await supabase.from("cv_coletor_config").update({ cameras_habilitado: v }).eq("id", collectorId);
     } else {
-      const { data } = await supabase.from("cv_coletor_config").insert({ cameras_habilitado: v }).select().single();
+      const estId = await getEstabelecimentoId();
+      const { data } = await supabase.from("cv_coletor_config").insert({ cameras_habilitado: v, estabelecimento_id: estId }).select().single();
       if (data) setCollectorId(data.id);
     }
     toast.success("Configuração do Coletor atualizada");

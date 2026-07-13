@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Camera, Plus, Trash2, Save, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
 type AngleSource = "device" | "ip_camera";
 interface Angle { key: string; label: string; required: boolean; source?: AngleSource; camera_id?: string | null; exit_camera_id?: string | null; }
@@ -77,9 +78,13 @@ export default function CVInspectionConfig() {
       entry_photos_required: entryRequired,
       updated_at: new Date().toISOString(),
     };
-    const q = id
-      ? supabase.from("cv_inspection_config").update(payload).eq("id", id)
-      : supabase.from("cv_inspection_config").insert({ ...payload, name: "default" });
+    let q;
+    if (id) {
+      q = supabase.from("cv_inspection_config").update(payload).eq("id", id);
+    } else {
+      const estId = await getEstabelecimentoId();
+      q = supabase.from("cv_inspection_config").insert({ ...payload, name: "default", estabelecimento_id: estId });
+    }
     const { error } = await q;
     setSaving(false);
     if (error) return toast.error(error.message);

@@ -8,6 +8,7 @@ import type {
   PendingVisitor,
 } from "@/types/visitantes";
 import { toast } from "sonner";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
 // Nomes reais das tabelas neste projeto
 const T_VIS = "vis_visitors" as const;
@@ -103,11 +104,14 @@ export function useVisitantesControl() {
   const findVisitorByCpf = (cpf: string) => visitors.find((v) => v.cpf === cpf);
 
   const createVisitor = async (data: Omit<Visitor, "id" | "createdAt">): Promise<Visitor> => {
+    const estId = await getEstabelecimentoId();
+    if (!estId) { toast.error("Estabelecimento não encontrado"); throw new Error("no est"); }
     const { data: row, error } = await supabase
       .from(T_VIS)
       .insert([{
         cpf: data.cpf, name: data.name, company: data.company,
         email: data.email, phone: data.phone, whatsapp: data.whatsapp, photo: data.photo,
+        estabelecimento_id: estId,
       }])
       .select()
       .single();
@@ -136,6 +140,8 @@ export function useVisitantesControl() {
   };
 
   const createAccessRecord = async (rec: Omit<AccessRecord, "id" | "entryDate" | "status">): Promise<AccessRecord> => {
+    const estId = await getEstabelecimentoId();
+    if (!estId) { toast.error("Estabelecimento não encontrado"); throw new Error("no est"); }
     const { data, error } = await supabase.from(T_AR).insert([{
       visitor_id: rec.visitorId,
       contact_person_name: rec.contactPerson,
@@ -143,6 +149,7 @@ export function useVisitantesControl() {
       vehicle_plate: rec.vehiclePlate,
       purpose: rec.purpose,
       notes: rec.notes,
+      estabelecimento_id: estId,
     }]).select(`*, visitor:${T_VIS}(*)`).single();
     if (error) { toast.error("Erro ao registrar entrada"); throw error; }
     const nr: AccessRecord = {
@@ -183,7 +190,9 @@ export function useVisitantesControl() {
     });
 
   const createContactPerson = async (d: Omit<ContactPerson, "id" | "createdAt">): Promise<ContactPerson> => {
-    const { data, error } = await supabase.from(T_CP).insert([d]).select().single();
+    const estId = await getEstabelecimentoId();
+    if (!estId) { toast.error("Estabelecimento não encontrado"); throw new Error("no est"); }
+    const { data, error } = await supabase.from(T_CP).insert([{ ...d, estabelecimento_id: estId }]).select().single();
     if (error) throw error;
     const nc: ContactPerson = { id: data.id, name: data.name, whatsapp: data.whatsapp, cpf: data.cpf, createdAt: data.created_at };
     setContactPersons((p) => [nc, ...p]);
@@ -206,6 +215,8 @@ export function useVisitantesControl() {
   };
 
   const createPendingVisitor = async (pd: Omit<PendingVisitor, "id" | "createdAt" | "status">): Promise<PendingVisitor> => {
+    const estId = await getEstabelecimentoId();
+    if (!estId) { toast.error("Estabelecimento não encontrado"); throw new Error("no est"); }
     const { data, error } = await supabase.from(T_PV).insert([{
       visitor_id: pd.visitor.id,
       contact_person_id: pd.contactPersonId,
@@ -213,6 +224,7 @@ export function useVisitantesControl() {
       vehicle_plate: pd.vehiclePlate,
       purpose: pd.purpose,
       notes: pd.notes,
+      estabelecimento_id: estId,
     }]).select(`*, visitor:${T_VIS}(*)`).single();
     if (error) { toast.error("Erro ao criar solicitação"); throw error; }
     const np: PendingVisitor = {
