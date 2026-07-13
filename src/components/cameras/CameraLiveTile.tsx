@@ -291,15 +291,17 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
         className="w-full h-full object-contain transition-transform will-change-transform"
         style={{ transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})` }}
       />
-      <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px]">
-        {status === "ao-vivo" ? (
-          <><Radio className="h-2.5 w-2.5 text-red-500 animate-pulse" /> AO VIVO</>
-        ) : status === "erro" ? (
-          <><X className="h-2.5 w-2.5 text-red-500" /> ERRO</>
-        ) : (
-          <><Loader2 className="h-2.5 w-2.5 animate-spin" /> ...</>
-        )}
-      </div>
+      {!hideOverlays && (
+        <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px]">
+          {status === "ao-vivo" ? (
+            <><Radio className="h-2.5 w-2.5 text-red-500 animate-pulse" /> AO VIVO</>
+          ) : status === "erro" ? (
+            <><X className="h-2.5 w-2.5 text-red-500" /> ERRO</>
+          ) : (
+            <><Loader2 className="h-2.5 w-2.5 animate-spin" /> ...</>
+          )}
+        </div>
+      )}
       {status === "ao-vivo" && (
         <div className="absolute top-1.5 right-1.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
           <button
