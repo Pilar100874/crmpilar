@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { CameraLiveTile } from "@/components/cameras/CameraLiveTile";
-import { Loader2, Camera as CameraIcon, ArrowLeft } from "lucide-react";
+import { Loader2, Camera as CameraIcon, ArrowLeft, X } from "lucide-react";
 
 const PAGE_SIZE = 16;
 const ROTATE_MS = 10_000;
