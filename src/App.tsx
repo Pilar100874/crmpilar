@@ -318,6 +318,7 @@ const App = () => (
           <StudioBackgroundIndicator />
           <WakeLockManager />
           <GlobalOpenInNewTabButton />
+          <GlobalBackToTelaButton />
           <Routes>
             <Route path="/" element={<Splash />} />
             <Route path="/login" element={<Login />} />
