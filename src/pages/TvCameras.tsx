@@ -280,30 +280,21 @@ export default function TvCameras() {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto divide-y">
-              {draftOrder.map((c, idx) => (
-                <div key={c.id} className="flex items-center gap-2 px-3 py-2">
-                  <span className="w-8 text-xs text-muted-foreground tabular-nums">{idx + 1}.</span>
-                  <span className="flex-1 text-sm truncate">{c.nome}</span>
-                  <button
-                    onClick={() => moveItem(idx, -1)}
-                    disabled={idx === 0}
-                    className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted disabled:opacity-30 disabled:pointer-events-none"
-                    title="Subir"
-                  >
-                    <ArrowUp className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => moveItem(idx, 1)}
-                    disabled={idx === draftOrder.length - 1}
-                    className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted disabled:opacity-30 disabled:pointer-events-none"
-                    title="Descer"
-                  >
-                    <ArrowDown className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
+            <div className="flex-1 overflow-y-auto">
+              <p className="px-3 pt-2 pb-1 text-[11px] text-muted-foreground">
+                Arraste pelo ícone <GripVertical className="inline h-3 w-3 align-text-bottom" /> para reordenar
+              </p>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={draftOrder.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+                  <div className="divide-y">
+                    {draftOrder.map((c, idx) => (
+                      <SortableCameraRow key={c.id} id={c.id} index={idx} nome={c.nome} />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             </div>
+
             <div className="flex items-center justify-between gap-2 px-4 py-3 border-t bg-muted/30">
               <button
                 onClick={resetOrder}
