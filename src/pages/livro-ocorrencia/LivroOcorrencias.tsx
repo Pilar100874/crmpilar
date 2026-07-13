@@ -148,18 +148,19 @@ export default function LivroOcorrencias() {
         </Select>
       </div>
 
-      <div className="border rounded-lg overflow-x-auto">
+      {/* Tabela (md+) */}
+      <div className="hidden md:block border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Nº</TableHead>
               <TableHead>Data/Hora</TableHead>
-              <TableHead>Turno</TableHead>
+              <TableHead className="hidden lg:table-cell">Turno</TableHead>
               <TableHead>Tipo</TableHead>
-              <TableHead>Local</TableHead>
+              <TableHead className="hidden xl:table-cell">Local</TableHead>
               <TableHead>Gravidade</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Responsável</TableHead>
+              <TableHead className="hidden lg:table-cell">Responsável</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -171,14 +172,14 @@ export default function LivroOcorrencias() {
             ) : filtered.map((o) => (
               <TableRow key={o.id}>
                 <TableCell className="font-mono">#{o.numero}</TableCell>
-                <TableCell>{new Date(o.data_hora).toLocaleString("pt-BR")}</TableCell>
-                <TableCell>{o.turno || "-"}</TableCell>
+                <TableCell className="whitespace-nowrap">{new Date(o.data_hora).toLocaleString("pt-BR")}</TableCell>
+                <TableCell className="hidden lg:table-cell">{o.turno || "-"}</TableCell>
                 <TableCell>{o.tipo}</TableCell>
-                <TableCell>{o.local || "-"}</TableCell>
+                <TableCell className="hidden xl:table-cell">{o.local || "-"}</TableCell>
                 <TableCell>{gravBadge(o.gravidade)}</TableCell>
                 <TableCell>{statusBadge(o.status)}</TableCell>
-                <TableCell>{o.responsavel || "-"}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="hidden lg:table-cell">{o.responsavel || "-"}</TableCell>
+                <TableCell className="text-right whitespace-nowrap">
                   <Button variant="ghost" size="icon" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" onClick={() => setDeletingId(o.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </TableCell>
@@ -187,6 +188,41 @@ export default function LivroOcorrencias() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Cards (mobile) */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="text-center text-muted-foreground py-8">Carregando...</div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center text-muted-foreground py-8">Nenhuma ocorrência encontrada</div>
+        ) : filtered.map((o) => (
+          <div key={o.id} className="border rounded-lg p-3 bg-card space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono text-sm text-muted-foreground">#{o.numero}</span>
+                  {gravBadge(o.gravidade)}
+                  {statusBadge(o.status)}
+                </div>
+                <div className="mt-1 font-medium truncate">{o.tipo}</div>
+                <div className="text-xs text-muted-foreground">{new Date(o.data_hora).toLocaleString("pt-BR")} · {o.turno || "-"}</div>
+              </div>
+              <div className="flex shrink-0">
+                <Button variant="ghost" size="icon" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => setDeletingId(o.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              </div>
+            </div>
+            {(o.local || o.responsavel) && (
+              <div className="text-xs text-muted-foreground grid grid-cols-1 gap-0.5">
+                {o.local && <div><span className="font-medium text-foreground/70">Local:</span> {o.local}</div>}
+                {o.responsavel && <div><span className="font-medium text-foreground/70">Responsável:</span> {o.responsavel}</div>}
+              </div>
+            )}
+            <p className="text-sm line-clamp-2">{o.descricao}</p>
+          </div>
+        ))}
+      </div>
+
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
