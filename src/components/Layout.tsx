@@ -749,7 +749,7 @@ export default function Layout({ children }: LayoutProps) {
                                   return (
                                     <NavLink
                                       key={atalho.id}
-                                      to={`${atalho.path}${atalho.path.includes("?") ? "&" : "?"}solo=1`}
+                                      to={`${atalho.path}${atalho.path.includes("?") ? "&" : "?"}solo=1&fromatalho=1`}
                                       onClick={() => setOpenSubmenuId(null)}
                                       className={({ isActive }) =>
                                         `flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
@@ -824,7 +824,7 @@ export default function Layout({ children }: LayoutProps) {
                               return (
                                 <NavLink
                                   key={atalho.id}
-                                  to={`${atalho.path}${atalho.path.includes("?") ? "&" : "?"}solo=1`}
+                                  to={`${atalho.path}${atalho.path.includes("?") ? "&" : "?"}solo=1&fromatalho=1`}
                                   onClick={() => setOpenSubmenuId(null)}
                                   className={({ isActive }) =>
                                     `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${

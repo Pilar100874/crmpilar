@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 
 /**
  * Barra superior fixa com botão "Voltar" para qualquer atalho aberto a
- * partir de uma Tela Customizada (`?fromtela=<id>`). Sempre retorna para
- * `/tela-customizada/<id>`, independente do layout da rota atual.
+ * partir de uma Tela Customizada (`?fromtela=<id>`) ou do menu de Atalhos
+ * (`?fromatalho=1`).
  *
  * Também marca `document.body[data-fromtela="1"]` e injeta CSS global que
  * oculta botões locais de "voltar" (icon-only com lucide-arrow-left) e
@@ -19,8 +19,9 @@ export default function GlobalBackToTelaButton() {
   const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
   const fromTela = params.get("fromtela");
+  const fromAtalho = params.get("fromatalho") === "1";
   const onTelaRoot = location.pathname.startsWith("/tela-customizada/");
-  const active = !!fromTela && !onTelaRoot;
+  const active = (!!fromTela && !onTelaRoot) || fromAtalho;
 
   useEffect(() => {
     const body = document.body;
@@ -40,8 +41,18 @@ export default function GlobalBackToTelaButton() {
   if (!active) return null;
 
   const handleBack = () => {
-    const solo = params.get("solo") === "1" ? "?solo=1" : "";
-    navigate(`/tela-customizada/${fromTela}${solo}`);
+    if (fromTela) {
+      const solo = params.get("solo") === "1" ? "?solo=1" : "";
+      navigate(`/tela-customizada/${fromTela}${solo}`);
+      return;
+    }
+
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+
+    navigate("/menu");
   };
 
   return (
