@@ -1329,6 +1329,14 @@ export default function Layout({ children }: LayoutProps) {
                               <AppWindow className="w-4 h-4 flex-shrink-0" />
                               <span className="text-sm">Apps</span>
                             </NavLink>
+                            <NavLink
+                              to="/admin/telas-customizadas"
+                              onClick={() => setOpenSubmenuId(null)}
+                              className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
+                            >
+                              <LucideIcons.LayoutGrid className="w-4 h-4 flex-shrink-0" />
+                              <span className="text-sm">Tela Customizada</span>
+                            </NavLink>
                           </>
                         )}
 
@@ -1444,6 +1452,14 @@ export default function Layout({ children }: LayoutProps) {
                         >
                           <AppWindow className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">Apps</span>
+                        </NavLink>
+                        <NavLink
+                          to="/admin/telas-customizadas"
+                          onClick={() => setOpenSubmenuId(null)}
+                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
+                        >
+                          <LucideIcons.LayoutGrid className="w-4 h-4 flex-shrink-0" />
+                          <span className="text-sm">Tela Customizada</span>
                         </NavLink>
                       </>
                     )}
