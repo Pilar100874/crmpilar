@@ -94,7 +94,7 @@ export default function CamerasLayout() {
     const button = (
       <button
         key={item.to}
-        onClick={() => navigate(item.to)}
+        onClick={() => go(item.to)}
         className={`hub-menu-item flex items-center gap-3 px-3 py-2.5 text-left w-full text-muted-foreground rounded-md ${
           active ? "is-active" : ""
         } ${isMenuCollapsed ? "justify-center" : ""}`}
