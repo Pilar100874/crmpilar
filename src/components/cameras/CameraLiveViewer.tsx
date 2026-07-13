@@ -130,7 +130,15 @@ export function CameraLiveViewer({ cameraId, cameraNome, filialId, temPtz = fals
               sdp: pc!.localDescription!.sdp,
             });
           } catch (e: any) {
-            if (String(e?.message || "").includes("wrong state")) return;
+            // Erros benignos de estado por offers duplicados (plain + filial).
+            // Safari/iOS reporta como "no pending remote description".
+            const msg = String(e?.message || "").toLowerCase();
+            if (
+              msg.includes("wrong state") ||
+              msg.includes("no pending remote description") ||
+              msg.includes("kstable") ||
+              msg.includes("invalid state")
+            ) return;
             setErro(e.message);
             setStatus("erro");
           }
