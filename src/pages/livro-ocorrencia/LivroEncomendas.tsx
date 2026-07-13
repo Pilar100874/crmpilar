@@ -325,6 +325,34 @@ export default function LivroEncomendas() {
           </DialogHeader>
           {editing && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <Label>Foto da Encomenda / Etiqueta</Label>
+                <input
+                  ref={fotoInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhoto(f); }}
+                />
+                {editing.foto_url ? (
+                  <div className="relative inline-block mt-1">
+                    <img src={editing.foto_url} alt="Foto" className="max-h-48 rounded border" />
+                    <Button type="button" size="icon" variant="destructive" className="absolute -top-2 -right-2 h-6 w-6" onClick={() => setEditing({ ...editing, foto_url: null })}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" className="ml-2 gap-2" onClick={() => fotoInputRef.current?.click()}>
+                      <Camera className="h-3 w-3" /> Trocar
+                    </Button>
+                  </div>
+                ) : (
+                  <Button type="button" variant="outline" onClick={() => fotoInputRef.current?.click()} disabled={uploadingFoto || analisando} className="gap-2 w-full">
+                    {analisando ? <><Sparkles className="h-4 w-4 animate-pulse" /> Analisando com IA...</> :
+                      uploadingFoto ? <>Enviando...</> :
+                      <><Camera className="h-4 w-4" /> Tirar foto (preenche os campos)</>}
+                  </Button>
+                )}
+              </div>
               <div>
                 <Label>Data/Hora do Recebimento *</Label>
                 <Input type="datetime-local" value={editing.data_recebimento} onChange={(e) => setEditing({ ...editing, data_recebimento: e.target.value })} />
@@ -351,23 +379,9 @@ export default function LivroEncomendas() {
                 <Label>Remetente</Label>
                 <Input value={editing.remetente || ""} onChange={(e) => setEditing({ ...editing, remetente: e.target.value })} />
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <Label>Destinatário *</Label>
-                <Input value={editing.destinatario || ""} onChange={(e) => setEditing({ ...editing, destinatario: e.target.value })} />
-              </div>
-              <div>
-                <Label>Unidade / Apto / Sala</Label>
-                <Input value={editing.unidade || ""} onChange={(e) => setEditing({ ...editing, unidade: e.target.value })} />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label>Volumes</Label>
-                  <Input type="number" min={1} value={editing.quantidade_volumes || 1} onChange={(e) => setEditing({ ...editing, quantidade_volumes: e.target.value })} />
-                </div>
-                <div>
-                  <Label>Peso (kg)</Label>
-                  <Input type="number" step="0.1" value={editing.peso || ""} onChange={(e) => setEditing({ ...editing, peso: e.target.value })} />
-                </div>
+                <Input value={editing.destinatario || ""} onChange={(e) => setEditing({ ...editing, destinatario: e.target.value })} placeholder={defaultDest || "Destinatário"} />
               </div>
               <div className="sm:col-span-2">
                 <Label>Descrição / Conteúdo</Label>
@@ -390,6 +404,7 @@ export default function LivroEncomendas() {
               </div>
             </div>
           )}
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
             <Button onClick={save}>Salvar</Button>
