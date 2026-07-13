@@ -570,6 +570,7 @@ export default function TelasCustomizadas() {
                       title="Mover para outro grupo"
                     >
                       <Move className="w-4 h-4" />
+                    </Button>
                     <Button
                       size="icon"
                       variant="ghost"
