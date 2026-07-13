@@ -145,6 +145,7 @@ export default function CVVehicleEntry() {
         defect_description: form.reported_defects,
         reported_by: user?.id ?? null,
         status: "pending",
+        estabelecimento_id: estId,
       });
     }
 
