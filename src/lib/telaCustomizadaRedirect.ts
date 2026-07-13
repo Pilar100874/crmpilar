@@ -12,7 +12,7 @@ export async function getInitialRouteForUsuario(usuarioId: string): Promise<stri
       .eq("usuario_id", usuarioId)
       .limit(1)
       .maybeSingle();
-    if (data?.tela_id) return `/tela-customizada/${data.tela_id}`;
+    if (data?.tela_id) return `/tela-customizada/${data.tela_id}?solo=1`;
   } catch (e) {
     console.error("Erro ao verificar tela customizada:", e);
   }
