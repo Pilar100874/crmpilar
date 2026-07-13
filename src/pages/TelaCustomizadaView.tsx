@@ -69,8 +69,9 @@ export default function TelaCustomizadaView() {
       setBreadcrumb((b) => [...b, item]);
       setCurrentParent(item.id);
     } else if (item.rota) {
-      const suffix = isVinculado ? `${item.rota.includes("?") ? "&" : "?"}solo=1` : "";
-      navigate(`${item.rota}${suffix}`);
+      const sep = item.rota.includes("?") ? "&" : "?";
+      const params = isVinculado ? "solo=1&notab=1" : "notab=1";
+      navigate(`${item.rota}${sep}${params}`);
     }
   };
 

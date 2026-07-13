@@ -19,8 +19,13 @@ export function isSoloMode(): boolean {
   return new URLSearchParams(window.location.search).get("solo") === "1";
 }
 
+function isNoTabMode(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("notab") === "1";
+}
+
 export default function OpenInNewTabButton() {
-  if (isSoloMode()) return null;
+  if (isSoloMode() || isNoTabMode()) return null;
 
   const abrirNovaAba = () => {
     const url = new URL(window.location.href);
