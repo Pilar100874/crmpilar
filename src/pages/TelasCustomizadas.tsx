@@ -33,6 +33,11 @@ import {
   Copy,
   Users as UsersIcon,
   Move,
+  Eye,
+  Monitor,
+  Smartphone,
+  Tablet,
+
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
