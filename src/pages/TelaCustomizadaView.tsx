@@ -88,9 +88,12 @@ export default function TelaCustomizadaView() {
     } else if (item.rota) {
       const sep = item.rota.includes("?") ? "&" : "?";
       const parts = ["notab=1", `fromtela=${id}`];
+      // Preserva o grupo atual para o botão Voltar retornar ao submenu correto
+      if (currentParent && currentParent !== id) parts.push(`fromgrupo=${currentParent}`);
       if (isVinculado) parts.push("solo=1");
       navigate(`${item.rota}${sep}${parts.join("&")}`);
     }
+
   };
 
   const goBack = () => {
