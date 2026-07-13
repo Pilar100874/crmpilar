@@ -282,6 +282,37 @@ export default function TelasCustomizadas() {
     }
   };
 
+  // Mover item para outro grupo
+  const [moveDialogFor, setMoveDialogFor] = useState<TelaCustomizada | null>(null);
+
+  const grupos = useMemo(() => items.filter((i) => i.tipo === "grupo"), [items]);
+
+  const isDescendant = (candidateId: string, ofId: string): boolean => {
+    // true se candidateId está dentro (descendente) de ofId
+    let cur = items.find((i) => i.id === candidateId);
+    while (cur) {
+      if (cur.parent_id === ofId) return true;
+      cur = items.find((i) => i.id === cur!.parent_id);
+    }
+    return false;
+  };
+
+  const moveItem = async (destParentId: string | null) => {
+    if (!moveDialogFor) return;
+    try {
+      const { error } = await supabase
+        .from("telas_customizadas")
+        .update({ parent_id: destParentId })
+        .eq("id", moveDialogFor.id);
+      if (error) throw error;
+      toast.success("Movido");
+      setMoveDialogFor(null);
+      await load();
+    } catch (e: any) {
+      toast.error("Erro ao mover: " + e.message);
+    }
+  };
+
 
   const load = async () => {
     setLoading(true);
