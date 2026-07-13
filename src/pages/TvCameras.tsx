@@ -73,6 +73,7 @@ export default function TvCameras() {
                 cameraNome={c.nome}
                 filialId={c.filial_id ?? null}
                 startDelayMs={Math.min(i, 8) * 400}
+                hideOverlays
                 className="w-full h-full rounded-none border-0"
               />
             </div>
@@ -81,6 +82,13 @@ export default function TvCameras() {
           )
         )}
       </div>
+      <button
+        onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
+        className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-black/60 hover:bg-black/80 text-white text-xs backdrop-blur-sm border border-white/10"
+        title="Voltar"
+      >
+        <ArrowLeft className="h-4 w-4" /> Voltar
+      </button>
       {pages.length > 1 && (
         <div className="absolute bottom-2 right-3 text-[11px] text-white/70 bg-black/50 px-2 py-0.5 rounded">
           {pageIdx + 1}/{pages.length} · rotaciona a cada 10s
