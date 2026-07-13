@@ -10,6 +10,9 @@ import type { TelaCustomizada } from "./TelasCustomizadas";
 export default function TelaCustomizadaView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const grupoParam = searchParams.get("grupo");
+
   const [items, setItems] = useState<TelaCustomizada[]>([]);
   const [loading, setLoading] = useState(true);
   const [breadcrumb, setBreadcrumb] = useState<TelaCustomizada[]>([]);
