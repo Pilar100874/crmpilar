@@ -17,6 +17,7 @@ import { CVPageHeader } from "./CVPageHeader";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
 import { CamerasLivePanel } from "@/components/cameras/CamerasLivePanel";
 import type { Vehicle, Driver } from "@/types/vehicle";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
 const STEPS = ["Veículo", "Motorista", "Detalhes", "Fotos", "Confirmação"] as const;
 
