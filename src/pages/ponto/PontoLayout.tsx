@@ -29,6 +29,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { isSoloMode } from "@/components/OpenInNewTabButton";
+import SoloBackButton from "@/components/SoloBackButton";
 import { usePontoEmpresa } from "./usePontoEmpresa";
 import WizardBackBar from "./WizardBackBar";
 
