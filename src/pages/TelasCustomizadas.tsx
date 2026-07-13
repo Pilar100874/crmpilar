@@ -786,6 +786,49 @@ export default function TelasCustomizadas() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Mover item */}
+      <Dialog open={!!moveDialogFor} onOpenChange={(o) => !o && setMoveDialogFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mover "{moveDialogFor?.nome}"</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-1 max-h-80 overflow-y-auto">
+            <button
+              className="w-full text-left p-2 rounded hover:bg-muted border"
+              onClick={() => moveItem(null)}
+              disabled={moveDialogFor?.parent_id === null}
+            >
+              <span className="font-medium">📂 Raiz (nível principal)</span>
+            </button>
+            {grupos
+              .filter(
+                (g) =>
+                  g.id !== moveDialogFor?.id &&
+                  !(moveDialogFor && isDescendant(g.id, moveDialogFor.id))
+              )
+              .map((g) => (
+                <button
+                  key={g.id}
+                  className="w-full text-left p-2 rounded hover:bg-muted border flex items-center gap-2"
+                  onClick={() => moveItem(g.id)}
+                  disabled={g.id === moveDialogFor?.parent_id}
+                >
+                  <FolderOpen className="w-4 h-4 text-primary" />
+                  <span>{g.nome}</span>
+                  {g.id === moveDialogFor?.parent_id && (
+                    <span className="ml-auto text-xs text-muted-foreground">(atual)</span>
+                  )}
+                </button>
+              ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMoveDialogFor(null)}>
+              Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
