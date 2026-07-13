@@ -58,7 +58,7 @@ export default function CVVehicleEntry() {
   const handleSelectVehicle = (move: any) => {
     setSelected(move);
     setForm({
-      entry_km: move.exit_km ?? 0,
+      entry_km: (move.exit_km ?? 0) + 1,
       reported_defects: "",
       defect_type_id: "",
       damage_notes: "",
