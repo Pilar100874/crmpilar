@@ -218,14 +218,14 @@ export default function TvCameras() {
       </div>
 
       {zoomed && (
-        <div className="fixed inset-0 z-20 bg-black">
+        <div className="fixed inset-0 z-20 bg-black landscape:[&_video]:!object-cover">
           <CameraLiveTile
             key={`zoom-${zoomed.id}`}
             cameraId={zoomed.id}
             cameraNome={zoomed.nome}
             filialId={zoomed.filial_id ?? null}
             hideOverlays
-            className="w-full h-full rounded-none border-0"
+            className="w-full h-full rounded-none border-0 !aspect-auto"
           />
           <button
             onClick={() => setZoomed(null)}
