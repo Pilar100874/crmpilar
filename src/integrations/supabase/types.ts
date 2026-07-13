@@ -8372,6 +8372,150 @@ export type Database = {
           },
         ]
       }
+      livro_encomendas: {
+        Row: {
+          assinatura_url: string | null
+          codigo_rastreio: string | null
+          created_at: string
+          data_entrega: string | null
+          data_recebimento: string
+          descricao: string | null
+          destinatario: string
+          documento_retirada: string | null
+          estabelecimento_id: string | null
+          foto_url: string | null
+          id: string
+          numero: number
+          observacoes: string | null
+          peso: number | null
+          quantidade_volumes: number | null
+          recebido_por: string | null
+          registrado_por: string | null
+          remetente: string | null
+          retirado_por: string | null
+          status: string
+          tipo_encomenda: string | null
+          transportadora: string | null
+          unidade: string | null
+          updated_at: string
+        }
+        Insert: {
+          assinatura_url?: string | null
+          codigo_rastreio?: string | null
+          created_at?: string
+          data_entrega?: string | null
+          data_recebimento?: string
+          descricao?: string | null
+          destinatario: string
+          documento_retirada?: string | null
+          estabelecimento_id?: string | null
+          foto_url?: string | null
+          id?: string
+          numero?: number
+          observacoes?: string | null
+          peso?: number | null
+          quantidade_volumes?: number | null
+          recebido_por?: string | null
+          registrado_por?: string | null
+          remetente?: string | null
+          retirado_por?: string | null
+          status?: string
+          tipo_encomenda?: string | null
+          transportadora?: string | null
+          unidade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assinatura_url?: string | null
+          codigo_rastreio?: string | null
+          created_at?: string
+          data_entrega?: string | null
+          data_recebimento?: string
+          descricao?: string | null
+          destinatario?: string
+          documento_retirada?: string | null
+          estabelecimento_id?: string | null
+          foto_url?: string | null
+          id?: string
+          numero?: number
+          observacoes?: string | null
+          peso?: number | null
+          quantidade_volumes?: number | null
+          recebido_por?: string | null
+          registrado_por?: string | null
+          remetente?: string | null
+          retirado_por?: string | null
+          status?: string
+          tipo_encomenda?: string | null
+          transportadora?: string | null
+          unidade?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      livro_ocorrencias: {
+        Row: {
+          acao_tomada: string | null
+          anexos: Json | null
+          created_at: string
+          data_hora: string
+          descricao: string
+          envolvidos: string | null
+          estabelecimento_id: string | null
+          gravidade: string
+          id: string
+          local: string | null
+          numero: number
+          observacoes: string | null
+          registrado_por: string | null
+          responsavel: string | null
+          status: string
+          tipo: string
+          turno: string | null
+          updated_at: string
+        }
+        Insert: {
+          acao_tomada?: string | null
+          anexos?: Json | null
+          created_at?: string
+          data_hora?: string
+          descricao: string
+          envolvidos?: string | null
+          estabelecimento_id?: string | null
+          gravidade?: string
+          id?: string
+          local?: string | null
+          numero?: number
+          observacoes?: string | null
+          registrado_por?: string | null
+          responsavel?: string | null
+          status?: string
+          tipo: string
+          turno?: string | null
+          updated_at?: string
+        }
+        Update: {
+          acao_tomada?: string | null
+          anexos?: Json | null
+          created_at?: string
+          data_hora?: string
+          descricao?: string
+          envolvidos?: string | null
+          estabelecimento_id?: string | null
+          gravidade?: string
+          id?: string
+          local?: string | null
+          numero?: number
+          observacoes?: string | null
+          registrado_por?: string | null
+          responsavel?: string | null
+          status?: string
+          tipo?: string
+          turno?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       logistica_automacoes: {
         Row: {
           ativo: boolean | null

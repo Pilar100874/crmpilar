@@ -74,6 +74,9 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   // Controle de Visitantes
   { id: "Controle de Visitantes", label: "Controle de Visitantes (Menu)", category: "Visitantes" },
 
+  // Livro de Ocorrência
+  { id: "Livro de Ocorrência", label: "Livro de Ocorrência (Portaria + Encomendas)", category: "Portaria" },
+
   // Editores
   { id: "Editores", label: "Editores (Categoria)", category: "Editores" },
   { id: "Editores Modelos", label: "Modelos de Documento", category: "Editores" },
