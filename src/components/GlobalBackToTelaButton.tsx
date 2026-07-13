@@ -47,12 +47,12 @@ export default function GlobalBackToTelaButton() {
   return (
     <>
       <style>{`
-        body[data-fromtela="1"] [data-app-back],
-        body[data-fromtela="1"] button:has(> svg.lucide-arrow-left:only-child) {
+        body[data-fromtela="1"] [data-app-back] {
           display: none !important;
         }
       `}</style>
       <div
+        data-global-back-bar
         className="fixed top-0 left-0 right-0 z-[9999] flex items-center justify-start gap-2 border-b bg-background shadow-sm px-3"
         style={{ height: BAR_HEIGHT }}
       >
