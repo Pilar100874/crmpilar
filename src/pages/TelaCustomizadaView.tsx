@@ -106,6 +106,17 @@ export default function TelaCustomizadaView() {
     setCurrentParent(nb[nb.length - 1].id);
   };
 
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } finally {
+      localStorage.removeItem("userType");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("estabelecimentoId");
+      window.location.href = "/";
+    }
+  };
+
   const title = breadcrumb[breadcrumb.length - 1]?.nome || "Tela Customizada";
 
   return (
@@ -125,6 +136,9 @@ export default function TelaCustomizadaView() {
               </div>
             ))}
           </div>
+          <Button variant="outline" size="sm" onClick={handleLogout} className="ml-auto">
+            <LogOut className="w-4 h-4 mr-1" /> Sair
+          </Button>
         </div>
 
         <h1 className="text-3xl font-bold">{title}</h1>
