@@ -32,6 +32,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { isSoloMode } from "@/components/OpenInNewTabButton";
+import SoloBackButton from "@/components/SoloBackButton";
 
 interface NavItem {
   to: string;
