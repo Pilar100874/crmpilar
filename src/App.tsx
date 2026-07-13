@@ -142,6 +142,10 @@ import CVisAutorizacoes from "./pages/controle-visitantes/CVisAutorizacoes";
 import CVisRelatorios from "./pages/controle-visitantes/CVisRelatorios";
 import CVisVisitantes from "./pages/controle-visitantes/CVisVisitantes";
 import CVisContatos from "./pages/controle-visitantes/CVisContatos";
+import LivroLayout from "./pages/livro-ocorrencia/LivroLayout";
+import LivroDashboard from "./pages/livro-ocorrencia/LivroDashboard";
+import LivroOcorrencias from "./pages/livro-ocorrencia/LivroOcorrencias";
+import LivroEncomendas from "./pages/livro-ocorrencia/LivroEncomendas";
 import CamerasLayout from "./pages/cameras/CamerasLayout";
 import CamerasDashboard from "./pages/cameras/CamerasDashboard";
 import CamerasGrupos from "./pages/cameras/CamerasGrupos";
@@ -548,6 +552,11 @@ const App = () => (
                 <Route path="relatorios" element={<CVisRelatorios />} />
                 <Route path="visitantes" element={<CVisVisitantes />} />
                 <Route path="contatos" element={<CVisContatos />} />
+              </Route>
+              <Route path="/livro-ocorrencia" element={<LivroLayout />}>
+                <Route index element={<LivroDashboard />} />
+                <Route path="ocorrencias" element={<LivroOcorrencias />} />
+                <Route path="encomendas" element={<LivroEncomendas />} />
               </Route>
               <Route path="/cameras" element={<CamerasLayout />}>
                 <Route index element={<CamerasAoVivo />} />
