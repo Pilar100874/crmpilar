@@ -66,6 +66,27 @@ export default function LivroOcorrencias() {
   const [editing, setEditing] = useState<Partial<Ocorrencia> | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [params, setParams] = useSearchParams();
+  const [uploadingFoto, setUploadingFoto] = useState(false);
+  const fotoInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadFoto = async (file: File) => {
+    setUploadingFoto(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `ocorrencias/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { data, error } = await supabase.storage.from("chat-attachments").upload(path, file, { upsert: false });
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from("chat-attachments").getPublicUrl(data.path);
+      setEditing((prev: any) => ({ ...prev, anexos: { ...(prev?.anexos || {}), foto_url: publicUrl } }));
+      toast.success("Foto anexada");
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao enviar foto");
+    } finally {
+      setUploadingFoto(false);
+      if (fotoInputRef.current) fotoInputRef.current.value = "";
+    }
+  };
+
 
   const load = async () => {
     setLoading(true);
