@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,6 +10,9 @@ import type { TelaCustomizada } from "./TelasCustomizadas";
 export default function TelaCustomizadaView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const grupoParam = searchParams.get("grupo");
+
   const [items, setItems] = useState<TelaCustomizada[]>([]);
   const [loading, setLoading] = useState(true);
   const [breadcrumb, setBreadcrumb] = useState<TelaCustomizada[]>([]);
@@ -48,14 +52,27 @@ export default function TelaCustomizadaView() {
         setItems((data || []) as TelaCustomizada[]);
 
         // Descobre o "root" para iniciar
-        const root = (data || []).find((d) => d.id === id) as TelaCustomizada | undefined;
+        const list = (data || []) as TelaCustomizada[];
+        const root = list.find((d) => d.id === id);
         if (root) {
-          setBreadcrumb([root]);
-          setCurrentParent(root.id);
+          // Se veio ?grupo=<id>, reconstrói o breadcrumb até esse grupo
+          let chain: TelaCustomizada[] = [root];
+          if (grupoParam && grupoParam !== root.id) {
+            const path: TelaCustomizada[] = [];
+            let cur = list.find((d) => d.id === grupoParam);
+            while (cur && cur.id !== root.id) {
+              path.unshift(cur);
+              cur = list.find((d) => d.id === (cur as any).parent_id);
+            }
+            chain = [root, ...path];
+          }
+          setBreadcrumb(chain);
+          setCurrentParent(chain[chain.length - 1].id);
         }
       } finally {
         setLoading(false);
       }
+
     })();
   }, [id]);
 
@@ -71,9 +88,12 @@ export default function TelaCustomizadaView() {
     } else if (item.rota) {
       const sep = item.rota.includes("?") ? "&" : "?";
       const parts = ["notab=1", `fromtela=${id}`];
+      // Preserva o grupo atual para o botão Voltar retornar ao submenu correto
+      if (currentParent && currentParent !== id) parts.push(`fromgrupo=${currentParent}`);
       if (isVinculado) parts.push("solo=1");
       navigate(`${item.rota}${sep}${parts.join("&")}`);
     }
+
   };
 
   const goBack = () => {

@@ -43,22 +43,26 @@ export default function GlobalBackToTelaButton() {
   if (!active) return null;
 
   const handleBack = () => {
-    // Preferimos voltar pelo histórico para preservar o submenu/breadcrumb
-    // em que o usuário estava (ex.: grupo dentro da tela customizada).
+    // Se veio de uma tela customizada, volta para o submenu correto (grupo)
+    if (fromTela) {
+      const fromGrupo = params.get("fromgrupo");
+      const qs = new URLSearchParams();
+      if (params.get("solo") === "1") qs.set("solo", "1");
+      if (fromGrupo) qs.set("grupo", fromGrupo);
+      const suffix = qs.toString() ? `?${qs.toString()}` : "";
+      navigate(`/tela-customizada/${fromTela}${suffix}`);
+      return;
+    }
+
+    // Sem tela de origem: usa histórico do navegador
     if (window.history.length > 1) {
       navigate(-1);
       return;
     }
 
-    // Fallback: raiz da tela customizada de origem, se houver
-    if (fromTela) {
-      const solo = params.get("solo") === "1" ? "?solo=1" : "";
-      navigate(`/tela-customizada/${fromTela}${solo}`);
-      return;
-    }
-
     navigate("/menu");
   };
+
 
 
   return (
