@@ -125,13 +125,29 @@ export default function TvCameras() {
   const moveItem = (idx: number, delta: number) => {
     setDraftOrder((prev) => {
       if (!prev) return prev;
-      const next = [...prev];
       const target = idx + delta;
-      if (target < 0 || target >= next.length) return prev;
-      [next[idx], next[target]] = [next[target], next[idx]];
-      return next;
+      if (target < 0 || target >= prev.length) return prev;
+      return arrayMove(prev, idx, target);
     });
   };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setDraftOrder((prev) => {
+      if (!prev) return prev;
+      const oldIndex = prev.findIndex((c) => c.id === active.id);
+      const newIndex = prev.findIndex((c) => c.id === over.id);
+      if (oldIndex < 0 || newIndex < 0) return prev;
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+  };
+
 
   const resetOrder = () => {
     const sorted = [...(draftOrder ?? [])].sort((a, b) =>
