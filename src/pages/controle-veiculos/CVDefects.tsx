@@ -109,11 +109,14 @@ export default function CVDefects() {
       return toast.error("Preencha todos os campos obrigatórios");
     }
     const { data: { user } } = await supabase.auth.getUser();
+    const estId = await getEstabelecimentoId();
+    if (!estId) return toast.error("Estabelecimento não encontrado");
     const { error } = await supabase.from("cv_defect_reports").insert({
       ...newDefect,
       reported_at: new Date().toISOString(),
       reported_by: user?.id ?? null,
       status: "pending",
+      estabelecimento_id: estId,
     });
     if (error) return toast.error(error.message);
     toast.success("Defeito reportado!");
