@@ -544,17 +544,6 @@ export default function TelasCustomizadas() {
                         <ChevronRight className="w-4 h-4" />
                       </Button>
                     )}
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => {
-                        navigator.clipboard.writeText(item.id);
-                        toast.success("ID copiado");
-                      }}
-                      title={`Copiar ID (${item.id})`}
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
                     {item.parent_id === null && (
                       <Button
                         size="icon"
