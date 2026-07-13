@@ -4,7 +4,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FolderOpen, Link as LinkIcon, ArrowLeft, ChevronRight } from "lucide-react";
+import { FolderOpen, Link as LinkIcon, ArrowLeft, ChevronRight, LogOut } from "lucide-react";
 import type { TelaCustomizada } from "./TelasCustomizadas";
 
 export default function TelaCustomizadaView() {
