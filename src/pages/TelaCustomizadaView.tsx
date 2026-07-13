@@ -52,14 +52,27 @@ export default function TelaCustomizadaView() {
         setItems((data || []) as TelaCustomizada[]);
 
         // Descobre o "root" para iniciar
-        const root = (data || []).find((d) => d.id === id) as TelaCustomizada | undefined;
+        const list = (data || []) as TelaCustomizada[];
+        const root = list.find((d) => d.id === id);
         if (root) {
-          setBreadcrumb([root]);
-          setCurrentParent(root.id);
+          // Se veio ?grupo=<id>, reconstrói o breadcrumb até esse grupo
+          let chain: TelaCustomizada[] = [root];
+          if (grupoParam && grupoParam !== root.id) {
+            const path: TelaCustomizada[] = [];
+            let cur = list.find((d) => d.id === grupoParam);
+            while (cur && cur.id !== root.id) {
+              path.unshift(cur);
+              cur = list.find((d) => d.id === (cur as any).parent_id);
+            }
+            chain = [root, ...path];
+          }
+          setBreadcrumb(chain);
+          setCurrentParent(chain[chain.length - 1].id);
         }
       } finally {
         setLoading(false);
       }
+
     })();
   }, [id]);
 
