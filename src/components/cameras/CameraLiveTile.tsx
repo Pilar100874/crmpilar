@@ -131,8 +131,17 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
               sdp: pc!.localDescription!.sdp,
             });
           } catch (e: any) {
-            // Ignora erros de estado (duplicata de offer); só reporta erros reais.
-            if (String(e?.message || "").includes("wrong state")) return;
+            // Ignora erros de estado benignos causados por offers duplicados
+            // (chegam pelo canal "plain" e pelo "filial:*"). No Chrome/Android
+            // aparece como "wrong state"; no Safari/iOS como "no pending remote
+            // description" ou "Called in wrong state: kStable".
+            const msg = String(e?.message || "").toLowerCase();
+            if (
+              msg.includes("wrong state") ||
+              msg.includes("no pending remote description") ||
+              msg.includes("kstable") ||
+              msg.includes("invalid state")
+            ) return;
             setErro(e.message);
             setStatus("erro");
           }
