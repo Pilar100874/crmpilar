@@ -10,11 +10,51 @@ import {
   ArrowLeft,
   X,
   ListOrdered,
-  ArrowUp,
-  ArrowDown,
   RotateCcw,
   Check,
+  GripVertical,
 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+function SortableCameraRow({ id, index, nome }: { id: string; index: number; nome: string }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-2 px-3 py-2 bg-background">
+      <button
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing h-7 w-7 flex items-center justify-center rounded hover:bg-muted touch-none"
+        title="Arrastar"
+      >
+        <GripVertical className="h-4 w-4 text-muted-foreground" />
+      </button>
+      <span className="w-8 text-xs text-muted-foreground tabular-nums">{index + 1}.</span>
+      <span className="flex-1 text-sm truncate">{nome}</span>
+    </div>
+  );
+}
+
 
 const PAGE_SIZE = 16;
 const ROTATE_MS = 10_000;
