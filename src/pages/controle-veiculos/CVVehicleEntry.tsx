@@ -58,7 +58,7 @@ export default function CVVehicleEntry() {
   const handleSelectVehicle = (move: any) => {
     setSelected(move);
     setForm({
-      entry_km: move.exit_km ?? 0,
+      entry_km: (move.exit_km ?? 0) + 1,
       reported_defects: "",
       defect_type_id: "",
       damage_notes: "",
@@ -273,15 +273,24 @@ export default function CVVehicleEntry() {
             <div className="space-y-4 max-w-xl">
               <div className="space-y-2">
                 <Label>Quilometragem de Entrada</Label>
-                <Input type="number" min={selected.exit_km} value={form.entry_km}
-                  onChange={(e) => setForm({ ...form, entry_km: +e.target.value })} />
+                <Input
+                  type="number"
+                  min={(selected.exit_km ?? 0) + 1}
+                  value={form.entry_km}
+                  onChange={(e) => setForm({ ...form, entry_km: +e.target.value })}
+                  className={form.entry_km <= (selected.exit_km ?? 0) ? "border-destructive focus-visible:ring-destructive" : ""}
+                />
                 <p className="text-xs text-muted-foreground">
-                  KM mínimo: {selected.exit_km?.toLocaleString()}
-                  {form.entry_km > selected.exit_km && (
+                  KM da saída: {selected.exit_km?.toLocaleString()} · mínimo permitido: {((selected.exit_km ?? 0) + 1).toLocaleString()}
+                  {form.entry_km > (selected.exit_km ?? 0) && (
                     <span className="ml-2 text-primary">(+{(form.entry_km - selected.exit_km).toLocaleString()} km)</span>
                   )}
                 </p>
+                {form.entry_km <= (selected.exit_km ?? 0) && (
+                  <p className="text-xs text-destructive">A KM de entrada deve ser maior que a KM de saída.</p>
+                )}
               </div>
+
 
               <div className="space-y-2">
                 <Label className="flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-warning" /> Defeitos Reportados pelo Motorista</Label>
