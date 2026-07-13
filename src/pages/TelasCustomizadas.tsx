@@ -119,12 +119,14 @@ export const ROTAS_SUGERIDAS: { label: string; value: string; grupo: string }[] 
 
   // Controle de Veículos
   { label: "Controle de Veículos (Dashboard)", value: "/controle-veiculos", grupo: "Controle de Veículos" },
-  { label: "Registrar Entrada / Saída", value: "/controle-veiculos/movements", grupo: "Controle de Veículos" },
-  { label: "Cadastro de Veículos", value: "/controle-veiculos/vehicles", grupo: "Controle de Veículos" },
+  { label: "Registrar Saída", value: "/controle-veiculos/saida", grupo: "Controle de Veículos" },
+  { label: "Registrar Entrada", value: "/controle-veiculos/entrada", grupo: "Controle de Veículos" },
+  { label: "Movimentações", value: "/controle-veiculos/movimentacoes", grupo: "Controle de Veículos" },
+  { label: "Cadastro de Veículos", value: "/controle-veiculos/veiculos", grupo: "Controle de Veículos" },
   { label: "Câmeras dos Veículos", value: "/controle-veiculos/cameras", grupo: "Controle de Veículos" },
-  { label: "Defeitos", value: "/controle-veiculos/defects", grupo: "Controle de Veículos" },
-  { label: "Histórico do Veículo", value: "/controle-veiculos/history", grupo: "Controle de Veículos" },
-  { label: "Manutenção", value: "/controle-veiculos/maintenance", grupo: "Controle de Veículos" },
+  { label: "Defeitos & Avarias", value: "/controle-veiculos/defeitos", grupo: "Controle de Veículos" },
+  { label: "Histórico de Imagens", value: "/controle-veiculos/historico-imagens", grupo: "Controle de Veículos" },
+  { label: "Análise de Manutenção", value: "/controle-veiculos/manutencao", grupo: "Controle de Veículos" },
 
   // Controle de Visitantes
   { label: "Visitantes (Dashboard)", value: "/controle-visitantes", grupo: "Visitantes" },
