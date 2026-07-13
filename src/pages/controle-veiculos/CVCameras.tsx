@@ -168,7 +168,7 @@ export default function CVCameras() {
               </div>
               {r.local_descricao && <div className="text-xs">Local: {r.local_descricao}</div>}
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-wrap gap-2 pt-2">
                 <Button size="sm" variant="outline" onClick={() => openEdit(r)}>
                   <Edit className="h-3 w-3 mr-1" /> Editar
                 </Button>
@@ -177,7 +177,7 @@ export default function CVCameras() {
                     <TestTube className="h-3 w-3 mr-1" /> {testing === r.id ? "..." : "Testar"}
                   </Button>
                 )}
-                <Button size="sm" variant="ghost" onClick={() => setDeleteId(r.id)}>
+                <Button size="sm" variant="ghost" onClick={() => setDeleteId(r.id)} className="ml-auto">
                   <Trash2 className="h-3 w-3 text-destructive" />
                 </Button>
               </div>
