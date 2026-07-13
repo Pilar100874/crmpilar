@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,9 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
-import { Plus, Pencil, Trash2, Search, Package, PackageCheck } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package, PackageCheck, Camera, X, Sparkles } from "lucide-react";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+
 
 interface Encomenda {
   id: string;
