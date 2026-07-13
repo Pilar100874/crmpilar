@@ -97,6 +97,8 @@ export default function CVVehicleExit() {
   const handleSubmit = async () => {
     setBusy(true);
     const { data: { user } } = await supabase.auth.getUser();
+    const estId = await getEstabelecimentoId();
+    if (!estId) { setBusy(false); return toast.error("Estabelecimento não encontrado"); }
     const exitTime = new Date();
     const exitKm = selectedVehicle?.current_km ?? 0;
 
@@ -112,6 +114,7 @@ export default function CVVehicleExit() {
       exit_notes: form.exit_notes || null,
       inspected_by: user?.id ?? null,
       status: "out",
+      estabelecimento_id: estId,
     } as any).select().single();
 
 
