@@ -147,6 +147,40 @@ export default function MenuHub() {
   const [openItem, setOpenItem] = useState<MenuItem | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingAdmin, setLoadingAdmin] = useState(true);
+  const [checkingVinculo, setCheckingVinculo] = useState(true);
+
+  // Se o usuário estiver vinculado a uma tela customizada, não abre o menu principal
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { if (!cancelled) setCheckingVinculo(false); return; }
+        const { data: usuario } = await supabase
+          .from("usuarios")
+          .select("id")
+          .eq("auth_user_id", session.user.id)
+          .maybeSingle();
+        if (!usuario?.id) { if (!cancelled) setCheckingVinculo(false); return; }
+        const { data: vinc } = await supabase
+          .from("usuario_telas_customizadas")
+          .select("tela_id")
+          .eq("usuario_id", usuario.id)
+          .limit(1)
+          .maybeSingle();
+        if (vinc?.tela_id) {
+          if (!cancelled) navigate(`/tela-customizada/${vinc.tela_id}?solo=1`, { replace: true });
+          return;
+        }
+      } catch (e) {
+        console.error("Erro ao verificar vínculo de tela customizada:", e);
+      }
+      if (!cancelled) setCheckingVinculo(false);
+    })();
+    return () => { cancelled = true; };
+  }, [navigate]);
+
+  const [loadingAdmin, setLoadingAdmin] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem("theme");
     if (saved) return saved === "dark";
