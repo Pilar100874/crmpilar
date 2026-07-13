@@ -451,6 +451,17 @@ export default function TelasCustomizadas() {
                     <Button
                       size="icon"
                       variant="ghost"
+                      onClick={() => {
+                        navigator.clipboard.writeText(item.id);
+                        toast.success("ID copiado");
+                      }}
+                      title={`Copiar ID (${item.id})`}
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
                       onClick={() => openEdit(item)}
                       title="Editar"
                     >
