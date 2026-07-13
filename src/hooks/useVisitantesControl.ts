@@ -140,6 +140,8 @@ export function useVisitantesControl() {
   };
 
   const createAccessRecord = async (rec: Omit<AccessRecord, "id" | "entryDate" | "status">): Promise<AccessRecord> => {
+    const estId = await getEstabelecimentoId();
+    if (!estId) { toast.error("Estabelecimento não encontrado"); throw new Error("no est"); }
     const { data, error } = await supabase.from(T_AR).insert([{
       visitor_id: rec.visitorId,
       contact_person_name: rec.contactPerson,
@@ -147,6 +149,7 @@ export function useVisitantesControl() {
       vehicle_plate: rec.vehiclePlate,
       purpose: rec.purpose,
       notes: rec.notes,
+      estabelecimento_id: estId,
     }]).select(`*, visitor:${T_VIS}(*)`).single();
     if (error) { toast.error("Erro ao registrar entrada"); throw error; }
     const nr: AccessRecord = {
