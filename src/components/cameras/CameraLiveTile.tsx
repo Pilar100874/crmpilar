@@ -14,11 +14,12 @@ interface Props {
   autoStart?: boolean;
   startDelayMs?: number;
   onMaximize?: () => void;
+  hideOverlays?: boolean;
 }
 
 const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-export function CameraLiveTile({ cameraId, cameraNome, filialId, className, autoStart = true, startDelayMs = 0, onMaximize }: Props) {
+export function CameraLiveTile({ cameraId, cameraNome, filialId, className, autoStart = true, startDelayMs = 0, onMaximize, hideOverlays = false }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [status, setStatus] = useState<"idle" | "conectando" | "ao-vivo" | "erro">(autoStart ? "conectando" : "idle");
@@ -290,15 +291,17 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
         className="w-full h-full object-contain transition-transform will-change-transform"
         style={{ transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})` }}
       />
-      <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px]">
-        {status === "ao-vivo" ? (
-          <><Radio className="h-2.5 w-2.5 text-red-500 animate-pulse" /> AO VIVO</>
-        ) : status === "erro" ? (
-          <><X className="h-2.5 w-2.5 text-red-500" /> ERRO</>
-        ) : (
-          <><Loader2 className="h-2.5 w-2.5 animate-spin" /> ...</>
-        )}
-      </div>
+      {!hideOverlays && (
+        <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px]">
+          {status === "ao-vivo" ? (
+            <><Radio className="h-2.5 w-2.5 text-red-500 animate-pulse" /> AO VIVO</>
+          ) : status === "erro" ? (
+            <><X className="h-2.5 w-2.5 text-red-500" /> ERRO</>
+          ) : (
+            <><Loader2 className="h-2.5 w-2.5 animate-spin" /> ...</>
+          )}
+        </div>
+      )}
       {status === "ao-vivo" && (
         <div className="absolute top-1.5 right-1.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
           <button
@@ -328,9 +331,11 @@ export function CameraLiveTile({ cameraId, cameraNome, filialId, className, auto
           ><Maximize2 className="h-3 w-3" /></button>
         </div>
       )}
-      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent px-2 py-1 text-white text-xs flex items-center gap-1 pointer-events-none">
-        <CameraIcon className="h-3 w-3" /> <span className="truncate">{cameraNome}</span>
-      </div>
+      {!hideOverlays && (
+        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent px-2 py-1 text-white text-xs flex items-center gap-1 pointer-events-none">
+          <CameraIcon className="h-3 w-3" /> <span className="truncate">{cameraNome}</span>
+        </div>
+      )}
       {status !== "ao-vivo" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-white gap-2 pointer-events-none">
           {status === "erro" ? (

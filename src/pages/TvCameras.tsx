@@ -1,14 +1,16 @@
 // TV: mosaico 4x4 (16 câmeras) sem espaçamento, rotacionando a cada 10s
 // entre os grupos de 16 quando houver mais câmeras no sistema.
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { CameraLiveTile } from "@/components/cameras/CameraLiveTile";
-import { Loader2, Camera as CameraIcon } from "lucide-react";
+import { Loader2, Camera as CameraIcon, ArrowLeft } from "lucide-react";
 
 const PAGE_SIZE = 16;
 const ROTATE_MS = 10_000;
 
 export default function TvCameras() {
+  const navigate = useNavigate();
   const [cams, setCams] = useState<any[] | null>(null);
   const [pageIdx, setPageIdx] = useState(0);
 
@@ -71,6 +73,7 @@ export default function TvCameras() {
                 cameraNome={c.nome}
                 filialId={c.filial_id ?? null}
                 startDelayMs={Math.min(i, 8) * 400}
+                hideOverlays
                 className="w-full h-full rounded-none border-0"
               />
             </div>
@@ -79,6 +82,13 @@ export default function TvCameras() {
           )
         )}
       </div>
+      <button
+        onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
+        className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-black/60 hover:bg-black/80 text-white text-xs backdrop-blur-sm border border-white/10"
+        title="Voltar"
+      >
+        <ArrowLeft className="h-4 w-4" /> Voltar
+      </button>
       {pages.length > 1 && (
         <div className="absolute bottom-2 right-3 text-[11px] text-white/70 bg-black/50 px-2 py-0.5 rounded">
           {pageIdx + 1}/{pages.length} · rotaciona a cada 10s
