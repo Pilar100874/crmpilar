@@ -53,7 +53,7 @@ export default function GlobalBackToTelaButton() {
         }
       `}</style>
       <div
-        className="fixed top-0 left-0 right-0 z-[1000] flex items-center justify-end gap-2 border-b bg-background/95 backdrop-blur px-3"
+        className="fixed top-0 left-0 right-0 z-[9999] flex items-center justify-start gap-2 border-b bg-background shadow-sm px-3"
         style={{ height: BAR_HEIGHT }}
       >
         <Button
