@@ -578,6 +578,7 @@ const App = () => (
             <Route path="/watch/logistica/historico" element={<WatchLogisticaHistorico />} />
             <Route path="/tv/vendas" element={<TvDashboardVendas />} />
             <Route path="/tv/veiculos" element={<TvDashboardVeiculos />} />
+            <Route path="/tv/cameras" element={<TvCameras />} />
             <Route path="/p/:slug" element={<PublicPage />} />
             {/* E-commerce routes */}
             <Route path="/ecommerce" element={<WishlistProvider><CartProvider><QuoteRequestProvider><EcommerceLayout /></QuoteRequestProvider></CartProvider></WishlistProvider>}>
