@@ -122,21 +122,23 @@ export default function TelaCustomizadaView() {
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-5xl mx-auto space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={goBack}>
-            <ArrowLeft className="w-4 h-4 mr-1" /> Voltar
-          </Button>
-          <div className="flex items-center flex-wrap gap-1 text-sm text-muted-foreground">
-            {breadcrumb.map((b, i) => (
-              <div key={b.id} className="flex items-center gap-1">
-                {i > 0 && <ChevronRight className="w-3 h-3" />}
-                <span className={i === breadcrumb.length - 1 ? "text-foreground font-medium" : ""}>
-                  {b.nome}
-                </span>
-              </div>
-            ))}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Button variant="outline" size="sm" onClick={goBack}>
+              <ArrowLeft className="w-4 h-4 mr-1" /> Voltar
+            </Button>
+            <div className="flex items-center flex-wrap gap-1 text-sm text-muted-foreground min-w-0">
+              {breadcrumb.map((b, i) => (
+                <div key={b.id} className="flex items-center gap-1">
+                  {i > 0 && <ChevronRight className="w-3 h-3" />}
+                  <span className={i === breadcrumb.length - 1 ? "text-foreground font-medium" : ""}>
+                    {b.nome}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-          <Button variant="outline" size="sm" onClick={handleLogout} className="ml-auto">
+          <Button variant="destructive" size="sm" onClick={handleLogout} className="shrink-0">
             <LogOut className="w-4 h-4 mr-1" /> Sair
           </Button>
         </div>
