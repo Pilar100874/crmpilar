@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+
 import {
   ChevronLeft, Zap, LifeBuoy, AppWindow, Shield, Sun, Moon,
   Bell, User as UserIcon, Monitor, Star, Settings, Users, FolderTree,
