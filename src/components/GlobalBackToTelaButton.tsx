@@ -21,7 +21,9 @@ export default function GlobalBackToTelaButton() {
   const fromTela = params.get("fromtela");
   const fromAtalho = params.get("fromatalho") === "1";
   const onTelaRoot = location.pathname.startsWith("/tela-customizada/");
-  const active = (!!fromTela && !onTelaRoot) || fromAtalho;
+  // Rotas imersivas (tela cheia) que já possuem seu próprio botão de voltar
+  const isImmersive = location.pathname.startsWith("/tv/") || location.pathname.startsWith("/watch");
+  const active = ((!!fromTela && !onTelaRoot) || fromAtalho) && !isImmersive;
 
   useEffect(() => {
     const body = document.body;
