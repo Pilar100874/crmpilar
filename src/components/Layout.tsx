@@ -236,11 +236,9 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const isTelaCustomizadaRoute =
-    location.pathname.startsWith("/tela-customizada") ||
-    location.pathname.startsWith("/admin/telas-customizadas");
+  const isAdminTelasRoute = location.pathname.startsWith("/admin/telas-customizadas");
   const soloMode =
-    isTelaCustomizadaRoute ||
+    isAdminTelasRoute ||
     (typeof window !== "undefined" &&
       new URLSearchParams(window.location.search).get("solo") === "1");
   const [user, setUser] = useState<User | null>(null);
