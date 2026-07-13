@@ -43,21 +43,23 @@ export default function GlobalBackToTelaButton() {
   if (!active) return null;
 
   const handleBack = () => {
-    // Prioriza voltar para a tela customizada que abriu o atalho
+    // Preferimos voltar pelo histórico para preservar o submenu/breadcrumb
+    // em que o usuário estava (ex.: grupo dentro da tela customizada).
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+
+    // Fallback: raiz da tela customizada de origem, se houver
     if (fromTela) {
       const solo = params.get("solo") === "1" ? "?solo=1" : "";
       navigate(`/tela-customizada/${fromTela}${solo}`);
       return;
     }
 
-    // Sem tela de origem: usa histórico do navegador
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
-
     navigate("/menu");
   };
+
 
   return (
     <>
