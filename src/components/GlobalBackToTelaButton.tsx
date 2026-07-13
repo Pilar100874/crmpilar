@@ -4,31 +4,40 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /**
- * Botão flutuante "Voltar" exibido em qualquer atalho aberto a partir
- * de uma Tela Customizada. Reconhecido pelo parâmetro `?fromtela=<id>`
- * e sempre retorna para `/tela-customizada/<id>`, restaurando os botões
- * anteriores independentemente do layout da rota atual.
+ * Barra superior fixa com botão "Voltar" para qualquer atalho aberto a
+ * partir de uma Tela Customizada (`?fromtela=<id>`). Sempre retorna para
+ * `/tela-customizada/<id>`, independente do layout da rota atual.
  *
- * Também marca `document.body[data-fromtela="1"]` e injeta um CSS global
- * que oculta botões locais de "voltar" (icon-only com lucide-arrow-left)
- * em qualquer atalho aberto via Tela Customizada, padronizando o botão
- * de voltar globalmente no canto superior direito.
+ * Também marca `document.body[data-fromtela="1"]` e injeta CSS global que
+ * oculta botões locais de "voltar" (icon-only com lucide-arrow-left) e
+ * adiciona padding-top no body para não sobrepor o conteúdo.
  */
+const BAR_HEIGHT = 48;
+
 export default function GlobalBackToTelaButton() {
   const location = useLocation();
   const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
   const fromTela = params.get("fromtela");
+  const onTelaRoot = location.pathname.startsWith("/tela-customizada/");
+  const active = !!fromTela && !onTelaRoot;
 
   useEffect(() => {
     const body = document.body;
-    if (fromTela) body.setAttribute("data-fromtela", "1");
-    else body.removeAttribute("data-fromtela");
-    return () => body.removeAttribute("data-fromtela");
-  }, [fromTela]);
+    if (active) {
+      body.setAttribute("data-fromtela", "1");
+      body.style.paddingTop = `${BAR_HEIGHT}px`;
+    } else {
+      body.removeAttribute("data-fromtela");
+      body.style.paddingTop = "";
+    }
+    return () => {
+      body.removeAttribute("data-fromtela");
+      body.style.paddingTop = "";
+    };
+  }, [active]);
 
-  if (!fromTela) return null;
-  if (location.pathname.startsWith("/tela-customizada/")) return null;
+  if (!active) return null;
 
   const handleBack = () => {
     const solo = params.get("solo") === "1" ? "?solo=1" : "";
@@ -37,25 +46,27 @@ export default function GlobalBackToTelaButton() {
 
   return (
     <>
-      {/* CSS global: oculta botões locais de "voltar" comuns nos atalhos.
-          Cobre: botões marcados com [data-app-back], e botões icon-only cujo
-          único filho é um svg.lucide-arrow-left (padrão usado em várias telas). */}
       <style>{`
         body[data-fromtela="1"] [data-app-back],
         body[data-fromtela="1"] button:has(> svg.lucide-arrow-left:only-child) {
           display: none !important;
         }
       `}</style>
-      <Button
-        type="button"
-        size="sm"
-        variant="default"
-        onClick={handleBack}
-        className="fixed top-4 right-4 z-[1000] rounded-full shadow-lg h-10 px-4"
-        aria-label="Voltar para a tela customizada"
+      <div
+        className="fixed top-0 left-0 right-0 z-[1000] flex items-center justify-end gap-2 border-b bg-background/95 backdrop-blur px-3"
+        style={{ height: BAR_HEIGHT }}
       >
-        <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
-      </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="default"
+          onClick={handleBack}
+          className="h-9 px-4"
+          aria-label="Voltar para a tela customizada"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
+        </Button>
+      </div>
     </>
   );
 }
