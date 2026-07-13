@@ -64,6 +64,10 @@ export default function LivroEncomendas() {
   const [deliverTarget, setDeliverTarget] = useState<Encomenda | null>(null);
   const [deliverData, setDeliverData] = useState({ retirado_por: "", documento_retirada: "", observacoes: "" });
   const [params, setParams] = useSearchParams();
+  const [defaultDest, setDefaultDest] = useState("");
+  const [uploadingFoto, setUploadingFoto] = useState(false);
+  const [analisando, setAnalisando] = useState(false);
+  const fotoInputRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
     setLoading(true);
@@ -75,15 +79,70 @@ export default function LivroEncomendas() {
 
   useEffect(() => { load(); }, []);
   useEffect(() => {
+    (async () => {
+      try {
+        const eid = await getEstabelecimentoId();
+        if (!eid) return;
+        const { data } = await supabase.from("estabelecimentos").select("nome").eq("id", eid).maybeSingle();
+        if (data?.nome) setDefaultDest(data.nome);
+      } catch {}
+    })();
+  }, []);
+  useEffect(() => {
     if (params.get("new") === "1") { openNew(); params.delete("new"); setParams(params, { replace: true }); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
-  const openNew = () => { setEditing({ ...empty }); setDialogOpen(true); };
+  const openNew = () => { setEditing({ ...empty, destinatario: defaultDest }); setDialogOpen(true); };
   const openEdit = (o: Encomenda) => {
     setEditing({ ...o, data_recebimento: new Date(o.data_recebimento).toISOString().slice(0, 16) });
     setDialogOpen(true);
   };
+
+  const fileToBase64 = (file: File) => new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(",")[1] || "");
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+
+  const handlePhoto = async (file: File) => {
+    setUploadingFoto(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `encomendas/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { data, error } = await supabase.storage.from("chat-attachments").upload(path, file, { upsert: false });
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from("chat-attachments").getPublicUrl(data.path);
+      setEditing((prev: any) => ({ ...prev, foto_url: publicUrl }));
+      toast.success("Foto anexada. Analisando...");
+      // Analisar com IA
+      setAnalisando(true);
+      const b64 = await fileToBase64(file);
+      const { data: ai, error: aiErr } = await supabase.functions.invoke("extract-encomenda-photo", {
+        body: { imageBase64: b64 },
+      });
+      if (aiErr) throw aiErr;
+      const f = ai?.fields || {};
+      setEditing((prev: any) => ({
+        ...prev,
+        transportadora: f.transportadora || prev.transportadora,
+        codigo_rastreio: f.codigo_rastreio || prev.codigo_rastreio,
+        tipo_encomenda: f.tipo_encomenda || prev.tipo_encomenda,
+        remetente: f.remetente || prev.remetente,
+        destinatario: prev.destinatario || f.destinatario || defaultDest,
+        descricao: f.descricao || prev.descricao,
+      }));
+      toast.success("Campos preenchidos pela IA");
+    } catch (e: any) {
+      toast.error(e?.message || "Erro no upload/análise");
+    } finally {
+      setUploadingFoto(false);
+      setAnalisando(false);
+      if (fotoInputRef.current) fotoInputRef.current.value = "";
+    }
+  };
+
 
   const save = async () => {
     if (!editing?.destinatario) { toast.error("Informe o destinatário"); return; }
