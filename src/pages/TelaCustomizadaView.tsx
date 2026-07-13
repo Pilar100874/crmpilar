@@ -70,8 +70,9 @@ export default function TelaCustomizadaView() {
       setCurrentParent(item.id);
     } else if (item.rota) {
       const sep = item.rota.includes("?") ? "&" : "?";
-      const params = isVinculado ? "solo=1&notab=1" : "notab=1";
-      navigate(`${item.rota}${sep}${params}`);
+      const parts = ["notab=1", `fromtela=${id}`];
+      if (isVinculado) parts.push("solo=1");
+      navigate(`${item.rota}${sep}${parts.join("&")}`);
     }
   };
 
