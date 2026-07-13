@@ -236,9 +236,13 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const isTelaCustomizadaRoute =
+    location.pathname.startsWith("/tela-customizada") ||
+    location.pathname.startsWith("/admin/telas-customizadas");
   const soloMode =
-    typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("solo") === "1";
+    isTelaCustomizadaRoute ||
+    (typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("solo") === "1");
   if (soloMode) {
     return (
       <div className="min-h-screen bg-background text-foreground">
