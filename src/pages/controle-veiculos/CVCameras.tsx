@@ -127,21 +127,21 @@ export default function CVCameras() {
         subtitle="TP-Link Tapo, Hikvision, Intelbras e genéricas · públicas ou via Coletor Desktop"
       />
 
-      <Card className="p-4 flex items-center justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <Wifi className="h-5 w-5 text-primary mt-0.5" />
-          <div>
+      <Card className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-start gap-3 min-w-0">
+          <Wifi className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+          <div className="min-w-0">
             <p className="font-medium">Módulo de câmeras no Coletor Desktop</p>
             <p className="text-xs text-muted-foreground">
               Ao habilitar, o Coletor (o mesmo usado no Ponto) também tira snapshots das câmeras internas quando solicitado.
             </p>
           </div>
         </div>
-        <Switch checked={collectorEnabled} onCheckedChange={toggleCollector} />
+        <Switch checked={collectorEnabled} onCheckedChange={toggleCollector} className="self-end sm:self-center shrink-0" />
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" /> Nova câmera</Button>
+        <Button onClick={openNew} className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-2" /> Nova câmera</Button>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
