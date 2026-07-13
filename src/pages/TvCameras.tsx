@@ -10,11 +10,51 @@ import {
   ArrowLeft,
   X,
   ListOrdered,
-  ArrowUp,
-  ArrowDown,
   RotateCcw,
   Check,
+  GripVertical,
 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+function SortableCameraRow({ id, index, nome }: { id: string; index: number; nome: string }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-2 px-3 py-2 bg-background">
+      <button
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing h-7 w-7 flex items-center justify-center rounded hover:bg-muted touch-none"
+        title="Arrastar"
+      >
+        <GripVertical className="h-4 w-4 text-muted-foreground" />
+      </button>
+      <span className="w-8 text-xs text-muted-foreground tabular-nums">{index + 1}.</span>
+      <span className="flex-1 text-sm truncate">{nome}</span>
+    </div>
+  );
+}
+
 
 const PAGE_SIZE = 16;
 const ROTATE_MS = 10_000;
@@ -85,13 +125,29 @@ export default function TvCameras() {
   const moveItem = (idx: number, delta: number) => {
     setDraftOrder((prev) => {
       if (!prev) return prev;
-      const next = [...prev];
       const target = idx + delta;
-      if (target < 0 || target >= next.length) return prev;
-      [next[idx], next[target]] = [next[target], next[idx]];
-      return next;
+      if (target < 0 || target >= prev.length) return prev;
+      return arrayMove(prev, idx, target);
     });
   };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setDraftOrder((prev) => {
+      if (!prev) return prev;
+      const oldIndex = prev.findIndex((c) => c.id === active.id);
+      const newIndex = prev.findIndex((c) => c.id === over.id);
+      if (oldIndex < 0 || newIndex < 0) return prev;
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+  };
+
 
   const resetOrder = () => {
     const sorted = [...(draftOrder ?? [])].sort((a, b) =>
@@ -181,21 +237,25 @@ export default function TvCameras() {
         </div>
       )}
 
-      <button
-        onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
-        className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-black/60 hover:bg-black/80 text-white text-xs backdrop-blur-sm border border-white/10"
-        title="Voltar"
-      >
-        <ArrowLeft className="h-4 w-4" /> Voltar
-      </button>
+      {!zoomed && (
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+          <button
+            onClick={openMenu}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium shadow-lg"
+            title="Sequência de exibição"
+          >
+            <ListOrdered className="h-4 w-4" /> Ordem
+          </button>
+          <button
+            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-white text-black hover:bg-white/90 text-sm font-medium shadow-lg"
+            title="Voltar"
+          >
+            <ArrowLeft className="h-4 w-4" /> Voltar
+          </button>
+        </div>
+      )}
 
-      <button
-        onClick={openMenu}
-        className="absolute top-3 left-28 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-black/60 hover:bg-black/80 text-white text-xs backdrop-blur-sm border border-white/10"
-        title="Sequência de exibição"
-      >
-        <ListOrdered className="h-4 w-4" /> Ordem
-      </button>
 
       {pages.length > 1 && (
         <div className="absolute bottom-2 right-3 text-[11px] text-white/70 bg-black/50 px-2 py-0.5 rounded">
@@ -220,30 +280,21 @@ export default function TvCameras() {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto divide-y">
-              {draftOrder.map((c, idx) => (
-                <div key={c.id} className="flex items-center gap-2 px-3 py-2">
-                  <span className="w-8 text-xs text-muted-foreground tabular-nums">{idx + 1}.</span>
-                  <span className="flex-1 text-sm truncate">{c.nome}</span>
-                  <button
-                    onClick={() => moveItem(idx, -1)}
-                    disabled={idx === 0}
-                    className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted disabled:opacity-30 disabled:pointer-events-none"
-                    title="Subir"
-                  >
-                    <ArrowUp className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => moveItem(idx, 1)}
-                    disabled={idx === draftOrder.length - 1}
-                    className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted disabled:opacity-30 disabled:pointer-events-none"
-                    title="Descer"
-                  >
-                    <ArrowDown className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
+            <div className="flex-1 overflow-y-auto">
+              <p className="px-3 pt-2 pb-1 text-[11px] text-muted-foreground">
+                Arraste pelo ícone <GripVertical className="inline h-3 w-3 align-text-bottom" /> para reordenar
+              </p>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={draftOrder.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+                  <div className="divide-y">
+                    {draftOrder.map((c, idx) => (
+                      <SortableCameraRow key={c.id} id={c.id} index={idx} nome={c.nome} />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             </div>
+
             <div className="flex items-center justify-between gap-2 px-4 py-3 border-t bg-muted/30">
               <button
                 onClick={resetOrder}
