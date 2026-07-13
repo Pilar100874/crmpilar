@@ -1,27 +1,16 @@
 import { supabase } from "@/integrations/supabase/client";
 
-/**
- * Obtém o ID do estabelecimento do usuário atual
- * Primeiro verifica no localStorage, depois busca no banco
- */
-export async function getEstabelecimentoId(): Promise<string> {
-  // Tentar obter do localStorage primeiro
-  const cached = localStorage.getItem('estabelecimentoId');
-  if (cached) {
-    return cached;
-  }
+let cached: string | null = null;
 
-  // Buscar do banco
+export async function getEstabelecimentoId(): Promise<string | null> {
+  if (cached) return cached;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
   const { data } = await supabase
-    .from('estabelecimentos')
-    .select('id')
-    .limit(1)
-    .single();
-
-  if (data?.id) {
-    localStorage.setItem('estabelecimentoId', data.id);
-    return data.id;
-  }
-
-  throw new Error('Estabelecimento não encontrado');
+    .from("usuarios")
+    .select("estabelecimento_id")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+  cached = data?.estabelecimento_id ?? null;
+  return cached;
 }
