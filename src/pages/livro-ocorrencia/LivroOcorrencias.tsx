@@ -11,7 +11,9 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
-import { Plus, Pencil, Trash2, Search, ShieldAlert } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ShieldAlert, Camera, X } from "lucide-react";
+import { useRef } from "react";
+
 
 interface Ocorrencia {
   id: string;
@@ -27,7 +29,9 @@ interface Ocorrencia {
   responsavel: string | null;
   status: string;
   observacoes: string | null;
+  anexos?: any;
 }
+
 
 const TIPOS = ["Segurança", "Acesso Indevido", "Furto/Roubo", "Briga/Agressão", "Acidente", "Falha Técnica", "Emergência Médica", "Incêndio", "Manutenção", "Outros"];
 const GRAVIDADES = [
@@ -62,6 +66,27 @@ export default function LivroOcorrencias() {
   const [editing, setEditing] = useState<Partial<Ocorrencia> | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [params, setParams] = useSearchParams();
+  const [uploadingFoto, setUploadingFoto] = useState(false);
+  const fotoInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadFoto = async (file: File) => {
+    setUploadingFoto(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `ocorrencias/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { data, error } = await supabase.storage.from("chat-attachments").upload(path, file, { upsert: false });
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from("chat-attachments").getPublicUrl(data.path);
+      setEditing((prev: any) => ({ ...prev, anexos: { ...(prev?.anexos || {}), foto_url: publicUrl } }));
+      toast.success("Foto anexada");
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao enviar foto");
+    } finally {
+      setUploadingFoto(false);
+      if (fotoInputRef.current) fotoInputRef.current.value = "";
+    }
+  };
+
 
   const load = async () => {
     setLoading(true);
@@ -284,9 +309,39 @@ export default function LivroOcorrencias() {
                 </Select>
               </div>
               <div className="sm:col-span-2">
+                <Label>Foto (opcional)</Label>
+                <input
+                  ref={fotoInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFoto(f); }}
+                />
+                {editing.anexos?.foto_url ? (
+                  <div className="relative inline-block mt-1">
+                    <img src={editing.anexos.foto_url} alt="Foto da ocorrência" className="max-h-48 rounded border" />
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="destructive"
+                      className="absolute -top-2 -right-2 h-6 w-6"
+                      onClick={() => setEditing({ ...editing, anexos: { ...(editing.anexos || {}), foto_url: null } })}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button type="button" variant="outline" onClick={() => fotoInputRef.current?.click()} disabled={uploadingFoto} className="gap-2">
+                    <Camera className="h-4 w-4" /> {uploadingFoto ? "Enviando..." : "Tirar / Anexar foto"}
+                  </Button>
+                )}
+              </div>
+              <div className="sm:col-span-2">
                 <Label>Observações</Label>
                 <Textarea rows={2} value={editing.observacoes || ""} onChange={(e) => setEditing({ ...editing, observacoes: e.target.value })} />
               </div>
+
             </div>
           )}
           <DialogFooter>

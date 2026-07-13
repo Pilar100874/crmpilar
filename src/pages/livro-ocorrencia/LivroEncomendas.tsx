@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,9 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
-import { Plus, Pencil, Trash2, Search, Package, PackageCheck } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package, PackageCheck, Camera, X, Sparkles } from "lucide-react";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+
 
 interface Encomenda {
   id: string;
@@ -62,6 +64,10 @@ export default function LivroEncomendas() {
   const [deliverTarget, setDeliverTarget] = useState<Encomenda | null>(null);
   const [deliverData, setDeliverData] = useState({ retirado_por: "", documento_retirada: "", observacoes: "" });
   const [params, setParams] = useSearchParams();
+  const [defaultDest, setDefaultDest] = useState("");
+  const [uploadingFoto, setUploadingFoto] = useState(false);
+  const [analisando, setAnalisando] = useState(false);
+  const fotoInputRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
     setLoading(true);
@@ -73,15 +79,70 @@ export default function LivroEncomendas() {
 
   useEffect(() => { load(); }, []);
   useEffect(() => {
+    (async () => {
+      try {
+        const eid = await getEstabelecimentoId();
+        if (!eid) return;
+        const { data } = await supabase.from("estabelecimentos").select("nome").eq("id", eid).maybeSingle();
+        if (data?.nome) setDefaultDest(data.nome);
+      } catch {}
+    })();
+  }, []);
+  useEffect(() => {
     if (params.get("new") === "1") { openNew(); params.delete("new"); setParams(params, { replace: true }); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
-  const openNew = () => { setEditing({ ...empty }); setDialogOpen(true); };
+  const openNew = () => { setEditing({ ...empty, destinatario: defaultDest }); setDialogOpen(true); };
   const openEdit = (o: Encomenda) => {
     setEditing({ ...o, data_recebimento: new Date(o.data_recebimento).toISOString().slice(0, 16) });
     setDialogOpen(true);
   };
+
+  const fileToBase64 = (file: File) => new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(",")[1] || "");
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+
+  const handlePhoto = async (file: File) => {
+    setUploadingFoto(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `encomendas/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { data, error } = await supabase.storage.from("chat-attachments").upload(path, file, { upsert: false });
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from("chat-attachments").getPublicUrl(data.path);
+      setEditing((prev: any) => ({ ...prev, foto_url: publicUrl }));
+      toast.success("Foto anexada. Analisando...");
+      // Analisar com IA
+      setAnalisando(true);
+      const b64 = await fileToBase64(file);
+      const { data: ai, error: aiErr } = await supabase.functions.invoke("extract-encomenda-photo", {
+        body: { imageBase64: b64 },
+      });
+      if (aiErr) throw aiErr;
+      const f = ai?.fields || {};
+      setEditing((prev: any) => ({
+        ...prev,
+        transportadora: f.transportadora || prev.transportadora,
+        codigo_rastreio: f.codigo_rastreio || prev.codigo_rastreio,
+        tipo_encomenda: f.tipo_encomenda || prev.tipo_encomenda,
+        remetente: f.remetente || prev.remetente,
+        destinatario: prev.destinatario || f.destinatario || defaultDest,
+        descricao: f.descricao || prev.descricao,
+      }));
+      toast.success("Campos preenchidos pela IA");
+    } catch (e: any) {
+      toast.error(e?.message || "Erro no upload/análise");
+    } finally {
+      setUploadingFoto(false);
+      setAnalisando(false);
+      if (fotoInputRef.current) fotoInputRef.current.value = "";
+    }
+  };
+
 
   const save = async () => {
     if (!editing?.destinatario) { toast.error("Informe o destinatário"); return; }
@@ -264,6 +325,34 @@ export default function LivroEncomendas() {
           </DialogHeader>
           {editing && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <Label>Foto da Encomenda / Etiqueta</Label>
+                <input
+                  ref={fotoInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhoto(f); }}
+                />
+                {editing.foto_url ? (
+                  <div className="relative inline-block mt-1">
+                    <img src={editing.foto_url} alt="Foto" className="max-h-48 rounded border" />
+                    <Button type="button" size="icon" variant="destructive" className="absolute -top-2 -right-2 h-6 w-6" onClick={() => setEditing({ ...editing, foto_url: null })}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" className="ml-2 gap-2" onClick={() => fotoInputRef.current?.click()}>
+                      <Camera className="h-3 w-3" /> Trocar
+                    </Button>
+                  </div>
+                ) : (
+                  <Button type="button" variant="outline" onClick={() => fotoInputRef.current?.click()} disabled={uploadingFoto || analisando} className="gap-2 w-full">
+                    {analisando ? <><Sparkles className="h-4 w-4 animate-pulse" /> Analisando com IA...</> :
+                      uploadingFoto ? <>Enviando...</> :
+                      <><Camera className="h-4 w-4" /> Tirar foto (preenche os campos)</>}
+                  </Button>
+                )}
+              </div>
               <div>
                 <Label>Data/Hora do Recebimento *</Label>
                 <Input type="datetime-local" value={editing.data_recebimento} onChange={(e) => setEditing({ ...editing, data_recebimento: e.target.value })} />
@@ -290,23 +379,9 @@ export default function LivroEncomendas() {
                 <Label>Remetente</Label>
                 <Input value={editing.remetente || ""} onChange={(e) => setEditing({ ...editing, remetente: e.target.value })} />
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <Label>Destinatário *</Label>
-                <Input value={editing.destinatario || ""} onChange={(e) => setEditing({ ...editing, destinatario: e.target.value })} />
-              </div>
-              <div>
-                <Label>Unidade / Apto / Sala</Label>
-                <Input value={editing.unidade || ""} onChange={(e) => setEditing({ ...editing, unidade: e.target.value })} />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label>Volumes</Label>
-                  <Input type="number" min={1} value={editing.quantidade_volumes || 1} onChange={(e) => setEditing({ ...editing, quantidade_volumes: e.target.value })} />
-                </div>
-                <div>
-                  <Label>Peso (kg)</Label>
-                  <Input type="number" step="0.1" value={editing.peso || ""} onChange={(e) => setEditing({ ...editing, peso: e.target.value })} />
-                </div>
+                <Input value={editing.destinatario || ""} onChange={(e) => setEditing({ ...editing, destinatario: e.target.value })} placeholder={defaultDest || "Destinatário"} />
               </div>
               <div className="sm:col-span-2">
                 <Label>Descrição / Conteúdo</Label>
@@ -329,6 +404,7 @@ export default function LivroEncomendas() {
               </div>
             </div>
           )}
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
             <Button onClick={save}>Salvar</Button>
