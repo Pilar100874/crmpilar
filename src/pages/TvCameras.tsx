@@ -35,9 +35,10 @@ export default function TvCameras() {
 
   useEffect(() => {
     if (pages.length <= 1) return;
+    if (zoomed) return; // pausa rotação com câmera em zoom
     const t = setInterval(() => setPageIdx((i) => (i + 1) % pages.length), ROTATE_MS);
     return () => clearInterval(t);
-  }, [pages.length]);
+  }, [pages.length, zoomed]);
 
   useEffect(() => {
     if (pageIdx >= pages.length) setPageIdx(0);
