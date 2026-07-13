@@ -72,9 +72,14 @@ export default function CVCameras() {
     const payload: any = { ...editing };
     delete payload.id;
     if (!payload.angulo_key) payload.angulo_key = slugify(payload.nome);
-    const q = editing.id
-      ? supabase.from("cv_cameras").update(payload).eq("id", editing.id)
-      : supabase.from("cv_cameras").insert(payload);
+    let q;
+    if (editing.id) {
+      q = supabase.from("cv_cameras").update(payload).eq("id", editing.id);
+    } else {
+      const estId = await getEstabelecimentoId();
+      if (!estId) return toast.error("Estabelecimento não encontrado");
+      q = supabase.from("cv_cameras").insert({ ...payload, estabelecimento_id: estId });
+    }
     const { error } = await q;
     if (error) return toast.error(error.message);
     toast.success("Câmera salva");
