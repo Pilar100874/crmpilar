@@ -78,9 +78,13 @@ export default function CVInspectionConfig() {
       entry_photos_required: entryRequired,
       updated_at: new Date().toISOString(),
     };
-    const q = id
-      ? supabase.from("cv_inspection_config").update(payload).eq("id", id)
-      : supabase.from("cv_inspection_config").insert({ ...payload, name: "default" });
+    let q;
+    if (id) {
+      q = supabase.from("cv_inspection_config").update(payload).eq("id", id);
+    } else {
+      const estId = await getEstabelecimentoId();
+      q = supabase.from("cv_inspection_config").insert({ ...payload, name: "default", estabelecimento_id: estId });
+    }
     const { error } = await q;
     setSaving(false);
     if (error) return toast.error(error.message);
