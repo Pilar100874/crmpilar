@@ -215,6 +215,8 @@ export function useVisitantesControl() {
   };
 
   const createPendingVisitor = async (pd: Omit<PendingVisitor, "id" | "createdAt" | "status">): Promise<PendingVisitor> => {
+    const estId = await getEstabelecimentoId();
+    if (!estId) { toast.error("Estabelecimento não encontrado"); throw new Error("no est"); }
     const { data, error } = await supabase.from(T_PV).insert([{
       visitor_id: pd.visitor.id,
       contact_person_id: pd.contactPersonId,
@@ -222,6 +224,7 @@ export function useVisitantesControl() {
       vehicle_plate: pd.vehiclePlate,
       purpose: pd.purpose,
       notes: pd.notes,
+      estabelecimento_id: estId,
     }]).select(`*, visitor:${T_VIS}(*)`).single();
     if (error) { toast.error("Erro ao criar solicitação"); throw error; }
     const np: PendingVisitor = {
