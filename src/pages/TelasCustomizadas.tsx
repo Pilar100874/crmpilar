@@ -552,14 +552,27 @@ export default function TelasCustomizadas() {
                       </Button>
                     )}
                     {item.parent_id === null && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => openLinkDialog(item)}
-                        title="Vincular usuários"
-                      >
-                        <UsersIcon className="w-4 h-4" />
-                      </Button>
+                      <>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => openLinkDialog(item)}
+                          title="Vincular usuários"
+                        >
+                          <UsersIcon className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => {
+                            setSimDevice("desktop");
+                            setSimulateFor(item);
+                          }}
+                          title="Simular visão do usuário"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </>
                     )}
                     <Button
                       size="icon"
