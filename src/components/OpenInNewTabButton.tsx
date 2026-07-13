@@ -16,7 +16,8 @@ import {
  */
 export function isSoloMode(): boolean {
   if (typeof window === "undefined") return false;
-  return new URLSearchParams(window.location.search).get("solo") === "1";
+  const p = new URLSearchParams(window.location.search);
+  return p.get("solo") === "1" || !!p.get("fromtela");
 }
 
 function isNoTabMode(): boolean {

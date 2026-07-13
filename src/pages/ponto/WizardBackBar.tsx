@@ -34,6 +34,7 @@ export default function WizardBackBar() {
   }, [location.pathname, location.search]);
 
   if (!active) return null;
+  if (new URLSearchParams(location.search).get("fromtela")) return null;
   if (
     location.pathname.endsWith("/config/wizard") ||
     location.pathname.endsWith("/ponto/config")

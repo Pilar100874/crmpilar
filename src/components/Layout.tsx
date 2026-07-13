@@ -238,7 +238,8 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const soloMode =
     typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("solo") === "1";
+    (new URLSearchParams(window.location.search).get("solo") === "1" ||
+      !!new URLSearchParams(window.location.search).get("fromtela"));
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [allowedMenus, setAllowedMenus] = useState<Record<string, MenuPermissions>>({});
