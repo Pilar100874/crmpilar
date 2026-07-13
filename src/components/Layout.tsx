@@ -222,6 +222,7 @@ export const menuItems: MenuItem[] = [
     subItems: [
       { id: "TV Vendas", title: "Dashboard Vendas", url: "/tv/vendas", icon: FileBarChart },
       { id: "TV Veículos", title: "Dashboard Veículos", url: "/tv/veiculos", icon: LucideIcons.Truck },
+      { id: "TV Câmeras", title: "Mosaico de Câmeras", url: "/tv/cameras", icon: LucideIcons.Camera },
     ]
   },
   { id: "Mapa de Calor", title: "Mapa de Calor", url: "/mapa-calor-sistema", icon: LucideIcons.Flame },

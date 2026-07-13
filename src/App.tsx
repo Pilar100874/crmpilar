@@ -237,6 +237,7 @@ import WatchLogisticaRota from "./pages/watch/WatchLogisticaRota";
 import WatchLogisticaHistorico from "./pages/watch/WatchLogisticaHistorico";
 import TvDashboardVendas from "./pages/TvDashboardVendas";
 import TvDashboardVeiculos from "./pages/TvDashboardVeiculos";
+import TvCameras from "./pages/TvCameras";
 import PublicPage from "./pages/PublicPage";
 import EcommerceLayout from "./components/ecommerce/EcommerceLayout";
 import EcommerceHome from "./pages/ecommerce/EcommerceHome";
@@ -577,6 +578,7 @@ const App = () => (
             <Route path="/watch/logistica/historico" element={<WatchLogisticaHistorico />} />
             <Route path="/tv/vendas" element={<TvDashboardVendas />} />
             <Route path="/tv/veiculos" element={<TvDashboardVeiculos />} />
+            <Route path="/tv/cameras" element={<TvCameras />} />
             <Route path="/p/:slug" element={<PublicPage />} />
             {/* E-commerce routes */}
             <Route path="/ecommerce" element={<WishlistProvider><CartProvider><QuoteRequestProvider><EcommerceLayout /></QuoteRequestProvider></CartProvider></WishlistProvider>}>

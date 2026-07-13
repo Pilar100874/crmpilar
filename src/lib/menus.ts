@@ -51,6 +51,7 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   { id: "TV", label: "TV (Categoria)", category: "TV" },
   { id: "TV Vendas", label: "TV Vendas", category: "TV" },
   { id: "TV Veículos", label: "TV Veículos", category: "TV" },
+  { id: "TV Câmeras", label: "TV Câmeras (Mosaico)", category: "TV" },
 
   // Controle de Ponto
   { id: "Controle de Ponto", label: "Controle de Ponto (Categoria)", category: "Ponto" },
