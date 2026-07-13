@@ -146,6 +146,11 @@ export const ROTAS_SUGERIDAS: { label: string; value: string; grupo: string }[] 
   { label: "Cadastro de Visitantes", value: "/controle-visitantes/visitantes", grupo: "Visitantes" },
   { label: "Contatos de Visitantes", value: "/controle-visitantes/contatos", grupo: "Visitantes" },
 
+  // Livro de Ocorrência
+  { label: "Livro de Ocorrência - Dashboard", value: "/livro-ocorrencia", grupo: "Livro de Ocorrência" },
+  { label: "Ocorrências da Portaria", value: "/livro-ocorrencia/ocorrencias", grupo: "Livro de Ocorrência" },
+  { label: "Encomendas / Correios", value: "/livro-ocorrencia/encomendas", grupo: "Livro de Ocorrência" },
+
   // Câmeras / TV
   { label: "Câmeras - Dashboard", value: "/cameras", grupo: "Câmeras / TV" },
   { label: "TV Câmeras (Mosaico)", value: "/tv/cameras", grupo: "Câmeras / TV" },
