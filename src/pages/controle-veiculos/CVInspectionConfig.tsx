@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Camera, Plus, Trash2, Save, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
 type AngleSource = "device" | "ip_camera";
 interface Angle { key: string; label: string; required: boolean; source?: AngleSource; camera_id?: string | null; exit_camera_id?: string | null; }
