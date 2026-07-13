@@ -705,6 +705,48 @@ export default function TelasCustomizadas() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Vincular usuários */}
+      <Dialog open={!!linkDialogFor} onOpenChange={(o) => !o && setLinkDialogFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Vincular usuários — {linkDialogFor?.nome}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-80 overflow-y-auto">
+            <p className="text-xs text-muted-foreground">
+              Ao logar, os usuários vinculados irão direto para esta tela em vez do sistema completo.
+            </p>
+            {usuariosList.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum usuário encontrado.</p>
+            ) : (
+              usuariosList.map((u) => (
+                <label
+                  key={u.id}
+                  className="flex items-center gap-2 p-2 rounded hover:bg-muted cursor-pointer"
+                >
+                  <Checkbox
+                    checked={linkedUserIds.has(u.id)}
+                    onCheckedChange={() => toggleLinkedUser(u.id)}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{u.nome}</p>
+                    <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                  </div>
+                </label>
+              ))
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLinkDialogFor(null)} disabled={savingLinks}>
+              Cancelar
+            </Button>
+            <Button onClick={saveLinks} disabled={savingLinks}>
+              {savingLinks ? "Salvando..." : "Salvar vínculos"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
