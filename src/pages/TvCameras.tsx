@@ -218,7 +218,33 @@ export default function TvCameras() {
       </div>
 
       {zoomed && (
-        <div className="fixed inset-0 z-20 bg-black landscape:[&_video]:!object-cover">
+        <div
+          ref={(el) => {
+            if (!el) return;
+            // Ao entrar em zoom, solicita fullscreen real do navegador para que
+            // ao rotacionar celular/tablet o vídeo ocupe toda a tela em paisagem.
+            const anyEl = el as any;
+            const req =
+              el.requestFullscreen ||
+              anyEl.webkitRequestFullscreen ||
+              anyEl.msRequestFullscreen;
+            if (req && !document.fullscreenElement) {
+              try {
+                const p = req.call(el);
+                if (p && typeof p.then === "function") {
+                  p.then(() => {
+                    const so: any = (screen as any).orientation;
+                    if (so && typeof so.lock === "function") {
+                      so.lock("landscape").catch(() => {});
+                    }
+                  }).catch(() => {});
+                }
+              } catch {}
+            }
+          }}
+          className="fixed inset-0 z-20 bg-black landscape:[&_video]:!object-cover"
+          style={{ width: "100vw", height: "100dvh" }}
+        >
           <CameraLiveTile
             key={`zoom-${zoomed.id}`}
             cameraId={zoomed.id}
@@ -228,7 +254,16 @@ export default function TvCameras() {
             className="w-full h-full rounded-none border-0 !aspect-auto"
           />
           <button
-            onClick={() => setZoomed(null)}
+            onClick={() => {
+              try {
+                const so: any = (screen as any).orientation;
+                if (so && typeof so.unlock === "function") so.unlock();
+              } catch {}
+              if (document.fullscreenElement) {
+                document.exitFullscreen?.().catch(() => {});
+              }
+              setZoomed(null);
+            }}
             className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-black/60 hover:bg-black/80 text-white text-xs backdrop-blur-sm border border-white/10"
             title="Fechar zoom"
           >
