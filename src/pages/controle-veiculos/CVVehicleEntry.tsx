@@ -105,6 +105,8 @@ export default function CVVehicleEntry() {
     if (!form.inspected_all_sides) return toast.error("Confirme a vistoria nos 4 lados");
     setBusy(true);
     const { data: { user } } = await supabase.auth.getUser();
+    const estId = await getEstabelecimentoId();
+
 
     const { error } = await supabase.from("cv_vehicle_movements").update({
       status: "returned",
