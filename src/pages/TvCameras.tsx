@@ -69,14 +69,18 @@ export default function TvCameras() {
       <div className="w-full h-full grid grid-cols-4 grid-rows-4 gap-0">
         {slots.map((c, i) =>
           c ? (
-            <div key={`${pageIdx}-${c.id}`} className="w-full h-full overflow-hidden">
+            <div
+              key={`${pageIdx}-${c.id}`}
+              className="w-full h-full overflow-hidden cursor-zoom-in"
+              onClick={() => setZoomed(c)}
+            >
               <CameraLiveTile
                 cameraId={c.id}
                 cameraNome={c.nome}
                 filialId={c.filial_id ?? null}
                 startDelayMs={Math.min(i, 8) * 400}
                 hideOverlays
-                className="w-full h-full rounded-none border-0"
+                className="w-full h-full rounded-none border-0 pointer-events-none"
               />
             </div>
           ) : (
@@ -84,6 +88,25 @@ export default function TvCameras() {
           )
         )}
       </div>
+      {zoomed && (
+        <div className="fixed inset-0 z-20 bg-black">
+          <CameraLiveTile
+            key={`zoom-${zoomed.id}`}
+            cameraId={zoomed.id}
+            cameraNome={zoomed.nome}
+            filialId={zoomed.filial_id ?? null}
+            hideOverlays
+            className="w-full h-full rounded-none border-0"
+          />
+          <button
+            onClick={() => setZoomed(null)}
+            className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-black/60 hover:bg-black/80 text-white text-xs backdrop-blur-sm border border-white/10"
+            title="Fechar zoom"
+          >
+            <X className="h-4 w-4" /> Fechar
+          </button>
+        </div>
+      )}
       <button
         onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
         className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-black/60 hover:bg-black/80 text-white text-xs backdrop-blur-sm border border-white/10"
