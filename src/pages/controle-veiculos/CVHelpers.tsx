@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, HardHat, Phone, IdCard, Search, ToggleLeft, ToggleRight, User } from "lucide-react";
 import { CVPageHeader } from "./CVPageHeader";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
 interface Helper { id: string; name: string; phone: string | null; document: string | null; active: boolean; }
 const empty = { name: "", phone: "", document: "", active: true };
