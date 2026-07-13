@@ -13,6 +13,7 @@ export default function TvCameras() {
   const navigate = useNavigate();
   const [cams, setCams] = useState<any[] | null>(null);
   const [pageIdx, setPageIdx] = useState(0);
+  const [zoomed, setZoomed] = useState<any | null>(null);
 
   useEffect(() => {
     (async () => {
