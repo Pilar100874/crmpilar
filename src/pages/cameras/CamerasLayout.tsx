@@ -48,9 +48,25 @@ function isItemActive(pathname: string, item: NavItem) {
 
 export default function CamerasLayout() {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const solo = isSoloMode();
+
+  // Preserva query params de contexto (fromtela, fromatalho, fromgrupo, solo)
+  // ao navegar entre as abas internas, para que o botão "Voltar" global
+  // continue funcionando corretamente.
+  const preserveKeys = ["fromtela", "fromatalho", "fromgrupo", "solo"];
+  const preservedSearch = (() => {
+    const src = new URLSearchParams(search);
+    const dst = new URLSearchParams();
+    preserveKeys.forEach((k) => {
+      const v = src.get(k);
+      if (v) dst.set(k, v);
+    });
+    const s = dst.toString();
+    return s ? `?${s}` : "";
+  })();
+  const go = (to: string) => navigate(`${to}${preservedSearch}`);
 
   if (solo) {
     return (
