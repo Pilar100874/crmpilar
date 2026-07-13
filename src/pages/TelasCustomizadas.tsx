@@ -33,6 +33,11 @@ import {
   Copy,
   Users as UsersIcon,
   Move,
+  Eye,
+  Monitor,
+  Smartphone,
+  Tablet,
+
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -284,6 +289,8 @@ export default function TelasCustomizadas() {
 
   // Mover item para outro grupo
   const [moveDialogFor, setMoveDialogFor] = useState<TelaCustomizada | null>(null);
+  const [simulateFor, setSimulateFor] = useState<TelaCustomizada | null>(null);
+  const [simDevice, setSimDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
 
   const grupos = useMemo(() => items.filter((i) => i.tipo === "grupo"), [items]);
 
@@ -545,14 +552,27 @@ export default function TelasCustomizadas() {
                       </Button>
                     )}
                     {item.parent_id === null && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => openLinkDialog(item)}
-                        title="Vincular usuários"
-                      >
-                        <UsersIcon className="w-4 h-4" />
-                      </Button>
+                      <>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => openLinkDialog(item)}
+                          title="Vincular usuários"
+                        >
+                          <UsersIcon className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => {
+                            setSimDevice("desktop");
+                            setSimulateFor(item);
+                          }}
+                          title="Simular visão do usuário"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </>
                     )}
                     <Button
                       size="icon"
@@ -711,6 +731,85 @@ export default function TelasCustomizadas() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Simular visão do usuário */}
+      <Dialog open={!!simulateFor} onOpenChange={(o) => !o && setSimulateFor(null)}>
+        <DialogContent className="max-w-[95vw] w-[95vw] h-[90vh] p-0 flex flex-col gap-0">
+          <DialogHeader className="p-4 border-b">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <DialogTitle className="text-base">
+                Simulando: {simulateFor?.nome}
+              </DialogTitle>
+              <div className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant={simDevice === "desktop" ? "default" : "outline"}
+                  onClick={() => setSimDevice("desktop")}
+                >
+                  <Monitor className="w-4 h-4 mr-1" /> Desktop
+                </Button>
+                <Button
+                  size="sm"
+                  variant={simDevice === "tablet" ? "default" : "outline"}
+                  onClick={() => setSimDevice("tablet")}
+                >
+                  <Tablet className="w-4 h-4 mr-1" /> Tablet
+                </Button>
+                <Button
+                  size="sm"
+                  variant={simDevice === "mobile" ? "default" : "outline"}
+                  onClick={() => setSimDevice("mobile")}
+                >
+                  <Smartphone className="w-4 h-4 mr-1" /> Mobile
+                </Button>
+                {simulateFor && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      window.open(`/tela-customizada/${simulateFor.id}?solo=1`, "_blank")
+                    }
+                  >
+                    <ExternalLink className="w-4 h-4 mr-1" /> Nova aba
+                  </Button>
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Pré-visualização de como o usuário vinculado enxerga esta tela ao logar (modo solo, sem menu principal).
+            </p>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto bg-muted/40 flex items-start justify-center p-4">
+            {simulateFor && (
+              <div
+                className="bg-background border rounded-lg shadow-lg overflow-hidden transition-all"
+                style={{
+                  width:
+                    simDevice === "desktop"
+                      ? "100%"
+                      : simDevice === "tablet"
+                      ? 820
+                      : 390,
+                  height:
+                    simDevice === "desktop"
+                      ? "100%"
+                      : simDevice === "tablet"
+                      ? 1100
+                      : 780,
+                  maxWidth: "100%",
+                }}
+              >
+                <iframe
+                  key={`${simulateFor.id}-${simDevice}`}
+                  src={`/tela-customizada/${simulateFor.id}?solo=1`}
+                  title="Simulação"
+                  className="w-full h-full border-0"
+                />
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Vincular usuários */}
       <Dialog open={!!linkDialogFor} onOpenChange={(o) => !o && setLinkDialogFor(null)}>
