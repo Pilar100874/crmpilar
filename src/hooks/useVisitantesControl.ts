@@ -190,7 +190,9 @@ export function useVisitantesControl() {
     });
 
   const createContactPerson = async (d: Omit<ContactPerson, "id" | "createdAt">): Promise<ContactPerson> => {
-    const { data, error } = await supabase.from(T_CP).insert([d]).select().single();
+    const estId = await getEstabelecimentoId();
+    if (!estId) { toast.error("Estabelecimento não encontrado"); throw new Error("no est"); }
+    const { data, error } = await supabase.from(T_CP).insert([{ ...d, estabelecimento_id: estId }]).select().single();
     if (error) throw error;
     const nc: ContactPerson = { id: data.id, name: data.name, whatsapp: data.whatsapp, cpf: data.cpf, createdAt: data.created_at };
     setContactPersons((p) => [nc, ...p]);
