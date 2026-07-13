@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CVPageHeader, CVKpiCard } from "./CVPageHeader";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
 const categoryLabels: Record<string, string> = {
   mechanical: "Mecânico", electrical: "Elétrico", bodywork: "Carroceria",
