@@ -139,7 +139,10 @@ export const ROTAS_SUGERIDAS: { label: string; value: string; grupo: string }[] 
 
   // Controle de Visitantes
   { label: "Visitantes (Dashboard)", value: "/controle-visitantes", grupo: "Visitantes" },
+  { label: "Registrar Entrada", value: "/controle-visitantes/entrada", grupo: "Visitantes" },
   { label: "Visitantes Presentes", value: "/controle-visitantes/presentes", grupo: "Visitantes" },
+  { label: "Autorizações", value: "/controle-visitantes/autorizacoes", grupo: "Visitantes" },
+  { label: "Relatórios de Visitantes", value: "/controle-visitantes/relatorios", grupo: "Visitantes" },
   { label: "Cadastro de Visitantes", value: "/controle-visitantes/visitantes", grupo: "Visitantes" },
   { label: "Contatos de Visitantes", value: "/controle-visitantes/contatos", grupo: "Visitantes" },
 
