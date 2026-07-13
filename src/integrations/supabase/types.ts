@@ -19590,6 +19590,63 @@ export type Database = {
           },
         ]
       }
+      telas_customizadas: {
+        Row: {
+          cor: string | null
+          created_at: string
+          estabelecimento_id: string
+          icone: string | null
+          id: string
+          nome: string
+          ordem: number
+          parent_id: string | null
+          rota: string | null
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          cor?: string | null
+          created_at?: string
+          estabelecimento_id: string
+          icone?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+          parent_id?: string | null
+          rota?: string | null
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          cor?: string | null
+          created_at?: string
+          estabelecimento_id?: string
+          icone?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          parent_id?: string | null
+          rota?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telas_customizadas_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "telas_customizadas_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "telas_customizadas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       telegram_config: {
         Row: {
           bot_token: string | null
