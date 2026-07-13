@@ -163,7 +163,7 @@ export default function CVVehicles() {
           <DialogHeader><DialogTitle>{editing ? "Editar Veículo" : "Novo Veículo"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div><Label>Nome</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><Label>Placa</Label><Input value={form.plate} onChange={e => setForm({ ...form, plate: e.target.value.toUpperCase() })} /></div>
               <div>
                 <Label>Tipo</Label>
@@ -173,7 +173,7 @@ export default function CVVehicles() {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div><Label>KM Atual</Label><Input type="number" value={form.current_km} onChange={e => setForm({ ...form, current_km: +e.target.value })} /></div>
               <div><Label>Última Troca (km)</Label><Input type="number" value={form.last_oil_change_km} onChange={e => setForm({ ...form, last_oil_change_km: +e.target.value })} /></div>
               <div><Label>Intervalo (km)</Label><Input type="number" value={form.oil_change_interval} onChange={e => setForm({ ...form, oil_change_interval: +e.target.value })} /></div>
