@@ -311,3 +311,7 @@ verify_jwt = false
 
 [functions.sms-queue-ack]
 verify_jwt = false
+
+[functions.extract-encomenda-photo]
+verify_jwt = false
+
