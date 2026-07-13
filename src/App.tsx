@@ -237,6 +237,7 @@ import WatchLogisticaRota from "./pages/watch/WatchLogisticaRota";
 import WatchLogisticaHistorico from "./pages/watch/WatchLogisticaHistorico";
 import TvDashboardVendas from "./pages/TvDashboardVendas";
 import TvDashboardVeiculos from "./pages/TvDashboardVeiculos";
+import TvCameras from "./pages/TvCameras";
 import PublicPage from "./pages/PublicPage";
 import EcommerceLayout from "./components/ecommerce/EcommerceLayout";
 import EcommerceHome from "./pages/ecommerce/EcommerceHome";
