@@ -526,6 +526,14 @@ export default function TelasCustomizadas() {
                     <Button
                       size="icon"
                       variant="ghost"
+                      onClick={() => openLinkDialog(item)}
+                      title="Vincular usuários"
+                    >
+                      <UsersIcon className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
                       onClick={() => openEdit(item)}
                       title="Editar"
                     >
