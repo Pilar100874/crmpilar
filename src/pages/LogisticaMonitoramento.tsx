@@ -333,7 +333,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
       <div className={cn("border-b bg-background flex flex-col gap-3", embedded ? "p-2" : "p-3 sm:p-4")}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
-            {!embedded && (
+            {!embedded && !new URLSearchParams(window.location.search).get('fromtela') && (
               <Button variant="ghost" size="icon" onClick={() => navigate('/logistica')} className="h-8 w-8">
                 <ArrowLeft className="h-4 w-4" />
               </Button>
