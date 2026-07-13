@@ -237,21 +237,25 @@ export default function TvCameras() {
         </div>
       )}
 
-      <button
-        onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
-        className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-black/60 hover:bg-black/80 text-white text-xs backdrop-blur-sm border border-white/10"
-        title="Voltar"
-      >
-        <ArrowLeft className="h-4 w-4" /> Voltar
-      </button>
+      {!zoomed && (
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+          <button
+            onClick={openMenu}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium shadow-lg"
+            title="Sequência de exibição"
+          >
+            <ListOrdered className="h-4 w-4" /> Ordem
+          </button>
+          <button
+            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-white text-black hover:bg-white/90 text-sm font-medium shadow-lg"
+            title="Voltar"
+          >
+            <ArrowLeft className="h-4 w-4" /> Voltar
+          </button>
+        </div>
+      )}
 
-      <button
-        onClick={openMenu}
-        className="absolute top-3 left-28 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-black/60 hover:bg-black/80 text-white text-xs backdrop-blur-sm border border-white/10"
-        title="Sequência de exibição"
-      >
-        <ListOrdered className="h-4 w-4" /> Ordem
-      </button>
 
       {pages.length > 1 && (
         <div className="absolute bottom-2 right-3 text-[11px] text-white/70 bg-black/50 px-2 py-0.5 rounded">
