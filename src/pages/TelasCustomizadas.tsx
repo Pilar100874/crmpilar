@@ -56,30 +56,145 @@ export interface TelaCustomizada {
 
 // Rotas mais usadas do sistema - o usuário também pode digitar uma rota livre.
 export const ROTAS_SUGERIDAS: { label: string; value: string; grupo: string }[] = [
+  // Dashboards
+  { label: "Painel Principal", value: "/dashboard", grupo: "Dashboards" },
+  { label: "Dashboard Atendente", value: "/dashboard-atendente", grupo: "Dashboards" },
+  { label: "Dashboard Supervisor", value: "/dashboard-supervisor", grupo: "Dashboards" },
+  { label: "Dashboard SLA", value: "/sla-dashboard", grupo: "Dashboards" },
+  { label: "Analytics Avançado", value: "/advanced-analytics", grupo: "Dashboards" },
+  { label: "Pesquisas de Satisfação (Dashboard)", value: "/dashboard-pesquisas-satisfacao", grupo: "Dashboards" },
+  { label: "Quality Assurance", value: "/quality-assurance", grupo: "Dashboards" },
+
+  // Atendimento / Chats
+  { label: "Painel de Chats", value: "/atendimento", grupo: "Atendimento & Chats" },
+  { label: "Configurações de Atendimento", value: "/atendimento-config", grupo: "Atendimento & Chats" },
+  { label: "Monitor de Filas", value: "/monitor-filas", grupo: "Atendimento & Chats" },
+  { label: "Monitor de Funcionários", value: "/monitor-funcionarios", grupo: "Atendimento & Chats" },
+  { label: "Teste de Roteamento", value: "/test-roteamento", grupo: "Atendimento & Chats" },
+  { label: "Agentes de Chat", value: "/agentes-chat", grupo: "Atendimento & Chats" },
+  { label: "Chat Interno", value: "/chat-interno", grupo: "Atendimento & Chats" },
+  { label: "Webchat", value: "/webchat", grupo: "Atendimento & Chats" },
+  { label: "Softphone", value: "/softphone", grupo: "Atendimento & Chats" },
+  { label: "Compartilhar Tela", value: "/compartilhar-tela", grupo: "Atendimento & Chats" },
+  { label: "Videochamada", value: "/videocall", grupo: "Atendimento & Chats" },
+
+  // Vendas
+  { label: "Orçamento", value: "/orcamentos", grupo: "Vendas" },
+  { label: "Configuração de Vendas", value: "/vendas-config", grupo: "Vendas" },
+  { label: "Automações de Vendas", value: "/automacoes-vendas", grupo: "Vendas" },
+  { label: "Programação de Visitas", value: "/vendas/programacao-visitas", grupo: "Vendas" },
+  { label: "Acompanhamento de Visitas", value: "/vendas/acompanhamento-visitas", grupo: "Vendas" },
+  { label: "Roteirizador de Visitas", value: "/roteirizador-visitas", grupo: "Vendas" },
+  { label: "Funil de Leads", value: "/funil", grupo: "Vendas" },
+  { label: "Clientes", value: "/contatos", grupo: "Vendas" },
+  { label: "Empresas", value: "/empresas", grupo: "Vendas" },
+  { label: "Pedidos Recebidos", value: "/pedidos-recebidos", grupo: "Vendas" },
+  { label: "Pedido / Tracking", value: "/pedido-tracking", grupo: "Vendas" },
+
+  // Assistente
+  { label: "Contagem Inteligente", value: "/contagem", grupo: "Assistente" },
+  { label: "Nova Contagem", value: "/contagem/nova", grupo: "Assistente" },
+
+  // Marketing
+  { label: "Marketing (Hub)", value: "/marketing", grupo: "Marketing" },
+  { label: "Marketing - Canvas", value: "/marketing/canvas", grupo: "Marketing" },
+  { label: "Marketing - Campanhas", value: "/marketing/campanhas", grupo: "Marketing" },
+  { label: "Marketing - Automações", value: "/marketing/automacoes", grupo: "Marketing" },
+  { label: "Auto Video Wizard", value: "/marketing/auto-video-wizard", grupo: "Marketing" },
+  { label: "Campanhas (Calendário)", value: "/campanhas", grupo: "Marketing" },
+  { label: "Calendário", value: "/calendario", grupo: "Marketing" },
+  { label: "E-mail", value: "/email", grupo: "Marketing" },
+  { label: "Ads", value: "/ads", grupo: "Marketing" },
+  { label: "Ads - Campanhas", value: "/ads/campaigns", grupo: "Marketing" },
+  { label: "Ads - Wizard", value: "/ads/wizard", grupo: "Marketing" },
+
+  // Logística
+  { label: "Logística", value: "/logistica", grupo: "Logística" },
+  { label: "Logística - Veículos", value: "/logistica/veiculos", grupo: "Logística" },
+  { label: "Logística - Rotas", value: "/logistica/rotas", grupo: "Logística" },
+  { label: "Logística - Roteirização", value: "/logistica/roteirizacao", grupo: "Logística" },
+  { label: "Logística - Monitoramento", value: "/logistica/monitoramento", grupo: "Logística" },
+  { label: "Logística - Histórico", value: "/logistica/historico", grupo: "Logística" },
+  { label: "Logística - Automações", value: "/logistica/automacoes", grupo: "Logística" },
+
   // Controle de Veículos
-  { label: "Registrar Entrada / Saída de Veículos", value: "/controle-veiculos/movements", grupo: "Controle de Veículos" },
+  { label: "Controle de Veículos (Dashboard)", value: "/controle-veiculos", grupo: "Controle de Veículos" },
+  { label: "Registrar Entrada / Saída", value: "/controle-veiculos/movements", grupo: "Controle de Veículos" },
   { label: "Cadastro de Veículos", value: "/controle-veiculos/vehicles", grupo: "Controle de Veículos" },
   { label: "Câmeras dos Veículos", value: "/controle-veiculos/cameras", grupo: "Controle de Veículos" },
-  { label: "Defeitos de Veículos", value: "/controle-veiculos/defects", grupo: "Controle de Veículos" },
+  { label: "Defeitos", value: "/controle-veiculos/defects", grupo: "Controle de Veículos" },
   { label: "Histórico do Veículo", value: "/controle-veiculos/history", grupo: "Controle de Veículos" },
-  { label: "Manutenção de Veículos", value: "/controle-veiculos/maintenance", grupo: "Controle de Veículos" },
-  // Câmeras / TV
-  { label: "TV Câmeras (Mosaico)", value: "/tv-cameras", grupo: "Câmeras / TV" },
-  { label: "Câmeras - Dashboard", value: "/cameras", grupo: "Câmeras / TV" },
-  { label: "TV Vendas", value: "/tv-vendas", grupo: "Câmeras / TV" },
-  { label: "TV Veículos", value: "/tv-veiculos", grupo: "Câmeras / TV" },
-  // Visitantes
-  { label: "Controle de Visitantes - Dashboard", value: "/controle-visitantes", grupo: "Visitantes" },
+  { label: "Manutenção", value: "/controle-veiculos/maintenance", grupo: "Controle de Veículos" },
+
+  // Controle de Visitantes
+  { label: "Visitantes (Dashboard)", value: "/controle-visitantes", grupo: "Visitantes" },
   { label: "Visitantes Presentes", value: "/controle-visitantes/presentes", grupo: "Visitantes" },
   { label: "Cadastro de Visitantes", value: "/controle-visitantes/visitantes", grupo: "Visitantes" },
-  { label: "Contatos", value: "/controle-visitantes/contatos", grupo: "Visitantes" },
-  // Chats / Vendas
-  { label: "Painel de Chats", value: "/atendimento", grupo: "Atendimento & Vendas" },
-  { label: "Orçamento", value: "/orcamento", grupo: "Atendimento & Vendas" },
-  { label: "Funil de Leads", value: "/clientes", grupo: "Atendimento & Vendas" },
-  // Ponto
-  { label: "Ponto - Registro", value: "/ponto/registro", grupo: "Ponto" },
-  { label: "Ponto - Espelho", value: "/ponto/espelho", grupo: "Ponto" },
+  { label: "Contatos de Visitantes", value: "/controle-visitantes/contatos", grupo: "Visitantes" },
+
+  // Câmeras / TV
+  { label: "Câmeras - Dashboard", value: "/cameras", grupo: "Câmeras / TV" },
+  { label: "TV Câmeras (Mosaico)", value: "/tv/cameras", grupo: "Câmeras / TV" },
+  { label: "TV Vendas", value: "/tv/vendas", grupo: "Câmeras / TV" },
+  { label: "TV Veículos", value: "/tv/veiculos", grupo: "Câmeras / TV" },
+
+  // Controle de Ponto
+  { label: "Ponto - Dashboard RH", value: "/ponto", grupo: "Controle de Ponto" },
+  { label: "Ponto - Tratamento", value: "/ponto/tratamento", grupo: "Controle de Ponto" },
+  { label: "Ponto - Ajustes", value: "/ponto/ajustes", grupo: "Controle de Ponto" },
+  { label: "Ponto - Aprovações", value: "/ponto/aprovacoes", grupo: "Controle de Ponto" },
+  { label: "Ponto - Espelho de Ponto", value: "/ponto/espelho", grupo: "Controle de Ponto" },
+  { label: "Ponto - Registro via App", value: "/ponto/registro", grupo: "Controle de Ponto" },
+  { label: "Ponto - Configurações", value: "/ponto/config", grupo: "Controle de Ponto" },
+  { label: "Ponto - Totem", value: "/ponto/totem", grupo: "Controle de Ponto" },
+
+  // E-commerce
+  { label: "E-commerce (Loja)", value: "/ecommerce", grupo: "E-commerce" },
+  { label: "E-commerce - Configurações", value: "/ecommerce-config", grupo: "E-commerce" },
+  { label: "E-commerce - Regras", value: "/ecommerce-rules", grupo: "E-commerce" },
+  { label: "E-commerce - Cupons", value: "/ecommerce-config/cupons", grupo: "E-commerce" },
+  { label: "E-commerce - Homepage", value: "/ecommerce-config/homepage", grupo: "E-commerce" },
+  { label: "E-commerce - Branding", value: "/ecommerce-config/branding" , grupo: "E-commerce" },
+  { label: "E-commerce - Mapa de Calor", value: "/ecommerce-config/mapa-calor", grupo: "E-commerce" },
+  { label: "E-commerce - LGPD", value: "/ecommerce-config/lgpd", grupo: "E-commerce" },
+  { label: "E-commerce - Newsletter", value: "/ecommerce-config/newsletter", grupo: "E-commerce" },
+  { label: "E-commerce - Denúncias", value: "/ecommerce-config/denuncias", grupo: "E-commerce" },
+  { label: "Marketplaces", value: "/marketplaces", grupo: "E-commerce" },
+  { label: "Robô de Preços", value: "/robo-precos", grupo: "E-commerce" },
+  { label: "WhatsApp Catálogo", value: "/whatsapp-catalogo", grupo: "E-commerce" },
+  { label: "Importação de Produtos", value: "/importacao-produtos", grupo: "E-commerce" },
+
+  // Editores / Relatórios / Listas
+  { label: "Editores de Documento", value: "/editores", grupo: "Editores & Relatórios" },
+  { label: "Relatórios", value: "/relatorios", grupo: "Editores & Relatórios" },
+  { label: "Listas", value: "/listas", grupo: "Editores & Relatórios" },
+  { label: "Conteúdos", value: "/conteudos", grupo: "Editores & Relatórios" },
+  { label: "Meus Conjuntos", value: "/meus-conjuntos", grupo: "Editores & Relatórios" },
+  { label: "Meus Textos Prontos", value: "/meus-textos-prontos", grupo: "Editores & Relatórios" },
+  { label: "Meus Anexos", value: "/meus-anexos", grupo: "Editores & Relatórios" },
+  { label: "Meus Tickets", value: "/meus-tickets", grupo: "Editores & Relatórios" },
+  { label: "Pesquisas de Satisfação", value: "/pesquisas-satisfacao", grupo: "Editores & Relatórios" },
+
+  // Sistema / Admin
+  { label: "Configurações", value: "/config", grupo: "Sistema" },
+  { label: "Macros", value: "/macros", grupo: "Sistema" },
+  { label: "Avisos", value: "/avisos", grupo: "Sistema" },
+  { label: "Gerenciar Atalhos", value: "/gerenciar-atalhos", grupo: "Sistema" },
+  { label: "Perfil", value: "/perfil", grupo: "Sistema" },
+  { label: "Menu", value: "/menu", grupo: "Sistema" },
+  { label: "Bot Builder", value: "/bot-builder", grupo: "Sistema" },
+  { label: "Omnichannel Builder", value: "/omnichannel-builder", grupo: "Sistema" },
+  { label: "Variáveis Globais", value: "/global-variables", grupo: "Sistema" },
+  { label: "Admin - Apps", value: "/admin/apps", grupo: "Sistema" },
+  { label: "Admin - Tickets", value: "/admin/support-tickets", grupo: "Sistema" },
+  { label: "Admin - Telas Customizadas", value: "/admin/telas-customizadas", grupo: "Sistema" },
+
+  // Watch (Smartwatch)
+  { label: "Watch - Dashboard", value: "/watch/dashboard", grupo: "Watch" },
+  { label: "Watch - Chats", value: "/watch/chats", grupo: "Watch" },
+  { label: "Watch - Agenda", value: "/watch/agenda", grupo: "Watch" },
+  { label: "Watch - Vendas", value: "/watch/vendas", grupo: "Watch" },
+  { label: "Watch - Logística", value: "/watch/logistica", grupo: "Watch" },
 ];
 
 export default function TelasCustomizadas() {
