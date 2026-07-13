@@ -10,6 +10,7 @@ const PAGE_SIZE = 16;
 const ROTATE_MS = 10_000;
 
 export default function TvCameras() {
+  const navigate = useNavigate();
   const [cams, setCams] = useState<any[] | null>(null);
   const [pageIdx, setPageIdx] = useState(0);
 
