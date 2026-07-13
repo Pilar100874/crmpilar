@@ -1,9 +1,15 @@
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function SoloBackButton() {
   const navigate = useNavigate();
+  const location = useLocation();
+  // Quando aberto a partir de uma Tela Customizada, o GlobalBackToTelaButton
+  // é o único botão "Voltar" exibido (padronizado). Não renderizamos aqui.
+  const fromTela = new URLSearchParams(location.search).get("fromtela");
+  if (fromTela) return null;
+
   return (
     <div className="sticky top-0 z-40 flex items-center gap-2 border-b bg-background/95 backdrop-blur px-3 py-2">
       <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
