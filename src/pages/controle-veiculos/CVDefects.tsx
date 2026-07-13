@@ -221,7 +221,7 @@ export default function CVDefects() {
           <CardTitle className="flex items-center gap-2"><Filter className="h-5 w-5" /> Filtros</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Buscar:</label>
               <div className="relative">
