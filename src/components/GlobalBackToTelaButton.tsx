@@ -27,7 +27,7 @@ export default function GlobalBackToTelaButton() {
       size="sm"
       variant="default"
       onClick={handleBack}
-      className="fixed bottom-4 left-4 z-[1000] rounded-full shadow-lg h-10 px-4"
+      className="fixed top-4 right-4 z-[1000] rounded-full shadow-lg h-10 px-4"
       aria-label="Voltar para a tela customizada"
     >
       <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
