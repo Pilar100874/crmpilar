@@ -162,19 +162,20 @@ export default function LivroEncomendas() {
         </Select>
       </div>
 
-      <div className="border rounded-lg overflow-x-auto">
+      {/* Tabela (md+) */}
+      <div className="hidden md:block border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Nº</TableHead>
               <TableHead>Recebido em</TableHead>
-              <TableHead>Transportadora</TableHead>
-              <TableHead>Rastreio</TableHead>
+              <TableHead className="hidden lg:table-cell">Transportadora</TableHead>
+              <TableHead className="hidden xl:table-cell">Rastreio</TableHead>
               <TableHead>Destinatário</TableHead>
-              <TableHead>Unidade</TableHead>
-              <TableHead>Vol.</TableHead>
+              <TableHead className="hidden lg:table-cell">Unidade</TableHead>
+              <TableHead className="hidden xl:table-cell">Vol.</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Entrega</TableHead>
+              <TableHead className="hidden lg:table-cell">Entrega</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -186,14 +187,14 @@ export default function LivroEncomendas() {
             ) : filtered.map((o) => (
               <TableRow key={o.id}>
                 <TableCell className="font-mono">#{o.numero}</TableCell>
-                <TableCell>{new Date(o.data_recebimento).toLocaleString("pt-BR")}</TableCell>
-                <TableCell>{o.transportadora || "-"}</TableCell>
-                <TableCell className="font-mono text-xs">{o.codigo_rastreio || "-"}</TableCell>
+                <TableCell className="whitespace-nowrap">{new Date(o.data_recebimento).toLocaleString("pt-BR")}</TableCell>
+                <TableCell className="hidden lg:table-cell">{o.transportadora || "-"}</TableCell>
+                <TableCell className="hidden xl:table-cell font-mono text-xs">{o.codigo_rastreio || "-"}</TableCell>
                 <TableCell className="font-medium">{o.destinatario}</TableCell>
-                <TableCell>{o.unidade || "-"}</TableCell>
-                <TableCell>{o.quantidade_volumes || 1}</TableCell>
+                <TableCell className="hidden lg:table-cell">{o.unidade || "-"}</TableCell>
+                <TableCell className="hidden xl:table-cell">{o.quantidade_volumes || 1}</TableCell>
                 <TableCell>{statusBadge(o.status)}</TableCell>
-                <TableCell>
+                <TableCell className="hidden lg:table-cell">
                   {o.data_entrega ? (
                     <div className="text-xs">
                       <div>{new Date(o.data_entrega).toLocaleString("pt-BR")}</div>
@@ -215,6 +216,46 @@ export default function LivroEncomendas() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Cards (mobile) */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="text-center text-muted-foreground py-8">Carregando...</div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center text-muted-foreground py-8">Nenhuma encomenda encontrada</div>
+        ) : filtered.map((o) => (
+          <div key={o.id} className="border rounded-lg p-3 bg-card space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono text-sm text-muted-foreground">#{o.numero}</span>
+                  {statusBadge(o.status)}
+                </div>
+                <div className="mt-1 font-medium truncate">{o.destinatario}</div>
+                <div className="text-xs text-muted-foreground">{new Date(o.data_recebimento).toLocaleString("pt-BR")}</div>
+              </div>
+              <div className="flex shrink-0">
+                {o.status === "aguardando_retirada" && (
+                  <Button variant="ghost" size="icon" title="Registrar entrega" onClick={() => setDeliverTarget(o)}>
+                    <PackageCheck className="h-4 w-4 text-green-600" />
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => setDeletingId(o.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              </div>
+            </div>
+            <div className="text-xs text-muted-foreground grid grid-cols-1 gap-0.5">
+              {o.transportadora && <div><span className="font-medium text-foreground/70">Transp.:</span> {o.transportadora} · {o.quantidade_volumes || 1} vol.</div>}
+              {o.codigo_rastreio && <div className="font-mono truncate"><span className="font-sans font-medium text-foreground/70">Rastreio:</span> {o.codigo_rastreio}</div>}
+              {o.unidade && <div><span className="font-medium text-foreground/70">Unidade:</span> {o.unidade}</div>}
+              {o.data_entrega && (
+                <div><span className="font-medium text-foreground/70">Entregue:</span> {new Date(o.data_entrega).toLocaleString("pt-BR")} p/ {o.retirado_por}</div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
