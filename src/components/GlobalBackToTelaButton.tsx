@@ -41,14 +41,16 @@ export default function GlobalBackToTelaButton() {
   if (!active) return null;
 
   const handleBack = () => {
-    if (fromTela) {
-      const solo = params.get("solo") === "1" ? "?solo=1" : "";
-      navigate(`/tela-customizada/${fromTela}${solo}`);
+    // Sempre prioriza a navegação real do histórico para voltar à tela anterior
+    if (window.history.length > 1) {
+      navigate(-1);
       return;
     }
 
-    if (window.history.length > 1) {
-      navigate(-1);
+    // Sem histórico: cai para a tela customizada de origem, se houver
+    if (fromTela) {
+      const solo = params.get("solo") === "1" ? "?solo=1" : "";
+      navigate(`/tela-customizada/${fromTela}${solo}`);
       return;
     }
 
