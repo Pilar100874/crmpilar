@@ -11,7 +11,9 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
-import { Plus, Pencil, Trash2, Search, ShieldAlert } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ShieldAlert, Camera, X } from "lucide-react";
+import { useRef } from "react";
+
 
 interface Ocorrencia {
   id: string;
