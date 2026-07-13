@@ -221,28 +221,38 @@ export default function TvCameras() {
         <div
           ref={(el) => {
             if (!el) return;
-            // Ao entrar em zoom, solicita fullscreen real do navegador para que
-            // ao rotacionar celular/tablet o vídeo ocupe toda a tela em paisagem.
-            const anyEl = el as any;
-            const req =
-              el.requestFullscreen ||
-              anyEl.webkitRequestFullscreen ||
-              anyEl.msRequestFullscreen;
-            if (req && !document.fullscreenElement) {
-              try {
-                const p = req.call(el);
-                if (p && typeof p.then === "function") {
-                  p.then(() => {
-                    const so: any = (screen as any).orientation;
-                    if (so && typeof so.lock === "function") {
-                      so.lock("landscape").catch(() => {});
-                    }
-                  }).catch(() => {});
+            const tryFullscreen = () => {
+              const anyEl = el as any;
+              const req =
+                el.requestFullscreen ||
+                anyEl.webkitRequestFullscreen ||
+                anyEl.msRequestFullscreen;
+              if (req && !document.fullscreenElement) {
+                try {
+                  const p = req.call(el);
+                  if (p && typeof p.then === "function") {
+                    p.then(() => {
+                      const so: any = (screen as any).orientation;
+                      if (so && typeof so.lock === "function") {
+                        so.lock("landscape").catch(() => {});
+                      }
+                    }).catch(() => {});
+                  }
+                } catch {}
+              }
+              // iOS Safari: só permite fullscreen no elemento <video>
+              const video = el.querySelector("video") as any;
+              if (video && !document.fullscreenElement) {
+                if (typeof video.webkitEnterFullscreen === "function") {
+                  try { video.webkitEnterFullscreen(); } catch {}
                 }
-              } catch {}
-            }
+              }
+            };
+            // aguarda o <video> montar antes de tentar iOS fullscreen
+            tryFullscreen();
+            setTimeout(tryFullscreen, 400);
           }}
-          className="fixed inset-0 z-20 bg-black landscape:[&_video]:!object-cover"
+          className="fixed inset-0 z-20 bg-black landscape:[&_video]:!object-cover [&_video]:w-full [&_video]:h-full [&_video]:object-contain"
           style={{ width: "100vw", height: "100dvh" }}
         >
           <CameraLiveTile
@@ -271,6 +281,7 @@ export default function TvCameras() {
           </button>
         </div>
       )}
+
 
       {!zoomed && (
         <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex items-center gap-1.5 sm:gap-2 flex-wrap justify-end max-w-[calc(100%-1rem)]">
