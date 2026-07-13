@@ -61,7 +61,7 @@ export default function CVMovements() {
         subtitle="Histórico completo de saídas e entradas"
       />
 
-      <div className="grid gap-3 grid-cols-3">
+      <div className="grid gap-2 sm:gap-3 grid-cols-3">
         <CVKpiCard label="Total" value={movements.length} icon={List} tone="primary" />
         <CVKpiCard label="Em Trânsito" value={movements.filter((m) => m.status === "out").length} icon={LogOut} tone="warning" />
         <CVKpiCard label="Retornados" value={movements.filter((m) => m.status === "returned").length} icon={LogIn} tone="success" />
