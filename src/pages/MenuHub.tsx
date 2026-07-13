@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+
 import {
   ChevronLeft, Zap, LifeBuoy, AppWindow, Shield, Sun, Moon,
   Bell, User as UserIcon, Monitor, Star, Settings, Users, FolderTree,
@@ -145,6 +147,41 @@ export default function MenuHub() {
   const [openItem, setOpenItem] = useState<MenuItem | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingAdmin, setLoadingAdmin] = useState(true);
+  const [checkingVinculo, setCheckingVinculo] = useState(true);
+
+  // Se o usuário estiver vinculado a uma tela customizada, não abre o menu principal
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { if (!cancelled) setCheckingVinculo(false); return; }
+        const { data: usuario } = await supabase
+          .from("usuarios")
+          .select("id")
+          .eq("auth_user_id", session.user.id)
+          .maybeSingle();
+        if (!usuario?.id) { if (!cancelled) setCheckingVinculo(false); return; }
+        const { data: vinc } = await supabase
+          .from("usuario_telas_customizadas")
+          .select("tela_id")
+          .eq("usuario_id", usuario.id)
+          .limit(1)
+          .maybeSingle();
+        if (vinc?.tela_id) {
+          if (!cancelled) navigate(`/tela-customizada/${vinc.tela_id}?solo=1`, { replace: true });
+          return;
+        }
+      } catch (e) {
+        console.error("Erro ao verificar vínculo de tela customizada:", e);
+      }
+      if (!cancelled) setCheckingVinculo(false);
+    })();
+    return () => { cancelled = true; };
+  }, [navigate]);
+
+
+
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem("theme");
     if (saved) return saved === "dark";
@@ -205,8 +242,11 @@ export default function MenuHub() {
   const title = openItem?.title ?? "Menu Principal";
 
 
+  if (checkingVinculo) return null;
+
   return (
     <div className="relative min-h-screen p-4 sm:p-6 lg:p-10 bg-background">
+
       <div
         className="pointer-events-none fixed inset-0 -z-10 bg-center bg-cover"
         style={{ backgroundImage: `url(${cinemaBg})` }}
