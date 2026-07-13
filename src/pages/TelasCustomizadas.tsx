@@ -735,8 +735,9 @@ export default function TelasCustomizadas() {
       {/* Simular visão do usuário */}
       <Dialog open={!!simulateFor} onOpenChange={(o) => !o && setSimulateFor(null)}>
         <DialogContent className="max-w-[95vw] w-[95vw] h-[90vh] p-0 flex flex-col gap-0">
-          <DialogHeader className="p-4 border-b">
+          <DialogHeader className="p-4 pr-12 border-b">
             <div className="flex items-center justify-between gap-2 flex-wrap">
+
               <DialogTitle className="text-base">
                 Simulando: {simulateFor?.nome}
               </DialogTitle>
