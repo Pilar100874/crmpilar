@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { CameraLiveTile } from "@/components/cameras/CameraLiveTile";
-import { Loader2, Camera as CameraIcon, ArrowLeft } from "lucide-react";
+import { Loader2, Camera as CameraIcon, ArrowLeft, X } from "lucide-react";
 
 const PAGE_SIZE = 16;
 const ROTATE_MS = 10_000;
@@ -13,6 +13,7 @@ export default function TvCameras() {
   const navigate = useNavigate();
   const [cams, setCams] = useState<any[] | null>(null);
   const [pageIdx, setPageIdx] = useState(0);
+  const [zoomed, setZoomed] = useState<any | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -34,9 +35,10 @@ export default function TvCameras() {
 
   useEffect(() => {
     if (pages.length <= 1) return;
+    if (zoomed) return; // pausa rotação com câmera em zoom
     const t = setInterval(() => setPageIdx((i) => (i + 1) % pages.length), ROTATE_MS);
     return () => clearInterval(t);
-  }, [pages.length]);
+  }, [pages.length, zoomed]);
 
   useEffect(() => {
     if (pageIdx >= pages.length) setPageIdx(0);
@@ -67,14 +69,18 @@ export default function TvCameras() {
       <div className="w-full h-full grid grid-cols-4 grid-rows-4 gap-0">
         {slots.map((c, i) =>
           c ? (
-            <div key={`${pageIdx}-${c.id}`} className="w-full h-full overflow-hidden">
+            <div
+              key={`${pageIdx}-${c.id}`}
+              className="w-full h-full overflow-hidden cursor-zoom-in"
+              onClick={() => setZoomed(c)}
+            >
               <CameraLiveTile
                 cameraId={c.id}
                 cameraNome={c.nome}
                 filialId={c.filial_id ?? null}
                 startDelayMs={Math.min(i, 8) * 400}
                 hideOverlays
-                className="w-full h-full rounded-none border-0"
+                className="w-full h-full rounded-none border-0 pointer-events-none"
               />
             </div>
           ) : (
@@ -82,6 +88,25 @@ export default function TvCameras() {
           )
         )}
       </div>
+      {zoomed && (
+        <div className="fixed inset-0 z-20 bg-black">
+          <CameraLiveTile
+            key={`zoom-${zoomed.id}`}
+            cameraId={zoomed.id}
+            cameraNome={zoomed.nome}
+            filialId={zoomed.filial_id ?? null}
+            hideOverlays
+            className="w-full h-full rounded-none border-0"
+          />
+          <button
+            onClick={() => setZoomed(null)}
+            className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-black/60 hover:bg-black/80 text-white text-xs backdrop-blur-sm border border-white/10"
+            title="Fechar zoom"
+          >
+            <X className="h-4 w-4" /> Fechar
+          </button>
+        </div>
+      )}
       <button
         onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
         className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-black/60 hover:bg-black/80 text-white text-xs backdrop-blur-sm border border-white/10"
