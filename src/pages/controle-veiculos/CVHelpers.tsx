@@ -30,9 +30,14 @@ export default function CVHelpers() {
 
   const save = async () => {
     if (!form.name) return toast.error("Nome obrigatório");
-    const { error } = editing
-      ? await supabase.from("cv_helpers").update(form).eq("id", editing)
-      : await supabase.from("cv_helpers").insert(form);
+    let error;
+    if (editing) {
+      ({ error } = await supabase.from("cv_helpers").update(form).eq("id", editing));
+    } else {
+      const estId = await getEstabelecimentoId();
+      if (!estId) return toast.error("Estabelecimento não encontrado");
+      ({ error } = await supabase.from("cv_helpers").insert({ ...form, estabelecimento_id: estId }));
+    }
     if (error) return toast.error(error.message);
     toast.success("Salvo"); setOpen(false); load();
   };
