@@ -125,12 +125,12 @@ export default function CVInspectionConfig() {
         <CardContent className="space-y-2">
           {photos.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum ângulo configurado</p>}
           {photos.map((a, i) => (
-            <div key={i} className="flex flex-wrap items-end gap-2 p-3 border rounded bg-muted/30">
-              <div className="flex-1 min-w-[220px] space-y-1">
+            <div key={i} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 p-3 border rounded bg-muted/30">
+              <div className="sm:col-span-2 lg:col-span-1 space-y-1">
                 <Label className="text-xs">Nome do ângulo</Label>
                 <Input value={a.label} onChange={(e) => updateAngle(i, { label: e.target.value })} />
               </div>
-              <div className="min-w-[160px] space-y-1">
+              <div className="space-y-1">
                 <Label className="text-xs">Origem da imagem</Label>
                 <Select
                   value={a.source ?? "device"}
@@ -145,7 +145,7 @@ export default function CVInspectionConfig() {
               </div>
               {a.source === "ip_camera" && (
                 <>
-                  <div className="min-w-[200px] space-y-1">
+                  <div className="space-y-1">
                     <Label className="text-xs">Câmera (Entrada)</Label>
                     <Select
                       value={a.camera_id ?? ""}
@@ -161,7 +161,7 @@ export default function CVInspectionConfig() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="min-w-[200px] space-y-1">
+                  <div className="space-y-1">
                     <Label className="text-xs" title="Use quando o veículo entra por um ponto e sai por outro — a comparação usará esta câmera na saída.">
                       Câmera de saída (inverter)
                     </Label>
@@ -182,13 +182,15 @@ export default function CVInspectionConfig() {
                   </div>
                 </>
               )}
-              <div className="flex items-center gap-2 pb-2">
-                <Switch checked={a.required} onCheckedChange={(v) => updateAngle(i, { required: v })} />
-                <Label className="text-sm">Obrigatória</Label>
+              <div className="flex items-center justify-between gap-2 sm:col-span-2 lg:col-span-4 pt-1 border-t border-border/50 mt-1">
+                <div className="flex items-center gap-2">
+                  <Switch checked={a.required} onCheckedChange={(v) => updateAngle(i, { required: v })} />
+                  <Label className="text-sm">Obrigatória</Label>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => removeAngle(i)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => removeAngle(i)}>
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
             </div>
 
           ))}
