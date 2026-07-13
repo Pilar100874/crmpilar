@@ -242,8 +242,11 @@ export default function MenuHub() {
   const title = openItem?.title ?? "Menu Principal";
 
 
+  if (checkingVinculo) return null;
+
   return (
     <div className="relative min-h-screen p-4 sm:p-6 lg:p-10 bg-background">
+
       <div
         className="pointer-events-none fixed inset-0 -z-10 bg-center bg-cover"
         style={{ backgroundImage: `url(${cinemaBg})` }}
