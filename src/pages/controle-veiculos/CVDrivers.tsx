@@ -30,9 +30,15 @@ export default function CVDrivers() {
 
   const save = async () => {
     if (!form.name || !form.license) return toast.error("Nome e CNH obrigatórios");
-    const { error } = editing
-      ? await supabase.from("cv_drivers").update(form).eq("id", editing)
-      : await supabase.from("cv_drivers").insert(form);
+    let error;
+    if (editing) {
+      ({ error } = await supabase.from("cv_drivers").update(form).eq("id", editing));
+    } else {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: u } = await supabase.from("usuarios").select("estabelecimento_id").eq("auth_user_id", user?.id).maybeSingle();
+      if (!u?.estabelecimento_id) return toast.error("Estabelecimento não encontrado");
+      ({ error } = await supabase.from("cv_drivers").insert({ ...form, estabelecimento_id: u.estabelecimento_id }));
+    }
     if (error) return toast.error(error.message);
     toast.success("Salvo"); setOpen(false); load();
   };
