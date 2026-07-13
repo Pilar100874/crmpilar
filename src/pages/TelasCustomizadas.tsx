@@ -555,14 +555,16 @@ export default function TelasCustomizadas() {
                     >
                       <Copy className="w-4 h-4" />
                     </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => openLinkDialog(item)}
-                      title="Vincular usuários"
-                    >
-                      <UsersIcon className="w-4 h-4" />
-                    </Button>
+                    {item.parent_id === null && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => openLinkDialog(item)}
+                        title="Vincular usuários"
+                      >
+                        <UsersIcon className="w-4 h-4" />
+                      </Button>
+                    )}
                     <Button
                       size="icon"
                       variant="ghost"
