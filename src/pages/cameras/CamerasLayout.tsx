@@ -131,7 +131,7 @@ export default function CamerasLayout() {
       <div className="flex-1 overflow-hidden">
         <div className="h-full flex flex-col lg:flex-row">
           <div className="lg:hidden border-b bg-muted/30 p-3">
-            <Select value={current.to} onValueChange={(v) => navigate(v)}>
+            <Select value={current.to} onValueChange={(v) => go(v)}>
               <SelectTrigger className="w-full bg-background">
                 <SelectValue>
                   <div className="flex items-center gap-2">
