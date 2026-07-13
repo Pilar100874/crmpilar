@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Tag, Wrench, Zap, Shield, Package, Car } from "lucide-react";
 import { CVPageHeader } from "./CVPageHeader";
 import type { DefectType, DefectCategory } from "@/types/vehicle";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
 const CATS: { value: DefectCategory; label: string; icon: any; tone: string; bg: string }[] = [
   { value: "mechanical", label: "Mecânico", icon: Wrench, tone: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10 ring-amber-500/20" },
