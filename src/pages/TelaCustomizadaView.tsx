@@ -13,6 +13,27 @@ export default function TelaCustomizadaView() {
   const [loading, setLoading] = useState(true);
   const [breadcrumb, setBreadcrumb] = useState<TelaCustomizada[]>([]);
   const [currentParent, setCurrentParent] = useState<string | null>(id || null);
+  const [isVinculado, setIsVinculado] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const { data: usuario } = await supabase
+        .from("usuarios")
+        .select("id")
+        .eq("auth_user_id", session.user.id)
+        .maybeSingle();
+      if (!usuario) return;
+      const { data: vinc } = await supabase
+        .from("usuario_telas_customizadas")
+        .select("tela_id")
+        .eq("usuario_id", usuario.id)
+        .limit(1)
+        .maybeSingle();
+      setIsVinculado(!!vinc?.tela_id);
+    })();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -48,7 +69,8 @@ export default function TelaCustomizadaView() {
       setBreadcrumb((b) => [...b, item]);
       setCurrentParent(item.id);
     } else if (item.rota) {
-      navigate(`${item.rota}${item.rota.includes("?") ? "&" : "?"}solo=1`);
+      const suffix = isVinculado ? `${item.rota.includes("?") ? "&" : "?"}solo=1` : "";
+      navigate(`${item.rota}${suffix}`);
     }
   };
 
