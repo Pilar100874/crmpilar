@@ -14,7 +14,17 @@ const Index = () => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/dashboard");
+        const { data: usuario } = await supabase
+          .from("usuarios")
+          .select("id")
+          .eq("auth_user_id", session.user.id)
+          .maybeSingle();
+        if (usuario) {
+          const { getInitialRouteForUsuario } = await import("@/lib/telaCustomizadaRedirect");
+          navigate(await getInitialRouteForUsuario(usuario.id));
+        } else {
+          navigate("/dashboard");
+        }
       }
     };
     checkUser();
