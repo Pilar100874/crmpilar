@@ -144,9 +144,9 @@ export default function CVMaintenance() {
             <BarChart3 className="h-4 w-4 text-primary" /> Filtros
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col sm:flex-row gap-3">
+        <CardContent className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           <Select value={vehicleFilter} onValueChange={setVehicleFilter}>
-            <SelectTrigger className="max-w-sm"><SelectValue placeholder="Veículo" /></SelectTrigger>
+            <SelectTrigger className="w-full"><SelectValue placeholder="Veículo" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os veículos</SelectItem>
               {vehicles.map(v => <SelectItem key={v.id} value={v.id}>{v.name} — {v.plate}</SelectItem>)}
