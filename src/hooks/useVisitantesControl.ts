@@ -8,6 +8,7 @@ import type {
   PendingVisitor,
 } from "@/types/visitantes";
 import { toast } from "sonner";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
 // Nomes reais das tabelas neste projeto
 const T_VIS = "vis_visitors" as const;
