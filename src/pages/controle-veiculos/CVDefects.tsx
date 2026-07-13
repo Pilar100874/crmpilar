@@ -286,10 +286,10 @@ export default function CVDefects() {
           return (
             <Card key={defect.id} className="shadow-sm hover:shadow-md transition-all">
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <AlertTriangle className="h-5 w-5 text-warning" />
-                    {v?.name} — {v?.plate}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg min-w-0">
+                    <AlertTriangle className="h-5 w-5 text-warning shrink-0" />
+                    <span className="truncate">{v?.name} — {v?.plate}</span>
                   </CardTitle>
                   {getStatusBadge(defect.status)}
                 </div>
