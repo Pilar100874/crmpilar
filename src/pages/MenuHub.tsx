@@ -180,7 +180,8 @@ export default function MenuHub() {
     return () => { cancelled = true; };
   }, [navigate]);
 
-  const [loadingAdmin, setLoadingAdmin] = useState(true);
+
+
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem("theme");
     if (saved) return saved === "dark";
