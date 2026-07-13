@@ -15,7 +15,7 @@ import {
 import { toast } from "sonner";
 import { CVPageHeader } from "./CVPageHeader";
 import { CVPhotoCapture, type CapturedPhoto, type PhotoAngle } from "@/components/cv/CVPhotoCapture";
-import { CamerasLivePanel } from "@/components/cameras/CamerasLivePanel";
+
 import type { Vehicle, Driver } from "@/types/vehicle";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
@@ -196,7 +196,6 @@ export default function CVVehicleExit() {
       <div className="space-y-4">
         <CVPageHeader icon={LogOut} title="Registrar Saída" subtitle="Assistente passo a passo para autorizar a saída" />
 
-        <CamerasLivePanel title="Câmeras da portaria (ao vivo)" columns={3} defaultOpen={false} />
 
         <Card className="max-w-4xl mx-auto shadow-sm">
           <CardHeader className="border-b">
