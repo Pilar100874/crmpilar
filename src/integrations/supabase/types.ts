@@ -20235,6 +20235,52 @@ export type Database = {
           },
         ]
       }
+      usuario_telas_customizadas: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          tela_id: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          tela_id: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          tela_id?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuario_telas_customizadas_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuario_telas_customizadas_tela_id_fkey"
+            columns: ["tela_id"]
+            isOneToOne: false
+            referencedRelation: "telas_customizadas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuario_telas_customizadas_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usuarios: {
         Row: {
           auth_user_id: string | null
