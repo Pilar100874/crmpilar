@@ -586,31 +586,6 @@ export default function TelasCustomizadas() {
         </CardContent>
       </Card>
 
-      {/* Onde encontrar */}
-      <Card>
-        <CardContent className="p-4 text-sm text-muted-foreground space-y-2">
-          <p>
-            <b>Como usar:</b> cada tela de nível principal fica disponível em{" "}
-            <code>/tela-customizada/&lt;id&gt;</code>. Copie o link e envie para
-            o usuário, ou use nas configurações de acesso dele.
-          </p>
-          {breadcrumb.length === 0 && visibleItems.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-2">
-              {visibleItems.map((i) => (
-                <Button
-                  key={i.id}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate(`/tela-customizada/${i.id}`)}
-                >
-                  <ExternalLink className="w-3 h-3 mr-1" />
-                  Abrir "{i.nome}"
-                </Button>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Dialog Create/Edit */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
