@@ -113,35 +113,56 @@ export default function CVDashboard() {
         {kpis.map(k => <CVKpiCard key={k.label} {...k} />)}
       </div>
 
-      <Card className="overflow-hidden border-2 border-primary/20 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-primary/10 to-transparent">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <ListChecks className="h-5 w-5 text-primary" />
-            Movimento de Veículos
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <p className="text-sm text-muted-foreground mb-4 text-center">
-            Registre a saída ou entrada do veículo com apenas um clique.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Button
-              className="h-28 sm:h-32 flex-col gap-2 bg-amber-500 hover:bg-amber-600 text-white text-lg font-semibold shadow-md hover:shadow-xl transition-all"
-              onClick={() => navigate("/controle-veiculos/saida")}
-            >
-              <LogOut className="h-10 w-10" />
-              Registrar Saída
-            </Button>
-            <Button
-              className="h-28 sm:h-32 flex-col gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-lg font-semibold shadow-md hover:shadow-xl transition-all"
-              onClick={() => navigate("/controle-veiculos/entrada")}
-            >
-              <LogIn className="h-10 w-10" />
-              Registrar Entrada
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-muted/40">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ListChecks className="h-4 w-4 text-primary" />
+              Movimento de Veículos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 space-y-3">
+            <p className="text-sm text-muted-foreground">Registre saídas e entradas rapidamente.</p>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                className="h-11 bg-amber-500 hover:bg-amber-600 text-white"
+                onClick={() => navigate("/controle-veiculos/saida")}
+              >
+                <LogOut className="h-4 w-4 mr-1" /> Saída
+              </Button>
+              <Button
+                className="h-11 bg-emerald-500 hover:bg-emerald-600 text-white"
+                onClick={() => navigate("/controle-veiculos/entrada")}
+              >
+                <LogIn className="h-4 w-4 mr-1" /> Entrada
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-muted/40">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Wrench className="h-4 w-4 text-primary" />
+              Gestão
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <p className="text-sm text-muted-foreground mb-3">Cadastros e análises operacionais.</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/controle-veiculos/veiculos")}><Car className="h-4 w-4 mr-1" />Veículos</Button>
+              <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/controle-veiculos/motoristas")}><Users className="h-4 w-4 mr-1" />Motoristas</Button>
+              <Button variant="outline" className="h-10 justify-start relative" onClick={() => navigate("/controle-veiculos/defeitos")}>
+                <AlertTriangle className="h-4 w-4 mr-1" />Defeitos
+                {stats.pendingDefects > 0 && <Badge variant="destructive" className="ml-auto h-5 px-1.5">{stats.pendingDefects}</Badge>}
+              </Button>
+              <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/controle-veiculos/manutencao")}><Wrench className="h-4 w-4 mr-1" />Análises</Button>
+              <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/controle-veiculos/movimentacoes")}><ListChecks className="h-4 w-4 mr-1" />Movim.</Button>
+              <Button variant="outline" className="h-10 justify-start" onClick={() => navigate("/controle-veiculos/tipos-defeito")}><Tag className="h-4 w-4 mr-1" />Tipos</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
