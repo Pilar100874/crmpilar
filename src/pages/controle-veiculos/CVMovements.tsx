@@ -153,10 +153,10 @@ export default function CVMovements() {
           {filtered.map((m) => (
             <Card key={m.id} className="shadow-sm hover:shadow-md transition-all">
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Car className="h-5 w-5 text-primary" />
-                    {m.vehicle?.name} — {m.vehicle?.plate}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg min-w-0">
+                    <Car className="h-5 w-5 text-primary shrink-0" />
+                    <span className="truncate">{m.vehicle?.name} — {m.vehicle?.plate}</span>
                   </CardTitle>
                   <Badge className={m.status === "out" ? "bg-warning text-warning-foreground" : "bg-success text-success-foreground"}>
                     {m.status === "out" ? "Em Trânsito" : "Retornado"}
