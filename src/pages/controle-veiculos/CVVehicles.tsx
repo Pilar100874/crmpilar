@@ -52,7 +52,13 @@ export default function CVVehicles() {
   const save = async () => {
     if (!form.name || !form.plate) return toast.error("Nome e placa são obrigatórios");
     const next_oil_change_km = Number(form.last_oil_change_km) + Number(form.oil_change_interval);
-    const payload = { ...form, next_oil_change_km, plate: String(form.plate).toUpperCase() };
+    const payload: any = { ...form, next_oil_change_km, plate: String(form.plate).toUpperCase() };
+    if (!editing) {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: u } = await supabase.from("usuarios").select("estabelecimento_id").eq("auth_user_id", user?.id).maybeSingle();
+      if (!u?.estabelecimento_id) return toast.error("Usuário sem estabelecimento vinculado");
+      payload.estabelecimento_id = u.estabelecimento_id;
+    }
     const { error } = editing
       ? await supabase.from("cv_vehicles").update(payload).eq("id", editing)
       : await supabase.from("cv_vehicles").insert(payload);
