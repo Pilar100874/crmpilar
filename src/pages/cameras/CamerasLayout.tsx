@@ -48,9 +48,25 @@ function isItemActive(pathname: string, item: NavItem) {
 
 export default function CamerasLayout() {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const solo = isSoloMode();
+
+  // Preserva query params de contexto (fromtela, fromatalho, fromgrupo, solo)
+  // ao navegar entre as abas internas, para que o botão "Voltar" global
+  // continue funcionando corretamente.
+  const preserveKeys = ["fromtela", "fromatalho", "fromgrupo", "solo"];
+  const preservedSearch = (() => {
+    const src = new URLSearchParams(search);
+    const dst = new URLSearchParams();
+    preserveKeys.forEach((k) => {
+      const v = src.get(k);
+      if (v) dst.set(k, v);
+    });
+    const s = dst.toString();
+    return s ? `?${s}` : "";
+  })();
+  const go = (to: string) => navigate(`${to}${preservedSearch}`);
 
   if (solo) {
     return (
@@ -78,7 +94,7 @@ export default function CamerasLayout() {
     const button = (
       <button
         key={item.to}
-        onClick={() => navigate(item.to)}
+        onClick={() => go(item.to)}
         className={`hub-menu-item flex items-center gap-3 px-3 py-2.5 text-left w-full text-muted-foreground rounded-md ${
           active ? "is-active" : ""
         } ${isMenuCollapsed ? "justify-center" : ""}`}
@@ -115,7 +131,7 @@ export default function CamerasLayout() {
       <div className="flex-1 overflow-hidden">
         <div className="h-full flex flex-col lg:flex-row">
           <div className="lg:hidden border-b bg-muted/30 p-3">
-            <Select value={current.to} onValueChange={(v) => navigate(v)}>
+            <Select value={current.to} onValueChange={(v) => go(v)}>
               <SelectTrigger className="w-full bg-background">
                 <SelectValue>
                   <div className="flex items-center gap-2">
