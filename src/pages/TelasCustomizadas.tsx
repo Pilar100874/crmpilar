@@ -30,6 +30,7 @@ import {
   ExternalLink,
   ChevronRight,
   ArrowLeft,
+  Copy,
 } from "lucide-react";
 import {
   AlertDialog,
