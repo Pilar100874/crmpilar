@@ -154,7 +154,7 @@ export default function CVMaintenance() {
           </Select>
 
           <Select value={periodFilter} onValueChange={(v) => { setPeriodFilter(v as PeriodFilter); if (v !== "custom") setCustomDate(undefined); }}>
-            <SelectTrigger className="max-w-sm"><SelectValue placeholder="Período" /></SelectTrigger>
+            <SelectTrigger className="w-full"><SelectValue placeholder="Período" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="30">Últimos 30 dias</SelectItem>
               <SelectItem value="60">Últimos 60 dias</SelectItem>
@@ -168,7 +168,7 @@ export default function CVMaintenance() {
           {periodFilter === "custom" && (
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className={cn("max-w-sm justify-start text-left font-normal", !customDate && "text-muted-foreground")}>
+                <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !customDate && "text-muted-foreground")}>
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {customDate ? format(customDate, "dd/MM/yyyy", { locale: ptBR }) : <span>Selecione a data</span>}
                 </Button>
