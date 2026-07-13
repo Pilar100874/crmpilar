@@ -762,17 +762,6 @@ export default function TelasCustomizadas() {
                 >
                   <Smartphone className="w-4 h-4 mr-1" /> Mobile
                 </Button>
-                {simulateFor && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      window.open(`/tela-customizada/${simulateFor.id}?solo=1`, "_blank")
-                    }
-                  >
-                    <ExternalLink className="w-4 h-4 mr-1" /> Nova aba
-                  </Button>
-                )}
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
