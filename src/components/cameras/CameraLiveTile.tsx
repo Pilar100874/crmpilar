@@ -14,11 +14,12 @@ interface Props {
   autoStart?: boolean;
   startDelayMs?: number;
   onMaximize?: () => void;
+  hideOverlays?: boolean;
 }
 
 const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-export function CameraLiveTile({ cameraId, cameraNome, filialId, className, autoStart = true, startDelayMs = 0, onMaximize }: Props) {
+export function CameraLiveTile({ cameraId, cameraNome, filialId, className, autoStart = true, startDelayMs = 0, onMaximize, hideOverlays = false }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [status, setStatus] = useState<"idle" | "conectando" | "ao-vivo" | "erro">(autoStart ? "conectando" : "idle");
