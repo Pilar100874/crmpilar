@@ -741,7 +741,18 @@ export default function TelasCustomizadas() {
               <DialogTitle className="text-base">
                 Simulando: {simulateFor?.nome}
               </DialogTitle>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 flex-wrap">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const ifr = document.querySelector<HTMLIFrameElement>('iframe[title="Simulação"]');
+                    try { ifr?.contentWindow?.history.back(); } catch {}
+                  }}
+                  title="Voltar dentro da simulação"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-1" /> Voltar
+                </Button>
                 <Button
                   size="sm"
                   variant={simDevice === "desktop" ? "default" : "outline"}
