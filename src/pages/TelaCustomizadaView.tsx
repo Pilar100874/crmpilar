@@ -48,7 +48,7 @@ export default function TelaCustomizadaView() {
       setBreadcrumb((b) => [...b, item]);
       setCurrentParent(item.id);
     } else if (item.rota) {
-      navigate(item.rota);
+      navigate(`${item.rota}${item.rota.includes("?") ? "&" : "?"}solo=1`);
     }
   };
 
