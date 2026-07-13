@@ -193,7 +193,7 @@ export default function CVLayout() {
             </TooltipProvider>
           </div>
 
-          <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-3 sm:p-6">
+          <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-2 sm:p-6">
             <div className="rounded-lg border bg-card text-card-foreground shadow-sm min-h-full p-3 sm:p-6">
               <Outlet />
             </div>
