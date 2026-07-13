@@ -29,6 +29,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { isSoloMode } from "@/components/OpenInNewTabButton";
+import SoloBackButton from "@/components/SoloBackButton";
 import { usePontoEmpresa } from "./usePontoEmpresa";
 import WizardBackBar from "./WizardBackBar";
 
@@ -68,6 +69,7 @@ export default function PontoLayout() {
   if (solo) {
     return (
       <div className="h-full flex flex-col bg-background text-foreground">
+        <SoloBackButton />
         <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-3 sm:p-6">
           <Outlet />
         </main>

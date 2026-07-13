@@ -32,6 +32,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { isSoloMode } from "@/components/OpenInNewTabButton";
+import SoloBackButton from "@/components/SoloBackButton";
 
 interface NavItem {
   to: string;
@@ -71,6 +72,7 @@ export default function CVLayout() {
   if (solo) {
     return (
       <div className="h-full flex flex-col bg-background text-foreground">
+        <SoloBackButton />
         <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-2 sm:p-6">
           <div className="rounded-lg border bg-card text-card-foreground shadow-sm min-h-full p-3 sm:p-6">
             <Outlet />
