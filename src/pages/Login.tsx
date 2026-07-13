@@ -76,7 +76,8 @@ export default function Login() {
           localStorage.setItem("userType", "user");
           localStorage.setItem("userId", usuario.id);
           localStorage.setItem("estabelecimentoId", usuario.estabelecimento_id);
-          navigate("/dashboard");
+          const { getInitialRouteForUsuario } = await import("@/lib/telaCustomizadaRedirect");
+          navigate(await getInitialRouteForUsuario(usuario.id));
         }
       }
     };
