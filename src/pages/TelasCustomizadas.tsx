@@ -31,7 +31,9 @@ import {
   ChevronRight,
   ArrowLeft,
   Copy,
+  Users as UsersIcon,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
