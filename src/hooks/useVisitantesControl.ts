@@ -104,11 +104,14 @@ export function useVisitantesControl() {
   const findVisitorByCpf = (cpf: string) => visitors.find((v) => v.cpf === cpf);
 
   const createVisitor = async (data: Omit<Visitor, "id" | "createdAt">): Promise<Visitor> => {
+    const estId = await getEstabelecimentoId();
+    if (!estId) { toast.error("Estabelecimento não encontrado"); throw new Error("no est"); }
     const { data: row, error } = await supabase
       .from(T_VIS)
       .insert([{
         cpf: data.cpf, name: data.name, company: data.company,
         email: data.email, phone: data.phone, whatsapp: data.whatsapp, photo: data.photo,
+        estabelecimento_id: estId,
       }])
       .select()
       .single();
