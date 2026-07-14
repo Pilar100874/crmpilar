@@ -156,8 +156,12 @@ export async function executarAutomacoesLogistica(
           try {
             const destino = (config as any).destino_tipo
               || ((config as any).usar_telefone_cliente ? 'cliente' : 'numero');
+            const whatsappSessionId = (config as any).whatsappSessionId || null;
+            const whatsappSessionName = (config as any).whatsappSessionName || null;
             const whatsappNumeroId = (config as any).whatsappNumeroId || null;
             const mensagemTpl = String((config as any).mensagem || '');
+
+            const commonWpp = { whatsappSessionId, whatsappSessionName, whatsappNumeroId };
 
             if (destino === 'motorista_atual') {
               const { fetchMotoristasAtuais, formatWhatsappNumber } = await import('@/lib/logistica/cvDriverLookup');
@@ -171,13 +175,13 @@ export async function executarAutomacoesLogistica(
                   .replace(/\{placa\}/g, (veic as any).placa || '')
                   .replace(/\{motorista\}/g, mot.nome || '');
                 await executarBlocoWhatsapp(
-                  { telefone: tel, mensagem, whatsappNumeroId },
+                  { telefone: tel, mensagem, ...commonWpp },
                   wfCtx
                 );
               }
             } else {
               await executarBlocoWhatsapp(
-                { telefone: (config as any).telefone || '', mensagem: mensagemTpl, whatsappNumeroId },
+                { telefone: (config as any).telefone || '', mensagem: mensagemTpl, ...commonWpp },
                 wfCtx
               );
             }
