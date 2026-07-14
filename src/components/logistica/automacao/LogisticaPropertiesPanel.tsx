@@ -529,21 +529,32 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
                 rows={4}
               />
             </div>
+            <EnviarLocalizacaoCheckbox config={config} updateConfig={updateConfig} />
           </div>
         );
 
       case 'disparar_push':
-        return <PushBlockConfigEditor
-          value={config as any}
-          onChange={(patch) => Object.entries(patch).forEach(([k, v]) => updateConfig(k, v))}
-          context="logistica"
-        />;
+        return (
+          <div className="space-y-4">
+            <PushBlockConfigEditor
+              value={config as any}
+              onChange={(patch) => Object.entries(patch).forEach(([k, v]) => updateConfig(k, v))}
+              context="logistica"
+            />
+            <EnviarLocalizacaoCheckbox config={config} updateConfig={updateConfig} />
+          </div>
+        );
 
       case 'enviar_sms':
-        return <SmsBlockConfig
-          config={{ ...config, message: (config as any).mensagem || (config as any).message || '' }}
-          onChange={(key, value) => updateConfig(key === 'message' ? 'mensagem' : key, value)}
-        />;
+        return (
+          <div className="space-y-4">
+            <SmsBlockConfig
+              config={{ ...config, message: (config as any).mensagem || (config as any).message || '' }}
+              onChange={(key, value) => updateConfig(key === 'message' ? 'mensagem' : key, value)}
+            />
+            <EnviarLocalizacaoCheckbox config={config} updateConfig={updateConfig} />
+          </div>
+        );
 
       default:
         return (
