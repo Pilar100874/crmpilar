@@ -264,7 +264,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[260px_280px_minmax(0,1fr)_300px] gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[300px_minmax(0,1fr)_320px] gap-4">
         {/* COLUNA 1 — Templates + Layout */}
         <div className="space-y-4 order-2 md:order-1">
           <Card className="border-border/60 shadow-sm">
