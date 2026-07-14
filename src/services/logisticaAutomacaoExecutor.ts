@@ -160,8 +160,30 @@ export async function executarAutomacoesLogistica(
             const whatsappSessionName = (config as any).whatsappSessionName || null;
             const whatsappNumeroId = (config as any).whatsappNumeroId || null;
             const mensagemTpl = String((config as any).mensagem || '');
+            const enviarLocalizacao = !!(config as any).enviar_localizacao;
 
             const commonWpp = { whatsappSessionId, whatsappSessionName, whatsappNumeroId };
+
+            // Busca última posição de cada veículo se necessário
+            const posMap: Record<string, { lat: number; lng: number } | null> = {};
+            if (enviarLocalizacao && veiculos.length) {
+              for (const v of veiculos) {
+                const { data: pos } = await supabase
+                  .from('veiculo_posicoes')
+                  .select('lat,lng')
+                  .eq('veiculo_id', (v as any).id)
+                  .order('data_hora', { ascending: false })
+                  .limit(1)
+                  .maybeSingle();
+                posMap[(v as any).id] = pos ? { lat: (pos as any).lat, lng: (pos as any).lng } : null;
+              }
+            }
+            const linkFor = (vid: string) => {
+              const p = posMap[vid];
+              return p ? `https://www.google.com/maps?q=${p.lat},${p.lng}` : null;
+            };
+            const appendLoc = (msg: string, link: string | null) =>
+              link ? `${msg}\n\n📍 Localização atual: ${link}` : msg;
 
             if (destino === 'motorista_atual') {
               const { fetchMotoristasAtuais, formatWhatsappNumber } = await import('@/lib/logistica/cvDriverLookup');
@@ -171,17 +193,23 @@ export async function executarAutomacoesLogistica(
                 const mot = map[veic.id];
                 const tel = formatWhatsappNumber(mot?.telefone || null);
                 if (!mot || !tel) continue;
-                const mensagem = mensagemTpl
+                let mensagem = mensagemTpl
                   .replace(/\{placa\}/g, (veic as any).placa || '')
                   .replace(/\{motorista\}/g, mot.nome || '');
+                if (enviarLocalizacao) mensagem = appendLoc(mensagem, linkFor((veic as any).id));
                 await executarBlocoWhatsapp(
                   { telefone: tel, mensagem, ...commonWpp },
                   wfCtx
                 );
               }
             } else {
+              let mensagem = mensagemTpl;
+              if (enviarLocalizacao) {
+                const links = veiculos.map(v => linkFor((v as any).id)).filter(Boolean) as string[];
+                if (links.length) mensagem = `${mensagem}\n\n📍 Localização atual:\n${links.join('\n')}`;
+              }
               await executarBlocoWhatsapp(
-                { telefone: (config as any).telefone || '', mensagem: mensagemTpl, ...commonWpp },
+                { telefone: (config as any).telefone || '', mensagem, ...commonWpp },
                 wfCtx
               );
             }
