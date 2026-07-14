@@ -7,112 +7,38 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/lib/toast-config";
-import { Plus, Trash2, Type, Image as ImageIcon, Barcode, QrCode, Printer, Save, Copy } from "lucide-react";
-import JsBarcode from "jsbarcode";
-import QRCode from "qrcode";
+import { Plus, Trash2, Type, Image as ImageIcon, Barcode, QrCode, Printer, Save, Copy, Star, FilePlus2 } from "lucide-react";
+import {
+  LAYOUTS,
+  PRODUCT_VARS,
+  type LayoutPreset,
+  type ElementType,
+  type EtiquetaElement,
+  type SavedTemplate,
+  type TemplateDefaults,
+  uid,
+  loadTemplates,
+  saveTemplates,
+  loadDefaults,
+  saveDefaults,
+  defaultTemplate,
+  interpolate,
+  renderBarcodeDataURL,
+  renderQRDataURL,
+  buildPrintHTML,
+} from "@/lib/zebraTemplates";
 
 interface Props {
   estabelecimentoId: string;
 }
 
-interface LayoutPreset {
-  id: string;
-  nome: string;
-  largura_mm: number;
-  altura_mm: number;
-  colunas: number;
-  gap_mm: number;
-}
-
-const LAYOUTS: LayoutPreset[] = [
-  { id: "100x30x1", nome: "100 x 30 mm (1 coluna)", largura_mm: 100, altura_mm: 30, colunas: 1, gap_mm: 2 },
-  { id: "50x30x2",  nome: "50 x 30 mm (2 colunas)", largura_mm: 50,  altura_mm: 30, colunas: 2, gap_mm: 2 },
-  { id: "100x25x1", nome: "100 x 25 mm (1 coluna)", largura_mm: 100, altura_mm: 25, colunas: 1, gap_mm: 2 },
-  { id: "100x50x1", nome: "100 x 50 mm (1 coluna)", largura_mm: 100, altura_mm: 50, colunas: 1, gap_mm: 2 },
-];
-
-type ElementType = "text" | "image" | "barcode_ean13" | "barcode_ean14" | "qrcode";
-
-interface EtiquetaElement {
-  id: string;
-  type: ElementType;
-  x: number; // mm
-  y: number; // mm
-  w: number; // mm
-  h: number; // mm
-  content: string; // texto com {{variavel}} OU url da imagem OU campo da variável do código
-  fontSize?: number; // pt
-  bold?: boolean;
-  align?: "left" | "center" | "right";
-}
-
-interface Template {
-  layoutId: string;
-  elements: EtiquetaElement[];
-}
-
-// Variáveis disponíveis do produto
-const PRODUCT_VARS: { key: string; label: string }[] = [
-  { key: "nome", label: "Nome" },
-  { key: "codigo", label: "Código / SKU" },
-  { key: "descricao", label: "Descrição" },
-  { key: "preco_tabela", label: "Preço" },
-  { key: "preco_minimo", label: "Preço Mínimo" },
-  { key: "ean_13", label: "EAN 13" },
-  { key: "ean_14_1", label: "EAN 14 (1)" },
-  { key: "ean_14_2", label: "EAN 14 (2)" },
-  { key: "gtin", label: "GTIN" },
-  { key: "marca", label: "Marca" },
-  { key: "cor", label: "Cor" },
-  { key: "tamanho", label: "Tamanho" },
-  { key: "material", label: "Material" },
-  { key: "ncm", label: "NCM" },
-  { key: "peso_unitario", label: "Peso" },
-  { key: "estoque", label: "Estoque" },
-];
-
-const MM_TO_PX = 3.78; // preview scale (aprox 96dpi)
-
-function uid() {
-  return Math.random().toString(36).slice(2, 10);
-}
-
-function interpolate(text: string, product: any): string {
-  return (text || "").replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_, key) => {
-    const v = product?.[key];
-    if (v === null || v === undefined) return "";
-    if (typeof v === "number" && (key === "preco_tabela" || key === "preco_minimo"))
-      return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-    return String(v);
-  });
-}
-
-async function renderBarcodeDataURL(value: string, format: "EAN13" | "ITF14"): Promise<string> {
-  try {
-    const canvas = document.createElement("canvas");
-    JsBarcode(canvas, value, {
-      format,
-      width: 2,
-      height: 60,
-      displayValue: true,
-      margin: 0,
-      fontSize: 14,
-    });
-    return canvas.toDataURL("image/png");
-  } catch {
-    return "";
-  }
-}
-
-async function renderQRDataURL(value: string): Promise<string> {
-  try {
-    return await QRCode.toDataURL(value || " ", { margin: 0, width: 200 });
-  } catch {
-    return "";
-  }
-}
+const MM_TO_PX = 3.78;
 
 export function EtiquetasZebra({ estabelecimentoId }: Props) {
+  const [templates, setTemplates] = useState<SavedTemplate[]>([]);
+  const [defaults, setDefaults] = useState<TemplateDefaults>({});
+  const [currentTemplateId, setCurrentTemplateId] = useState<string | null>(null);
+  const [nome, setNome] = useState("");
   const [layoutId, setLayoutId] = useState<string>(LAYOUTS[0].id);
   const [elements, setElements] = useState<EtiquetaElement[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -124,11 +50,9 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
-
   const layout = LAYOUTS.find(l => l.id === layoutId)!;
-  const storageKey = `zebra_template_${estabelecimentoId}_${layoutId}`;
 
-  // Carregar produtos
+  // Carregar produtos + templates
   useEffect(() => {
     (async () => {
       const { data } = await supabase
@@ -140,24 +64,27 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
         .limit(500);
       setProducts(data || []);
     })();
+
+    const tpls = loadTemplates(estabelecimentoId);
+    setTemplates(tpls);
+    setDefaults(loadDefaults(estabelecimentoId));
+
+    if (tpls.length > 0) {
+      const first = tpls[0];
+      setCurrentTemplateId(first.id);
+      setNome(first.nome);
+      setLayoutId(first.layoutId);
+      setElements(first.elements);
+    } else {
+      // Novo em branco
+      setCurrentTemplateId(null);
+      setNome("Novo template");
+      setLayoutId(LAYOUTS[0].id);
+      setElements(defaultTemplate(LAYOUTS[0]));
+    }
   }, [estabelecimentoId]);
 
-  // Carregar template salvo do layout atual
-  useEffect(() => {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      try {
-        const t: Template = JSON.parse(saved);
-        setElements(t.elements || []);
-      } catch { setElements([]); }
-    } else {
-      // Template padrão inicial
-      setElements(defaultTemplate(layout));
-    }
-    setSelectedId(null);
-  }, [layoutId]);
-
-  // Escala responsiva da pré-visualização para caber sem rolagem horizontal
+  // Escala responsiva
   useEffect(() => {
     function update() {
       const wrapper = previewRef.current;
@@ -176,6 +103,67 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
 
   const selected = elements.find(e => e.id === selectedId) || null;
 
+  function newTemplate() {
+    setCurrentTemplateId(null);
+    setNome("Novo template");
+    setLayoutId(LAYOUTS[0].id);
+    setElements(defaultTemplate(LAYOUTS[0]));
+    setSelectedId(null);
+  }
+
+  function loadTemplate(id: string) {
+    const t = templates.find(x => x.id === id);
+    if (!t) return;
+    setCurrentTemplateId(t.id);
+    setNome(t.nome);
+    setLayoutId(t.layoutId);
+    setElements(t.elements);
+    setSelectedId(null);
+  }
+
+  function saveCurrent() {
+    if (!nome.trim()) { toast.error("Informe um nome para o template"); return; }
+    const now = Date.now();
+    let list = [...templates];
+    let id = currentTemplateId;
+    if (id && list.find(t => t.id === id)) {
+      list = list.map(t => t.id === id ? { ...t, nome, layoutId, elements, updatedAt: now } : t);
+    } else {
+      id = uid();
+      list.push({ id, nome, layoutId, elements, updatedAt: now });
+    }
+    saveTemplates(estabelecimentoId, list);
+    setTemplates(list);
+    setCurrentTemplateId(id);
+    toast.success("Template salvo!");
+  }
+
+  function deleteCurrent() {
+    if (!currentTemplateId) return;
+    if (!confirm("Excluir este template?")) return;
+    const list = templates.filter(t => t.id !== currentTemplateId);
+    saveTemplates(estabelecimentoId, list);
+    // Limpar defaults se apontavam para este
+    const newDefs: TemplateDefaults = { ...defaults };
+    if (newDefs.ean13 === currentTemplateId) delete newDefs.ean13;
+    if (newDefs.ean14 === currentTemplateId) delete newDefs.ean14;
+    saveDefaults(estabelecimentoId, newDefs);
+    setDefaults(newDefs);
+    setTemplates(list);
+    if (list[0]) loadTemplate(list[0].id);
+    else newTemplate();
+    toast.success("Template excluído");
+  }
+
+  function toggleDefault(kind: "ean13" | "ean14") {
+    if (!currentTemplateId) { toast.error("Salve o template antes de marcar como padrão"); return; }
+    const newDefs = { ...defaults };
+    if (newDefs[kind] === currentTemplateId) delete newDefs[kind];
+    else newDefs[kind] = currentTemplateId;
+    saveDefaults(estabelecimentoId, newDefs);
+    setDefaults(newDefs);
+    toast.success(`Padrão para ${kind.toUpperCase()} atualizado`);
+  }
 
   function addElement(type: ElementType) {
     const base: EtiquetaElement = {
@@ -210,11 +198,6 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
     setSelectedId(null);
   }
 
-  function saveTemplate() {
-    localStorage.setItem(storageKey, JSON.stringify({ layoutId, elements }));
-    toast.success("Template salvo!");
-  }
-
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f || !selected || selected.type !== "image") return;
@@ -234,18 +217,10 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
   }, [products, search]);
 
   async function handlePrint() {
-    if (selectedProductIds.length === 0) {
-      toast.error("Selecione ao menos um produto");
-      return;
-    }
+    if (selectedProductIds.length === 0) { toast.error("Selecione ao menos um produto"); return; }
     const chosen = products.filter(p => selectedProductIds.includes(p.id));
-    // Gerar lista repetindo pela quantidade
     const items: any[] = [];
-    chosen.forEach(p => {
-      for (let i = 0; i < qtyPerProduct; i++) items.push(p);
-    });
-
-    // Pré-renderizar dataURLs dos códigos por elemento e produto
+    chosen.forEach(p => { for (let i = 0; i < qtyPerProduct; i++) items.push(p); });
     const html = await buildPrintHTML(layout, elements, items);
     const w = window.open("", "_blank", "width=900,height=700");
     if (!w) { toast.error("Bloqueado pelo navegador"); return; }
@@ -254,6 +229,9 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
     w.document.close();
     setTimeout(() => { w.focus(); w.print(); }, 400);
   }
+
+  const isDefaultEan13 = currentTemplateId && defaults.ean13 === currentTemplateId;
+  const isDefaultEan14 = currentTemplateId && defaults.ean14 === currentTemplateId;
 
   return (
     <div className="space-y-4">
@@ -272,8 +250,11 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="outline" onClick={saveTemplate} className="gap-1.5">
-              <Save className="h-3.5 w-3.5" /> Salvar template
+            <Button size="sm" variant="outline" onClick={newTemplate} className="gap-1.5">
+              <FilePlus2 className="h-3.5 w-3.5" /> Novo
+            </Button>
+            <Button size="sm" variant="outline" onClick={saveCurrent} className="gap-1.5">
+              <Save className="h-3.5 w-3.5" /> Salvar
             </Button>
             <Button size="sm" onClick={handlePrint} className="gap-1.5">
               <Printer className="h-3.5 w-3.5" /> Imprimir ({selectedProductIds.length * qtyPerProduct * layout.colunas})
@@ -282,9 +263,68 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[240px_280px_minmax(0,1fr)_300px] gap-4">
-        {/* COLUNA 1 — Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[260px_280px_minmax(0,1fr)_300px] gap-4">
+        {/* COLUNA 1 — Templates + Layout */}
         <div className="space-y-4 order-2 md:order-1">
+          <Card className="border-border/60 shadow-sm">
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Templates
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="space-y-1">
+                <Label className="text-xs">Nome</Label>
+                <Input value={nome} onChange={e => setNome(e.target.value)} className="h-9" placeholder="Ex: Prateleira PDV" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Templates salvos</Label>
+                <Select value={currentTemplateId || ""} onValueChange={loadTemplate}>
+                  <SelectTrigger className="h-9"><SelectValue placeholder="— não salvo —" /></SelectTrigger>
+                  <SelectContent>
+                    {templates.length === 0 && <div className="text-xs text-muted-foreground p-2">Nenhum salvo</div>}
+                    {templates.map(t => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.nome}
+                        {defaults.ean13 === t.id && " · ★13"}
+                        {defaults.ean14 === t.id && " · ★14"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {currentTemplateId && (
+                <Button variant="ghost" size="sm" onClick={deleteCurrent} className="w-full text-destructive h-8">
+                  <Trash2 className="h-3.5 w-3.5 mr-1" /> Excluir template
+                </Button>
+              )}
+              <div className="border-t pt-2 space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Marcar como padrão para:</Label>
+                <div className="flex gap-1.5">
+                  <Button
+                    type="button" size="sm"
+                    variant={isDefaultEan13 ? "default" : "outline"}
+                    className="flex-1 h-8 gap-1"
+                    onClick={() => toggleDefault("ean13")}
+                  >
+                    <Star className={`h-3.5 w-3.5 ${isDefaultEan13 ? "fill-current" : ""}`} /> EAN-13
+                  </Button>
+                  <Button
+                    type="button" size="sm"
+                    variant={isDefaultEan14 ? "default" : "outline"}
+                    className="flex-1 h-8 gap-1"
+                    onClick={() => toggleDefault("ean14")}
+                  >
+                    <Star className={`h-3.5 w-3.5 ${isDefaultEan14 ? "fill-current" : ""}`} /> EAN-14
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground leading-snug">
+                  O template padrão é usado ao imprimir direto do cadastro do produto.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="border-border/60 shadow-sm">
             <CardHeader className="py-3">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -541,18 +581,8 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
   );
 }
 
-// ---------- Componentes/utilitários internos ----------
-
 function labelForType(t: ElementType): string {
   return t === "text" ? "Texto" : t === "image" ? "Imagem" : t === "barcode_ean13" ? "EAN-13" : t === "barcode_ean14" ? "EAN-14" : "QR Code";
-}
-
-function defaultTemplate(layout: LayoutPreset): EtiquetaElement[] {
-  return [
-    { id: uid(), type: "text", x: 2, y: 1.5, w: layout.largura_mm - 4, h: 4, content: "{{nome}}", fontSize: 9, bold: true, align: "left" },
-    { id: uid(), type: "text", x: 2, y: 6, w: layout.largura_mm - 4, h: 3.5, content: "Cód: {{codigo}}", fontSize: 7, align: "left" },
-    { id: uid(), type: "barcode_ean13", x: 2, y: layout.altura_mm - 15, w: Math.min(50, layout.largura_mm - 4), h: 12, content: "{{ean_13}}" },
-  ];
 }
 
 function PreviewElement({
@@ -628,7 +658,6 @@ function PreviewElement({
       onTouchStart={(e) => { e.stopPropagation(); const t = e.touches[0]; if (t) startDrag(t.clientX, t.clientY, true); }}
       onClick={(e) => { e.stopPropagation(); onSelect(); }}
     >
-
       {el.type === "text" && <div className="w-full h-full">{interpolate(el.content, sample || {}) || <span className="text-muted-foreground/40">texto</span>}</div>}
       {(el.type === "image" || el.type === "barcode_ean13" || el.type === "barcode_ean14" || el.type === "qrcode") && (
         dataURL
@@ -637,58 +666,6 @@ function PreviewElement({
       )}
     </div>
   );
-}
-
-async function buildPrintHTML(layout: LayoutPreset, elements: EtiquetaElement[], items: any[]): Promise<string> {
-  // Página = largura total (colunas + gaps), altura de UMA etiqueta
-  const pageWidth = layout.largura_mm * layout.colunas + layout.gap_mm * (layout.colunas - 1);
-  const pageHeight = layout.altura_mm;
-
-  // Cada item gera uma linha de etiquetas. Em layouts de N colunas, a mesma
-  // informação do produto é repetida em todas as colunas da linha.
-  const renderCell = async (product: any) => {
-    const parts: string[] = [];
-    for (const el of elements) {
-      const value = interpolate(el.content, product || {});
-      let inner = "";
-      if (el.type === "text") {
-        inner = `<div style="width:100%;height:100%;font-size:${el.fontSize || 8}pt;font-weight:${el.bold ? 700 : 400};text-align:${el.align || "left"};line-height:1.05;overflow:hidden;">${escapeHtml(value)}</div>`;
-      } else if (el.type === "image") {
-        inner = value ? `<img src="${value}" style="width:100%;height:100%;object-fit:contain;"/>` : "";
-      } else if (el.type === "barcode_ean13") {
-        const d = await renderBarcodeDataURL(value.replace(/\D/g, "").slice(0, 13) || "0000000000000", "EAN13");
-        inner = `<img src="${d}" style="width:100%;height:100%;object-fit:contain;"/>`;
-      } else if (el.type === "barcode_ean14") {
-        const d = await renderBarcodeDataURL(value.replace(/\D/g, "").slice(0, 14) || "00000000000000", "ITF14");
-        inner = `<img src="${d}" style="width:100%;height:100%;object-fit:contain;"/>`;
-      } else if (el.type === "qrcode") {
-        const d = await renderQRDataURL(value || " ");
-        inner = `<img src="${d}" style="width:100%;height:100%;object-fit:contain;"/>`;
-      }
-      parts.push(`<div style="position:absolute;left:${el.x}mm;top:${el.y}mm;width:${el.w}mm;height:${el.h}mm;overflow:hidden;">${inner}</div>`);
-    }
-    return `<div style="position:relative;width:${layout.largura_mm}mm;height:${layout.altura_mm}mm;box-sizing:border-box;">${parts.join("")}</div>`;
-  };
-
-  const pageHTMLs: string[] = [];
-  for (const prod of items) {
-    const cells: string[] = [];
-    for (let c = 0; c < layout.colunas; c++) cells.push(await renderCell(prod));
-    pageHTMLs.push(`<div class="page" style="display:flex;gap:${layout.gap_mm}mm;width:${pageWidth}mm;height:${pageHeight}mm;">${cells.join("")}</div>`);
-  }
-
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Etiquetas Zebra</title>
-<style>
-  @page { size: ${pageWidth}mm ${pageHeight}mm; margin: 0; }
-  html,body { margin:0; padding:0; }
-  body { font-family: Arial, sans-serif; }
-  .page { page-break-after: always; overflow: hidden; }
-  .page:last-child { page-break-after: auto; }
-</style></head><body>${pageHTMLs.join("")}</body></html>`;
-}
-
-function escapeHtml(s: string): string {
-  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 }
 
 export default EtiquetasZebra;
