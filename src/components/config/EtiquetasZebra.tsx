@@ -288,7 +288,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
           <Card className="border-border/60 shadow-sm">
             <CardHeader className="py-3">
               <CardTitle className="text-sm flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Layout da Etiqueta
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Layout
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -303,7 +303,10 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
               </div>
             </CardContent>
           </Card>
+        </div>
 
+        {/* COLUNA 2 — Produtos */}
+        <div className="space-y-4 order-3 md:order-2">
           <Card className="border-border/60 shadow-sm">
             <CardHeader className="py-3">
               <CardTitle className="text-sm flex items-center justify-between">
