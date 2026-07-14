@@ -1067,17 +1067,43 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!sessionToDelete} onOpenChange={() => setSessionToDelete(null)}>
+      <AlertDialog open={!!sessionToDelete} onOpenChange={() => { setSessionToDelete(null); setSessionUsages([]); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir Sessão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir esta sessão? Esta ação não pode ser desfeita.
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm">
+                {checkingUsage ? (
+                  <p>Verificando vínculos com workflows...</p>
+                ) : sessionUsages.length > 0 ? (
+                  <>
+                    <p className="text-destructive font-medium">
+                      Esta sessão não pode ser excluída porque está vinculada aos seguintes workflows:
+                    </p>
+                    <ul className="max-h-48 overflow-auto rounded-md border p-2 space-y-1">
+                      {sessionUsages.map((u, i) => (
+                        <li key={`${u.tabela ?? u.tipo}-${u.id}-${i}`} className="flex flex-col">
+                          <span className="font-medium">{u.nome}</span>
+                          <span className="text-xs text-muted-foreground">{u.tipo}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p>
+                      Para excluir, edite cada workflow acima e mude o bloco de WhatsApp para outra sessão.
+                    </p>
+                  </>
+                ) : (
+                  <p>Tem certeza que deseja excluir esta sessão? Esta ação não pode ser desfeita.</p>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={deleteSession}>
+            <AlertDialogAction
+              onClick={deleteSession}
+              disabled={checkingUsage || sessionUsages.length > 0}
+            >
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
