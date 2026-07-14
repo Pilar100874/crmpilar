@@ -13,6 +13,8 @@ import {
   RotateCcw,
   Check,
   GripVertical,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import {
   DndContext,
