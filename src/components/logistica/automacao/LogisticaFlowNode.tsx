@@ -34,7 +34,9 @@ const iconMap: Record<string, any> = {
   Clock,
   MessageCircle,
   Bell,
+  BellRing,
   Mail,
+  MessageSquareText,
 };
 
 // Map for marker icons
