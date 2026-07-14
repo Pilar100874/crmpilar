@@ -235,9 +235,9 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr_320px] gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[280px_1fr_320px] gap-4">
       {/* COLUNA ESQUERDA — Produtos & Layout */}
-      <div className="space-y-4">
+      <div className="space-y-4 md:col-span-1 lg:col-span-1 order-2 md:order-1">
         <Card>
           <CardHeader className="py-3"><CardTitle className="text-sm">Layout da Etiqueta</CardTitle></CardHeader>
           <CardContent className="space-y-2">
@@ -260,7 +260,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
           <CardHeader className="py-3"><CardTitle className="text-sm">Produtos</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             <Input placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} />
-            <div className="max-h-64 overflow-auto border rounded p-1 space-y-1">
+            <div className="max-h-48 md:max-h-64 overflow-auto border rounded p-1 space-y-1">
               {filteredProducts.map(p => (
                 <label key={p.id} className="flex items-center gap-2 text-xs p-1 hover:bg-muted rounded cursor-pointer">
                   <input
@@ -287,7 +287,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
       </div>
 
       {/* COLUNA CENTRAL — Preview */}
-      <div className="space-y-3">
+      <div className="space-y-3 md:col-span-1 lg:col-span-1 order-1 md:order-2">
         <div className="flex gap-2 flex-wrap">
           <Button size="sm" variant="outline" onClick={() => addElement("text")}><Type className="h-3.5 w-3.5 mr-1" />Texto</Button>
           <Button size="sm" variant="outline" onClick={() => addElement("image")}><ImageIcon className="h-3.5 w-3.5 mr-1" />Imagem</Button>
@@ -301,14 +301,16 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
             <CardTitle className="text-sm">Pré-visualização — {layout.largura_mm} × {layout.altura_mm} mm</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-center p-6 bg-muted/30 rounded overflow-auto">
+            <div className="flex justify-center p-3 sm:p-6 bg-muted/30 rounded overflow-auto">
               <div
-                className="relative bg-white border-2 border-dashed border-border shadow-sm"
+                className="relative bg-white border-2 border-dashed border-border shadow-sm shrink-0"
                 style={{
                   width: layout.largura_mm * MM_TO_PX * 2,
                   height: layout.altura_mm * MM_TO_PX * 2,
                 }}
-                onClick={() => setSelectedId(null)}
+                onMouseDown={(e) => {
+                  if (e.target === e.currentTarget) setSelectedId(null);
+                }}
               >
                 {elements.map(el => (
                   <PreviewElement
@@ -331,7 +333,8 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
       </div>
 
       {/* COLUNA DIREITA — Propriedades */}
-      <div>
+      <div className="md:col-span-2 lg:col-span-1 order-3">
+
         <Card>
           <CardHeader className="py-3">
             <CardTitle className="text-sm">
