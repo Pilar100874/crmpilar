@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/lib/toast-config";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Plus, Trash2, Type, Image as ImageIcon, Barcode, QrCode, Printer, Save, Copy, Star, FilePlus2 } from "lucide-react";
 import {
   LAYOUTS,
