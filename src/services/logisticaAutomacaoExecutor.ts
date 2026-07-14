@@ -138,17 +138,51 @@ export async function executarAutomacoesLogistica(
           origem: 'logistica_automacao',
         };
 
+        // --- Helpers de localização (Google Maps) ---
+        const enviarLocalizacao = !!(config as any).enviar_localizacao;
+        const posMap: Record<string, { lat: number; lng: number } | null> = {};
+        if (enviarLocalizacao && veiculos.length) {
+          for (const v of veiculos) {
+            const { data: pos } = await supabase
+              .from('veiculo_posicoes')
+              .select('lat,lng')
+              .eq('veiculo_id', (v as any).id)
+              .order('data_hora', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            posMap[(v as any).id] = pos ? { lat: (pos as any).lat, lng: (pos as any).lng } : null;
+          }
+        }
+        const linkFor = (vid: string) => {
+          const p = posMap[vid];
+          return p ? `https://www.google.com/maps?q=${p.lat},${p.lng}` : null;
+        };
+        const appendLocOne = (msg: string, vid: string) => {
+          if (!enviarLocalizacao) return msg;
+          const l = linkFor(vid);
+          return l ? `${msg}\n\n📍 Localização atual: ${l}` : msg;
+        };
+        const appendLocAll = (msg: string) => {
+          if (!enviarLocalizacao) return msg;
+          const links = veiculos.map(v => linkFor((v as any).id)).filter(Boolean) as string[];
+          return links.length ? `${msg}\n\n📍 Localização atual:\n${links.join('\n')}` : msg;
+        };
+
         // Handle "disparar_push"
         if ((nodeType as string) === 'disparar_push') {
           try {
-            await executarBlocoPush(config as unknown as PushBlockConfig, { ...wfCtx, workflow_id: automacao.id });
+            const cfgPush = { ...(config as any), corpo: appendLocAll(String((config as any).corpo || '')) };
+            await executarBlocoPush(cfgPush as PushBlockConfig, { ...wfCtx, workflow_id: automacao.id });
           } catch (e) { console.error('[logistica] falha ao disparar push', e); }
         }
 
         // Handle "enviar_sms"
         if ((nodeType as string) === 'enviar_sms') {
-          try { await executarBlocoSms(config as any, wfCtx); }
-          catch (e) { console.error('[logistica] falha ao enviar SMS', e); }
+          try {
+            const msgSms = String((config as any).mensagem || (config as any).message || '');
+            const cfgSms = { ...(config as any), message: appendLocAll(msgSms) };
+            await executarBlocoSms(cfgSms as any, wfCtx);
+          } catch (e) { console.error('[logistica] falha ao enviar SMS', e); }
         }
 
         // Handle "acao_whatsapp"
@@ -160,30 +194,8 @@ export async function executarAutomacoesLogistica(
             const whatsappSessionName = (config as any).whatsappSessionName || null;
             const whatsappNumeroId = (config as any).whatsappNumeroId || null;
             const mensagemTpl = String((config as any).mensagem || '');
-            const enviarLocalizacao = !!(config as any).enviar_localizacao;
 
             const commonWpp = { whatsappSessionId, whatsappSessionName, whatsappNumeroId };
-
-            // Busca última posição de cada veículo se necessário
-            const posMap: Record<string, { lat: number; lng: number } | null> = {};
-            if (enviarLocalizacao && veiculos.length) {
-              for (const v of veiculos) {
-                const { data: pos } = await supabase
-                  .from('veiculo_posicoes')
-                  .select('lat,lng')
-                  .eq('veiculo_id', (v as any).id)
-                  .order('data_hora', { ascending: false })
-                  .limit(1)
-                  .maybeSingle();
-                posMap[(v as any).id] = pos ? { lat: (pos as any).lat, lng: (pos as any).lng } : null;
-              }
-            }
-            const linkFor = (vid: string) => {
-              const p = posMap[vid];
-              return p ? `https://www.google.com/maps?q=${p.lat},${p.lng}` : null;
-            };
-            const appendLoc = (msg: string, link: string | null) =>
-              link ? `${msg}\n\n📍 Localização atual: ${link}` : msg;
 
             if (destino === 'motorista_atual') {
               const { fetchMotoristasAtuais, formatWhatsappNumber } = await import('@/lib/logistica/cvDriverLookup');
@@ -196,18 +208,14 @@ export async function executarAutomacoesLogistica(
                 let mensagem = mensagemTpl
                   .replace(/\{placa\}/g, (veic as any).placa || '')
                   .replace(/\{motorista\}/g, mot.nome || '');
-                if (enviarLocalizacao) mensagem = appendLoc(mensagem, linkFor((veic as any).id));
+                mensagem = appendLocOne(mensagem, (veic as any).id);
                 await executarBlocoWhatsapp(
                   { telefone: tel, mensagem, ...commonWpp },
                   wfCtx
                 );
               }
             } else {
-              let mensagem = mensagemTpl;
-              if (enviarLocalizacao) {
-                const links = veiculos.map(v => linkFor((v as any).id)).filter(Boolean) as string[];
-                if (links.length) mensagem = `${mensagem}\n\n📍 Localização atual:\n${links.join('\n')}`;
-              }
+              const mensagem = appendLocAll(mensagemTpl);
               await executarBlocoWhatsapp(
                 { telefone: (config as any).telefone || '', mensagem, ...commonWpp },
                 wfCtx
@@ -221,7 +229,11 @@ export async function executarAutomacoesLogistica(
         if ((nodeType as string) === 'acao_email') {
           try {
             await executarBlocoEmail(
-              { email_destino: config.email_destino, assunto_email: config.assunto_email, corpo_email: config.corpo_email },
+              {
+                email_destino: config.email_destino,
+                assunto_email: config.assunto_email,
+                corpo_email: appendLocAll(String((config as any).corpo_email || '')),
+              },
               wfCtx
             );
           } catch (e) { console.error('[logistica] falha ao enviar e-mail', e); }
@@ -239,10 +251,26 @@ export async function executarAutomacoesLogistica(
           catch (e) { console.error('[logistica] falha na mensagem interna', e); }
         }
 
-        // Handle "enviar_aviso_sistema" / "acao_aviso_sistema"
-        if ((nodeType as string) === 'enviar_aviso_sistema' || (nodeType as string) === 'acao_aviso_sistema') {
-          try { await executarBlocoAvisoSistema(config as any, wfCtx); }
-          catch (e) { console.error('[logistica] falha no aviso do sistema', e); }
+        // Handle "acao_notificacao" / "enviar_aviso_sistema" / "acao_aviso_sistema"
+        if (
+          (nodeType as string) === 'acao_notificacao' ||
+          (nodeType as string) === 'enviar_aviso_sistema' ||
+          (nodeType as string) === 'acao_aviso_sistema'
+        ) {
+          try {
+            const titulo = (config as any).titulo_notificacao || (config as any).titulo || 'Notificação';
+            const mensagemBase = String(
+              (config as any).corpo_notificacao || (config as any).mensagem || ''
+            );
+            await executarBlocoAvisoSistema(
+              {
+                ...(config as any),
+                titulo,
+                mensagem: appendLocAll(mensagemBase),
+              },
+              wfCtx
+            );
+          } catch (e) { console.error('[logistica] falha no aviso do sistema', e); }
         }
       }
     }

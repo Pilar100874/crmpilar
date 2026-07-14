@@ -15,6 +15,26 @@ import { supabase } from '@/integrations/supabase/client';
 import { PushBlockConfigEditor } from '@/components/workflows/PushBlockConfig';
 import { SmsBlockConfig } from '@/components/shared/SmsBlockConfig';
 
+function EnviarLocalizacaoCheckbox({ config, updateConfig }: { config: any; updateConfig: (k: string, v: any) => void }) {
+  return (
+    <div className="flex items-start gap-2 rounded-md border p-3">
+      <Checkbox
+        id={`enviar_localizacao_${Math.random().toString(36).slice(2, 8)}`}
+        checked={!!config.enviar_localizacao}
+        onCheckedChange={(v) => updateConfig('enviar_localizacao', !!v)}
+      />
+      <div className="space-y-0.5">
+        <Label className="text-sm cursor-pointer" onClick={() => updateConfig('enviar_localizacao', !config.enviar_localizacao)}>
+          Enviar localização atual do veículo (Google Maps)
+        </Label>
+        <p className="text-[11px] text-muted-foreground">
+          Adiciona um link do Google Maps logo abaixo da mensagem com a última posição registrada do veículo.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 interface Usuario {
   id: string;
   nome: string;
@@ -407,21 +427,7 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
               </p>
             </div>
 
-            <div className="flex items-start gap-2 rounded-md border p-3">
-              <Checkbox
-                id="enviar_localizacao"
-                checked={!!config.enviar_localizacao}
-                onCheckedChange={(v) => updateConfig('enviar_localizacao', !!v)}
-              />
-              <div className="space-y-0.5">
-                <Label htmlFor="enviar_localizacao" className="text-sm cursor-pointer">
-                  Enviar localização atual do veículo (Google Maps)
-                </Label>
-                <p className="text-[11px] text-muted-foreground">
-                  Adiciona um link do Google Maps logo abaixo da mensagem com a última posição registrada do veículo.
-                </p>
-              </div>
-            </div>
+            <EnviarLocalizacaoCheckbox config={config} updateConfig={updateConfig} />
           </div>
         );
       }
@@ -490,6 +496,7 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
                 Variáveis: {'{placa}'}, {'{motorista}'}, {'{endereco}'}, {'{velocidade}'}
               </p>
             </div>
+            <EnviarLocalizacaoCheckbox config={config} updateConfig={updateConfig} />
           </div>
         );
 
@@ -522,21 +529,32 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
                 rows={4}
               />
             </div>
+            <EnviarLocalizacaoCheckbox config={config} updateConfig={updateConfig} />
           </div>
         );
 
       case 'disparar_push':
-        return <PushBlockConfigEditor
-          value={config as any}
-          onChange={(patch) => Object.entries(patch).forEach(([k, v]) => updateConfig(k, v))}
-          context="logistica"
-        />;
+        return (
+          <div className="space-y-4">
+            <PushBlockConfigEditor
+              value={config as any}
+              onChange={(patch) => Object.entries(patch).forEach(([k, v]) => updateConfig(k, v))}
+              context="logistica"
+            />
+            <EnviarLocalizacaoCheckbox config={config} updateConfig={updateConfig} />
+          </div>
+        );
 
       case 'enviar_sms':
-        return <SmsBlockConfig
-          config={{ ...config, message: (config as any).mensagem || (config as any).message || '' }}
-          onChange={(key, value) => updateConfig(key === 'message' ? 'mensagem' : key, value)}
-        />;
+        return (
+          <div className="space-y-4">
+            <SmsBlockConfig
+              config={{ ...config, message: (config as any).mensagem || (config as any).message || '' }}
+              onChange={(key, value) => updateConfig(key === 'message' ? 'mensagem' : key, value)}
+            />
+            <EnviarLocalizacaoCheckbox config={config} updateConfig={updateConfig} />
+          </div>
+        );
 
       default:
         return (
