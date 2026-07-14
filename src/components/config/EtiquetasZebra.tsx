@@ -86,12 +86,12 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
     }
   }, [estabelecimentoId]);
 
-  // Escala responsiva
+  // Escala responsiva (mostra apenas 1 coluna na pré-visualização)
   useEffect(() => {
     function update() {
       const wrapper = previewRef.current;
       if (!wrapper) return;
-      const totalW = layout.largura_mm * layout.colunas + layout.gap_mm * (layout.colunas - 1);
+      const totalW = layout.largura_mm;
       const desired = totalW * MM_TO_PX * 2;
       const max = wrapper.clientWidth - 24;
       const s = desired <= max ? MM_TO_PX * 2 : Math.max(2, max / totalW);
@@ -101,7 +101,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
     const ro = new ResizeObserver(update);
     if (previewRef.current) ro.observe(previewRef.current);
     return () => ro.disconnect();
-  }, [layoutId, layout.largura_mm, layout.colunas, layout.gap_mm]);
+  }, [layoutId, layout.largura_mm]);
 
   const selected = elements.find(e => e.id === selectedId) || null;
 
