@@ -8,6 +8,7 @@ import { VeiculoComStatus, VeiculoPosicao, VeiculoStatus } from '@/types/logisti
 import { ParadaMarcada } from '@/types/automacaoLogistica';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
+import { fetchMotoristasAtuais } from '@/lib/logistica/cvDriverLookup';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { List, X, Info, PanelLeftClose, PanelLeft } from 'lucide-react';
@@ -137,6 +138,16 @@ const LogisticaDashboard: React.FC = () => {
           } as VeiculoComStatus;
         })
       );
+
+      // Enriquece com motorista atual (baseado em cv_vehicle_movements)
+      try {
+        const motoristasMap = await fetchMotoristasAtuais(veiculosComPosicao.map(v => v.id));
+        for (const v of veiculosComPosicao) {
+          v.motorista_atual = motoristasMap[v.id] ?? null;
+        }
+      } catch (e) {
+        console.warn('Falha ao buscar motoristas atuais', e);
+      }
 
       setVeiculos(veiculosComPosicao);
     } catch (error) {
