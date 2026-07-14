@@ -272,6 +272,29 @@ export function EmbalagemTab({
     }
   };
 
+  const handleZebraPrint = async (value: string, kind: "ean13" | "ean14") => {
+    if (!value) { toast.error("EAN não disponível"); return; }
+    const template = getTemplateForBarcode(estabelecimentoId, kind);
+    if (!template) {
+      toast.error(`Nenhum template Zebra padrão definido para ${kind.toUpperCase()}. Configure em Configurações de Vendas → Impressão de Etiquetas Zebra.`);
+      return;
+    }
+    const qty = parseInt(prompt(`Quantidade de etiquetas Zebra (1-500):`, "1") || "0", 10);
+    if (!qty || qty < 1 || qty > 500) { toast.error("Quantidade inválida"); return; }
+    try {
+      const product = {
+        ...(productData || {}),
+        ean_13: ean13,
+        ean_14_1: ean14_1,
+        ean_14_2: ean14_2,
+      };
+      await printZebraLabels(template, product, qty);
+      toast.success(`Enviando ${qty} etiqueta(s) para impressão...`);
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao imprimir");
+    }
+  };
+
   const EanField = ({
     label,
     value,
