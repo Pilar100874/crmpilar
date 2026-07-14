@@ -169,12 +169,29 @@ export function PushBlockConfigEditor({ value, onChange, context }: Props) {
             </div>
 
             <div>
-              <Label>URL ao clicar (opcional)</Label>
-              <Input
-                placeholder={e.url}
-                value={cfg.url || ""}
-                onChange={(ev) => onChange({ url: ev.target.value })}
-              />
+              <Label>Tela ao clicar (opcional)</Label>
+              <Select
+                value={cfg.url || "__none__"}
+                onValueChange={(v) => onChange({ url: v === "__none__" ? "" : v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar tela" />
+                </SelectTrigger>
+                <SelectContent className="max-h-80">
+                  <SelectItem value="__none__">Nenhuma (sem redirecionamento)</SelectItem>
+                  {APP_SCREENS.map((g) => (
+                    <div key={g.grupo}>
+                      <div className="px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">{g.grupo}</div>
+                      {g.telas.map((t) => (
+                        <SelectItem key={t.path} value={t.path}>{t.nome}</SelectItem>
+                      ))}
+                    </div>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Tela que será aberta ao tocar na notificação push.
+              </p>
             </div>
 
             <p className="text-xs text-muted-foreground">
