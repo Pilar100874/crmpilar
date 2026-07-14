@@ -24,6 +24,7 @@ interface EmbalagemTabProps {
   imgEan14_1: string;
   imgEan14_2: string;
   estabelecimentoId: string;
+  productData?: any;
   onEan13Change: (value: string) => void;
   onEan14_1Change: (value: string) => void;
   onEan14_2Change: (value: string) => void;
