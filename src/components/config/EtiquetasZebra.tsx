@@ -276,7 +276,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
               <Save className="h-3.5 w-3.5" /> Salvar template
             </Button>
             <Button size="sm" onClick={handlePrint} className="gap-1.5">
-              <Printer className="h-3.5 w-3.5" /> Imprimir ({selectedProductIds.length * qtyPerProduct})
+              <Printer className="h-3.5 w-3.5" /> Imprimir ({selectedProductIds.length * qtyPerProduct * layout.colunas})
             </Button>
           </div>
         </div>
