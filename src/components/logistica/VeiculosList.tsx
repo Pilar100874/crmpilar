@@ -110,12 +110,33 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
                     </Badge>
                   </div>
 
-                {veiculo.motorista && (
+                {veiculo.motorista_atual ? (
+                  <div className="mb-1.5 space-y-1">
+                    <div className="flex items-center gap-2 text-xs sm:text-sm">
+                      <User className="h-3 w-3 text-primary" />
+                      <span className="truncate font-medium">{veiculo.motorista_atual.nome}</span>
+                    </div>
+                    {veiculo.motorista_atual.telefone && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const wa = formatWhatsappNumber(veiculo.motorista_atual!.telefone);
+                          if (wa) window.open(`https://wa.me/${wa}`, '_blank');
+                        }}
+                        className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-emerald-600 hover:underline"
+                      >
+                        <MessageCircle className="h-3 w-3" />
+                        {veiculo.motorista_atual.telefone}
+                      </button>
+                    )}
+                  </div>
+                ) : veiculo.motorista && (
                   <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground mb-1">
                     <User className="h-3 w-3" />
                     <span className="truncate">{veiculo.motorista}</span>
                   </div>
                 )}
+
 
                 {veiculo.ultima_posicao && (
                   <div className="space-y-1 text-[10px] sm:text-xs text-muted-foreground">
