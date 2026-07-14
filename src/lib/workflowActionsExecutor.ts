@@ -82,22 +82,34 @@ export async function executarBlocoEmail(cfg: any, ctx: WfCtx = {}) {
 
 // ---------- WhatsApp ----------
 export async function executarBlocoWhatsapp(cfg: any, ctx: WfCtx = {}) {
-  const telefone = interpolar(cfg?.phoneNumber ?? cfg?.telefone ?? cfg?.numero, ctx.variaveis).replace(/\D/g, "");
+  const telefonesRaw: string[] = Array.isArray(cfg?.phoneNumbers) && cfg.phoneNumbers.length
+    ? cfg.phoneNumbers
+    : [cfg?.phoneNumber ?? cfg?.telefone ?? cfg?.numero];
+  const telefones = telefonesRaw
+    .map((t) => interpolar(t, ctx.variaveis).replace(/\D/g, ""))
+    .filter(Boolean);
   const mensagem = interpolar(cfg?.message ?? cfg?.mensagem ?? cfg?.texto, ctx.variaveis);
-  if (!telefone || !mensagem) return { ok: false, erro: "Telefone/mensagem vazio" };
+  if (!telefones.length || !mensagem) return { ok: false, erro: "Telefone/mensagem vazio" };
   const estabelecimento_id = await resolveEstab(ctx);
+  const whatsappNumeroId = cfg?.whatsappNumeroId || cfg?.canal_id || null;
   try {
-    const { data, error } = await supabase.functions.invoke("send-agent-message", {
-      body: {
-        estabelecimento_id,
-        telefone,
-        mensagem,
-        canal: "whatsapp",
-        origem: ctx.origem || ctx.workflow_tipo || "workflow",
-      },
-    });
-    if (error) return { ok: false, erro: error.message };
-    return { ok: true, response: data };
+    const resultados: any[] = [];
+    for (const telefone of telefones) {
+      const { data, error } = await supabase.functions.invoke("send-agent-message", {
+        body: {
+          estabelecimento_id,
+          telefone,
+          mensagem,
+          canal: "whatsapp",
+          whatsappNumeroId,
+          origem: ctx.origem || ctx.workflow_tipo || "workflow",
+        },
+      });
+      if (error) resultados.push({ telefone, ok: false, erro: error.message });
+      else resultados.push({ telefone, ok: true, response: data });
+    }
+    const okAll = resultados.every((r) => r.ok);
+    return { ok: okAll, response: resultados };
   } catch (e: any) {
     return { ok: false, erro: e?.message || String(e) };
   }
