@@ -1,12 +1,13 @@
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Car, Clock, Gauge, User, Wifi, WifiOff } from 'lucide-react';
+import { Car, Clock, Gauge, User, Wifi, WifiOff, MessageCircle } from 'lucide-react';
 import { VeiculoComStatus } from '@/types/logistica';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { formatWhatsappNumber } from '@/lib/logistica/cvDriverLookup';
 
 interface VeiculosListProps {
   veiculos: VeiculoComStatus[];
@@ -37,6 +38,7 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
     const matchesSearch = 
       v.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
       v.motorista?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.motorista_atual?.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       v.descricao?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'todos' || v.status === statusFilter;
@@ -108,12 +110,33 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
                     </Badge>
                   </div>
 
-                {veiculo.motorista && (
+                {veiculo.motorista_atual ? (
+                  <div className="mb-1.5 space-y-1">
+                    <div className="flex items-center gap-2 text-xs sm:text-sm">
+                      <User className="h-3 w-3 text-primary" />
+                      <span className="truncate font-medium">{veiculo.motorista_atual.nome}</span>
+                    </div>
+                    {veiculo.motorista_atual.telefone && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const wa = formatWhatsappNumber(veiculo.motorista_atual!.telefone);
+                          if (wa) window.open(`https://wa.me/${wa}`, '_blank');
+                        }}
+                        className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-emerald-600 hover:underline"
+                      >
+                        <MessageCircle className="h-3 w-3" />
+                        {veiculo.motorista_atual.telefone}
+                      </button>
+                    )}
+                  </div>
+                ) : veiculo.motorista && (
                   <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground mb-1">
                     <User className="h-3 w-3" />
                     <span className="truncate">{veiculo.motorista}</span>
                   </div>
                 )}
+
 
                 {veiculo.ultima_posicao && (
                   <div className="space-y-1 text-[10px] sm:text-xs text-muted-foreground">

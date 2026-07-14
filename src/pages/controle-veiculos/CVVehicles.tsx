@@ -24,10 +24,14 @@ const TYPES: { value: VehicleType; label: string }[] = [
 const empty = {
   name: "", plate: "", vehicle_type: "carro" as VehicleType,
   current_km: 0, oil_change_interval: 10000, last_oil_change_km: 0, active: true,
+  veiculo_id: null as string | null,
 };
+
+interface LogVeic { id: string; placa: string; descricao: string | null }
 
 export default function CVVehicles() {
   const [rows, setRows] = useState<Vehicle[]>([]);
+  const [logVeiculos, setLogVeiculos] = useState<LogVeic[]>([]);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(empty);
@@ -37,6 +41,8 @@ export default function CVVehicles() {
     const { data, error } = await supabase.from("cv_vehicles").select("*").order("name");
     if (error) return toast.error(error.message);
     setRows((data ?? []) as Vehicle[]);
+    const { data: vs } = await supabase.from("veiculos").select("id, placa, descricao").eq("ativo", true).order("placa");
+    setLogVeiculos((vs ?? []) as LogVeic[]);
   };
   useEffect(() => { load(); }, []);
 
@@ -46,6 +52,7 @@ export default function CVVehicles() {
       name: v.name, plate: v.plate, vehicle_type: v.vehicle_type,
       current_km: v.current_km, oil_change_interval: v.oil_change_interval,
       last_oil_change_km: v.last_oil_change_km, active: v.active,
+      veiculo_id: (v as any).veiculo_id ?? null,
     });
     setEditing(v.id); setOpen(true);
   };
@@ -183,6 +190,26 @@ export default function CVVehicles() {
               <div><Label>KM Atual</Label><Input type="number" value={form.current_km} onChange={e => setForm({ ...form, current_km: +e.target.value })} /></div>
               <div><Label>Última Troca (km)</Label><Input type="number" value={form.last_oil_change_km} onChange={e => setForm({ ...form, last_oil_change_km: +e.target.value })} /></div>
               <div><Label>Intervalo (km)</Label><Input type="number" value={form.oil_change_interval} onChange={e => setForm({ ...form, oil_change_interval: +e.target.value })} /></div>
+            </div>
+            <div>
+              <Label>Vincular ao veículo da Logística (opcional)</Label>
+              <Select
+                value={form.veiculo_id ?? "__none__"}
+                onValueChange={v => setForm({ ...form, veiculo_id: v === "__none__" ? null : v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Nenhum</SelectItem>
+                  {logVeiculos.map(lv => (
+                    <SelectItem key={lv.id} value={lv.id}>
+                      {lv.placa}{lv.descricao ? ` — ${lv.descricao}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Usado no monitoramento da Logística para exibir motorista e WhatsApp em tempo real.
+              </p>
             </div>
             <div className="flex items-center gap-2">
               <Switch checked={form.active} onCheckedChange={v => setForm({ ...form, active: v })} />
