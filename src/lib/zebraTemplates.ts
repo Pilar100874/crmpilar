@@ -1,5 +1,6 @@
 import JsBarcode from "jsbarcode";
 import QRCode from "qrcode";
+import { jsPDF } from "jspdf";
 
 export interface LayoutPreset {
   id: string;
