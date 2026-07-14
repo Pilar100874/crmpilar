@@ -334,18 +334,58 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
           </div>
         );
 
-      case 'acao_whatsapp':
+      case 'acao_whatsapp': {
+        const destino = config.destino_tipo
+          || (config.usar_telefone_cliente ? 'cliente' : 'numero');
         return (
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="usar_telefone_cliente"
-                checked={config.usar_telefone_cliente || false}
-                onCheckedChange={(checked) => updateConfig('usar_telefone_cliente', checked)}
-              />
-              <Label htmlFor="usar_telefone_cliente">Usar telefone do cliente da entrega</Label>
+            <div>
+              <Label>Canal de envio (número WhatsApp)</Label>
+              <Select
+                value={config.whatsappNumeroId || '__default__'}
+                onValueChange={(v) => updateConfig('whatsappNumeroId', v === '__default__' ? null : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar canal" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__default__">Canal padrão do estabelecimento</SelectItem>
+                  {canaisWhats.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.nome}{c.telefone ? ` — ${c.telefone}` : ''}{c.is_default ? ' (padrão)' : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Escolha por qual número/canal de WhatsApp a mensagem será enviada.
+              </p>
             </div>
-            {!config.usar_telefone_cliente && (
+
+            <div>
+              <Label>Destinatário</Label>
+              <Select
+                value={destino}
+                onValueChange={(v) => {
+                  updateConfig('destino_tipo', v);
+                  updateConfig('usar_telefone_cliente', v === 'cliente');
+                }}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="numero">Número fixo</SelectItem>
+                  <SelectItem value="cliente">Telefone do cliente da entrega</SelectItem>
+                  <SelectItem value="motorista_atual">Motorista atual do veículo</SelectItem>
+                </SelectContent>
+              </Select>
+              {destino === 'motorista_atual' && (
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  A mensagem será enviada para o WhatsApp do motorista que está dirigindo o veículo no momento (baseado na saída registrada em Controle de Veículos).
+                </p>
+              )}
+            </div>
+
+            {destino === 'numero' && (
               <div>
                 <Label>Telefone de destino</Label>
                 <Input
@@ -369,6 +409,8 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
             </div>
           </div>
         );
+      }
+
 
       case 'acao_notificacao':
         return (
