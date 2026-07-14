@@ -4545,6 +4545,7 @@ export type Database = {
           plate: string
           updated_at: string
           vehicle_type: Database["public"]["Enums"]["cv_vehicle_type"]
+          veiculo_id: string | null
         }
         Insert: {
           active?: boolean
@@ -4559,6 +4560,7 @@ export type Database = {
           plate: string
           updated_at?: string
           vehicle_type?: Database["public"]["Enums"]["cv_vehicle_type"]
+          veiculo_id?: string | null
         }
         Update: {
           active?: boolean
@@ -4573,6 +4575,7 @@ export type Database = {
           plate?: string
           updated_at?: string
           vehicle_type?: Database["public"]["Enums"]["cv_vehicle_type"]
+          veiculo_id?: string | null
         }
         Relationships: [
           {
@@ -4580,6 +4583,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_vehicles_veiculo_id_fkey"
+            columns: ["veiculo_id"]
+            isOneToOne: false
+            referencedRelation: "veiculos"
             referencedColumns: ["id"]
           },
         ]
