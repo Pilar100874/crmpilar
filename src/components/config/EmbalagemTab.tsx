@@ -105,10 +105,11 @@ export function EmbalagemTab({
 }: EmbalagemTabProps) {
   const [uploading, setUploading] = useState<string | null>(null);
   const [ean13Valid, setEan13Valid] = useState<boolean | null>(null);
-  const [printDialog, setPrintDialog] = useState<{ open: boolean; ean: string; type: string }>({
+  const [printDialog, setPrintDialog] = useState<{ open: boolean; ean: string; type: string; kind: "ean13" | "ean14" }>({
     open: false,
     ean: "",
     type: "",
+    kind: "ean13",
   });
   const [printQuantity, setPrintQuantity] = useState("1");
   const [zebraDialog, setZebraDialog] = useState<{ open: boolean; ean: string; kind: "ean13" | "ean14"; label: string }>({
