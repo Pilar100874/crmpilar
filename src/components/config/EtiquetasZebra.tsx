@@ -384,25 +384,33 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
                 className="flex justify-center p-3 sm:p-6 rounded-md overflow-hidden bg-[linear-gradient(135deg,hsl(var(--muted))_25%,transparent_25%,transparent_50%,hsl(var(--muted))_50%,hsl(var(--muted))_75%,transparent_75%,transparent)] bg-[length:16px_16px] bg-muted/20"
               >
                 <div
-                  className="relative bg-white border-2 border-dashed border-primary/40 shadow-md shrink-0 rounded-sm"
-                  style={{
-                    width: layout.largura_mm * previewScale,
-                    height: layout.altura_mm * previewScale,
-                  }}
-                  onMouseDown={(e) => {
-                    if (e.target === e.currentTarget) setSelectedId(null);
-                  }}
+                  className="flex items-start"
+                  style={{ gap: layout.gap_mm * previewScale }}
                 >
-                  {elements.map(el => (
-                    <PreviewElement
-                      key={el.id}
-                      el={el}
-                      selected={el.id === selectedId}
-                      scale={previewScale}
-                      onSelect={() => setSelectedId(el.id)}
-                      onMove={(x, y) => setElements(prev => prev.map(e => e.id === el.id ? { ...e, x, y } : e))}
-                      sample={products[0]}
-                    />
+                  {Array.from({ length: layout.colunas }).map((_, col) => (
+                    <div
+                      key={col}
+                      className="relative bg-white border-2 border-dashed border-primary/40 shadow-md shrink-0 rounded-sm"
+                      style={{
+                        width: layout.largura_mm * previewScale,
+                        height: layout.altura_mm * previewScale,
+                      }}
+                      onMouseDown={(e) => {
+                        if (e.target === e.currentTarget) setSelectedId(null);
+                      }}
+                    >
+                      {elements.map(el => (
+                        <PreviewElement
+                          key={`${col}-${el.id}`}
+                          el={el}
+                          selected={el.id === selectedId}
+                          scale={previewScale}
+                          onSelect={() => setSelectedId(el.id)}
+                          onMove={(x, y) => setElements(prev => prev.map(e => e.id === el.id ? { ...e, x, y } : e))}
+                          sample={products[0]}
+                        />
+                      ))}
+                    </div>
                   ))}
                 </div>
               </div>
