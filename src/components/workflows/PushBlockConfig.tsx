@@ -7,6 +7,100 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { PushBlockConfig } from "@/lib/pushExecutor";
 
+const APP_SCREENS: Array<{ grupo: string; telas: Array<{ path: string; nome: string }> }> = [
+  {
+    grupo: "Atendimento",
+    telas: [
+      { path: "/atendimento", nome: "Atendimento (chat)" },
+      { path: "/chat-interno", nome: "Chat interno" },
+      { path: "/agentes-chat", nome: "Agentes de IA" },
+      { path: "/dashboard-atendente", nome: "Dashboard do atendente" },
+      { path: "/dashboard-supervisor", nome: "Dashboard do supervisor" },
+      { path: "/monitor-filas", nome: "Monitor de filas" },
+      { path: "/sla-dashboard", nome: "Dashboard SLA" },
+      { path: "/pesquisas-satisfacao", nome: "Pesquisas de satisfação" },
+      { path: "/quality-assurance", nome: "Quality Assurance" },
+    ],
+  },
+  {
+    grupo: "Vendas / CRM",
+    telas: [
+      { path: "/funil", nome: "Funil de vendas" },
+      { path: "/orcamentos", nome: "Orçamentos" },
+      { path: "/pedidos-recebidos", nome: "Pedidos recebidos" },
+      { path: "/pedido-tracking", nome: "Rastreio de pedidos" },
+      { path: "/contatos", nome: "Contatos" },
+      { path: "/empresas", nome: "Empresas" },
+      { path: "/automacoes-vendas", nome: "Automações de vendas" },
+      { path: "/vendas/programacao-visitas", nome: "Programação de visitas" },
+      { path: "/vendas/acompanhamento-visitas", nome: "Acompanhamento de visitas" },
+      { path: "/roteirizador-visitas", nome: "Roteirizador de visitas" },
+    ],
+  },
+  {
+    grupo: "E-commerce",
+    telas: [
+      { path: "/ecommerce", nome: "Loja (e-commerce)" },
+      { path: "/ecommerce-config", nome: "Configurações e-commerce" },
+      { path: "/ecommerce-rules", nome: "Regras de negócio" },
+      { path: "/ecommerce-config/cupons", nome: "Cupons de desconto" },
+      { path: "/marketplaces", nome: "Marketplaces" },
+      { path: "/whatsapp-catalogo", nome: "Catálogo WhatsApp" },
+    ],
+  },
+  {
+    grupo: "Marketing",
+    telas: [
+      { path: "/marketing", nome: "Marketing" },
+      { path: "/marketing/campanhas", nome: "Campanhas" },
+      { path: "/marketing/automacoes", nome: "Automações" },
+      { path: "/marketing/canvas", nome: "Canvas" },
+      { path: "/campanhas", nome: "Envios em massa" },
+    ],
+  },
+  {
+    grupo: "Ads",
+    telas: [
+      { path: "/ads", nome: "Ads (dashboard)" },
+      { path: "/ads/campaigns", nome: "Campanhas de ads" },
+      { path: "/ads/automation", nome: "Automações de ads" },
+      { path: "/ads/alerts", nome: "Alertas de ads" },
+      { path: "/ads/reports", nome: "Relatórios de ads" },
+    ],
+  },
+  {
+    grupo: "Logística",
+    telas: [
+      { path: "/logistica", nome: "Logística" },
+      { path: "/logistica/monitoramento", nome: "Monitoramento de veículos" },
+      { path: "/logistica/veiculos", nome: "Veículos" },
+      { path: "/logistica/rotas", nome: "Rotas" },
+      { path: "/logistica/roteirizacao", nome: "Roteirização" },
+      { path: "/logistica/historico", nome: "Histórico" },
+      { path: "/logistica/automacoes", nome: "Automações de logística" },
+      { path: "/controle-veiculos", nome: "Controle de veículos" },
+      { path: "/pedido-tracking", nome: "Rastreio de entregas" },
+    ],
+  },
+  {
+    grupo: "Operacional",
+    telas: [
+      { path: "/dashboard", nome: "Dashboard principal" },
+      { path: "/calendario", nome: "Calendário / Tarefas" },
+      { path: "/todos", nome: "Tarefas (to-dos)" },
+      { path: "/avisos", nome: "Avisos do sistema" },
+      { path: "/cameras", nome: "Câmeras" },
+      { path: "/contagem", nome: "Contagem de estoque" },
+      { path: "/controle-visitantes", nome: "Controle de visitantes" },
+      { path: "/livro-ocorrencia", nome: "Livro de ocorrências" },
+      { path: "/ponto", nome: "Ponto eletrônico" },
+      { path: "/relatorios", nome: "Relatórios" },
+      { path: "/advanced-analytics", nome: "Análises avançadas" },
+    ],
+  },
+];
+
+
 interface Props {
   value: Partial<PushBlockConfig>;
   onChange: (patch: Partial<PushBlockConfig>) => void;
@@ -169,12 +263,29 @@ export function PushBlockConfigEditor({ value, onChange, context }: Props) {
             </div>
 
             <div>
-              <Label>URL ao clicar (opcional)</Label>
-              <Input
-                placeholder={e.url}
-                value={cfg.url || ""}
-                onChange={(ev) => onChange({ url: ev.target.value })}
-              />
+              <Label>Tela ao clicar (opcional)</Label>
+              <Select
+                value={cfg.url || "__none__"}
+                onValueChange={(v) => onChange({ url: v === "__none__" ? "" : v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar tela" />
+                </SelectTrigger>
+                <SelectContent className="max-h-80">
+                  <SelectItem value="__none__">Nenhuma (sem redirecionamento)</SelectItem>
+                  {APP_SCREENS.map((g) => (
+                    <div key={g.grupo}>
+                      <div className="px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">{g.grupo}</div>
+                      {g.telas.map((t) => (
+                        <SelectItem key={t.path} value={t.path}>{t.nome}</SelectItem>
+                      ))}
+                    </div>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Tela que será aberta ao tocar na notificação push.
+              </p>
             </div>
 
             <p className="text-xs text-muted-foreground">
