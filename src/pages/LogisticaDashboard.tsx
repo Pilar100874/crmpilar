@@ -8,6 +8,7 @@ import { VeiculoComStatus, VeiculoPosicao, VeiculoStatus } from '@/types/logisti
 import { ParadaMarcada } from '@/types/automacaoLogistica';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
+import { fetchMotoristasAtuais } from '@/lib/logistica/cvDriverLookup';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { List, X, Info, PanelLeftClose, PanelLeft } from 'lucide-react';
