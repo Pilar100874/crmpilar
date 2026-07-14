@@ -222,11 +222,24 @@ export function EmbalagemTab({
 
     try {
       const { ean, type } = printDialog;
-      
+      const cleanEan = (ean || "").replace(/\D/g, "");
+      const isEan13 = type === "EAN-13";
+      const format: "EAN13" | "ITF14" = isEan13 ? "EAN13" : "ITF14";
+
+      // Validação de comprimento
+      if (isEan13 && cleanEan.length !== 13) {
+        toast.error(`EAN-13 inválido: precisa ter 13 dígitos (atual: ${cleanEan.length}). Preencha o EAN corretamente antes de imprimir.`);
+        return;
+      }
+      if (!isEan13 && cleanEan.length !== 14) {
+        toast.error(`EAN-14 inválido: precisa ter 14 dígitos (atual: ${cleanEan.length}). Preencha o EAN-13 corretamente para gerar o EAN-14.`);
+        return;
+      }
+
       // Cria canvas para gerar o código de barras
       const canvas = document.createElement("canvas");
-      JsBarcode(canvas, ean, {
-        format: type === "EAN-13" ? "EAN13" : "ITF14",
+      JsBarcode(canvas, cleanEan, {
+        format,
         width: 2,
         height: 80,
         displayValue: true,
@@ -270,17 +283,26 @@ export function EmbalagemTab({
         itemCount++;
       }
 
-      pdf.save(`etiquetas_${type.replace(/[^a-zA-Z0-9]/g, "_")}_${ean}.pdf`);
+      pdf.save(`etiquetas_${type.replace(/[^a-zA-Z0-9]/g, "_")}_${cleanEan}.pdf`);
       toast.success(`PDF com ${quantity} etiqueta(s) gerado com sucesso`);
       setPrintDialog({ open: false, ean: "", type: "" });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao gerar PDF:", error);
-      toast.error("Erro ao gerar PDF das etiquetas");
+      toast.error(`Erro ao gerar PDF: ${error?.message || "verifique o código EAN"}`);
     }
   };
 
   const openZebraDialog = (value: string, kind: "ean13" | "ean14", label: string) => {
     if (!value) { toast.error("EAN não disponível"); return; }
+    const clean = value.replace(/\D/g, "");
+    if (kind === "ean13" && clean.length !== 13) {
+      toast.error(`EAN-13 inválido: precisa ter 13 dígitos (atual: ${clean.length}).`);
+      return;
+    }
+    if (kind === "ean14" && clean.length !== 14) {
+      toast.error(`EAN-14 inválido: precisa ter 14 dígitos (atual: ${clean.length}). Preencha o EAN-13 corretamente.`);
+      return;
+    }
     const template = getTemplateForBarcode(estabelecimentoId, kind);
     if (!template) {
       toast.error(`Nenhum template Zebra padrão definido para ${kind.toUpperCase()}. Configure em Configurações de Vendas → Impressão de Etiquetas Zebra.`);

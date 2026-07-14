@@ -113,9 +113,11 @@ export function defaultTemplate(layout: LayoutPreset): EtiquetaElement[] {
 export function interpolate(text: string, product: any): string {
   return (text || "").replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_, key) => {
     const v = product?.[key];
-    if (v === null || v === undefined) return "";
-    if (typeof v === "number" && (key === "preco_tabela" || key === "preco_minimo"))
-      return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    if (v === null || v === undefined || v === "") return "";
+    if (key === "preco_tabela" || key === "preco_minimo") {
+      const n = typeof v === "number" ? v : parseFloat(String(v).replace(",", "."));
+      if (!isNaN(n)) return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    }
     return String(v);
   });
 }
@@ -188,9 +190,23 @@ export async function printZebraLabels(template: SavedTemplate, product: any, qu
   const items = Array.from({ length: Math.max(1, quantity) }, () => product);
   const html = await buildPrintHTML(layout, template.elements, items);
   const w = window.open("", "_blank", "width=900,height=700");
-  if (!w) throw new Error("Popup bloqueado pelo navegador");
+  if (!w) throw new Error("Popup bloqueado pelo navegador. Habilite popups para este site.");
   w.document.open();
   w.document.write(html);
   w.document.close();
-  setTimeout(() => { w.focus(); w.print(); }, 400);
+  // Espera imagens (barcodes/QR) carregarem antes de imprimir
+  const doPrint = () => {
+    try {
+      const imgs = Array.from(w.document.images || []);
+      const pending = imgs.filter(i => !i.complete);
+      if (pending.length === 0) { w.focus(); w.print(); return; }
+      let remaining = pending.length;
+      const done = () => { if (--remaining <= 0) { w.focus(); w.print(); } };
+      pending.forEach(i => { i.addEventListener("load", done); i.addEventListener("error", done); });
+      // fallback
+      setTimeout(() => { try { w.focus(); w.print(); } catch {} }, 1500);
+    } catch { try { w.focus(); w.print(); } catch {} }
+  };
+  if (w.document.readyState === "complete") setTimeout(doPrint, 100);
+  else w.addEventListener("load", () => setTimeout(doPrint, 100));
 }
