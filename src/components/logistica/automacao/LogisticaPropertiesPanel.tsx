@@ -333,27 +333,33 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
         return (
           <div className="space-y-4">
             <div>
-              <Label>Canal de envio (número WhatsApp)</Label>
+              <Label>Sessão de WhatsApp (canal de envio)</Label>
               <Select
-                value={config.whatsappNumeroId || '__default__'}
-                onValueChange={(v) => updateConfig('whatsappNumeroId', v === '__default__' ? null : v)}
+                value={config.whatsappSessionId || '__first__'}
+                onValueChange={(v) => {
+                  const val = v === '__first__' ? null : v;
+                  updateConfig('whatsappSessionId', val);
+                  const s = sessoesWhats.find((s) => s.id === val);
+                  updateConfig('whatsappSessionName', s?.session_name || null);
+                }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecionar canal" />
+                  <SelectValue placeholder="Selecionar sessão" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__default__">Canal padrão do estabelecimento</SelectItem>
-                  {canaisWhats.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.nome}{c.telefone ? ` — ${c.telefone}` : ''}{c.is_default ? ' (padrão)' : ''}
+                  <SelectItem value="__first__">Primeira sessão disponível</SelectItem>
+                  {sessoesWhats.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.session_name}{s.phone_number ? ` — ${s.phone_number}` : ''}{s.status && s.status !== 'WORKING' ? ` (${s.status})` : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground mt-1">
-                Escolha por qual número/canal de WhatsApp a mensagem será enviada.
+                Escolha por qual sessão de WhatsApp (aba <b>Canais → WhatsApp</b>) a mensagem será enviada.
               </p>
             </div>
+
 
             <div>
               <Label>Destinatário</Label>
