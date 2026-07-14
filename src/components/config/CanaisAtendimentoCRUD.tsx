@@ -676,8 +676,33 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
     }
   };
 
+  const requestDeleteSession = async (sessionId: string) => {
+    setSessionToDelete(sessionId);
+    setSessionUsages([]);
+    setCheckingUsage(true);
+    try {
+      const session = sessions.find(s => s.id === sessionId);
+      const { checkWhatsappSessionUsage } = await import('@/lib/whatsapp/sessionUsage');
+      const usages = await checkWhatsappSessionUsage(sessionId, session?.session_name || null);
+      setSessionUsages(usages);
+    } catch (e) {
+      console.error('Erro ao verificar uso da sessão:', e);
+    } finally {
+      setCheckingUsage(false);
+    }
+  };
+
   const deleteSession = async () => {
     if (!sessionToDelete) return;
+    if (sessionUsages.length > 0) {
+      toast({
+        title: 'Não é possível excluir',
+        description: 'A sessão está vinculada a workflows. Altere os blocos para outra sessão antes de excluir.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
 
     try {
       const session = sessions.find(s => s.id === sessionToDelete);
