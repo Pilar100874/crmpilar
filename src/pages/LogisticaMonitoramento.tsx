@@ -439,9 +439,9 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
       </div>
 
       {/* Content - Mobile optimized */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
-        {/* Mobile floating buttons */}
-        <div className="md:hidden absolute top-2 left-2 right-2 z-10 flex justify-between">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+        {/* Mobile/Tablet floating buttons */}
+        <div className="lg:hidden absolute top-2 left-2 right-2 z-10 flex justify-between">
           <Sheet open={mobileVehicleListOpen} onOpenChange={setMobileVehicleListOpen}>
             <SheetTrigger asChild>
               <Button variant="secondary" size="sm" className="shadow-lg">
