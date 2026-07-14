@@ -489,7 +489,27 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                               {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
                             </Badge>
                           </div>
-                          {v.motorista && (
+                          {v.motorista_atual ? (
+                            <div className="mt-1 space-y-0.5">
+                              <p className="text-xs font-medium truncate flex items-center gap-1">
+                                <User className="h-3 w-3 text-primary" />
+                                {v.motorista_atual.nome}
+                              </p>
+                              {v.motorista_atual.telefone && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const wa = formatWhatsappNumber(v.motorista_atual!.telefone);
+                                    if (wa) window.open(`https://wa.me/${wa}`, '_blank');
+                                  }}
+                                  className="inline-flex items-center gap-1 text-[10px] text-emerald-600 hover:underline"
+                                >
+                                  <MessageCircle className="h-3 w-3" />
+                                  {v.motorista_atual.telefone}
+                                </button>
+                              )}
+                            </div>
+                          ) : v.motorista && (
                             <p className="text-xs text-muted-foreground mt-1 truncate">{v.motorista}</p>
                           )}
                         </div>
