@@ -440,6 +440,8 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
                         el={el}
                         selected={el.id === selectedId}
                         scale={previewScale}
+                        maxW={layout.largura_mm}
+                        maxH={layout.altura_mm}
                         onSelect={() => setSelectedId(el.id)}
                         onMove={(x, y) => setElements(prev => prev.map(e => e.id === el.id ? { ...e, x, y } : e))}
                         onResize={(x, y, w, h) => setElements(prev => prev.map(e => e.id === el.id ? { ...e, x, y, w, h } : e))}
