@@ -264,9 +264,9 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[260px_280px_minmax(0,1fr)_300px] gap-4">
-        {/* COLUNA 1 — Templates + Layout */}
-        <div className="space-y-4 order-2 md:order-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[300px_minmax(0,1fr)_320px] gap-4">
+        {/* COLUNA 1 — Templates + Layout + Produtos */}
+        <div className="space-y-4 order-2 md:order-1 xl:order-1">
           <Card className="border-border/60 shadow-sm">
             <CardHeader className="py-3">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -344,10 +344,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        {/* COLUNA 2 — Produtos */}
-        <div className="space-y-4 order-3 md:order-2">
           <Card className="border-border/60 shadow-sm">
             <CardHeader className="py-3">
               <CardTitle className="text-sm flex items-center justify-between">
@@ -402,8 +399,8 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
           </Card>
         </div>
 
-        {/* COLUNA 3 — Preview */}
-        <div className="space-y-3 order-1 md:order-3 md:col-span-2 xl:col-span-1">
+        {/* COLUNA 2 — Preview */}
+        <div className="space-y-3 order-1 md:order-3 md:col-span-2 xl:col-span-1 xl:order-2">
           <Card className="border-border/60 shadow-sm">
             <CardHeader className="py-3">
               <CardTitle className="text-sm flex items-center justify-between">
@@ -465,9 +462,9 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
           </Card>
         </div>
 
-        {/* COLUNA 4 — Propriedades */}
-        <div className="order-4 md:order-4">
-          <Card className="border-border/60 shadow-sm lg:sticky lg:top-2">
+        {/* COLUNA 3 — Propriedades */}
+        <div className="order-4 md:order-2 md:col-span-2 xl:col-span-1 xl:order-3">
+          <Card className="border-border/60 shadow-sm xl:sticky xl:top-2">
             <CardHeader className="py-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <span className={`h-1.5 w-1.5 rounded-full ${selected ? "bg-primary" : "bg-muted-foreground/40"}`} />
