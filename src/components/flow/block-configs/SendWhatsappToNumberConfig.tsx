@@ -1,14 +1,27 @@
+import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MessageCircle, Plus, Trash2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
 interface ConfigProps {
   config: any;
   handleConfigChange: (key: string, value: any) => void;
+}
+
+interface CanalWhats {
+  id: string;
+  nome: string;
+  telefone: string | null;
+  provider: string;
+  is_default: boolean;
+  ativo: boolean;
 }
 
 export const SendWhatsappToNumberConfig = ({ config, handleConfigChange }: ConfigProps) => {
@@ -18,9 +31,34 @@ export const SendWhatsappToNumberConfig = ({ config, handleConfigChange }: Confi
       ? [config.phoneNumber]
       : [""];
 
+  const [canais, setCanais] = useState<CanalWhats[]>([]);
+  const [loadingCanais, setLoadingCanais] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoadingCanais(true);
+        const estabId = await getEstabelecimentoId().catch(() => null);
+        let query = supabase
+          .from("whatsapp_numeros")
+          .select("id, nome, telefone, provider, is_default, ativo")
+          .eq("ativo", true)
+          .order("is_default", { ascending: false })
+          .order("nome");
+        if (estabId) query = query.eq("estabelecimento_id", estabId);
+        const { data } = await query;
+        setCanais((data as any) || []);
+      } finally {
+        setLoadingCanais(false);
+      }
+    })();
+  }, []);
+
   const updateNumbers = (next: string[]) => {
     handleConfigChange("phoneNumbers", next);
   };
+
+  const canalSelecionado = config.whatsappNumeroId || "__default__";
 
   return (
     <div className="space-y-4">
@@ -30,6 +68,33 @@ export const SendWhatsappToNumberConfig = ({ config, handleConfigChange }: Confi
           Envia uma mensagem WhatsApp para um ou mais números. Você pode usar variáveis (ex.: <code>{"{{telefone}}"}</code>, <code>{"{{nome}}"}</code>) tanto nos números quanto no texto.
         </AlertDescription>
       </Alert>
+
+      <div className="space-y-2">
+        <Label>Canal de atendimento (número de envio)</Label>
+        <Select
+          value={canalSelecionado}
+          onValueChange={(v) =>
+            handleConfigChange("whatsappNumeroId", v === "__default__" ? null : v)
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={loadingCanais ? "Carregando..." : "Selecionar canal"} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__default__">Canal padrão do estabelecimento</SelectItem>
+            {canais.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {c.nome}
+                {c.telefone ? ` — ${c.telefone}` : ""}
+                {c.is_default ? " (padrão)" : ""}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-[11px] text-muted-foreground">
+          Escolha por qual número/canal de WhatsApp a mensagem será enviada. Se nenhum for escolhido, será usado o canal padrão.
+        </p>
+      </div>
 
       <div className="space-y-2">
         <Label>Números de destino (com DDI)</Label>
