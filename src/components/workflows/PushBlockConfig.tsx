@@ -109,7 +109,11 @@ export function PushBlockConfigEditor({ value, onChange, context }: Props) {
       <div>
         <Label>Título</Label>
         <Input
-          placeholder="Ex: Novo pedido chegou {{orcamento.numero}}"
+          placeholder={
+            context === "logistica"
+              ? "Ex: Veículo {placa} parado há {tempo} min"
+              : "Ex: Novo pedido chegou {{orcamento.numero}}"
+          }
           value={cfg.titulo || ""}
           onChange={(e) => onChange({ titulo: e.target.value })}
         />
@@ -118,7 +122,11 @@ export function PushBlockConfigEditor({ value, onChange, context }: Props) {
       <div>
         <Label>Mensagem</Label>
         <Textarea
-          placeholder="Ex: Cliente {{cliente.nome}} solicitou orçamento de R$ {{orcamento.valor_total}}"
+          placeholder={
+            context === "logistica"
+              ? "Ex: O motorista {motorista} está com o veículo {placa} parado em {endereco}"
+              : "Ex: Cliente {{cliente.nome}} solicitou orçamento de R$ {{orcamento.valor_total}}"
+          }
           value={cfg.corpo || ""}
           onChange={(e) => onChange({ corpo: e.target.value })}
           rows={3}
@@ -128,15 +136,24 @@ export function PushBlockConfigEditor({ value, onChange, context }: Props) {
       <div>
         <Label>URL ao clicar (opcional)</Label>
         <Input
-          placeholder="/orcamentos"
+          placeholder={context === "logistica" ? "/logistica" : "/orcamentos"}
           value={cfg.url || ""}
           onChange={(e) => onChange({ url: e.target.value })}
         />
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        Use <code className="text-primary">{"{{campo.subcampo}}"}</code> para interpolar variáveis do fluxo.
-      </p>
+      {context === "logistica" ? (
+        <p className="text-xs text-muted-foreground">
+          Variáveis: <code className="text-primary">{"{placa}"}</code>,{" "}
+          <code className="text-primary">{"{motorista}"}</code>,{" "}
+          <code className="text-primary">{"{endereco}"}</code>,{" "}
+          <code className="text-primary">{"{velocidade}"}</code>.
+        </p>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          Use <code className="text-primary">{"{{campo.subcampo}}"}</code> para interpolar variáveis do fluxo.
+        </p>
+      )}
     </div>
   );
 }
