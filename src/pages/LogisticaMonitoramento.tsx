@@ -439,9 +439,9 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
       </div>
 
       {/* Content - Mobile optimized */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
-        {/* Mobile floating buttons */}
-        <div className="md:hidden absolute top-2 left-2 right-2 z-10 flex justify-between">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+        {/* Mobile/Tablet floating buttons */}
+        <div className="lg:hidden absolute top-2 left-2 right-2 z-10 flex justify-between">
           <Sheet open={mobileVehicleListOpen} onOpenChange={setMobileVehicleListOpen}>
             <SheetTrigger asChild>
               <Button variant="secondary" size="sm" className="shadow-lg">
@@ -547,7 +547,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
         </div>
 
         {/* Desktop Vehicle List */}
-        <div className="hidden md:flex w-64 lg:w-72 flex-shrink-0 border-r bg-background overflow-hidden flex-col">
+        <div className="hidden lg:flex w-64 lg:w-72 flex-shrink-0 border-r bg-background overflow-hidden flex-col">
           <div className="p-2 sm:p-3 border-b flex items-center justify-between">
             <h3 className="font-medium text-sm flex items-center gap-2">
               <Car className="h-4 w-4" />
@@ -621,7 +621,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
           <Button
             variant="outline"
             size="icon"
-            className="absolute left-[10px] top-[82px] z-[400] h-[30px] w-[30px] bg-background border-2 border-[rgba(0,0,0,0.2)] shadow-none hover:bg-accent rounded-sm md:flex hidden"
+            className="absolute left-[10px] top-[82px] z-[400] h-[30px] w-[30px] bg-background border-2 border-[rgba(0,0,0,0.2)] shadow-none hover:bg-accent rounded-sm lg:flex hidden"
             onClick={() => setMapFullscreen(true)}
             title="Expandir mapa"
           >
@@ -630,7 +630,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
         </div>
 
         {/* Desktop Alerts Panel */}
-        <div className="hidden md:flex w-64 lg:w-72 flex-shrink-0 border-l bg-background overflow-hidden flex-col">
+        <div className="hidden lg:flex w-64 lg:w-72 flex-shrink-0 border-l bg-background overflow-hidden flex-col">
           <div 
             className="p-2 sm:p-3 border-b flex items-center justify-between cursor-pointer"
             onClick={() => setShowAlerts(!showAlerts)}
