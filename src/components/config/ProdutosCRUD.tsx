@@ -1876,6 +1876,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                 imgEan14_1={formData.embalagem_img_ean14_1}
                 imgEan14_2={formData.embalagem_img_ean14_2}
                 estabelecimentoId={estabelecimentoId}
+                productData={formData}
                 onEan13Change={(value) => setFormData(prev => ({ ...prev, ean_13: value }))}
                 onEan14_1Change={(value) => setFormData(prev => ({ ...prev, ean_14_1: value }))}
                 onEan14_2Change={(value) => setFormData(prev => ({ ...prev, ean_14_2: value }))}
