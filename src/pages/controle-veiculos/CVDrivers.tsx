@@ -113,7 +113,7 @@ export default function CVDrivers() {
                     <span className="font-mono truncate">{d.license}</span>
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <Phone className="h-4 w-4" />
+                    <MessageCircle className="h-4 w-4 text-emerald-500" />
                     <span className="truncate">{d.phone || "—"}</span>
                   </div>
                 </div>
