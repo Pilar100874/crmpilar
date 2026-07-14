@@ -103,6 +103,27 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
     return () => ro.disconnect();
   }, [layoutId, layout.largura_mm]);
 
+  // Mantém todos os elementos dentro da área da etiqueta (evita elementos "fora da caixa")
+  function clampElements(list: EtiquetaElement[], lay: LayoutPreset): EtiquetaElement[] {
+    return list.map(el => {
+      const w = Math.min(Math.max(2, el.w), lay.largura_mm);
+      const h = Math.min(Math.max(2, el.h), lay.altura_mm);
+      const x = Math.min(Math.max(0, el.x), Math.max(0, lay.largura_mm - w));
+      const y = Math.min(Math.max(0, el.y), Math.max(0, lay.altura_mm - h));
+      return { ...el, x, y, w, h };
+    });
+  }
+
+  // Ao trocar de layout, re-encaixa os elementos existentes
+  useEffect(() => {
+    setElements(prev => {
+      const clamped = clampElements(prev, layout);
+      const changed = clamped.some((e, i) => e.x !== prev[i].x || e.y !== prev[i].y || e.w !== prev[i].w || e.h !== prev[i].h);
+      return changed ? clamped : prev;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layoutId]);
+
   const selected = elements.find(e => e.id === selectedId) || null;
 
   function newTemplate() {
@@ -116,12 +137,14 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
   function loadTemplate(id: string) {
     const t = templates.find(x => x.id === id);
     if (!t) return;
+    const lay = LAYOUTS.find(l => l.id === t.layoutId) || LAYOUTS[0];
     setCurrentTemplateId(t.id);
     setNome(t.nome);
     setLayoutId(t.layoutId);
-    setElements(t.elements);
+    setElements(clampElements(t.elements, lay));
     setSelectedId(null);
   }
+
 
   function saveCurrent() {
     if (!nome.trim()) { toast.error("Informe um nome para o template"); return; }
