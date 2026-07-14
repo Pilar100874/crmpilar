@@ -284,6 +284,24 @@ export default function TvCameras() {
 
       {!zoomed && (
         <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex items-center gap-1.5 sm:gap-2 flex-wrap justify-end max-w-[calc(100%-1rem)]">
+          {pages.length > 1 && (
+            <>
+              <button
+                onClick={prevPage}
+                className="flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 rounded-md bg-white/90 text-black hover:bg-white text-xs sm:text-sm font-medium shadow-lg"
+                title="Lote anterior"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={nextPage}
+                className="flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-xs sm:text-sm font-medium shadow-lg"
+                title="Próximo lote"
+              >
+                <span className="hidden xs:inline sm:inline">Próximas</span> <ChevronRight className="h-4 w-4" />
+              </button>
+            </>
+          )}
           <button
             onClick={openMenu}
             className="flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-xs sm:text-sm font-medium shadow-lg"
@@ -304,8 +322,7 @@ export default function TvCameras() {
 
       {pages.length > 1 && (
         <div className="absolute bottom-2 right-3 text-[11px] text-white/70 bg-black/50 px-2 py-0.5 rounded">
-          {pageIdx + 1}/{pages.length} · rotaciona a cada 10s
-          {(zoomed || menuOpen) && <span className="ml-1">· pausado</span>}
+          Lote {pageIdx + 1}/{pages.length}
         </div>
       )}
 
