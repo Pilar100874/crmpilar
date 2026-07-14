@@ -578,6 +578,14 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
           </Card>
         </div>
       </div>
+
+      <DeleteConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={confirmDelete}
+        title="Excluir template"
+        itemName={nome}
+      />
     </div>
   );
 }
