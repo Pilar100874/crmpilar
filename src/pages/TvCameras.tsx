@@ -108,12 +108,9 @@ export default function TvCameras() {
     return chunks.length ? chunks : [[]];
   }, [cams]);
 
-  useEffect(() => {
-    if (pages.length <= 1) return;
-    if (zoomed || menuOpen) return; // pausa rotação
-    const t = setInterval(() => setPageIdx((i) => (i + 1) % pages.length), ROTATE_MS);
-    return () => clearInterval(t);
-  }, [pages.length, zoomed, menuOpen]);
+  // Avanço manual: sem rotação automática por tempo.
+  const nextPage = () => setPageIdx((i) => (pages.length ? (i + 1) % pages.length : 0));
+  const prevPage = () => setPageIdx((i) => (pages.length ? (i - 1 + pages.length) % pages.length : 0));
 
   useEffect(() => {
     if (pageIdx >= pages.length) setPageIdx(0);
