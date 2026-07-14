@@ -485,17 +485,30 @@ function PreviewElement({
     return () => { cancelled = true; };
   }, [el.content, el.type, sample]);
 
-  function startDrag(e: React.MouseEvent) {
-    e.stopPropagation();
+  function startDrag(clientX: number, clientY: number, isTouch: boolean) {
     onSelect();
-    const startX = e.clientX, startY = e.clientY, origX = el.x, origY = el.y;
-    function move(ev: MouseEvent) {
-      const dx = (ev.clientX - startX) / scale;
-      const dy = (ev.clientY - startY) / scale;
+    const startX = clientX, startY = clientY, origX = el.x, origY = el.y;
+    function move(ev: MouseEvent | TouchEvent) {
+      const p = "touches" in ev ? ev.touches[0] : (ev as MouseEvent);
+      if (!p) return;
+      const dx = (p.clientX - startX) / scale;
+      const dy = (p.clientY - startY) / scale;
       onMove(Math.max(0, origX + dx), Math.max(0, origY + dy));
+      if ("touches" in ev) ev.preventDefault();
     }
-    function up() { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); }
-    window.addEventListener("mousemove", move); window.addEventListener("mouseup", up);
+    function up() {
+      window.removeEventListener("mousemove", move as any);
+      window.removeEventListener("mouseup", up);
+      window.removeEventListener("touchmove", move as any);
+      window.removeEventListener("touchend", up);
+    }
+    if (isTouch) {
+      window.addEventListener("touchmove", move as any, { passive: false });
+      window.addEventListener("touchend", up);
+    } else {
+      window.addEventListener("mousemove", move as any);
+      window.addEventListener("mouseup", up);
+    }
   }
 
   const style: React.CSSProperties = {
@@ -512,10 +525,17 @@ function PreviewElement({
     textAlign: el.align || "left",
     lineHeight: 1.05,
     background: "white",
+    touchAction: "none",
   };
 
   return (
-    <div style={style} onMouseDown={startDrag}>
+    <div
+      style={style}
+      onMouseDown={(e) => { e.stopPropagation(); startDrag(e.clientX, e.clientY, false); }}
+      onTouchStart={(e) => { e.stopPropagation(); const t = e.touches[0]; if (t) startDrag(t.clientX, t.clientY, true); }}
+      onClick={(e) => { e.stopPropagation(); onSelect(); }}
+    >
+
       {el.type === "text" && <div className="w-full h-full">{interpolate(el.content, sample || {}) || <span className="text-muted-foreground/40">texto</span>}</div>}
       {(el.type === "image" || el.type === "barcode_ean13" || el.type === "barcode_ean14" || el.type === "qrcode") && (
         dataURL
