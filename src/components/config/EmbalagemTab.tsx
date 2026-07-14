@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
-import { Upload, Printer, CheckCircle, XCircle, Image as ImageIcon } from "lucide-react";
+import { Upload, Printer, CheckCircle, XCircle, Image as ImageIcon, Zap } from "lucide-react";
 import JsBarcode from "jsbarcode";
 import { jsPDF } from "jspdf";
 import {
@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { getTemplateForBarcode, printZebraLabels } from "@/lib/zebraTemplates";
 
 interface EmbalagemTabProps {
   ean13: string;
