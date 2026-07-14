@@ -50,6 +50,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
   const [previewScale, setPreviewScale] = useState(MM_TO_PX * 2);
   const fileRef = useRef<HTMLInputElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const layout = LAYOUTS.find(l => l.id === layoutId)!;
 
