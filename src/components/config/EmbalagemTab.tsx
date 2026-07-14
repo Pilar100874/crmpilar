@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
-import { Upload, Printer, CheckCircle, XCircle, Image as ImageIcon } from "lucide-react";
+import { Upload, Printer, CheckCircle, XCircle, Image as ImageIcon, Zap } from "lucide-react";
 import JsBarcode from "jsbarcode";
 import { jsPDF } from "jspdf";
 import {
@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { getTemplateForBarcode, printZebraLabels } from "@/lib/zebraTemplates";
 
 interface EmbalagemTabProps {
   ean13: string;
@@ -23,6 +24,7 @@ interface EmbalagemTabProps {
   imgEan14_1: string;
   imgEan14_2: string;
   estabelecimentoId: string;
+  productData?: any;
   onEan13Change: (value: string) => void;
   onEan14_1Change: (value: string) => void;
   onEan14_2Change: (value: string) => void;
@@ -93,6 +95,7 @@ export function EmbalagemTab({
   imgEan14_1,
   imgEan14_2,
   estabelecimentoId,
+  productData,
   onEan13Change,
   onEan14_1Change,
   onEan14_2Change,
@@ -269,6 +272,29 @@ export function EmbalagemTab({
     }
   };
 
+  const handleZebraPrint = async (value: string, kind: "ean13" | "ean14") => {
+    if (!value) { toast.error("EAN não disponível"); return; }
+    const template = getTemplateForBarcode(estabelecimentoId, kind);
+    if (!template) {
+      toast.error(`Nenhum template Zebra padrão definido para ${kind.toUpperCase()}. Configure em Configurações de Vendas → Impressão de Etiquetas Zebra.`);
+      return;
+    }
+    const qty = parseInt(prompt(`Quantidade de etiquetas Zebra (1-500):`, "1") || "0", 10);
+    if (!qty || qty < 1 || qty > 500) { toast.error("Quantidade inválida"); return; }
+    try {
+      const product = {
+        ...(productData || {}),
+        ean_13: ean13,
+        ean_14_1: ean14_1,
+        ean_14_2: ean14_2,
+      };
+      await printZebraLabels(template, product, qty);
+      toast.success(`Enviando ${qty} etiqueta(s) para impressão...`);
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao imprimir");
+    }
+  };
+
   const EanField = ({
     label,
     value,
@@ -371,18 +397,30 @@ export function EmbalagemTab({
           </label>
         </div>
 
-        {/* Botão de imprimir */}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => openPrintDialog(value, label)}
-          disabled={!value}
-          className="self-start mt-1"
-        >
-          <Printer className="w-4 h-4 mr-1" />
-          Imprimir
-        </Button>
+        {/* Botões de imprimir */}
+        <div className="flex flex-col gap-1.5 self-start mt-1">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => openPrintDialog(value, label)}
+            disabled={!value}
+          >
+            <Printer className="w-4 h-4 mr-1" />
+            PDF
+          </Button>
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={() => handleZebraPrint(value, type === "ean13" ? "ean13" : "ean14")}
+            disabled={!value}
+            title="Imprimir usando template Zebra padrão"
+          >
+            <Zap className="w-4 h-4 mr-1" />
+            Zebra
+          </Button>
+        </div>
       </div>
     </div>
   );
