@@ -111,6 +111,13 @@ export function EmbalagemTab({
     type: "",
   });
   const [printQuantity, setPrintQuantity] = useState("1");
+  const [zebraDialog, setZebraDialog] = useState<{ open: boolean; ean: string; kind: "ean13" | "ean14"; label: string }>({
+    open: false,
+    ean: "",
+    kind: "ean13",
+    label: "",
+  });
+  const [zebraQty, setZebraQty] = useState("1");
 
   const handleEan13Change = (value: string) => {
     // Apenas números
@@ -272,15 +279,22 @@ export function EmbalagemTab({
     }
   };
 
-  const handleZebraPrint = async (value: string, kind: "ean13" | "ean14") => {
+  const openZebraDialog = (value: string, kind: "ean13" | "ean14", label: string) => {
     if (!value) { toast.error("EAN não disponível"); return; }
     const template = getTemplateForBarcode(estabelecimentoId, kind);
     if (!template) {
       toast.error(`Nenhum template Zebra padrão definido para ${kind.toUpperCase()}. Configure em Configurações de Vendas → Impressão de Etiquetas Zebra.`);
       return;
     }
-    const qty = parseInt(prompt(`Quantidade de etiquetas Zebra (1-500):`, "1") || "0", 10);
-    if (!qty || qty < 1 || qty > 500) { toast.error("Quantidade inválida"); return; }
+    setZebraQty("1");
+    setZebraDialog({ open: true, ean: value, kind, label });
+  };
+
+  const confirmZebraPrint = async () => {
+    const qty = parseInt(zebraQty, 10);
+    if (!qty || qty < 1 || qty > 500) { toast.error("Quantidade inválida (1 a 500)"); return; }
+    const template = getTemplateForBarcode(estabelecimentoId, zebraDialog.kind);
+    if (!template) { toast.error("Template não encontrado"); return; }
     try {
       const product = {
         ...(productData || {}),
@@ -290,6 +304,7 @@ export function EmbalagemTab({
       };
       await printZebraLabels(template, product, qty);
       toast.success(`Enviando ${qty} etiqueta(s) para impressão...`);
+      setZebraDialog({ ...zebraDialog, open: false });
     } catch (e: any) {
       toast.error(e?.message || "Erro ao imprimir");
     }
@@ -413,7 +428,7 @@ export function EmbalagemTab({
             type="button"
             variant="default"
             size="sm"
-            onClick={() => handleZebraPrint(value, type === "ean13" ? "ean13" : "ean14")}
+            onClick={() => openZebraDialog(value, type === "ean13" ? "ean13" : "ean14", label)}
             disabled={!value}
             title="Imprimir usando template Zebra padrão"
           >
@@ -500,6 +515,42 @@ export function EmbalagemTab({
             <Button onClick={generateBarcodePDF}>
               <Printer className="w-4 h-4 mr-2" />
               Gerar PDF
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Zebra */}
+      <Dialog open={zebraDialog.open} onOpenChange={(open) => setZebraDialog({ ...zebraDialog, open })}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Imprimir Zebra — {zebraDialog.label}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label>Código</Label>
+              <Input value={zebraDialog.ean} readOnly className="font-mono bg-muted/50" />
+            </div>
+            <div>
+              <Label>Quantidade de etiquetas</Label>
+              <Input
+                type="number"
+                min="1"
+                max="500"
+                value={zebraQty}
+                onChange={(e) => setZebraQty(e.target.value)}
+                autoFocus
+              />
+              <p className="text-xs text-muted-foreground mt-1">Máximo: 500 etiquetas</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setZebraDialog({ ...zebraDialog, open: false })}>
+              Cancelar
+            </Button>
+            <Button onClick={confirmZebraPrint}>
+              <Printer className="w-4 h-4 mr-2" />
+              Imprimir
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/lib/toast-config";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { Plus, Trash2, Type, Image as ImageIcon, Barcode, QrCode, Printer, Save, Copy, Star, FilePlus2 } from "lucide-react";
 import {
   LAYOUTS,
@@ -49,6 +50,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
   const [previewScale, setPreviewScale] = useState(MM_TO_PX * 2);
   const fileRef = useRef<HTMLInputElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const layout = LAYOUTS.find(l => l.id === layoutId)!;
 
@@ -138,12 +140,10 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
     toast.success("Template salvo!");
   }
 
-  function deleteCurrent() {
+  function confirmDelete() {
     if (!currentTemplateId) return;
-    if (!confirm("Excluir este template?")) return;
     const list = templates.filter(t => t.id !== currentTemplateId);
     saveTemplates(estabelecimentoId, list);
-    // Limpar defaults se apontavam para este
     const newDefs: TemplateDefaults = { ...defaults };
     if (newDefs.ean13 === currentTemplateId) delete newDefs.ean13;
     if (newDefs.ean14 === currentTemplateId) delete newDefs.ean14;
@@ -152,6 +152,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
     setTemplates(list);
     if (list[0]) loadTemplate(list[0].id);
     else newTemplate();
+    setDeleteOpen(false);
     toast.success("Template excluído");
   }
 
@@ -294,7 +295,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
                 </Select>
               </div>
               {currentTemplateId && (
-                <Button variant="ghost" size="sm" onClick={deleteCurrent} className="w-full text-destructive h-8">
+                <Button variant="ghost" size="sm" onClick={() => setDeleteOpen(true)} className="w-full text-destructive h-8">
                   <Trash2 className="h-3.5 w-3.5 mr-1" /> Excluir template
                 </Button>
               )}
@@ -577,6 +578,14 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
           </Card>
         </div>
       </div>
+
+      <DeleteConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={confirmDelete}
+        title="Excluir template"
+        itemName={nome}
+      />
     </div>
   );
 }
