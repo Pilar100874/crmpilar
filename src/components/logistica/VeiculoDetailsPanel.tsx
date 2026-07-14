@@ -89,30 +89,27 @@ export const VeiculoDetailsPanel: React.FC<VeiculoDetailsPanelProps> = ({
                   </p>
                 </div>
               </div>
-              {veiculo.motorista_atual.telefone && (
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => window.open(`tel:${veiculo.motorista_atual!.telefone}`)}
-                  >
-                    <Phone className="h-3.5 w-3.5 mr-1.5" />
-                    Ligar
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
-                    onClick={() => {
-                      const wa = formatWhatsappNumber(veiculo.motorista_atual!.telefone);
-                      if (wa) window.open(`https://wa.me/${wa}`, '_blank');
-                    }}
-                  >
-                    <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
-                    WhatsApp
-                  </Button>
-                </div>
-              )}
+              {veiculo.motorista_atual.telefone && (() => {
+                const wa = formatWhatsappNumber(veiculo.motorista_atual!.telefone);
+                return (
+                  <div className="flex gap-2">
+                    <Button asChild size="sm" variant="outline" className="flex-1">
+                      <a href={`tel:${veiculo.motorista_atual!.telefone}`}>
+                        <Phone className="h-3.5 w-3.5 mr-1.5" />
+                        Ligar
+                      </a>
+                    </Button>
+                    {wa && (
+                      <Button asChild size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white">
+                        <a href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer">
+                          <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
+                          WhatsApp
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           ) : veiculo.motorista && (
             <div className="flex items-center gap-2 sm:gap-3">
