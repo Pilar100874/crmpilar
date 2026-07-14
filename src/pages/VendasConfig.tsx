@@ -510,7 +510,6 @@ export default function VendasConfig() {
                 </CardContent>
               </Card>
             </TabsContent>
-            </TabsContent>
 
             <TabsContent value="etiquetas-zebra" className="mt-0 h-full">
               <Card className="h-full">
