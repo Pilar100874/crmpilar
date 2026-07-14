@@ -106,54 +106,86 @@ export function PushBlockConfigEditor({ value, onChange, context }: Props) {
         </div>
       )}
 
-      <div>
-        <Label>Título</Label>
-        <Input
-          placeholder={
-            context === "logistica"
-              ? "Ex: Veículo {placa} parado há {tempo} min"
-              : "Ex: Novo pedido chegou {{orcamento.numero}}"
-          }
-          value={cfg.titulo || ""}
-          onChange={(e) => onChange({ titulo: e.target.value })}
-        />
-      </div>
+      {(() => {
+        const ex: Record<string, { titulo: string; corpo: string; url: string; vars: string }> = {
+          logistica: {
+            titulo: "Ex: Veículo {placa} parado há {tempo} min",
+            corpo: "Ex: O motorista {motorista} está com o veículo {placa} parado em {endereco}",
+            url: "/logistica",
+            vars: "{placa}, {motorista}, {endereco}, {velocidade}",
+          },
+          vendas: {
+            titulo: "Ex: Novo pedido de {{cliente.nome}}",
+            corpo: "Ex: Pedido {{pedido.numero}} no valor de R$ {{pedido.total}} foi recebido",
+            url: "/vendas",
+            vars: "{{cliente.nome}}, {{pedido.numero}}, {{pedido.total}}, {{pedido.status}}",
+          },
+          ads: {
+            titulo: "Ex: Alerta de campanha {{campanha.nome}}",
+            corpo: "Ex: A campanha {{campanha.nome}} atingiu R$ {{campanha.gasto}} de investimento com CPA {{campanha.cpa}}",
+            url: "/ads",
+            vars: "{{campanha.nome}}, {{campanha.gasto}}, {{campanha.cpa}}, {{campanha.roas}}",
+          },
+          omnichannel: {
+            titulo: "Ex: Nova conversa de {{cliente.nome}}",
+            corpo: "Ex: {{cliente.nome}} enviou uma mensagem no canal {{canal}}: {{mensagem}}",
+            url: "/atendimento",
+            vars: "{{cliente.nome}}, {{canal}}, {{mensagem}}, {{conversa.id}}",
+          },
+          marketing: {
+            titulo: "Ex: {{cliente.nome}}, temos uma oferta pra você!",
+            corpo: "Ex: Aproveite {{cupom.desconto}} de desconto em {{produto.nome}}",
+            url: "/promocoes",
+            vars: "{{cliente.nome}}, {{cupom.codigo}}, {{cupom.desconto}}, {{produto.nome}}",
+          },
+          bot: {
+            titulo: "Ex: Olá {{contato.nome}}, tudo bem?",
+            corpo: "Ex: Sua solicitação {{atendimento.protocolo}} foi atualizada",
+            url: "/atendimento",
+            vars: "{{contato.nome}}, {{atendimento.protocolo}}, {{mensagem}}",
+          },
+        };
+        const e = ex[context || "bot"] || ex.bot;
+        const isLogistica = context === "logistica";
+        return (
+          <>
+            <div>
+              <Label>Título</Label>
+              <Input
+                placeholder={e.titulo}
+                value={cfg.titulo || ""}
+                onChange={(ev) => onChange({ titulo: ev.target.value })}
+              />
+            </div>
 
-      <div>
-        <Label>Mensagem</Label>
-        <Textarea
-          placeholder={
-            context === "logistica"
-              ? "Ex: O motorista {motorista} está com o veículo {placa} parado em {endereco}"
-              : "Ex: Cliente {{cliente.nome}} solicitou orçamento de R$ {{orcamento.valor_total}}"
-          }
-          value={cfg.corpo || ""}
-          onChange={(e) => onChange({ corpo: e.target.value })}
-          rows={3}
-        />
-      </div>
+            <div>
+              <Label>Mensagem</Label>
+              <Textarea
+                placeholder={e.corpo}
+                value={cfg.corpo || ""}
+                onChange={(ev) => onChange({ corpo: ev.target.value })}
+                rows={3}
+              />
+            </div>
 
-      <div>
-        <Label>URL ao clicar (opcional)</Label>
-        <Input
-          placeholder={context === "logistica" ? "/logistica" : "/orcamentos"}
-          value={cfg.url || ""}
-          onChange={(e) => onChange({ url: e.target.value })}
-        />
-      </div>
+            <div>
+              <Label>URL ao clicar (opcional)</Label>
+              <Input
+                placeholder={e.url}
+                value={cfg.url || ""}
+                onChange={(ev) => onChange({ url: ev.target.value })}
+              />
+            </div>
 
-      {context === "logistica" ? (
-        <p className="text-xs text-muted-foreground">
-          Variáveis: <code className="text-primary">{"{placa}"}</code>,{" "}
-          <code className="text-primary">{"{motorista}"}</code>,{" "}
-          <code className="text-primary">{"{endereco}"}</code>,{" "}
-          <code className="text-primary">{"{velocidade}"}</code>.
-        </p>
-      ) : (
-        <p className="text-xs text-muted-foreground">
-          Use <code className="text-primary">{"{{campo.subcampo}}"}</code> para interpolar variáveis do fluxo.
-        </p>
-      )}
+            <p className="text-xs text-muted-foreground">
+              Variáveis disponíveis: <code className="text-primary">{e.vars}</code>.
+              {!isLogistica && (
+                <> Use <code className="text-primary">{"{{campo.subcampo}}"}</code> para interpolar valores do fluxo.</>
+              )}
+            </p>
+          </>
+        );
+      })()}
     </div>
   );
 }
