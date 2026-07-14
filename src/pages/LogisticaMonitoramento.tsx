@@ -138,6 +138,12 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
         })
       );
 
+      // Enriquece com motorista atual (baseado em cv_vehicle_movements)
+      const motoristasMap = await fetchMotoristasAtuais(veiculosComStatus.map(v => v.id));
+      for (const v of veiculosComStatus) {
+        v.motorista_atual = motoristasMap[v.id] ?? null;
+      }
+
       setVeiculos(veiculosComStatus);
       setLastUpdate(new Date());
       checkAlerts(veiculosComStatus);
