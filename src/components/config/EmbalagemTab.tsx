@@ -503,7 +503,7 @@ export function EmbalagemTab({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPrintDialog({ open: false, ean: "", type: "" })}>
+            <Button variant="outline" onClick={() => setPrintDialog({ open: false, ean: "", type: "", kind: "ean13" })}>
               Cancelar
             </Button>
             <Button onClick={generateBarcodePDF}>
