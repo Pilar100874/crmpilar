@@ -120,7 +120,10 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [qtyPerProduct, setQtyPerProduct] = useState<number>(1);
   const [search, setSearch] = useState("");
+  const [previewScale, setPreviewScale] = useState(MM_TO_PX * 2);
   const fileRef = useRef<HTMLInputElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+
 
   const layout = LAYOUTS.find(l => l.id === layoutId)!;
   const storageKey = `zebra_template_${estabelecimentoId}_${layoutId}`;
