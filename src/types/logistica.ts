@@ -66,6 +66,11 @@ export interface VeiculoComStatus extends Veiculo {
   status: VeiculoStatus;
   ultima_atualizacao?: string;
   cor?: string; // Cor única para identificação no mapa
+  motorista_atual?: {
+    nome: string;
+    telefone: string | null;
+    exit_time: string;
+  } | null;
 }
 
 export interface HistoricoEstatisticas {
