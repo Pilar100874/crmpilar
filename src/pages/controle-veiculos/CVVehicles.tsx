@@ -31,6 +31,7 @@ interface LogVeic { id: string; placa: string; descricao: string | null }
 
 export default function CVVehicles() {
   const [rows, setRows] = useState<Vehicle[]>([]);
+  const [logVeiculos, setLogVeiculos] = useState<LogVeic[]>([]);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(empty);
@@ -40,6 +41,8 @@ export default function CVVehicles() {
     const { data, error } = await supabase.from("cv_vehicles").select("*").order("name");
     if (error) return toast.error(error.message);
     setRows((data ?? []) as Vehicle[]);
+    const { data: vs } = await supabase.from("veiculos").select("id, placa, descricao").eq("ativo", true).order("placa");
+    setLogVeiculos((vs ?? []) as LogVeic[]);
   };
   useEffect(() => { load(); }, []);
 
@@ -49,6 +52,7 @@ export default function CVVehicles() {
       name: v.name, plate: v.plate, vehicle_type: v.vehicle_type,
       current_km: v.current_km, oil_change_interval: v.oil_change_interval,
       last_oil_change_km: v.last_oil_change_km, active: v.active,
+      veiculo_id: (v as any).veiculo_id ?? null,
     });
     setEditing(v.id); setOpen(true);
   };
