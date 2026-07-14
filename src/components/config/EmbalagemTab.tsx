@@ -111,6 +111,13 @@ export function EmbalagemTab({
     type: "",
   });
   const [printQuantity, setPrintQuantity] = useState("1");
+  const [zebraDialog, setZebraDialog] = useState<{ open: boolean; ean: string; kind: "ean13" | "ean14"; label: string }>({
+    open: false,
+    ean: "",
+    kind: "ean13",
+    label: "",
+  });
+  const [zebraQty, setZebraQty] = useState("1");
 
   const handleEan13Change = (value: string) => {
     // Apenas números
