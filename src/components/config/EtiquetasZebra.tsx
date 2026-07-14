@@ -235,214 +235,272 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[280px_1fr_320px] gap-4">
-      {/* COLUNA ESQUERDA — Produtos & Layout */}
-      <div className="space-y-4 md:col-span-1 lg:col-span-1 order-2 md:order-1">
-        <Card>
-          <CardHeader className="py-3"><CardTitle className="text-sm">Layout da Etiqueta</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            <Select value={layoutId} onValueChange={setLayoutId}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {LAYOUTS.map(l => <SelectItem key={l.id} value={l.id}>{l.nome}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <div className="text-xs text-muted-foreground">
-              Impressora: Zebra TLP 2844 (203dpi). Ajuste o tamanho de papel na caixa de impressão.
+    <div className="space-y-4">
+      {/* HEADER */}
+      <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 sm:p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="h-10 w-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center shrink-0">
+              <Printer className="h-5 w-5" />
             </div>
-            <Button size="sm" variant="outline" className="w-full" onClick={saveTemplate}>
-              <Save className="h-3.5 w-3.5 mr-2" /> Salvar Template
+            <div>
+              <h2 className="text-base sm:text-lg font-semibold leading-tight">Impressão de Etiquetas Zebra</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Modelo TLP 2844 · {layout.nome}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="outline" onClick={saveTemplate} className="gap-1.5">
+              <Save className="h-3.5 w-3.5" /> Salvar template
             </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="py-3"><CardTitle className="text-sm">Produtos</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            <Input placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} />
-            <div className="max-h-48 md:max-h-64 overflow-auto border rounded p-1 space-y-1">
-              {filteredProducts.map(p => (
-                <label key={p.id} className="flex items-center gap-2 text-xs p-1 hover:bg-muted rounded cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedProductIds.includes(p.id)}
-                    onChange={e => setSelectedProductIds(prev =>
-                      e.target.checked ? [...prev, p.id] : prev.filter(id => id !== p.id)
-                    )}
-                  />
-                  <span className="truncate">{p.nome}</span>
-                </label>
-              ))}
-              {filteredProducts.length === 0 && <div className="text-xs text-muted-foreground p-2">Nenhum produto</div>}
-            </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-xs">Qtd por produto:</Label>
-              <Input type="number" min={1} value={qtyPerProduct} onChange={e => setQtyPerProduct(Math.max(1, +e.target.value || 1))} className="w-20 h-8" />
-            </div>
-            <Button className="w-full" onClick={handlePrint}>
-              <Printer className="h-4 w-4 mr-2" /> Imprimir ({selectedProductIds.length * qtyPerProduct})
+            <Button size="sm" onClick={handlePrint} className="gap-1.5">
+              <Printer className="h-3.5 w-3.5" /> Imprimir ({selectedProductIds.length * qtyPerProduct})
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
-      {/* COLUNA CENTRAL — Preview */}
-      <div className="space-y-3 md:col-span-1 lg:col-span-1 order-1 md:order-2">
-        <div className="flex gap-2 flex-wrap">
-          <Button size="sm" variant="outline" onClick={() => addElement("text")}><Type className="h-3.5 w-3.5 mr-1" />Texto</Button>
-          <Button size="sm" variant="outline" onClick={() => addElement("image")}><ImageIcon className="h-3.5 w-3.5 mr-1" />Imagem</Button>
-          <Button size="sm" variant="outline" onClick={() => addElement("barcode_ean13")}><Barcode className="h-3.5 w-3.5 mr-1" />EAN-13</Button>
-          <Button size="sm" variant="outline" onClick={() => addElement("barcode_ean14")}><Barcode className="h-3.5 w-3.5 mr-1" />EAN-14</Button>
-          <Button size="sm" variant="outline" onClick={() => addElement("qrcode")}><QrCode className="h-3.5 w-3.5 mr-1" />QR Code</Button>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[300px_minmax(0,1fr)_340px] gap-4">
+        {/* COLUNA ESQUERDA — Produtos & Layout */}
+        <div className="space-y-4 order-2 md:order-1">
+          <Card className="border-border/60 shadow-sm">
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Layout da Etiqueta
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Select value={layoutId} onValueChange={setLayoutId}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {LAYOUTS.map(l => <SelectItem key={l.id} value={l.id}>{l.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <div className="text-[11px] text-muted-foreground leading-relaxed">
+                Zebra TLP 2844 (203dpi). Ajuste o tamanho de papel na caixa de impressão.
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 shadow-sm">
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Produtos
+                </span>
+                {selectedProductIds.length > 0 && (
+                  <span className="text-[10px] font-normal rounded-full bg-primary/15 text-primary px-2 py-0.5">
+                    {selectedProductIds.length} selecionado(s)
+                  </span>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Input placeholder="Buscar produto, código, EAN..." value={search} onChange={e => setSearch(e.target.value)} className="h-9" />
+              <div className="max-h-56 lg:max-h-72 overflow-auto border rounded-md p-1 space-y-0.5 bg-muted/20">
+                {filteredProducts.map(p => {
+                  const checked = selectedProductIds.includes(p.id);
+                  return (
+                    <label
+                      key={p.id}
+                      className={`flex items-center gap-2 text-xs p-1.5 rounded cursor-pointer transition-colors ${
+                        checked ? "bg-primary/10 text-foreground" : "hover:bg-muted"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={e => setSelectedProductIds(prev =>
+                          e.target.checked ? [...prev, p.id] : prev.filter(id => id !== p.id)
+                        )}
+                        className="accent-primary"
+                      />
+                      <span className="truncate flex-1">{p.nome}</span>
+                      {p.codigo && <span className="text-[10px] text-muted-foreground shrink-0">{p.codigo}</span>}
+                    </label>
+                  );
+                })}
+                {filteredProducts.length === 0 && <div className="text-xs text-muted-foreground p-3 text-center">Nenhum produto</div>}
+              </div>
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <Label className="text-xs">Qtd por produto</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={qtyPerProduct}
+                  onChange={e => setQtyPerProduct(Math.max(1, +e.target.value || 1))}
+                  className="w-20 h-8"
+                />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        <Card>
-          <CardHeader className="py-3">
-            <CardTitle className="text-sm">Pré-visualização — {layout.largura_mm} × {layout.altura_mm} mm</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-center p-3 sm:p-6 bg-muted/30 rounded overflow-auto">
-              <div
-                className="relative bg-white border-2 border-dashed border-border shadow-sm shrink-0"
-                style={{
-                  width: layout.largura_mm * MM_TO_PX * 2,
-                  height: layout.altura_mm * MM_TO_PX * 2,
-                }}
-                onMouseDown={(e) => {
-                  if (e.target === e.currentTarget) setSelectedId(null);
-                }}
-              >
-                {elements.map(el => (
-                  <PreviewElement
-                    key={el.id}
-                    el={el}
-                    selected={el.id === selectedId}
-                    scale={MM_TO_PX * 2}
-                    onSelect={() => setSelectedId(el.id)}
-                    onMove={(x, y) => setElements(prev => prev.map(e => e.id === el.id ? { ...e, x, y } : e))}
-                    sample={products[0]}
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="text-xs text-muted-foreground mt-2 text-center">
-              Arraste os elementos para posicionar. Amostra usa o 1º produto do catálogo.
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        {/* COLUNA CENTRAL — Preview */}
+        <div className="space-y-3 order-1 md:order-2 md:col-span-1">
+          <div className="flex gap-1.5 flex-wrap p-2 rounded-lg border bg-card sticky top-0 z-10 shadow-sm">
+            <span className="text-[11px] font-medium text-muted-foreground px-2 self-center">Adicionar:</span>
+            <Button size="sm" variant="outline" onClick={() => addElement("text")} className="h-8"><Type className="h-3.5 w-3.5 mr-1" />Texto</Button>
+            <Button size="sm" variant="outline" onClick={() => addElement("image")} className="h-8"><ImageIcon className="h-3.5 w-3.5 mr-1" />Imagem</Button>
+            <Button size="sm" variant="outline" onClick={() => addElement("barcode_ean13")} className="h-8"><Barcode className="h-3.5 w-3.5 mr-1" />EAN-13</Button>
+            <Button size="sm" variant="outline" onClick={() => addElement("barcode_ean14")} className="h-8"><Barcode className="h-3.5 w-3.5 mr-1" />EAN-14</Button>
+            <Button size="sm" variant="outline" onClick={() => addElement("qrcode")} className="h-8"><QrCode className="h-3.5 w-3.5 mr-1" />QR</Button>
+          </div>
 
-      {/* COLUNA DIREITA — Propriedades */}
-      <div className="md:col-span-2 lg:col-span-1 order-3">
-
-        <Card>
-          <CardHeader className="py-3">
-            <CardTitle className="text-sm">
-              {selected ? `Propriedades — ${labelForType(selected.type)}` : "Selecione um elemento"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {!selected && (
-              <div className="text-xs text-muted-foreground">
-                Adicione elementos usando os botões acima e clique para editar.
-              </div>
-            )}
-            {selected && (
-              <>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs">X (mm)</Label>
-                    <Input type="number" step="0.5" value={selected.x} onChange={e => updateSelected({ x: +e.target.value })} />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Y (mm)</Label>
-                    <Input type="number" step="0.5" value={selected.y} onChange={e => updateSelected({ y: +e.target.value })} />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Largura (mm)</Label>
-                    <Input type="number" step="0.5" value={selected.w} onChange={e => updateSelected({ w: +e.target.value })} />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Altura (mm)</Label>
-                    <Input type="number" step="0.5" value={selected.h} onChange={e => updateSelected({ h: +e.target.value })} />
-                  </div>
+          <Card className="border-border/60 shadow-sm">
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm flex items-center justify-between">
+                <span>Pré-visualização</span>
+                <span className="text-[11px] font-normal text-muted-foreground">
+                  {layout.largura_mm} × {layout.altura_mm} mm
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-center p-3 sm:p-6 rounded-md overflow-auto bg-[linear-gradient(135deg,hsl(var(--muted))_25%,transparent_25%,transparent_50%,hsl(var(--muted))_50%,hsl(var(--muted))_75%,transparent_75%,transparent)] bg-[length:16px_16px] bg-muted/20">
+                <div
+                  className="relative bg-white border-2 border-dashed border-primary/40 shadow-md shrink-0 rounded-sm"
+                  style={{
+                    width: layout.largura_mm * MM_TO_PX * 2,
+                    height: layout.altura_mm * MM_TO_PX * 2,
+                  }}
+                  onMouseDown={(e) => {
+                    if (e.target === e.currentTarget) setSelectedId(null);
+                  }}
+                >
+                  {elements.map(el => (
+                    <PreviewElement
+                      key={el.id}
+                      el={el}
+                      selected={el.id === selectedId}
+                      scale={MM_TO_PX * 2}
+                      onSelect={() => setSelectedId(el.id)}
+                      onMove={(x, y) => setElements(prev => prev.map(e => e.id === el.id ? { ...e, x, y } : e))}
+                      sample={products[0]}
+                    />
+                  ))}
                 </div>
+              </div>
+              <div className="text-[11px] text-muted-foreground mt-2 text-center">
+                Arraste os elementos para posicionar. Amostra usa o 1º produto do catálogo.
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-                {selected.type === "text" && (
-                  <>
+        {/* COLUNA DIREITA — Propriedades */}
+        <div className="order-3 md:col-span-2 lg:col-span-1">
+          <Card className="border-border/60 shadow-sm lg:sticky lg:top-2">
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <span className={`h-1.5 w-1.5 rounded-full ${selected ? "bg-primary" : "bg-muted-foreground/40"}`} />
+                {selected ? `Propriedades — ${labelForType(selected.type)}` : "Selecione um elemento"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {!selected && (
+                <div className="text-xs text-muted-foreground border border-dashed rounded-md p-4 text-center">
+                  Adicione elementos usando a barra de ferramentas acima e clique para editar.
+                </div>
+              )}
+              {selected && (
+                <>
+                  <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <Label className="text-xs">Conteúdo (use variáveis)</Label>
-                      <Textarea rows={3} value={selected.content} onChange={e => updateSelected({ content: e.target.value })} />
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div>
-                        <Label className="text-xs">Tamanho (pt)</Label>
-                        <Input type="number" value={selected.fontSize || 8} onChange={e => updateSelected({ fontSize: +e.target.value })} />
-                      </div>
-                      <div>
-                        <Label className="text-xs">Alinhamento</Label>
-                        <Select value={selected.align || "left"} onValueChange={(v: any) => updateSelected({ align: v })}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="left">Esquerda</SelectItem>
-                            <SelectItem value="center">Centro</SelectItem>
-                            <SelectItem value="right">Direita</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-xs">Negrito</Label>
-                        <Button variant={selected.bold ? "default" : "outline"} size="sm" className="w-full" onClick={() => updateSelected({ bold: !selected.bold })}>
-                          {selected.bold ? "Sim" : "Não"}
-                        </Button>
-                      </div>
+                      <Label className="text-xs">X (mm)</Label>
+                      <Input type="number" step="0.5" value={selected.x} onChange={e => updateSelected({ x: +e.target.value })} className="h-8" />
                     </div>
                     <div>
-                      <Label className="text-xs">Inserir variável</Label>
-                      <div className="flex flex-wrap gap-1 max-h-32 overflow-auto border rounded p-2">
-                        {PRODUCT_VARS.map(v => (
-                          <Button key={v.key} type="button" size="sm" variant="secondary" className="h-6 text-[10px]"
-                            onClick={() => updateSelected({ content: (selected.content || "") + `{{${v.key}}}` })}>
-                            <Copy className="h-2.5 w-2.5 mr-1" />{v.label}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {selected.type === "image" && (
-                  <>
-                    <div>
-                      <Label className="text-xs">URL ou variável (ex: {`{{foto_url}}`})</Label>
-                      <Input value={selected.content} onChange={e => updateSelected({ content: e.target.value })} />
+                      <Label className="text-xs">Y (mm)</Label>
+                      <Input type="number" step="0.5" value={selected.y} onChange={e => updateSelected({ y: +e.target.value })} className="h-8" />
                     </div>
                     <div>
-                      <Label className="text-xs">Ou fazer upload</Label>
-                      <input ref={fileRef} type="file" accept="image/*" onChange={handleImageUpload} className="text-xs" />
+                      <Label className="text-xs">Largura (mm)</Label>
+                      <Input type="number" step="0.5" value={selected.w} onChange={e => updateSelected({ w: +e.target.value })} className="h-8" />
                     </div>
-                  </>
-                )}
-
-                {(selected.type === "barcode_ean13" || selected.type === "barcode_ean14" || selected.type === "qrcode") && (
-                  <div>
-                    <Label className="text-xs">Valor / Variável</Label>
-                    <Input value={selected.content} onChange={e => updateSelected({ content: e.target.value })} />
-                    <div className="text-[10px] text-muted-foreground mt-1">
-                      {selected.type === "barcode_ean13" && "EAN-13: 12 ou 13 dígitos"}
-                      {selected.type === "barcode_ean14" && "EAN-14 / ITF-14: 13 ou 14 dígitos"}
-                      {selected.type === "qrcode" && "Qualquer texto ou URL"}
+                    <div>
+                      <Label className="text-xs">Altura (mm)</Label>
+                      <Input type="number" step="0.5" value={selected.h} onChange={e => updateSelected({ h: +e.target.value })} className="h-8" />
                     </div>
                   </div>
-                )}
 
-                <Button variant="destructive" size="sm" className="w-full" onClick={removeSelected}>
-                  <Trash2 className="h-3.5 w-3.5 mr-2" /> Remover elemento
-                </Button>
-              </>
-            )}
-          </CardContent>
-        </Card>
+                  {selected.type === "text" && (
+                    <>
+                      <div>
+                        <Label className="text-xs">Conteúdo (use variáveis)</Label>
+                        <Textarea rows={3} value={selected.content} onChange={e => updateSelected({ content: e.target.value })} className="text-xs font-mono" />
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <Label className="text-xs">Tam. (pt)</Label>
+                          <Input type="number" value={selected.fontSize || 8} onChange={e => updateSelected({ fontSize: +e.target.value })} className="h-8" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Alinhar</Label>
+                          <Select value={selected.align || "left"} onValueChange={(v: any) => updateSelected({ align: v })}>
+                            <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="left">Esquerda</SelectItem>
+                              <SelectItem value="center">Centro</SelectItem>
+                              <SelectItem value="right">Direita</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs">Negrito</Label>
+                          <Button variant={selected.bold ? "default" : "outline"} size="sm" className="w-full h-8" onClick={() => updateSelected({ bold: !selected.bold })}>
+                            {selected.bold ? "B" : "b"}
+                          </Button>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Inserir variável</Label>
+                        <div className="flex flex-wrap gap-1 max-h-36 overflow-auto border rounded-md p-2 bg-muted/20">
+                          {PRODUCT_VARS.map(v => (
+                            <Button key={v.key} type="button" size="sm" variant="secondary" className="h-6 text-[10px] px-2"
+                              onClick={() => updateSelected({ content: (selected.content || "") + `{{${v.key}}}` })}>
+                              <Copy className="h-2.5 w-2.5 mr-1" />{v.label}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {selected.type === "image" && (
+                    <>
+                      <div>
+                        <Label className="text-xs">URL ou variável (ex: {`{{foto_url}}`})</Label>
+                        <Input value={selected.content} onChange={e => updateSelected({ content: e.target.value })} className="h-8 text-xs font-mono" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Ou fazer upload</Label>
+                        <input ref={fileRef} type="file" accept="image/*" onChange={handleImageUpload} className="text-xs w-full" />
+                      </div>
+                    </>
+                  )}
+
+                  {(selected.type === "barcode_ean13" || selected.type === "barcode_ean14" || selected.type === "qrcode") && (
+                    <div>
+                      <Label className="text-xs">Valor / Variável</Label>
+                      <Input value={selected.content} onChange={e => updateSelected({ content: e.target.value })} className="h-8 text-xs font-mono" />
+                      <div className="text-[10px] text-muted-foreground mt-1">
+                        {selected.type === "barcode_ean13" && "EAN-13: 12 ou 13 dígitos"}
+                        {selected.type === "barcode_ean14" && "EAN-14 / ITF-14: 13 ou 14 dígitos"}
+                        {selected.type === "qrcode" && "Qualquer texto ou URL"}
+                      </div>
+                    </div>
+                  )}
+
+                  <Button variant="destructive" size="sm" className="w-full" onClick={removeSelected}>
+                    <Trash2 className="h-3.5 w-3.5 mr-2" /> Remover elemento
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
