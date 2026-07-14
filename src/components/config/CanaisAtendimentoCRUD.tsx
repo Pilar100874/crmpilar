@@ -338,6 +338,8 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
   const [showNewSessionDialog, setShowNewSessionDialog] = useState(false);
   const [selectedQrSession, setSelectedQrSession] = useState<WhatsAppSession | null>(null);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+  const [sessionUsages, setSessionUsages] = useState<Array<{ tipo: string; nome: string; id: string }>>([]);
+  const [checkingUsage, setCheckingUsage] = useState(false);
 
   useEffect(() => {
     loadConfig();
