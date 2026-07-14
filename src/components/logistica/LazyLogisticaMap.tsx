@@ -32,11 +32,14 @@ interface LazyLogisticaMapProps {
   disableInteraction?: boolean;
 }
 
-// Retry dynamic import; se o chunk sumiu após novo deploy, força reload uma vez.
+// Retry dynamic import; se o chunk sumiu após novo deploy, força reload (com janela de 30s p/ evitar loop).
 const LogisticaMapInternal = lazy(() =>
   import('./LogisticaMapInternal').catch((err) => {
-    if (!sessionStorage.getItem('reloadedForChunkError')) {
-      sessionStorage.setItem('reloadedForChunkError', '1');
+    const key = 'reloadedForChunkError:ts';
+    const last = Number(sessionStorage.getItem(key) || 0);
+    const now = Date.now();
+    if (now - last > 30_000) {
+      sessionStorage.setItem(key, String(now));
       window.location.reload();
     }
     throw err;
