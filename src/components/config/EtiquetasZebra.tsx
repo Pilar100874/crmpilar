@@ -295,7 +295,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
                 </Select>
               </div>
               {currentTemplateId && (
-                <Button variant="ghost" size="sm" onClick={deleteCurrent} className="w-full text-destructive h-8">
+                <Button variant="ghost" size="sm" onClick={() => setDeleteOpen(true)} className="w-full text-destructive h-8">
                   <Trash2 className="h-3.5 w-3.5 mr-1" /> Excluir template
                 </Button>
               )}
