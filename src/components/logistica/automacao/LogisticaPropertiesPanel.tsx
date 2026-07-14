@@ -31,6 +31,8 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
   const [condicoesLocal, setCondicoesLocal] = useState<CondicaoTempoParado[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loadingUsuarios, setLoadingUsuarios] = useState(false);
+  const [canaisWhats, setCanaisWhats] = useState<Array<{ id: string; nome: string; telefone: string | null; is_default: boolean }>>([]);
+
   
   const nodeData = selectedNode?.data as any;
   const config = nodeData?.config || {};
