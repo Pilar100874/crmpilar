@@ -154,12 +154,36 @@ export async function executarAutomacoesLogistica(
         // Handle "acao_whatsapp"
         if ((nodeType as string) === 'acao_whatsapp') {
           try {
-            await executarBlocoWhatsapp(
-              { telefone: config.telefone || '', mensagem: config.mensagem },
-              wfCtx
-            );
+            const destino = (config as any).destino_tipo
+              || ((config as any).usar_telefone_cliente ? 'cliente' : 'numero');
+            const whatsappNumeroId = (config as any).whatsappNumeroId || null;
+            const mensagemTpl = String((config as any).mensagem || '');
+
+            if (destino === 'motorista_atual') {
+              const { fetchMotoristasAtuais, formatWhatsappNumber } = await import('@/lib/logistica/cvDriverLookup');
+              const ids = veiculos.map(v => v.id);
+              const map = await fetchMotoristasAtuais(ids);
+              for (const veic of veiculos) {
+                const mot = map[veic.id];
+                const tel = formatWhatsappNumber(mot?.telefone || null);
+                if (!mot || !tel) continue;
+                const mensagem = mensagemTpl
+                  .replace(/\{placa\}/g, (veic as any).placa || '')
+                  .replace(/\{motorista\}/g, mot.nome || '');
+                await executarBlocoWhatsapp(
+                  { telefone: tel, mensagem, whatsappNumeroId },
+                  wfCtx
+                );
+              }
+            } else {
+              await executarBlocoWhatsapp(
+                { telefone: (config as any).telefone || '', mensagem: mensagemTpl, whatsappNumeroId },
+                wfCtx
+              );
+            }
           } catch (e) { console.error('[logistica] falha ao enviar WhatsApp', e); }
         }
+
 
         // Handle "acao_email"
         if ((nodeType as string) === 'acao_email') {
