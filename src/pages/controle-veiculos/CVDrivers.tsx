@@ -8,7 +8,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Users, User, Phone, IdCard, Search, ToggleLeft, ToggleRight } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, User, IdCard, Search, ToggleLeft, ToggleRight, MessageCircle } from "lucide-react";
+
+const maskWhatsapp = (v: string) => {
+  const d = (v || "").replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+};
 import { CVPageHeader } from "./CVPageHeader";
 import type { Driver } from "@/types/vehicle";
 
