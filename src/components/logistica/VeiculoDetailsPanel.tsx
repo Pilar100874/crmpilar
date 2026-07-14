@@ -101,7 +101,7 @@ export const VeiculoDetailsPanel: React.FC<VeiculoDetailsPanelProps> = ({
                     </Button>
                     {wa && (
                       <Button asChild size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white">
-                        <a href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer">
+                        <a href={`https://web.whatsapp.com/send?phone=${wa}`} target="_blank" rel="noopener noreferrer">
                           <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
                           WhatsApp
                         </a>
