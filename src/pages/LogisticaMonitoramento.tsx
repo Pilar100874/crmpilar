@@ -612,19 +612,21 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                           <User className="h-3 w-3 text-primary" />
                           {v.motorista_atual.nome}
                         </p>
-                        {v.motorista_atual.telefone && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const wa = formatWhatsappNumber(v.motorista_atual!.telefone);
-                              if (wa) window.open(`https://wa.me/${wa}`, '_blank');
-                            }}
-                            className="inline-flex items-center gap-1 text-[10px] text-emerald-600 hover:underline"
-                          >
-                            <MessageCircle className="h-3 w-3" />
-                            {v.motorista_atual.telefone}
-                          </button>
-                        )}
+                        {v.motorista_atual.telefone && (() => {
+                          const wa = formatWhatsappNumber(v.motorista_atual!.telefone);
+                          return wa ? (
+                            <a
+                              href={`https://wa.me/${wa}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1 text-[10px] text-emerald-600 hover:underline"
+                            >
+                              <MessageCircle className="h-3 w-3" />
+                              {v.motorista_atual.telefone}
+                            </a>
+                          ) : null;
+                        })()}
                       </div>
                     ) : v.motorista && (
                       <p className="text-xs text-muted-foreground mt-1 truncate">{v.motorista}</p>
