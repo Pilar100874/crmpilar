@@ -139,7 +139,7 @@ export default function CVDrivers() {
           <div className="space-y-3">
             <div><Label>Nome</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
             <div><Label>CNH</Label><Input value={form.license} onChange={e => setForm({ ...form, license: e.target.value })} /></div>
-            <div><Label>Telefone</Label><Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
+            <div><Label>WhatsApp</Label><Input inputMode="tel" placeholder="(11) 91234-5678" value={form.phone} onChange={e => setForm({ ...form, phone: maskWhatsapp(e.target.value) })} /></div>
             <div className="flex items-center gap-2">
               <Switch checked={form.active} onCheckedChange={v => setForm({ ...form, active: v })} />
               <Label>Ativo</Label>
