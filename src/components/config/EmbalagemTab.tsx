@@ -279,15 +279,22 @@ export function EmbalagemTab({
     }
   };
 
-  const handleZebraPrint = async (value: string, kind: "ean13" | "ean14") => {
+  const openZebraDialog = (value: string, kind: "ean13" | "ean14", label: string) => {
     if (!value) { toast.error("EAN não disponível"); return; }
     const template = getTemplateForBarcode(estabelecimentoId, kind);
     if (!template) {
       toast.error(`Nenhum template Zebra padrão definido para ${kind.toUpperCase()}. Configure em Configurações de Vendas → Impressão de Etiquetas Zebra.`);
       return;
     }
-    const qty = parseInt(prompt(`Quantidade de etiquetas Zebra (1-500):`, "1") || "0", 10);
-    if (!qty || qty < 1 || qty > 500) { toast.error("Quantidade inválida"); return; }
+    setZebraQty("1");
+    setZebraDialog({ open: true, ean: value, kind, label });
+  };
+
+  const confirmZebraPrint = async () => {
+    const qty = parseInt(zebraQty, 10);
+    if (!qty || qty < 1 || qty > 500) { toast.error("Quantidade inválida (1 a 500)"); return; }
+    const template = getTemplateForBarcode(estabelecimentoId, zebraDialog.kind);
+    if (!template) { toast.error("Template não encontrado"); return; }
     try {
       const product = {
         ...(productData || {}),
@@ -297,6 +304,7 @@ export function EmbalagemTab({
       };
       await printZebraLabels(template, product, qty);
       toast.success(`Enviando ${qty} etiqueta(s) para impressão...`);
+      setZebraDialog({ ...zebraDialog, open: false });
     } catch (e: any) {
       toast.error(e?.message || "Erro ao imprimir");
     }
