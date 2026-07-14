@@ -120,7 +120,10 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [qtyPerProduct, setQtyPerProduct] = useState<number>(1);
   const [search, setSearch] = useState("");
+  const [previewScale, setPreviewScale] = useState(MM_TO_PX * 2);
   const fileRef = useRef<HTMLInputElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+
 
   const layout = LAYOUTS.find(l => l.id === layoutId)!;
   const storageKey = `zebra_template_${estabelecimentoId}_${layoutId}`;
@@ -154,7 +157,24 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
     setSelectedId(null);
   }, [layoutId]);
 
+  // Escala responsiva da pré-visualização para caber sem rolagem horizontal
+  useEffect(() => {
+    function update() {
+      const wrapper = previewRef.current;
+      if (!wrapper) return;
+      const desired = layout.largura_mm * MM_TO_PX * 2;
+      const max = wrapper.clientWidth - 24;
+      const s = desired <= max ? MM_TO_PX * 2 : Math.max(2, max / layout.largura_mm);
+      setPreviewScale(s);
+    }
+    update();
+    const ro = new ResizeObserver(update);
+    if (previewRef.current) ro.observe(previewRef.current);
+    return () => ro.disconnect();
+  }, [layoutId, layout.largura_mm]);
+
   const selected = elements.find(e => e.id === selectedId) || null;
+
 
   function addElement(type: ElementType) {
     const base: EtiquetaElement = {
@@ -358,12 +378,15 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-center p-3 sm:p-6 rounded-md overflow-auto bg-[linear-gradient(135deg,hsl(var(--muted))_25%,transparent_25%,transparent_50%,hsl(var(--muted))_50%,hsl(var(--muted))_75%,transparent_75%,transparent)] bg-[length:16px_16px] bg-muted/20">
+              <div
+                ref={previewRef}
+                className="flex justify-center p-3 sm:p-6 rounded-md overflow-hidden bg-[linear-gradient(135deg,hsl(var(--muted))_25%,transparent_25%,transparent_50%,hsl(var(--muted))_50%,hsl(var(--muted))_75%,transparent_75%,transparent)] bg-[length:16px_16px] bg-muted/20"
+              >
                 <div
                   className="relative bg-white border-2 border-dashed border-primary/40 shadow-md shrink-0 rounded-sm"
                   style={{
-                    width: layout.largura_mm * MM_TO_PX * 2,
-                    height: layout.altura_mm * MM_TO_PX * 2,
+                    width: layout.largura_mm * previewScale,
+                    height: layout.altura_mm * previewScale,
                   }}
                   onMouseDown={(e) => {
                     if (e.target === e.currentTarget) setSelectedId(null);
@@ -374,7 +397,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
                       key={el.id}
                       el={el}
                       selected={el.id === selectedId}
-                      scale={MM_TO_PX * 2}
+                      scale={previewScale}
                       onSelect={() => setSelectedId(el.id)}
                       onMove={(x, y) => setElements(prev => prev.map(e => e.id === el.id ? { ...e, x, y } : e))}
                       sample={products[0]}
@@ -382,6 +405,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
                   ))}
                 </div>
               </div>
+
               <div className="text-[11px] text-muted-foreground mt-2 text-center">
                 Arraste os elementos para posicionar. Amostra usa o 1º produto do catálogo.
               </div>
