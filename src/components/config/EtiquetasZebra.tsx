@@ -140,12 +140,10 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
     toast.success("Template salvo!");
   }
 
-  function deleteCurrent() {
+  function confirmDelete() {
     if (!currentTemplateId) return;
-    if (!confirm("Excluir este template?")) return;
     const list = templates.filter(t => t.id !== currentTemplateId);
     saveTemplates(estabelecimentoId, list);
-    // Limpar defaults se apontavam para este
     const newDefs: TemplateDefaults = { ...defaults };
     if (newDefs.ean13 === currentTemplateId) delete newDefs.ean13;
     if (newDefs.ean14 === currentTemplateId) delete newDefs.ean14;
@@ -154,6 +152,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
     setTemplates(list);
     if (list[0]) loadTemplate(list[0].id);
     else newTemplate();
+    setDeleteOpen(false);
     toast.success("Template excluído");
   }
 
