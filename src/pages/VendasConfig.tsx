@@ -21,8 +21,10 @@ import {
   FileUp,
   FileText,
   Bot,
-  ImagePlus
+  ImagePlus,
+  Tag
 } from 'lucide-react';
+import { EtiquetasZebra } from '@/components/config/EtiquetasZebra';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -73,6 +75,7 @@ const tabItems: TabItem[] = [
   { id: 'importacao-terceiros', label: 'Importação de Terceiros', icon: FileUp },
   { id: 'whatsapp-catalogo', label: 'Lista de Produtos no WhatsApp', icon: MessageCircle },
   { id: 'licitacoes-bot', label: 'Bot Caça Licitações', icon: Bot },
+  { id: 'etiquetas-zebra', label: 'Impressão de Etiquetas Zebra', icon: Tag },
 ];
 
 export default function VendasConfig() {
@@ -504,6 +507,23 @@ export default function VendasConfig() {
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6">
                   {estabelecimentoId && <LicitacoesBot estabelecimentoId={estabelecimentoId} />}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="etiquetas-zebra" className="mt-0 h-full">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <Tag className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Impressão de Etiquetas Zebra
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Crie layouts de etiquetas (100x30, 50x30, 100x25, 100x50) para Zebra TLP 2844 com texto, imagem, EAN-13, EAN-14 e QR Code
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6">
+                  {estabelecimentoId && <EtiquetasZebra estabelecimentoId={estabelecimentoId} />}
                 </CardContent>
               </Card>
             </TabsContent>
