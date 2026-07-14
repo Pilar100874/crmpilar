@@ -39,6 +39,7 @@ interface VeiculoHistorico {
   posicoes: VeiculoPosicao[];
   estatisticas: HistoricoEstatisticas | null;
   color: string;
+  motorista_atual?: MotoristaAtual | null;
 }
 
 interface LogisticaHistoricoProps {
