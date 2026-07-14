@@ -95,6 +95,7 @@ export function EmbalagemTab({
   imgEan14_1,
   imgEan14_2,
   estabelecimentoId,
+  productData,
   onEan13Change,
   onEan14_1Change,
   onEan14_2Change,
