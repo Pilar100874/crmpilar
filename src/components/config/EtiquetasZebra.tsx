@@ -592,10 +592,13 @@ function labelForType(t: ElementType): string {
 }
 
 function PreviewElement({
-  el, selected, scale, onSelect, onMove, sample,
+  el, selected, scale, onSelect, onMove, onResize, sample,
 }: {
   el: EtiquetaElement; selected: boolean; scale: number;
-  onSelect: () => void; onMove: (x: number, y: number) => void; sample: any;
+  onSelect: () => void;
+  onMove: (x: number, y: number) => void;
+  onResize: (x: number, y: number, w: number, h: number) => void;
+  sample: any;
 }) {
   const [dataURL, setDataURL] = useState<string>("");
 
@@ -640,6 +643,48 @@ function PreviewElement({
     }
   }
 
+  // dir: combinação de n/s/e/w (ex: "nw", "e", "se")
+  function startResize(clientX: number, clientY: number, isTouch: boolean, dir: string) {
+    onSelect();
+    const startX = clientX, startY = clientY;
+    const origX = el.x, origY = el.y, origW = el.w, origH = el.h;
+    const MIN = 2;
+    function move(ev: MouseEvent | TouchEvent) {
+      const p = "touches" in ev ? ev.touches[0] : (ev as MouseEvent);
+      if (!p) return;
+      const dx = (p.clientX - startX) / scale;
+      const dy = (p.clientY - startY) / scale;
+      let nx = origX, ny = origY, nw = origW, nh = origH;
+      if (dir.includes("e")) nw = Math.max(MIN, origW + dx);
+      if (dir.includes("s")) nh = Math.max(MIN, origH + dy);
+      if (dir.includes("w")) {
+        const cand = Math.max(MIN, origW - dx);
+        nx = Math.max(0, origX + (origW - cand));
+        nw = cand;
+      }
+      if (dir.includes("n")) {
+        const cand = Math.max(MIN, origH - dy);
+        ny = Math.max(0, origY + (origH - cand));
+        nh = cand;
+      }
+      onResize(nx, ny, nw, nh);
+      if ("touches" in ev) ev.preventDefault();
+    }
+    function up() {
+      window.removeEventListener("mousemove", move as any);
+      window.removeEventListener("mouseup", up);
+      window.removeEventListener("touchmove", move as any);
+      window.removeEventListener("touchend", up);
+    }
+    if (isTouch) {
+      window.addEventListener("touchmove", move as any, { passive: false });
+      window.addEventListener("touchend", up);
+    } else {
+      window.addEventListener("mousemove", move as any);
+      window.addEventListener("mouseup", up);
+    }
+  }
+
   const style: React.CSSProperties = {
     position: "absolute",
     left: el.x * scale,
@@ -648,7 +693,7 @@ function PreviewElement({
     height: el.h * scale,
     outline: selected ? "2px solid hsl(var(--primary))" : "1px dashed hsl(var(--border))",
     cursor: "move",
-    overflow: "hidden",
+    overflow: "visible",
     fontSize: (el.fontSize || 8) * 1.2,
     fontWeight: el.bold ? 700 : 400,
     textAlign: el.align || "left",
@@ -657,6 +702,17 @@ function PreviewElement({
     touchAction: "none",
   };
 
+  const handles: { dir: string; style: React.CSSProperties; cursor: string }[] = [
+    { dir: "nw", cursor: "nwse-resize", style: { left: -4, top: -4 } },
+    { dir: "n",  cursor: "ns-resize",   style: { left: "50%", top: -4, transform: "translateX(-50%)" } },
+    { dir: "ne", cursor: "nesw-resize", style: { right: -4, top: -4 } },
+    { dir: "e",  cursor: "ew-resize",   style: { right: -4, top: "50%", transform: "translateY(-50%)" } },
+    { dir: "se", cursor: "nwse-resize", style: { right: -4, bottom: -4 } },
+    { dir: "s",  cursor: "ns-resize",   style: { left: "50%", bottom: -4, transform: "translateX(-50%)" } },
+    { dir: "sw", cursor: "nesw-resize", style: { left: -4, bottom: -4 } },
+    { dir: "w",  cursor: "ew-resize",   style: { left: -4, top: "50%", transform: "translateY(-50%)" } },
+  ];
+
   return (
     <div
       style={style}
@@ -664,12 +720,34 @@ function PreviewElement({
       onTouchStart={(e) => { e.stopPropagation(); const t = e.touches[0]; if (t) startDrag(t.clientX, t.clientY, true); }}
       onClick={(e) => { e.stopPropagation(); onSelect(); }}
     >
-      {el.type === "text" && <div className="w-full h-full">{interpolate(el.content, sample || {}) || <span className="text-muted-foreground/40">texto</span>}</div>}
-      {(el.type === "image" || el.type === "barcode_ean13" || el.type === "barcode_ean14" || el.type === "qrcode") && (
-        dataURL
-          ? <img src={dataURL} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} draggable={false} />
-          : <div className="text-[10px] text-muted-foreground w-full h-full flex items-center justify-center">{labelForType(el.type)}</div>
-      )}
+      <div style={{ width: "100%", height: "100%", overflow: "hidden" }}>
+        {el.type === "text" && <div className="w-full h-full">{interpolate(el.content, sample || {}) || <span className="text-muted-foreground/40">texto</span>}</div>}
+        {(el.type === "image" || el.type === "barcode_ean13" || el.type === "barcode_ean14" || el.type === "qrcode") && (
+          dataURL
+            ? <img src={dataURL} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} draggable={false} />
+            : <div className="text-[10px] text-muted-foreground w-full h-full flex items-center justify-center">{labelForType(el.type)}</div>
+        )}
+      </div>
+      {selected && handles.map(h => (
+        <div
+          key={h.dir}
+          onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); startResize(e.clientX, e.clientY, false, h.dir); }}
+          onTouchStart={(e) => { e.stopPropagation(); const t = e.touches[0]; if (t) startResize(t.clientX, t.clientY, true, h.dir); }}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: "absolute",
+            width: 10,
+            height: 10,
+            background: "hsl(var(--primary))",
+            border: "1px solid white",
+            borderRadius: 2,
+            cursor: h.cursor,
+            zIndex: 10,
+            touchAction: "none",
+            ...h.style,
+          }}
+        />
+      ))}
     </div>
   );
 }
