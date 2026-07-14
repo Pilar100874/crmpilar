@@ -361,17 +361,8 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
           </Card>
         </div>
 
-        {/* COLUNA CENTRAL — Preview */}
-        <div className="space-y-3 order-1 md:order-2 md:col-span-1">
-          <div className="flex gap-1.5 flex-wrap p-2 rounded-lg border bg-card sticky top-0 z-10 shadow-sm">
-            <span className="text-[11px] font-medium text-muted-foreground px-2 self-center">Adicionar:</span>
-            <Button size="sm" variant="outline" onClick={() => addElement("text")} className="h-8"><Type className="h-3.5 w-3.5 mr-1" />Texto</Button>
-            <Button size="sm" variant="outline" onClick={() => addElement("image")} className="h-8"><ImageIcon className="h-3.5 w-3.5 mr-1" />Imagem</Button>
-            <Button size="sm" variant="outline" onClick={() => addElement("barcode_ean13")} className="h-8"><Barcode className="h-3.5 w-3.5 mr-1" />EAN-13</Button>
-            <Button size="sm" variant="outline" onClick={() => addElement("barcode_ean14")} className="h-8"><Barcode className="h-3.5 w-3.5 mr-1" />EAN-14</Button>
-            <Button size="sm" variant="outline" onClick={() => addElement("qrcode")} className="h-8"><QrCode className="h-3.5 w-3.5 mr-1" />QR</Button>
-          </div>
-
+        {/* COLUNA 3 — Preview */}
+        <div className="space-y-3 order-1 md:order-3 md:col-span-2 xl:col-span-1">
           <Card className="border-border/60 shadow-sm">
             <CardHeader className="py-3">
               <CardTitle className="text-sm flex items-center justify-between">
@@ -381,7 +372,15 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
+              <div className="flex gap-1.5 flex-wrap p-2 rounded-lg border bg-muted/20">
+                <span className="text-[11px] font-medium text-muted-foreground px-2 self-center">Adicionar:</span>
+                <Button size="sm" variant="outline" onClick={() => addElement("text")} className="h-8"><Type className="h-3.5 w-3.5 mr-1" />Texto</Button>
+                <Button size="sm" variant="outline" onClick={() => addElement("image")} className="h-8"><ImageIcon className="h-3.5 w-3.5 mr-1" />Imagem</Button>
+                <Button size="sm" variant="outline" onClick={() => addElement("barcode_ean13")} className="h-8"><Barcode className="h-3.5 w-3.5 mr-1" />EAN-13</Button>
+                <Button size="sm" variant="outline" onClick={() => addElement("barcode_ean14")} className="h-8"><Barcode className="h-3.5 w-3.5 mr-1" />EAN-14</Button>
+                <Button size="sm" variant="outline" onClick={() => addElement("qrcode")} className="h-8"><QrCode className="h-3.5 w-3.5 mr-1" />QR</Button>
+              </div>
               <div
                 ref={previewRef}
                 className="flex justify-center p-3 sm:p-6 rounded-md overflow-hidden bg-[linear-gradient(135deg,hsl(var(--muted))_25%,transparent_25%,transparent_50%,hsl(var(--muted))_50%,hsl(var(--muted))_75%,transparent_75%,transparent)] bg-[length:16px_16px] bg-muted/20"
