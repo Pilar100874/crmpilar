@@ -519,6 +519,42 @@ export function EmbalagemTab({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog Zebra */}
+      <Dialog open={zebraDialog.open} onOpenChange={(open) => setZebraDialog({ ...zebraDialog, open })}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Imprimir Zebra — {zebraDialog.label}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label>Código</Label>
+              <Input value={zebraDialog.ean} readOnly className="font-mono bg-muted/50" />
+            </div>
+            <div>
+              <Label>Quantidade de etiquetas</Label>
+              <Input
+                type="number"
+                min="1"
+                max="500"
+                value={zebraQty}
+                onChange={(e) => setZebraQty(e.target.value)}
+                autoFocus
+              />
+              <p className="text-xs text-muted-foreground mt-1">Máximo: 500 etiquetas</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setZebraDialog({ ...zebraDialog, open: false })}>
+              Cancelar
+            </Button>
+            <Button onClick={confirmZebraPrint}>
+              <Printer className="w-4 h-4 mr-2" />
+              Imprimir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
