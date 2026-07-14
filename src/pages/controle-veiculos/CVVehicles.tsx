@@ -24,7 +24,10 @@ const TYPES: { value: VehicleType; label: string }[] = [
 const empty = {
   name: "", plate: "", vehicle_type: "carro" as VehicleType,
   current_km: 0, oil_change_interval: 10000, last_oil_change_km: 0, active: true,
+  veiculo_id: null as string | null,
 };
+
+interface LogVeic { id: string; placa: string; descricao: string | null }
 
 export default function CVVehicles() {
   const [rows, setRows] = useState<Vehicle[]>([]);
