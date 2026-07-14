@@ -162,16 +162,17 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
     function update() {
       const wrapper = previewRef.current;
       if (!wrapper) return;
-      const desired = layout.largura_mm * MM_TO_PX * 2;
+      const totalW = layout.largura_mm * layout.colunas + layout.gap_mm * (layout.colunas - 1);
+      const desired = totalW * MM_TO_PX * 2;
       const max = wrapper.clientWidth - 24;
-      const s = desired <= max ? MM_TO_PX * 2 : Math.max(2, max / layout.largura_mm);
+      const s = desired <= max ? MM_TO_PX * 2 : Math.max(2, max / totalW);
       setPreviewScale(s);
     }
     update();
     const ro = new ResizeObserver(update);
     if (previewRef.current) ro.observe(previewRef.current);
     return () => ro.disconnect();
-  }, [layoutId, layout.largura_mm]);
+  }, [layoutId, layout.largura_mm, layout.colunas, layout.gap_mm]);
 
   const selected = elements.find(e => e.id === selectedId) || null;
 
@@ -275,7 +276,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
               <Save className="h-3.5 w-3.5" /> Salvar template
             </Button>
             <Button size="sm" onClick={handlePrint} className="gap-1.5">
-              <Printer className="h-3.5 w-3.5" /> Imprimir ({selectedProductIds.length * qtyPerProduct})
+              <Printer className="h-3.5 w-3.5" /> Imprimir ({selectedProductIds.length * qtyPerProduct * layout.colunas})
             </Button>
           </div>
         </div>
@@ -383,25 +384,33 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
                 className="flex justify-center p-3 sm:p-6 rounded-md overflow-hidden bg-[linear-gradient(135deg,hsl(var(--muted))_25%,transparent_25%,transparent_50%,hsl(var(--muted))_50%,hsl(var(--muted))_75%,transparent_75%,transparent)] bg-[length:16px_16px] bg-muted/20"
               >
                 <div
-                  className="relative bg-white border-2 border-dashed border-primary/40 shadow-md shrink-0 rounded-sm"
-                  style={{
-                    width: layout.largura_mm * previewScale,
-                    height: layout.altura_mm * previewScale,
-                  }}
-                  onMouseDown={(e) => {
-                    if (e.target === e.currentTarget) setSelectedId(null);
-                  }}
+                  className="flex items-start"
+                  style={{ gap: layout.gap_mm * previewScale }}
                 >
-                  {elements.map(el => (
-                    <PreviewElement
-                      key={el.id}
-                      el={el}
-                      selected={el.id === selectedId}
-                      scale={previewScale}
-                      onSelect={() => setSelectedId(el.id)}
-                      onMove={(x, y) => setElements(prev => prev.map(e => e.id === el.id ? { ...e, x, y } : e))}
-                      sample={products[0]}
-                    />
+                  {Array.from({ length: layout.colunas }).map((_, col) => (
+                    <div
+                      key={col}
+                      className="relative bg-white border-2 border-dashed border-primary/40 shadow-md shrink-0 rounded-sm"
+                      style={{
+                        width: layout.largura_mm * previewScale,
+                        height: layout.altura_mm * previewScale,
+                      }}
+                      onMouseDown={(e) => {
+                        if (e.target === e.currentTarget) setSelectedId(null);
+                      }}
+                    >
+                      {elements.map(el => (
+                        <PreviewElement
+                          key={`${col}-${el.id}`}
+                          el={el}
+                          selected={el.id === selectedId}
+                          scale={previewScale}
+                          onSelect={() => setSelectedId(el.id)}
+                          onMove={(x, y) => setElements(prev => prev.map(e => e.id === el.id ? { ...e, x, y } : e))}
+                          sample={products[0]}
+                        />
+                      ))}
+                    </div>
                   ))}
                 </div>
               </div>
@@ -633,13 +642,8 @@ async function buildPrintHTML(layout: LayoutPreset, elements: EtiquetaElement[],
   const pageWidth = layout.largura_mm * layout.colunas + layout.gap_mm * (layout.colunas - 1);
   const pageHeight = layout.altura_mm;
 
-  // Distribuir itens em "páginas" (linhas de N colunas). Cada página é impressa como uma etiqueta na Zebra.
-  const pages: any[][] = [];
-  for (let i = 0; i < items.length; i += layout.colunas) {
-    pages.push(items.slice(i, i + layout.colunas));
-  }
-
-  // Pré-renderizar códigos para cada célula
+  // Cada item gera uma linha de etiquetas. Em layouts de N colunas, a mesma
+  // informação do produto é repetida em todas as colunas da linha.
   const renderCell = async (product: any) => {
     const parts: string[] = [];
     for (const el of elements) {
@@ -665,9 +669,9 @@ async function buildPrintHTML(layout: LayoutPreset, elements: EtiquetaElement[],
   };
 
   const pageHTMLs: string[] = [];
-  for (const page of pages) {
+  for (const prod of items) {
     const cells: string[] = [];
-    for (const prod of page) cells.push(await renderCell(prod));
+    for (let c = 0; c < layout.colunas; c++) cells.push(await renderCell(prod));
     pageHTMLs.push(`<div class="page" style="display:flex;gap:${layout.gap_mm}mm;width:${pageWidth}mm;height:${pageHeight}mm;">${cells.join("")}</div>`);
   }
 
