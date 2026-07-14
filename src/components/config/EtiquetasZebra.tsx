@@ -157,7 +157,24 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
     setSelectedId(null);
   }, [layoutId]);
 
+  // Escala responsiva da pré-visualização para caber sem rolagem horizontal
+  useEffect(() => {
+    function update() {
+      const wrapper = previewRef.current;
+      if (!wrapper) return;
+      const desired = layout.largura_mm * MM_TO_PX * 2;
+      const max = wrapper.clientWidth - 24;
+      const s = desired <= max ? MM_TO_PX * 2 : Math.max(2, max / layout.largura_mm);
+      setPreviewScale(s);
+    }
+    update();
+    const ro = new ResizeObserver(update);
+    if (previewRef.current) ro.observe(previewRef.current);
+    return () => ro.disconnect();
+  }, [layoutId, layout.largura_mm]);
+
   const selected = elements.find(e => e.id === selectedId) || null;
+
 
   function addElement(type: ElementType) {
     const base: EtiquetaElement = {
