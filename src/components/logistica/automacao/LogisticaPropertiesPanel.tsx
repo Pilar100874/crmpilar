@@ -427,21 +427,7 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
               </p>
             </div>
 
-            <div className="flex items-start gap-2 rounded-md border p-3">
-              <Checkbox
-                id="enviar_localizacao"
-                checked={!!config.enviar_localizacao}
-                onCheckedChange={(v) => updateConfig('enviar_localizacao', !!v)}
-              />
-              <div className="space-y-0.5">
-                <Label htmlFor="enviar_localizacao" className="text-sm cursor-pointer">
-                  Enviar localização atual do veículo (Google Maps)
-                </Label>
-                <p className="text-[11px] text-muted-foreground">
-                  Adiciona um link do Google Maps logo abaixo da mensagem com a última posição registrada do veículo.
-                </p>
-              </div>
-            </div>
+            <EnviarLocalizacaoCheckbox config={config} updateConfig={updateConfig} />
           </div>
         );
       }
