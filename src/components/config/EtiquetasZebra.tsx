@@ -642,13 +642,8 @@ async function buildPrintHTML(layout: LayoutPreset, elements: EtiquetaElement[],
   const pageWidth = layout.largura_mm * layout.colunas + layout.gap_mm * (layout.colunas - 1);
   const pageHeight = layout.altura_mm;
 
-  // Distribuir itens em "páginas" (linhas de N colunas). Cada página é impressa como uma etiqueta na Zebra.
-  const pages: any[][] = [];
-  for (let i = 0; i < items.length; i += layout.colunas) {
-    pages.push(items.slice(i, i + layout.colunas));
-  }
-
-  // Pré-renderizar códigos para cada célula
+  // Cada item gera uma linha de etiquetas. Em layouts de N colunas, a mesma
+  // informação do produto é repetida em todas as colunas da linha.
   const renderCell = async (product: any) => {
     const parts: string[] = [];
     for (const el of elements) {
@@ -674,9 +669,9 @@ async function buildPrintHTML(layout: LayoutPreset, elements: EtiquetaElement[],
   };
 
   const pageHTMLs: string[] = [];
-  for (const page of pages) {
+  for (const prod of items) {
     const cells: string[] = [];
-    for (const prod of page) cells.push(await renderCell(prod));
+    for (let c = 0; c < layout.colunas; c++) cells.push(await renderCell(prod));
     pageHTMLs.push(`<div class="page" style="display:flex;gap:${layout.gap_mm}mm;width:${pageWidth}mm;height:${pageHeight}mm;">${cells.join("")}</div>`);
   }
 
