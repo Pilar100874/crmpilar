@@ -1,12 +1,13 @@
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Car, Clock, Gauge, User, Wifi, WifiOff } from 'lucide-react';
+import { Car, Clock, Gauge, User, Wifi, WifiOff, MessageCircle } from 'lucide-react';
 import { VeiculoComStatus } from '@/types/logistica';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { formatWhatsappNumber } from '@/lib/logistica/cvDriverLookup';
 
 interface VeiculosListProps {
   veiculos: VeiculoComStatus[];
