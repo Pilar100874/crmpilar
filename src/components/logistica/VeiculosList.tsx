@@ -116,19 +116,21 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
                       <User className="h-3 w-3 text-primary" />
                       <span className="truncate font-medium">{veiculo.motorista_atual.nome}</span>
                     </div>
-                    {veiculo.motorista_atual.telefone && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const wa = formatWhatsappNumber(veiculo.motorista_atual!.telefone);
-                          if (wa) window.open(`https://wa.me/${wa}`, '_blank');
-                        }}
-                        className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-emerald-600 hover:underline"
-                      >
-                        <MessageCircle className="h-3 w-3" />
-                        {veiculo.motorista_atual.telefone}
-                      </button>
-                    )}
+                    {veiculo.motorista_atual.telefone && (() => {
+                      const wa = formatWhatsappNumber(veiculo.motorista_atual!.telefone);
+                      return wa ? (
+                        <a
+                          href={`https://wa.me/${wa}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-emerald-600 hover:underline"
+                        >
+                          <MessageCircle className="h-3 w-3" />
+                          {veiculo.motorista_atual.telefone}
+                        </a>
+                      ) : null;
+                    })()}
                   </div>
                 ) : veiculo.motorista && (
                   <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground mb-1">
