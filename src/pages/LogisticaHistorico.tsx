@@ -709,18 +709,39 @@ const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = fals
               {displayData.map((vh) => (
                 <div key={vh.veiculo.id} className="space-y-3">
                   <div 
-                    className="flex items-center gap-2 pb-2 border-b"
+                    className="flex flex-col gap-1 pb-2 border-b"
                     style={{ borderBottomColor: vh.color }}
                   >
-                    <div 
-                      className="w-3 h-3 rounded-full flex-shrink-0" 
-                      style={{ backgroundColor: vh.color }}
-                    />
-                    <span className="font-medium text-sm">{vh.veiculo.placa}</span>
-                    {vh.veiculo.descricao && (
-                      <span className="text-xs text-muted-foreground truncate">
-                        {vh.veiculo.descricao}
-                      </span>
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full flex-shrink-0" 
+                        style={{ backgroundColor: vh.color }}
+                      />
+                      <span className="font-medium text-sm">{vh.veiculo.placa}</span>
+                      {vh.veiculo.descricao && (
+                        <span className="text-xs text-muted-foreground truncate">
+                          {vh.veiculo.descricao}
+                        </span>
+                      )}
+                    </div>
+                    {vh.motorista_atual && (
+                      <div className="flex items-center gap-2 pl-5 text-xs">
+                        <User className="h-3 w-3 text-primary" />
+                        <span className="font-medium truncate">{vh.motorista_atual.nome}</span>
+                        {vh.motorista_atual.telefone && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const wa = formatWhatsappNumber(vh.motorista_atual!.telefone);
+                              if (wa) window.open(`https://wa.me/${wa}`, '_blank');
+                            }}
+                            className="inline-flex items-center gap-1 text-emerald-600 hover:underline"
+                          >
+                            <MessageCircle className="h-3 w-3" />
+                            {vh.motorista_atual.telefone}
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
 
