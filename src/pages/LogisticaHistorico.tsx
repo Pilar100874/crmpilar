@@ -20,6 +20,8 @@ import { Label } from '@/components/ui/label';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
+import { fetchMotoristasAtuais, formatWhatsappNumber, type MotoristaAtual } from '@/lib/logistica/cvDriverLookup';
+import { MessageCircle, User } from 'lucide-react';
 
 const ROUTE_COLORS = [
   '#3b82f6', // blue
