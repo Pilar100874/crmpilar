@@ -417,15 +417,15 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
                 </div>
               </div>
 
-              <div className="text-[11px] text-muted-foreground mt-2 text-center">
+              <div className="text-[11px] text-muted-foreground text-center">
                 Arraste os elementos para posicionar. Amostra usa o 1º produto do catálogo.
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* COLUNA DIREITA — Propriedades */}
-        <div className="order-3 md:col-span-2 lg:col-span-1">
+        {/* COLUNA 4 — Propriedades */}
+        <div className="order-4 md:order-4">
           <Card className="border-border/60 shadow-sm lg:sticky lg:top-2">
             <CardHeader className="py-3">
               <CardTitle className="text-sm flex items-center gap-2">
