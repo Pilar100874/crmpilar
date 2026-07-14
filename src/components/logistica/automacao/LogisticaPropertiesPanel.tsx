@@ -59,7 +59,21 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
     };
 
     fetchUsuarios();
+
+    (async () => {
+      const estabelecimentoId = localStorage.getItem('estabelecimentoId');
+      let q = supabase
+        .from('whatsapp_numeros')
+        .select('id, nome, telefone, is_default')
+        .eq('ativo', true)
+        .order('is_default', { ascending: false })
+        .order('nome');
+      if (estabelecimentoId) q = q.eq('estabelecimento_id', estabelecimentoId);
+      const { data } = await q;
+      setCanaisWhats((data as any) || []);
+    })();
   }, []);
+
   
   // Sincroniza estado local quando muda o nó selecionado
   useEffect(() => {
