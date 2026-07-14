@@ -113,9 +113,11 @@ export function defaultTemplate(layout: LayoutPreset): EtiquetaElement[] {
 export function interpolate(text: string, product: any): string {
   return (text || "").replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_, key) => {
     const v = product?.[key];
-    if (v === null || v === undefined) return "";
-    if (typeof v === "number" && (key === "preco_tabela" || key === "preco_minimo"))
-      return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    if (v === null || v === undefined || v === "") return "";
+    if (key === "preco_tabela" || key === "preco_minimo") {
+      const n = typeof v === "number" ? v : parseFloat(String(v).replace(",", "."));
+      if (!isNaN(n)) return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    }
     return String(v);
   });
 }
