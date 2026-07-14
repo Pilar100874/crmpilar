@@ -8,7 +8,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Users, User, Phone, IdCard, Search, ToggleLeft, ToggleRight } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, User, IdCard, Search, ToggleLeft, ToggleRight, MessageCircle } from "lucide-react";
+
+const maskWhatsapp = (v: string) => {
+  const d = (v || "").replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+};
 import { CVPageHeader } from "./CVPageHeader";
 import type { Driver } from "@/types/vehicle";
 
@@ -105,7 +113,7 @@ export default function CVDrivers() {
                     <span className="font-mono truncate">{d.license}</span>
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <Phone className="h-4 w-4" />
+                    <MessageCircle className="h-4 w-4 text-emerald-500" />
                     <span className="truncate">{d.phone || "—"}</span>
                   </div>
                 </div>
@@ -131,7 +139,7 @@ export default function CVDrivers() {
           <div className="space-y-3">
             <div><Label>Nome</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
             <div><Label>CNH</Label><Input value={form.license} onChange={e => setForm({ ...form, license: e.target.value })} /></div>
-            <div><Label>Telefone</Label><Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
+            <div><Label>WhatsApp</Label><Input inputMode="tel" placeholder="(11) 91234-5678" value={form.phone} onChange={e => setForm({ ...form, phone: maskWhatsapp(e.target.value) })} /></div>
             <div className="flex items-center gap-2">
               <Switch checked={form.active} onCheckedChange={v => setForm({ ...form, active: v })} />
               <Label>Ativo</Label>
