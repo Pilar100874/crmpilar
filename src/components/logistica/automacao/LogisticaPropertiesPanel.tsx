@@ -15,6 +15,26 @@ import { supabase } from '@/integrations/supabase/client';
 import { PushBlockConfigEditor } from '@/components/workflows/PushBlockConfig';
 import { SmsBlockConfig } from '@/components/shared/SmsBlockConfig';
 
+function EnviarLocalizacaoCheckbox({ config, updateConfig }: { config: any; updateConfig: (k: string, v: any) => void }) {
+  return (
+    <div className="flex items-start gap-2 rounded-md border p-3">
+      <Checkbox
+        id={`enviar_localizacao_${Math.random().toString(36).slice(2, 8)}`}
+        checked={!!config.enviar_localizacao}
+        onCheckedChange={(v) => updateConfig('enviar_localizacao', !!v)}
+      />
+      <div className="space-y-0.5">
+        <Label className="text-sm cursor-pointer" onClick={() => updateConfig('enviar_localizacao', !config.enviar_localizacao)}>
+          Enviar localização atual do veículo (Google Maps)
+        </Label>
+        <p className="text-[11px] text-muted-foreground">
+          Adiciona um link do Google Maps logo abaixo da mensagem com a última posição registrada do veículo.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 interface Usuario {
   id: string;
   nome: string;
