@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { getTemplateForBarcode, printZebraLabels } from "@/lib/zebraTemplates";
+import { getTemplateForBarcode, printZebraLabels, generateTemplatePDF } from "@/lib/zebraTemplates";
 
 interface EmbalagemTabProps {
   ean13: string;
@@ -105,10 +105,11 @@ export function EmbalagemTab({
 }: EmbalagemTabProps) {
   const [uploading, setUploading] = useState<string | null>(null);
   const [ean13Valid, setEan13Valid] = useState<boolean | null>(null);
-  const [printDialog, setPrintDialog] = useState<{ open: boolean; ean: string; type: string }>({
+  const [printDialog, setPrintDialog] = useState<{ open: boolean; ean: string; type: string; kind: "ean13" | "ean14" }>({
     open: false,
     ean: "",
     type: "",
+    kind: "ean13",
   });
   const [printQuantity, setPrintQuantity] = useState("1");
   const [zebraDialog, setZebraDialog] = useState<{ open: boolean; ean: string; kind: "ean13" | "ean14"; label: string }>({
@@ -204,16 +205,16 @@ export function EmbalagemTab({
     }
   };
 
-  const openPrintDialog = (ean: string, type: string) => {
+  const openPrintDialog = (ean: string, type: string, kind: "ean13" | "ean14") => {
     if (!ean) {
       toast.error("EAN não disponível para impressão");
       return;
     }
-    setPrintDialog({ open: true, ean, type });
+    setPrintDialog({ open: true, ean, type, kind });
     setPrintQuantity("1");
   };
 
-  const generateBarcodePDF = () => {
+  const generateBarcodePDF = async () => {
     const quantity = parseInt(printQuantity, 10);
     if (isNaN(quantity) || quantity < 1 || quantity > 100) {
       toast.error("Quantidade deve ser entre 1 e 100");
@@ -221,76 +222,47 @@ export function EmbalagemTab({
     }
 
     try {
-      const { ean, type } = printDialog;
+      const { ean, type, kind } = printDialog;
       const cleanEan = (ean || "").replace(/\D/g, "");
-      const isEan13 = type === "EAN-13";
-      const format: "EAN13" | "ITF14" = isEan13 ? "EAN13" : "ITF14";
 
       // Validação de comprimento
-      if (isEan13 && cleanEan.length !== 13) {
-        toast.error(`EAN-13 inválido: precisa ter 13 dígitos (atual: ${cleanEan.length}). Preencha o EAN corretamente antes de imprimir.`);
+      if (kind === "ean13" && cleanEan.length !== 13) {
+        toast.error(`EAN-13 inválido: precisa ter 13 dígitos (atual: ${cleanEan.length}).`);
         return;
       }
-      if (!isEan13 && cleanEan.length !== 14) {
+      if (kind === "ean14" && cleanEan.length !== 14) {
         toast.error(`EAN-14 inválido: precisa ter 14 dígitos (atual: ${cleanEan.length}). Preencha o EAN-13 corretamente para gerar o EAN-14.`);
         return;
       }
 
-      // Cria canvas para gerar o código de barras
-      const canvas = document.createElement("canvas");
-      JsBarcode(canvas, cleanEan, {
-        format,
-        width: 2,
-        height: 80,
-        displayValue: true,
-        fontSize: 14,
-        margin: 10,
-      });
-
-      // Cria PDF
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-
-      const imgData = canvas.toDataURL("image/png");
-      const imgWidth = 60;
-      const imgHeight = 30;
-      const margin = 10;
-      const cols = 3;
-      const rows = 9;
-      const perPage = cols * rows;
-
-      let currentPage = 0;
-      let itemCount = 0;
-
-      for (let i = 0; i < quantity; i++) {
-        const pageIndex = Math.floor(itemCount / perPage);
-        const posInPage = itemCount % perPage;
-        const col = posInPage % cols;
-        const row = Math.floor(posInPage / cols);
-
-        if (pageIndex > currentPage) {
-          pdf.addPage();
-          currentPage = pageIndex;
-        }
-
-        const x = margin + col * (imgWidth + 5);
-        const y = margin + row * (imgHeight + 5);
-
-        pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight);
-        itemCount++;
+      const template = getTemplateForBarcode(estabelecimentoId, kind);
+      if (!template) {
+        toast.error(`Nenhum template padrão definido para ${kind.toUpperCase()}. Configure em Configurações de Vendas → Impressão de Etiquetas Zebra e marque como padrão.`);
+        return;
       }
 
-      pdf.save(`etiquetas_${type.replace(/[^a-zA-Z0-9]/g, "_")}_${cleanEan}.pdf`);
+      const product = {
+        ...(productData || {}),
+        ean_13: ean13,
+        ean_14_1: ean14_1,
+        ean_14_2: ean14_2,
+      };
+
+      await generateTemplatePDF(
+        template,
+        product,
+        quantity,
+        `etiquetas_${type.replace(/[^a-zA-Z0-9]/g, "_")}_${cleanEan}.pdf`,
+      );
+
       toast.success(`PDF com ${quantity} etiqueta(s) gerado com sucesso`);
-      setPrintDialog({ open: false, ean: "", type: "" });
+      setPrintDialog({ open: false, ean: "", type: "", kind: "ean13" });
     } catch (error: any) {
       console.error("Erro ao gerar PDF:", error);
       toast.error(`Erro ao gerar PDF: ${error?.message || "verifique o código EAN"}`);
     }
   };
+
 
   const openZebraDialog = (value: string, kind: "ean13" | "ean14", label: string) => {
     if (!value) { toast.error("EAN não disponível"); return; }
@@ -440,7 +412,7 @@ export function EmbalagemTab({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => openPrintDialog(value, label)}
+            onClick={() => openPrintDialog(value, label, type === "ean13" ? "ean13" : "ean14")}
             disabled={!value}
           >
             <Printer className="w-4 h-4 mr-1" />
@@ -531,7 +503,7 @@ export function EmbalagemTab({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPrintDialog({ open: false, ean: "", type: "" })}>
+            <Button variant="outline" onClick={() => setPrintDialog({ open: false, ean: "", type: "", kind: "ean13" })}>
               Cancelar
             </Button>
             <Button onClick={generateBarcodePDF}>

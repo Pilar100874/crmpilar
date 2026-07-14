@@ -1,5 +1,6 @@
 import JsBarcode from "jsbarcode";
 import QRCode from "qrcode";
+import { jsPDF } from "jspdf";
 
 export interface LayoutPreset {
   id: string;
@@ -210,3 +211,71 @@ export async function printZebraLabels(template: SavedTemplate, product: any, qu
   if (w.document.readyState === "complete") setTimeout(doPrint, 100);
   else w.addEventListener("load", () => setTimeout(doPrint, 100));
 }
+
+// Gera um PDF seguindo o mesmo template visual da etiqueta (Zebra)
+export async function generateTemplatePDF(
+  template: SavedTemplate,
+  product: any,
+  quantity: number,
+  filename: string,
+) {
+  const layout = LAYOUTS.find(l => l.id === template.layoutId);
+  if (!layout) throw new Error("Layout do template não encontrado");
+
+  const pageW = layout.largura_mm * layout.colunas + layout.gap_mm * (layout.colunas - 1);
+  const pageH = layout.altura_mm;
+  const orientation = pageW >= pageH ? "landscape" : "portrait";
+
+  const pdf = new jsPDF({ orientation, unit: "mm", format: [pageW, pageH] });
+
+  const drawCell = async (offsetX: number) => {
+    for (const el of template.elements) {
+      const value = interpolate(el.content, product || {});
+      const x = offsetX + el.x;
+      const y = el.y;
+
+      if (el.type === "text") {
+        const size = el.fontSize || 8;
+        pdf.setFontSize(size);
+        pdf.setFont("helvetica", el.bold ? "bold" : "normal");
+        const align = (el.align || "left") as "left" | "center" | "right";
+        const tx = align === "center" ? x + el.w / 2 : align === "right" ? x + el.w : x;
+        try {
+          pdf.text(value || "", tx, y + size * 0.35, { align, baseline: "top", maxWidth: el.w });
+        } catch { /* ignore */ }
+      } else if (el.type === "barcode_ean13") {
+        const clean = value.replace(/\D/g, "");
+        if (clean.length === 12 || clean.length === 13) {
+          const d = await renderBarcodeDataURL(clean, "EAN13");
+          if (d) pdf.addImage(d, "PNG", x, y, el.w, el.h);
+        }
+      } else if (el.type === "barcode_ean14") {
+        const clean = value.replace(/\D/g, "");
+        if (clean.length === 13 || clean.length === 14) {
+          const d = await renderBarcodeDataURL(clean, "ITF14");
+          if (d) pdf.addImage(d, "PNG", x, y, el.w, el.h);
+        }
+      } else if (el.type === "qrcode") {
+        const d = await renderQRDataURL(value || " ");
+        if (d) pdf.addImage(d, "PNG", x, y, el.w, el.h);
+      } else if (el.type === "image" && value) {
+        try {
+          const fmt = value.startsWith("data:image/jpeg") || value.startsWith("data:image/jpg") ? "JPEG" : "PNG";
+          pdf.addImage(value, fmt, x, y, el.w, el.h);
+        } catch { /* ignore */ }
+      }
+    }
+  };
+
+  const qty = Math.max(1, quantity);
+  for (let i = 0; i < qty; i++) {
+    if (i > 0) pdf.addPage([pageW, pageH], orientation);
+    for (let c = 0; c < layout.colunas; c++) {
+      const offX = c * (layout.largura_mm + layout.gap_mm);
+      await drawCell(offX);
+    }
+  }
+
+  pdf.save(filename);
+}
+
