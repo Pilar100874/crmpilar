@@ -428,7 +428,7 @@ export function EmbalagemTab({
             type="button"
             variant="default"
             size="sm"
-            onClick={() => handleZebraPrint(value, type === "ean13" ? "ean13" : "ean14")}
+            onClick={() => openZebraDialog(value, type === "ean13" ? "ean13" : "ean14", label)}
             disabled={!value}
             title="Imprimir usando template Zebra padrão"
           >
