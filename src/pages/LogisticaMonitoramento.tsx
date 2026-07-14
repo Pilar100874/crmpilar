@@ -5,7 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { 
   ArrowLeft, Car, Gauge, Clock, MapPin, AlertTriangle, 
   Wifi, WifiOff, Activity, ChevronDown, ChevronUp, 
-  Bell, BellOff, Volume2, RefreshCw, Eye, Maximize2, Minimize2, List
+  Bell, BellOff, Volume2, RefreshCw, Eye, Maximize2, Minimize2, List, MessageCircle, User
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -23,7 +23,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils';
 import { executarAutomacoesLogistica, limparParadasAntigas } from '@/services/logisticaAutomacaoExecutor';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
-import { fetchMotoristasAtuais } from '@/lib/logistica/cvDriverLookup';
+import { fetchMotoristasAtuais, formatWhatsappNumber } from '@/lib/logistica/cvDriverLookup';
 const statusConfig = {
   movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-600', borderColor: 'border-green-500' },
   parado: { label: 'Parado', color: 'bg-amber-500', textColor: 'text-amber-600', borderColor: 'border-amber-500' },
@@ -489,7 +489,27 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                               {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
                             </Badge>
                           </div>
-                          {v.motorista && (
+                          {v.motorista_atual ? (
+                            <div className="mt-1 space-y-0.5">
+                              <p className="text-xs font-medium truncate flex items-center gap-1">
+                                <User className="h-3 w-3 text-primary" />
+                                {v.motorista_atual.nome}
+                              </p>
+                              {v.motorista_atual.telefone && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const wa = formatWhatsappNumber(v.motorista_atual!.telefone);
+                                    if (wa) window.open(`https://wa.me/${wa}`, '_blank');
+                                  }}
+                                  className="inline-flex items-center gap-1 text-[10px] text-emerald-600 hover:underline"
+                                >
+                                  <MessageCircle className="h-3 w-3" />
+                                  {v.motorista_atual.telefone}
+                                </button>
+                              )}
+                            </div>
+                          ) : v.motorista && (
                             <p className="text-xs text-muted-foreground mt-1 truncate">{v.motorista}</p>
                           )}
                         </div>
@@ -584,7 +604,27 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                         {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
                       </Badge>
                     </div>
-                    {v.motorista && (
+                    {v.motorista_atual ? (
+                      <div className="mt-1 space-y-0.5">
+                        <p className="text-xs font-medium truncate flex items-center gap-1">
+                          <User className="h-3 w-3 text-primary" />
+                          {v.motorista_atual.nome}
+                        </p>
+                        {v.motorista_atual.telefone && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const wa = formatWhatsappNumber(v.motorista_atual!.telefone);
+                              if (wa) window.open(`https://wa.me/${wa}`, '_blank');
+                            }}
+                            className="inline-flex items-center gap-1 text-[10px] text-emerald-600 hover:underline"
+                          >
+                            <MessageCircle className="h-3 w-3" />
+                            {v.motorista_atual.telefone}
+                          </button>
+                        )}
+                      </div>
+                    ) : v.motorista && (
                       <p className="text-xs text-muted-foreground mt-1 truncate">{v.motorista}</p>
                     )}
                   </div>
