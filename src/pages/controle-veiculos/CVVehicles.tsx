@@ -191,6 +191,26 @@ export default function CVVehicles() {
               <div><Label>Última Troca (km)</Label><Input type="number" value={form.last_oil_change_km} onChange={e => setForm({ ...form, last_oil_change_km: +e.target.value })} /></div>
               <div><Label>Intervalo (km)</Label><Input type="number" value={form.oil_change_interval} onChange={e => setForm({ ...form, oil_change_interval: +e.target.value })} /></div>
             </div>
+            <div>
+              <Label>Vincular ao veículo da Logística (opcional)</Label>
+              <Select
+                value={form.veiculo_id ?? "__none__"}
+                onValueChange={v => setForm({ ...form, veiculo_id: v === "__none__" ? null : v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Nenhum</SelectItem>
+                  {logVeiculos.map(lv => (
+                    <SelectItem key={lv.id} value={lv.id}>
+                      {lv.placa}{lv.descricao ? ` — ${lv.descricao}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Usado no monitoramento da Logística para exibir motorista e WhatsApp em tempo real.
+              </p>
+            </div>
             <div className="flex items-center gap-2">
               <Switch checked={form.active} onCheckedChange={v => setForm({ ...form, active: v })} />
               <Label>Ativo</Label>
