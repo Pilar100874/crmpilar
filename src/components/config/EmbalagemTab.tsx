@@ -412,7 +412,7 @@ export function EmbalagemTab({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => openPrintDialog(value, label)}
+            onClick={() => openPrintDialog(value, label, type === "ean13" ? "ean13" : "ean14")}
             disabled={!value}
           >
             <Printer className="w-4 h-4 mr-1" />
