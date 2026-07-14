@@ -490,6 +490,7 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
                 Variáveis: {'{placa}'}, {'{motorista}'}, {'{endereco}'}, {'{velocidade}'}
               </p>
             </div>
+            <EnviarLocalizacaoCheckbox config={config} updateConfig={updateConfig} />
           </div>
         );
 
