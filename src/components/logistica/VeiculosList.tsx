@@ -38,6 +38,7 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
     const matchesSearch = 
       v.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
       v.motorista?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.motorista_atual?.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       v.descricao?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'todos' || v.status === statusFilter;
