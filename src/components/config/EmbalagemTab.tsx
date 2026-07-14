@@ -397,18 +397,30 @@ export function EmbalagemTab({
           </label>
         </div>
 
-        {/* Botão de imprimir */}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => openPrintDialog(value, label)}
-          disabled={!value}
-          className="self-start mt-1"
-        >
-          <Printer className="w-4 h-4 mr-1" />
-          Imprimir
-        </Button>
+        {/* Botões de imprimir */}
+        <div className="flex flex-col gap-1.5 self-start mt-1">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => openPrintDialog(value, label)}
+            disabled={!value}
+          >
+            <Printer className="w-4 h-4 mr-1" />
+            PDF
+          </Button>
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={() => handleZebraPrint(value, type === "ean13" ? "ean13" : "ean14")}
+            disabled={!value}
+            title="Imprimir usando template Zebra padrão"
+          >
+            <Zap className="w-4 h-4 mr-1" />
+            Zebra
+          </Button>
+        </div>
       </div>
     </div>
   );
