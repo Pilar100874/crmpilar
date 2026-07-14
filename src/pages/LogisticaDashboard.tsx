@@ -139,6 +139,16 @@ const LogisticaDashboard: React.FC = () => {
         })
       );
 
+      // Enriquece com motorista atual (baseado em cv_vehicle_movements)
+      try {
+        const motoristasMap = await fetchMotoristasAtuais(veiculosComPosicao.map(v => v.id));
+        for (const v of veiculosComPosicao) {
+          v.motorista_atual = motoristasMap[v.id] ?? null;
+        }
+      } catch (e) {
+        console.warn('Falha ao buscar motoristas atuais', e);
+      }
+
       setVeiculos(veiculosComPosicao);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
