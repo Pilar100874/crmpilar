@@ -594,9 +594,10 @@ function labelForType(t: ElementType): string {
 }
 
 function PreviewElement({
-  el, selected, scale, onSelect, onMove, onResize, sample,
+  el, selected, scale, maxW, maxH, onSelect, onMove, onResize, sample,
 }: {
   el: EtiquetaElement; selected: boolean; scale: number;
+  maxW: number; maxH: number;
   onSelect: () => void;
   onMove: (x: number, y: number) => void;
   onResize: (x: number, y: number, w: number, h: number) => void;
@@ -627,7 +628,9 @@ function PreviewElement({
       if (!p) return;
       const dx = (p.clientX - startX) / scale;
       const dy = (p.clientY - startY) / scale;
-      onMove(Math.max(0, origX + dx), Math.max(0, origY + dy));
+      const nx = Math.min(Math.max(0, maxW - el.w), Math.max(0, origX + dx));
+      const ny = Math.min(Math.max(0, maxH - el.h), Math.max(0, origY + dy));
+      onMove(nx, ny);
       if ("touches" in ev) ev.preventDefault();
     }
     function up() {
@@ -657,15 +660,15 @@ function PreviewElement({
       const dx = (p.clientX - startX) / scale;
       const dy = (p.clientY - startY) / scale;
       let nx = origX, ny = origY, nw = origW, nh = origH;
-      if (dir.includes("e")) nw = Math.max(MIN, origW + dx);
-      if (dir.includes("s")) nh = Math.max(MIN, origH + dy);
+      if (dir.includes("e")) nw = Math.max(MIN, Math.min(maxW - origX, origW + dx));
+      if (dir.includes("s")) nh = Math.max(MIN, Math.min(maxH - origY, origH + dy));
       if (dir.includes("w")) {
-        const cand = Math.max(MIN, origW - dx);
+        const cand = Math.max(MIN, Math.min(origX + origW, origW - dx));
         nx = Math.max(0, origX + (origW - cand));
         nw = cand;
       }
       if (dir.includes("n")) {
-        const cand = Math.max(MIN, origH - dy);
+        const cand = Math.max(MIN, Math.min(origY + origH, origH - dy));
         ny = Math.max(0, origY + (origH - cand));
         nh = cand;
       }
