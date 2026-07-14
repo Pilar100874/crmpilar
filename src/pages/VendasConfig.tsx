@@ -510,6 +510,24 @@ export default function VendasConfig() {
                 </CardContent>
               </Card>
             </TabsContent>
+            </TabsContent>
+
+            <TabsContent value="etiquetas-zebra" className="mt-0 h-full">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <Tag className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Impressão de Etiquetas Zebra
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Crie layouts de etiquetas (100x30, 50x30, 100x25, 100x50) para Zebra TLP 2844 com texto, imagem, EAN-13, EAN-14 e QR Code
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6">
+                  {estabelecimentoId && <EtiquetasZebra estabelecimentoId={estabelecimentoId} />}
+                </CardContent>
+              </Card>
+            </TabsContent>
           </div>
         </Tabs>
       </div>
