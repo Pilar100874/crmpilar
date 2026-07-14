@@ -5,7 +5,7 @@ import { memo, useState, useEffect } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from '@xyflow/react';
 import { 
   Play, Pause, Gauge, MapPin, MapPinOff, Clock, 
-  MessageCircle, Bell, Mail, Copy, Trash2, StickyNote,
+  MessageCircle, Bell, BellRing, Mail, MessageSquareText, Copy, Trash2, StickyNote,
   MoreVertical, SkipForward, X, ArrowRight,
   AlertTriangle, CircleAlert, Truck, Package, Home, Building2,
   Fuel, Wrench, Coffee, ShoppingCart, Factory, Warehouse,
@@ -34,7 +34,9 @@ const iconMap: Record<string, any> = {
   Clock,
   MessageCircle,
   Bell,
+  BellRing,
   Mail,
+  MessageSquareText,
 };
 
 // Map for marker icons
