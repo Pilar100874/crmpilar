@@ -31,7 +31,7 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
   const [condicoesLocal, setCondicoesLocal] = useState<CondicaoTempoParado[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loadingUsuarios, setLoadingUsuarios] = useState(false);
-  const [canaisWhats, setCanaisWhats] = useState<Array<{ id: string; nome: string; telefone: string | null; is_default: boolean }>>([]);
+  const [sessoesWhats, setSessoesWhats] = useState<Array<{ id: string; session_name: string; phone_number: string | null; status: string }>>([]);
 
   
   const nodeData = selectedNode?.data as any;
@@ -61,18 +61,11 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
     fetchUsuarios();
 
     (async () => {
-      const estabelecimentoId = localStorage.getItem('estabelecimentoId');
-      let q = supabase
-        .from('whatsapp_numeros')
-        .select('id, nome, telefone, is_default')
-        .eq('ativo', true)
-        .order('is_default', { ascending: false })
-        .order('nome');
-      if (estabelecimentoId) q = q.eq('estabelecimento_id', estabelecimentoId);
-      const { data } = await q;
-      setCanaisWhats((data as any) || []);
+      const { fetchWhatsappSessions } = await import('@/lib/whatsapp/sessionUsage');
+      setSessoesWhats(await fetchWhatsappSessions());
     })();
   }, []);
+
 
   
   // Sincroniza estado local quando muda o nó selecionado
