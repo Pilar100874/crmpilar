@@ -1082,7 +1082,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
                     </p>
                     <ul className="max-h-48 overflow-auto rounded-md border p-2 space-y-1">
                       {sessionUsages.map((u, i) => (
-                        <li key={`${u.tabela ?? u.tipo}-${u.id}-${i}`} className="flex flex-col">
+                        <li key={`${u.tipo}-${u.id}-${i}`} className="flex flex-col">
                           <span className="font-medium">{u.nome}</span>
                           <span className="text-xs text-muted-foreground">{u.tipo}</span>
                         </li>
