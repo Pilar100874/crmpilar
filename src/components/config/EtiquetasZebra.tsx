@@ -378,12 +378,15 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-center p-3 sm:p-6 rounded-md overflow-auto bg-[linear-gradient(135deg,hsl(var(--muted))_25%,transparent_25%,transparent_50%,hsl(var(--muted))_50%,hsl(var(--muted))_75%,transparent_75%,transparent)] bg-[length:16px_16px] bg-muted/20">
+              <div
+                ref={previewRef}
+                className="flex justify-center p-3 sm:p-6 rounded-md overflow-hidden bg-[linear-gradient(135deg,hsl(var(--muted))_25%,transparent_25%,transparent_50%,hsl(var(--muted))_50%,hsl(var(--muted))_75%,transparent_75%,transparent)] bg-[length:16px_16px] bg-muted/20"
+              >
                 <div
                   className="relative bg-white border-2 border-dashed border-primary/40 shadow-md shrink-0 rounded-sm"
                   style={{
-                    width: layout.largura_mm * MM_TO_PX * 2,
-                    height: layout.altura_mm * MM_TO_PX * 2,
+                    width: layout.largura_mm * previewScale,
+                    height: layout.altura_mm * previewScale,
                   }}
                   onMouseDown={(e) => {
                     if (e.target === e.currentTarget) setSelectedId(null);
@@ -394,7 +397,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
                       key={el.id}
                       el={el}
                       selected={el.id === selectedId}
-                      scale={MM_TO_PX * 2}
+                      scale={previewScale}
                       onSelect={() => setSelectedId(el.id)}
                       onMove={(x, y) => setElements(prev => prev.map(e => e.id === el.id ? { ...e, x, y } : e))}
                       sample={products[0]}
@@ -402,6 +405,7 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
                   ))}
                 </div>
               </div>
+
               <div className="text-[11px] text-muted-foreground mt-2 text-center">
                 Arraste os elementos para posicionar. Amostra usa o 1º produto do catálogo.
               </div>
