@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { X, Car, User, MapPin, Gauge, Clock, Navigation, History, Route, Copy, Check } from 'lucide-react';
+import { X, Car, User, MapPin, Gauge, Clock, Navigation, History, Route, Copy, Check, Phone, MessageCircle } from 'lucide-react';
 import { VeiculoComStatus } from '@/types/logistica';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { formatWhatsappNumber } from '@/lib/logistica/cvDriverLookup';
 
 interface VeiculoDetailsPanelProps {
   veiculo: VeiculoComStatus;
