@@ -499,7 +499,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                                 const wa = formatWhatsappNumber(v.motorista_atual!.telefone);
                                 return wa ? (
                                   <a
-                                    href={`https://wa.me/${wa}`}
+                                    href={`https://web.whatsapp.com/send?phone=${wa}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={(e) => e.stopPropagation()}
@@ -616,7 +616,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                           const wa = formatWhatsappNumber(v.motorista_atual!.telefone);
                           return wa ? (
                             <a
-                              href={`https://wa.me/${wa}`}
+                              href={`https://web.whatsapp.com/send?phone=${wa}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
