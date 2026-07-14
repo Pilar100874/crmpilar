@@ -75,6 +75,7 @@ const tabItems: TabItem[] = [
   { id: 'importacao-terceiros', label: 'Importação de Terceiros', icon: FileUp },
   { id: 'whatsapp-catalogo', label: 'Lista de Produtos no WhatsApp', icon: MessageCircle },
   { id: 'licitacoes-bot', label: 'Bot Caça Licitações', icon: Bot },
+  { id: 'etiquetas-zebra', label: 'Impressão de Etiquetas Zebra', icon: Tag },
 ];
 
 export default function VendasConfig() {
