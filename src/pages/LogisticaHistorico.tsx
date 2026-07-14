@@ -188,6 +188,12 @@ const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = fals
         });
       }
 
+      // Enriquecer com motorista que estava dirigindo no período (referência: fim do range)
+      const driverMap = await fetchMotoristasAtuais(results.map(r => r.veiculo.id), end);
+      for (const r of results) {
+        r.motorista_atual = driverMap[r.veiculo.id] ?? null;
+      }
+
       setVeiculosHistorico(results);
     } catch (error) {
       console.error('Error fetching positions:', error);
