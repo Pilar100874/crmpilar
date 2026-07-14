@@ -423,40 +423,40 @@ export function EtiquetasZebra({ estabelecimentoId }: Props) {
                 ref={previewRef}
                 className="flex justify-center p-3 sm:p-6 rounded-md overflow-hidden bg-[linear-gradient(135deg,hsl(var(--muted))_25%,transparent_25%,transparent_50%,hsl(var(--muted))_50%,hsl(var(--muted))_75%,transparent_75%,transparent)] bg-[length:16px_16px] bg-muted/20"
               >
-                <div
-                  className="flex items-start"
-                  style={{ gap: layout.gap_mm * previewScale }}
-                >
-                  {Array.from({ length: layout.colunas }).map((_, col) => (
-                    <div
-                      key={col}
-                      className="relative bg-white border-2 border-dashed border-primary/40 shadow-md shrink-0 rounded-sm"
-                      style={{
-                        width: layout.largura_mm * previewScale,
-                        height: layout.altura_mm * previewScale,
-                      }}
-                      onMouseDown={(e) => {
-                        if (e.target === e.currentTarget) setSelectedId(null);
-                      }}
-                    >
-                      {elements.map(el => (
-                        <PreviewElement
-                          key={`${col}-${el.id}`}
-                          el={el}
-                          selected={el.id === selectedId}
-                          scale={previewScale}
-                          onSelect={() => setSelectedId(el.id)}
-                          onMove={(x, y) => setElements(prev => prev.map(e => e.id === el.id ? { ...e, x, y } : e))}
-                          sample={products[0]}
-                        />
-                      ))}
-                    </div>
-                  ))}
+                <div className="flex items-start">
+                  <div
+                    className="relative bg-white border-2 border-dashed border-primary/40 shadow-md shrink-0 rounded-sm"
+                    style={{
+                      width: layout.largura_mm * previewScale,
+                      height: layout.altura_mm * previewScale,
+                    }}
+                    onMouseDown={(e) => {
+                      if (e.target === e.currentTarget) setSelectedId(null);
+                    }}
+                  >
+                    {elements.map(el => (
+                      <PreviewElement
+                        key={el.id}
+                        el={el}
+                        selected={el.id === selectedId}
+                        scale={previewScale}
+                        onSelect={() => setSelectedId(el.id)}
+                        onMove={(x, y) => setElements(prev => prev.map(e => e.id === el.id ? { ...e, x, y } : e))}
+                        onResize={(x, y, w, h) => setElements(prev => prev.map(e => e.id === el.id ? { ...e, x, y, w, h } : e))}
+                        sample={products[0]}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div className="text-[11px] text-muted-foreground text-center">
-                Arraste os elementos para posicionar. Amostra usa o 1º produto do catálogo.
+              <div className="text-[11px] text-muted-foreground text-center space-y-0.5">
+                <div>Arraste para mover · puxe as bordas/cantos para redimensionar</div>
+                {layout.colunas > 1 && (
+                  <div className="text-primary/70">
+                    Exibindo 1 de {layout.colunas} colunas — as demais serão idênticas na impressão.
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
