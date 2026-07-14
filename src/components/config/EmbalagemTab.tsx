@@ -294,6 +294,15 @@ export function EmbalagemTab({
 
   const openZebraDialog = (value: string, kind: "ean13" | "ean14", label: string) => {
     if (!value) { toast.error("EAN não disponível"); return; }
+    const clean = value.replace(/\D/g, "");
+    if (kind === "ean13" && clean.length !== 13) {
+      toast.error(`EAN-13 inválido: precisa ter 13 dígitos (atual: ${clean.length}).`);
+      return;
+    }
+    if (kind === "ean14" && clean.length !== 14) {
+      toast.error(`EAN-14 inválido: precisa ter 14 dígitos (atual: ${clean.length}). Preencha o EAN-13 corretamente.`);
+      return;
+    }
     const template = getTemplateForBarcode(estabelecimentoId, kind);
     if (!template) {
       toast.error(`Nenhum template Zebra padrão definido para ${kind.toUpperCase()}. Configure em Configurações de Vendas → Impressão de Etiquetas Zebra.`);
