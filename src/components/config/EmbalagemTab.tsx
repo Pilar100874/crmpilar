@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { getTemplateForBarcode, printZebraLabels } from "@/lib/zebraTemplates";
+import { getTemplateForBarcode, printZebraLabels, generateTemplatePDF } from "@/lib/zebraTemplates";
 
 interface EmbalagemTabProps {
   ean13: string;
