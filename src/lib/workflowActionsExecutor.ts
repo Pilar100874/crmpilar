@@ -91,6 +91,8 @@ export async function executarBlocoWhatsapp(cfg: any, ctx: WfCtx = {}) {
   const mensagem = interpolar(cfg?.message ?? cfg?.mensagem ?? cfg?.texto, ctx.variaveis);
   if (!telefones.length || !mensagem) return { ok: false, erro: "Telefone/mensagem vazio" };
   const estabelecimento_id = await resolveEstab(ctx);
+  const whatsappSessionId = cfg?.whatsappSessionId || null;
+  const whatsappSessionName = cfg?.whatsappSessionName || null;
   const whatsappNumeroId = cfg?.whatsappNumeroId || cfg?.canal_id || null;
   try {
     const resultados: any[] = [];
@@ -101,6 +103,8 @@ export async function executarBlocoWhatsapp(cfg: any, ctx: WfCtx = {}) {
           telefone,
           mensagem,
           canal: "whatsapp",
+          whatsappSessionId,
+          whatsappSessionName,
           whatsappNumeroId,
           origem: ctx.origem || ctx.workflow_tipo || "workflow",
         },

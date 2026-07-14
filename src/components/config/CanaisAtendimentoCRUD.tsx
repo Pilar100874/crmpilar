@@ -338,6 +338,8 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
   const [showNewSessionDialog, setShowNewSessionDialog] = useState(false);
   const [selectedQrSession, setSelectedQrSession] = useState<WhatsAppSession | null>(null);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+  const [sessionUsages, setSessionUsages] = useState<Array<{ tipo: string; nome: string; id: string }>>([]);
+  const [checkingUsage, setCheckingUsage] = useState(false);
 
   useEffect(() => {
     loadConfig();
@@ -674,8 +676,33 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
     }
   };
 
+  const requestDeleteSession = async (sessionId: string) => {
+    setSessionToDelete(sessionId);
+    setSessionUsages([]);
+    setCheckingUsage(true);
+    try {
+      const session = sessions.find(s => s.id === sessionId);
+      const { checkWhatsappSessionUsage } = await import('@/lib/whatsapp/sessionUsage');
+      const usages = await checkWhatsappSessionUsage(sessionId, session?.session_name || null);
+      setSessionUsages(usages);
+    } catch (e) {
+      console.error('Erro ao verificar uso da sessão:', e);
+    } finally {
+      setCheckingUsage(false);
+    }
+  };
+
   const deleteSession = async () => {
     if (!sessionToDelete) return;
+    if (sessionUsages.length > 0) {
+      toast({
+        title: 'Não é possível excluir',
+        description: 'A sessão está vinculada a workflows. Altere os blocos para outra sessão antes de excluir.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
 
     try {
       const session = sessions.find(s => s.id === sessionToDelete);
@@ -939,7 +966,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setSessionToDelete(session.id)}
+                        onClick={() => requestDeleteSession(session.id)}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -1040,17 +1067,43 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!sessionToDelete} onOpenChange={() => setSessionToDelete(null)}>
+      <AlertDialog open={!!sessionToDelete} onOpenChange={() => { setSessionToDelete(null); setSessionUsages([]); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir Sessão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir esta sessão? Esta ação não pode ser desfeita.
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm">
+                {checkingUsage ? (
+                  <p>Verificando vínculos com workflows...</p>
+                ) : sessionUsages.length > 0 ? (
+                  <>
+                    <p className="text-destructive font-medium">
+                      Esta sessão não pode ser excluída porque está vinculada aos seguintes workflows:
+                    </p>
+                    <ul className="max-h-48 overflow-auto rounded-md border p-2 space-y-1">
+                      {sessionUsages.map((u, i) => (
+                        <li key={`${u.tipo}-${u.id}-${i}`} className="flex flex-col">
+                          <span className="font-medium">{u.nome}</span>
+                          <span className="text-xs text-muted-foreground">{u.tipo}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p>
+                      Para excluir, edite cada workflow acima e mude o bloco de WhatsApp para outra sessão.
+                    </p>
+                  </>
+                ) : (
+                  <p>Tem certeza que deseja excluir esta sessão? Esta ação não pode ser desfeita.</p>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={deleteSession}>
+            <AlertDialogAction
+              onClick={deleteSession}
+              disabled={checkingUsage || sessionUsages.length > 0}
+            >
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>

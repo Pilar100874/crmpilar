@@ -7,21 +7,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MessageCircle, Plus, Trash2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { getEstabelecimentoId } from "@/lib/estabelecimento";
+import { fetchWhatsappSessions, WhatsappSessionOption } from "@/lib/whatsapp/sessionUsage";
 
 interface ConfigProps {
   config: any;
   handleConfigChange: (key: string, value: any) => void;
-}
-
-interface CanalWhats {
-  id: string;
-  nome: string;
-  telefone: string | null;
-  provider: string;
-  is_default: boolean;
-  ativo: boolean;
 }
 
 export const SendWhatsappToNumberConfig = ({ config, handleConfigChange }: ConfigProps) => {
@@ -31,25 +21,16 @@ export const SendWhatsappToNumberConfig = ({ config, handleConfigChange }: Confi
       ? [config.phoneNumber]
       : [""];
 
-  const [canais, setCanais] = useState<CanalWhats[]>([]);
-  const [loadingCanais, setLoadingCanais] = useState(false);
+  const [sessoes, setSessoes] = useState<WhatsappSessionOption[]>([]);
+  const [loadingSessoes, setLoadingSessoes] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
-        setLoadingCanais(true);
-        const estabId = await getEstabelecimentoId().catch(() => null);
-        let query = supabase
-          .from("whatsapp_numeros")
-          .select("id, nome, telefone, provider, is_default, ativo")
-          .eq("ativo", true)
-          .order("is_default", { ascending: false })
-          .order("nome");
-        if (estabId) query = query.eq("estabelecimento_id", estabId);
-        const { data } = await query;
-        setCanais((data as any) || []);
+        setLoadingSessoes(true);
+        setSessoes(await fetchWhatsappSessions());
       } finally {
-        setLoadingCanais(false);
+        setLoadingSessoes(false);
       }
     })();
   }, []);
@@ -58,7 +39,7 @@ export const SendWhatsappToNumberConfig = ({ config, handleConfigChange }: Confi
     handleConfigChange("phoneNumbers", next);
   };
 
-  const canalSelecionado = config.whatsappNumeroId || "__default__";
+  const sessaoSelecionada = config.whatsappSessionId || "__first__";
 
   return (
     <div className="space-y-4">
@@ -70,31 +51,36 @@ export const SendWhatsappToNumberConfig = ({ config, handleConfigChange }: Confi
       </Alert>
 
       <div className="space-y-2">
-        <Label>Canal de atendimento (número de envio)</Label>
+        <Label>Sessão de WhatsApp (canal de envio)</Label>
         <Select
-          value={canalSelecionado}
-          onValueChange={(v) =>
-            handleConfigChange("whatsappNumeroId", v === "__default__" ? null : v)
-          }
+          value={sessaoSelecionada}
+          onValueChange={(v) => {
+            const val = v === "__first__" ? null : v;
+            handleConfigChange("whatsappSessionId", val);
+            const s = sessoes.find((s) => s.id === val);
+            handleConfigChange("whatsappSessionName", s?.session_name || null);
+          }}
         >
           <SelectTrigger>
-            <SelectValue placeholder={loadingCanais ? "Carregando..." : "Selecionar canal"} />
+            <SelectValue placeholder={loadingSessoes ? "Carregando..." : "Selecionar sessão"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="__default__">Canal padrão do estabelecimento</SelectItem>
-            {canais.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.nome}
-                {c.telefone ? ` — ${c.telefone}` : ""}
-                {c.is_default ? " (padrão)" : ""}
+            <SelectItem value="__first__">Primeira sessão disponível</SelectItem>
+            {sessoes.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.session_name}
+                {s.phone_number ? ` — ${s.phone_number}` : ""}
+                {s.status && s.status !== "WORKING" ? ` (${s.status})` : ""}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <p className="text-[11px] text-muted-foreground">
-          Escolha por qual número/canal de WhatsApp a mensagem será enviada. Se nenhum for escolhido, será usado o canal padrão.
+          Escolha por qual sessão de WhatsApp (aba <b>Canais → WhatsApp</b>) a mensagem será enviada.
         </p>
       </div>
+
+
 
       <div className="space-y-2">
         <Label>Números de destino (com DDI)</Label>
