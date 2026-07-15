@@ -69,32 +69,15 @@ function commandPriority(tpl: string): number {
   return COMMAND_PRIORITY.length;
 }
 
-// Comandos no padrão GT06/J-series (APN,... / SERVER,... / TIMER,... / GPRSON,... / RELAY,... / STATUS#)
-// exigem prefixo da senha do dispositivo: "123456,APN,...". Se o template não já começa com a
-// senha, prependa automaticamente para evitar que o rastreador ignore o SMS silenciosamente.
-const GT06_KEYWORDS = /^(APN|GPRSON|SERVER|TIMER|RELAY|STATUS|RESET|FACTORY|CENTER|SOS|GMT|SENDSMS|SLEEP|MODE)\b/i;
-
-function applyPasswordPrefix(rendered: string, password: string): string {
-  if (!password) return rendered;
-  const trimmed = rendered.trimStart();
-  if (trimmed.startsWith(password + ',') || trimmed.startsWith(password + ' ')) return rendered;
-  if (GT06_KEYWORDS.test(trimmed)) return `${password},${trimmed}`;
-  return rendered;
-}
-
 export function getTrackerRenderedCommands(model: TrackerModelLite): RenderedTrackerCommand[] {
   const ctx = buildTrackerTemplateContext(model);
-  const password = model.senha_padrao || '';
   const cmds = Array.isArray(model.sms_commands) ? model.sms_commands : [];
 
   return cmds
     .filter((cmd) => !/RELAY,\s*[01]\s*#/i.test(cmd.template))
     .slice()
     .sort((a, b) => commandPriority(a.template) - commandPriority(b.template))
-    .map((cmd) => {
-      const rendered = applyPasswordPrefix(renderTemplate(cmd.template, ctx), password);
-      return { ...cmd, rendered };
-    });
+    .map((cmd) => ({ ...cmd, rendered: renderTemplate(cmd.template, ctx) }));
 }
 
 export function buildTrackerParametersSms(model: TrackerModelLite): string {
