@@ -258,14 +258,16 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         }
       }
 
-      // Persist telefone_sms + tracker_model_id na tabela veiculos
+      // Persist telefone_sms + tracker_model_id + operadora APN na tabela veiculos
       if (veiculoId) {
+        const opSel = OPERADORAS_APN.find(o => o.id === formData.operadora_id);
         await supabase
           .from('veiculos')
           .update({
             telefone_sms: formData.telefone_sms || null,
             tipo_chip: formData.tipo_chip || 'm2m',
             tracker_model_id: formData.tracker_model_id || null,
+            apn_operadora: opSel?.apn || null,
           } as any)
           .eq('id', veiculoId);
       }
