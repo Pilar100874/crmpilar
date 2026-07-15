@@ -585,6 +585,24 @@ Deno.serve(async (req) => {
         };
         
         console.log('Converted Traccar Client payload:', payload);
+      } else if (rawPayload.source === 'gt06-bridge' && rawPayload.imei) {
+        // GT06 Bridge format (J6/JM01/JM-VL03/GT06N via TCP bridge no Railway)
+        if (typeof rawPayload.latitude !== 'number' || typeof rawPayload.longitude !== 'number') {
+          return new Response(
+            JSON.stringify({ status: 'error', message: 'Invalid GT06 bridge format: missing latitude/longitude' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        payload = {
+          veiculoId: String(rawPayload.imei),
+          lat: rawPayload.latitude,
+          lng: rawPayload.longitude,
+          velocidade: typeof rawPayload.speed_kmh === 'number' ? rawPayload.speed_kmh : 0,
+          direcao: typeof rawPayload.heading === 'number' ? rawPayload.heading : undefined,
+          dataHora: rawPayload.timestamp || new Date().toISOString(),
+          token: rawPayload.token,
+        };
+        console.log('Converted GT06 bridge payload:', payload);
       } else {
         // Standard format
         payload = rawPayload as PosicaoPayload;
