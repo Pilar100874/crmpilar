@@ -1,0 +1,13 @@
+{
+  "name": "gt06-bridge",
+  "version": "1.0.0",
+  "description": "Bridge TCP GT06 (J6/JM01/JM-VL03) -> HTTPS endpoint (Supabase Edge Function)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {}
+}
