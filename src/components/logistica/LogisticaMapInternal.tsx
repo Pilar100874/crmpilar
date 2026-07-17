@@ -265,6 +265,17 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     }
   }, [veiculos, fitBounds, onVeiculoClick, routes, paradasMarcadas, compactIcons]);
 
+  // Focus/zoom on a specific vehicle when requested (e.g., double click on list)
+  useEffect(() => {
+    if (!mapRef.current || !focusVeiculoId) return;
+    const veiculo = veiculos.find(v => v.id === focusVeiculoId && v.ultima_posicao);
+    if (!veiculo) return;
+    const pos: L.LatLngExpression = [veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng];
+    mapRef.current.setView(pos, Math.max(mapRef.current.getZoom(), 17), { animate: true });
+    const marker = markersRef.current.get(veiculo.id);
+    marker?.openPopup();
+  }, [focusVeiculoId, focusTrigger, veiculos]);
+
   // Update paradas marcadas markers
   useEffect(() => {
     if (!mapRef.current) return;
