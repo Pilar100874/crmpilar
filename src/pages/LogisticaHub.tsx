@@ -53,6 +53,7 @@ const tabItems: TabItem[] = [
   { id: 'roteirizacao', label: 'Roteirização', icon: Route, description: 'Planejamento de rotas' },
   { id: 'rotas', label: 'Rotas Salvas', icon: Navigation, description: 'Rotas salvas' },
   { id: 'automacoes', label: 'Automações', icon: Zap, description: 'Regras automáticas' },
+  { id: 'parametros-rastreador', label: 'Parâmetros Rastreador', icon: Radio, description: 'Ajuste de parâmetros dos modelos (GT06/J16, etc.)' },
   { id: 'manual', label: 'Manual', icon: BookOpen, description: 'Manual de configuração dos rastreadores' },
   { id: 'config', label: 'Configuração', icon: Settings, description: 'Configurações do sistema' },
 ];
