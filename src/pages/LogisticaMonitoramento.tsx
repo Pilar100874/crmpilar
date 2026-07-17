@@ -269,14 +269,16 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
     };
   }, [fetchVeiculos]);
 
-  const veiculosComPosicao = veiculos.filter(v => v.ultima_posicao);
-  const selectedVeiculo = veiculos.find(v => v.id === selectedVeiculoId);
+  const { grupoId, setGrupoId, unidades } = useGrupoFilter(estabelecimentoId);
+  const veiculosFiltrados = filterByGrupo(veiculos, grupoId);
+  const veiculosComPosicao = veiculosFiltrados.filter(v => v.ultima_posicao);
+  const selectedVeiculo = veiculosFiltrados.find(v => v.id === selectedVeiculoId);
 
   const stats = {
-    total: veiculos.length,
-    movendo: veiculos.filter(v => v.status === 'movendo').length,
-    parado: veiculos.filter(v => v.status === 'parado').length,
-    offline: veiculos.filter(v => v.status === 'offline').length
+    total: veiculosFiltrados.length,
+    movendo: veiculosFiltrados.filter(v => v.status === 'movendo').length,
+    parado: veiculosFiltrados.filter(v => v.status === 'parado').length,
+    offline: veiculosFiltrados.filter(v => v.status === 'offline').length
   };
 
   const getAlertIcon = (type: string) => {
