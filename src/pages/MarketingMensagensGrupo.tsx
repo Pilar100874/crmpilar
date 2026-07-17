@@ -76,28 +76,31 @@ export default function MarketingMensagensGrupo() {
   }, []);
 
   useEffect(() => {
-    if (grupoId && activeTema) loadFrases();
+    if (escopoPronto && activeTema) loadFrases();
     else setFrases([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [grupoId, activeTema]);
+  }, [escopo, grupoId, activeTema]);
 
   const loadFrases = async () => {
-    if (!grupoId || !activeTema) return;
+    if (!activeTema) return;
+    if (escopo === "grupo" && !grupoId) return;
     setLoading(true);
-    const { data, error } = await supabase
+    let q = supabase
       .from("mensagens_grupo_produto")
       .select("*")
-      .eq("grupo_id", grupoId)
+      .eq("estabelecimento_id", estabelecimentoId)
       .eq("tema", activeTema)
       .order("ordem");
+    q = escopo === "geral" ? q.is("grupo_id", null) : q.eq("grupo_id", grupoId);
+    const { data, error } = await q;
     setLoading(false);
     if (error) { toast.error("Erro ao carregar frases"); return; }
     setFrases((data || []) as Frase[]);
   };
 
   const abrirGerar = () => {
-    if (!grupoAtual || !activeTema) {
-      toast.error("Selecione um grupo e um tema");
+    if (!escopoPronto || !activeTema) {
+      toast.error(escopo === "grupo" ? "Selecione um grupo e um tema" : "Selecione um tema");
       return;
     }
     setComplemento("");
