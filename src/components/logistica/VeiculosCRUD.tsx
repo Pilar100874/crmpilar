@@ -64,6 +64,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const [enviandoSms, setEnviandoSms] = useState(false);
   const [configurandoTracker, setConfigurandoTracker] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [mainTab, setMainTab] = useState<'veiculos' | 'dispositivos'>('veiculos');
+  const [urlCopiada, setUrlCopiada] = useState(false);
   const [formData, setFormData] = useState({
     placa: '',
     descricao: '',
@@ -77,8 +79,11 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     operadora_id: '',
     enviar_sms_automatico: false,
     configurar_tracker_ao_salvar: true,
-    ativo: true
+    ativo: true,
+    tipo_dispositivo: 'rastreador' as 'rastreador' | 'app' | 'nenhum',
   });
+
+  const isPessoa = formData.tipo_veiculo === 'Pessoa';
 
   // Aplica override de APN da operadora selecionada em uma cópia do modelo
   const modelComOperadora = (model: TrackerModelLite): TrackerModelLite => {
