@@ -24,12 +24,13 @@ interface Grupo {
 }
 interface Frase {
   id: string;
-  grupo_id: string;
+  grupo_id: string | null;
   tema: string;
   frase: string;
   ordem: number;
   ativo: boolean;
 }
+type Escopo = "geral" | "grupo";
 
 const TEMAS_SUGERIDOS = [
   "Promoção", "Institucional", "Lançamento", "Novidade",
