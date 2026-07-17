@@ -290,8 +290,10 @@ const LogisticaDashboard: React.FC = () => {
                 setMobileDetailsOpen(true);
               }
             }}
+            focusVeiculoId={focusVehicle?.id}
+            focusTrigger={focusVehicle?.nonce}
             className="h-full w-full"
-            fitBounds
+            fitBounds={!focusVehicle}
           />
         )}
         
