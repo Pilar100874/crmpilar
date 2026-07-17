@@ -26,6 +26,7 @@ import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { fetchMotoristasAtuais, formatWhatsappNumber } from '@/lib/logistica/cvDriverLookup';
 import { GrupoFilterSelect } from '@/components/logistica/GrupoFilterSelect';
 import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
+import { FocusLegend } from '@/components/logistica/FocusLegend';
 const statusConfig = {
   movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-600', borderColor: 'border-green-500' },
   parado: { label: 'Parado', color: 'bg-amber-500', textColor: 'text-amber-600', borderColor: 'border-amber-500' },
