@@ -821,16 +821,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             {/* Bloco: dados básicos */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label>Placa *</Label>
-                <Input
-                  value={formData.placa}
-                  onChange={(e) => setFormData(prev => ({ ...prev, placa: e.target.value.toUpperCase() }))}
-                  placeholder="ABC-1234"
-                  maxLength={8}
-                />
-              </div>
-              <div>
-                <Label>Tipo</Label>
+                <Label>Tipo *</Label>
                 <Select
                   value={formData.tipo_veiculo}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, tipo_veiculo: value }))}
@@ -846,58 +837,144 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 </Select>
               </div>
               <div>
+                <Label>{isPessoa ? 'Nome *' : 'Placa *'}</Label>
+                <Input
+                  value={formData.placa}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    placa: isPessoa ? e.target.value : e.target.value.toUpperCase(),
+                  }))}
+                  placeholder={isPessoa ? 'Nome da pessoa' : 'ABC-1234'}
+                  maxLength={isPessoa ? 100 : 8}
+                />
+              </div>
+              <div>
                 <Label>Descrição</Label>
                 <Input
                   value={formData.descricao}
                   onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
-                  placeholder="Ex: Fiorino Branca"
+                  placeholder={isPessoa ? 'Ex: Vendedor externo' : 'Ex: Fiorino Branca'}
                 />
               </div>
-              <div>
-                <Label>Motorista</Label>
-                <Input
-                  value={formData.motorista}
-                  onChange={(e) => setFormData(prev => ({ ...prev, motorista: e.target.value }))}
-                  placeholder="Nome do motorista"
-                />
-              </div>
+              {!isPessoa && (
+                <div>
+                  <Label>Motorista</Label>
+                  <Input
+                    value={formData.motorista}
+                    onChange={(e) => setFormData(prev => ({ ...prev, motorista: e.target.value }))}
+                    placeholder="Nome do motorista"
+                  />
+                </div>
+              )}
             </div>
 
 
-            <div>
-              <Label className="flex items-center gap-2">
+            {/* Seletor: Rastreador físico vs App aprovado */}
+            <div className="border rounded-lg p-3 space-y-3">
+              <Label className="flex items-center gap-2 text-sm font-semibold">
                 <Smartphone className="h-4 w-4" />
-                Dispositivo de Rastreamento (app aprovado)
+                Como esta {isPessoa ? 'pessoa' : 'veículo'} será rastreado?
               </Label>
-              <div className="mt-2">
-                <Select
-                  value={formData.dispositivo_id || '__none__'}
-                  onValueChange={(value) => setFormData(prev => ({
-                    ...prev,
-                    dispositivo_id: value === '__none__' ? '' : value,
-                  }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um dispositivo aprovado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">Nenhum</SelectItem>
-                    {dispositivos
-                      .filter(d => !d.veiculo_id || d.veiculo_id === selectedVeiculo?.id)
-                      .map(d => (
-                        <SelectItem key={d.id} value={d.id}>
-                          {d.nome_dispositivo || d.device_uuid} ({d.device_uuid})
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-                {dispositivos.filter(d => !d.veiculo_id || d.veiculo_id === selectedVeiculo?.id).length === 0 && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Nenhum dispositivo aprovado disponível. Aprove dispositivos na aba "Dispositivos de Rastreamento".
-                  </p>
-                )}
-              </div>
+              <RadioGroup
+                value={formData.tipo_dispositivo}
+                onValueChange={(v) => setFormData(prev => ({
+                  ...prev,
+                  tipo_dispositivo: v as 'rastreador' | 'app' | 'nenhum',
+                  // Limpa vínculos do outro tipo
+                  ...(v === 'app' ? { tracker_model_id: '' } : {}),
+                  ...(v === 'rastreador' ? { dispositivo_id: '' } : {}),
+                  ...(v === 'nenhum' ? { tracker_model_id: '', dispositivo_id: '' } : {}),
+                }))}
+                className="grid grid-cols-1 sm:grid-cols-3 gap-2"
+              >
+                <label className="flex items-start gap-2 border rounded-md p-2 cursor-pointer hover:bg-muted/40">
+                  <RadioGroupItem value="rastreador" id="dev-rastreador" className="mt-0.5" />
+                  <div className="text-xs">
+                    <div className="font-medium flex items-center gap-1"><Radio className="h-3 w-3" /> Rastreador físico</div>
+                    <div className="text-muted-foreground">GT06/J16/TK100 com chip próprio.</div>
+                  </div>
+                </label>
+                <label className="flex items-start gap-2 border rounded-md p-2 cursor-pointer hover:bg-muted/40">
+                  <RadioGroupItem value="app" id="dev-app" className="mt-0.5" />
+                  <div className="text-xs">
+                    <div className="font-medium flex items-center gap-1"><Smartphone className="h-3 w-3" /> App aprovado</div>
+                    <div className="text-muted-foreground">Celular com Traccar Client/OsmAnd ou app Pilar.</div>
+                  </div>
+                </label>
+                <label className="flex items-start gap-2 border rounded-md p-2 cursor-pointer hover:bg-muted/40">
+                  <RadioGroupItem value="nenhum" id="dev-nenhum" className="mt-0.5" />
+                  <div className="text-xs">
+                    <div className="font-medium">Sem rastreamento</div>
+                    <div className="text-muted-foreground">Somente cadastro.</div>
+                  </div>
+                </label>
+              </RadioGroup>
             </div>
+
+            {formData.tipo_dispositivo === 'app' && (
+              <div>
+                <Label className="flex items-center gap-2">
+                  <Smartphone className="h-4 w-4" />
+                  Dispositivo aprovado
+                </Label>
+                <div className="mt-2">
+                  <Select
+                    value={formData.dispositivo_id || '__none__'}
+                    onValueChange={(value) => setFormData(prev => ({
+                      ...prev,
+                      dispositivo_id: value === '__none__' ? '' : value,
+                    }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um dispositivo aprovado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Nenhum</SelectItem>
+                      {dispositivos
+                        .filter(d => !d.veiculo_id || d.veiculo_id === selectedVeiculo?.id)
+                        .map(d => (
+                          <SelectItem key={d.id} value={d.id}>
+                            {d.nome_dispositivo || d.device_uuid} ({d.device_uuid})
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  {dispositivos.filter(d => !d.veiculo_id || d.veiculo_id === selectedVeiculo?.id).length === 0 && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Nenhum dispositivo aprovado disponível. Aprove dispositivos na aba "Dispositivos aprovados".
+                    </p>
+                  )}
+                </div>
+
+                {/* Ajuda: URL do Traccar/OsmAnd */}
+                <div className="mt-3 rounded-md border bg-muted/40 p-3 text-xs space-y-2">
+                  <div className="font-medium">Usando Traccar Client / OsmAnd?</div>
+                  <p className="text-muted-foreground">
+                    Configure no app a URL do servidor abaixo e use como identificador o <b>IMEI</b> ou <b>UUID</b> do dispositivo aprovado.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Input readOnly value={TRACKING_URL} className="font-mono text-[11px] h-8" />
+                    <Button
+                      type="button" variant="outline" size="icon" className="h-8 w-8 shrink-0"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(TRACKING_URL);
+                          setUrlCopiada(true);
+                          toast.success('URL copiada');
+                          setTimeout(() => setUrlCopiada(false), 2000);
+                        } catch { toast.error('Erro ao copiar'); }
+                      }}
+                    >
+                      {urlCopiada ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {formData.tipo_dispositivo !== 'rastreador' && (
+              <div className="hidden" />
+            )}
 
             {/* Telefone único usado pelos dois blocos */}
             <div className="border rounded-lg p-3 bg-muted/30 space-y-2">
