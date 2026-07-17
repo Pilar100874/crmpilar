@@ -221,6 +221,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   };
 
   const handleSave = async () => {
+    if (saving) return;
     const identificador = formData.placa.trim();
     if (!identificador) {
       toast.error(isPessoa ? 'Nome é obrigatório' : 'Placa é obrigatória');
