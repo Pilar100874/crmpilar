@@ -74,14 +74,18 @@ function parseLocation(body) {
   let lat = parseCoord(body.slice(7, 11));
   let lon = parseCoord(body.slice(11, 15));
   const speed = body[15];                       // km/h
-  const course = body.readUInt16BE(16);         // bits 0-9: heading; bits 10-13: flags
+  const course = body.readUInt16BE(16);         // bits 0-9: heading; bits 10-15: status flags
   const heading = course & 0x03ff;
   const flags = (course >> 10) & 0x3f;
-  const north = (flags & 0x04) !== 0;
-  const east  = (flags & 0x08) !== 0;
+  // GT06 status bits (após shift >>10):
+  //   bit 2 (0x04) = EW: 0=East, 1=West
+  //   bit 3 (0x08) = NS: 0=South, 1=North
+  //   bit 4 (0x10) = GPS fixed
+  const north = (flags & 0x08) !== 0;
+  const west  = (flags & 0x04) !== 0;
   const fixed = (flags & 0x10) !== 0;
   if (!north) lat = -lat;
-  if (!east)  lon = -lon;
+  if (west)   lon = -lon;
   return {
     timestamp: dt.toISOString(),
     latitude: lat,
