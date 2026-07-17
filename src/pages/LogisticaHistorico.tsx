@@ -366,7 +366,7 @@ const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = fals
                   <CommandList>
                     <CommandEmpty>Nenhum veículo encontrado.</CommandEmpty>
                     <CommandGroup>
-                      {veiculos.map((v) => {
+                      {veiculosFiltradosGrupo.map((v) => {
                         const isSelected = selectedVeiculoIds.includes(v.id);
                         const index = selectedVeiculoIds.indexOf(v.id);
                         return (
