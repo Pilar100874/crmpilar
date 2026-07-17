@@ -318,21 +318,7 @@ Content-Type: application/json
             </CardContent>
           </Card>
 
-          {/* Dispositivos de Rastreamento */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Smartphone className="h-5 w-5" />
-                Dispositivos de Rastreamento
-              </CardTitle>
-              <CardDescription>
-                Gerencie os dispositivos que podem enviar dados de localização
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DispositivosRastreamento estabelecimentoId={config?.estabelecimento_id || null} />
-            </CardContent>
-          </Card>
+          {/* Dispositivos de Rastreamento agora vive dentro de Logística → Veículo / Pessoa */}
         </div>
       </div>
     </div>
