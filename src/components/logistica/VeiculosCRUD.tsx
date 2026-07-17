@@ -183,6 +183,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         descricao: veiculo.descricao || '',
         motorista: veiculo.motorista || '',
         tipo_veiculo: veiculo.tipo_veiculo || '',
+        grupo_id: (veiculo as any).grupo_id || '',
         traccar_device_id: veiculo.traccar_device_id || '',
         dispositivo_id: linkedDevice?.id || '',
         tracker_model_id: (veiculo as any).tracker_model_id || '',
