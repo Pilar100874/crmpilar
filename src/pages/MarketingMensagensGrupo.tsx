@@ -34,7 +34,7 @@ interface Frase {
 const TEMAS_SUGERIDOS = [
   "Promoção", "Institucional", "Lançamento", "Novidade",
   "Benefícios", "Diferencial", "Prova social", "Urgência",
-  "Sazonal", "Educacional",
+  "Sazonal", "Educacional", "Manter Contato",
 ];
 
 export default function MarketingMensagensGrupo() {
