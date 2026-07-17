@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { LogisticaGruposCRUD } from '@/components/logistica/LogisticaGruposCRUD';
+import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 
 
 interface LogisticaConfigData {
