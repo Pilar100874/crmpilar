@@ -662,6 +662,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 <TableCell>{veiculo.descricao || '-'}</TableCell>
                 <TableCell>{veiculo.motorista || '-'}</TableCell>
                 <TableCell>{veiculo.tipo_veiculo || '-'}</TableCell>
+                <TableCell>{unidadeNomeById[(veiculo as any).grupo_id] || '-'}</TableCell>
                 <TableCell>
                   {model ? (
                     <div className="flex flex-col gap-1">
