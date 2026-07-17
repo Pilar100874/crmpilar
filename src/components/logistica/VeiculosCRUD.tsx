@@ -20,6 +20,8 @@ import { buildTrackerParametersSms, configurarRastreador, getTrackerRenderedComm
 import { OPERADORAS_APN, findOperadoraByApn } from '@/lib/operadorasSms';
 import { VeiculosBulkImportDialog } from './VeiculosBulkImportDialog';
 import DispositivosRastreamento from './DispositivosRastreamento';
+import { GrupoFilterSelect } from './GrupoFilterSelect';
+import { useGrupoFilter, filterByGrupo, GRUPO_ALL } from '@/lib/logistica/grupoFilter';
 
 interface VeiculosCRUDProps {
   estabelecimentoId: string;
@@ -71,6 +73,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     descricao: '',
     motorista: '',
     tipo_veiculo: '',
+    grupo_id: '',
     traccar_device_id: '',
     dispositivo_id: '',
     tracker_model_id: '',
@@ -82,6 +85,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     ativo: true,
     tipo_dispositivo: 'rastreador' as 'rastreador' | 'app' | 'nenhum',
   });
+
+  const { grupoId, setGrupoId, unidades } = useGrupoFilter(estabelecimentoId);
 
   const isPessoa = formData.tipo_veiculo === 'Pessoa';
 
@@ -178,6 +183,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         descricao: veiculo.descricao || '',
         motorista: veiculo.motorista || '',
         tipo_veiculo: veiculo.tipo_veiculo || '',
+        grupo_id: (veiculo as any).grupo_id || '',
         traccar_device_id: veiculo.traccar_device_id || '',
         dispositivo_id: linkedDevice?.id || '',
         tracker_model_id: (veiculo as any).tracker_model_id || '',
@@ -196,6 +202,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         descricao: '',
         motorista: '',
         tipo_veiculo: '',
+        grupo_id: grupoId && grupoId !== GRUPO_ALL ? grupoId : '',
         traccar_device_id: '',
         dispositivo_id: '',
         tracker_model_id: '',
@@ -244,6 +251,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             descricao: formData.descricao || null,
             motorista: formData.motorista || null,
             tipo_veiculo: formData.tipo_veiculo || null,
+            grupo_id: formData.grupo_id || null,
             traccar_device_id: formData.traccar_device_id || null,
             ativo: formData.ativo
           })
@@ -259,6 +267,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             descricao: formData.descricao || null,
             motorista: formData.motorista || null,
             tipo_veiculo: formData.tipo_veiculo || null,
+            grupo_id: formData.grupo_id || null,
             traccar_device_id: formData.traccar_device_id || null,
             ativo: formData.ativo
           })
@@ -588,23 +597,32 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     }
   };
 
-  const filteredVeiculos = veiculos.filter(v =>
+  const filteredVeiculos = filterByGrupo(veiculos as any[], grupoId).filter(v =>
     v.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
     v.motorista?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     v.descricao?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const unidadeNomeById = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    unidades.forEach(u => { map[u.id] = u.nome; });
+    return map;
+  }, [unidades]);
+
   return (
     <div className="space-y-4 max-w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="relative flex-1 sm:max-w-sm w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar veículos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
-          />
+        <div className="flex flex-col sm:flex-row gap-2 flex-1 sm:max-w-xl">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar veículos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} />
         </div>
         <div className="grid grid-cols-1 sm:flex sm:flex-row gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={() => setBulkOpen(true)} className="w-full sm:w-auto justify-center">
@@ -628,6 +646,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               <TableHead>Descrição</TableHead>
               <TableHead>Motorista</TableHead>
               <TableHead>Tipo</TableHead>
+              <TableHead>Grupo</TableHead>
               <TableHead>Rastreador</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[180px]">Ações</TableHead>
@@ -643,6 +662,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 <TableCell>{veiculo.descricao || '-'}</TableCell>
                 <TableCell>{veiculo.motorista || '-'}</TableCell>
                 <TableCell>{veiculo.tipo_veiculo || '-'}</TableCell>
+                <TableCell>{unidadeNomeById[(veiculo as any).grupo_id] || '-'}</TableCell>
                 <TableCell>
                   {model ? (
                     <div className="flex flex-col gap-1">
@@ -714,7 +734,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             })}
             {filteredVeiculos.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   {loading ? 'Carregando...' : 'Nenhum veículo encontrado'}
                 </TableCell>
               </TableRow>
@@ -777,6 +797,12 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   <div className="min-w-0">
                     <span className="text-muted-foreground">Tipo: </span>
                     <span>{veiculo.tipo_veiculo}</span>
+                  </div>
+                )}
+                {unidadeNomeById[(veiculo as any).grupo_id] && (
+                  <div className="min-w-0 col-span-2">
+                    <span className="text-muted-foreground">Grupo: </span>
+                    <span>{unidadeNomeById[(veiculo as any).grupo_id]}</span>
                   </div>
                 )}
               </div>
@@ -866,6 +892,23 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   />
                 </div>
               )}
+              <div>
+                <Label>Grupo (Unidade)</Label>
+                <Select
+                  value={formData.grupo_id || '__none__'}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, grupo_id: value === '__none__' ? '' : value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a unidade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Sem grupo</SelectItem>
+                    {unidades.map(u => (
+                      <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
 

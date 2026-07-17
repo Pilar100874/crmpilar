@@ -22,6 +22,8 @@ import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
 import { fetchMotoristasAtuais, formatWhatsappNumber, type MotoristaAtual } from '@/lib/logistica/cvDriverLookup';
 import { MessageCircle, User } from 'lucide-react';
+import { GrupoFilterSelect } from '@/components/logistica/GrupoFilterSelect';
+import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
 
 const ROUTE_COLORS = [
   '#3b82f6', // blue
@@ -51,6 +53,8 @@ const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = fals
   const navigate = useNavigate();
   
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
+  const { grupoId, setGrupoId, unidades } = useGrupoFilter();
+  const veiculosFiltradosGrupo = filterByGrupo(veiculos as any[], grupoId) as Veiculo[];
   const [selectedVeiculoIds, setSelectedVeiculoIds] = useState<string[]>(paramVeiculoId ? [paramVeiculoId] : []);
   const [veiculosHistorico, setVeiculosHistorico] = useState<VeiculoHistorico[]>([]);
   const [filteredVeiculosHistorico, setFilteredVeiculosHistorico] = useState<VeiculoHistorico[]>([]);
@@ -343,6 +347,7 @@ const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = fals
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} />
             {/* Multi Vehicle Selector */}
             <Popover open={selectorOpen} onOpenChange={setSelectorOpen}>
               <PopoverTrigger asChild>
@@ -361,7 +366,7 @@ const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = fals
                   <CommandList>
                     <CommandEmpty>Nenhum veículo encontrado.</CommandEmpty>
                     <CommandGroup>
-                      {veiculos.map((v) => {
+                      {veiculosFiltradosGrupo.map((v) => {
                         const isSelected = selectedVeiculoIds.includes(v.id);
                         const index = selectedVeiculoIds.indexOf(v.id);
                         return (

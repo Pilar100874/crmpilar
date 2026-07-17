@@ -24,6 +24,8 @@ import { cn } from '@/lib/utils';
 import { executarAutomacoesLogistica, limparParadasAntigas } from '@/services/logisticaAutomacaoExecutor';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { fetchMotoristasAtuais, formatWhatsappNumber } from '@/lib/logistica/cvDriverLookup';
+import { GrupoFilterSelect } from '@/components/logistica/GrupoFilterSelect';
+import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
 const statusConfig = {
   movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-600', borderColor: 'border-green-500' },
   parado: { label: 'Parado', color: 'bg-amber-500', textColor: 'text-amber-600', borderColor: 'border-amber-500' },
@@ -267,14 +269,16 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
     };
   }, [fetchVeiculos]);
 
-  const veiculosComPosicao = veiculos.filter(v => v.ultima_posicao);
-  const selectedVeiculo = veiculos.find(v => v.id === selectedVeiculoId);
+  const { grupoId, setGrupoId, unidades } = useGrupoFilter(estabelecimentoId);
+  const veiculosFiltrados = filterByGrupo(veiculos, grupoId);
+  const veiculosComPosicao = veiculosFiltrados.filter(v => v.ultima_posicao);
+  const selectedVeiculo = veiculosFiltrados.find(v => v.id === selectedVeiculoId);
 
   const stats = {
-    total: veiculos.length,
-    movendo: veiculos.filter(v => v.status === 'movendo').length,
-    parado: veiculos.filter(v => v.status === 'parado').length,
-    offline: veiculos.filter(v => v.status === 'offline').length
+    total: veiculosFiltrados.length,
+    movendo: veiculosFiltrados.filter(v => v.status === 'movendo').length,
+    parado: veiculosFiltrados.filter(v => v.status === 'parado').length,
+    offline: veiculosFiltrados.filter(v => v.status === 'offline').length
   };
 
   const getAlertIcon = (type: string) => {
@@ -359,6 +363,8 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+            <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} className="min-w-[180px]" />
+
             {/* Auto Refresh Toggle */}
             <TooltipProvider>
               <Tooltip>
@@ -459,7 +465,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="p-2 space-y-1">
-                    {veiculos.map(v => {
+                    {veiculosFiltrados.map(v => {
                       const config = statusConfig[v.status];
                       const isSelected = selectedVeiculoId === v.id;
                       return (
@@ -578,7 +584,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
           </div>
           <ScrollArea className="flex-1">
             <div className="p-2 space-y-1">
-              {veiculos.map(v => {
+              {veiculosFiltrados.map(v => {
                 const config = statusConfig[v.status];
                 const isSelected = selectedVeiculoId === v.id;
                 
