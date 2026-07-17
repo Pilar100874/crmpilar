@@ -1212,8 +1212,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={handleSave} className="w-full sm:w-auto">
-              Salvar
+            <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
+              {saving ? 'Salvando...' : 'Salvar'}
             </Button>
           </DialogFooter>
         </DialogContent>
