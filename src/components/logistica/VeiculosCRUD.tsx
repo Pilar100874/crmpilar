@@ -734,7 +734,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             })}
             {filteredVeiculos.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   {loading ? 'Carregando...' : 'Nenhum veículo encontrado'}
                 </TableCell>
               </TableRow>
