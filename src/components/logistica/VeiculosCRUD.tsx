@@ -893,7 +893,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 </div>
               )}
               <div>
-                <Label>Grupo (Unidade)</Label>
+                <Label>Grupo</Label>
                 <Select
                   value={formData.logistica_grupo_id || '__none__'}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, logistica_grupo_id: value === '__none__' ? '' : value }))}
