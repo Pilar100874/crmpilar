@@ -447,7 +447,17 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   }, [currentMarker]);
 
   return (
-    <div ref={mapContainerRef} className={className} />
+    <>
+      <div ref={mapContainerRef} className={`logistica-map-container ${className}`} />
+      <style>{`
+        .logistica-map-container .leaflet-control-zoom {
+          top: auto !important;
+          bottom: 16px !important;
+          right: 16px !important;
+          left: auto !important;
+        }
+      `}</style>
+    </>
   );
 };
 
