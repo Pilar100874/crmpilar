@@ -213,10 +213,25 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   };
 
   const handleSave = async () => {
-    if (!formData.placa.trim()) {
-      toast.error('Placa é obrigatória');
+    const identificador = formData.placa.trim();
+    if (!identificador) {
+      toast.error(isPessoa ? 'Nome é obrigatório' : 'Placa é obrigatória');
       return;
     }
+
+    // Impede duplicidade de placa/nome no mesmo estabelecimento
+    const normalized = isPessoa ? identificador : identificador.toUpperCase();
+    const duplicado = veiculos.find(v =>
+      v.id !== selectedVeiculo?.id &&
+      (v.placa || '').trim().toUpperCase() === normalized.toUpperCase()
+    );
+    if (duplicado) {
+      toast.error(isPessoa
+        ? 'Já existe uma pessoa cadastrada com esse nome'
+        : 'Já existe um veículo cadastrado com essa placa');
+      return;
+    }
+
 
     try {
       let veiculoId = selectedVeiculo?.id;
