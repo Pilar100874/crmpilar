@@ -66,6 +66,11 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [mobileVehicleListOpen, setMobileVehicleListOpen] = useState(false);
   const [mobileAlertsOpen, setMobileAlertsOpen] = useState(false);
+  const [focusVehicle, setFocusVehicle] = useState<{ id: string; nonce: number } | null>(null);
+  const zoomToVehicle = useCallback((id: string) => {
+    setSelectedVeiculoId(id);
+    setFocusVehicle({ id, nonce: Date.now() });
+  }, []);
   
   const alertConfig: AlertConfig = {
     speedLimit: 120,
