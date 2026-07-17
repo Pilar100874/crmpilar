@@ -118,8 +118,6 @@ const LogisticaHub: React.FC = () => {
         return <LogisticaRotas embedded />;
       case 'automacoes':
         return <LogisticaAutomacoes />;
-      case 'pilar-rastreador':
-        return estabelecimentoId ? <PilarRastreadorHub estabelecimentoId={estabelecimentoId} /> : null;
       case 'manual':
         return <ManualRastreadores />;
       case 'config':
