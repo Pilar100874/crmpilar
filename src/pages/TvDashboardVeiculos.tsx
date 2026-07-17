@@ -5,8 +5,10 @@ import { ptBR } from 'date-fns/locale';
 import { 
   Car, Gauge, Clock, MapPin, 
   WifiOff, Activity, RefreshCw,
-  Fuel, Route, Timer, Zap, ArrowLeft, X, List
+  Fuel, Route, Timer, Zap, ArrowLeft, X, List, Pin, Maximize2
 } from 'lucide-react';
+import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
+import { GrupoFilterSelect } from '@/components/logistica/GrupoFilterSelect';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -73,10 +75,28 @@ export default function TvDashboardVeiculos() {
   const [kmRodadosHoje, setKmRodadosHoje] = useState<Record<string, number>>({});
   const [focusVeiculoId, setFocusVeiculoId] = useState<string | null>(null);
   const [focusTrigger, setFocusTrigger] = useState(0);
+  const [pinnedVeiculoId, setPinnedVeiculoId] = useState<string | null>(null);
+  const { grupoId, setGrupoId, unidades } = useGrupoFilter();
 
   const handleFocus = useCallback((id: string) => {
     setFocusVeiculoId(id);
     setFocusTrigger(t => t + 1);
+  }, []);
+
+  const togglePin = useCallback((id: string) => {
+    setPinnedVeiculoId(prev => {
+      const next = prev === id ? null : id;
+      if (next) {
+        setFocusVeiculoId(next);
+        setFocusTrigger(t => t + 1);
+      }
+      return next;
+    });
+  }, []);
+
+  const showAll = useCallback(() => {
+    setPinnedVeiculoId(null);
+    setFocusVeiculoId(null);
   }, []);
 
   useEffect(() => {
@@ -278,7 +298,15 @@ export default function TvDashboardVeiculos() {
     };
   }, [estabelecimentoId, fetchVeiculos]);
 
-  const veiculosComPosicao = veiculos.filter(v => v.ultima_posicao);
+  const veiculosFiltrados = useMemo(() => filterByGrupo(veiculos, grupoId), [veiculos, grupoId]);
+  const veiculosComPosicao = veiculosFiltrados.filter(v => v.ultima_posicao);
+
+  // Follow mode: recentraliza no veículo fixado toda vez que houver nova posição
+  useEffect(() => {
+    if (!pinnedVeiculoId) return;
+    setFocusVeiculoId(pinnedVeiculoId);
+    setFocusTrigger(t => t + 1);
+  }, [pinnedVeiculoId, veiculos]);
 
   // Calcular veículos parados há muito tempo (mais de 30 min)
   const veiculosParadosAlerta = useMemo(() => {
@@ -314,10 +342,10 @@ export default function TvDashboardVeiculos() {
   }, [veiculos, kmRodadosHoje, precosCombustivel]);
 
   const stats = {
-    total: veiculos.length,
-    movendo: veiculos.filter(v => v.status === 'movendo').length,
-    parado: veiculos.filter(v => v.status === 'parado').length,
-    offline: veiculos.filter(v => v.status === 'offline').length,
+    total: veiculosFiltrados.length,
+    movendo: veiculosFiltrados.filter(v => v.status === 'movendo').length,
+    parado: veiculosFiltrados.filter(v => v.status === 'parado').length,
+    offline: veiculosFiltrados.filter(v => v.status === 'offline').length,
     velocidadeMedia: veiculosComPosicao.length > 0
       ? Math.round(veiculosComPosicao.reduce((acc, v) => acc + (v.ultima_posicao?.velocidade || 0), 0) / veiculosComPosicao.length)
       : 0,
@@ -354,7 +382,7 @@ export default function TvDashboardVeiculos() {
         <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
           <h3 className="font-medium text-xs text-white/90 flex items-center gap-1.5">
             <Car className="h-3 w-3" />
-            Veículos ({veiculos.length})
+            Veículos ({veiculosFiltrados.length})
           </h3>
           {isMobile && (
             <Button
@@ -369,15 +397,16 @@ export default function TvDashboardVeiculos() {
         </div>
         
         <div className="flex-1 overflow-y-auto">
-          {veiculos.length === 0 ? (
+          {veiculosFiltrados.length === 0 ? (
             <div className="p-3 text-center text-white/60 text-xs">
               Nenhum veículo
             </div>
           ) : (
             <div className="divide-y divide-white/5">
-              {veiculos.map((veiculo) => {
+              {veiculosFiltrados.map((veiculo) => {
                 const config = statusConfig[veiculo.status];
                 const km = kmRodadosHoje[veiculo.id] || 0;
+                const isPinned = pinnedVeiculoId === veiculo.id;
                 
                 return (
                   <div
@@ -404,6 +433,13 @@ export default function TvDashboardVeiculos() {
                             <span>{km}km</span>
                           </>
                         )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); togglePin(veiculo.id); }}
+                          title={isPinned ? 'Desafixar' : 'Fixar no mapa'}
+                          className={`p-1 rounded hover:bg-white/10 ${isPinned ? 'text-primary' : 'text-white/50'}`}
+                        >
+                          <Pin className={`h-3 w-3 ${isPinned ? 'fill-current' : ''}`} />
+                        </button>
                       </div>
                     </div>
                     {veiculo.motorista_atual?.nome && (
@@ -448,7 +484,7 @@ export default function TvDashboardVeiculos() {
               veiculos={veiculosComPosicao}
               paradasMarcadas={paradasMarcadas}
               className="absolute inset-0"
-              fitBounds={!focusVeiculoId}
+              fitBounds={!pinnedVeiculoId}
               compactIcons
               focusVeiculoId={focusVeiculoId || undefined}
               focusTrigger={focusTrigger}
@@ -480,6 +516,19 @@ export default function TvDashboardVeiculos() {
               {format(lastUpdate, 'HH:mm:ss', { locale: ptBR })}
             </p>
           </div>
+          <div className="bg-background/95 backdrop-blur-md rounded-xl shadow-xl">
+            <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} size="sm" />
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={showAll}
+            className="h-10 rounded-xl bg-background/95 backdrop-blur-md shadow-xl gap-1"
+            title="Mostrar todos os veículos no mapa"
+          >
+            <Maximize2 className="h-4 w-4" />
+            Ver todos
+          </Button>
         </div>
 
         {/* Bottom Left - Alerts */}
