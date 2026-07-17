@@ -13,6 +13,7 @@ interface VeiculosListProps {
   veiculos: VeiculoComStatus[];
   selectedVeiculoId?: string;
   onVeiculoSelect: (veiculo: VeiculoComStatus) => void;
+  onVeiculoDoubleClick?: (veiculo: VeiculoComStatus) => void;
   searchTerm: string;
   onSearchChange: (value: string) => void;
   statusFilter: string;
