@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { List, X, Info, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { GrupoFilterSelect } from '@/components/logistica/GrupoFilterSelect';
+import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
 
 const LogisticaDashboard: React.FC = () => {
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
