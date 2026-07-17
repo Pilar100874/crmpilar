@@ -24,12 +24,13 @@ interface Grupo {
 }
 interface Frase {
   id: string;
-  grupo_id: string;
+  grupo_id: string | null;
   tema: string;
   frase: string;
   ordem: number;
   ativo: boolean;
 }
+type Escopo = "geral" | "grupo";
 
 const TEMAS_SUGERIDOS = [
   "Promoção", "Institucional", "Lançamento", "Novidade",
@@ -40,6 +41,7 @@ const TEMAS_SUGERIDOS = [
 export default function MarketingMensagensGrupo() {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
   const [grupos, setGrupos] = useState<Grupo[]>([]);
+  const [escopo, setEscopo] = useState<Escopo>("geral");
   const [grupoId, setGrupoId] = useState<string>("");
   const [tema, setTema] = useState<string>("Promoção");
   const [temaCustom, setTemaCustom] = useState<string>("");
@@ -57,6 +59,7 @@ export default function MarketingMensagensGrupo() {
 
   const activeTema = tema === "__custom__" ? temaCustom.trim() : tema;
   const grupoAtual = useMemo(() => grupos.find(g => g.id === grupoId), [grupos, grupoId]);
+  const escopoPronto = escopo === "geral" || (escopo === "grupo" && !!grupoId);
 
   useEffect(() => {
     (async () => {
@@ -73,28 +76,31 @@ export default function MarketingMensagensGrupo() {
   }, []);
 
   useEffect(() => {
-    if (grupoId && activeTema) loadFrases();
+    if (escopoPronto && activeTema) loadFrases();
     else setFrases([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [grupoId, activeTema]);
+  }, [escopo, grupoId, activeTema]);
 
   const loadFrases = async () => {
-    if (!grupoId || !activeTema) return;
+    if (!activeTema) return;
+    if (escopo === "grupo" && !grupoId) return;
     setLoading(true);
-    const { data, error } = await supabase
+    let q = supabase
       .from("mensagens_grupo_produto")
       .select("*")
-      .eq("grupo_id", grupoId)
+      .eq("estabelecimento_id", estabelecimentoId)
       .eq("tema", activeTema)
       .order("ordem");
+    q = escopo === "geral" ? q.is("grupo_id", null) : q.eq("grupo_id", grupoId);
+    const { data, error } = await q;
     setLoading(false);
     if (error) { toast.error("Erro ao carregar frases"); return; }
     setFrases((data || []) as Frase[]);
   };
 
   const abrirGerar = () => {
-    if (!grupoAtual || !activeTema) {
-      toast.error("Selecione um grupo e um tema");
+    if (!escopoPronto || !activeTema) {
+      toast.error(escopo === "grupo" ? "Selecione um grupo e um tema" : "Selecione um tema");
       return;
     }
     setComplemento("");
@@ -102,14 +108,16 @@ export default function MarketingMensagensGrupo() {
   };
 
   const gerarComIA = async () => {
-    if (!grupoAtual || !activeTema) return;
+    if (!activeTema) return;
+    if (escopo === "grupo" && !grupoAtual) return;
     setShowGerar(false);
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("gerar-mensagens-grupo", {
         body: {
-          grupo: grupoAtual.nome,
-          descritivo: grupoAtual.descritivo_catalogo || "",
+          escopo,
+          grupo: escopo === "grupo" ? grupoAtual?.nome : undefined,
+          descritivo: escopo === "grupo" ? (grupoAtual?.descritivo_catalogo || "") : "",
           tema: activeTema,
           count: 10,
           complemento: complemento.trim() || undefined,
@@ -123,7 +131,7 @@ export default function MarketingMensagensGrupo() {
       const startOrdem = frases.length;
       const rows = novas.map((f, i) => ({
         estabelecimento_id: estabelecimentoId,
-        grupo_id: grupoId,
+        grupo_id: escopo === "grupo" ? grupoId : null,
         tema: activeTema,
         frase: f,
         ordem: startOrdem + i,
@@ -141,10 +149,11 @@ export default function MarketingMensagensGrupo() {
   };
 
   const salvarNova = async () => {
-    if (!newText.trim() || !grupoId || !activeTema) return;
+    if (!newText.trim() || !activeTema) return;
+    if (escopo === "grupo" && !grupoId) return;
     const { error } = await supabase.from("mensagens_grupo_produto").insert({
       estabelecimento_id: estabelecimentoId,
-      grupo_id: grupoId,
+      grupo_id: escopo === "grupo" ? grupoId : null,
       tema: activeTema,
       frase: newText.trim(),
       ordem: frases.length,
@@ -196,18 +205,35 @@ export default function MarketingMensagensGrupo() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <Label>Escopo</Label>
+              <Select value={escopo} onValueChange={(v) => setEscopo(v as Escopo)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="geral">Geral</SelectItem>
+                  <SelectItem value="grupo">Por grupo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div>
               <Label>Grupo de produtos</Label>
-              <Select value={grupoId} onValueChange={setGrupoId}>
-                <SelectTrigger><SelectValue placeholder="Selecione um grupo" /></SelectTrigger>
+              <Select
+                value={grupoId}
+                onValueChange={setGrupoId}
+                disabled={escopo === "geral"}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={escopo === "geral" ? "— (não se aplica)" : "Selecione um grupo"} />
+                </SelectTrigger>
                 <SelectContent>
                   {grupos.map(g => (
                     <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {grupoAtual?.descritivo_catalogo && (
+              {escopo === "grupo" && grupoAtual?.descritivo_catalogo && (
                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                   {grupoAtual.descritivo_catalogo}
                 </p>
@@ -238,7 +264,7 @@ export default function MarketingMensagensGrupo() {
             <div className="flex items-end gap-2">
               <Button
                 onClick={abrirGerar}
-                disabled={!grupoId || !activeTema || generating}
+                disabled={!escopoPronto || !activeTema || generating}
                 className="w-full"
               >
                 {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
@@ -249,7 +275,7 @@ export default function MarketingMensagensGrupo() {
         </CardContent>
       </Card>
 
-      {grupoId && activeTema && (
+      {escopoPronto && activeTema && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
@@ -333,7 +359,9 @@ export default function MarketingMensagensGrupo() {
           </DialogHeader>
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
-              Grupo: <b>{grupoAtual?.nome}</b> · Tema: <b>{activeTema}</b>
+              {escopo === "grupo"
+                ? <>Grupo: <b>{grupoAtual?.nome}</b> · Tema: <b>{activeTema}</b></>
+                : <>Escopo: <b>Geral</b> · Tema: <b>{activeTema}</b></>}
             </p>
             <Label>Complemento (opcional)</Label>
             <Textarea
