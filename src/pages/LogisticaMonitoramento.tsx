@@ -69,9 +69,25 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   const [mobileVehicleListOpen, setMobileVehicleListOpen] = useState(false);
   const [mobileAlertsOpen, setMobileAlertsOpen] = useState(false);
   const [focusVehicle, setFocusVehicle] = useState<{ id: string; nonce: number } | null>(null);
+  const [pinnedVeiculoId, setPinnedVeiculoId] = useState<string | null>(null);
   const zoomToVehicle = useCallback((id: string) => {
     setSelectedVeiculoId(id);
     setFocusVehicle({ id, nonce: Date.now() });
+  }, []);
+  const togglePin = useCallback((id: string) => {
+    setPinnedVeiculoId(prev => {
+      const next = prev === id ? null : id;
+      if (next) {
+        setSelectedVeiculoId(next);
+        setFocusVehicle({ id: next, nonce: Date.now() });
+      }
+      return next;
+    });
+  }, []);
+  const showAll = useCallback(() => {
+    setPinnedVeiculoId(null);
+    setFocusVehicle(null);
+    setSelectedVeiculoId(null);
   }, []);
   
   const alertConfig: AlertConfig = {
