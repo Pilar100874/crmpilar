@@ -172,6 +172,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     
     if (veiculo) {
       setSelectedVeiculo(veiculo);
+      const linkedTracker = !!((veiculo as any).tracker_model_id);
       setFormData({
         placa: veiculo.placa,
         descricao: veiculo.descricao || '',
@@ -185,7 +186,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         operadora_id: findOperadoraByApn((veiculo as any).apn_operadora)?.id || '',
         enviar_sms_automatico: false,
         configurar_tracker_ao_salvar: !(veiculo as any).tracker_model_id ? true : false,
-        ativo: veiculo.ativo
+        ativo: veiculo.ativo,
+        tipo_dispositivo: linkedDevice ? 'app' : (linkedTracker ? 'rastreador' : 'nenhum'),
       });
     } else {
       setSelectedVeiculo(null);
@@ -202,7 +204,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         operadora_id: '',
         enviar_sms_automatico: false,
         configurar_tracker_ao_salvar: true,
-        ativo: true
+        ativo: true,
+        tipo_dispositivo: 'rastreador',
       });
     }
     setDispositivoTab('selecionar');
