@@ -16,6 +16,8 @@ import { ParadaMarcada } from '@/types/automacaoLogistica';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { useFullscreen } from '@/hooks/useFullscreen';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { fetchMotoristasAtuais } from '@/lib/logistica/cvDriverLookup';
+import { FocusLegend } from '@/components/logistica/FocusLegend';
 
 const statusConfig = {
   movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-600', icon: Activity },
