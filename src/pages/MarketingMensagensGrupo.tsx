@@ -41,6 +41,7 @@ const TEMAS_SUGERIDOS = [
 export default function MarketingMensagensGrupo() {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
   const [grupos, setGrupos] = useState<Grupo[]>([]);
+  const [escopo, setEscopo] = useState<Escopo>("geral");
   const [grupoId, setGrupoId] = useState<string>("");
   const [tema, setTema] = useState<string>("Promoção");
   const [temaCustom, setTemaCustom] = useState<string>("");
@@ -58,6 +59,7 @@ export default function MarketingMensagensGrupo() {
 
   const activeTema = tema === "__custom__" ? temaCustom.trim() : tema;
   const grupoAtual = useMemo(() => grupos.find(g => g.id === grupoId), [grupos, grupoId]);
+  const escopoPronto = escopo === "geral" || (escopo === "grupo" && !!grupoId);
 
   useEffect(() => {
     (async () => {
