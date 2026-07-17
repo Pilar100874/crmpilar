@@ -26,7 +26,7 @@ const LogisticaConfig: React.FC<LogisticaConfigProps> = ({ embedded = false }) =
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [config, setConfig] = useState<LogisticaConfigData | null>(null);
-  const [copied, setCopied] = useState<'key' | 'url' | 'token' | null>(null);
+  const [copied, setCopied] = useState<'key' | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [apiKey, setApiKey] = useState('');
 
