@@ -270,10 +270,16 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     if (!mapRef.current || !focusVeiculoId) return;
     const veiculo = veiculos.find(v => v.id === focusVeiculoId && v.ultima_posicao);
     if (!veiculo) return;
+    const map = mapRef.current;
     const pos: L.LatLngExpression = [veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng];
-    mapRef.current.setView(pos, Math.max(mapRef.current.getZoom(), 17), { animate: true });
-    const marker = markersRef.current.get(veiculo.id);
-    marker?.openPopup();
+    // Defer to next frame so container resize (details panel opening) settles first
+    const raf = requestAnimationFrame(() => {
+      map.invalidateSize();
+      map.setView(pos, Math.max(map.getZoom(), 17), { animate: true });
+      const marker = markersRef.current.get(veiculo.id);
+      marker?.openPopup();
+    });
+    return () => cancelAnimationFrame(raf);
   }, [focusVeiculoId, focusTrigger, veiculos]);
 
   // Update paradas marcadas markers
