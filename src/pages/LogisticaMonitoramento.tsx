@@ -693,7 +693,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
               <LazyLogisticaMap
                 veiculos={veiculosComPosicao}
                 paradasMarcadas={paradasMarcadas}
-                onVeiculoClick={(v) => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
+                onVeiculoClick={(v) => zoomToVehicle(v.id)}
                 focusVeiculoId={focusVehicle?.id}
                 focusTrigger={focusVehicle?.nonce}
                 className="h-full w-full absolute inset-0"
