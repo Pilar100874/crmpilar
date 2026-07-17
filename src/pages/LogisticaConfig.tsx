@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { LogisticaGruposCRUD } from '@/components/logistica/LogisticaGruposCRUD';
+
 
 
 interface LogisticaConfigData {
@@ -29,9 +31,11 @@ const LogisticaConfig: React.FC<LogisticaConfigProps> = ({ embedded = false }) =
   const [copied, setCopied] = useState<'key' | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [apiKey, setApiKey] = useState('');
+  const [estabId, setEstabId] = useState<string | null>(null);
 
   useEffect(() => {
     loadConfig();
+    getEstabelecimentoId().then(setEstabId);
   }, []);
 
   const getEstabelecimentoId = async (): Promise<string | null> => {
@@ -238,6 +242,8 @@ const LogisticaConfig: React.FC<LogisticaConfigProps> = ({ embedded = false }) =
               </Button>
             </CardContent>
           </Card>
+
+          <LogisticaGruposCRUD estabelecimentoId={estabId} />
 
           <TestePostFakeCard />
           {/* Dispositivos de Rastreamento agora vive dentro de Logística → Veículo / Pessoa */}

@@ -8602,6 +8602,39 @@ export type Database = {
           },
         ]
       }
+      logistica_grupos: {
+        Row: {
+          ativo: boolean
+          cor: string | null
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string | null
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cor?: string | null
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cor?: string | null
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       logistica_paradas_marcadas: {
         Row: {
           ativa: boolean
@@ -20702,6 +20735,7 @@ export type Database = {
           estabelecimento_id: string | null
           grupo_id: string | null
           id: string
+          logistica_grupo_id: string | null
           motorista: string | null
           placa: string
           telefone_sms: string | null
@@ -20723,6 +20757,7 @@ export type Database = {
           estabelecimento_id?: string | null
           grupo_id?: string | null
           id?: string
+          logistica_grupo_id?: string | null
           motorista?: string | null
           placa: string
           telefone_sms?: string | null
@@ -20744,6 +20779,7 @@ export type Database = {
           estabelecimento_id?: string | null
           grupo_id?: string | null
           id?: string
+          logistica_grupo_id?: string | null
           motorista?: string | null
           placa?: string
           telefone_sms?: string | null
@@ -20770,6 +20806,13 @@ export type Database = {
             columns: ["grupo_id"]
             isOneToOne: false
             referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "veiculos_logistica_grupo_id_fkey"
+            columns: ["logistica_grupo_id"]
+            isOneToOne: false
+            referencedRelation: "logistica_grupos"
             referencedColumns: ["id"]
           },
           {

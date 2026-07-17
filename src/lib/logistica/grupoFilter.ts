@@ -25,15 +25,18 @@ export function saveGrupo(value: string) {
   }
 }
 
-export function filterByGrupo<T extends { grupo_id?: string | null }>(
+export function filterByGrupo<T extends { logistica_grupo_id?: string | null; grupo_id?: string | null }>(
   list: T[],
   grupoId: string
 ): T[] {
   if (!grupoId || grupoId === GRUPO_ALL) return list;
-  return list.filter(v => (v as any).grupo_id === grupoId);
+  return list.filter(v => {
+    const anyV = v as any;
+    return anyV.logistica_grupo_id === grupoId || anyV.grupo_id === grupoId;
+  });
 }
 
-export function useGrupoFilter(estabelecimentoId?: string | null) {
+export function useGrupoFilter(_estabelecimentoId?: string | null) {
   const [grupoId, setGrupoIdState] = useState<string>(() => getSavedGrupo());
   const [unidades, setUnidades] = useState<UnidadeOpt[]>([]);
 
@@ -41,15 +44,16 @@ export function useGrupoFilter(estabelecimentoId?: string | null) {
     let cancelled = false;
     (async () => {
       const { data } = await supabase
-        .from('unidades')
+        .from('logistica_grupos')
         .select('id, nome')
+        .eq('ativo', true)
         .order('nome');
       if (!cancelled) setUnidades((data || []) as UnidadeOpt[]);
     })();
     return () => {
       cancelled = true;
     };
-  }, [estabelecimentoId]);
+  }, []);
 
   const setGrupoId = useCallback((v: string) => {
     setGrupoIdState(v);
