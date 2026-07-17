@@ -69,7 +69,7 @@ const tabItems: TabItem[] = [
   { id: 'video-editor', label: 'Editor de Vídeo', icon: Clapperboard, description: 'Timeline completa com efeitos, cortes e transições' },
   { id: 'config-apis', label: 'Config APIs', icon: Key, description: 'Gerencie chaves de API dos serviços de IA pagos' },
   { id: 'envio-massa', label: 'Envio em Massa', icon: Send, description: 'Dispare mensagens para múltiplos contatos' },
-  { id: 'mensagens-grupo', label: 'Mensagens por Grupo', icon: MessageSquareText, description: 'Frases prontas por grupo de produtos e tema, geradas com IA' },
+  { id: 'mensagens-grupo', label: 'Mensagens pré definidas', icon: MessageSquareText, description: 'Frases prontas por tema e grupo de produtos, geradas com IA' },
 
   { id: 'galeria', label: 'Galeria', icon: FolderOpen, description: 'Visualize o conteúdo criado' },
   { id: 'catalogo', label: 'Catálogo', icon: BookOpen, description: 'Gere catálogos de produtos em PDF' },

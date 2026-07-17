@@ -201,7 +201,7 @@ export default function MarketingMensagensGrupo() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <MessageSquareText className="h-4 w-4 text-primary" />
-            Mensagens Automáticas por Grupo de Produtos
+            Mensagens pré definidas
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
