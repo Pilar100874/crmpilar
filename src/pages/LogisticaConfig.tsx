@@ -239,6 +239,7 @@ const LogisticaConfig: React.FC<LogisticaConfigProps> = ({ embedded = false }) =
             </CardContent>
           </Card>
 
+          <TestePostFakeCard />
           {/* Dispositivos de Rastreamento agora vive dentro de Logística → Veículo / Pessoa */}
         </div>
       </div>
