@@ -5,7 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { 
   ArrowLeft, Car, Gauge, Clock, MapPin, AlertTriangle, 
   Wifi, WifiOff, Activity, ChevronDown, ChevronUp, 
-  Bell, BellOff, Volume2, RefreshCw, Eye, Maximize2, Minimize2, List, MessageCircle, User
+  Bell, BellOff, Volume2, RefreshCw, Eye, Maximize2, Minimize2, List, MessageCircle, User, Pin
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -69,9 +69,25 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   const [mobileVehicleListOpen, setMobileVehicleListOpen] = useState(false);
   const [mobileAlertsOpen, setMobileAlertsOpen] = useState(false);
   const [focusVehicle, setFocusVehicle] = useState<{ id: string; nonce: number } | null>(null);
+  const [pinnedVeiculoId, setPinnedVeiculoId] = useState<string | null>(null);
   const zoomToVehicle = useCallback((id: string) => {
     setSelectedVeiculoId(id);
     setFocusVehicle({ id, nonce: Date.now() });
+  }, []);
+  const togglePin = useCallback((id: string) => {
+    setPinnedVeiculoId(prev => {
+      const next = prev === id ? null : id;
+      if (next) {
+        setSelectedVeiculoId(next);
+        setFocusVehicle({ id: next, nonce: Date.now() });
+      }
+      return next;
+    });
+  }, []);
+  const showAll = useCallback(() => {
+    setPinnedVeiculoId(null);
+    setFocusVehicle(null);
+    setSelectedVeiculoId(null);
   }, []);
   
   const alertConfig: AlertConfig = {
@@ -287,6 +303,12 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   const veiculosComPosicao = veiculosFiltrados.filter(v => v.ultima_posicao);
   const selectedVeiculo = veiculosFiltrados.find(v => v.id === selectedVeiculoId);
 
+  // Follow mode: recentraliza no veículo fixado sempre que houver nova posição
+  useEffect(() => {
+    if (!pinnedVeiculoId) return;
+    setFocusVehicle({ id: pinnedVeiculoId, nonce: Date.now() });
+  }, [pinnedVeiculoId, veiculos]);
+
   const stats = {
     total: veiculosFiltrados.length,
     movendo: veiculosFiltrados.filter(v => v.status === 'movendo').length,
@@ -329,7 +351,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                 focusVeiculoId={focusVehicle?.id}
                 focusTrigger={focusVehicle?.nonce}
                 className="absolute inset-0"
-                fitBounds={!focusVehicle}
+                fitBounds={!pinnedVeiculoId}
               />
               <FocusLegend
                 veiculo={focusVehicle ? veiculosComPosicao.find(v => v.id === focusVehicle.id) : undefined}
@@ -430,6 +452,17 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
               </Tooltip>
             </TooltipProvider>
 
+            <Button
+              variant={pinnedVeiculoId ? 'default' : 'outline'}
+              size="sm"
+              onClick={showAll}
+              disabled={!pinnedVeiculoId && !focusVehicle}
+              title="Ver todos os veículos no mapa"
+            >
+              <Maximize2 className="h-4 w-4 mr-2" />
+              Ver todos
+            </Button>
+
             <Button variant="outline" size="sm" onClick={fetchVeiculos}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Atualizar
@@ -521,9 +554,21 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                               )}
                               <span className="font-medium text-sm">{v.placa}</span>
                             </div>
-                            <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
-                              {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
-                            </Badge>
+                            <div className="flex items-center gap-1">
+                              <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
+                                {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
+                              </Badge>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); togglePin(v.id); }}
+                                title={pinnedVeiculoId === v.id ? 'Desafixar' : 'Fixar no mapa'}
+                                className={cn(
+                                  "p-1 rounded hover:bg-accent",
+                                  pinnedVeiculoId === v.id ? 'text-primary' : 'text-muted-foreground'
+                                )}
+                              >
+                                <Pin className={cn("h-3 w-3", pinnedVeiculoId === v.id && 'fill-current')} />
+                              </button>
+                            </div>
                           </div>
                           {v.motorista_atual ? (
                             <div className="mt-1 space-y-0.5">
@@ -639,9 +684,21 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                         )}
                         <span className="font-medium text-sm">{v.placa}</span>
                       </div>
-                      <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
-                        {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
-                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
+                          {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
+                        </Badge>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); togglePin(v.id); }}
+                          title={pinnedVeiculoId === v.id ? 'Desafixar' : 'Fixar no mapa'}
+                          className={cn(
+                            "p-1 rounded hover:bg-accent",
+                            pinnedVeiculoId === v.id ? 'text-primary' : 'text-muted-foreground'
+                          )}
+                        >
+                          <Pin className={cn("h-3 w-3", pinnedVeiculoId === v.id && 'fill-current')} />
+                        </button>
+                      </div>
                     </div>
                     {v.motorista_atual ? (
                       <div className="mt-1 space-y-0.5">
@@ -697,7 +754,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                 focusVeiculoId={focusVehicle?.id}
                 focusTrigger={focusVehicle?.nonce}
                 className="h-full w-full absolute inset-0"
-                fitBounds={!focusVehicle}
+                fitBounds={!pinnedVeiculoId}
               />
               <FocusLegend
                 veiculo={focusVehicle ? veiculosComPosicao.find(v => v.id === focusVehicle.id) : undefined}
