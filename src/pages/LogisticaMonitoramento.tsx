@@ -463,7 +463,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="p-2 space-y-1">
-                    {veiculos.map(v => {
+                    {veiculosFiltrados.map(v => {
                       const config = statusConfig[v.status];
                       const isSelected = selectedVeiculoId === v.id;
                       return (
@@ -582,7 +582,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
           </div>
           <ScrollArea className="flex-1">
             <div className="p-2 space-y-1">
-              {veiculos.map(v => {
+              {veiculosFiltrados.map(v => {
                 const config = statusConfig[v.status];
                 const isSelected = selectedVeiculoId === v.id;
                 
