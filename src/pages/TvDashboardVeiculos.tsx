@@ -71,6 +71,13 @@ export default function TvDashboardVeiculos() {
     etanol: number;
   }>({ gasolina: 5.50, diesel: 5.80, etanol: 4.20 });
   const [kmRodadosHoje, setKmRodadosHoje] = useState<Record<string, number>>({});
+  const [focusVeiculoId, setFocusVeiculoId] = useState<string | null>(null);
+  const [focusTrigger, setFocusTrigger] = useState(0);
+
+  const handleFocus = useCallback((id: string) => {
+    setFocusVeiculoId(id);
+    setFocusTrigger(t => t + 1);
+  }, []);
 
   useEffect(() => {
     const fetchEstabelecimento = async () => {
