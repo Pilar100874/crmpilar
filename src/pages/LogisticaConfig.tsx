@@ -31,9 +31,11 @@ const LogisticaConfig: React.FC<LogisticaConfigProps> = ({ embedded = false }) =
   const [copied, setCopied] = useState<'key' | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [apiKey, setApiKey] = useState('');
+  const [estabId, setEstabId] = useState<string | null>(null);
 
   useEffect(() => {
     loadConfig();
+    getEstabelecimentoId().then(setEstabId);
   }, []);
 
   const getEstabelecimentoId = async (): Promise<string | null> => {
