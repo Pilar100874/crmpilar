@@ -58,6 +58,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedVeiculo, setSelectedVeiculo] = useState<Veiculo | null>(null);
   const [bloqueioOpen, setBloqueioOpen] = useState(false);
@@ -220,6 +221,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
   };
 
   const handleSave = async () => {
+    if (saving) return;
     const identificador = formData.placa.trim();
     if (!identificador) {
       toast.error(isPessoa ? 'Nome é obrigatório' : 'Placa é obrigatória');
@@ -240,6 +242,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     }
 
 
+    setSaving(true);
     try {
       let veiculoId = selectedVeiculo?.id;
 
@@ -350,6 +353,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     } catch (error: any) {
       console.error('Error saving vehicle:', error);
       toast.error(error.message || 'Erro ao salvar veículo');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -1207,8 +1212,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={handleSave} className="w-full sm:w-auto">
-              Salvar
+            <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
+              {saving ? 'Salvando...' : 'Salvar'}
             </Button>
           </DialogFooter>
         </DialogContent>
