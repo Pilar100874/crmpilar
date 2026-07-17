@@ -1154,8 +1154,10 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               </div>
 
             </div>
+            </>)}
 
           </div>
+
 
 
           <DialogFooter className="px-4 sm:px-6 py-3 border-t bg-muted/30 gap-2 flex-col-reverse sm:flex-row">
