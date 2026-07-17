@@ -36,14 +36,9 @@ const ManualRastreadores: React.FC = () => {
     return `${base.replace(/\/$/, '')}/functions/v1/rastreamento-posicao`;
   }, []);
 
-  // Extrai host/porta para trackers que aceitam apenas host+porta (protocolos TCP nativos)
-  const host = useMemo(() => {
-    try {
-      return new URL(endpoint).host;
-    } catch {
-      return 'crm.pilar.com.br';
-    }
-  }, [endpoint]);
+  // Host TCP do bridge Railway (para trackers físicos que falam protocolo binário)
+  const tcpHost = 'tokaido.proxy.rlwy.net';
+  const tcpPort = '44241';
 
   return (
     <div className="space-y-4">
