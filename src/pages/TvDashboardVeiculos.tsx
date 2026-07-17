@@ -342,10 +342,10 @@ export default function TvDashboardVeiculos() {
   }, [veiculos, kmRodadosHoje, precosCombustivel]);
 
   const stats = {
-    total: veiculos.length,
-    movendo: veiculos.filter(v => v.status === 'movendo').length,
-    parado: veiculos.filter(v => v.status === 'parado').length,
-    offline: veiculos.filter(v => v.status === 'offline').length,
+    total: veiculosFiltrados.length,
+    movendo: veiculosFiltrados.filter(v => v.status === 'movendo').length,
+    parado: veiculosFiltrados.filter(v => v.status === 'parado').length,
+    offline: veiculosFiltrados.filter(v => v.status === 'offline').length,
     velocidadeMedia: veiculosComPosicao.length > 0
       ? Math.round(veiculosComPosicao.reduce((acc, v) => acc + (v.ultima_posicao?.velocidade || 0), 0) / veiculosComPosicao.length)
       : 0,
