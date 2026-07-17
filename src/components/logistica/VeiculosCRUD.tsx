@@ -73,6 +73,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     descricao: '',
     motorista: '',
     tipo_veiculo: '',
+    grupo_id: '',
     traccar_device_id: '',
     dispositivo_id: '',
     tracker_model_id: '',
@@ -84,6 +85,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     ativo: true,
     tipo_dispositivo: 'rastreador' as 'rastreador' | 'app' | 'nenhum',
   });
+
+  const { grupoId, setGrupoId, unidades } = useGrupoFilter(estabelecimentoId);
 
   const isPessoa = formData.tipo_veiculo === 'Pessoa';
 
