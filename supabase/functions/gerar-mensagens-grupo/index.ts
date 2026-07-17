@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { grupo, descritivo, tema, count = 30 } = await req.json();
+    const { grupo, descritivo, tema, count = 10, complemento, existentes } = await req.json();
     if (!grupo || !tema) {
       return new Response(JSON.stringify({ error: "grupo e tema são obrigatórios" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -19,15 +19,18 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY não configurada");
 
-    const n = Math.max(1, Math.min(50, Number(count) || 30));
+    const n = Math.max(1, Math.min(50, Number(count) || 10));
+    const existentesArr: string[] = Array.isArray(existentes) ? existentes.slice(0, 100) : [];
 
     const sys = "Você é um copywriter brasileiro especialista em mensagens curtas para marketing de produtos. Responda SEMPRE em JSON válido no formato solicitado.";
     const user = [
       `Grupo de produtos: ${grupo}`,
       descritivo ? `Sobre o grupo: ${descritivo}` : "",
       `Tema: ${tema}`,
+      complemento ? `Complemento/direcionamento do usuário: ${complemento}` : "",
       `Gere ${n} frases DISTINTAS, curtas (até 140 caracteres), em português brasileiro, sobre o tema aplicado a esse grupo de produtos.`,
       `Sem emojis excessivos, sem aspas, sem numeração. Cada frase deve funcionar sozinha em WhatsApp/SMS/redes sociais.`,
+      existentesArr.length ? `NÃO repita nem parafraseie estas frases já existentes:\n- ${existentesArr.join("\n- ")}` : "",
       `Responda APENAS com JSON: {"frases":["frase1","frase2",...]}`,
     ].filter(Boolean).join("\n");
 
