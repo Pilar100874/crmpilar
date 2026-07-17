@@ -363,6 +363,8 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+            <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} className="min-w-[180px]" />
+
             {/* Auto Refresh Toggle */}
             <TooltipProvider>
               <Tooltip>
