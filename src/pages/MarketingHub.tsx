@@ -21,7 +21,9 @@ import {
   Brain,
   Globe,
   Share2,
+  MessageSquareText,
 } from 'lucide-react';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -50,6 +52,8 @@ import PageBuilder from '@/components/marketing/page-builder/PageBuilder';
 import { ConectoresRedesSociaisCRUD } from '@/components/config/ConectoresRedesSociaisCRUD';
 import { RedesSociaisCRUD } from '@/components/config/RedesSociaisCRUD';
 import AutoVideoWizardDialog from '@/components/marketing/ai-studio/AutoVideoWizardDialog';
+import MarketingMensagensGrupo from './MarketingMensagensGrupo';
+
 
 interface TabItem {
   id: string;
@@ -65,6 +69,8 @@ const tabItems: TabItem[] = [
   { id: 'video-editor', label: 'Editor de Vídeo', icon: Clapperboard, description: 'Timeline completa com efeitos, cortes e transições' },
   { id: 'config-apis', label: 'Config APIs', icon: Key, description: 'Gerencie chaves de API dos serviços de IA pagos' },
   { id: 'envio-massa', label: 'Envio em Massa', icon: Send, description: 'Dispare mensagens para múltiplos contatos' },
+  { id: 'mensagens-grupo', label: 'Mensagens por Grupo', icon: MessageSquareText, description: 'Frases prontas por grupo de produtos e tema, geradas com IA' },
+
   { id: 'galeria', label: 'Galeria', icon: FolderOpen, description: 'Visualize o conteúdo criado' },
   { id: 'catalogo', label: 'Catálogo', icon: BookOpen, description: 'Gere catálogos de produtos em PDF' },
   { id: 'automacoes', label: 'Automações', icon: Zap, description: 'Fluxos automatizados de marketing' },
@@ -105,6 +111,9 @@ const MarketingHub: React.FC = () => {
         return <AISettingsPage />;
       case 'envio-massa':
         return <EnvioMassaMarketing />;
+      case 'mensagens-grupo':
+        return <MarketingMensagensGrupo />;
+
       case 'recursos':
         return <MarketingRecursos />;
       case 'galeria':
