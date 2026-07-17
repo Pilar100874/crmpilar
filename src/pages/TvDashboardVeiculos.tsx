@@ -484,7 +484,7 @@ export default function TvDashboardVeiculos() {
               veiculos={veiculosComPosicao}
               paradasMarcadas={paradasMarcadas}
               className="absolute inset-0"
-              fitBounds={!focusVeiculoId}
+              fitBounds={!pinnedVeiculoId}
               compactIcons
               focusVeiculoId={focusVeiculoId || undefined}
               focusTrigger={focusTrigger}
