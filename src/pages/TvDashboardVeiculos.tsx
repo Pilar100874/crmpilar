@@ -397,15 +397,16 @@ export default function TvDashboardVeiculos() {
         </div>
         
         <div className="flex-1 overflow-y-auto">
-          {veiculos.length === 0 ? (
+          {veiculosFiltrados.length === 0 ? (
             <div className="p-3 text-center text-white/60 text-xs">
               Nenhum veículo
             </div>
           ) : (
             <div className="divide-y divide-white/5">
-              {veiculos.map((veiculo) => {
+              {veiculosFiltrados.map((veiculo) => {
                 const config = statusConfig[veiculo.status];
                 const km = kmRodadosHoje[veiculo.id] || 0;
+                const isPinned = pinnedVeiculoId === veiculo.id;
                 
                 return (
                   <div
@@ -432,6 +433,13 @@ export default function TvDashboardVeiculos() {
                             <span>{km}km</span>
                           </>
                         )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); togglePin(veiculo.id); }}
+                          title={isPinned ? 'Desafixar' : 'Fixar no mapa'}
+                          className={`p-1 rounded hover:bg-white/10 ${isPinned ? 'text-primary' : 'text-white/50'}`}
+                        >
+                          <Pin className={`h-3 w-3 ${isPinned ? 'fill-current' : ''}`} />
+                        </button>
                       </div>
                     </div>
                     {veiculo.motorista_atual?.nome && (
