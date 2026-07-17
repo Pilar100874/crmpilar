@@ -237,12 +237,12 @@ export default function MarketingMensagensGrupo() {
 
             <div className="flex items-end gap-2">
               <Button
-                onClick={gerarComIA}
+                onClick={abrirGerar}
                 disabled={!grupoId || !activeTema || generating}
                 className="w-full"
               >
                 {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                Gerar 30 frases com IA
+                Gerar 10 frases com IA
               </Button>
             </div>
           </div>
