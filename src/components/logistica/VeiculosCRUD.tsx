@@ -613,7 +613,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
           </Button>
           <Button onClick={() => handleOpenDialog()} className="w-full sm:w-auto justify-center">
             <Plus className="h-4 w-4 mr-2" />
-            Novo Veículo
+            Veículo / Pessoa
           </Button>
         </div>
       </div>
