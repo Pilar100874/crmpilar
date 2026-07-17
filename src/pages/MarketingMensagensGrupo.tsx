@@ -414,7 +414,7 @@ export default function MarketingMensagensGrupo() {
             <Button variant="outline" onClick={() => setShowGerar(false)}>Cancelar</Button>
             <Button onClick={gerarComIA} disabled={generating}>
               {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-              Gerar 10 frases
+              Gerar {Math.max(1, 10 - frases.length)} {Math.max(1, 10 - frases.length) === 1 ? "frase" : "frases"}
             </Button>
           </DialogFooter>
         </DialogContent>
