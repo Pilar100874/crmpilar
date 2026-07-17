@@ -603,6 +603,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                   <div
                     key={v.id}
                     onClick={() => setSelectedVeiculoId(isSelected ? null : v.id)}
+                    onDoubleClick={() => zoomToVehicle(v.id)}
                     className={cn(
                       "p-2 rounded-lg cursor-pointer transition-all",
                       isSelected 
