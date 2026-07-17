@@ -9136,7 +9136,7 @@ export type Database = {
           created_at: string
           estabelecimento_id: string
           frase: string
-          grupo_id: string
+          grupo_id: string | null
           id: string
           ordem: number
           tema: string
@@ -9147,7 +9147,7 @@ export type Database = {
           created_at?: string
           estabelecimento_id: string
           frase: string
-          grupo_id: string
+          grupo_id?: string | null
           id?: string
           ordem?: number
           tema: string
@@ -9158,7 +9158,7 @@ export type Database = {
           created_at?: string
           estabelecimento_id?: string
           frase?: string
-          grupo_id?: string
+          grupo_id?: string | null
           id?: string
           ordem?: number
           tema?: string

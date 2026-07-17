@@ -1,0 +1,1 @@
+ALTER TABLE public.mensagens_grupo_produto ALTER COLUMN grupo_id DROP NOT NULL;
