@@ -26,6 +26,7 @@ import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { fetchMotoristasAtuais, formatWhatsappNumber } from '@/lib/logistica/cvDriverLookup';
 import { GrupoFilterSelect } from '@/components/logistica/GrupoFilterSelect';
 import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
+import { FocusLegend } from '@/components/logistica/FocusLegend';
 const statusConfig = {
   movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-600', borderColor: 'border-green-500' },
   parado: { label: 'Parado', color: 'bg-amber-500', textColor: 'text-amber-600', borderColor: 'border-amber-500' },
@@ -319,15 +320,21 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
               </div>
             </div>
           ) : (
-            <LazyLogisticaMap
-              veiculos={veiculosComPosicao}
-              paradasMarcadas={paradasMarcadas}
-              onVeiculoClick={(v) => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
-              focusVeiculoId={focusVehicle?.id}
-              focusTrigger={focusVehicle?.nonce}
-              className="absolute inset-0"
-              fitBounds={!focusVehicle}
-            />
+            <>
+              <LazyLogisticaMap
+                veiculos={veiculosComPosicao}
+                paradasMarcadas={paradasMarcadas}
+                onVeiculoClick={(v) => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
+                focusVeiculoId={focusVehicle?.id}
+                focusTrigger={focusVehicle?.nonce}
+                className="absolute inset-0"
+                fitBounds={!focusVehicle}
+              />
+              <FocusLegend
+                veiculo={focusVehicle ? veiculosComPosicao.find(v => v.id === focusVehicle.id) : undefined}
+                onClose={() => setFocusVehicle(null)}
+              />
+            </>
           )}
           
           {/* Exit fullscreen button */}
@@ -676,15 +683,21 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
               </div>
             </div>
           ) : (
-            <LazyLogisticaMap
-              veiculos={veiculosComPosicao}
-              paradasMarcadas={paradasMarcadas}
-              onVeiculoClick={(v) => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
-              focusVeiculoId={focusVehicle?.id}
-              focusTrigger={focusVehicle?.nonce}
-              className="h-full w-full absolute inset-0"
-              fitBounds={!focusVehicle}
-            />
+            <>
+              <LazyLogisticaMap
+                veiculos={veiculosComPosicao}
+                paradasMarcadas={paradasMarcadas}
+                onVeiculoClick={(v) => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
+                focusVeiculoId={focusVehicle?.id}
+                focusTrigger={focusVehicle?.nonce}
+                className="h-full w-full absolute inset-0"
+                fitBounds={!focusVehicle}
+              />
+              <FocusLegend
+                veiculo={focusVehicle ? veiculosComPosicao.find(v => v.id === focusVehicle.id) : undefined}
+                onClose={() => setFocusVehicle(null)}
+              />
+            </>
           )}
           
           {/* Fullscreen toggle button */}
