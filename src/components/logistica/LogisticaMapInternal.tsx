@@ -122,6 +122,8 @@ interface LogisticaMapInternalProps {
   fitBounds?: boolean;
   compactIcons?: boolean;
   disableInteraction?: boolean;
+  focusVeiculoId?: string;
+  focusTrigger?: number;
 }
 
 const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
@@ -138,6 +140,8 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   fitBounds = true,
   compactIcons = false,
   disableInteraction = false,
+  focusVeiculoId,
+  focusTrigger,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -230,6 +234,10 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         marker.on('click', () => {
           onVeiculoClick?.(veiculo);
         });
+        marker.on('dblclick', () => {
+          map.setView(pos, Math.max(map.getZoom(), 17), { animate: true });
+          marker.openPopup();
+        });
 
         currentMarkers.set(veiculo.id, marker);
       }
@@ -256,6 +264,17 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       map.fitBounds(bounds, { padding: [50, 50] });
     }
   }, [veiculos, fitBounds, onVeiculoClick, routes, paradasMarcadas, compactIcons]);
+
+  // Focus/zoom on a specific vehicle when requested (e.g., double click on list)
+  useEffect(() => {
+    if (!mapRef.current || !focusVeiculoId) return;
+    const veiculo = veiculos.find(v => v.id === focusVeiculoId && v.ultima_posicao);
+    if (!veiculo) return;
+    const pos: L.LatLngExpression = [veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng];
+    mapRef.current.setView(pos, Math.max(mapRef.current.getZoom(), 17), { animate: true });
+    const marker = markersRef.current.get(veiculo.id);
+    marker?.openPopup();
+  }, [focusVeiculoId, focusTrigger, veiculos]);
 
   // Update paradas marcadas markers
   useEffect(() => {

@@ -66,6 +66,11 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [mobileVehicleListOpen, setMobileVehicleListOpen] = useState(false);
   const [mobileAlertsOpen, setMobileAlertsOpen] = useState(false);
+  const [focusVehicle, setFocusVehicle] = useState<{ id: string; nonce: number } | null>(null);
+  const zoomToVehicle = useCallback((id: string) => {
+    setSelectedVeiculoId(id);
+    setFocusVehicle({ id, nonce: Date.now() });
+  }, []);
   
   const alertConfig: AlertConfig = {
     speedLimit: 120,
@@ -318,8 +323,10 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
               veiculos={veiculosComPosicao}
               paradasMarcadas={paradasMarcadas}
               onVeiculoClick={(v) => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
+              focusVeiculoId={focusVehicle?.id}
+              focusTrigger={focusVehicle?.nonce}
               className="absolute inset-0"
-              fitBounds
+              fitBounds={!focusVehicle}
             />
           )}
           
@@ -481,6 +488,10 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                             setSelectedVeiculoId(isSelected ? null : v.id);
                             setMobileVehicleListOpen(false);
                           }}
+                          onDoubleClick={() => {
+                            zoomToVehicle(v.id);
+                            setMobileVehicleListOpen(false);
+                          }}
                           className={cn(
                             "p-2 rounded-lg cursor-pointer transition-all",
                             isSelected 
@@ -598,6 +609,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                   <div
                     key={v.id}
                     onClick={() => setSelectedVeiculoId(isSelected ? null : v.id)}
+                    onDoubleClick={() => zoomToVehicle(v.id)}
                     className={cn(
                       "p-2 rounded-lg cursor-pointer transition-all",
                       isSelected 
@@ -668,8 +680,10 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
               veiculos={veiculosComPosicao}
               paradasMarcadas={paradasMarcadas}
               onVeiculoClick={(v) => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
+              focusVeiculoId={focusVehicle?.id}
+              focusTrigger={focusVehicle?.nonce}
               className="h-full w-full absolute inset-0"
-              fitBounds
+              fitBounds={!focusVehicle}
             />
           )}
           

@@ -13,6 +13,7 @@ interface VeiculosListProps {
   veiculos: VeiculoComStatus[];
   selectedVeiculoId?: string;
   onVeiculoSelect: (veiculo: VeiculoComStatus) => void;
+  onVeiculoDoubleClick?: (veiculo: VeiculoComStatus) => void;
   searchTerm: string;
   onSearchChange: (value: string) => void;
   statusFilter: string;
@@ -29,6 +30,7 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
   veiculos,
   selectedVeiculoId,
   onVeiculoSelect,
+  onVeiculoDoubleClick,
   searchTerm,
   onSearchChange,
   statusFilter,
@@ -81,6 +83,7 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
               <div
                 key={veiculo.id}
                 onClick={() => onVeiculoSelect(veiculo)}
+                onDoubleClick={() => onVeiculoDoubleClick?.(veiculo)}
                 className={`p-2 sm:p-3 rounded-lg cursor-pointer transition-all ${
                   isSelected 
                     ? 'bg-primary/10 border-2 border-primary' 

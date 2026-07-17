@@ -30,6 +30,8 @@ interface LazyLogisticaMapProps {
   fitBounds?: boolean;
   compactIcons?: boolean;
   disableInteraction?: boolean;
+  focusVeiculoId?: string;
+  focusTrigger?: number;
 }
 
 // Retry dynamic import; se o chunk sumiu após novo deploy, força reload (com janela de 30s p/ evitar loop).

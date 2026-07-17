@@ -27,6 +27,7 @@ const LogisticaDashboard: React.FC = () => {
   const [mobileListOpen, setMobileListOpen] = useState(false);
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [focusVehicle, setFocusVehicle] = useState<{ id: string; nonce: number } | null>(null);
   const { grupoId, setGrupoId, unidades } = useGrupoFilter(estabelecimentoId);
   const veiculosFiltrados = React.useMemo(() => filterByGrupo(veiculos, grupoId), [veiculos, grupoId]);
 
@@ -218,6 +219,7 @@ const LogisticaDashboard: React.FC = () => {
                   veiculos={veiculosFiltrados}
                   selectedVeiculoId={selectedVeiculo?.id}
                   onVeiculoSelect={handleVeiculoSelect}
+                  onVeiculoDoubleClick={(v) => { setSelectedVeiculo(v); setFocusVehicle({ id: v.id, nonce: Date.now() }); setMobileListOpen(false); }}
                   searchTerm={searchTerm}
                   onSearchChange={setSearchTerm}
                   statusFilter={statusFilter}
@@ -262,6 +264,7 @@ const LogisticaDashboard: React.FC = () => {
             veiculos={veiculosFiltrados}
             selectedVeiculoId={selectedVeiculo?.id}
             onVeiculoSelect={setSelectedVeiculo}
+            onVeiculoDoubleClick={(v) => { setSelectedVeiculo(v); setFocusVehicle({ id: v.id, nonce: Date.now() }); }}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             statusFilter={statusFilter}
@@ -287,8 +290,10 @@ const LogisticaDashboard: React.FC = () => {
                 setMobileDetailsOpen(true);
               }
             }}
+            focusVeiculoId={focusVehicle?.id}
+            focusTrigger={focusVehicle?.nonce}
             className="h-full w-full"
-            fitBounds
+            fitBounds={!focusVehicle}
           />
         )}
         
