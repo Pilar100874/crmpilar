@@ -30,6 +30,7 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
   veiculos,
   selectedVeiculoId,
   onVeiculoSelect,
+  onVeiculoDoubleClick,
   searchTerm,
   onSearchChange,
   statusFilter,
