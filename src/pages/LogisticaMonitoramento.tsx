@@ -335,6 +335,11 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                 veiculo={focusVehicle ? veiculosComPosicao.find(v => v.id === focusVehicle.id) : undefined}
                 onClose={() => setFocusVehicle(null)}
               />
+              <VehicleLegend
+                veiculos={veiculosComPosicao}
+                selectedId={focusVehicle?.id ?? selectedVeiculoId}
+                onVeiculoClick={zoomToVehicle}
+              />
             </>
           )}
           
