@@ -69,21 +69,18 @@ const ManualRastreadores: React.FC = () => {
           <div>
             <div className="text-sm font-medium mb-2 flex items-center gap-2">
               <Zap className="h-4 w-4 text-amber-500" />
-              Host / Porta para rastreadores físicos (protocolos TCP binários):
+              Host / Porta para rastreadores físicos (bridge TCP Railway):
             </div>
             <div className="grid gap-2">
-              <CopyLine label="Host" value={host} />
-              <CopyLine label="GPS103/TK103" value="Porta 5001" />
-              <CopyLine label="GT06 / J16 / TK100" value="Porta 5023" />
-              <CopyLine label="Mictrack" value="Porta 5031" />
-              <CopyLine label="Suntech" value="Porta 5011" />
-              <CopyLine label="OsmAnd / Traccar Client" value="Porta 5055" />
+              <CopyLine label="Host TCP" value={tcpHost} />
+              <CopyLine label="GT06 / J16 / TK100" value={`Porta ${tcpPort}`} />
+              <CopyLine label="OsmAnd / Traccar Client" value="Usa o endpoint HTTP acima (porta 443)" />
             </div>
             <div className="mt-3 flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
               <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
               <span>
-                Rastreadores físicos (GT06, TK103 etc.) usam protocolos TCP binários. Se você usa apenas o endpoint HTTP,
-                será necessário um servidor Traccar intermediário publicado no host acima nas portas indicadas.
+                Atualmente o sistema tem suporte homologado para <strong>GT06 / J16 / TK100</strong> (protocolo binário TCP via bridge Railway)
+                e <strong>Traccar Client / OsmAnd</strong> (HTTP direto). Outros modelos exigem parser dedicado no bridge.
               </span>
             </div>
           </div>
