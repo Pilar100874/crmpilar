@@ -835,57 +835,36 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             <div>
               <Label className="flex items-center gap-2">
                 <Smartphone className="h-4 w-4" />
-                Dispositivo de Rastreamento
+                Dispositivo de Rastreamento (app aprovado)
               </Label>
-              <Tabs value={dispositivoTab} onValueChange={(v) => setDispositivoTab(v as 'selecionar' | 'digitar')} className="mt-2">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="selecionar">Selecionar Liberado</TabsTrigger>
-                  <TabsTrigger value="digitar">Digitar ID</TabsTrigger>
-                </TabsList>
-                <TabsContent value="selecionar" className="mt-2">
-                  <Select
-                    value={formData.dispositivo_id || '__none__'}
-                    onValueChange={(value) => setFormData(prev => ({ 
-                      ...prev, 
-                      dispositivo_id: value === '__none__' ? '' : value,
-                      traccar_device_id: '' // Clear manual ID when selecting device
-                    }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um dispositivo aprovado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">Nenhum</SelectItem>
-                      {dispositivos
-                        .filter(d => !d.veiculo_id || d.veiculo_id === selectedVeiculo?.id)
-                        .map(d => (
-                          <SelectItem key={d.id} value={d.id}>
-                            {d.nome_dispositivo || d.device_uuid} ({d.device_uuid})
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                  {dispositivos.filter(d => !d.veiculo_id || d.veiculo_id === selectedVeiculo?.id).length === 0 && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Nenhum dispositivo aprovado disponível. Aprove dispositivos na aba "Dispositivos de Rastreamento".
-                    </p>
-                  )}
-                </TabsContent>
-                <TabsContent value="digitar" className="mt-2">
-                  <Input
-                    value={formData.traccar_device_id}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
-                      traccar_device_id: e.target.value,
-                      dispositivo_id: '' // Clear selected device when typing manual ID
-                    }))}
-                    placeholder="Ex: 123456 (ID do app Traccar)"
-                  />
+              <div className="mt-2">
+                <Select
+                  value={formData.dispositivo_id || '__none__'}
+                  onValueChange={(value) => setFormData(prev => ({
+                    ...prev,
+                    dispositivo_id: value === '__none__' ? '' : value,
+                  }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um dispositivo aprovado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Nenhum</SelectItem>
+                    {dispositivos
+                      .filter(d => !d.veiculo_id || d.veiculo_id === selectedVeiculo?.id)
+                      .map(d => (
+                        <SelectItem key={d.id} value={d.id}>
+                          {d.nome_dispositivo || d.device_uuid} ({d.device_uuid})
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                {dispositivos.filter(d => !d.veiculo_id || d.veiculo_id === selectedVeiculo?.id).length === 0 && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Informe o mesmo ID configurado no app Traccar Client
+                    Nenhum dispositivo aprovado disponível. Aprove dispositivos na aba "Dispositivos de Rastreamento".
                   </p>
-                </TabsContent>
-              </Tabs>
+                )}
+              </div>
             </div>
 
             {/* Telefone único usado pelos dois blocos */}
@@ -897,6 +876,23 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 placeholder="+5511999999999"
                 className="mt-1"
               />
+              <div>
+                <Label className="text-xs">IMEI do rastreador</Label>
+                <Input
+                  value={formData.traccar_device_id}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    traccar_device_id: e.target.value.replace(/\D/g, ''),
+                  }))}
+                  placeholder="Ex: 353456789012345"
+                  inputMode="numeric"
+                  maxLength={17}
+                  className="mt-1"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  IMEI do aparelho rastreador físico (GT06/J6/JM01 etc.). É este número que vincula as posições recebidas a este veículo.
+                </p>
+              </div>
               <div>
                 <Label className="text-xs">Tipo do chip</Label>
                 <Select
@@ -917,6 +913,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 </p>
               </div>
             </div>
+
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
               {/* Bloco Rastreador físico via SMS */}
