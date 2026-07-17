@@ -53,6 +53,8 @@ const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = fals
   const navigate = useNavigate();
   
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
+  const { grupoId, setGrupoId, unidades } = useGrupoFilter();
+  const veiculosFiltradosGrupo = filterByGrupo(veiculos as any[], grupoId) as Veiculo[];
   const [selectedVeiculoIds, setSelectedVeiculoIds] = useState<string[]>(paramVeiculoId ? [paramVeiculoId] : []);
   const [veiculosHistorico, setVeiculosHistorico] = useState<VeiculoHistorico[]>([]);
   const [filteredVeiculosHistorico, setFilteredVeiculosHistorico] = useState<VeiculoHistorico[]>([]);
