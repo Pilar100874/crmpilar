@@ -220,7 +220,13 @@ export default function TvDashboardVeiculos() {
         })
       );
 
-      setVeiculos(veiculosComStatus);
+      const motoristasMap = await fetchMotoristasAtuais(veiculosComStatus.map(v => v.id));
+      const veiculosComMotorista = veiculosComStatus.map(v => ({
+        ...v,
+        motorista_atual: motoristasMap[v.id] || undefined,
+      }));
+
+      setVeiculos(veiculosComMotorista);
       setLastUpdate(new Date());
       await Promise.all([
         fetchParadasMarcadas(),
