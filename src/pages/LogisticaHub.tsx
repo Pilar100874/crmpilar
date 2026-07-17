@@ -33,7 +33,7 @@ import LogisticaRoteirizacao from './LogisticaRoteirizacao';
 import LogisticaRotas from './LogisticaRotas';
 import LogisticaAutomacoes from './LogisticaAutomacoes';
 import LogisticaConfig from './LogisticaConfig';
-import PilarRastreadorHub from '@/components/logistica/PilarRastreadorHub';
+
 import ManualRastreadores from '@/components/logistica/ManualRastreadores';
 
 interface TabItem {
