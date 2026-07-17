@@ -799,14 +799,18 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
           <DialogHeader className="px-4 sm:px-6 py-3 sm:py-4 border-b bg-muted/30">
             <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Car className="h-5 w-5 text-primary" />
-              {selectedVeiculo ? 'Editar Veículo' : 'Novo Veículo'}
+              {selectedVeiculo
+                ? (isPessoa ? 'Editar Pessoa' : 'Editar Veículo')
+                : (isPessoa ? 'Nova Pessoa' : 'Novo Veículo / Pessoa')}
             </DialogTitle>
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-4 space-y-5">
-            {/* Veículo ativo — topo */}
+            {/* Ativo — topo */}
             <div className="flex items-center justify-between border rounded-lg px-3 py-2 bg-muted/30">
-              <Label htmlFor="veiculo-ativo" className="cursor-pointer">Veículo ativo</Label>
+              <Label htmlFor="veiculo-ativo" className="cursor-pointer">
+                {isPessoa ? 'Pessoa ativa' : 'Veículo ativo'}
+              </Label>
               <Switch
                 id="veiculo-ativo"
                 checked={formData.ativo}
