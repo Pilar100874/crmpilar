@@ -15,7 +15,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { Sparkles, Plus, Pencil, Trash2, Loader2, MessageSquareText, Copy } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Sparkles, Plus, Pencil, Trash2, Loader2, MessageSquareText, Copy, AlertCircle } from "lucide-react";
 
 interface Grupo {
   id: string;
@@ -76,10 +77,11 @@ export default function MarketingMensagensGrupo() {
   }, []);
 
   useEffect(() => {
+    if (!estabelecimentoId) return;
     if (escopoPronto && activeTema) loadFrases();
     else setFrases([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [escopo, grupoId, activeTema]);
+  }, [estabelecimentoId, escopo, grupoId, activeTema]);
 
   const loadFrases = async () => {
     if (!activeTema) return;
@@ -103,6 +105,10 @@ export default function MarketingMensagensGrupo() {
       toast.error(escopo === "grupo" ? "Selecione um grupo e um tema" : "Selecione um tema");
       return;
     }
+    if (frases.length >= 10) {
+      toast.error("Limite de 10 frases por tema atingido. Exclua algumas para gerar novas.");
+      return;
+    }
     setComplemento("");
     setShowGerar(true);
   };
@@ -119,7 +125,7 @@ export default function MarketingMensagensGrupo() {
           grupo: escopo === "grupo" ? grupoAtual?.nome : undefined,
           descritivo: escopo === "grupo" ? (grupoAtual?.descritivo_catalogo || "") : "",
           tema: activeTema,
-          count: 10,
+          count: Math.max(1, 10 - frases.length),
           complemento: complemento.trim() || undefined,
           existentes: frases.map(f => f.frase),
         },
@@ -151,6 +157,10 @@ export default function MarketingMensagensGrupo() {
   const salvarNova = async () => {
     if (!newText.trim() || !activeTema) return;
     if (escopo === "grupo" && !grupoId) return;
+    if (frases.length >= 10) {
+      toast.error("Limite de 10 frases por tema atingido. Exclua algumas para adicionar novas.");
+      return;
+    }
     const { error } = await supabase.from("mensagens_grupo_produto").insert({
       estabelecimento_id: estabelecimentoId,
       grupo_id: escopo === "grupo" ? grupoId : null,
@@ -264,7 +274,7 @@ export default function MarketingMensagensGrupo() {
             <div className="flex items-end gap-2">
               <Button
                 onClick={abrirGerar}
-                disabled={!escopoPronto || !activeTema || generating}
+                disabled={!escopoPronto || !activeTema || generating || frases.length >= 10}
                 className="w-full"
               >
                 {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
@@ -280,9 +290,14 @@ export default function MarketingMensagensGrupo() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
               Frases
-              <Badge variant="secondary">{frases.length}</Badge>
+              <Badge variant={frases.length >= 10 ? "destructive" : "secondary"}>{frases.length}/10</Badge>
             </CardTitle>
-            <Button size="sm" variant="outline" onClick={() => setShowNew(true)}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowNew(true)}
+              disabled={frases.length >= 10}
+            >
               <Plus className="h-4 w-4 mr-1" /> Nova frase
             </Button>
           </CardHeader>
@@ -296,30 +311,50 @@ export default function MarketingMensagensGrupo() {
                 Nenhuma frase cadastrada. Gere 10 automaticamente com IA ou adicione manualmente.
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {frases.map((f, i) => (
-                  <div
-                    key={f.id}
-                    className="group flex items-start gap-2 p-3 rounded-lg border bg-card hover:bg-accent/40 transition-colors"
-                  >
-                    <span className="text-xs font-mono text-muted-foreground w-6 pt-0.5">{i + 1}</span>
-                    <p className="flex-1 text-sm">{f.frase}</p>
-                    <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button size="icon" variant="ghost" className="h-7 w-7"
-                        onClick={() => copiar(f.frase)}>
-                        <Copy className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7"
-                        onClick={() => { setEditing(f); setEditText(f.frase); }}>
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive"
-                        onClick={() => setDeleteTarget(f)}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+              <div className="space-y-3">
+                {frases.length >= 10 && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Limite atingido</AlertTitle>
+                    <AlertDescription>
+                      Este tema já possui 10 frases. Exclua algumas para gerar ou adicionar novas.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {frases.length >= 8 && frases.length < 10 && (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Limite próximo</AlertTitle>
+                    <AlertDescription>
+                      Este tema permite até 10 frases. Restam {10 - frases.length} vagas.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {frases.map((f, i) => (
+                    <div
+                      key={f.id}
+                      className="group flex items-start gap-2 p-3 rounded-lg border bg-card hover:bg-accent/40 transition-colors"
+                    >
+                      <span className="text-xs font-mono text-muted-foreground w-6 pt-0.5">{i + 1}</span>
+                      <p className="flex-1 text-sm">{f.frase}</p>
+                      <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button size="icon" variant="ghost" className="h-7 w-7"
+                          onClick={() => copiar(f.frase)}>
+                          <Copy className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7"
+                          onClick={() => { setEditing(f); setEditText(f.frase); }}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive"
+                          onClick={() => setDeleteTarget(f)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </CardContent>
