@@ -12,7 +12,7 @@ const HIDDEN_PREFIXES = [
   "/watch",
   "/tv/",
   "/webchat",
-  "/pilar-rastreador",
+  
   "/orcamento/", // link público de orçamento
   "/rastreio",
   "/p/", // páginas públicas
