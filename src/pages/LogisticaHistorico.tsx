@@ -347,6 +347,7 @@ const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = fals
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} />
             {/* Multi Vehicle Selector */}
             <Popover open={selectorOpen} onOpenChange={setSelectorOpen}>
               <PopoverTrigger asChild>
