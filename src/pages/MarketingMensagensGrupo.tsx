@@ -267,7 +267,7 @@ export default function MarketingMensagensGrupo() {
               </div>
             ) : frases.length === 0 ? (
               <div className="text-center py-12 text-sm text-muted-foreground">
-                Nenhuma frase cadastrada. Gere 30 automaticamente com IA ou adicione manualmente.
+                Nenhuma frase cadastrada. Gere 10 automaticamente com IA ou adicione manualmente.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
