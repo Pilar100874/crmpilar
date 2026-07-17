@@ -597,23 +597,32 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     }
   };
 
-  const filteredVeiculos = veiculos.filter(v =>
+  const filteredVeiculos = filterByGrupo(veiculos as any[], grupoId).filter(v =>
     v.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
     v.motorista?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     v.descricao?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const unidadeNomeById = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    unidades.forEach(u => { map[u.id] = u.nome; });
+    return map;
+  }, [unidades]);
+
   return (
     <div className="space-y-4 max-w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="relative flex-1 sm:max-w-sm w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar veículos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
-          />
+        <div className="flex flex-col sm:flex-row gap-2 flex-1 sm:max-w-xl">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar veículos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} />
         </div>
         <div className="grid grid-cols-1 sm:flex sm:flex-row gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={() => setBulkOpen(true)} className="w-full sm:w-auto justify-center">
