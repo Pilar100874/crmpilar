@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Car, Search, Smartphone, Fuel, Send, Radio, CheckCircle2, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
+import { Plus, Pencil, Trash2, Car, Search, Smartphone, Fuel, Send, Radio, CheckCircle2, AlertCircle, Loader2, RefreshCw, Copy, Check } from 'lucide-react';
 import { BloqueioCombustivelDialog } from './BloqueioCombustivelDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -18,6 +19,7 @@ import { Veiculo } from '@/types/logistica';
 import { buildTrackerParametersSms, configurarRastreador, getTrackerRenderedCommands, TrackerModelLite } from '@/lib/trackerConfig';
 import { OPERADORAS_APN, findOperadoraByApn } from '@/lib/operadorasSms';
 import { VeiculosBulkImportDialog } from './VeiculosBulkImportDialog';
+import DispositivosRastreamento from './DispositivosRastreamento';
 
 interface VeiculosCRUDProps {
   estabelecimentoId: string;
