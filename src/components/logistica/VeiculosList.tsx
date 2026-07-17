@@ -83,6 +83,7 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
               <div
                 key={veiculo.id}
                 onClick={() => onVeiculoSelect(veiculo)}
+                onDoubleClick={() => onVeiculoDoubleClick?.(veiculo)}
                 className={`p-2 sm:p-3 rounded-lg cursor-pointer transition-all ${
                   isSelected 
                     ? 'bg-primary/10 border-2 border-primary' 
