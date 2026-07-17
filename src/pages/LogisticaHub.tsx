@@ -48,7 +48,7 @@ interface TabItem {
 const tabItems: TabItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: MapPin, description: 'Visão geral da frota' },
   { id: 'monitoramento', label: 'Monitoramento', icon: Eye, description: 'Rastreamento em tempo real' },
-  { id: 'veiculos', label: 'Veículos', icon: Car, description: 'Cadastro de veículos' },
+  { id: 'veiculos', label: 'Veículo / Pessoa', icon: Car, description: 'Cadastro de veículos, pessoas rastreadas e dispositivos' },
   { id: 'historico', label: 'Histórico', icon: Clock, description: 'Histórico de trajetos' },
   { id: 'roteirizacao', label: 'Roteirização', icon: Route, description: 'Planejamento de rotas' },
   { id: 'rotas', label: 'Rotas Salvas', icon: Navigation, description: 'Rotas salvas' },
