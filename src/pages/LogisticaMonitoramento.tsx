@@ -351,7 +351,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                 focusVeiculoId={focusVehicle?.id}
                 focusTrigger={focusVehicle?.nonce}
                 className="absolute inset-0"
-                fitBounds={!focusVehicle}
+                fitBounds={!pinnedVeiculoId}
               />
               <FocusLegend
                 veiculo={focusVehicle ? veiculosComPosicao.find(v => v.id === focusVehicle.id) : undefined}
