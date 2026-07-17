@@ -886,6 +886,23 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   />
                 </div>
               )}
+              <div>
+                <Label>Grupo (Unidade)</Label>
+                <Select
+                  value={formData.grupo_id || '__none__'}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, grupo_id: value === '__none__' ? '' : value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a unidade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Sem grupo</SelectItem>
+                    {unidades.map(u => (
+                      <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
 
