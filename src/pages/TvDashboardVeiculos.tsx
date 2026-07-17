@@ -382,7 +382,7 @@ export default function TvDashboardVeiculos() {
         <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
           <h3 className="font-medium text-xs text-white/90 flex items-center gap-1.5">
             <Car className="h-3 w-3" />
-            Veículos ({veiculos.length})
+            Veículos ({veiculosFiltrados.length})
           </h3>
           {isMobile && (
             <Button
