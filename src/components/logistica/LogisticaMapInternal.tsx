@@ -450,7 +450,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     <>
       <div ref={mapContainerRef} className={`logistica-map-container ${className}`} />
       <style>{`
-        .logistica-map-container .leaflet-control-zoom {
+        .logistica-map-container .leaflet-control-container .leaflet-top.leaflet-left {
           top: auto !important;
           bottom: 16px !important;
           left: 16px !important;
@@ -464,7 +464,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
           font-size: 20px !important;
         }
         @media (max-width: 768px) {
-          .logistica-map-container .leaflet-control-zoom {
+          .logistica-map-container .leaflet-control-container .leaflet-top.leaflet-left {
             bottom: 80px !important;
             left: auto !important;
             right: 16px !important;
