@@ -91,11 +91,9 @@ const ManualRastreadores: React.FC = () => {
         <TabsList className="w-full flex-wrap h-auto justify-start">
           <TabsTrigger value="preparacao">1. Preparação</TabsTrigger>
           <TabsTrigger value="celular">2. Celular</TabsTrigger>
-          <TabsTrigger value="tk103">3. TK103 / GPS103</TabsTrigger>
-          <TabsTrigger value="gt06">4. GT06 / J16</TabsTrigger>
-          <TabsTrigger value="mictrack">5. Mictrack</TabsTrigger>
-          <TabsTrigger value="cadastro">6. Cadastro no Pilar</TabsTrigger>
-          <TabsTrigger value="bloqueio">7. Corte de Combustível</TabsTrigger>
+          <TabsTrigger value="gt06">3. GT06 / J16 / TK100</TabsTrigger>
+          <TabsTrigger value="cadastro">4. Cadastro no Pilar</TabsTrigger>
+          <TabsTrigger value="bloqueio">5. Corte de Combustível</TabsTrigger>
         </TabsList>
 
         <TabsContent value="preparacao">
