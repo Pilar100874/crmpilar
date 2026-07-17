@@ -11,7 +11,7 @@ import {
   Settings,
   PanelLeft,
   PanelLeftClose,
-  Smartphone,
+  
   BookOpen,
   LucideIcon
 } from 'lucide-react';
