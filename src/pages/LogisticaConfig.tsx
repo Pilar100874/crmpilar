@@ -31,9 +31,6 @@ const LogisticaConfig: React.FC<LogisticaConfigProps> = ({ embedded = false }) =
   const [showKey, setShowKey] = useState(false);
   const [apiKey, setApiKey] = useState('');
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ioxugupvxlcdweldocmq.supabase.co';
-  const trackingUrl = `${supabaseUrl}/functions/v1/rastreamento-posicao`;
-
   useEffect(() => {
     loadConfig();
   }, []);
