@@ -9130,6 +9130,50 @@ export type Database = {
           },
         ]
       }
+      mensagens_grupo_produto: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          estabelecimento_id: string
+          frase: string
+          grupo_id: string
+          id: string
+          ordem: number
+          tema: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          estabelecimento_id: string
+          frase: string
+          grupo_id: string
+          id?: string
+          ordem?: number
+          tema: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          estabelecimento_id?: string
+          frase?: string
+          grupo_id?: string
+          id?: string
+          ordem?: number
+          tema?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mensagens_grupo_produto_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "produto_grupos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           attachments: string[] | null
