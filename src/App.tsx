@@ -577,8 +577,6 @@ const App = () => (
             <Route path="/rastreio" element={<RastreioPedido />} />
             <Route path="/rastreio/:token" element={<RastreioPedido />} />
             <Route path="/webchat" element={<WebChat />} />
-            <Route path="/pilar-rastreador" element={<PilarRastreador />} />
-            <Route path="/pilar-rastreador-nativo" element={<PilarRastreadorNativo />} />
             <Route path="/watch" element={<WatchDashboard />} />
             <Route path="/watch/dashboard" element={<WatchDashboardHome />} />
             <Route path="/watch/agenda" element={<WatchAgenda />} />
