@@ -36,6 +36,7 @@ import LogisticaAutomacoes from './LogisticaAutomacoes';
 import LogisticaConfig from './LogisticaConfig';
 
 import ManualRastreadores from '@/components/logistica/ManualRastreadores';
+import { TrackerDeviceModels } from '@/components/logistica/TrackerDeviceModels';
 
 interface TabItem {
   id: string;
