@@ -359,7 +359,9 @@ export default function MarketingMensagensGrupo() {
           </DialogHeader>
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
-              Grupo: <b>{grupoAtual?.nome}</b> · Tema: <b>{activeTema}</b>
+              {escopo === "grupo"
+                ? <>Grupo: <b>{grupoAtual?.nome}</b> · Tema: <b>{activeTema}</b></>
+                : <>Escopo: <b>Geral</b> · Tema: <b>{activeTema}</b></>}
             </p>
             <Label>Complemento (opcional)</Label>
             <Textarea
