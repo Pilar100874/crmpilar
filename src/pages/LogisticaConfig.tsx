@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Settings, Copy, Check, Key, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Settings, Copy, Check, Key, Eye, EyeOff, Send, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -239,6 +239,7 @@ const LogisticaConfig: React.FC<LogisticaConfigProps> = ({ embedded = false }) =
             </CardContent>
           </Card>
 
+          <TestePostFakeCard />
           {/* Dispositivos de Rastreamento agora vive dentro de Logística → Veículo / Pessoa */}
         </div>
       </div>
@@ -247,3 +248,150 @@ const LogisticaConfig: React.FC<LogisticaConfigProps> = ({ embedded = false }) =
 };
 
 export default LogisticaConfig;
+
+// ============================================================
+// Card de teste: envia um POST fake para a edge rastreamento-posicao
+// ============================================================
+const TestePostFakeCard: React.FC = () => {
+  const [veiculos, setVeiculos] = useState<Array<{ id: string; placa: string; traccar_device_id: string | null }>>([]);
+  const [veiculoId, setVeiculoId] = useState('');
+  const [lat, setLat] = useState('-23.55052');
+  const [lng, setLng] = useState('-46.633308');
+  const [velocidade, setVelocidade] = useState('40');
+  const [enviando, setEnviando] = useState(false);
+  const [resultado, setResultado] = useState<{ ok: boolean; msg: string } | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('veiculos')
+        .select('id, placa, traccar_device_id')
+        .eq('ativo', true)
+        .order('placa');
+      if (data) setVeiculos(data as any);
+    })();
+  }, []);
+
+  const enviar = async () => {
+    if (!veiculoId) {
+      toast.error('Selecione um veículo');
+      return;
+    }
+    setEnviando(true);
+    setResultado(null);
+    try {
+      const supaUrl = (import.meta as any).env.VITE_SUPABASE_URL;
+      const anon = (import.meta as any).env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const url = `${supaUrl}/functions/v1/rastreamento-posicao`;
+      const body = {
+        veiculoId,
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+        velocidade: parseFloat(velocidade) || 0,
+        direcao: 0,
+        dataHora: new Date().toISOString(),
+      };
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: anon,
+          Authorization: `Bearer ${anon}`,
+        },
+        body: JSON.stringify(body),
+      });
+      const text = await resp.text();
+      const ok = resp.ok;
+      setResultado({ ok, msg: `HTTP ${resp.status} — ${text}` });
+      if (ok) toast.success('Posição fake enviada com sucesso');
+      else toast.error('Falha ao enviar posição fake');
+    } catch (e: any) {
+      setResultado({ ok: false, msg: e?.message || String(e) });
+      toast.error('Erro de rede');
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Send className="h-5 w-5" />
+          Teste — Envio de posição fake
+        </CardTitle>
+        <CardDescription>
+          Simula um rastreador enviando uma posição para a edge <code>rastreamento-posicao</code>.
+          Útil para validar se o veículo aparece no monitoramento.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label>Veículo</Label>
+          <select
+            value={veiculoId}
+            onChange={(e) => setVeiculoId(e.target.value)}
+            className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+          >
+            <option value="">Selecione…</option>
+            {veiculos.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.placa} {v.traccar_device_id ? `(IMEI ${v.traccar_device_id})` : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <div className="space-y-2">
+            <Label>Latitude</Label>
+            <Input value={lat} onChange={(e) => setLat(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Longitude</Label>
+            <Input value={lng} onChange={(e) => setLng(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Velocidade (km/h)</Label>
+            <Input value={velocidade} onChange={(e) => setVelocidade(e.target.value)} />
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <Button onClick={enviar} disabled={enviando || !veiculoId} className="flex-1">
+            <Send className="h-4 w-4 mr-2" />
+            {enviando ? 'Enviando…' : 'Enviar posição fake'}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              // São Paulo aleatório dentro de ~5km
+              const baseLat = -23.55052;
+              const baseLng = -46.633308;
+              setLat((baseLat + (Math.random() - 0.5) * 0.05).toFixed(6));
+              setLng((baseLng + (Math.random() - 0.5) * 0.05).toFixed(6));
+            }}
+          >
+            <MapPin className="h-4 w-4 mr-2" />
+            Aleatório
+          </Button>
+        </div>
+
+        {resultado && (
+          <div
+            className={cn(
+              'text-xs font-mono p-3 rounded-md border break-all',
+              resultado.ok
+                ? 'bg-green-500/10 border-green-500/30 text-green-700 dark:text-green-400'
+                : 'bg-destructive/10 border-destructive/30 text-destructive'
+            )}
+          >
+            {resultado.msg}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
