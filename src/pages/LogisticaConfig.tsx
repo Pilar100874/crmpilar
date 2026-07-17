@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Settings, Copy, Check, Key, Eye, EyeOff, Link2, Smartphone } from 'lucide-react';
+import { ArrowLeft, Settings, Copy, Check, Key, Eye, EyeOff, Link2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
