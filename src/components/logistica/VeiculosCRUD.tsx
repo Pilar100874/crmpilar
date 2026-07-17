@@ -240,7 +240,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         const { error } = await supabase
           .from('veiculos')
           .update({
-            placa: formData.placa.toUpperCase(),
+            placa: normalized,
             descricao: formData.descricao || null,
             motorista: formData.motorista || null,
             tipo_veiculo: formData.tipo_veiculo || null,
