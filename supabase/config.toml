@@ -1,5 +1,9 @@
 project_id = "ioxugupvxlcdweldocmq"
 
+[functions.gerar-mensagens-grupo]
+verify_jwt = false
+
+
 [functions.marketing-automation-execute]
 verify_jwt = false
 
