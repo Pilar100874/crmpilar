@@ -380,26 +380,37 @@ export default function TvDashboardVeiculos() {
                 const km = kmRodadosHoje[veiculo.id] || 0;
                 
                 return (
-                  <div 
+                  <div
                     key={veiculo.id}
-                    className="px-3 py-1.5 hover:bg-white/5 transition-colors flex items-center justify-between"
+                    onClick={() => handleFocus(veiculo.id)}
+                    onDoubleClick={() => handleFocus(veiculo.id)}
+                    className={`px-3 py-1.5 hover:bg-white/5 transition-colors cursor-pointer ${
+                      focusVeiculoId === veiculo.id ? 'bg-white/10 ring-1 ring-primary' : ''
+                    }`}
                   >
-                    <div className="flex items-center gap-1.5">
-                      <div 
-                        className="w-3 h-3 rounded-full border-2 border-white/50" 
-                        style={{ backgroundColor: veiculo.cor }}
-                      />
-                      <span className="font-medium text-xs text-white/90">{veiculo.placa}</span>
-                      <span className={`text-[10px] ${config.textColor}`}>({config.label})</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <div
+                          className="w-3 h-3 rounded-full border-2 border-white/50 flex-shrink-0"
+                          style={{ backgroundColor: veiculo.cor }}
+                        />
+                        <span className="font-medium text-xs text-white/90 truncate">{veiculo.placa}</span>
+                        <span className={`text-[10px] ${config.textColor} flex-shrink-0`}>({config.label})</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] text-white/60 flex-shrink-0">
+                        {veiculo.ultima_posicao && (
+                          <>
+                            <span>{Math.round(veiculo.ultima_posicao.velocidade)}km/h</span>
+                            <span>{km}km</span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] text-white/60">
-                      {veiculo.ultima_posicao && (
-                        <>
-                          <span>{Math.round(veiculo.ultima_posicao.velocidade)}km/h</span>
-                          <span>{km}km</span>
-                        </>
-                      )}
-                    </div>
+                    {veiculo.motorista_atual?.nome && (
+                      <div className="mt-0.5 pl-4 text-[10px] text-white/70 truncate">
+                        👤 {veiculo.motorista_atual.nome}
+                      </div>
+                    )}
                   </div>
                 );
               })}
