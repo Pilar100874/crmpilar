@@ -325,7 +325,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
               <LazyLogisticaMap
                 veiculos={veiculosComPosicao}
                 paradasMarcadas={paradasMarcadas}
-                onVeiculoClick={(v) => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
+                onVeiculoClick={(v) => zoomToVehicle(v.id)}
                 focusVeiculoId={focusVehicle?.id}
                 focusTrigger={focusVehicle?.nonce}
                 className="absolute inset-0"
@@ -498,7 +498,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                         <div
                           key={v.id}
                           onClick={() => {
-                            setSelectedVeiculoId(isSelected ? null : v.id);
+                            zoomToVehicle(v.id);
                             setMobileVehicleListOpen(false);
                           }}
                           onDoubleClick={() => {
@@ -621,7 +621,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                 return (
                   <div
                     key={v.id}
-                    onClick={() => setSelectedVeiculoId(isSelected ? null : v.id)}
+                    onClick={() => zoomToVehicle(v.id)}
                     onDoubleClick={() => zoomToVehicle(v.id)}
                     className={cn(
                       "p-2 rounded-lg cursor-pointer transition-all",
@@ -693,7 +693,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
               <LazyLogisticaMap
                 veiculos={veiculosComPosicao}
                 paradasMarcadas={paradasMarcadas}
-                onVeiculoClick={(v) => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
+                onVeiculoClick={(v) => zoomToVehicle(v.id)}
                 focusVeiculoId={focusVehicle?.id}
                 focusTrigger={focusVehicle?.nonce}
                 className="h-full w-full absolute inset-0"

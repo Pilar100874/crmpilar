@@ -277,7 +277,12 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       map.invalidateSize();
       map.setView(pos, Math.max(map.getZoom(), 17), { animate: true });
       const marker = markersRef.current.get(veiculo.id);
+      // Open popup without auto-panning so the marker stays centered on screen
       marker?.openPopup();
+      // Re-center after popup opens to counter Leaflet's autoPan shift
+      setTimeout(() => {
+        map.panTo(pos, { animate: true });
+      }, 350);
     });
     return () => cancelAnimationFrame(raf);
   }, [focusVeiculoId, focusTrigger, veiculos]);
