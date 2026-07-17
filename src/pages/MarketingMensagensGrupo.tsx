@@ -325,6 +325,37 @@ export default function MarketingMensagensGrupo() {
         </DialogContent>
       </Dialog>
 
+      {/* Complemento antes de gerar */}
+      <Dialog open={showGerar} onOpenChange={setShowGerar}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Gerar 10 frases com IA</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Grupo: <b>{grupoAtual?.nome}</b> · Tema: <b>{activeTema}</b>
+            </p>
+            <Label>Complemento (opcional)</Label>
+            <Textarea
+              rows={4}
+              value={complemento}
+              onChange={(e) => setComplemento(e.target.value)}
+              placeholder="Ex.: foco em varejo, tom descontraído, destacar entrega rápida, público jovem..."
+            />
+            <p className="text-xs text-muted-foreground">
+              Deixe em branco para gerar sem direcionamentos adicionais.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowGerar(false)}>Cancelar</Button>
+            <Button onClick={gerarComIA} disabled={generating}>
+              {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+              Gerar 10 frases
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <DeleteConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
