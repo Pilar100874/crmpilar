@@ -205,18 +205,35 @@ export default function MarketingMensagensGrupo() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <Label>Escopo</Label>
+              <Select value={escopo} onValueChange={(v) => setEscopo(v as Escopo)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="geral">Geral</SelectItem>
+                  <SelectItem value="grupo">Por grupo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div>
               <Label>Grupo de produtos</Label>
-              <Select value={grupoId} onValueChange={setGrupoId}>
-                <SelectTrigger><SelectValue placeholder="Selecione um grupo" /></SelectTrigger>
+              <Select
+                value={grupoId}
+                onValueChange={setGrupoId}
+                disabled={escopo === "geral"}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={escopo === "geral" ? "— (não se aplica)" : "Selecione um grupo"} />
+                </SelectTrigger>
                 <SelectContent>
                   {grupos.map(g => (
                     <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {grupoAtual?.descritivo_catalogo && (
+              {escopo === "grupo" && grupoAtual?.descritivo_catalogo && (
                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                   {grupoAtual.descritivo_catalogo}
                 </p>
@@ -247,7 +264,7 @@ export default function MarketingMensagensGrupo() {
             <div className="flex items-end gap-2">
               <Button
                 onClick={abrirGerar}
-                disabled={!grupoId || !activeTema || generating}
+                disabled={!escopoPronto || !activeTema || generating}
                 className="w-full"
               >
                 {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
@@ -258,7 +275,7 @@ export default function MarketingMensagensGrupo() {
         </CardContent>
       </Card>
 
-      {grupoId && activeTema && (
+      {escopoPronto && activeTema && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
