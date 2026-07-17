@@ -122,6 +122,8 @@ interface LogisticaMapInternalProps {
   fitBounds?: boolean;
   compactIcons?: boolean;
   disableInteraction?: boolean;
+  focusVeiculoId?: string;
+  focusTrigger?: number;
 }
 
 const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
