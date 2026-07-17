@@ -36,14 +36,9 @@ const ManualRastreadores: React.FC = () => {
     return `${base.replace(/\/$/, '')}/functions/v1/rastreamento-posicao`;
   }, []);
 
-  // Extrai host/porta para trackers que aceitam apenas host+porta (protocolos TCP nativos)
-  const host = useMemo(() => {
-    try {
-      return new URL(endpoint).host;
-    } catch {
-      return 'crm.pilar.com.br';
-    }
-  }, [endpoint]);
+  // Host TCP do bridge Railway (para trackers físicos que falam protocolo binário)
+  const tcpHost = 'tokaido.proxy.rlwy.net';
+  const tcpPort = '44241';
 
   return (
     <div className="space-y-4">
@@ -74,21 +69,18 @@ const ManualRastreadores: React.FC = () => {
           <div>
             <div className="text-sm font-medium mb-2 flex items-center gap-2">
               <Zap className="h-4 w-4 text-amber-500" />
-              Host / Porta para rastreadores físicos (protocolos TCP binários):
+              Host / Porta para rastreadores físicos (bridge TCP Railway):
             </div>
             <div className="grid gap-2">
-              <CopyLine label="Host" value={host} />
-              <CopyLine label="GPS103/TK103" value="Porta 5001" />
-              <CopyLine label="GT06 / J16 / TK100" value="Porta 5023" />
-              <CopyLine label="Mictrack" value="Porta 5031" />
-              <CopyLine label="Suntech" value="Porta 5011" />
-              <CopyLine label="OsmAnd / Traccar Client" value="Porta 5055" />
+              <CopyLine label="Host TCP" value={tcpHost} />
+              <CopyLine label="GT06 / J16 / TK100" value={`Porta ${tcpPort}`} />
+              <CopyLine label="OsmAnd / Traccar Client" value="Usa o endpoint HTTP acima (porta 443)" />
             </div>
             <div className="mt-3 flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
               <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
               <span>
-                Rastreadores físicos (GT06, TK103 etc.) usam protocolos TCP binários. Se você usa apenas o endpoint HTTP,
-                será necessário um servidor Traccar intermediário publicado no host acima nas portas indicadas.
+                Atualmente o sistema tem suporte homologado para <strong>GT06 / J16 / TK100</strong> (protocolo binário TCP via bridge Railway)
+                e <strong>Traccar Client / OsmAnd</strong> (HTTP direto). Outros modelos exigem parser dedicado no bridge.
               </span>
             </div>
           </div>
@@ -99,11 +91,9 @@ const ManualRastreadores: React.FC = () => {
         <TabsList className="w-full flex-wrap h-auto justify-start">
           <TabsTrigger value="preparacao">1. Preparação</TabsTrigger>
           <TabsTrigger value="celular">2. Celular</TabsTrigger>
-          <TabsTrigger value="tk103">3. TK103 / GPS103</TabsTrigger>
-          <TabsTrigger value="gt06">4. GT06 / J16</TabsTrigger>
-          <TabsTrigger value="mictrack">5. Mictrack</TabsTrigger>
-          <TabsTrigger value="cadastro">6. Cadastro no Pilar</TabsTrigger>
-          <TabsTrigger value="bloqueio">7. Corte de Combustível</TabsTrigger>
+          <TabsTrigger value="gt06">3. GT06 / J16 / TK100</TabsTrigger>
+          <TabsTrigger value="cadastro">4. Cadastro no Pilar</TabsTrigger>
+          <TabsTrigger value="bloqueio">5. Corte de Combustível</TabsTrigger>
         </TabsList>
 
         <TabsContent value="preparacao">
@@ -140,30 +130,13 @@ const ManualRastreadores: React.FC = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="tk103">
-          <Card>
-            <CardHeader><CardTitle className="text-base">TK103 / GPS103</CardTitle></CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <p>Envie os SMS abaixo <strong>para o número do chip</strong> que está no rastreador. Senha padrão: <code>123456</code>.</p>
-              <div className="space-y-1">
-                <CopyLine value="begin123456" />
-                <CopyLine value="apn123456 zap.vivo.com.br" />
-                <CopyLine value={`adminip123456 ${host} 5001`} />
-                <CopyLine value="fix030s***n123456" />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Substitua <code>zap.vivo.com.br</code> pelo APN da sua operadora.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         <TabsContent value="gt06">
           <Card>
             <CardHeader><CardTitle className="text-base">GT06 / J16 / TK100 (com corte de ignição)</CardTitle></CardHeader>
             <CardContent className="space-y-3 text-sm">
+              <p>Envie os SMS abaixo <strong>para o número do chip</strong> que está no rastreador.</p>
               <div className="space-y-1">
-                <CopyLine value={`SERVER,1,${host},5023,0#`} />
+                <CopyLine value={`SERVER,1,${tcpHost},${tcpPort},0#`} />
                 <CopyLine value="APN,zap.vivo.com.br,vivo,vivo#" />
                 <CopyLine value="TIMER,30,60#" />
                 <CopyLine value="GPRSON,1#" />
@@ -176,26 +149,12 @@ const ManualRastreadores: React.FC = () => {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                Após a instalação do fio de corte, prefira usar o botão <strong>Bloquear Combustível</strong> na tela de Veículos.
+                Substitua <code>zap.vivo.com.br,vivo,vivo</code> pelo APN/usuário/senha da operadora do chip.
+                Após instalar o fio de corte, prefira usar o botão <strong>Bloquear Combustível</strong> na tela de Veículos.
               </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="mictrack">
-          <Card>
-            <CardHeader><CardTitle className="text-base">Mictrack MT532 / MT600</CardTitle></CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <p>Baixe o app <strong>MiTrack</strong> na Play Store / App Store.</p>
-              <ol className="list-decimal pl-5 space-y-1">
-                <li>Login com IMEI + senha (padrão <code>mt600</code> ou <code>123456</code>).</li>
-                <li>Vá em <em>Settings → Server</em> e informe:</li>
-              </ol>
-              <div className="space-y-1 pl-6">
-                <CopyLine label="Host" value={host} />
-                <CopyLine label="Porta" value="5031" />
-              </div>
-              <p>Configure o APN em <em>Settings → APN</em> e salve. O aparelho reinicia sozinho.</p>
+              <p className="text-xs text-muted-foreground">
+                Para ajustar/testar os parâmetros e o texto dos SMS, use a aba <strong>Parâmetros Rastreador</strong>.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -225,7 +184,7 @@ const ManualRastreadores: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <p>
-                Na aba <strong>Veículos</strong>, cada veículo com dispositivo GT06/J16/Mictrack tem o botão
+                Na aba <strong>Veículos</strong>, cada veículo com dispositivo GT06/J16/TK100 tem o botão
                 <Badge className="ml-1" variant="outline">Bloquear/Liberar Combustível</Badge>.
               </p>
               <ol className="list-decimal pl-5 space-y-1">
