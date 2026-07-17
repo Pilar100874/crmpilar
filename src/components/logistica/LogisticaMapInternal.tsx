@@ -234,6 +234,10 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         marker.on('click', () => {
           onVeiculoClick?.(veiculo);
         });
+        marker.on('dblclick', () => {
+          map.setView(pos, Math.max(map.getZoom(), 17), { animate: true });
+          marker.openPopup();
+        });
 
         currentMarkers.set(veiculo.id, marker);
       }
