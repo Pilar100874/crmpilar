@@ -25,6 +25,7 @@ interface Props {
 export const LogisticaGruposCRUD: React.FC<Props> = ({ estabelecimentoId }) => {
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<Grupo | null>(null);
   const [form, setForm] = useState({ nome: '', descricao: '', cor: '#3b82f6', ativo: true });
 
