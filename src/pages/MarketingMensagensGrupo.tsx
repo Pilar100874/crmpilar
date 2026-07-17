@@ -52,6 +52,8 @@ export default function MarketingMensagensGrupo() {
   const [showNew, setShowNew] = useState(false);
   const [newText, setNewText] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Frase | null>(null);
+  const [showGerar, setShowGerar] = useState(false);
+  const [complemento, setComplemento] = useState("");
 
   const activeTema = tema === "__custom__" ? temaCustom.trim() : tema;
   const grupoAtual = useMemo(() => grupos.find(g => g.id === grupoId), [grupos, grupoId]);
@@ -90,11 +92,18 @@ export default function MarketingMensagensGrupo() {
     setFrases((data || []) as Frase[]);
   };
 
-  const gerarComIA = async () => {
+  const abrirGerar = () => {
     if (!grupoAtual || !activeTema) {
       toast.error("Selecione um grupo e um tema");
       return;
     }
+    setComplemento("");
+    setShowGerar(true);
+  };
+
+  const gerarComIA = async () => {
+    if (!grupoAtual || !activeTema) return;
+    setShowGerar(false);
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("gerar-mensagens-grupo", {
@@ -102,7 +111,9 @@ export default function MarketingMensagensGrupo() {
           grupo: grupoAtual.nome,
           descritivo: grupoAtual.descritivo_catalogo || "",
           tema: activeTema,
-          count: 30,
+          count: 10,
+          complemento: complemento.trim() || undefined,
+          existentes: frases.map(f => f.frase),
         },
       });
       if (error) throw error;
@@ -226,12 +237,12 @@ export default function MarketingMensagensGrupo() {
 
             <div className="flex items-end gap-2">
               <Button
-                onClick={gerarComIA}
+                onClick={abrirGerar}
                 disabled={!grupoId || !activeTema || generating}
                 className="w-full"
               >
                 {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                Gerar 30 frases com IA
+                Gerar 10 frases com IA
               </Button>
             </div>
           </div>
@@ -256,7 +267,7 @@ export default function MarketingMensagensGrupo() {
               </div>
             ) : frases.length === 0 ? (
               <div className="text-center py-12 text-sm text-muted-foreground">
-                Nenhuma frase cadastrada. Gere 30 automaticamente com IA ou adicione manualmente.
+                Nenhuma frase cadastrada. Gere 10 automaticamente com IA ou adicione manualmente.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -310,6 +321,37 @@ export default function MarketingMensagensGrupo() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowNew(false)}>Cancelar</Button>
             <Button onClick={salvarNova}>Adicionar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Complemento antes de gerar */}
+      <Dialog open={showGerar} onOpenChange={setShowGerar}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Gerar 10 frases com IA</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Grupo: <b>{grupoAtual?.nome}</b> · Tema: <b>{activeTema}</b>
+            </p>
+            <Label>Complemento (opcional)</Label>
+            <Textarea
+              rows={4}
+              value={complemento}
+              onChange={(e) => setComplemento(e.target.value)}
+              placeholder="Ex.: foco em varejo, tom descontraído, destacar entrega rápida, público jovem..."
+            />
+            <p className="text-xs text-muted-foreground">
+              Deixe em branco para gerar sem direcionamentos adicionais.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowGerar(false)}>Cancelar</Button>
+            <Button onClick={gerarComIA} disabled={generating}>
+              {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+              Gerar 10 frases
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
