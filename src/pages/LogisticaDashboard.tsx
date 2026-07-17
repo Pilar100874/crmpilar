@@ -27,6 +27,9 @@ const LogisticaDashboard: React.FC = () => {
   const [mobileListOpen, setMobileListOpen] = useState(false);
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { grupoId, setGrupoId, unidades } = useGrupoFilter(estabelecimentoId);
+  const veiculosFiltrados = React.useMemo(() => filterByGrupo(veiculos, grupoId), [veiculos, grupoId]);
+
 
   useEffect(() => {
     const initEstabelecimento = async () => {
