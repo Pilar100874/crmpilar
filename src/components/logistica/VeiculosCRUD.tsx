@@ -34,6 +34,7 @@ interface DispositivoAprovado {
 }
 
 const tipos = [
+  'Pessoa',
   'Celular',
   'Carro',
   'Van',
@@ -44,6 +45,8 @@ const tipos = [
   'Bicicleta',
   'Outro'
 ];
+
+const TRACKING_URL = `${import.meta.env.VITE_SUPABASE_URL || 'https://ioxugupvxlcdweldocmq.supabase.co'}/functions/v1/rastreamento-posicao`;
 
 export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId }) => {
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
