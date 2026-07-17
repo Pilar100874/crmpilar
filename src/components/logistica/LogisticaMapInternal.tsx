@@ -140,6 +140,8 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   fitBounds = true,
   compactIcons = false,
   disableInteraction = false,
+  focusVeiculoId,
+  focusTrigger,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
