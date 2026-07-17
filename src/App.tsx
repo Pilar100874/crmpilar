@@ -200,9 +200,7 @@ import LogisticaRoteirizacao from "./pages/LogisticaRoteirizacao";
 import LogisticaRotas from "./pages/LogisticaRotas";
 import LogisticaConfig from "./pages/LogisticaConfig";
 import LogisticaAutomacoes from "./pages/LogisticaAutomacoes";
-import PilarRastreador from "./pages/PilarRastreador";
 import PedidosRecebidos from "./pages/PedidosRecebidos";
-import PilarRastreadorNativo from "./pages/PilarRastreadorNativo";
 import WhatsAppCatalogo from "./pages/WhatsAppCatalogo";
 import MarketplacesHubPage from "./pages/MarketplacesHubPage";
 import AdsDashboard from "./pages/ads/AdsDashboard";
@@ -579,8 +577,6 @@ const App = () => (
             <Route path="/rastreio" element={<RastreioPedido />} />
             <Route path="/rastreio/:token" element={<RastreioPedido />} />
             <Route path="/webchat" element={<WebChat />} />
-            <Route path="/pilar-rastreador" element={<PilarRastreador />} />
-            <Route path="/pilar-rastreador-nativo" element={<PilarRastreadorNativo />} />
             <Route path="/watch" element={<WatchDashboard />} />
             <Route path="/watch/dashboard" element={<WatchDashboardHome />} />
             <Route path="/watch/agenda" element={<WatchAgenda />} />

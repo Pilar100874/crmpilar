@@ -11,7 +11,7 @@ import {
   Settings,
   PanelLeft,
   PanelLeftClose,
-  Smartphone,
+  
   BookOpen,
   LucideIcon
 } from 'lucide-react';
@@ -33,7 +33,7 @@ import LogisticaRoteirizacao from './LogisticaRoteirizacao';
 import LogisticaRotas from './LogisticaRotas';
 import LogisticaAutomacoes from './LogisticaAutomacoes';
 import LogisticaConfig from './LogisticaConfig';
-import PilarRastreadorHub from '@/components/logistica/PilarRastreadorHub';
+
 import ManualRastreadores from '@/components/logistica/ManualRastreadores';
 
 interface TabItem {
@@ -51,7 +51,6 @@ const tabItems: TabItem[] = [
   { id: 'roteirizacao', label: 'Roteirização', icon: Route, description: 'Planejamento de rotas' },
   { id: 'rotas', label: 'Rotas Salvas', icon: Navigation, description: 'Rotas salvas' },
   { id: 'automacoes', label: 'Automações', icon: Zap, description: 'Regras automáticas' },
-  { id: 'pilar-rastreador', label: 'Pilar Rastreador', icon: Smartphone, description: 'Apps de rastreamento GPS' },
   { id: 'manual', label: 'Manual', icon: BookOpen, description: 'Manual de configuração dos rastreadores' },
   { id: 'config', label: 'Configuração', icon: Settings, description: 'Configurações do sistema' },
 ];
@@ -119,8 +118,6 @@ const LogisticaHub: React.FC = () => {
         return <LogisticaRotas embedded />;
       case 'automacoes':
         return <LogisticaAutomacoes />;
-      case 'pilar-rastreador':
-        return estabelecimentoId ? <PilarRastreadorHub estabelecimentoId={estabelecimentoId} /> : null;
       case 'manual':
         return <ManualRastreadores />;
       case 'config':
