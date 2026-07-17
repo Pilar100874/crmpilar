@@ -453,8 +453,22 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         .logistica-map-container .leaflet-control-zoom {
           top: auto !important;
           bottom: 16px !important;
-          right: 16px !important;
-          left: auto !important;
+          left: 16px !important;
+          right: auto !important;
+          z-index: 9999 !important;
+        }
+        .logistica-map-container .leaflet-control-zoom a {
+          width: 34px !important;
+          height: 34px !important;
+          line-height: 34px !important;
+          font-size: 20px !important;
+        }
+        @media (max-width: 768px) {
+          .logistica-map-container .leaflet-control-zoom {
+            bottom: 80px !important;
+            left: auto !important;
+            right: 16px !important;
+          }
         }
       `}</style>
     </>
