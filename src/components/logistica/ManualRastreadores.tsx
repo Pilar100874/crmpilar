@@ -184,7 +184,7 @@ const ManualRastreadores: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <p>
-                Na aba <strong>Veículos</strong>, cada veículo com dispositivo GT06/J16/Mictrack tem o botão
+                Na aba <strong>Veículos</strong>, cada veículo com dispositivo GT06/J16/TK100 tem o botão
                 <Badge className="ml-1" variant="outline">Bloquear/Liberar Combustível</Badge>.
               </p>
               <ol className="list-decimal pl-5 space-y-1">
