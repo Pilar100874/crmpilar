@@ -22,6 +22,8 @@ import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
 import { fetchMotoristasAtuais, formatWhatsappNumber, type MotoristaAtual } from '@/lib/logistica/cvDriverLookup';
 import { MessageCircle, User } from 'lucide-react';
+import { GrupoFilterSelect } from '@/components/logistica/GrupoFilterSelect';
+import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
 
 const ROUTE_COLORS = [
   '#3b82f6', // blue
