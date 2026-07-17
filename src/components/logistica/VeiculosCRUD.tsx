@@ -255,7 +255,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
           .from('veiculos')
           .insert({
             estabelecimento_id: estabelecimentoId,
-            placa: formData.placa.toUpperCase(),
+            placa: normalized,
             descricao: formData.descricao || null,
             motorista: formData.motorista || null,
             tipo_veiculo: formData.tipo_veiculo || null,
