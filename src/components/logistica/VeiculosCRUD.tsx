@@ -73,7 +73,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     descricao: '',
     motorista: '',
     tipo_veiculo: '',
-    grupo_id: '',
+    logistica_grupo_id: '',
     traccar_device_id: '',
     dispositivo_id: '',
     tracker_model_id: '',
@@ -183,7 +183,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         descricao: veiculo.descricao || '',
         motorista: veiculo.motorista || '',
         tipo_veiculo: veiculo.tipo_veiculo || '',
-        grupo_id: (veiculo as any).grupo_id || '',
+        logistica_grupo_id: (veiculo as any).logistica_grupo_id || '',
         traccar_device_id: veiculo.traccar_device_id || '',
         dispositivo_id: linkedDevice?.id || '',
         tracker_model_id: (veiculo as any).tracker_model_id || '',
@@ -202,7 +202,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         descricao: '',
         motorista: '',
         tipo_veiculo: '',
-        grupo_id: grupoId && grupoId !== GRUPO_ALL ? grupoId : '',
+        logistica_grupo_id: grupoId && grupoId !== GRUPO_ALL ? grupoId : '',
         traccar_device_id: '',
         dispositivo_id: '',
         tracker_model_id: '',
@@ -251,7 +251,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             descricao: formData.descricao || null,
             motorista: formData.motorista || null,
             tipo_veiculo: formData.tipo_veiculo || null,
-            grupo_id: formData.grupo_id || null,
+            logistica_grupo_id: formData.logistica_grupo_id || null,
             traccar_device_id: formData.traccar_device_id || null,
             ativo: formData.ativo
           })
@@ -267,7 +267,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             descricao: formData.descricao || null,
             motorista: formData.motorista || null,
             tipo_veiculo: formData.tipo_veiculo || null,
-            grupo_id: formData.grupo_id || null,
+            logistica_grupo_id: formData.logistica_grupo_id || null,
             traccar_device_id: formData.traccar_device_id || null,
             ativo: formData.ativo
           })
@@ -662,7 +662,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 <TableCell>{veiculo.descricao || '-'}</TableCell>
                 <TableCell>{veiculo.motorista || '-'}</TableCell>
                 <TableCell>{veiculo.tipo_veiculo || '-'}</TableCell>
-                <TableCell>{unidadeNomeById[(veiculo as any).grupo_id] || '-'}</TableCell>
+                <TableCell>{unidadeNomeById[(veiculo as any).logistica_grupo_id] || '-'}</TableCell>
                 <TableCell>
                   {model ? (
                     <div className="flex flex-col gap-1">
@@ -799,10 +799,10 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                     <span>{veiculo.tipo_veiculo}</span>
                   </div>
                 )}
-                {unidadeNomeById[(veiculo as any).grupo_id] && (
+                {unidadeNomeById[(veiculo as any).logistica_grupo_id] && (
                   <div className="min-w-0 col-span-2">
                     <span className="text-muted-foreground">Grupo: </span>
-                    <span>{unidadeNomeById[(veiculo as any).grupo_id]}</span>
+                    <span>{unidadeNomeById[(veiculo as any).logistica_grupo_id]}</span>
                   </div>
                 )}
               </div>
@@ -895,8 +895,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               <div>
                 <Label>Grupo (Unidade)</Label>
                 <Select
-                  value={formData.grupo_id || '__none__'}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, grupo_id: value === '__none__' ? '' : value }))}
+                  value={formData.logistica_grupo_id || '__none__'}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, logistica_grupo_id: value === '__none__' ? '' : value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a unidade" />
