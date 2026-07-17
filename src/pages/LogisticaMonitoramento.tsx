@@ -5,7 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { 
   ArrowLeft, Car, Gauge, Clock, MapPin, AlertTriangle, 
   Wifi, WifiOff, Activity, ChevronDown, ChevronUp, 
-  Bell, BellOff, Volume2, RefreshCw, Eye, Maximize2, Minimize2, List, MessageCircle, User
+  Bell, BellOff, Volume2, RefreshCw, Eye, Maximize2, Minimize2, List, MessageCircle, User, Pin
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
