@@ -92,11 +92,18 @@ export default function MarketingMensagensGrupo() {
     setFrases((data || []) as Frase[]);
   };
 
-  const gerarComIA = async () => {
+  const abrirGerar = () => {
     if (!grupoAtual || !activeTema) {
       toast.error("Selecione um grupo e um tema");
       return;
     }
+    setComplemento("");
+    setShowGerar(true);
+  };
+
+  const gerarComIA = async () => {
+    if (!grupoAtual || !activeTema) return;
+    setShowGerar(false);
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("gerar-mensagens-grupo", {
@@ -104,7 +111,9 @@ export default function MarketingMensagensGrupo() {
           grupo: grupoAtual.nome,
           descritivo: grupoAtual.descritivo_catalogo || "",
           tema: activeTema,
-          count: 30,
+          count: 10,
+          complemento: complemento.trim() || undefined,
+          existentes: frases.map(f => f.frase),
         },
       });
       if (error) throw error;
