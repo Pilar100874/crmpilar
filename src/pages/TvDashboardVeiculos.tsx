@@ -371,7 +371,7 @@ export default function TvDashboardVeiculos() {
       {/* Vehicle List - Right Side */}
       {/* Vehicle List - Right Side (desktop) / Bottom sheet (mobile) */}
       <div 
-        className={`fixed bg-black/40 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden flex flex-col transition-transform
+        className={`fixed bg-black/20 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden flex flex-col transition-transform
           md:top-3 md:right-3 md:bottom-3 md:w-64 md:translate-x-0
           ${isMobile 
             ? `left-2 right-2 bottom-2 max-h-[55vh] ${listaAberta ? 'translate-y-0' : 'translate-y-[calc(100%+1rem)]'}`
