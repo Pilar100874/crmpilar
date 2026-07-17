@@ -972,9 +972,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
               </div>
             )}
 
-            {formData.tipo_dispositivo !== 'rastreador' && (
-              <div className="hidden" />
-            )}
+            {formData.tipo_dispositivo === 'rastreador' && (<>
+
 
             {/* Telefone único usado pelos dois blocos */}
             <div className="border rounded-lg p-3 bg-muted/30 space-y-2">
