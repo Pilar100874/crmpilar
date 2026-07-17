@@ -264,6 +264,7 @@ const LogisticaDashboard: React.FC = () => {
             veiculos={veiculosFiltrados}
             selectedVeiculoId={selectedVeiculo?.id}
             onVeiculoSelect={setSelectedVeiculo}
+            onVeiculoDoubleClick={(v) => { setSelectedVeiculo(v); setFocusVehicle({ id: v.id, nonce: Date.now() }); }}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             statusFilter={statusFilter}
