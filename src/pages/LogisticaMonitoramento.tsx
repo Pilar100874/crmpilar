@@ -452,6 +452,17 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
               </Tooltip>
             </TooltipProvider>
 
+            <Button
+              variant={pinnedVeiculoId ? 'default' : 'outline'}
+              size="sm"
+              onClick={showAll}
+              disabled={!pinnedVeiculoId && !focusVehicle}
+              title="Ver todos os veículos no mapa"
+            >
+              <Maximize2 className="h-4 w-4 mr-2" />
+              Ver todos
+            </Button>
+
             <Button variant="outline" size="sm" onClick={fetchVeiculos}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Atualizar
