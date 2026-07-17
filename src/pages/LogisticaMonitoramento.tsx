@@ -303,6 +303,12 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   const veiculosComPosicao = veiculosFiltrados.filter(v => v.ultima_posicao);
   const selectedVeiculo = veiculosFiltrados.find(v => v.id === selectedVeiculoId);
 
+  // Follow mode: recentraliza no veículo fixado sempre que houver nova posição
+  useEffect(() => {
+    if (!pinnedVeiculoId) return;
+    setFocusVehicle({ id: pinnedVeiculoId, nonce: Date.now() });
+  }, [pinnedVeiculoId, veiculos]);
+
   const stats = {
     total: veiculosFiltrados.length,
     movendo: veiculosFiltrados.filter(v => v.status === 'movendo').length,
