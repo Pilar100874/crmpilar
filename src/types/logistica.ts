@@ -6,6 +6,7 @@ export interface Veiculo {
   motorista?: string;
   ativo: boolean;
   tipo_veiculo?: string;
+  grupo_id?: string | null;
   created_at: string;
   updated_at: string;
   // Computed from latest position
