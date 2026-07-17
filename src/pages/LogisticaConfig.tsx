@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Settings, Copy, Check, Key, Eye, EyeOff, Link2 } from 'lucide-react';
+import { ArrowLeft, Settings, Copy, Check, Key, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 interface LogisticaConfigData {
@@ -28,12 +26,9 @@ const LogisticaConfig: React.FC<LogisticaConfigProps> = ({ embedded = false }) =
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [config, setConfig] = useState<LogisticaConfigData | null>(null);
-  const [copied, setCopied] = useState<'key' | 'url' | 'token' | null>(null);
+  const [copied, setCopied] = useState<'key' | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [apiKey, setApiKey] = useState('');
-
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ioxugupvxlcdweldocmq.supabase.co';
-  const trackingUrl = `${supabaseUrl}/functions/v1/rastreamento-posicao`;
 
   useEffect(() => {
     loadConfig();
@@ -129,7 +124,7 @@ const LogisticaConfig: React.FC<LogisticaConfigProps> = ({ embedded = false }) =
     }
   };
 
-  const copyToClipboard = async (text: string, type: 'key' | 'url' | 'token') => {
+  const copyToClipboard = async (text: string, type: 'key') => {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(type);
@@ -241,80 +236,6 @@ const LogisticaConfig: React.FC<LogisticaConfigProps> = ({ embedded = false }) =
               >
                 {saving ? 'Salvando...' : 'Salvar Chave da API'}
               </Button>
-            </CardContent>
-          </Card>
-
-          {/* Tracking URL Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Link2 className="h-5 w-5" />
-                URL de Rastreamento
-              </CardTitle>
-              <CardDescription>
-                Configure esta URL no seu aplicativo de rastreamento (Traccar Client, OsmAnd, etc.)
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>URL do Endpoint</Label>
-                <div className="flex gap-2">
-                  <Input
-                    value={trackingUrl}
-                    readOnly
-                    className="font-mono text-sm"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => copyToClipboard(trackingUrl, 'url')}
-                  >
-                    {copied === 'url' ? (
-                      <Check className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <Label>Configuração do Traccar Client</Label>
-                <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
-                  <p className="font-medium">No aplicativo Traccar Client:</p>
-                  <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                    <li>Abra as Configurações</li>
-                    <li>Em "URL do Servidor", cole: <code className="bg-background px-1 rounded">{trackingUrl}</code></li>
-                    <li>Em "Identificador do Dispositivo", use o ID cadastrado no veículo (traccar_device_id)</li>
-                    <li>Ative o rastreamento</li>
-                  </ol>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <Label>Formato da Requisição (Avançado)</Label>
-                <div className="bg-muted p-4 rounded-lg space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    Para integração personalizada, envie um POST com o seguinte formato:
-                  </p>
-                  <pre className="bg-background p-3 rounded text-xs overflow-x-auto">
-{`POST ${trackingUrl}
-Content-Type: application/json
-
-{
-  "veiculoId": "uuid-do-veiculo",
-  "lat": -23.5505,
-  "lng": -46.6333,
-  "velocidade": 60,
-  "direcao": 180
-}`}
-                  </pre>
-                </div>
-              </div>
             </CardContent>
           </Card>
 
