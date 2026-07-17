@@ -16,6 +16,8 @@ import { ParadaMarcada } from '@/types/automacaoLogistica';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { useFullscreen } from '@/hooks/useFullscreen';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { fetchMotoristasAtuais } from '@/lib/logistica/cvDriverLookup';
+import { FocusLegend } from '@/components/logistica/FocusLegend';
 
 const statusConfig = {
   movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-600', icon: Activity },
@@ -69,6 +71,13 @@ export default function TvDashboardVeiculos() {
     etanol: number;
   }>({ gasolina: 5.50, diesel: 5.80, etanol: 4.20 });
   const [kmRodadosHoje, setKmRodadosHoje] = useState<Record<string, number>>({});
+  const [focusVeiculoId, setFocusVeiculoId] = useState<string | null>(null);
+  const [focusTrigger, setFocusTrigger] = useState(0);
+
+  const handleFocus = useCallback((id: string) => {
+    setFocusVeiculoId(id);
+    setFocusTrigger(t => t + 1);
+  }, []);
 
   useEffect(() => {
     const fetchEstabelecimento = async () => {
@@ -211,7 +220,13 @@ export default function TvDashboardVeiculos() {
         })
       );
 
-      setVeiculos(veiculosComStatus);
+      const motoristasMap = await fetchMotoristasAtuais(veiculosComStatus.map(v => v.id));
+      const veiculosComMotorista = veiculosComStatus.map(v => ({
+        ...v,
+        motorista_atual: motoristasMap[v.id] || undefined,
+      }));
+
+      setVeiculos(veiculosComMotorista);
       setLastUpdate(new Date());
       await Promise.all([
         fetchParadasMarcadas(),
@@ -365,26 +380,37 @@ export default function TvDashboardVeiculos() {
                 const km = kmRodadosHoje[veiculo.id] || 0;
                 
                 return (
-                  <div 
+                  <div
                     key={veiculo.id}
-                    className="px-3 py-1.5 hover:bg-white/5 transition-colors flex items-center justify-between"
+                    onClick={() => handleFocus(veiculo.id)}
+                    onDoubleClick={() => handleFocus(veiculo.id)}
+                    className={`px-3 py-1.5 hover:bg-white/5 transition-colors cursor-pointer ${
+                      focusVeiculoId === veiculo.id ? 'bg-white/10 ring-1 ring-primary' : ''
+                    }`}
                   >
-                    <div className="flex items-center gap-1.5">
-                      <div 
-                        className="w-3 h-3 rounded-full border-2 border-white/50" 
-                        style={{ backgroundColor: veiculo.cor }}
-                      />
-                      <span className="font-medium text-xs text-white/90">{veiculo.placa}</span>
-                      <span className={`text-[10px] ${config.textColor}`}>({config.label})</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <div
+                          className="w-3 h-3 rounded-full border-2 border-white/50 flex-shrink-0"
+                          style={{ backgroundColor: veiculo.cor }}
+                        />
+                        <span className="font-medium text-xs text-white/90 truncate">{veiculo.placa}</span>
+                        <span className={`text-[10px] ${config.textColor} flex-shrink-0`}>({config.label})</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] text-white/60 flex-shrink-0">
+                        {veiculo.ultima_posicao && (
+                          <>
+                            <span>{Math.round(veiculo.ultima_posicao.velocidade)}km/h</span>
+                            <span>{km}km</span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] text-white/60">
-                      {veiculo.ultima_posicao && (
-                        <>
-                          <span>{Math.round(veiculo.ultima_posicao.velocidade)}km/h</span>
-                          <span>{km}km</span>
-                        </>
-                      )}
-                    </div>
+                    {veiculo.motorista_atual?.nome && (
+                      <div className="mt-0.5 pl-4 text-[10px] text-white/70 truncate">
+                        👤 {veiculo.motorista_atual.nome}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -422,10 +448,20 @@ export default function TvDashboardVeiculos() {
               veiculos={veiculosComPosicao}
               paradasMarcadas={paradasMarcadas}
               className="absolute inset-0"
-              fitBounds
+              fitBounds={!focusVeiculoId}
               compactIcons
-              disableInteraction
+              focusVeiculoId={focusVeiculoId || undefined}
+              focusTrigger={focusTrigger}
+              onVeiculoClick={(v) => handleFocus(v.id)}
             />
+          )}
+          {focusVeiculoId && (
+            <div className="pointer-events-none absolute inset-0" style={{ zIndex: 999999 }}>
+              <FocusLegend
+                veiculo={veiculos.find(v => v.id === focusVeiculoId)}
+                onClose={() => setFocusVeiculoId(null)}
+              />
+            </div>
           )}
         </div>
 
