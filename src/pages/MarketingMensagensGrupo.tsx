@@ -52,6 +52,8 @@ export default function MarketingMensagensGrupo() {
   const [showNew, setShowNew] = useState(false);
   const [newText, setNewText] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Frase | null>(null);
+  const [showGerar, setShowGerar] = useState(false);
+  const [complemento, setComplemento] = useState("");
 
   const activeTema = tema === "__custom__" ? temaCustom.trim() : tema;
   const grupoAtual = useMemo(() => grupos.find(g => g.id === grupoId), [grupos, grupoId]);
