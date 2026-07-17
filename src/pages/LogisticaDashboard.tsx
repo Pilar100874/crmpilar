@@ -205,19 +205,26 @@ const LogisticaDashboard: React.FC = () => {
           <SheetTrigger asChild>
             <Button variant="secondary" size="sm" className="shadow-lg">
               <List className="h-4 w-4 mr-2" />
-              Veículos ({veiculos.length})
+              Veículos ({veiculosFiltrados.length})
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-[85vw] sm:w-[350px] p-0">
-            <VeiculosList
-              veiculos={veiculos}
-              selectedVeiculoId={selectedVeiculo?.id}
-              onVeiculoSelect={handleVeiculoSelect}
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              statusFilter={statusFilter}
-              onStatusFilterChange={setStatusFilter}
-            />
+            <div className="flex flex-col h-full">
+              <div className="p-2 border-b">
+                <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} className="w-full" />
+              </div>
+              <div className="flex-1 min-h-0">
+                <VeiculosList
+                  veiculos={veiculosFiltrados}
+                  selectedVeiculoId={selectedVeiculo?.id}
+                  onVeiculoSelect={handleVeiculoSelect}
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  statusFilter={statusFilter}
+                  onStatusFilterChange={setStatusFilter}
+                />
+              </div>
+            </div>
           </SheetContent>
         </Sheet>
 
