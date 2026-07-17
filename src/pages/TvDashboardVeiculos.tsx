@@ -448,10 +448,20 @@ export default function TvDashboardVeiculos() {
               veiculos={veiculosComPosicao}
               paradasMarcadas={paradasMarcadas}
               className="absolute inset-0"
-              fitBounds
+              fitBounds={!focusVeiculoId}
               compactIcons
-              disableInteraction
+              focusVeiculoId={focusVeiculoId || undefined}
+              focusTrigger={focusTrigger}
+              onVeiculoClick={(v) => handleFocus(v.id)}
             />
+          )}
+          {focusVeiculoId && (
+            <div className="pointer-events-none absolute inset-0" style={{ zIndex: 999999 }}>
+              <FocusLegend
+                veiculo={veiculos.find(v => v.id === focusVeiculoId)}
+                onClose={() => setFocusVeiculoId(null)}
+              />
+            </div>
           )}
         </div>
 
