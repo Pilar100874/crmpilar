@@ -130,30 +130,13 @@ const ManualRastreadores: React.FC = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="tk103">
-          <Card>
-            <CardHeader><CardTitle className="text-base">TK103 / GPS103</CardTitle></CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <p>Envie os SMS abaixo <strong>para o número do chip</strong> que está no rastreador. Senha padrão: <code>123456</code>.</p>
-              <div className="space-y-1">
-                <CopyLine value="begin123456" />
-                <CopyLine value="apn123456 zap.vivo.com.br" />
-                <CopyLine value={`adminip123456 ${host} 5001`} />
-                <CopyLine value="fix030s***n123456" />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Substitua <code>zap.vivo.com.br</code> pelo APN da sua operadora.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         <TabsContent value="gt06">
           <Card>
             <CardHeader><CardTitle className="text-base">GT06 / J16 / TK100 (com corte de ignição)</CardTitle></CardHeader>
             <CardContent className="space-y-3 text-sm">
+              <p>Envie os SMS abaixo <strong>para o número do chip</strong> que está no rastreador.</p>
               <div className="space-y-1">
-                <CopyLine value={`SERVER,1,${host},5023,0#`} />
+                <CopyLine value={`SERVER,1,${tcpHost},${tcpPort},0#`} />
                 <CopyLine value="APN,zap.vivo.com.br,vivo,vivo#" />
                 <CopyLine value="TIMER,30,60#" />
                 <CopyLine value="GPRSON,1#" />
@@ -166,26 +149,12 @@ const ManualRastreadores: React.FC = () => {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                Após a instalação do fio de corte, prefira usar o botão <strong>Bloquear Combustível</strong> na tela de Veículos.
+                Substitua <code>zap.vivo.com.br,vivo,vivo</code> pelo APN/usuário/senha da operadora do chip.
+                Após instalar o fio de corte, prefira usar o botão <strong>Bloquear Combustível</strong> na tela de Veículos.
               </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="mictrack">
-          <Card>
-            <CardHeader><CardTitle className="text-base">Mictrack MT532 / MT600</CardTitle></CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <p>Baixe o app <strong>MiTrack</strong> na Play Store / App Store.</p>
-              <ol className="list-decimal pl-5 space-y-1">
-                <li>Login com IMEI + senha (padrão <code>mt600</code> ou <code>123456</code>).</li>
-                <li>Vá em <em>Settings → Server</em> e informe:</li>
-              </ol>
-              <div className="space-y-1 pl-6">
-                <CopyLine label="Host" value={host} />
-                <CopyLine label="Porta" value="5031" />
-              </div>
-              <p>Configure o APN em <em>Settings → APN</em> e salve. O aparelho reinicia sozinho.</p>
+              <p className="text-xs text-muted-foreground">
+                Para ajustar/testar os parâmetros e o texto dos SMS, use a aba <strong>Parâmetros Rastreador</strong>.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
