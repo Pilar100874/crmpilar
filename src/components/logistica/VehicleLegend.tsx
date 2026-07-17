@@ -23,7 +23,7 @@ export const VehicleLegend: React.FC<VehicleLegendProps> = ({ veiculos, selected
 
   return (
     <div className="absolute top-2 right-2 z-[500] pointer-events-auto">
-      <div className="bg-background/95 backdrop-blur border border-border shadow-lg rounded-lg overflow-hidden">
+      <div className="bg-background/35 backdrop-blur-sm border border-border/50 shadow-lg rounded-lg overflow-hidden">
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="w-full flex items-center justify-between gap-2 px-2 py-1.5 text-xs font-semibold border-b hover:bg-accent"
