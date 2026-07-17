@@ -242,6 +242,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     }
 
 
+    setSaving(true);
     try {
       let veiculoId = selectedVeiculo?.id;
 
