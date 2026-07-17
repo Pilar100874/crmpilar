@@ -251,18 +251,23 @@ const LogisticaDashboard: React.FC = () => {
 
       {/* Desktop Left Sidebar */}
       <div className={cn(
-        "hidden md:flex flex-shrink-0 border-r transition-all duration-300",
+        "hidden md:flex flex-col flex-shrink-0 border-r transition-all duration-300",
         sidebarCollapsed ? "w-0 overflow-hidden" : "w-72 lg:w-80"
       )}>
-        <VeiculosList
-          veiculos={veiculos}
-          selectedVeiculoId={selectedVeiculo?.id}
-          onVeiculoSelect={setSelectedVeiculo}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-        />
+        <div className="p-2 border-b">
+          <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} className="w-full" />
+        </div>
+        <div className="flex-1 min-h-0">
+          <VeiculosList
+            veiculos={veiculosFiltrados}
+            selectedVeiculoId={selectedVeiculo?.id}
+            onVeiculoSelect={setSelectedVeiculo}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+          />
+        </div>
       </div>
 
       {/* Map Container */}
@@ -273,7 +278,7 @@ const LogisticaDashboard: React.FC = () => {
           </div>
         ) : (
           <LazyLogisticaMap
-            veiculos={veiculos}
+            veiculos={veiculosFiltrados}
             paradasMarcadas={paradasMarcadas}
             onVeiculoClick={(v) => {
               setSelectedVeiculo(v);
