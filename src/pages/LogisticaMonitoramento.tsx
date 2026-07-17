@@ -498,7 +498,7 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                         <div
                           key={v.id}
                           onClick={() => {
-                            setSelectedVeiculoId(isSelected ? null : v.id);
+                            zoomToVehicle(v.id);
                             setMobileVehicleListOpen(false);
                           }}
                           onDoubleClick={() => {
