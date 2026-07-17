@@ -298,7 +298,15 @@ export default function TvDashboardVeiculos() {
     };
   }, [estabelecimentoId, fetchVeiculos]);
 
-  const veiculosComPosicao = veiculos.filter(v => v.ultima_posicao);
+  const veiculosFiltrados = useMemo(() => filterByGrupo(veiculos, grupoId), [veiculos, grupoId]);
+  const veiculosComPosicao = veiculosFiltrados.filter(v => v.ultima_posicao);
+
+  // Follow mode: recentraliza no veículo fixado toda vez que houver nova posição
+  useEffect(() => {
+    if (!pinnedVeiculoId) return;
+    setFocusVeiculoId(pinnedVeiculoId);
+    setFocusTrigger(t => t + 1);
+  }, [pinnedVeiculoId, veiculos]);
 
   // Calcular veículos parados há muito tempo (mais de 30 min)
   const veiculosParadosAlerta = useMemo(() => {
