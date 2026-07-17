@@ -20700,6 +20700,7 @@ export type Database = {
           created_at: string
           descricao: string | null
           estabelecimento_id: string | null
+          grupo_id: string | null
           id: string
           motorista: string | null
           placa: string
@@ -20720,6 +20721,7 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           estabelecimento_id?: string | null
+          grupo_id?: string | null
           id?: string
           motorista?: string | null
           placa: string
@@ -20740,6 +20742,7 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           estabelecimento_id?: string | null
+          grupo_id?: string | null
           id?: string
           motorista?: string | null
           placa?: string
@@ -20760,6 +20763,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "veiculos_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
           {
