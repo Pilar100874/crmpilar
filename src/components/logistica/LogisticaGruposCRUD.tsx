@@ -58,27 +58,42 @@ export const LogisticaGruposCRUD: React.FC<Props> = ({ estabelecimentoId }) => {
   };
 
   const save = async () => {
-    if (!form.nome.trim()) {
+    if (saving) return;
+    const nome = form.nome.trim();
+    if (!nome) {
       toast.error('Informe o nome do grupo');
       return;
     }
-    const payload = {
-      nome: form.nome.trim(),
-      descricao: form.descricao.trim() || null,
-      cor: form.cor,
-      ativo: form.ativo,
-      estabelecimento_id: estabelecimentoId,
-    };
-    const { error } = editing
-      ? await supabase.from('logistica_grupos').update(payload).eq('id', editing.id)
-      : await supabase.from('logistica_grupos').insert(payload);
-    if (error) {
-      toast.error('Erro ao salvar grupo');
+    // Impede duplicidade de nome (case-insensitive), ignorando o próprio em edição
+    const dup = grupos.find(
+      g => g.nome.trim().toLowerCase() === nome.toLowerCase() && g.id !== editing?.id
+    );
+    if (dup) {
+      toast.error('Já existe um grupo com esse nome');
       return;
     }
-    toast.success('Grupo salvo');
-    setOpen(false);
-    fetchGrupos();
+    setSaving(true);
+    try {
+      const payload = {
+        nome,
+        descricao: form.descricao.trim() || null,
+        cor: form.cor,
+        ativo: form.ativo,
+        estabelecimento_id: estabelecimentoId,
+      };
+      const { error } = editing
+        ? await supabase.from('logistica_grupos').update(payload).eq('id', editing.id)
+        : await supabase.from('logistica_grupos').insert(payload);
+      if (error) {
+        toast.error('Erro ao salvar grupo');
+        return;
+      }
+      toast.success('Grupo salvo');
+      setOpen(false);
+      fetchGrupos();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const remove = async (g: Grupo) => {
