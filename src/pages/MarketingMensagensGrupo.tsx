@@ -391,7 +391,7 @@ export default function MarketingMensagensGrupo() {
       <Dialog open={showGerar} onOpenChange={setShowGerar}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Gerar 10 frases com IA</DialogTitle>
+            <DialogTitle>Gerar {Math.max(1, 10 - frases.length)} {Math.max(1, 10 - frases.length) === 1 ? "frase" : "frases"} com IA</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
