@@ -140,10 +140,16 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
         })
       );
 
-      // Enriquece com motorista atual (baseado em cv_vehicle_movements)
-      const motoristasMap = await fetchMotoristasAtuais(veiculosComStatus.map(v => v.id));
-      for (const v of veiculosComStatus) {
-        v.motorista_atual = motoristasMap[v.id] ?? null;
+      // Enriquece com motorista atual (baseado em cv_vehicle_movements).
+      // Falhas aqui NÃO devem quebrar o rastreamento — o veículo aparece
+      // normalmente mesmo sem vínculo com Controle de Veículos, apenas sem nome do motorista.
+      try {
+        const motoristasMap = await fetchMotoristasAtuais(veiculosComStatus.map(v => v.id));
+        for (const v of veiculosComStatus) {
+          v.motorista_atual = motoristasMap[v.id] ?? null;
+        }
+      } catch (e) {
+        console.warn('Falha ao buscar motoristas atuais (rastreio segue normalmente)', e);
       }
 
       setVeiculos(veiculosComStatus);
