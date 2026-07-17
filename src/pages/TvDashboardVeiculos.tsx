@@ -75,10 +75,28 @@ export default function TvDashboardVeiculos() {
   const [kmRodadosHoje, setKmRodadosHoje] = useState<Record<string, number>>({});
   const [focusVeiculoId, setFocusVeiculoId] = useState<string | null>(null);
   const [focusTrigger, setFocusTrigger] = useState(0);
+  const [pinnedVeiculoId, setPinnedVeiculoId] = useState<string | null>(null);
+  const { grupoId, setGrupoId, unidades } = useGrupoFilter();
 
   const handleFocus = useCallback((id: string) => {
     setFocusVeiculoId(id);
     setFocusTrigger(t => t + 1);
+  }, []);
+
+  const togglePin = useCallback((id: string) => {
+    setPinnedVeiculoId(prev => {
+      const next = prev === id ? null : id;
+      if (next) {
+        setFocusVeiculoId(next);
+        setFocusTrigger(t => t + 1);
+      }
+      return next;
+    });
+  }, []);
+
+  const showAll = useCallback(() => {
+    setPinnedVeiculoId(null);
+    setFocusVeiculoId(null);
   }, []);
 
   useEffect(() => {
