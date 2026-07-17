@@ -353,6 +353,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     } catch (error: any) {
       console.error('Error saving vehicle:', error);
       toast.error(error.message || 'Erro ao salvar veículo');
+    } finally {
+      setSaving(false);
     }
   };
 
