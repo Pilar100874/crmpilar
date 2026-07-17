@@ -516,6 +516,19 @@ export default function TvDashboardVeiculos() {
               {format(lastUpdate, 'HH:mm:ss', { locale: ptBR })}
             </p>
           </div>
+          <div className="bg-background/95 backdrop-blur-md rounded-xl shadow-xl">
+            <GrupoFilterSelect value={grupoId} onChange={setGrupoId} unidades={unidades} size="sm" />
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={showAll}
+            className="h-10 rounded-xl bg-background/95 backdrop-blur-md shadow-xl gap-1"
+            title="Mostrar todos os veículos no mapa"
+          >
+            <Maximize2 className="h-4 w-4" />
+            Ver todos
+          </Button>
         </div>
 
         {/* Bottom Left - Alerts */}
