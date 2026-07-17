@@ -124,7 +124,7 @@ const LogisticaConfig: React.FC<LogisticaConfigProps> = ({ embedded = false }) =
     }
   };
 
-  const copyToClipboard = async (text: string, type: 'key' | 'url' | 'token') => {
+  const copyToClipboard = async (text: string, type: 'key') => {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(type);
