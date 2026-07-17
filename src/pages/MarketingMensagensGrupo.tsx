@@ -108,14 +108,16 @@ export default function MarketingMensagensGrupo() {
   };
 
   const gerarComIA = async () => {
-    if (!grupoAtual || !activeTema) return;
+    if (!activeTema) return;
+    if (escopo === "grupo" && !grupoAtual) return;
     setShowGerar(false);
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("gerar-mensagens-grupo", {
         body: {
-          grupo: grupoAtual.nome,
-          descritivo: grupoAtual.descritivo_catalogo || "",
+          escopo,
+          grupo: escopo === "grupo" ? grupoAtual?.nome : undefined,
+          descritivo: escopo === "grupo" ? (grupoAtual?.descritivo_catalogo || "") : "",
           tema: activeTema,
           count: 10,
           complemento: complemento.trim() || undefined,
@@ -129,7 +131,7 @@ export default function MarketingMensagensGrupo() {
       const startOrdem = frases.length;
       const rows = novas.map((f, i) => ({
         estabelecimento_id: estabelecimentoId,
-        grupo_id: grupoId,
+        grupo_id: escopo === "grupo" ? grupoId : null,
         tema: activeTema,
         frase: f,
         ordem: startOrdem + i,
@@ -147,10 +149,11 @@ export default function MarketingMensagensGrupo() {
   };
 
   const salvarNova = async () => {
-    if (!newText.trim() || !grupoId || !activeTema) return;
+    if (!newText.trim() || !activeTema) return;
+    if (escopo === "grupo" && !grupoId) return;
     const { error } = await supabase.from("mensagens_grupo_produto").insert({
       estabelecimento_id: estabelecimentoId,
-      grupo_id: grupoId,
+      grupo_id: escopo === "grupo" ? grupoId : null,
       tema: activeTema,
       frase: newText.trim(),
       ordem: frases.length,
