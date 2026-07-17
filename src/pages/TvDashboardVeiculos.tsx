@@ -5,8 +5,10 @@ import { ptBR } from 'date-fns/locale';
 import { 
   Car, Gauge, Clock, MapPin, 
   WifiOff, Activity, RefreshCw,
-  Fuel, Route, Timer, Zap, ArrowLeft, X, List
+  Fuel, Route, Timer, Zap, ArrowLeft, X, List, Pin, Maximize2
 } from 'lucide-react';
+import { useGrupoFilter, filterByGrupo } from '@/lib/logistica/grupoFilter';
+import { GrupoFilterSelect } from '@/components/logistica/GrupoFilterSelect';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
