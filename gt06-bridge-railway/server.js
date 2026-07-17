@@ -77,13 +77,14 @@ function parseLocation(body) {
   const course = body.readUInt16BE(16);         // bits 0-9: heading; bits 10-15: status flags
   const heading = course & 0x03ff;
   const flags = (course >> 10) & 0x3f;
-  // GT06 status bits (após shift >>10):
-  //   bit 2 (0x04) = EW: 0=East, 1=West
-  //   bit 3 (0x08) = NS: 0=South, 1=North
-  //   bit 4 (0x10) = GPS fixed
-  const north = (flags & 0x08) !== 0;
-  const west  = (flags & 0x04) !== 0;
-  const fixed = (flags & 0x10) !== 0;
+  // GT06 course/status bits (posições ORIGINAIS no word de 16 bits):
+  //   bit 10 = 1: North latitude / 0: South
+  //   bit 11 = 1: West longitude / 0: East
+  //   bit 12 = 1: GPS positioned
+  // Após shift >>10: bit 0 = NS, bit 1 = EW, bit 2 = fix
+  const north = (flags & 0x01) !== 0;
+  const west  = (flags & 0x02) !== 0;
+  const fixed = (flags & 0x04) !== 0;
   if (!north) lat = -lat;
   if (west)   lon = -lon;
   return {
