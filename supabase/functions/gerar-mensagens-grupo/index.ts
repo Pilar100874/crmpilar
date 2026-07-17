@@ -20,8 +20,15 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY não configurada");
 
-    const n = Math.max(1, Math.min(50, Number(count) || 10));
     const existentesArr: string[] = Array.isArray(existentes) ? existentes.slice(0, 100) : [];
+    const maxPermitido = 10;
+    const vagas = Math.max(0, maxPermitido - existentesArr.length);
+    const n = Math.max(0, Math.min(vagas, Math.min(50, Number(count) || 10)));
+    if (n === 0) {
+      return new Response(JSON.stringify({ error: "Limite de 10 frases por tema atingido. Exclua algumas para gerar novas." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const sys = "Você é um copywriter brasileiro especialista em mensagens curtas para marketing. Responda SEMPRE em JSON válido no formato solicitado.";
     const user = [
