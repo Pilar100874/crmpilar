@@ -684,9 +684,21 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
                         )}
                         <span className="font-medium text-sm">{v.placa}</span>
                       </div>
-                      <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
-                        {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
-                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
+                          {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
+                        </Badge>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); togglePin(v.id); }}
+                          title={pinnedVeiculoId === v.id ? 'Desafixar' : 'Fixar no mapa'}
+                          className={cn(
+                            "p-1 rounded hover:bg-accent",
+                            pinnedVeiculoId === v.id ? 'text-primary' : 'text-muted-foreground'
+                          )}
+                        >
+                          <Pin className={cn("h-3 w-3", pinnedVeiculoId === v.id && 'fill-current')} />
+                        </button>
+                      </div>
                     </div>
                     {v.motorista_atual ? (
                       <div className="mt-1 space-y-0.5">
