@@ -799,6 +799,12 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                     <span>{veiculo.tipo_veiculo}</span>
                   </div>
                 )}
+                {unidadeNomeById[(veiculo as any).grupo_id] && (
+                  <div className="min-w-0 col-span-2">
+                    <span className="text-muted-foreground">Grupo: </span>
+                    <span>{unidadeNomeById[(veiculo as any).grupo_id]}</span>
+                  </div>
+                )}
               </div>
               {model && (
                 <div className="flex items-center gap-2 flex-wrap pt-1 border-t">
