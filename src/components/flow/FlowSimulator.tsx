@@ -2574,11 +2574,12 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       }
 
       case "mensagem_pre_definida": {
+        let semFrase = false;
         try {
           const cursorKey = `sim:${node.id}`;
           const estabelecimentoId = context.vars?.estabelecimento_id || await getEstabelecimentoId();
           if (!estabelecimentoId) {
-            addBotMessage("⚠️ Estabelecimento não identificado para buscar frase.", node.id);
+            semFrase = true;
           } else {
             const { data, error } = await supabase.functions.invoke("pick-mensagem-pre-definida", {
               body: {
@@ -2595,7 +2596,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             if ((data as any)?.error) throw new Error((data as any).error);
             const frase = data?.frase?.frase;
             if (!frase) {
-              addBotMessage("⚠️ Nenhuma frase pré-definida encontrada. Cadastre em Marketing → Mensagens pré definidas.", node.id);
+              semFrase = true;
             } else {
               if (config.outputVariable) context.vars[config.outputVariable] = frase;
               addBotMessage(
@@ -2606,12 +2607,18 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           }
         } catch (e: any) {
           console.error("[SIM] mensagem_pre_definida error:", e);
-          addBotMessage(`⚠️ Erro ao buscar frase pré-definida: ${e?.message || e}`, node.id);
+          semFrase = true;
         }
-        const nextNode = getNextNode(node.id);
+        // Roteia pela saída correta (sem_frase quando não há frase, senão default)
+        const desiredHandle = semFrase ? "sem_frase" : "default";
+        const outs = edges.filter((e) => e.source === node.id);
+        const edge = outs.find((e) => e.sourceHandle === desiredHandle)
+          || (!semFrase ? outs.find((e) => !e.sourceHandle || e.sourceHandle === "default") : undefined);
+        const nextNode = edge ? nodes.find((n) => n.id === edge.target) : null;
         if (nextNode) await executeNode(nextNode);
         break;
       }
+
 
       case "generate_ai_media": {
         const ask = interpolateVariables(config.textPrompt || "Descreva o que você quer gerar:", context);
