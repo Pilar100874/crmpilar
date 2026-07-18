@@ -2638,7 +2638,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                     contextRef.current = mediaCtx;
                     setContext(mediaCtx);
                     for (const url of urls.slice(0, variations)) {
-                      addBotMessage(mediaType === "video" ? `🎬 ${url}` : `🖼️ ${url}`, node.id);
+                      addBotMediaMessage(url, mediaType === "video" ? "video" : "image", "", node.id);
                     }
                   } else {
                     addSystemMessage("⚠️ Não consegui gerar a mídia agora. Enviei apenas o texto.");
