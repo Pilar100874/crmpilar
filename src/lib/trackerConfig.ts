@@ -17,6 +17,7 @@ export interface TrackerModelLite {
   apn_user: string | null;
   apn_password: string | null;
   sms_commands: SmsCommand[];
+  supports_bloqueio?: boolean;
 }
 
 export interface ConfigureResult {
