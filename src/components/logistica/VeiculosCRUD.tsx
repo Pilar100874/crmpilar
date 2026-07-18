@@ -33,7 +33,11 @@ interface DispositivoAprovado {
   nome_dispositivo: string | null;
   veiculo_id: string | null;
   estabelecimento_id: string | null;
+  status?: string;
+  plataforma?: string | null;
+  ultimo_acesso?: string | null;
 }
+
 
 const tipos = [
   'Pessoa',
