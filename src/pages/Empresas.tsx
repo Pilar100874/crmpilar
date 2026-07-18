@@ -2361,6 +2361,92 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               </div>
             </TabsContent>
           )}
+          {(variant === "vendedor" || variant === "transportadora") && (
+            <TabsContent value="empresas-vinculadas" className="p-6">
+              <Card className="p-6">
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Empresas Vinculadas</h3>
+                    <p className="text-sm text-muted-foreground mb-6">
+                      Vincule as empresas atendidas por {variant === "vendedor" ? "este vendedor" : "esta transportadora"}.
+                    </p>
+                  </div>
+                  {editingEmpresa ? (() => {
+                    const key = variant === "vendedor" ? "vendedor_id" : "transportadora_id";
+                    const vinculosDesta = vinculos.filter((v) => v[key] === editingEmpresa.id);
+                    const idsJaVinculados = new Set(vinculosDesta.map((v) => v.empresa_id));
+                    const empresasDisponiveis = empresas.filter((e) => !idsJaVinculados.has(e.id));
+                    return (
+                      <div className="space-y-4">
+                        <Card className="border-primary/20 bg-primary/5">
+                          <CardContent className="p-4 space-y-4">
+                            <h4 className="text-sm font-semibold">Adicionar Empresas</h4>
+                            <div className="space-y-2 max-h-[240px] overflow-y-auto border rounded-lg p-2 bg-background">
+                              {empresasDisponiveis.length === 0 && (
+                                <p className="text-xs text-muted-foreground p-2">Nenhuma empresa disponível.</p>
+                              )}
+                              {empresasDisponiveis.map((e) => (
+                                <div key={e.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
+                                  <Checkbox
+                                    id={`new-emp-${e.id}`}
+                                    checked={novasEmpresasVinculo.includes(e.id)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) setNovasEmpresasVinculo([...novasEmpresasVinculo, e.id]);
+                                      else setNovasEmpresasVinculo(novasEmpresasVinculo.filter((id) => id !== e.id));
+                                    }}
+                                  />
+                                  <label htmlFor={`new-emp-${e.id}`} className="text-sm cursor-pointer flex-1">
+                                    {e.nome_fantasia || e.nome}
+                                    {e.cnpj && <span className="text-xs text-muted-foreground ml-2">{e.cnpj}</span>}
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                            <Button onClick={handleAdicionarEmpresasVinculo} className="w-full" size="sm">
+                              <Plus className="w-4 h-4 mr-2" />
+                              Adicionar Empresas Selecionadas
+                            </Button>
+                          </CardContent>
+                        </Card>
+                        <div>
+                          <h4 className="text-sm font-semibold mb-3">Empresas Vinculadas ({vinculosDesta.length})</h4>
+                          {vinculosDesta.length > 0 ? (
+                            <div className="space-y-2">
+                              {vinculosDesta.map((v) => {
+                                const emp = empresas.find((x) => x.id === v.empresa_id);
+                                return (
+                                  <div key={v.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors">
+                                    <div>
+                                      <p className="text-sm font-medium">{emp?.nome_fantasia || emp?.nome || "Empresa não encontrada"}</p>
+                                      {emp?.cnpj && <p className="text-xs text-muted-foreground">{emp.cnpj}</p>}
+                                    </div>
+                                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoverVinculoSimples(v.id)}>
+                                      <Trash2 className="w-4 h-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="p-4 border rounded-lg bg-muted/30 text-center">
+                              <p className="text-sm text-muted-foreground">Nenhuma empresa vinculada</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })() : (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      Salve primeiro para gerenciar as empresas vinculadas.
+                    </p>
+                  )}
+                </div>
+              </Card>
+              <div className="flex justify-end gap-3 mt-6">
+                <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">Fechar</Button>
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
         </div>
         </div>
