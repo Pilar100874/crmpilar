@@ -80,6 +80,10 @@ const ListasHub: React.FC = () => {
         return <Contatos />;
       case 'empresas':
         return <Empresas />;
+      case 'vendedores':
+        return <Empresas variant="vendedor" />;
+      case 'transportadoras':
+        return <Empresas variant="transportadora" />;
       case 'todos':
         return <Todos />;
       case 'vinculos-empresas':
