@@ -394,11 +394,20 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   }, [location.state, searchParams, empresas]);
 
   const fetchEmpresas = async (estabId: string) => {
-    const { data, error } = await supabase
+    let query = supabase
       .from('empresas')
       .select('*')
       .eq('estabelecimento_id', estabId)
       .order('nome_fantasia');
+
+    if (variant === "empresa") {
+      // Excluir vendedores e transportadoras da lista de empresas
+      query = query.not('tipo_cliente', 'in', '("vendedor","transportadora")');
+    } else {
+      query = query.eq('tipo_cliente', entityConfig.tipo_cliente);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Erro ao carregar empresas:', error);
