@@ -130,7 +130,7 @@ export function MobileAppCard() {
           <div className="space-y-1">
             <p><b>Atualização automática:</b> toda vez que abrir o app, ele carrega a versão mais nova. Nunca precisa reinstalar.</p>
             <p><b>Push notifications:</b> após instalar, ative as notificações em <Link to="/config/push" className="text-primary underline">Configurações → Push</Link>.</p>
-            <p><b>Rastreamento:</b> para enviar sua localização, abra o app instalado, faça login e permita o acesso à localização quando o navegador solicitar. O administrador aprova o dispositivo em <b>Logística → Veículos</b> — o usuário não precisa aprovar nada no Perfil.</p>
+            <p><b>Rastreamento:</b> para enviar sua localização, abra o app instalado, faça login e ative o <b>Envio de Localização</b> em <Link to="/perfil" className="text-primary underline">Perfil</Link> (concedendo a permissão do navegador). Só depois disso o dispositivo aparece em <b>Logística → Veículos</b> para o administrador aprovar e vincular a um veículo/pessoa.</p>
             <p><b>Só funciona em produção:</b> instale a partir de <code>crmpilar.lovable.app</code> ou do seu domínio publicado — não pelo editor Lovable.</p>
           </div>
         </div>
