@@ -4923,6 +4923,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     
     setMessages([]);
     const emptyContext = {};
+    contextRef.current = emptyContext;
     setContext(emptyContext);
     onContextChange?.(emptyContext); // Notifica imediatamente o reset
     setIsWaitingInput(true); // Habilitar input desde o início
