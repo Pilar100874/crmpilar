@@ -827,7 +827,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         estado: formData.state,
         cep: formData.cep,
         bairro: formData.neighborhood || null,
-        tipo_cliente: formData.tipo_cliente || "B2B",
+        tipo_cliente: variant !== "empresa" ? entityConfig.tipo_cliente : (formData.tipo_cliente || "B2B"),
         custom_fields: customFieldsData,
         emails_vinculados: emailsVinculados,
         whatsapps_vinculados: whatsappsVinculados
