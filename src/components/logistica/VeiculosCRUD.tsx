@@ -720,17 +720,19 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                         </Tooltip>
                       </TooltipProvider>
                     )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Bloqueio de combustível"
-                      onClick={() => {
-                        setVeiculoBloqueio(veiculo);
-                        setBloqueioOpen(true);
-                      }}
-                    >
-                      <Fuel className="h-4 w-4 text-amber-600" />
-                    </Button>
+                    {model?.supports_bloqueio && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Bloqueio de combustível"
+                        onClick={() => {
+                          setVeiculoBloqueio(veiculo);
+                          setBloqueioOpen(true);
+                        }}
+                      >
+                        <Fuel className="h-4 w-4 text-amber-600" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
