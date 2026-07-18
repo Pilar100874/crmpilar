@@ -112,7 +112,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     try {
       const { data, error } = await supabase
         .from('tracker_device_models')
-        .select('id,nome,protocolo,porta,host,senha_padrao,apn,apn_user,apn_password,sms_commands')
+        .select('id,nome,protocolo,porta,host,senha_padrao,apn,apn_user,apn_password,sms_commands,supports_bloqueio')
         .eq('estabelecimento_id', estabelecimentoId)
         .eq('ativo', true)
         .order('ordem', { ascending: true });
