@@ -2602,7 +2602,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           addBotMessage("⚠️ Erro ao buscar frase pré-definida.", node.id);
         }
         const nextNode = getNextNode(node.id);
-        if (nextNode) await executeNode(nextNode, context);
+        if (nextNode) await executeNode(nextNode);
         break;
       }
 
