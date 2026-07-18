@@ -27,6 +27,7 @@ import Empresas from './Empresas';
 import Todos from './Todos';
 import VinculosEmpresas from './VinculosEmpresas';
 import VinculosContatos from './VinculosContatos';
+import VinculosEmpresaVendedor from './VinculosEmpresaVendedor';
 import MapaClientesView from '@/components/listas/MapaClientesView';
 import { ProspeccaoB2BView } from '@/components/listas/prospeccao-b2b';
 
