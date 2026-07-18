@@ -545,6 +545,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       basePrompt: "",
       variations: 4,
       outputVariable: "midia_selecionada",
+    },
   },
   {
     type: "mensagem_pre_definida",
@@ -553,13 +554,13 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     icon: "MessageSquareText",
     color: "text-fuchsia-600",
     defaultData: {
-      escopo: "qualquer",           // "qualquer" | "geral" | "grupo"
+      escopo: "qualquer",
       grupoId: "",
       tema: "",
-      modoSelecao: "rotacao",        // "fixa" | "rotacao" | "aleatoria"
+      modoSelecao: "rotacao",
       fraseId: "",
-      apresentacao: "texto",         // "texto" | "midia"
-      mediaType: "image",             // quando apresentacao=midia
+      apresentacao: "texto",
+      mediaType: "image",
       styleSource: "visual_identity",
       preset: "",
       variations: 4,
@@ -567,7 +568,6 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       basePrompt: "",
       outputVariable: "frase_pre_definida",
     },
-  },
   },
   // Disparo direto WhatsApp
   {
