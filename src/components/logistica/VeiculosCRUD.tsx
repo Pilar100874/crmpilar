@@ -297,14 +297,19 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
 
         // Then link the selected device (if any) — auto-aprova se ainda estava pendente
         if (formData.dispositivo_id) {
-          await supabase
+          const { error: dispErr } = await supabase
             .from('dispositivos_rastreamento')
             .update({
               veiculo_id: veiculoId,
               status: 'aprovado',
+              estabelecimento_id: estabelecimentoId,
               aprovado_em: new Date().toISOString(),
             })
             .eq('id', formData.dispositivo_id);
+          if (dispErr) {
+            console.error('Erro ao ativar dispositivo:', dispErr);
+            toast.error('Vínculo salvo, mas não foi possível ativar o dispositivo: ' + dispErr.message);
+          }
         }
 
       }
