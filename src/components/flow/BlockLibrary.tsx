@@ -20,7 +20,7 @@ const blockCategories = [
   {
     name: "IA & Criação",
     icon: "Sparkles",
-    blocks: ["ai_agent", "generate_ai_media", "content_type", "text_content", "ask_influencer", "ask_product_image"] as NodeType[],
+    blocks: ["ai_agent", "generate_ai_media", "mensagem_pre_definida", "content_type", "text_content", "ask_influencer", "ask_product_image"] as NodeType[],
   },
   {
     name: "Mensagens",

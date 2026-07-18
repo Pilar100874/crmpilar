@@ -63,7 +63,8 @@ export type NodeType =
   | "carousel"
   | "attach_catalog"
   | "global_redirect"
-  | "disparar_push";
+  | "disparar_push"
+  | "mensagem_pre_definida";
 
 
 export interface BlockDefinition {
@@ -544,6 +545,28 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       basePrompt: "",
       variations: 4,
       outputVariable: "midia_selecionada",
+    },
+  },
+  {
+    type: "mensagem_pre_definida",
+    label: "Mensagem Pré Definida",
+    description: "Pega uma frase cadastrada em Mensagens Pré Definidas (texto ou imagem/vídeo com IA)",
+    icon: "MessageSquareText",
+    color: "text-fuchsia-600",
+    defaultData: {
+      escopo: "qualquer",
+      grupoId: "",
+      tema: "",
+      modoSelecao: "rotacao",
+      fraseId: "",
+      apresentacao: "texto",
+      mediaType: "image",
+      styleSource: "visual_identity",
+      preset: "",
+      variations: 4,
+      aspectRatio: "1:1",
+      basePrompt: "",
+      outputVariable: "frase_pre_definida",
     },
   },
   // Disparo direto WhatsApp

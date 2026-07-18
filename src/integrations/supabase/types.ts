@@ -1797,6 +1797,38 @@ export type Database = {
           },
         ]
       }
+      bot_frase_uso: {
+        Row: {
+          cursor_key: string
+          estabelecimento_id: string
+          frase_id: string
+          id: string
+          used_at: string
+        }
+        Insert: {
+          cursor_key: string
+          estabelecimento_id: string
+          frase_id: string
+          id?: string
+          used_at?: string
+        }
+        Update: {
+          cursor_key?: string
+          estabelecimento_id?: string
+          frase_id?: string
+          id?: string
+          used_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_frase_uso_frase_id_fkey"
+            columns: ["frase_id"]
+            isOneToOne: false
+            referencedRelation: "mensagens_grupo_produto"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendario_regras: {
         Row: {
           ativa: boolean
