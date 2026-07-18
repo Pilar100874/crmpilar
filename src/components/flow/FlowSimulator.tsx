@@ -2577,7 +2577,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         let semFrase = false;
         try {
           const cursorKey = `sim:${node.id}`;
-          const estabelecimentoId = context.vars?.estabelecimento_id || await getEstabelecimentoId();
+          const estabelecimentoId = contextRef.current.estabelecimento_id || await getEstabelecimentoId();
           if (!estabelecimentoId) {
             semFrase = true;
           } else {
@@ -2598,8 +2598,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             if (!frase) {
               semFrase = true;
             } else {
-              if (config.outputVariable) context.vars[config.outputVariable] = frase;
-              context.vars.last_mensagem_pre_definida = frase;
+              const newCtx = {
+                ...contextRef.current,
+                ...(config.outputVariable ? { [config.outputVariable]: frase } : {}),
+                last_mensagem_pre_definida: frase,
+              };
+              contextRef.current = newCtx;
+              setContext(newCtx);
 
               if ((config.apresentacao || "texto") === "midia") {
                 // Gera mídia com a frase como texto principal
@@ -2625,8 +2630,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                     ? genData.images.filter(Boolean)
                     : (genData?.items || genData?.results || []).map((it: any) => it?.url).filter(Boolean);
                   if (urls.length) {
-                    context.vars.last_generated_media_url = urls[0];
-                    context.vars.last_generated_media_urls = urls;
+                    const mediaCtx = {
+                      ...contextRef.current,
+                      last_generated_media_url: urls[0],
+                      last_generated_media_urls: urls,
+                    };
+                    contextRef.current = mediaCtx;
+                    setContext(mediaCtx);
                     for (const url of urls.slice(0, variations)) {
                       addBotMessage(mediaType === "video" ? `🎬 ${url}` : `🖼️ ${url}`, node.id);
                     }
@@ -4913,6 +4923,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     
     setMessages([]);
     const emptyContext = {};
+    contextRef.current = emptyContext;
     setContext(emptyContext);
     onContextChange?.(emptyContext); // Notifica imediatamente o reset
     setIsWaitingInput(true); // Habilitar input desde o início
