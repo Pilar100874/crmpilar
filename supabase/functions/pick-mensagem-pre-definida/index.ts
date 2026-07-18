@@ -70,7 +70,7 @@ serve(async (req) => {
       .eq("ativo", true);
     if (escopo === "geral") q = q.is("grupo_id", null);
     else if (escopo === "grupo" && grupoId) q = q.eq("grupo_id", grupoId);
-    if (tema) q = q.eq("tema", tema);
+    if (tema) q = q.ilike("tema", tema);
 
     const { data: elig, error: eErr } = await q;
     if (eErr) throw eErr;
