@@ -362,7 +362,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         }
       }
 
-      toast.success(selectedVeiculo ? 'Veículo atualizado' : 'Veículo criado');
+      toast.success(selectedVeiculo ? 'Veículo / Pessoa atualizado' : 'Veículo / Pessoa criado');
       setDialogOpen(false);
       fetchVeiculos();
       fetchDispositivos();
