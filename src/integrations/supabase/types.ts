@@ -5893,6 +5893,7 @@ export type Database = {
           segmento_id: string | null
           updated_at: string | null
           usuario_id: string | null
+          vendedor_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -5902,6 +5903,7 @@ export type Database = {
           segmento_id?: string | null
           updated_at?: string | null
           usuario_id?: string | null
+          vendedor_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -5911,6 +5913,7 @@ export type Database = {
           segmento_id?: string | null
           updated_at?: string | null
           usuario_id?: string | null
+          vendedor_id?: string | null
         }
         Relationships: [
           {
@@ -5932,6 +5935,13 @@ export type Database = {
             columns: ["usuario_id"]
             isOneToOne: false
             referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empresa_vinculos_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
             referencedColumns: ["id"]
           },
         ]

@@ -1,0 +1,2 @@
+ALTER TABLE public.empresa_vinculos ADD COLUMN IF NOT EXISTS vendedor_id uuid REFERENCES public.empresas(id) ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS idx_empresa_vinculos_vendedor_id ON public.empresa_vinculos(vendedor_id);
