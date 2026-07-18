@@ -945,8 +945,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 <label className="flex items-start gap-2 border rounded-md p-2 cursor-pointer hover:bg-muted/40">
                   <RadioGroupItem value="app" id="dev-app" className="mt-0.5" />
                   <div className="text-xs">
-                    <div className="font-medium flex items-center gap-1"><Smartphone className="h-3 w-3" /> App aprovado</div>
-                    <div className="text-muted-foreground">Celular com Traccar Client/OsmAnd ou app Pilar.</div>
+                    <div className="font-medium flex items-center gap-1"><Smartphone className="h-3 w-3" /> App / PWA Pilar</div>
+                    <div className="text-muted-foreground">Celular com PWA Pilar instalado, Traccar Client ou OsmAnd.</div>
                   </div>
                 </label>
                 <label className="flex items-start gap-2 border rounded-md p-2 cursor-pointer hover:bg-muted/40">
