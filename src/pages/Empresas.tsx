@@ -68,9 +68,15 @@ interface Contato {
 
 interface EmpresasProps {
   hideAdminButtons?: boolean;
+  variant?: "empresa" | "vendedor" | "transportadora";
 }
 
-export default function Empresas({ hideAdminButtons = false }: EmpresasProps) {
+export default function Empresas({ hideAdminButtons = false, variant = "empresa" }: EmpresasProps) {
+  const entityConfig = {
+    empresa: { singular: "Empresa", plural: "Empresas", tipo_cliente: "B2B", subtitle: "Gerencie sua carteira de clientes", showSegmento: true, showTipoCliente: true },
+    vendedor: { singular: "Vendedor", plural: "Vendedores", tipo_cliente: "vendedor", subtitle: "Gerencie seus vendedores", showSegmento: true, showTipoCliente: false },
+    transportadora: { singular: "Transportadora", plural: "Transportadoras", tipo_cliente: "transportadora", subtitle: "Gerencie suas transportadoras", showSegmento: false, showTipoCliente: false },
+  }[variant];
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [showForm, setShowForm] = useState(false);
@@ -388,11 +394,20 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   }, [location.state, searchParams, empresas]);
 
   const fetchEmpresas = async (estabId: string) => {
-    const { data, error } = await supabase
+    let query = supabase
       .from('empresas')
       .select('*')
       .eq('estabelecimento_id', estabId)
       .order('nome_fantasia');
+
+    if (variant === "empresa") {
+      // Excluir vendedores e transportadoras da lista de empresas
+      query = query.not('tipo_cliente', 'in', '("vendedor","transportadora")');
+    } else {
+      query = query.eq('tipo_cliente', entityConfig.tipo_cliente);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Erro ao carregar empresas:', error);
@@ -812,7 +827,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         estado: formData.state,
         cep: formData.cep,
         bairro: formData.neighborhood || null,
-        tipo_cliente: formData.tipo_cliente || "B2B",
+        tipo_cliente: variant !== "empresa" ? entityConfig.tipo_cliente : (formData.tipo_cliente || "B2B"),
         custom_fields: customFieldsData,
         emails_vinculados: emailsVinculados,
         whatsapps_vinculados: whatsappsVinculados
@@ -1387,8 +1402,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         <div className="border-b bg-card/80 backdrop-blur-sm px-3 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-foreground">Empresas</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">Gerencie sua carteira de clientes</p>
+              <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-foreground">{entityConfig.plural}</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">{entityConfig.subtitle}</p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
               <Button onClick={() => {
@@ -1399,7 +1414,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 setCriarNovoContato(false);
               }} className="gap-2 shadow-sm text-xs sm:text-sm h-9 sm:h-10">
                 <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                Nova Empresa
+                {variant === "empresa" ? "Nova Empresa" : (variant === "vendedor" ? "Novo Vendedor" : "Nova Transportadora")}
               </Button>
               {!hideAdminButtons && (
                 <Button 
@@ -1678,10 +1693,10 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-light tracking-tight text-foreground">
-              {editingEmpresa ? "Editar Empresa" : "Nova Empresa"}
+              {editingEmpresa ? `Editar ${entityConfig.singular}` : `${variant === "transportadora" ? "Nova" : (variant === "vendedor" ? "Novo" : "Nova")} ${entityConfig.singular}`}
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              {editingEmpresa ? "Atualize as informações da empresa" : "Preencha os dados da nova empresa"}
+              {editingEmpresa ? `Atualize as informações` : `Preencha os dados`}
             </p>
           </div>
         </div>
@@ -1694,7 +1709,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               value="empresa"
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
             >
-              Dados da Empresa
+              Dados {variant === "empresa" ? "da Empresa" : (variant === "vendedor" ? "do Vendedor" : "da Transportadora")}
             </TabsTrigger>
             <TabsTrigger 
               value="contatos"
@@ -1703,12 +1718,14 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             >
               Contatos Vinculados
             </TabsTrigger>
-            <TabsTrigger 
-              value="vinculos"
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-            >
-              Segmentos
-            </TabsTrigger>
+            {entityConfig.showSegmento && (
+              <TabsTrigger 
+                value="vinculos"
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+              >
+                Segmentos
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="empresa" className="space-y-6">
