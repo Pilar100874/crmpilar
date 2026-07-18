@@ -184,15 +184,137 @@ export const MensagemPreDefinidaConfig = ({ config, handleConfigChange }: Props)
       </div>
 
       {apresentacao === "midia" && (
-        <div className="space-y-3 rounded-md border border-dashed p-3 bg-muted/20">
+        <div className="space-y-4 rounded-md border border-dashed p-3 bg-muted/20">
+          {/* 1. Tipo de mídia (cards) */}
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold">1. Tipo de mídia</Label>
+            <RadioGroup
+              value={mediaType}
+              onValueChange={(v) => {
+                handleConfigChange("mediaType", v);
+                // limpa preset se não for do tipo escolhido
+                if (config.preset) {
+                  const cur = allSystemPresets.find((p) => p.id === config.preset);
+                  if (!cur || cur.mediaType !== v) {
+                    handleConfigChange("preset", "");
+                    handleConfigChange("presetName", "");
+                  }
+                }
+              }}
+              className="grid grid-cols-2 gap-2"
+            >
+              <label className={`flex items-center gap-2 p-2 rounded-lg border-2 cursor-pointer ${mediaType === "image" ? "border-primary bg-primary/10" : "border-border"}`}>
+                <RadioGroupItem value="image" />
+                <ImageIcon className="h-4 w-4" />
+                <span className="text-xs font-medium">Imagem</span>
+              </label>
+              <label className={`flex items-center gap-2 p-2 rounded-lg border-2 cursor-pointer ${mediaType === "video" ? "border-primary bg-primary/10" : "border-border"}`}>
+                <RadioGroupItem value="video" />
+                <Video className="h-4 w-4" />
+                <span className="text-xs font-medium">Vídeo</span>
+              </label>
+            </RadioGroup>
+          </div>
+
+          {/* 2. Estilo visual (mesmo padrão do Gerar Mídia IA) */}
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold">2. Estilo visual</Label>
+            <RadioGroup
+              value={styleSource}
+              onValueChange={(v) => {
+                handleConfigChange("styleSource", v);
+                if (v !== "preset") {
+                  handleConfigChange("preset", "");
+                  handleConfigChange("presetName", "");
+                }
+              }}
+              className="space-y-1"
+            >
+              <label className={`flex items-center gap-2 p-2 rounded-lg border-2 cursor-pointer ${styleSource === "visual_identity" ? "border-primary bg-primary/10" : "border-border"}`}>
+                <RadioGroupItem value="visual_identity" />
+                <span className="text-xs font-medium">Usar Identidade Visual da marca</span>
+              </label>
+              <label className={`flex items-center gap-2 p-2 rounded-lg border-2 cursor-pointer ${styleSource === "preset" ? "border-primary bg-primary/10" : "border-border"}`}>
+                <RadioGroupItem value="preset" />
+                <span className="text-xs font-medium">Selecionar um preset pronto</span>
+              </label>
+              <label className={`flex items-center gap-2 p-2 rounded-lg border-2 cursor-pointer ${styleSource === "none" ? "border-primary bg-primary/10" : "border-border"}`}>
+                <RadioGroupItem value="none" />
+                <span className="text-xs font-medium">Nenhum estilo específico</span>
+              </label>
+            </RadioGroup>
+
+            {styleSource === "preset" && (
+              <>
+                {presetsForType.length === 0 && (
+                  <p className="text-[10px] text-muted-foreground">
+                    Nenhum preset disponível para {mediaType === "video" ? "vídeo" : "imagem"}.
+                  </p>
+                )}
+                <div className="grid grid-cols-2 gap-2 max-h-[320px] overflow-y-auto pr-1">
+                  {presetsForType.map((p) => {
+                    const isSelected = config.preset === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => handlePresetChange(p.id)}
+                        className={`group relative rounded-lg overflow-hidden border-2 text-left transition ${
+                          isSelected ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <div className="aspect-video bg-muted/40 overflow-hidden">
+                          {p.image ? (
+                            <img
+                              src={p.image}
+                              alt={p.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                              <Sparkles className="h-5 w-5" />
+                            </div>
+                          )}
+                        </div>
+                        {p.bestSeller && (
+                          <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-500/90 text-white">
+                            🏆 Top
+                          </span>
+                        )}
+                        {isSelected && (
+                          <span className="absolute top-1 right-1 p-1 rounded-full bg-primary text-primary-foreground">
+                            <Check className="h-3 w-3" />
+                          </span>
+                        )}
+                        <div className="p-1.5 bg-background">
+                          <p className="text-[11px] font-medium leading-tight line-clamp-1">{p.name}</p>
+                          <p className="text-[9px] text-muted-foreground line-clamp-1">{p.category}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedPreset && (
+                  <p className="text-[10px] text-muted-foreground">
+                    {selectedPreset.tags.slice(0, 4).map((t) => `#${t}`).join(" ")}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* 3. Proporção e variações */}
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
-              <Label className="text-xs">Tipo de mídia</Label>
-              <Select value={config.mediaType || "image"} onValueChange={(v) => handleConfigChange("mediaType", v)}>
+              <Label className="text-xs">Proporção</Label>
+              <Select value={config.aspectRatio || "1:1"} onValueChange={(v) => handleConfigChange("aspectRatio", v)}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="image" className="text-xs"><ImageIcon className="h-3 w-3 inline mr-1" /> Imagem</SelectItem>
-                  <SelectItem value="video" className="text-xs"><Video className="h-3 w-3 inline mr-1" /> Vídeo</SelectItem>
+                  <SelectItem value="1:1" className="text-xs">1:1 (quadrado)</SelectItem>
+                  <SelectItem value="9:16" className="text-xs">9:16 (story)</SelectItem>
+                  <SelectItem value="16:9" className="text-xs">16:9 (feed horizontal)</SelectItem>
+                  <SelectItem value="4:5" className="text-xs">4:5 (feed vertical)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -207,44 +329,7 @@ export const MensagemPreDefinidaConfig = ({ config, handleConfigChange }: Props)
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <Label className="text-xs">Estilo</Label>
-              <Select value={config.styleSource || "visual_identity"} onValueChange={(v) => handleConfigChange("styleSource", v)}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="visual_identity" className="text-xs">Identidade Visual</SelectItem>
-                  <SelectItem value="preset" className="text-xs">Preset pronto</SelectItem>
-                  <SelectItem value="none" className="text-xs">Nenhum</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Proporção</Label>
-              <Select value={config.aspectRatio || "1:1"} onValueChange={(v) => handleConfigChange("aspectRatio", v)}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1:1" className="text-xs">1:1 (quadrado)</SelectItem>
-                  <SelectItem value="9:16" className="text-xs">9:16 (story)</SelectItem>
-                  <SelectItem value="16:9" className="text-xs">16:9 (feed horizontal)</SelectItem>
-                  <SelectItem value="4:5" className="text-xs">4:5 (feed vertical)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {config.styleSource === "preset" && (
-            <div className="space-y-1">
-              <Label className="text-xs">Preset</Label>
-              <Select value={config.preset || "none"} onValueChange={(v) => handleConfigChange("preset", v === "none" ? "" : v)}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {PRESETS.map((p) => <SelectItem key={p.value} value={p.value} className="text-xs">{p.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
+          {/* 4. Instruções extras */}
           <div className="space-y-1">
             <Label className="text-xs">Instruções extras para a IA (opcional)</Label>
             <Textarea
