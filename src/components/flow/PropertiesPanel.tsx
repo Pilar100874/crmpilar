@@ -425,6 +425,8 @@ export const PropertiesPanel = ({
       // IA - Geração de Mídia
       case "generate_ai_media":
         return <BlockConfigs.GenerateAIMediaConfig {...configProps} />;
+      case "mensagem_pre_definida":
+        return <BlockConfigs.MensagemPreDefinidaConfig {...configProps} />;
 
       // Disparo direto / Loops
       case "send_whatsapp_to_number":
