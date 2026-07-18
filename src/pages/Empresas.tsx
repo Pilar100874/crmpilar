@@ -429,6 +429,15 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       setUsuarios(usuariosData || []);
     }
 
+    // Carregar vendedores (empresas com tipo_cliente = vendedor)
+    const { data: vendedoresData } = await supabase
+      .from('empresas')
+      .select('id, nome_fantasia, nome')
+      .eq('estabelecimento_id', estabId)
+      .eq('tipo_cliente', 'vendedor')
+      .order('nome_fantasia');
+    setVendedoresLista(vendedoresData || []);
+
     // Carregar vínculos
     const { data: vinculosData, error: vinculosError } = await supabase
       .from('empresa_vinculos')
@@ -439,6 +448,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       setVinculos(vinculosData || []);
     }
   };
+
 
   const fetchContatos = async (estabId: string) => {
     const { data, error } = await supabase
