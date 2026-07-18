@@ -68,9 +68,15 @@ interface Contato {
 
 interface EmpresasProps {
   hideAdminButtons?: boolean;
+  variant?: "empresa" | "vendedor" | "transportadora";
 }
 
-export default function Empresas({ hideAdminButtons = false }: EmpresasProps) {
+export default function Empresas({ hideAdminButtons = false, variant = "empresa" }: EmpresasProps) {
+  const entityConfig = {
+    empresa: { singular: "Empresa", plural: "Empresas", tipo_cliente: "B2B", subtitle: "Gerencie sua carteira de clientes", showSegmento: true, showTipoCliente: true },
+    vendedor: { singular: "Vendedor", plural: "Vendedores", tipo_cliente: "vendedor", subtitle: "Gerencie seus vendedores", showSegmento: true, showTipoCliente: false },
+    transportadora: { singular: "Transportadora", plural: "Transportadoras", tipo_cliente: "transportadora", subtitle: "Gerencie suas transportadoras", showSegmento: false, showTipoCliente: false },
+  }[variant];
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [showForm, setShowForm] = useState(false);
