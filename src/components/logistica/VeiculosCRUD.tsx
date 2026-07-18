@@ -945,8 +945,8 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 <label className="flex items-start gap-2 border rounded-md p-2 cursor-pointer hover:bg-muted/40">
                   <RadioGroupItem value="app" id="dev-app" className="mt-0.5" />
                   <div className="text-xs">
-                    <div className="font-medium flex items-center gap-1"><Smartphone className="h-3 w-3" /> App aprovado</div>
-                    <div className="text-muted-foreground">Celular com Traccar Client/OsmAnd ou app Pilar.</div>
+                    <div className="font-medium flex items-center gap-1"><Smartphone className="h-3 w-3" /> App / PWA Pilar</div>
+                    <div className="text-muted-foreground">Celular com PWA Pilar instalado, Traccar Client ou OsmAnd.</div>
                   </div>
                 </label>
                 <label className="flex items-start gap-2 border rounded-md p-2 cursor-pointer hover:bg-muted/40">
@@ -1015,6 +1015,18 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                     >
                       {urlCopiada ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
                     </Button>
+                  </div>
+                  <div className="pt-2 border-t space-y-1">
+                    <div className="font-medium">Downloads dos apps:</div>
+                    <div className="flex flex-wrap gap-2">
+                      <a href="https://crmpilar.lovable.app" target="_blank" rel="noreferrer" className="underline text-primary">PWA Pilar (instalar)</a>
+                      <span className="text-muted-foreground">•</span>
+                      <a href="https://play.google.com/store/apps/details?id=org.traccar.client" target="_blank" rel="noreferrer" className="underline text-primary">Traccar Client (Android)</a>
+                      <span className="text-muted-foreground">•</span>
+                      <a href="https://apps.apple.com/app/traccar-client/id843156974" target="_blank" rel="noreferrer" className="underline text-primary">Traccar Client (iOS)</a>
+                      <span className="text-muted-foreground">•</span>
+                      <a href="https://play.google.com/store/apps/details?id=net.osmand" target="_blank" rel="noreferrer" className="underline text-primary">OsmAnd (Android)</a>
+                    </div>
                   </div>
                 </div>
               </div>
