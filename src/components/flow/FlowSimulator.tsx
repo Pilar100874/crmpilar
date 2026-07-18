@@ -2576,30 +2576,37 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       case "mensagem_pre_definida": {
         try {
           const cursorKey = `sim:${node.id}`;
-          const { data, error } = await supabase.functions.invoke("pick-mensagem-pre-definida", {
-            body: {
-              estabelecimentoId: context.vars?.estabelecimento_id,
-              escopo: config.escopo || "qualquer",
-              grupoId: config.grupoId || undefined,
-              tema: config.tema || undefined,
-              modoSelecao: config.modoSelecao || "rotacao",
-              fraseId: config.fraseId || undefined,
-              cursorKey,
-            },
-          });
-          if (error) throw error;
-          const frase = data?.frase?.frase;
-          if (!frase) {
-            addBotMessage("⚠️ Nenhuma frase pré-definida encontrada.", node.id);
+          const estabelecimentoId = context.vars?.estabelecimento_id || await getEstabelecimentoId();
+          if (!estabelecimentoId) {
+            addBotMessage("⚠️ Estabelecimento não identificado para buscar frase.", node.id);
           } else {
-            if (config.outputVariable) context.vars[config.outputVariable] = frase;
-            addBotMessage(
-              (config.apresentacao === "midia" ? "[Simulação: geraria mídia com a frase]\n" : "") + frase,
-              node.id,
-            );
+            const { data, error } = await supabase.functions.invoke("pick-mensagem-pre-definida", {
+              body: {
+                estabelecimentoId,
+                escopo: config.escopo || "qualquer",
+                grupoId: config.grupoId || undefined,
+                tema: config.tema || undefined,
+                modoSelecao: config.modoSelecao || "rotacao",
+                fraseId: config.fraseId || undefined,
+                cursorKey,
+              },
+            });
+            if (error) throw error;
+            if ((data as any)?.error) throw new Error((data as any).error);
+            const frase = data?.frase?.frase;
+            if (!frase) {
+              addBotMessage("⚠️ Nenhuma frase pré-definida encontrada. Cadastre em Marketing → Mensagens pré definidas.", node.id);
+            } else {
+              if (config.outputVariable) context.vars[config.outputVariable] = frase;
+              addBotMessage(
+                (config.apresentacao === "midia" ? "[Simulação: geraria mídia com a frase]\n" : "") + frase,
+                node.id,
+              );
+            }
           }
-        } catch (e) {
-          addBotMessage("⚠️ Erro ao buscar frase pré-definida.", node.id);
+        } catch (e: any) {
+          console.error("[SIM] mensagem_pre_definida error:", e);
+          addBotMessage(`⚠️ Erro ao buscar frase pré-definida: ${e?.message || e}`, node.id);
         }
         const nextNode = getNextNode(node.id);
         if (nextNode) await executeNode(nextNode);
