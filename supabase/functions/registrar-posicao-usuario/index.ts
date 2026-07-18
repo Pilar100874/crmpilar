@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     // Resolve usuario.id + estabelecimento
     const { data: usuario, error: uErr } = await supabase
       .from("usuarios")
-      .select("id, estabelecimento_id")
+      .select("id, estabelecimento_id, nome")
       .eq("auth_user_id", user.id)
       .maybeSingle();
 
@@ -65,6 +65,21 @@ Deno.serve(async (req) => {
     const device = body?.device;
     if (device?.device_uuid) {
       const nowIso = new Date().toISOString();
+      // Resumo do dispositivo a partir do UA
+      const ua = String(device.modelo ?? "");
+      let resumo = "Dispositivo";
+      if (/iPhone/i.test(ua)) resumo = "iPhone";
+      else if (/iPad/i.test(ua)) resumo = "iPad";
+      else if (/Android/i.test(ua)) {
+        const m = ua.match(/Android[^;)]*;\s*[^;]*;\s*([^);]+)/) || ua.match(/;\s*([^;)]+)\s*Build/i);
+        resumo = (m?.[1] || "Android").trim().slice(0, 40);
+      } else if (/Windows/i.test(ua)) resumo = "Windows";
+      else if (/Macintosh|Mac OS/i.test(ua)) resumo = "Mac";
+      else if (/Linux/i.test(ua)) resumo = "Linux";
+
+      const nomeUsuario = (usuario as any).nome || "Usuário";
+      const nomeDispositivo = `${nomeUsuario} - ${resumo}`.slice(0, 100);
+
       // Usa service role para bypass de RLS (dispositivos podem exigir permissão)
       const admin = createClient(
         Deno.env.get("SUPABASE_URL")!,
@@ -79,13 +94,18 @@ Deno.serve(async (req) => {
       if (existente?.id) {
         await admin
           .from("dispositivos_rastreamento")
-          .update({ ultimo_acesso: nowIso, plataforma: device.plataforma ?? null, modelo: device.modelo ?? null })
+          .update({
+            ultimo_acesso: nowIso,
+            plataforma: device.plataforma ?? null,
+            modelo: device.modelo ?? null,
+            nome_dispositivo: nomeDispositivo,
+          })
           .eq("id", existente.id);
       } else {
         await admin.from("dispositivos_rastreamento").insert({
           device_uuid: device.device_uuid,
           estabelecimento_id: usuario.estabelecimento_id,
-          nome_dispositivo: device.modelo ? `PWA - ${device.modelo.split(")")[0].slice(0, 60)}` : "PWA Pilar",
+          nome_dispositivo: nomeDispositivo,
           modelo: device.modelo ?? null,
           plataforma: device.plataforma ?? "pwa",
           status: "pendente",
