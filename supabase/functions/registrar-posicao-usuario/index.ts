@@ -63,6 +63,12 @@ Deno.serve(async (req) => {
 
     // Registra/atualiza o dispositivo em dispositivos_rastreamento (PWA)
     const device = body?.device;
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    let veiculoVinculado: { id: string; estabelecimento_id: string | null } | null = null;
+
     if (device?.device_uuid) {
       const nowIso = new Date().toISOString();
       // Resumo do dispositivo a partir do UA
@@ -80,14 +86,9 @@ Deno.serve(async (req) => {
       const nomeUsuario = (usuario as any).nome || "Usuário";
       const nomeDispositivo = `${nomeUsuario} - ${resumo}`.slice(0, 100);
 
-      // Usa service role para bypass de RLS (dispositivos podem exigir permissão)
-      const admin = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      );
       const { data: existente } = await admin
         .from("dispositivos_rastreamento")
-        .select("id")
+        .select("id, veiculo_id, estabelecimento_id, status")
         .eq("device_uuid", device.device_uuid)
         .maybeSingle();
 
@@ -101,6 +102,12 @@ Deno.serve(async (req) => {
             nome_dispositivo: nomeDispositivo,
           })
           .eq("id", existente.id);
+        if (existente.veiculo_id) {
+          veiculoVinculado = {
+            id: existente.veiculo_id,
+            estabelecimento_id: existente.estabelecimento_id ?? usuario.estabelecimento_id,
+          };
+        }
       } else {
         await admin.from("dispositivos_rastreamento").insert({
           device_uuid: device.device_uuid,
@@ -127,6 +134,21 @@ Deno.serve(async (req) => {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Se o dispositivo está vinculado a um veículo, replica em veiculo_posicoes
+    // para aparecer no Monitoramento / Dashboard / Histórico.
+    if (veiculoVinculado?.id) {
+      const veicRows = rows.map((r) => ({
+        veiculo_id: veiculoVinculado!.id,
+        estabelecimento_id: veiculoVinculado!.estabelecimento_id ?? r.estabelecimento_id,
+        lat: r.lat,
+        lng: r.lng,
+        velocidade: 0,
+        data_hora: r.data_hora,
+      }));
+      const { error: vpErr } = await admin.from("veiculo_posicoes").insert(veicRows);
+      if (vpErr) console.warn("veiculo_posicoes insert falhou:", vpErr.message);
     }
 
     return new Response(JSON.stringify({ inserted: rows.length }), {
