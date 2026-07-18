@@ -214,7 +214,7 @@ export const MensagemPreDefinidaConfig = ({ config, handleConfigChange }: Props)
           {config.styleSource === "preset" && (
             <div className="space-y-1">
               <Label className="text-xs">Preset</Label>
-              <Select value={config.preset || ""} onValueChange={(v) => handleConfigChange("preset", v)}>
+              <Select value={config.preset || "none"} onValueChange={(v) => handleConfigChange("preset", v === "none" ? "" : v)}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {PRESETS.map((p) => <SelectItem key={p.value} value={p.value} className="text-xs">{p.label}</SelectItem>)}
