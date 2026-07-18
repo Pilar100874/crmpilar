@@ -40,6 +40,8 @@ interface TabItem {
 const tabItems: TabItem[] = [
   { id: 'contatos', label: 'Contatos', icon: User, description: 'Gestão de contatos' },
   { id: 'empresas', label: 'Empresas', icon: Building2, description: 'Gestão de empresas' },
+  { id: 'vendedores', label: 'Vendedores', icon: UserCog, description: 'Gestão de vendedores' },
+  { id: 'transportadoras', label: 'Transportadoras', icon: Truck, description: 'Gestão de transportadoras' },
   { id: 'todos', label: 'Todos', icon: Users, description: 'Visualização de todos os registros' },
   { id: 'vinculos-empresas', label: 'Vínculo Empresas', icon: Link2, description: 'Vínculo Empresas X Usuário / Segmento' },
   { id: 'vinculos-contatos', label: 'Vínculo Contatos', icon: Link2, description: 'Vínculo Contatos X Usuário' },
