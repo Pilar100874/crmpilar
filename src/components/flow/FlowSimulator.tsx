@@ -2599,10 +2599,47 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               semFrase = true;
             } else {
               if (config.outputVariable) context.vars[config.outputVariable] = frase;
-              addBotMessage(
-                (config.apresentacao === "midia" ? "[Simulação: geraria mídia com a frase]\n" : "") + frase,
-                node.id,
-              );
+              context.vars.last_mensagem_pre_definida = frase;
+
+              if ((config.apresentacao || "texto") === "midia") {
+                // Gera mídia com a frase como texto principal
+                const variations = Math.max(1, Math.min(6, config.variations || 1));
+                const mediaType = config.mediaType === "video" ? "video" : "image";
+                addSystemMessage(`🎨 Gerando ${variations} ${mediaType === "video" ? "vídeo(s)" : "imagem(ns)"} com a frase escolhida…`);
+                addBotMessage(frase, node.id);
+                try {
+                  const { data: genData, error: genErr } = await supabase.functions.invoke("bot-generate-ai-media", {
+                    body: {
+                      prompt: `Crie uma peça de ${mediaType === "video" ? "vídeo curto" : "imagem"} destacando o texto: "${frase}"`,
+                      basePrompt: config.basePrompt || "",
+                      variations,
+                      estabelecimentoId,
+                      aspectRatio: config.aspectRatio || "1:1",
+                      mediaType,
+                      styleSource: config.styleSource || "visual_identity",
+                      preset: config.styleSource === "preset" ? (config.preset || "") : "",
+                    },
+                  });
+                  if (genErr) throw genErr;
+                  const urls: string[] = Array.isArray(genData?.images)
+                    ? genData.images.filter(Boolean)
+                    : (genData?.items || genData?.results || []).map((it: any) => it?.url).filter(Boolean);
+                  if (urls.length) {
+                    context.vars.last_generated_media_url = urls[0];
+                    context.vars.last_generated_media_urls = urls;
+                    for (const url of urls.slice(0, variations)) {
+                      addBotMessage(mediaType === "video" ? `🎬 ${url}` : `🖼️ ${url}`, node.id);
+                    }
+                  } else {
+                    addSystemMessage("⚠️ Não consegui gerar a mídia agora. Enviei apenas o texto.");
+                  }
+                } catch (mediaErr: any) {
+                  console.error("[SIM] mensagem_pre_definida media error:", mediaErr);
+                  addSystemMessage("⚠️ Falha ao gerar a mídia. Enviei apenas o texto.");
+                }
+              } else {
+                addBotMessage(frase, node.id);
+              }
             }
           }
         } catch (e: any) {
