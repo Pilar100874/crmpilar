@@ -5891,6 +5891,7 @@ export type Database = {
           estabelecimento_id: string
           id: string
           segmento_id: string | null
+          transportadora_id: string | null
           updated_at: string | null
           usuario_id: string | null
           vendedor_id: string | null
@@ -5901,6 +5902,7 @@ export type Database = {
           estabelecimento_id: string
           id?: string
           segmento_id?: string | null
+          transportadora_id?: string | null
           updated_at?: string | null
           usuario_id?: string | null
           vendedor_id?: string | null
@@ -5911,6 +5913,7 @@ export type Database = {
           estabelecimento_id?: string
           id?: string
           segmento_id?: string | null
+          transportadora_id?: string | null
           updated_at?: string | null
           usuario_id?: string | null
           vendedor_id?: string | null
@@ -5928,6 +5931,13 @@ export type Database = {
             columns: ["segmento_id"]
             isOneToOne: false
             referencedRelation: "segmentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empresa_vinculos_transportadora_id_fkey"
+            columns: ["transportadora_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
             referencedColumns: ["id"]
           },
           {
