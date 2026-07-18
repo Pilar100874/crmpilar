@@ -583,6 +583,59 @@ export const LiveBlockPreview = ({ type, config }: LiveBlockPreviewProps) => {
         );
       }
 
+      case "mensagem_pre_definida": {
+        const apresentacao = c.apresentacao || "texto";
+        const escopo = c.escopo || "qualquer";
+        const modo = c.modoSelecao || "rotacao";
+        const modoLabel =
+          modo === "aleatoria" ? "Aleatória" : modo === "fixa" ? "Frase fixa" : "Rotação sem repetir";
+        const escopoLabel =
+          escopo === "geral" ? "Geral" : escopo === "grupo" ? "Grupo específico" : "Qualquer frase";
+        const tema = c.tema ? ` · Tema: ${c.tema}` : "";
+
+        if (apresentacao === "midia") {
+          const mediaType = c.mediaType || "image";
+          const variations = c.variations || 1;
+          return (
+            <div className="space-y-2">
+              <Bubble>💬 <i>Frase pré definida escolhida na hora do envio…</i></Bubble>
+              {card(
+                <>
+                  <div className="w-full aspect-square bg-gradient-to-br from-fuchsia-50 to-purple-50 dark:from-fuchsia-950/40 dark:to-purple-950/40 flex flex-col items-center justify-center text-fuchsia-700 dark:text-fuchsia-300">
+                    <div className="text-4xl">{mediaType === "video" ? "🎬" : "🖼️"}</div>
+                    <div className="text-xs mt-1 font-semibold">
+                      {mediaType === "video" ? "Vídeo IA" : "Imagem IA"} · {variations}x
+                    </div>
+                    {c.presetName && (
+                      <div className="text-[10px] mt-1 opacity-80">Preset: {c.presetName}</div>
+                    )}
+                  </div>
+                  <div className="px-3 py-2 text-[12px] whitespace-pre-wrap break-words">
+                    <i className="text-muted-foreground">[frase selecionada aparecerá aqui]</i>
+                  </div>
+                  <div className="px-3 pb-2 text-[11px] text-muted-foreground italic">
+                    {c.aspectRatio ? `Proporção ${c.aspectRatio}` : "Mídia gerada por IA"} · {modoLabel}
+                  </div>
+                </>,
+              )}
+            </div>
+          );
+        }
+
+        return (
+          <div className="space-y-2">
+            <Bubble>
+              <i className="text-muted-foreground">[frase pré definida — {modoLabel}]</i>
+            </Bubble>
+            {card(
+              <div className="px-3 py-2 text-[11px] text-muted-foreground">
+                Escopo: {escopoLabel}{tema}
+              </div>,
+            )}
+          </div>
+        );
+      }
+
       case "crm_cadastro_empresa": {
         const fields: any[] = c.campos || c.fields || [];
         return card(
