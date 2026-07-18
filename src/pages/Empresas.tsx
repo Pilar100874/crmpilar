@@ -1117,6 +1117,30 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     }
   };
 
+  const handleAdicionarEmpresasVinculo = async () => {
+    if (!estabelecimentoId || !editingEmpresa || novasEmpresasVinculo.length === 0) {
+      toast.error("Selecione pelo menos uma empresa");
+      return;
+    }
+    try {
+      const rows = novasEmpresasVinculo.map((eid) => ({
+        empresa_id: eid,
+        vendedor_id: variant === "vendedor" ? editingEmpresa.id : null,
+        transportadora_id: variant === "transportadora" ? editingEmpresa.id : null,
+        usuario_id: null,
+        segmento_id: null,
+        estabelecimento_id: estabelecimentoId,
+      }));
+      const { error } = await supabase.from("empresa_vinculos").insert(rows);
+      if (error) throw error;
+      toast.success("Empresas vinculadas!");
+      setNovasEmpresasVinculo([]);
+      await fetchEmpresas(estabelecimentoId);
+    } catch (error: any) {
+      toast.error("Erro ao vincular empresas: " + error.message);
+    }
+  };
+
   const handleRemoverVinculoSimples = async (vinculoId: string) => {
     try {
       const { error } = await supabase.from("empresa_vinculos").delete().eq("id", vinculoId);
