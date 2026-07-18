@@ -2162,6 +2162,172 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               </Button>
             </div>
           </TabsContent>
+
+          {variant === "empresa" && (
+            <TabsContent value="usuarios" className="p-6">
+              <Card className="p-6">
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Usuários do Sistema Vinculados</h3>
+                    <p className="text-sm text-muted-foreground mb-6">
+                      Vincule usuários do sistema responsáveis por esta empresa.
+                    </p>
+                  </div>
+                  {editingEmpresa ? (() => {
+                    const vinculosDaEmpresa = vinculos.filter(v => v.empresa_id === editingEmpresa.id);
+                    const vinculosUsuarios = vinculosDaEmpresa.filter(v => v.usuario_id !== null);
+                    const idsJaVinculados = new Set(vinculosUsuarios.map(v => v.usuario_id));
+                    const usuariosDisponiveis = usuarios.filter(u => !idsJaVinculados.has(u.id));
+                    return (
+                      <div className="space-y-4">
+                        <Card className="border-primary/20 bg-primary/5">
+                          <CardContent className="p-4 space-y-4">
+                            <h4 className="text-sm font-semibold">Adicionar Usuários</h4>
+                            <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
+                              {usuariosDisponiveis.length === 0 && (
+                                <p className="text-xs text-muted-foreground p-2">Nenhum usuário disponível.</p>
+                              )}
+                              {usuariosDisponiveis.map((u) => (
+                                <div key={u.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
+                                  <Checkbox
+                                    id={`new-user-${u.id}`}
+                                    checked={novosUsuariosVinculo.includes(u.id)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) setNovosUsuariosVinculo([...novosUsuariosVinculo, u.id]);
+                                      else setNovosUsuariosVinculo(novosUsuariosVinculo.filter(id => id !== u.id));
+                                    }}
+                                  />
+                                  <label htmlFor={`new-user-${u.id}`} className="text-sm cursor-pointer flex-1">
+                                    {u.nome}
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                            <Button onClick={handleAdicionarUsuariosVinculo} className="w-full" size="sm">
+                              <Plus className="w-4 h-4 mr-2" />
+                              Adicionar Usuários Selecionados
+                            </Button>
+                          </CardContent>
+                        </Card>
+                        <div>
+                          <h4 className="text-sm font-semibold mb-3">Usuários Vinculados</h4>
+                          {vinculosUsuarios.length > 0 ? (
+                            <div className="space-y-2">
+                              {vinculosUsuarios.map((v) => {
+                                const u = usuarios.find(x => x.id === v.usuario_id);
+                                return (
+                                  <div key={v.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors">
+                                    <p className="text-sm font-medium">{u?.nome || "Usuário não encontrado"}</p>
+                                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoverVinculoSimples(v.id)}>
+                                      <Trash2 className="w-4 h-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="p-4 border rounded-lg bg-muted/30 text-center">
+                              <p className="text-sm text-muted-foreground">Nenhum usuário vinculado</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })() : (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      Salve a empresa primeiro para gerenciar os usuários.
+                    </p>
+                  )}
+                </div>
+              </Card>
+              <div className="flex justify-end gap-3 mt-6">
+                <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">Fechar</Button>
+              </div>
+            </TabsContent>
+          )}
+
+          {variant === "empresa" && (
+            <TabsContent value="vendedores" className="p-6">
+              <Card className="p-6">
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Vendedores Vinculados</h3>
+                    <p className="text-sm text-muted-foreground mb-6">
+                      Vincule os vendedores responsáveis por esta empresa.
+                    </p>
+                  </div>
+                  {editingEmpresa ? (() => {
+                    const vinculosDaEmpresa = vinculos.filter(v => v.empresa_id === editingEmpresa.id);
+                    const vinculosVendedores = vinculosDaEmpresa.filter(v => v.vendedor_id !== null && v.vendedor_id !== undefined);
+                    const idsJaVinculados = new Set(vinculosVendedores.map(v => v.vendedor_id));
+                    const vendedoresDisponiveis = vendedoresLista.filter(v => !idsJaVinculados.has(v.id));
+                    return (
+                      <div className="space-y-4">
+                        <Card className="border-primary/20 bg-primary/5">
+                          <CardContent className="p-4 space-y-4">
+                            <h4 className="text-sm font-semibold">Adicionar Vendedores</h4>
+                            <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
+                              {vendedoresDisponiveis.length === 0 && (
+                                <p className="text-xs text-muted-foreground p-2">Nenhum vendedor disponível. Cadastre em Listas → Vendedores.</p>
+                              )}
+                              {vendedoresDisponiveis.map((v) => (
+                                <div key={v.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
+                                  <Checkbox
+                                    id={`new-vend-${v.id}`}
+                                    checked={novosVendedoresVinculo.includes(v.id)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) setNovosVendedoresVinculo([...novosVendedoresVinculo, v.id]);
+                                      else setNovosVendedoresVinculo(novosVendedoresVinculo.filter(id => id !== v.id));
+                                    }}
+                                  />
+                                  <label htmlFor={`new-vend-${v.id}`} className="text-sm cursor-pointer flex-1">
+                                    {v.nome_fantasia || v.nome}
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                            <Button onClick={handleAdicionarVendedoresVinculo} className="w-full" size="sm">
+                              <Plus className="w-4 h-4 mr-2" />
+                              Adicionar Vendedores Selecionados
+                            </Button>
+                          </CardContent>
+                        </Card>
+                        <div>
+                          <h4 className="text-sm font-semibold mb-3">Vendedores Vinculados</h4>
+                          {vinculosVendedores.length > 0 ? (
+                            <div className="space-y-2">
+                              {vinculosVendedores.map((v) => {
+                                const vend = vendedoresLista.find(x => x.id === v.vendedor_id);
+                                return (
+                                  <div key={v.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors">
+                                    <p className="text-sm font-medium">{vend?.nome_fantasia || vend?.nome || "Vendedor não encontrado"}</p>
+                                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoverVinculoSimples(v.id)}>
+                                      <Trash2 className="w-4 h-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="p-4 border rounded-lg bg-muted/30 text-center">
+                              <p className="text-sm text-muted-foreground">Nenhum vendedor vinculado</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })() : (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      Salve a empresa primeiro para gerenciar os vendedores.
+                    </p>
+                  )}
+                </div>
+              </Card>
+              <div className="flex justify-end gap-3 mt-6">
+                <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">Fechar</Button>
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
         </div>
         </div>
