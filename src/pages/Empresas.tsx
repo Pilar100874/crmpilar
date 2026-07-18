@@ -102,6 +102,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   const [novosUsuariosVinculo, setNovosUsuariosVinculo] = useState<string[]>([]);
   const [novosVendedoresVinculo, setNovosVendedoresVinculo] = useState<string[]>([]);
   const [novosSegmentosVinculo, setNovosSegmentosVinculo] = useState<string[]>([]);
+  const [novasEmpresasVinculo, setNovasEmpresasVinculo] = useState<string[]>([]);
   
   // Estado para dialog de importação via API
   const [importDialogOpen, setImportDialogOpen] = useState(false);
