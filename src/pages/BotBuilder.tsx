@@ -1865,7 +1865,7 @@ function BotBuilderContent() {
                 className="fixed inset-0 top-[90px] bg-black/40 z-30 lg:hidden"
                 onClick={() => setShowSimulator(false)}
               />
-              <div className="fixed right-0 top-[90px] w-full sm:w-[420px] lg:w-96 h-[calc(100vh-90px)] h-[calc(100dvh-90px)] min-h-0 overflow-hidden flex flex-col bg-card backdrop-blur-sm border-l border-border z-40 shadow-2xl lg:right-0 lg:top-[56px] lg:h-[calc(100vh-64px)] lg:m-2 lg:rounded-2xl lg:border-2 lg:border-white dark:lg:border-white/10 lg:bg-gradient-to-b lg:from-background lg:to-border lg:shadow-lg lg:border-l-2">
+              <div className="fixed right-0 top-[90px] bottom-16 sm:bottom-20 w-full sm:w-[420px] lg:w-[400px] min-h-0 overflow-hidden flex flex-col bg-card backdrop-blur-sm border-l border-border z-40 shadow-2xl lg:top-[64px] lg:m-2 lg:mb-16 lg:rounded-2xl lg:border-2 lg:border-white dark:lg:border-white/10 lg:bg-gradient-to-b lg:from-background lg:to-border lg:shadow-lg lg:border-l-2">
                 <button
                   type="button"
                   onClick={() => setShowSimulator(false)}
