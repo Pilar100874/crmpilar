@@ -19,6 +19,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
+import { Truck, UserCog } from 'lucide-react';
+
 // Import existing components
 import Contatos from './Contatos';
 import Empresas from './Empresas';
