@@ -61,6 +61,40 @@ Deno.serve(async (req) => {
         data_hora: p.data_hora ?? new Date().toISOString(),
       }));
 
+    // Registra/atualiza o dispositivo em dispositivos_rastreamento (PWA)
+    const device = body?.device;
+    if (device?.device_uuid) {
+      const nowIso = new Date().toISOString();
+      // Usa service role para bypass de RLS (dispositivos podem exigir permissão)
+      const admin = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      );
+      const { data: existente } = await admin
+        .from("dispositivos_rastreamento")
+        .select("id")
+        .eq("device_uuid", device.device_uuid)
+        .maybeSingle();
+
+      if (existente?.id) {
+        await admin
+          .from("dispositivos_rastreamento")
+          .update({ ultimo_acesso: nowIso, plataforma: device.plataforma ?? null, modelo: device.modelo ?? null })
+          .eq("id", existente.id);
+      } else {
+        await admin.from("dispositivos_rastreamento").insert({
+          device_uuid: device.device_uuid,
+          estabelecimento_id: usuario.estabelecimento_id,
+          nome_dispositivo: device.modelo ? `PWA - ${device.modelo.split(")")[0].slice(0, 60)}` : "PWA Pilar",
+          modelo: device.modelo ?? null,
+          plataforma: device.plataforma ?? "pwa",
+          status: "pendente",
+          primeiro_acesso: nowIso,
+          ultimo_acesso: nowIso,
+        });
+      }
+    }
+
     if (rows.length === 0) {
       return new Response(JSON.stringify({ inserted: 0 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
