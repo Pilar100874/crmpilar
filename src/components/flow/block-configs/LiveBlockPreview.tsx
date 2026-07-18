@@ -722,4 +722,5 @@ export const PREVIEW_SUPPORTED_TYPES = new Set<string>([
   "crm_cadastro_empresa",
   "crm_agenda_rapida",
   "generate_ai_media",
+  "mensagem_pre_definida",
 ]);
