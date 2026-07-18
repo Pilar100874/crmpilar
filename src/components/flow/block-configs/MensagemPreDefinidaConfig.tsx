@@ -17,7 +17,7 @@ interface Props {
 }
 
 const PRESETS = [
-  { value: "", label: "Nenhum" },
+  { value: "none", label: "Nenhum" },
   { value: "produto_branco", label: "Produto fundo branco" },
   { value: "produto_lifestyle", label: "Produto lifestyle" },
   { value: "influencer_ugc", label: "Influencer UGC" },
