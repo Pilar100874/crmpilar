@@ -1858,14 +1858,28 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   // Lógica de liberação progressiva
                   const tipoSelecionado = !!formData.company_type;
                   const cnpjPreenchido = !!formData.cpf_cnpj;
+                  const isPessoaFisica = formData.company_type === "Pessoa Física";
                   
                   // CPF/CNPJ só habilita após selecionar o tipo
                   const isDisabled = field.id === "cpf_cnpj" ? !tipoSelecionado : 
                                      field.id === "company_type" ? false :
                                      !cnpjPreenchido;
                   
+                  // Nome/Razão Social e Nome Fantasia: quando Pessoa Física, sempre editáveis
+                  const isNomeField = field.id === "company_name" || field.id === "company_fantasia";
+                  const fieldLocked = isPessoaFisica && isNomeField ? false : field.locked;
+                  
+                  // Rótulos dinâmicos para Pessoa Física
+                  let displayLabel = field.label;
+                  if (isPessoaFisica) {
+                    if (field.id === "company_name") displayLabel = "Nome";
+                    if (field.id === "company_fantasia") displayLabel = "Como prefere ser chamado";
+                  } else {
+                    if (field.id === "company_name") displayLabel = "Razão Social";
+                  }
+                  
                   // Para campos auto-preenchidos, desabilitar sempre
-                  const finalDisabled = field.locked || isDisabled;
+                  const finalDisabled = fieldLocked || isDisabled;
                   
                   return (
                     <div key={field.id} className="space-y-2">
@@ -1877,9 +1891,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                             : 'text-foreground'
                         }`}
                       >
-                        {field.label} 
+                        {displayLabel} 
                         {field.required && <span className="text-destructive ml-1">*</span>}
-                        {field.locked && <span className="text-xs text-muted-foreground ml-2">(preenchido automaticamente)</span>}
+                        {fieldLocked && <span className="text-xs text-muted-foreground ml-2">(preenchido automaticamente)</span>}
                       </Label>
                       <div className={field.id === 'company_type' || field.id === 'cpf_cnpj' ? 'ring-2 ring-primary/30 rounded-md' : ''}>
                         {renderField(field, finalDisabled)}
@@ -1887,6 +1901,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                     </div>
                   );
                 })}
+
               </div>
             </div>
             </Card>
