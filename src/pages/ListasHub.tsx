@@ -46,6 +46,7 @@ const tabItems: TabItem[] = [
   { id: 'todos', label: 'Todos', icon: Users, description: 'Visualização de todos os registros' },
   { id: 'vinculos-empresas', label: 'Vínculo Empresas', icon: Link2, description: 'Vínculo Empresas X Usuário / Segmento' },
   { id: 'vinculos-contatos', label: 'Vínculo Contatos', icon: Link2, description: 'Vínculo Contatos X Usuário' },
+  { id: 'vinculos-empresa-vendedor', label: 'Vínculo Emp. x Vendedor', icon: Link2, description: 'Vínculo Empresas X Vendedor' },
   { id: 'mapa-clientes', label: 'Mapa Clientes', icon: MapPin, description: 'Visualização geográfica das empresas' },
   { id: 'prospeccao-b2b', label: 'Prospecção B2B', icon: Target, description: 'Busca de empresas por região e segmento' },
 ];
