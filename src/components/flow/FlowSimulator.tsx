@@ -4945,13 +4945,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <CardHeader className={`flex-shrink-0 border-b ${channelStyle.headerBg} py-2.5 px-3 sm:px-4`}>
-        <div className="flex items-center justify-between gap-2 pl-9 lg:pl-0">
+      <CardHeader className={`flex-shrink-0 border-b ${channelStyle.headerBg} py-2 px-2 sm:px-3`}>
+        <div className="flex items-center justify-between gap-2 pl-9 lg:pl-0 flex-wrap">
           <CardTitle className={`text-sm flex items-center gap-2 min-w-0 ${channelStyle.headerText}`}>
             <span className="shrink-0">{channelStyle.icon}</span>
             <span className="truncate">Simulador - {channelStyle.name}</span>
           </CardTitle>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
             {channel === "whatsapp" && onProviderChange && (
               <div className="inline-flex items-center rounded-full border border-primary-foreground/20 bg-background/15 p-0.5" title="Provedor para simulação">
                 <button
@@ -4966,7 +4966,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                   onClick={() => onProviderChange("whatsapp_oficial")}
                   className={`h-6 px-2 text-[11px] font-medium rounded-full transition-colors ${provider === "whatsapp_oficial" ? "bg-primary text-primary-foreground shadow-sm" : "text-primary-foreground/80 hover:text-primary-foreground"}`}
                 >
-                  WhatsApp Oficial
+                  Oficial
                 </button>
               </div>
             )}
@@ -4980,14 +4980,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 });
               }}
               title={realMode ? "Modo Real ativo — clicar desativa" : "Ativar Modo Real (dispara webhooks/ações de verdade)"}
-              className={`inline-flex items-center gap-1 h-8 px-3 rounded-full text-[11px] font-semibold border transition-colors shrink-0 ${realMode ? "bg-red-500 text-white border-red-600 hover:bg-red-600" : "bg-white/10 text-white border-white/20 hover:bg-white/20"}`}
+              className={`inline-flex items-center gap-1 h-7 px-2 rounded-full text-[11px] font-semibold border transition-colors shrink-0 ${realMode ? "bg-red-500 text-white border-red-600 hover:bg-red-600" : "bg-white/10 text-white border-white/20 hover:bg-white/20"}`}
             >
               <Zap className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{realMode ? "Modo Real" : "Simulação"}</span>
+              <span className="hidden md:inline">{realMode ? "Real" : "Sim"}</span>
             </button>
-            <Button size="sm" variant="outline" onClick={handleReset} className="bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-full shrink-0 h-8 w-8 sm:w-auto sm:px-3 p-0" title="Reiniciar simulação">
+            <Button size="sm" variant="outline" onClick={handleReset} className="bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-full shrink-0 h-7 w-7 p-0" title="Reiniciar simulação">
               <RotateCcw className="w-4 h-4" />
-              <span className="hidden sm:inline sm:ml-2">Reiniciar</span>
             </Button>
           </div>
         </div>
