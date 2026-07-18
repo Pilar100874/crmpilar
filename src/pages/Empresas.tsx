@@ -1402,8 +1402,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         <div className="border-b bg-card/80 backdrop-blur-sm px-3 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-foreground">Empresas</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">Gerencie sua carteira de clientes</p>
+              <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-foreground">{entityConfig.plural}</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">{entityConfig.subtitle}</p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
               <Button onClick={() => {
@@ -1414,7 +1414,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 setCriarNovoContato(false);
               }} className="gap-2 shadow-sm text-xs sm:text-sm h-9 sm:h-10">
                 <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                Nova Empresa
+                {variant === "empresa" ? "Nova Empresa" : (variant === "vendedor" ? "Novo Vendedor" : "Nova Transportadora")}
               </Button>
               {!hideAdminButtons && (
                 <Button 
