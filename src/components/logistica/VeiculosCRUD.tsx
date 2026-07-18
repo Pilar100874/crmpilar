@@ -295,13 +295,18 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
           .update({ veiculo_id: null })
           .eq('veiculo_id', veiculoId);
 
-        // Then link the selected device (if any)
+        // Then link the selected device (if any) — auto-aprova se ainda estava pendente
         if (formData.dispositivo_id) {
           await supabase
             .from('dispositivos_rastreamento')
-            .update({ veiculo_id: veiculoId })
+            .update({
+              veiculo_id: veiculoId,
+              status: 'aprovado',
+              aprovado_em: new Date().toISOString(),
+            })
             .eq('id', formData.dispositivo_id);
         }
+
       }
 
       // Persist telefone_sms + tracker_model_id + operadora APN na tabela veiculos
