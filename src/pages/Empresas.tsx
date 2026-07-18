@@ -1796,6 +1796,22 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 Segmentos
               </TabsTrigger>
             )}
+            {variant === "empresa" && (
+              <>
+                <TabsTrigger
+                  value="usuarios"
+                  className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                >
+                  Usuários
+                </TabsTrigger>
+                <TabsTrigger
+                  value="vendedores"
+                  className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                >
+                  Vendedores
+                </TabsTrigger>
+              </>
+            )}
           </TabsList>
 
           <TabsContent value="empresa" className="space-y-6">
