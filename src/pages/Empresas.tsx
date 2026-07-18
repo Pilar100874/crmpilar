@@ -1693,10 +1693,10 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-light tracking-tight text-foreground">
-              {editingEmpresa ? "Editar Empresa" : "Nova Empresa"}
+              {editingEmpresa ? `Editar ${entityConfig.singular}` : `${variant === "transportadora" ? "Nova" : (variant === "vendedor" ? "Novo" : "Nova")} ${entityConfig.singular}`}
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              {editingEmpresa ? "Atualize as informações da empresa" : "Preencha os dados da nova empresa"}
+              {editingEmpresa ? `Atualize as informações` : `Preencha os dados`}
             </p>
           </div>
         </div>
@@ -1709,7 +1709,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               value="empresa"
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
             >
-              Dados da Empresa
+              Dados {variant === "empresa" ? "da Empresa" : (variant === "vendedor" ? "do Vendedor" : "da Transportadora")}
             </TabsTrigger>
             <TabsTrigger 
               value="contatos"
@@ -1718,12 +1718,14 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             >
               Contatos Vinculados
             </TabsTrigger>
-            <TabsTrigger 
-              value="vinculos"
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-            >
-              Segmentos
-            </TabsTrigger>
+            {entityConfig.showSegmento && (
+              <TabsTrigger 
+                value="vinculos"
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+              >
+                Segmentos
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="empresa" className="space-y-6">
