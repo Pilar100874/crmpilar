@@ -189,8 +189,19 @@ export const FlowNode = memo((props: any) => {
       };
     }
 
+    // Mensagem Pré Definida - saída padrão + saída quando não há frase
+    if (data.type === "mensagem_pre_definida") {
+      return {
+        paths: [
+          { id: "default", label: "Com frase", color: "bg-green-500" },
+          { id: "sem_frase", label: "Sem frase", color: "bg-red-500" },
+        ],
+      };
+    }
+
     return null;
   };
+
 
   const dynamicHandles = getDynamicHandles();
 
