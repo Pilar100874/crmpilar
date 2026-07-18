@@ -8,23 +8,27 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { MessageSquareText, Sparkles, Image as ImageIcon, Video, Info } from "lucide-react";
+import { MessageSquareText, Sparkles, Image as ImageIcon, Video, Info, Check } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
+import { PROMPT_PRESETS, type PromptPreset } from "@/components/marketing/ai-studio/PromptPresets";
 
 interface Props {
   config: any;
   handleConfigChange: (key: string, value: any) => void;
 }
 
-const PRESETS = [
-  { value: "none", label: "Nenhum" },
-  { value: "produto_branco", label: "Produto fundo branco" },
-  { value: "produto_lifestyle", label: "Produto lifestyle" },
-  { value: "influencer_ugc", label: "Influencer UGC" },
-  { value: "post_promocional", label: "Post promocional" },
-  { value: "story_vertical", label: "Story vertical 9:16" },
-  { value: "cinematic", label: "Cinematográfico" },
-];
+const CUSTOM_PRESETS_KEY = "ai-studio-custom-prompt-presets";
+const loadAllSystemPresets = (): PromptPreset[] => {
+  try {
+    const raw = localStorage.getItem(CUSTOM_PRESETS_KEY);
+    const saved: PromptPreset[] = raw ? JSON.parse(raw) : [];
+    const savedIds = new Set(saved.map((p) => p.id));
+    const merged = [...PROMPT_PRESETS.filter((p) => !savedIds.has(p.id)), ...saved];
+    return merged;
+  } catch {
+    return [...PROMPT_PRESETS];
+  }
+};
 
 export const MensagemPreDefinidaConfig = ({ config, handleConfigChange }: Props) => {
   const [grupos, setGrupos] = useState<Array<{ id: string; nome: string }>>([]);
