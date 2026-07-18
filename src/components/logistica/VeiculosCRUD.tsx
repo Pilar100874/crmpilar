@@ -157,20 +157,21 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
 
   const fetchDispositivos = async () => {
     try {
-      // Fetch ALL approved devices regardless of estabelecimento
-      // since the config screen may use a different estabelecimento
+      // Busca TODOS os dispositivos (aprovados e pendentes) — a aprovação acontece
+      // automaticamente ao selecionar e salvar o vínculo aqui.
       const { data, error } = await supabase
         .from('dispositivos_rastreamento')
-        .select('id, device_uuid, nome_dispositivo, veiculo_id, estabelecimento_id')
-        .eq('status', 'aprovado');
+        .select('id, device_uuid, nome_dispositivo, veiculo_id, estabelecimento_id, status, tipo_dispositivo, ultimo_ping')
+        .in('status', ['aprovado', 'pendente']);
 
       if (error) throw error;
-      console.log('Dispositivos aprovados encontrados:', data);
+      console.log('Dispositivos encontrados:', data);
       setDispositivos(data || []);
     } catch (error) {
       console.error('Error fetching devices:', error);
     }
   };
+
 
   const handleOpenDialog = (veiculo?: any) => {
     // Find if this vehicle has a linked device
