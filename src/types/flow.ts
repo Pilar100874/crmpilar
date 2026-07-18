@@ -63,7 +63,8 @@ export type NodeType =
   | "carousel"
   | "attach_catalog"
   | "global_redirect"
-  | "disparar_push";
+  | "disparar_push"
+  | "mensagem_pre_definida";
 
 
 export interface BlockDefinition {
