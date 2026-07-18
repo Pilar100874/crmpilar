@@ -33,7 +33,11 @@ interface DispositivoAprovado {
   nome_dispositivo: string | null;
   veiculo_id: string | null;
   estabelecimento_id: string | null;
+  status?: string;
+  plataforma?: string | null;
+  ultimo_acesso?: string | null;
 }
+
 
 const tipos = [
   'Pessoa',
@@ -157,20 +161,22 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
 
   const fetchDispositivos = async () => {
     try {
-      // Fetch ALL approved devices regardless of estabelecimento
-      // since the config screen may use a different estabelecimento
+      // Busca TODOS os dispositivos (aprovados e pendentes) — a aprovação acontece
+      // automaticamente ao selecionar e salvar o vínculo aqui.
       const { data, error } = await supabase
         .from('dispositivos_rastreamento')
-        .select('id, device_uuid, nome_dispositivo, veiculo_id, estabelecimento_id')
-        .eq('status', 'aprovado');
+        .select('id, device_uuid, nome_dispositivo, veiculo_id, estabelecimento_id, status, plataforma, ultimo_acesso')
+        .in('status', ['aprovado', 'pendente']);
+
 
       if (error) throw error;
-      console.log('Dispositivos aprovados encontrados:', data);
+      console.log('Dispositivos encontrados:', data);
       setDispositivos(data || []);
     } catch (error) {
       console.error('Error fetching devices:', error);
     }
   };
+
 
   const handleOpenDialog = (veiculo?: any) => {
     // Find if this vehicle has a linked device
@@ -289,13 +295,18 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
           .update({ veiculo_id: null })
           .eq('veiculo_id', veiculoId);
 
-        // Then link the selected device (if any)
+        // Then link the selected device (if any) — auto-aprova se ainda estava pendente
         if (formData.dispositivo_id) {
           await supabase
             .from('dispositivos_rastreamento')
-            .update({ veiculo_id: veiculoId })
+            .update({
+              veiculo_id: veiculoId,
+              status: 'aprovado',
+              aprovado_em: new Date().toISOString(),
+            })
             .eq('id', formData.dispositivo_id);
         }
+
       }
 
       // Persist telefone_sms + tracker_model_id + operadora APN na tabela veiculos
@@ -982,17 +993,20 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                         .filter(d => !d.veiculo_id || d.veiculo_id === selectedVeiculo?.id)
                         .map(d => (
                           <SelectItem key={d.id} value={d.id}>
-                            {d.nome_dispositivo || d.device_uuid} ({d.device_uuid})
+                            {(d.nome_dispositivo || d.device_uuid)}
+                            {d.plataforma ? ` · ${d.plataforma}` : ''}
+                            {d.status === 'pendente' ? ' — pendente (aprova ao salvar)' : ''}
                           </SelectItem>
                         ))}
                     </SelectContent>
                   </Select>
                   {dispositivos.filter(d => !d.veiculo_id || d.veiculo_id === selectedVeiculo?.id).length === 0 && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Nenhum dispositivo aprovado disponível. Aprove dispositivos na aba "Dispositivos aprovados".
+                      Nenhum dispositivo detectado ainda. Peça para a pessoa abrir o <b>PWA Pilar</b> (com login) ou ativar o <b>Traccar Client</b> apontando para a URL abaixo — o aparelho aparecerá aqui automaticamente.
                     </p>
                   )}
                 </div>
+
 
                 {/* Ajuda: URL do Traccar/OsmAnd */}
                 <div className="mt-3 rounded-md border bg-muted/40 p-3 text-xs space-y-2">
