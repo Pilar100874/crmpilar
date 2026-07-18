@@ -161,8 +161,9 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
       // automaticamente ao selecionar e salvar o vínculo aqui.
       const { data, error } = await supabase
         .from('dispositivos_rastreamento')
-        .select('id, device_uuid, nome_dispositivo, veiculo_id, estabelecimento_id, status, tipo_dispositivo, ultimo_ping')
+        .select('id, device_uuid, nome_dispositivo, veiculo_id, estabelecimento_id, status, plataforma, ultimo_acesso')
         .in('status', ['aprovado', 'pendente']);
+
 
       if (error) throw error;
       console.log('Dispositivos encontrados:', data);
