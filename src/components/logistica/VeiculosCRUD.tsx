@@ -993,17 +993,20 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                         .filter(d => !d.veiculo_id || d.veiculo_id === selectedVeiculo?.id)
                         .map(d => (
                           <SelectItem key={d.id} value={d.id}>
-                            {d.nome_dispositivo || d.device_uuid} ({d.device_uuid})
+                            {(d.nome_dispositivo || d.device_uuid)}
+                            {d.plataforma ? ` · ${d.plataforma}` : ''}
+                            {d.status === 'pendente' ? ' — pendente (aprova ao salvar)' : ''}
                           </SelectItem>
                         ))}
                     </SelectContent>
                   </Select>
                   {dispositivos.filter(d => !d.veiculo_id || d.veiculo_id === selectedVeiculo?.id).length === 0 && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Nenhum dispositivo aprovado disponível. Aprove dispositivos na aba "Dispositivos aprovados".
+                      Nenhum dispositivo detectado ainda. Peça para a pessoa abrir o <b>PWA Pilar</b> (com login) ou ativar o <b>Traccar Client</b> apontando para a URL abaixo — o aparelho aparecerá aqui automaticamente.
                     </p>
                   )}
                 </div>
+
 
                 {/* Ajuda: URL do Traccar/OsmAnd */}
                 <div className="mt-3 rounded-md border bg-muted/40 p-3 text-xs space-y-2">
