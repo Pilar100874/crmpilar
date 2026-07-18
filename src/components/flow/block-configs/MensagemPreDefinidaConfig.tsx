@@ -55,6 +55,24 @@ export const MensagemPreDefinidaConfig = ({ config, handleConfigChange }: Props)
   const tema = config.tema || "";
   const modoSelecao = config.modoSelecao || "rotacao";
   const apresentacao = config.apresentacao || "texto";
+  const mediaType = (config.mediaType as "image" | "video") || "image";
+  const styleSource = config.styleSource || "visual_identity";
+
+  const allSystemPresets = useMemo(() => loadAllSystemPresets(), []);
+  const presetsForType = useMemo(
+    () => allSystemPresets.filter((p) => p.mediaType === mediaType),
+    [allSystemPresets, mediaType],
+  );
+  const selectedPreset = useMemo(
+    () => allSystemPresets.find((p) => p.id === config.preset),
+    [allSystemPresets, config.preset],
+  );
+
+  const handlePresetChange = (presetId: string) => {
+    handleConfigChange("preset", presetId);
+    const p = allSystemPresets.find((x) => x.id === presetId);
+    if (p) handleConfigChange("presetName", p.name);
+  };
 
   // Carrega frases (para popular temas e a lista fixa)
   useEffect(() => {
