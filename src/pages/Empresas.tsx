@@ -94,11 +94,13 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   const [duplicateEmpresa, setDuplicateEmpresa] = useState<Empresa | null>(null);
 
   const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string }>>([]);
+  const [vendedoresLista, setVendedoresLista] = useState<Array<{ id: string; nome_fantasia: string; nome: string }>>([]);
   const [vinculos, setVinculos] = useState<any[]>([]);
   const [segmentos, setSegmentos] = useState<Array<{ id: string; nome: string }>>([]);
   
   // Estados para gerenciar vínculos na aba
   const [novosUsuariosVinculo, setNovosUsuariosVinculo] = useState<string[]>([]);
+  const [novosVendedoresVinculo, setNovosVendedoresVinculo] = useState<string[]>([]);
   const [novosSegmentosVinculo, setNovosSegmentosVinculo] = useState<string[]>([]);
   
   // Estado para dialog de importação via API
