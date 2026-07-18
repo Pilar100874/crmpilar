@@ -4317,6 +4317,7 @@ async function executeNode(
         break;
       }
       case "mensagem_pre_definida": {
+        let semFrase = false;
         try {
           const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
           const cursorKey = `bot:${context.vars.bot_id || context.vars.botId || "flow"}:${node.id}`;
@@ -4337,54 +4338,62 @@ async function executeNode(
           if (pickErr) throw pickErr;
           const frase = pickData?.frase?.frase;
           if (!frase) {
-            await onResponse("⚠️ Nenhuma frase pré-definida encontrada.");
-            break;
-          }
-          if (cfg.outputVariable) context.vars[cfg.outputVariable] = frase;
-          context.vars.last_mensagem_pre_definida = frase;
-
-          if ((cfg.apresentacao || "texto") === "texto") {
-            await onResponse(frase);
+            semFrase = true;
           } else {
-            // Gerar mídia com a frase como conteúdo principal
-            const basePrompt = [
-              cfg.basePrompt || "",
-              cfg.preset ? `Preset visual: ${cfg.preset}.` : "",
-            ].filter(Boolean).join("\n");
-            const promptFinal = `Crie uma peça de ${cfg.mediaType === "video" ? "vídeo curto" : "imagem"} destacando o texto: "${frase}"`;
-            const { data, error } = await supabase.functions.invoke("bot-generate-ai-media", {
-              body: {
-                prompt: promptFinal,
-                basePrompt,
-                variations: cfg.variations || 1,
-                estabelecimentoId: context.vars.estabelecimento_id,
-                aspectRatio: cfg.aspectRatio || "1:1",
-                mediaType: cfg.mediaType || "image",
-                styleSource: cfg.styleSource || "visual_identity",
-              },
-            });
-            if (error) throw error;
-            const urls: string[] = Array.isArray(data?.images)
-              ? data.images
-              : (data?.items || data?.results || []).map((it: any) => it?.url).filter(Boolean);
-            if (!urls.length) {
+            if (cfg.outputVariable) context.vars[cfg.outputVariable] = frase;
+            context.vars.last_mensagem_pre_definida = frase;
+
+            if ((cfg.apresentacao || "texto") === "texto") {
               await onResponse(frase);
             } else {
-              let first = true;
-              for (const url of urls.slice(0, cfg.variations || 1)) {
-                await onResponse(first ? frase : "", url, cfg.mediaType === "video" ? "video" : "image");
-                first = false;
-                await new Promise((r) => setTimeout(r, 600));
+              // Gerar mídia com a frase como conteúdo principal
+              const basePrompt = [
+                cfg.basePrompt || "",
+                cfg.preset ? `Preset visual: ${cfg.preset}.` : "",
+              ].filter(Boolean).join("\n");
+              const promptFinal = `Crie uma peça de ${cfg.mediaType === "video" ? "vídeo curto" : "imagem"} destacando o texto: "${frase}"`;
+              const { data, error } = await supabase.functions.invoke("bot-generate-ai-media", {
+                body: {
+                  prompt: promptFinal,
+                  basePrompt,
+                  variations: cfg.variations || 1,
+                  estabelecimentoId: context.vars.estabelecimento_id,
+                  aspectRatio: cfg.aspectRatio || "1:1",
+                  mediaType: cfg.mediaType || "image",
+                  styleSource: cfg.styleSource || "visual_identity",
+                },
+              });
+              if (error) throw error;
+              const urls: string[] = Array.isArray(data?.images)
+                ? data.images
+                : (data?.items || data?.results || []).map((it: any) => it?.url).filter(Boolean);
+              if (!urls.length) {
+                await onResponse(frase);
+              } else {
+                let first = true;
+                for (const url of urls.slice(0, cfg.variations || 1)) {
+                  await onResponse(first ? frase : "", url, cfg.mediaType === "video" ? "video" : "image");
+                  first = false;
+                  await new Promise((r) => setTimeout(r, 600));
+                }
+                context.vars.last_generated_media_url = urls[0];
+                context.vars.last_generated_media_urls = urls;
               }
-              context.vars.last_generated_media_url = urls[0];
-              context.vars.last_generated_media_urls = urls;
             }
           }
         } catch (e) {
           console.error(`[FLOW] mensagem_pre_definida error:`, e);
-          await onResponse("⚠️ Não foi possível obter a frase.");
+          semFrase = true;
         }
-        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        // Roteia via sourceHandle: "sem_frase" se não obteve frase, senão "default"
+        const desiredHandle = semFrase ? "sem_frase" : "default";
+        const outs = edges.filter((e: any) => e.source === node.id);
+        let edge = outs.find((e: any) => e.sourceHandle === desiredHandle);
+        if (!edge && !semFrase) {
+          edge = outs.find((e: any) => !e.sourceHandle || e.sourceHandle === "default");
+        }
+        const nx = edge ? nodes.find((n: any) => n.id === edge.target) : null;
+        if (nx) await executeNode(nx, nodes, edges, context, onResponse);
         break;
       }
       case "generate_ai_media": {
