@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     // Resolve usuario.id + estabelecimento
     const { data: usuario, error: uErr } = await supabase
       .from("usuarios")
-      .select("id, estabelecimento_id")
+      .select("id, estabelecimento_id, nome")
       .eq("auth_user_id", user.id)
       .maybeSingle();
 
