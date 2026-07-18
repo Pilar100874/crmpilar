@@ -1070,6 +1070,64 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     }
   };
 
+  const handleAdicionarUsuariosVinculo = async () => {
+    if (!estabelecimentoId || !editingEmpresa || novosUsuariosVinculo.length === 0) {
+      toast.error("Selecione pelo menos um usuário");
+      return;
+    }
+    try {
+      const rows = novosUsuariosVinculo.map((uid) => ({
+        empresa_id: editingEmpresa.id,
+        usuario_id: uid,
+        segmento_id: null,
+        vendedor_id: null,
+        estabelecimento_id: estabelecimentoId,
+      }));
+      const { error } = await supabase.from("empresa_vinculos").insert(rows);
+      if (error) throw error;
+      toast.success("Usuários vinculados!");
+      setNovosUsuariosVinculo([]);
+      await fetchEmpresas(estabelecimentoId);
+    } catch (error: any) {
+      toast.error("Erro ao vincular usuários: " + error.message);
+    }
+  };
+
+  const handleAdicionarVendedoresVinculo = async () => {
+    if (!estabelecimentoId || !editingEmpresa || novosVendedoresVinculo.length === 0) {
+      toast.error("Selecione pelo menos um vendedor");
+      return;
+    }
+    try {
+      const rows = novosVendedoresVinculo.map((vid) => ({
+        empresa_id: editingEmpresa.id,
+        vendedor_id: vid,
+        usuario_id: null,
+        segmento_id: null,
+        estabelecimento_id: estabelecimentoId,
+      }));
+      const { error } = await supabase.from("empresa_vinculos").insert(rows);
+      if (error) throw error;
+      toast.success("Vendedores vinculados!");
+      setNovosVendedoresVinculo([]);
+      await fetchEmpresas(estabelecimentoId);
+    } catch (error: any) {
+      toast.error("Erro ao vincular vendedores: " + error.message);
+    }
+  };
+
+  const handleRemoverVinculoSimples = async (vinculoId: string) => {
+    try {
+      const { error } = await supabase.from("empresa_vinculos").delete().eq("id", vinculoId);
+      if (error) throw error;
+      toast.success("Vínculo removido!");
+      await fetchEmpresas(estabelecimentoId!);
+    } catch (error: any) {
+      toast.error("Erro ao remover: " + error.message);
+    }
+  };
+
+
   const handleRemoverVinculo = async (vinculoId: string) => {
     try {
       // Primeiro buscar os dados do vínculo para saber o segmento_id
