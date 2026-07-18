@@ -2573,6 +2573,38 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         break;
       }
 
+      case "mensagem_pre_definida": {
+        try {
+          const cursorKey = `sim:${node.id}`;
+          const { data, error } = await supabase.functions.invoke("pick-mensagem-pre-definida", {
+            body: {
+              estabelecimentoId: context.vars?.estabelecimento_id,
+              escopo: config.escopo || "qualquer",
+              grupoId: config.grupoId || undefined,
+              tema: config.tema || undefined,
+              modoSelecao: config.modoSelecao || "rotacao",
+              fraseId: config.fraseId || undefined,
+              cursorKey,
+            },
+          });
+          if (error) throw error;
+          const frase = data?.frase?.frase;
+          if (!frase) {
+            addBotMessage("⚠️ Nenhuma frase pré-definida encontrada.", node.id);
+          } else {
+            if (config.outputVariable) context.vars[config.outputVariable] = frase;
+            addBotMessage(
+              (config.apresentacao === "midia" ? "[Simulação: geraria mídia com a frase]\n" : "") + frase,
+              node.id,
+            );
+          }
+        } catch (e) {
+          addBotMessage("⚠️ Erro ao buscar frase pré-definida.", node.id);
+        }
+        await advanceToNext(node);
+        break;
+      }
+
       case "generate_ai_media": {
         const ask = interpolateVariables(config.textPrompt || "Descreva o que você quer gerar:", context);
         const imageRefSource = config.imageRefSource || "user";
