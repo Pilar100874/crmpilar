@@ -1095,7 +1095,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         empresa_id: editingEmpresa.id,
         usuario_id: uid,
         segmento_id: null,
-        vendedor_id: null,
+        vendedor_id: variant === "vendedor" ? editingEmpresa.id : null,
+        transportadora_id: variant === "transportadora" ? editingEmpresa.id : null,
         estabelecimento_id: estabelecimentoId,
       }));
       const { error } = await supabase.from("empresa_vinculos").insert(rows);
@@ -1835,21 +1836,21 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 Segmentos
               </TabsTrigger>
             )}
+            {(variant === "empresa" || variant === "vendedor" || variant === "transportadora") && (
+              <TabsTrigger
+                value="usuarios"
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+              >
+                Usuários
+              </TabsTrigger>
+            )}
             {variant === "empresa" && (
-              <>
-                <TabsTrigger
-                  value="usuarios"
-                  className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-                >
-                  Usuários
-                </TabsTrigger>
-                <TabsTrigger
-                  value="vendedores"
-                  className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-                >
-                  Vendedores
-                </TabsTrigger>
-              </>
+              <TabsTrigger
+                value="vendedores"
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+              >
+                Vendedores
+              </TabsTrigger>
             )}
             {(variant === "vendedor" || variant === "transportadora") && (
               <TabsTrigger
@@ -2227,7 +2228,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </div>
           </TabsContent>
 
-          {variant === "empresa" && (
+          {(variant === "empresa" || variant === "vendedor" || variant === "transportadora") && (
             <TabsContent value="usuarios" className="p-6">
               <Card className="p-6">
                 <div className="space-y-6">
