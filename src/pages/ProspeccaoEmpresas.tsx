@@ -281,11 +281,33 @@ export default function ProspeccaoEmpresas() {
                   </ol>
                 </div>
 
-                <Alert className="mt-2">
-                  <AlertDescription className="text-xs">
-                    <strong>Login OAuth:</strong> na primeira execução de qualquer ferramenta, abrirá uma janela para você entrar no Pilar
-                    com seu usuário. Depois disso, o assistente age como você, respeitando suas permissões (RLS). Você só verá aqui as
-                    prospecções feitas <strong>com o seu usuário</strong>.
+                <Alert className="mt-2 border-primary/40">
+                  <AlertDescription className="text-xs space-y-2">
+                    <div>
+                      <strong>🔐 Login compartilhado (recomendado para MCP):</strong> na primeira execução de qualquer ferramenta,
+                      abrirá uma janela de login. Use SEMPRE a conta compartilhada abaixo (não use seu login pessoal) — assim
+                      todas as prospecções entram no mesmo pote e qualquer pessoa da equipe enxerga:
+                    </div>
+                    <div className="bg-muted/60 p-2 rounded font-mono text-xs space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground w-16">Login:</span>
+                        <code className="flex-1">Pilar</code>
+                        <Button size="sm" variant="ghost" className="h-6 px-2" onClick={() => copy('Pilar')}>
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground w-16">Senha:</span>
+                        <code className="flex-1">Ceotto2468</code>
+                        <Button size="sm" variant="ghost" className="h-6 px-2" onClick={() => copy('Ceotto2468')}>
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="text-muted-foreground">
+                      Depois de autorizado, o assistente age como esse usuário respeitando o RLS. Se preferir prospecções
+                      privadas por pessoa, cada um pode usar o próprio login — mas aí só quem prospectou verá os dados aqui.
+                    </div>
                   </AlertDescription>
                 </Alert>
               </div>
