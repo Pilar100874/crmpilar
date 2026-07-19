@@ -12,7 +12,7 @@
   "mcp": {
     "server": {
       "name": "pilar-mcp",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "title": "Pilar CRM MCP"
     },
     "tools": [
@@ -138,6 +138,219 @@
               "description": "Máximo (padrão 100)."
             }
           },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "add_prospeccao_empresa",
+        "title": "Adicionar empresa à Prospecção",
+        "description": "Insere uma empresa pesquisada na web na tela 'Prospecção Empresas' do Listas. Use para trazer leads pesquisados de fontes externas (site, Google, LinkedIn, etc.) para dentro do CRM Pilar. Depois o usuário revisa e importa para o cadastro definitivo de Empresas. Use `add_prospeccao_empresas_bulk` para vários de uma vez.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "nome": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Razão social ou nome da empresa (obrigatório)."
+            },
+            "nome_fantasia": {
+              "type": "string"
+            },
+            "cnpj": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "telefone": {
+              "type": "string",
+              "description": "Telefone geral."
+            },
+            "whatsapp": {
+              "type": "string",
+              "description": "Número WhatsApp com DDD."
+            },
+            "site": {
+              "type": "string"
+            },
+            "endereco": {
+              "type": "string"
+            },
+            "bairro": {
+              "type": "string"
+            },
+            "cidade": {
+              "type": "string"
+            },
+            "estado": {
+              "type": "string",
+              "description": "UF (2 letras)."
+            },
+            "cep": {
+              "type": "string"
+            },
+            "cnae_principal": {
+              "type": "string"
+            },
+            "cnae_descricao": {
+              "type": "string"
+            },
+            "segmento_nome": {
+              "type": "string",
+              "description": "Segmento (texto livre)."
+            },
+            "descricao": {
+              "type": "string",
+              "description": "Descrição / resumo da empresa."
+            },
+            "redes_sociais": {
+              "type": "object",
+              "properties": {
+                "instagram": {
+                  "type": "string"
+                },
+                "facebook": {
+                  "type": "string"
+                },
+                "linkedin": {
+                  "type": "string"
+                },
+                "youtube": {
+                  "type": "string"
+                },
+                "tiktok": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "fontes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uri"
+              },
+              "description": "URLs das fontes usadas na pesquisa."
+            },
+            "extras": {
+              "type": "object",
+              "additionalProperties": {},
+              "description": "Qualquer dado extra relevante em JSON."
+            }
+          },
+          "required": [
+            "nome"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "add_prospeccao_empresas_bulk",
+        "title": "Adicionar várias empresas à Prospecção",
+        "description": "Insere um lote de empresas pesquisadas em 'Prospecção Empresas'. Use quando o assistente já compilou uma lista (ex.: 20 indústrias em SP). Máximo 100 por chamada.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "empresas": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "nome": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "nome_fantasia": {
+                    "type": "string"
+                  },
+                  "cnpj": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "telefone": {
+                    "type": "string"
+                  },
+                  "whatsapp": {
+                    "type": "string"
+                  },
+                  "site": {
+                    "type": "string"
+                  },
+                  "endereco": {
+                    "type": "string"
+                  },
+                  "bairro": {
+                    "type": "string"
+                  },
+                  "cidade": {
+                    "type": "string"
+                  },
+                  "estado": {
+                    "type": "string"
+                  },
+                  "cep": {
+                    "type": "string"
+                  },
+                  "cnae_principal": {
+                    "type": "string"
+                  },
+                  "cnae_descricao": {
+                    "type": "string"
+                  },
+                  "segmento_nome": {
+                    "type": "string"
+                  },
+                  "descricao": {
+                    "type": "string"
+                  },
+                  "redes_sociais": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "fontes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "extras": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  }
+                },
+                "required": [
+                  "nome"
+                ],
+                "additionalProperties": false
+              },
+              "minItems": 1,
+              "maxItems": 100,
+              "description": "Lista de empresas a inserir."
+            }
+          },
+          "required": [
+            "empresas"
+          ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
