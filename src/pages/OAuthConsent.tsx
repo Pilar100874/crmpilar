@@ -8,7 +8,22 @@ import { Loader2, ShieldCheck } from "lucide-react";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
-async function callOAuth(path: string, token: string, method: "GET" | "POST" = "GET") {
+type OAuthResult = { data: any; error: { message?: string } | null };
+
+type OAuthServerApi = {
+  getAuthorizationDetails?: (authorizationId: string) => Promise<OAuthResult>;
+  approveAuthorization?: (authorizationId: string, options?: { skipBrowserRedirect?: boolean }) => Promise<OAuthResult>;
+  denyAuthorization?: (authorizationId: string, options?: { skipBrowserRedirect?: boolean }) => Promise<OAuthResult>;
+};
+
+const getOAuthApi = () => (supabase.auth as typeof supabase.auth & { oauth?: OAuthServerApi }).oauth;
+
+async function callOAuth(
+  path: string,
+  token: string,
+  method: "GET" | "POST" = "GET",
+  body?: Record<string, unknown>,
+): Promise<OAuthResult> {
   const res = await fetch(`${SUPABASE_URL}/auth/v1/oauth/authorizations/${path}`, {
     method,
     headers: {
@@ -16,6 +31,7 @@ async function callOAuth(path: string, token: string, method: "GET" | "POST" = "
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
+    body: body ? JSON.stringify(body) : undefined,
   });
   const text = await res.text();
   let data: any = null;
@@ -24,6 +40,31 @@ async function callOAuth(path: string, token: string, method: "GET" | "POST" = "
     return { data: null, error: { message: data?.msg || data?.error_description || data?.error || `HTTP ${res.status}` } };
   }
   return { data, error: null };
+}
+
+async function getAuthorizationDetails(authorizationId: string): Promise<OAuthResult> {
+  const oauth = getOAuthApi();
+  if (oauth?.getAuthorizationDetails) {
+    return oauth.getAuthorizationDetails(authorizationId);
+  }
+
+  const { data: sess } = await supabase.auth.getSession();
+  const token = sess.session?.access_token;
+  if (!token) return { data: null, error: { message: "Sessão não encontrada." } };
+  return callOAuth(authorizationId, token, "GET");
+}
+
+async function submitAuthorization(authorizationId: string, approve: boolean): Promise<OAuthResult> {
+  const oauth = getOAuthApi();
+  const sdkMethod = approve ? oauth?.approveAuthorization : oauth?.denyAuthorization;
+  if (sdkMethod) {
+    return sdkMethod(authorizationId, { skipBrowserRedirect: true });
+  }
+
+  const { data: sess } = await supabase.auth.getSession();
+  const token = sess.session?.access_token;
+  if (!token) return { data: null, error: { message: "Sessão não encontrada." } };
+  return callOAuth(`${authorizationId}/consent`, token, "POST", { action: approve ? "approve" : "deny" });
 }
 
 export default function OAuthConsent() {
@@ -43,8 +84,7 @@ export default function OAuthConsent() {
         window.location.href = "/login?next=" + encodeURIComponent(next);
         return;
       }
-      const token = sess.session.access_token;
-      const { data, error } = await callOAuth(authorizationId, token, "GET");
+      const { data, error } = await getAuthorizationDetails(authorizationId);
       if (!active) return;
       if (error) return setError(error.message || "Falha ao carregar autorização.");
       const immediate = data?.redirect_url ?? data?.redirect_to;
@@ -59,13 +99,7 @@ export default function OAuthConsent() {
 
   async function decide(approve: boolean) {
     setBusy(true);
-    const { data: sess } = await supabase.auth.getSession();
-    const token = sess.session?.access_token ?? "";
-    const { data, error } = await callOAuth(
-      `${authorizationId}/${approve ? "approve" : "deny"}`,
-      token,
-      "POST",
-    );
+    const { data, error } = await submitAuthorization(authorizationId, approve);
     if (error) {
       setBusy(false);
       return setError(error.message || "Falha ao processar decisão.");
