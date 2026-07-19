@@ -1836,21 +1836,21 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 Segmentos
               </TabsTrigger>
             )}
+            {(variant === "empresa" || variant === "vendedor" || variant === "transportadora") && (
+              <TabsTrigger
+                value="usuarios"
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+              >
+                Usuários
+              </TabsTrigger>
+            )}
             {variant === "empresa" && (
-              <>
-                <TabsTrigger
-                  value="usuarios"
-                  className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-                >
-                  Usuários
-                </TabsTrigger>
-                <TabsTrigger
-                  value="vendedores"
-                  className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-                >
-                  Vendedores
-                </TabsTrigger>
-              </>
+              <TabsTrigger
+                value="vendedores"
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+              >
+                Vendedores
+              </TabsTrigger>
             )}
             {(variant === "vendedor" || variant === "transportadora") && (
               <TabsTrigger
