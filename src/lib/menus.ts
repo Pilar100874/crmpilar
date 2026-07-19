@@ -46,6 +46,7 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   { id: "Marketplaces", label: "Marketplaces", category: "Principal" },
   { id: "Ads", label: "Ads", category: "Principal" },
   { id: "Robô de Preços", label: "Robô de Preços", category: "Principal" },
+  { id: "Integrações IA (MCP)", label: "Integrações IA (MCP)", category: "Principal" },
   
   // TV Dashboards
   { id: "TV", label: "TV (Categoria)", category: "TV" },
