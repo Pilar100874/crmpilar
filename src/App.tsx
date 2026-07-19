@@ -8,6 +8,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import OAuthConsent from "./pages/OAuthConsent";
+import AgentIntegrations from "./pages/AgentIntegrations";
 import Dashboard from "./pages/Dashboard";
 import Atendimento from "./pages/Atendimento";
 import BotBuilder from "./pages/BotBuilder";
