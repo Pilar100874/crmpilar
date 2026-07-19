@@ -223,9 +223,9 @@ var EmpresaSchema = z4.object({
   extras: z4.record(z4.any()).optional().describe("Qualquer dado extra relevante em JSON.")
 });
 var add_prospeccao_empresa_default = defineTool5({
-  name: "add_prospeccao_empresa",
-  title: "Adicionar empresa \xE0 Prospec\xE7\xE3o",
-  description: "Insere uma empresa pesquisada na web na tela 'Prospec\xE7\xE3o Empresas' do Listas. Use para trazer leads pesquisados de fontes externas (site, Google, LinkedIn, etc.) para dentro do CRM Pilar. Depois o usu\xE1rio revisa e importa para o cadastro definitivo de Empresas. Use `add_prospeccao_empresas_bulk` para v\xE1rios de uma vez.",
+  name: "salvar_empresa_prospectada",
+  title: "Salvar empresa prospectada",
+  description: "Insere UMA empresa pesquisada na web na tela 'Prospec\xE7\xE3o Empresas' do Listas do Pilar CRM. Use para trazer leads pesquisados de fontes externas (site, Google, LinkedIn, etc.) para dentro do Pilar. Depois o usu\xE1rio revisa e importa para o cadastro definitivo de Empresas. Para v\xE1rios leads de uma vez, use `salvar_empresas_prospectadas`.",
   inputSchema: EmpresaSchema.shape,
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
   handler: async (input, ctx) => {
