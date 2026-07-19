@@ -25,19 +25,28 @@ const exemplosPrompt = [
   {
     titulo: '10 indústrias de embalagem em SP com WhatsApp',
     prompt:
-      'Pesquise na web 10 indústrias de embalagem plástica no estado de SP que tenham WhatsApp e site. Para cada uma, colete: nome, nome fantasia, CNPJ (se disponível), WhatsApp, e-mail, site, cidade, UF, e uma breve descrição. Depois adicione todas na Prospecção do Pilar usando add_prospeccao_empresas_bulk.',
+      'Pesquise na web 10 indústrias de embalagem plástica no estado de SP que tenham WhatsApp e site. Para cada uma, colete: nome, nome fantasia, CNPJ (se disponível), WhatsApp, e-mail, site, cidade, UF, e uma breve descrição. Depois adicione todas na Prospecção do Pilar usando salvar_empresas_prospectadas.',
   },
   {
     titulo: '20 restaurantes em Curitiba',
     prompt:
-      'Pesquise 20 restaurantes bem avaliados em Curitiba/PR com WhatsApp e Instagram. Adicione na Prospecção do Pilar com nome, whatsapp, endereço, cidade, UF, redes_sociais.instagram e descrição.',
+      'Pesquise 20 restaurantes bem avaliados em Curitiba/PR com WhatsApp e Instagram. Adicione na Prospecção do Pilar (salvar_empresas_prospectadas) com nome, whatsapp, endereço, cidade, UF, redes_sociais.instagram e descrição.',
   },
   {
     titulo: 'Concorrentes de um segmento',
     prompt:
-      'Encontre 15 concorrentes brasileiros da empresa "X" (segmento: SaaS de gestão). Adicione na Prospecção do Pilar com nome, site, e-mail comercial, cidade, UF, descrição e linkedin em redes_sociais.',
+      'Encontre 15 concorrentes brasileiros da empresa "X" (segmento: SaaS de gestão). Use salvar_empresas_prospectadas com nome, site, e-mail comercial, cidade, UF, descrição e linkedin em redes_sociais.',
   },
 ];
+
+const mcpConfigJson = `{
+  "mcpServers": {
+    "pilar": {
+      "type": "http",
+      "url": "${MCP_URL}"
+    }
+  }
+}`;
 
 interface ProspeccaoRow {
   id: string;
@@ -195,36 +204,99 @@ export default function ProspeccaoEmpresas() {
 
               <div>
                 <div className="font-semibold mb-2 flex items-center gap-2">
-                  <Terminal className="h-4 w-4" /> 1. Conectar o Claude Code / ChatGPT ao Pilar (uma vez)
+                  <Terminal className="h-4 w-4" /> 1. Conectar o assistente ao Pilar (uma vez só)
                 </div>
-                <p className="mb-2">No <strong>Claude Code</strong> (terminal), rode:</p>
-                <div className="flex items-center gap-2 bg-muted p-3 rounded font-mono text-xs">
-                  <code className="flex-1 break-all">claude mcp add --transport http pilar {MCP_URL}</code>
-                  <Button size="sm" variant="ghost" onClick={() => copy(`claude mcp add --transport http pilar ${MCP_URL}`)}>
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                </div>
-                <p className="mt-2 text-muted-foreground">
-                  No <strong>ChatGPT / Cursor / Claude Desktop</strong>, adicione um servidor MCP apontando para:
+                <p className="text-muted-foreground mb-3">
+                  A URL do servidor MCP do Pilar é sempre a mesma. Copie e use no seu assistente favorito:
                 </p>
-                <div className="flex items-center gap-2 bg-muted p-3 rounded font-mono text-xs mt-1">
+                <div className="flex items-center gap-2 bg-muted p-3 rounded font-mono text-xs mb-4">
                   <code className="flex-1 break-all">{MCP_URL}</code>
                   <Button size="sm" variant="ghost" onClick={() => copy(MCP_URL)}>
                     <Copy className="h-3 w-3" />
                   </Button>
                 </div>
-                <p className="mt-2 text-muted-foreground">
-                  Na primeira chamada, será aberta uma janela para você <strong>fazer login no Pilar e autorizar</strong> o assistente.
-                  Depois, ele passa a agir com o seu usuário (respeitando permissões e RLS). Um manual completo dessa etapa está em <strong>Listas → Prospecção Claude Code</strong>.
-                </p>
+
+                {/* Claude Code */}
+                <div className="border rounded-lg p-3 mb-3 bg-muted/20">
+                  <div className="font-medium mb-2">🖥️ Claude Code (terminal)</div>
+                  <ol className="list-decimal ml-5 space-y-1 text-sm text-muted-foreground mb-2">
+                    <li>Abra o terminal em qualquer pasta.</li>
+                    <li>Rode o comando abaixo:</li>
+                  </ol>
+                  <div className="flex items-center gap-2 bg-background p-2 rounded font-mono text-xs mb-2">
+                    <code className="flex-1 break-all">claude mcp add --transport http pilar {MCP_URL}</code>
+                    <Button size="sm" variant="ghost" onClick={() => copy(`claude mcp add --transport http pilar ${MCP_URL}`)}>
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <ol start={3} className="list-decimal ml-5 space-y-1 text-sm text-muted-foreground">
+                    <li>Rode <code className="bg-background px-1 rounded">claude</code> e digite <code className="bg-background px-1 rounded">/mcp</code> — deve aparecer <strong>pilar</strong> como "connected".</li>
+                    <li>Na primeira chamada de ferramenta, abrirá o navegador para você <strong>fazer login no Pilar e autorizar</strong>.</li>
+                  </ol>
+                </div>
+
+                {/* ChatGPT */}
+                <div className="border rounded-lg p-3 mb-3 bg-muted/20">
+                  <div className="font-medium mb-2">💬 ChatGPT (Plus / Pro / Business)</div>
+                  <ol className="list-decimal ml-5 space-y-1 text-sm text-muted-foreground">
+                    <li>Abra <strong>chatgpt.com</strong> → <strong>Settings</strong> → <strong>Connectors</strong> (ou "Conectores").</li>
+                    <li>Clique <strong>Add connector</strong> / <strong>New connector</strong>.</li>
+                    <li>Nome: <code className="bg-background px-1 rounded">Pilar</code></li>
+                    <li>MCP Server URL: cole a URL acima.</li>
+                    <li>Authentication: <strong>OAuth</strong> (o ChatGPT descobre sozinho).</li>
+                    <li>Clique <strong>Create</strong> → faça login no Pilar → <strong>Autorizar</strong>.</li>
+                    <li>Em qualquer chat, clique no ícone <strong>+</strong> e selecione o conector <strong>Pilar</strong> para ativá-lo.</li>
+                  </ol>
+                </div>
+
+                {/* Claude Desktop */}
+                <div className="border rounded-lg p-3 mb-3 bg-muted/20">
+                  <div className="font-medium mb-2">🤖 Claude Desktop (Mac / Windows)</div>
+                  <ol className="list-decimal ml-5 space-y-1 text-sm text-muted-foreground">
+                    <li>Abra o Claude Desktop → <strong>Settings</strong> → <strong>Connectors</strong>.</li>
+                    <li>Clique <strong>Add custom connector</strong>.</li>
+                    <li>Name: <code className="bg-background px-1 rounded">Pilar</code></li>
+                    <li>URL: cole a URL acima.</li>
+                    <li>Clique <strong>Add</strong> → faça login no Pilar → <strong>Autorizar</strong>.</li>
+                    <li>Nas conversas, verifique se o conector <strong>Pilar</strong> aparece ativo (ícone de plug).</li>
+                  </ol>
+                </div>
+
+                {/* Cursor */}
+                <div className="border rounded-lg p-3 mb-3 bg-muted/20">
+                  <div className="font-medium mb-2">✏️ Cursor</div>
+                  <ol className="list-decimal ml-5 space-y-1 text-sm text-muted-foreground mb-2">
+                    <li>Cursor → <strong>Settings</strong> (⌘ + ,) → <strong>MCP</strong> → <strong>Add new MCP server</strong>.</li>
+                    <li>Escolha <strong>Edit config</strong> e cole o JSON abaixo em <code className="bg-background px-1 rounded">~/.cursor/mcp.json</code>:</li>
+                  </ol>
+                  <div className="flex items-start gap-2 bg-background p-2 rounded font-mono text-xs mb-2">
+                    <pre className="flex-1 whitespace-pre-wrap break-all">{mcpConfigJson}</pre>
+                    <Button size="sm" variant="ghost" onClick={() => copy(mcpConfigJson)}>
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <ol start={3} className="list-decimal ml-5 space-y-1 text-sm text-muted-foreground">
+                    <li>Salve, volte no Cursor — o servidor <strong>pilar</strong> aparece na lista com bolinha verde.</li>
+                    <li>Na primeira chamada, autorize via OAuth no navegador.</li>
+                  </ol>
+                </div>
+
+                <Alert className="mt-2">
+                  <AlertDescription className="text-xs">
+                    <strong>Login OAuth:</strong> na primeira execução de qualquer ferramenta, abrirá uma janela para você entrar no Pilar
+                    com seu usuário. Depois disso, o assistente age como você, respeitando suas permissões (RLS). Você só verá aqui as
+                    prospecções feitas <strong>com o seu usuário</strong>.
+                  </AlertDescription>
+                </Alert>
               </div>
 
               <div>
                 <div className="font-semibold mb-2">2. Peça a pesquisa em linguagem natural</div>
                 <p className="text-muted-foreground mb-2">
                   Deixe claro <strong>o que pesquisar</strong>, <strong>onde</strong> (cidade/UF/segmento) e <strong>quais campos coletar</strong>.
-                  O assistente usa a ferramenta <code className="bg-muted px-1 rounded">add_prospeccao_empresa</code> (uma) ou{' '}
-                  <code className="bg-muted px-1 rounded">add_prospeccao_empresas_bulk</code> (várias) automaticamente.
+                  O assistente usa automaticamente a ferramenta{' '}
+                  <code className="bg-muted px-1 rounded">salvar_empresa_prospectada</code> (uma empresa) ou{' '}
+                  <code className="bg-muted px-1 rounded">salvar_empresas_prospectadas</code> (várias de uma vez).
                 </p>
                 <div className="space-y-2">
                   {exemplosPrompt.map((ex, i) => (
@@ -240,6 +312,7 @@ export default function ProspeccaoEmpresas() {
                   ))}
                 </div>
               </div>
+
 
               <div>
                 <div className="font-semibold mb-2">3. Campos que o assistente pode preencher</div>

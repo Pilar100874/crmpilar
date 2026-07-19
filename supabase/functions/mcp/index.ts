@@ -223,9 +223,9 @@ var EmpresaSchema = z4.object({
   extras: z4.record(z4.any()).optional().describe("Qualquer dado extra relevante em JSON.")
 });
 var add_prospeccao_empresa_default = defineTool5({
-  name: "add_prospeccao_empresa",
-  title: "Adicionar empresa \xE0 Prospec\xE7\xE3o",
-  description: "Insere uma empresa pesquisada na web na tela 'Prospec\xE7\xE3o Empresas' do Listas. Use para trazer leads pesquisados de fontes externas (site, Google, LinkedIn, etc.) para dentro do CRM Pilar. Depois o usu\xE1rio revisa e importa para o cadastro definitivo de Empresas. Use `add_prospeccao_empresas_bulk` para v\xE1rios de uma vez.",
+  name: "salvar_empresa_prospectada",
+  title: "Salvar empresa prospectada",
+  description: "Insere UMA empresa pesquisada na web na tela 'Prospec\xE7\xE3o Empresas' do Listas do Pilar CRM. Use para trazer leads pesquisados de fontes externas (site, Google, LinkedIn, etc.) para dentro do Pilar. Depois o usu\xE1rio revisa e importa para o cadastro definitivo de Empresas. Para v\xE1rios leads de uma vez, use `salvar_empresas_prospectadas`.",
   inputSchema: EmpresaSchema.shape,
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
   handler: async (input, ctx) => {
@@ -297,9 +297,9 @@ var Empresa = z5.object({
   extras: z5.record(z5.any()).optional()
 });
 var add_prospeccao_empresas_bulk_default = defineTool6({
-  name: "add_prospeccao_empresas_bulk",
-  title: "Adicionar v\xE1rias empresas \xE0 Prospec\xE7\xE3o",
-  description: "Insere um lote de empresas pesquisadas em 'Prospec\xE7\xE3o Empresas'. Use quando o assistente j\xE1 compilou uma lista (ex.: 20 ind\xFAstrias em SP). M\xE1ximo 100 por chamada.",
+  name: "salvar_empresas_prospectadas",
+  title: "Salvar v\xE1rias empresas prospectadas",
+  description: "Insere um LOTE de empresas pesquisadas na web em 'Prospec\xE7\xE3o Empresas' do Pilar CRM. Use quando o assistente j\xE1 compilou uma lista (ex.: 20 ind\xFAstrias em SP) \u2014 envia todas de uma vez, muito mais r\xE1pido que chamar `salvar_empresa_prospectada` v\xE1rias vezes. M\xE1ximo 100 por chamada.",
   inputSchema: {
     empresas: z5.array(Empresa).min(1).max(100).describe("Lista de empresas a inserir.")
   },
@@ -349,7 +349,7 @@ var mcp_default = defineMcp({
   name: "pilar-mcp",
   title: "Pilar CRM MCP",
   version: "0.2.0",
-  instructions: "Ferramentas do Pilar CRM.\nLeitura: `whoami`, `list_segmentos`, `list_empresas` (filtros UF/cidade/segmento/e-mail/WhatsApp), `list_produtos`.\nEscrita \u2014 Prospec\xE7\xE3o: `add_prospeccao_empresa` insere UMA empresa pesquisada na web na tela 'Prospec\xE7\xE3o Empresas' do Listas; `add_prospeccao_empresas_bulk` insere um lote (at\xE9 100). Use SEMPRE que o usu\xE1rio pedir para pesquisar empresas na internet e trazer os resultados para dentro do Pilar. O usu\xE1rio depois revisa e importa para o cadastro definitivo. Todas as ferramentas respeitam as permiss\xF5es (RLS) do usu\xE1rio autenticado.",
+  instructions: "Ferramentas do Pilar CRM.\nLeitura: `whoami`, `list_segmentos`, `list_empresas` (filtros UF/cidade/segmento/e-mail/WhatsApp), `list_produtos`.\nEscrita \u2014 Prospec\xE7\xE3o: `salvar_empresa_prospectada` insere UMA empresa pesquisada na web na tela 'Prospec\xE7\xE3o Empresas' do Listas; `salvar_empresas_prospectadas` insere um lote (at\xE9 100). Use SEMPRE que o usu\xE1rio pedir para pesquisar empresas na internet e trazer os resultados para dentro do Pilar. O usu\xE1rio depois revisa e importa para o cadastro definitivo. Todas as ferramentas respeitam as permiss\xF5es (RLS) do usu\xE1rio autenticado.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"

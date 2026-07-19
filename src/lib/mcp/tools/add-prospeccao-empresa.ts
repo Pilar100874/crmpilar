@@ -41,10 +41,10 @@ const EmpresaSchema = z.object({
 });
 
 export default defineTool({
-  name: "add_prospeccao_empresa",
-  title: "Adicionar empresa à Prospecção",
+  name: "salvar_empresa_prospectada",
+  title: "Salvar empresa prospectada",
   description:
-    "Insere uma empresa pesquisada na web na tela 'Prospecção Empresas' do Listas. Use para trazer leads pesquisados de fontes externas (site, Google, LinkedIn, etc.) para dentro do CRM Pilar. Depois o usuário revisa e importa para o cadastro definitivo de Empresas. Use `add_prospeccao_empresas_bulk` para vários de uma vez.",
+    "Insere UMA empresa pesquisada na web na tela 'Prospecção Empresas' do Listas do Pilar CRM. Use para trazer leads pesquisados de fontes externas (site, Google, LinkedIn, etc.) para dentro do Pilar. Depois o usuário revisa e importa para o cadastro definitivo de Empresas. Para vários leads de uma vez, use `salvar_empresas_prospectadas`.",
   inputSchema: EmpresaSchema.shape,
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
   handler: async (input, ctx) => {
