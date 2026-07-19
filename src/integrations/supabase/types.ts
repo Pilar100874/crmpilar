@@ -5886,6 +5886,7 @@ export type Database = {
       }
       empresa_vinculos: {
         Row: {
+          auto_via_vendedor_id: string | null
           created_at: string | null
           empresa_id: string
           estabelecimento_id: string
@@ -5897,6 +5898,7 @@ export type Database = {
           vendedor_id: string | null
         }
         Insert: {
+          auto_via_vendedor_id?: string | null
           created_at?: string | null
           empresa_id: string
           estabelecimento_id: string
@@ -5908,6 +5910,7 @@ export type Database = {
           vendedor_id?: string | null
         }
         Update: {
+          auto_via_vendedor_id?: string | null
           created_at?: string | null
           empresa_id?: string
           estabelecimento_id?: string
@@ -5919,6 +5922,13 @@ export type Database = {
           vendedor_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "empresa_vinculos_auto_via_vendedor_id_fkey"
+            columns: ["auto_via_vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "empresa_vinculos_empresa_id_fkey"
             columns: ["empresa_id"]
