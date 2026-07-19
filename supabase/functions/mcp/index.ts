@@ -297,9 +297,9 @@ var Empresa = z5.object({
   extras: z5.record(z5.any()).optional()
 });
 var add_prospeccao_empresas_bulk_default = defineTool6({
-  name: "add_prospeccao_empresas_bulk",
-  title: "Adicionar v\xE1rias empresas \xE0 Prospec\xE7\xE3o",
-  description: "Insere um lote de empresas pesquisadas em 'Prospec\xE7\xE3o Empresas'. Use quando o assistente j\xE1 compilou uma lista (ex.: 20 ind\xFAstrias em SP). M\xE1ximo 100 por chamada.",
+  name: "salvar_empresas_prospectadas",
+  title: "Salvar v\xE1rias empresas prospectadas",
+  description: "Insere um LOTE de empresas pesquisadas na web em 'Prospec\xE7\xE3o Empresas' do Pilar CRM. Use quando o assistente j\xE1 compilou uma lista (ex.: 20 ind\xFAstrias em SP) \u2014 envia todas de uma vez, muito mais r\xE1pido que chamar `salvar_empresa_prospectada` v\xE1rias vezes. M\xE1ximo 100 por chamada.",
   inputSchema: {
     empresas: z5.array(Empresa).min(1).max(100).describe("Lista de empresas a inserir.")
   },

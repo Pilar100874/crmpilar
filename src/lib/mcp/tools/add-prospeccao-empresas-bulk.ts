@@ -32,10 +32,10 @@ const Empresa = z.object({
 });
 
 export default defineTool({
-  name: "add_prospeccao_empresas_bulk",
-  title: "Adicionar várias empresas à Prospecção",
+  name: "salvar_empresas_prospectadas",
+  title: "Salvar várias empresas prospectadas",
   description:
-    "Insere um lote de empresas pesquisadas em 'Prospecção Empresas'. Use quando o assistente já compilou uma lista (ex.: 20 indústrias em SP). Máximo 100 por chamada.",
+    "Insere um LOTE de empresas pesquisadas na web em 'Prospecção Empresas' do Pilar CRM. Use quando o assistente já compilou uma lista (ex.: 20 indústrias em SP) — envia todas de uma vez, muito mais rápido que chamar `salvar_empresa_prospectada` várias vezes. Máximo 100 por chamada.",
   inputSchema: {
     empresas: z.array(Empresa).min(1).max(100).describe("Lista de empresas a inserir."),
   },
