@@ -33,6 +33,7 @@ import VinculosVendedorUsuario from './VinculosVendedorUsuario';
 import MapaClientesView from '@/components/listas/MapaClientesView';
 import { ProspeccaoB2BView } from '@/components/listas/prospeccao-b2b';
 import ProspeccaoClaudeCode from './ProspeccaoClaudeCode';
+import ProspeccaoEmpresas from './ProspeccaoEmpresas';
 
 interface TabItem {
   id: string;
@@ -54,6 +55,7 @@ const tabItems: TabItem[] = [
   { id: 'mapa-clientes', label: 'Mapa Clientes', icon: MapPin, description: 'Visualização geográfica das empresas' },
   { id: 'prospeccao-b2b', label: 'Prospecção B2B', icon: Target, description: 'Busca de empresas por região e segmento' },
   { id: 'prospeccao-claude-code', label: 'Prospecção Claude Code', icon: Bot, description: 'Consulte o CRM via Claude Code / ChatGPT usando MCP' },
+  { id: 'prospeccao-empresas', label: 'Prospecção Empresas', icon: Target, description: 'Empresas trazidas via Claude Code / ChatGPT para importar' },
 ];
 
 const ListasHub: React.FC = () => {
@@ -107,6 +109,8 @@ const ListasHub: React.FC = () => {
         return <ProspeccaoB2BView />;
       case 'prospeccao-claude-code':
         return <ProspeccaoClaudeCode />;
+      case 'prospeccao-empresas':
+        return <ProspeccaoEmpresas />;
       default:
         return null;
     }
