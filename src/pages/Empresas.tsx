@@ -1874,14 +1874,16 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   const cnpjPreenchido = !!formData.cpf_cnpj;
                   const isPessoaFisica = formData.company_type === "Pessoa Física";
                   
-                  // CPF/CNPJ só habilita após selecionar o tipo
-                  const isDisabled = field.id === "cpf_cnpj" ? !tipoSelecionado : 
-                                     field.id === "company_type" ? false :
-                                     !cnpjPreenchido;
-                  
-                  // Nome/Razão Social e Nome Fantasia: quando Pessoa Física, sempre editáveis
-                  const isNomeField = field.id === "company_name" || field.id === "company_fantasia";
-                  const fieldLocked = isPessoaFisica && isNomeField ? false : field.locked;
+                  // CPF/CNPJ só habilita após selecionar o tipo (apenas em cadastro novo)
+                  const isDisabled = editingEmpresa ? false : (
+                    field.id === "cpf_cnpj" ? !tipoSelecionado :
+                    field.id === "company_type" ? false :
+                    (isPessoaFisica ? false : !cnpjPreenchido)
+                  );
+
+                  // Pessoa Física não tem lookup automático — todos os campos são editáveis
+                  // Em edição, também liberamos os campos travados para permitir ajustes
+                  const fieldLocked = isPessoaFisica || editingEmpresa ? false : field.locked;
                   
                   // Rótulos dinâmicos para Pessoa Física
                   let displayLabel = field.label;
