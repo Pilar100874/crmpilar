@@ -25,19 +25,28 @@ const exemplosPrompt = [
   {
     titulo: '10 indústrias de embalagem em SP com WhatsApp',
     prompt:
-      'Pesquise na web 10 indústrias de embalagem plástica no estado de SP que tenham WhatsApp e site. Para cada uma, colete: nome, nome fantasia, CNPJ (se disponível), WhatsApp, e-mail, site, cidade, UF, e uma breve descrição. Depois adicione todas na Prospecção do Pilar usando add_prospeccao_empresas_bulk.',
+      'Pesquise na web 10 indústrias de embalagem plástica no estado de SP que tenham WhatsApp e site. Para cada uma, colete: nome, nome fantasia, CNPJ (se disponível), WhatsApp, e-mail, site, cidade, UF, e uma breve descrição. Depois adicione todas na Prospecção do Pilar usando salvar_empresas_prospectadas.',
   },
   {
     titulo: '20 restaurantes em Curitiba',
     prompt:
-      'Pesquise 20 restaurantes bem avaliados em Curitiba/PR com WhatsApp e Instagram. Adicione na Prospecção do Pilar com nome, whatsapp, endereço, cidade, UF, redes_sociais.instagram e descrição.',
+      'Pesquise 20 restaurantes bem avaliados em Curitiba/PR com WhatsApp e Instagram. Adicione na Prospecção do Pilar (salvar_empresas_prospectadas) com nome, whatsapp, endereço, cidade, UF, redes_sociais.instagram e descrição.',
   },
   {
     titulo: 'Concorrentes de um segmento',
     prompt:
-      'Encontre 15 concorrentes brasileiros da empresa "X" (segmento: SaaS de gestão). Adicione na Prospecção do Pilar com nome, site, e-mail comercial, cidade, UF, descrição e linkedin em redes_sociais.',
+      'Encontre 15 concorrentes brasileiros da empresa "X" (segmento: SaaS de gestão). Use salvar_empresas_prospectadas com nome, site, e-mail comercial, cidade, UF, descrição e linkedin em redes_sociais.',
   },
 ];
+
+const mcpConfigJson = `{
+  "mcpServers": {
+    "pilar": {
+      "type": "http",
+      "url": "${MCP_URL}"
+    }
+  }
+}`;
 
 interface ProspeccaoRow {
   id: string;
