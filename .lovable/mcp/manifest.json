@@ -114,6 +114,34 @@
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
+      },
+      {
+        "name": "list_segmentos",
+        "title": "Listar segmentos",
+        "description": "Lista os segmentos de empresa cadastrados no Pilar. Use para descobrir o id/nome de um segmento antes de filtrar em list_empresas.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "search": {
+              "type": "string",
+              "description": "Filtro parcial pelo nome do segmento."
+            },
+            "limit": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 200,
+              "description": "Máximo (padrão 100)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
       }
     ]
   }
