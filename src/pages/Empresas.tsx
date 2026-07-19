@@ -2228,7 +2228,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </div>
           </TabsContent>
 
-          {variant === "empresa" && (
+          {(variant === "empresa" || variant === "vendedor" || variant === "transportadora") && (
             <TabsContent value="usuarios" className="p-6">
               <Card className="p-6">
                 <div className="space-y-6">
