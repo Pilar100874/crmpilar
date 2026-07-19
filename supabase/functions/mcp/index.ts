@@ -349,7 +349,7 @@ var mcp_default = defineMcp({
   name: "pilar-mcp",
   title: "Pilar CRM MCP",
   version: "0.2.0",
-  instructions: "Ferramentas do Pilar CRM.\nLeitura: `whoami`, `list_segmentos`, `list_empresas` (filtros UF/cidade/segmento/e-mail/WhatsApp), `list_produtos`.\nEscrita \u2014 Prospec\xE7\xE3o: `add_prospeccao_empresa` insere UMA empresa pesquisada na web na tela 'Prospec\xE7\xE3o Empresas' do Listas; `add_prospeccao_empresas_bulk` insere um lote (at\xE9 100). Use SEMPRE que o usu\xE1rio pedir para pesquisar empresas na internet e trazer os resultados para dentro do Pilar. O usu\xE1rio depois revisa e importa para o cadastro definitivo. Todas as ferramentas respeitam as permiss\xF5es (RLS) do usu\xE1rio autenticado.",
+  instructions: "Ferramentas do Pilar CRM.\nLeitura: `whoami`, `list_segmentos`, `list_empresas` (filtros UF/cidade/segmento/e-mail/WhatsApp), `list_produtos`.\nEscrita \u2014 Prospec\xE7\xE3o: `salvar_empresa_prospectada` insere UMA empresa pesquisada na web na tela 'Prospec\xE7\xE3o Empresas' do Listas; `salvar_empresas_prospectadas` insere um lote (at\xE9 100). Use SEMPRE que o usu\xE1rio pedir para pesquisar empresas na internet e trazer os resultados para dentro do Pilar. O usu\xE1rio depois revisa e importa para o cadastro definitivo. Todas as ferramentas respeitam as permiss\xF5es (RLS) do usu\xE1rio autenticado.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"

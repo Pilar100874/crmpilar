@@ -15,8 +15,8 @@ export default defineMcp({
   instructions:
     "Ferramentas do Pilar CRM.\n" +
     "Leitura: `whoami`, `list_segmentos`, `list_empresas` (filtros UF/cidade/segmento/e-mail/WhatsApp), `list_produtos`.\n" +
-    "Escrita — Prospecção: `add_prospeccao_empresa` insere UMA empresa pesquisada na web na tela 'Prospecção Empresas' do Listas; " +
-    "`add_prospeccao_empresas_bulk` insere um lote (até 100). Use SEMPRE que o usuário pedir para pesquisar empresas na internet " +
+    "Escrita — Prospecção: `salvar_empresa_prospectada` insere UMA empresa pesquisada na web na tela 'Prospecção Empresas' do Listas; " +
+    "`salvar_empresas_prospectadas` insere um lote (até 100). Use SEMPRE que o usuário pedir para pesquisar empresas na internet " +
     "e trazer os resultados para dentro do Pilar. O usuário depois revisa e importa para o cadastro definitivo. " +
     "Todas as ferramentas respeitam as permissões (RLS) do usuário autenticado.",
   auth: auth.oauth.issuer({
