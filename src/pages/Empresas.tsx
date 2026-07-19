@@ -2243,7 +2243,10 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                     const vinculosUsuarios = vinculosDaEmpresa.filter(v => v.usuario_id !== null);
                     const idsJaVinculados = new Set(vinculosUsuarios.map(v => v.usuario_id));
                     const usuariosDisponiveis = usuarios.filter(u => !idsJaVinculados.has(u.id));
-                    const nomeVendedorPorId = (vid: string) => empresas.find(e => e.id === vid)?.nome_fantasia || empresas.find(e => e.id === vid)?.razao_social || "vendedor";
+                    const nomeVendedorPorId = (vid: string) => {
+                      const e = empresas.find(x => x.id === vid) as any;
+                      return e?.nome_fantasia || e?.nome || "vendedor";
+                    };
                     return (
                       <div className="space-y-4">
                         <Card className="border-primary/20 bg-primary/5">
