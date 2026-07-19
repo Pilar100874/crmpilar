@@ -2243,6 +2243,10 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                     const vinculosUsuarios = vinculosDaEmpresa.filter(v => v.usuario_id !== null);
                     const idsJaVinculados = new Set(vinculosUsuarios.map(v => v.usuario_id));
                     const usuariosDisponiveis = usuarios.filter(u => !idsJaVinculados.has(u.id));
+                    const nomeVendedorPorId = (vid: string) => {
+                      const e = empresas.find(x => x.id === vid) as any;
+                      return e?.nome_fantasia || e?.nome || "vendedor";
+                    };
                     return (
                       <div className="space-y-4">
                         <Card className="border-primary/20 bg-primary/5">
@@ -2278,17 +2282,29 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                           <h4 className="text-sm font-semibold mb-3">Usuários Vinculados</h4>
                           {vinculosUsuarios.length > 0 ? (
                             <div className="space-y-2">
-                              {vinculosUsuarios.map((v) => {
-                                const u = usuarios.find(x => x.id === v.usuario_id);
-                                return (
-                                  <div key={v.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors">
-                                    <p className="text-sm font-medium">{u?.nome || "Usuário não encontrado"}</p>
-                                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoverVinculoSimples(v.id)}>
-                                      <Trash2 className="w-4 h-4 text-destructive" />
-                                    </Button>
-                                  </div>
-                                );
-                              })}
+                               {vinculosUsuarios.map((v) => {
+                                 const u = usuarios.find(x => x.id === v.usuario_id);
+                                 const isAuto = !!v.auto_via_vendedor_id;
+                                 return (
+                                   <div key={v.id} className={`p-3 border rounded-lg flex items-center justify-between group transition-colors ${isAuto ? "bg-blue-500/5 border-blue-500/30" : "bg-muted/30 hover:border-primary/30"}`}>
+                                     <div className="flex items-center gap-2 flex-wrap">
+                                       <p className="text-sm font-medium">{u?.nome || "Usuário não encontrado"}</p>
+                                       {isAuto && (
+                                         <Badge variant="outline" className="text-[10px] border-blue-500/50 text-blue-600 dark:text-blue-400" title={`Vinculado automaticamente por estar no vendedor ${nomeVendedorPorId(v.auto_via_vendedor_id)}`}>
+                                           Auto · via {nomeVendedorPorId(v.auto_via_vendedor_id)}
+                                         </Badge>
+                                       )}
+                                     </div>
+                                     {isAuto ? (
+                                       <span className="text-[10px] text-muted-foreground italic pr-2">gerenciado pelo vendedor</span>
+                                     ) : (
+                                       <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoverVinculoSimples(v.id)}>
+                                         <Trash2 className="w-4 h-4 text-destructive" />
+                                       </Button>
+                                     )}
+                                   </div>
+                                 );
+                               })}
                             </div>
                           ) : (
                             <div className="p-4 border rounded-lg bg-muted/30 text-center">
