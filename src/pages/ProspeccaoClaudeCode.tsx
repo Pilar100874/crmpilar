@@ -1,27 +1,38 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Sparkles, Copy, ExternalLink, Terminal } from 'lucide-react';
+import { Sparkles, Copy, ExternalLink, Terminal, Plus, Trash2, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 
 const MCP_URL = 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/mcp';
 
+const SUGESTOES_TABELAS = [
+  'empresas', 'produtos', 'orcamentos', 'orcamento_itens', 'pedidos_ecommerce', 'pedidos_recebidos',
+  'customers', 'funil_deals', 'funil_stages', 'segmentos', 'produto_categorias', 'produto_grupos',
+  'condicoes_pagamento', 'tabelas_preco', 'estabelecimentos', 'atendentes', 'filas_atendimento',
+  'conversations', 'messages', 'contas_marketplace', 'marketplace_produtos', 'cupons_desconto',
+  'ncm_codigos', 'cnaes', 'municipios_coordenadas', 'campaigns', 'campaign_send_logs',
+];
+
 const exemplos = [
   {
-    titulo: 'Empresas com WhatsApp e e-mail de um segmento em SP',
-    prompt:
-      'Liste em formato de tabela as empresas do segmento "Indústria" no estado SP que tenham WhatsApp e e-mail cadastrados. Colunas: Nome, CNPJ, Cidade, UF, E-mail, WhatsApp.',
+    titulo: 'Listar tabelas liberadas',
+    prompt: 'Quais tabelas do Pilar eu tenho liberadas para consulta? Use listar_tabelas_disponiveis.',
   },
   {
-    titulo: 'Clientes de uma cidade específica',
+    titulo: 'Consultar uma tabela liberada',
     prompt:
-      'Traga as empresas cadastradas em Campinas/SP e monte uma tabela com Nome, WhatsApp e E-mail.',
+      'Use consultar_tabela na tabela "empresas" ordenando por nome. Traga os 50 primeiros em formato de tabela.',
   },
   {
-    titulo: 'Descobrir segmentos disponíveis',
-    prompt: 'Quais segmentos de empresa estão cadastrados no meu Pilar?',
+    titulo: 'Empresas com WhatsApp em SP',
+    prompt:
+      'Liste em formato de tabela as empresas do segmento "Indústria" no estado SP que tenham WhatsApp e e-mail cadastrados.',
   },
   {
     titulo: 'Produtos por marca',
@@ -39,27 +50,159 @@ const copy = (text: string) => {
   toast.success('Copiado!');
 };
 
+interface TabelaExposta {
+  id: string;
+  tabela: string;
+  descricao: string | null;
+  created_at: string;
+}
+
 export default function ProspeccaoClaudeCode() {
+  const [tabelas, setTabelas] = useState<TabelaExposta[]>([]);
+  const [novaTabela, setNovaTabela] = useState('');
+  const [novaDesc, setNovaDesc] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [toDelete, setToDelete] = useState<TabelaExposta | null>(null);
+
+  const carregar = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('mcp_tabelas_expostas')
+      .select('*')
+      .order('tabela');
+    if (error) toast.error(error.message);
+    else setTabelas((data as TabelaExposta[]) ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { carregar(); }, []);
+
+  const adicionar = async (tabela?: string) => {
+    const nome = (tabela ?? novaTabela).trim().toLowerCase();
+    if (!nome) { toast.error('Informe o nome da tabela'); return; }
+    if (!/^[a-z_][a-z0-9_]*$/.test(nome)) {
+      toast.error('Nome inválido. Use apenas letras minúsculas, números e _');
+      return;
+    }
+    if (tabelas.some((t) => t.tabela === nome)) {
+      toast.info('Tabela já está liberada');
+      return;
+    }
+    const { data: userData } = await supabase.auth.getUser();
+    const { error } = await supabase.from('mcp_tabelas_expostas').insert({
+      tabela: nome,
+      descricao: novaDesc.trim() || null,
+      created_by: userData.user?.id ?? null,
+    });
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Tabela "${nome}" liberada`);
+    setNovaTabela(''); setNovaDesc('');
+    carregar();
+  };
+
+  const remover = async (t: TabelaExposta) => {
+    const { error } = await supabase.from('mcp_tabelas_expostas').delete().eq('id', t.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Tabela removida');
+    carregar();
+  };
+
+  const sugestoesRestantes = SUGESTOES_TABELAS.filter(
+    (s) => !tabelas.some((t) => t.tabela === s),
+  );
+
   return (
     <div className="space-y-4">
       <Alert>
         <Sparkles className="h-4 w-4" />
         <AlertDescription>
-          Use o <strong>Claude Code</strong>, <strong>Claude Desktop</strong>, <strong>ChatGPT</strong> ou <strong>Cursor</strong> para
-          conversar com o seu CRM Pilar em linguagem natural — pedir listas de empresas por UF, cidade,
-          segmento, com WhatsApp/e-mail e receber a resposta em tabela ou CSV.
+          Defina abaixo quais tabelas do sistema ficam disponíveis para consulta via <strong>Claude Code</strong>,{' '}
+          <strong>Cursor</strong>, <strong>ChatGPT</strong> ou <strong>Claude Desktop</strong>. Só as tabelas
+          liberadas nesta tela poderão ser consultadas pelas ferramentas de IA (respeitando as permissões / RLS
+          do usuário conectado).
         </AlertDescription>
       </Alert>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
+            <Database className="h-4 w-4" />
+            Tabelas liberadas para consulta
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_1.5fr_auto] gap-2">
+            <Input
+              placeholder="Nome da tabela (ex: empresas, produtos)"
+              value={novaTabela}
+              onChange={(e) => setNovaTabela(e.target.value)}
+              list="mcp-tabelas-sugestoes"
+              onKeyDown={(e) => e.key === 'Enter' && adicionar()}
+            />
+            <datalist id="mcp-tabelas-sugestoes">
+              {sugestoesRestantes.map((s) => <option key={s} value={s} />)}
+            </datalist>
+            <Input
+              placeholder="Descrição opcional (ajuda a IA a entender)"
+              value={novaDesc}
+              onChange={(e) => setNovaDesc(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && adicionar()}
+            />
+            <Button onClick={() => adicionar()} disabled={loading}>
+              <Plus className="h-4 w-4 mr-1" /> Adicionar
+            </Button>
+          </div>
+
+          {sugestoesRestantes.length > 0 && (
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Sugestões rápidas:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {sugestoesRestantes.slice(0, 20).map((s) => (
+                  <Badge
+                    key={s}
+                    variant="outline"
+                    className="cursor-pointer hover:bg-accent"
+                    onClick={() => adicionar(s)}
+                  >
+                    <Plus className="h-3 w-3 mr-1" /> {s}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="border rounded-lg divide-y">
+            {tabelas.length === 0 && (
+              <p className="p-4 text-sm text-muted-foreground text-center">
+                Nenhuma tabela liberada ainda. Adicione acima ou use uma das sugestões.
+              </p>
+            )}
+            {tabelas.map((t) => (
+              <div key={t.id} className="flex items-center justify-between p-3">
+                <div>
+                  <p className="font-mono text-sm">{t.tabela}</p>
+                  {t.descricao && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{t.descricao}</p>
+                  )}
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setToDelete(t)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
             <Terminal className="h-4 w-4" />
-            1. Conectar o Claude Code ao Pilar
+            Conectar Claude Code / Cursor / ChatGPT ao Pilar
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
-          <p>No Claude Code, rode o comando abaixo (ele registra o servidor MCP do Pilar):</p>
+          <p>No Claude Code, rode o comando abaixo:</p>
           <div className="flex items-center gap-2 bg-muted p-3 rounded font-mono text-xs">
             <code className="flex-1 break-all">claude mcp add --transport http pilar {MCP_URL}</code>
             <Button
@@ -71,12 +214,10 @@ export default function ProspeccaoClaudeCode() {
             </Button>
           </div>
           <p className="text-muted-foreground">
-            Na primeira chamada, o Claude abre uma janela pedindo para você fazer login no Pilar e
-            aprovar o acesso. Depois disso, ele passa a agir como você (respeita permissões e RLS).
+            Na primeira chamada, o Claude abre uma janela pedindo para você fazer login no Pilar e aprovar o
+            acesso. Depois disso, ele passa a agir como você (respeita permissões e RLS).
           </p>
-          <p>
-            Para ChatGPT / Cursor / Claude Desktop, basta apontar a URL do servidor MCP:
-          </p>
+          <p>Para ChatGPT / Cursor / Claude Desktop, aponte para a URL do servidor MCP:</p>
           <div className="flex items-center gap-2 bg-muted p-3 rounded font-mono text-xs">
             <code className="flex-1 break-all">{MCP_URL}</code>
             <Button size="sm" variant="ghost" onClick={() => copy(MCP_URL)}>
@@ -88,14 +229,20 @@ export default function ProspeccaoClaudeCode() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">2. Ferramentas disponíveis</CardTitle>
+          <CardTitle className="text-base">Ferramentas disponíveis</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <div>
+            <Badge variant="secondary">listar_tabelas_disponiveis</Badge>{' '}
+            <span className="text-muted-foreground">mostra ao Claude/ChatGPT quais tabelas foram liberadas nesta tela.</span>
+          </div>
+          <div>
+            <Badge variant="secondary">consultar_tabela</Badge>{' '}
+            <span className="text-muted-foreground">consulta qualquer tabela liberada acima (com colunas, ordenação e limite).</span>
+          </div>
+          <div>
             <Badge variant="secondary">list_empresas</Badge>{' '}
-            <span className="text-muted-foreground">
-              busca empresas com filtros de UF, cidade, segmento, com/sem e-mail, com/sem WhatsApp.
-            </span>
+            <span className="text-muted-foreground">busca empresas com filtros de UF, cidade, segmento, com/sem e-mail, com/sem WhatsApp.</span>
           </div>
           <div>
             <Badge variant="secondary">list_segmentos</Badge>{' '}
@@ -114,7 +261,7 @@ export default function ProspeccaoClaudeCode() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">3. Exemplos de perguntas para prospecção</CardTitle>
+          <CardTitle className="text-base">Exemplos de perguntas</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {exemplos.map((ex, i) => (
@@ -131,18 +278,6 @@ export default function ProspeccaoClaudeCode() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">4. Dicas</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm space-y-2 text-muted-foreground">
-          <p>• Peça sempre em <strong>formato de tabela</strong> ou <strong>CSV</strong> — o assistente formata pra você.</p>
-          <p>• Combine filtros: <em>"empresas do segmento X em SP e RJ com WhatsApp"</em>.</p>
-          <p>• O limite padrão é 50 registros por consulta (máx 500). Peça explicitamente se precisar mais.</p>
-          <p>• Todas as consultas respeitam suas permissões — o assistente só vê o que você já vê no Pilar.</p>
-        </CardContent>
-      </Card>
-
       <div className="flex justify-end">
         <a href="https://docs.claude.com/en/docs/claude-code/mcp" target="_blank" rel="noreferrer">
           <Button variant="outline" size="sm">
@@ -150,6 +285,15 @@ export default function ProspeccaoClaudeCode() {
           </Button>
         </a>
       </div>
+
+      <DeleteConfirmDialog
+        open={!!toDelete}
+        onOpenChange={(o) => !o && setToDelete(null)}
+        onConfirm={() => { if (toDelete) { remover(toDelete); setToDelete(null); } }}
+        itemName={toDelete?.tabela ?? ''}
+        title="Remover tabela liberada"
+        description="A IA não poderá mais consultar esta tabela via MCP."
+      />
     </div>
   );
 }
