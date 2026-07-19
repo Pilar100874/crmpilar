@@ -1095,7 +1095,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         empresa_id: editingEmpresa.id,
         usuario_id: uid,
         segmento_id: null,
-        vendedor_id: null,
+        vendedor_id: variant === "vendedor" ? editingEmpresa.id : null,
+        transportadora_id: variant === "transportadora" ? editingEmpresa.id : null,
         estabelecimento_id: estabelecimentoId,
       }));
       const { error } = await supabase.from("empresa_vinculos").insert(rows);
