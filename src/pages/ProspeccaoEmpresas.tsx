@@ -290,9 +290,9 @@ export default function ProspeccaoEmpresas() {
                     </div>
                     <div className="bg-muted/60 p-2 rounded font-mono text-xs space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground w-16">Login:</span>
-                        <code className="flex-1">Pilar</code>
-                        <Button size="sm" variant="ghost" className="h-6 px-2" onClick={() => copy('Pilar')}>
+                        <span className="text-muted-foreground w-16">E-mail:</span>
+                        <code className="flex-1">pilar@pilar.com.br</code>
+                        <Button size="sm" variant="ghost" className="h-6 px-2" onClick={() => copy('pilar@pilar.com.br')}>
                           <Copy className="h-3 w-3" />
                         </Button>
                       </div>
