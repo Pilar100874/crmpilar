@@ -440,6 +440,19 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       .order('nome_fantasia');
     setVendedoresLista(vendedoresData || []);
 
+    // Carregar empresas reais (para uso na aba de vínculos em vendedor/transportadora)
+    if (variant !== "empresa") {
+      const { data: empresasReaisData } = await supabase
+        .from('empresas')
+        .select('id, nome_fantasia, nome, cnpj')
+        .eq('estabelecimento_id', estabId)
+        .not('tipo_cliente', 'in', '("vendedor","transportadora")')
+        .order('nome_fantasia');
+      setEmpresasParaVincular(empresasReaisData || []);
+    } else {
+      setEmpresasParaVincular([]);
+    }
+
     // Carregar vínculos
     const { data: vinculosData, error: vinculosError } = await supabase
       .from('empresa_vinculos')
