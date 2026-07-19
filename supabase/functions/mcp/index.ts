@@ -343,13 +343,93 @@ var add_prospeccao_empresas_bulk_default = defineTool6({
   }
 });
 
+// src/lib/mcp/tools/consultar-tabela.ts
+import { createClient as createClient7 } from "npm:@supabase/supabase-js@^2.75.0";
+import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.23.0";
+import { z as z6 } from "npm:zod@^3.25.76";
+function supabaseForUser7(ctx) {
+  return createClient7(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+var consultar_tabela_default = defineTool7({
+  name: "consultar_tabela",
+  title: "Consultar uma tabela liberada",
+  description: "Consulta uma tabela do sistema Pilar que foi previamente liberada pelo administrador na tela 'Disponibilizar dados para Cloud Code / Cursor / ChatGPT'. Use 'listar_tabelas_disponiveis' primeiro para saber quais tabelas est\xE3o dispon\xEDveis. Retorna os registros (respeitando RLS do usu\xE1rio autenticado).",
+  inputSchema: {
+    tabela: z6.string().describe("Nome exato da tabela (ex.: empresas, produtos, orcamentos). Precisa estar na lista de tabelas liberadas."),
+    colunas: z6.string().optional().describe("Colunas separadas por v\xEDrgula (padr\xE3o: *)."),
+    limit: z6.number().int().positive().max(500).optional().describe("M\xE1ximo de registros (padr\xE3o 50, m\xE1x 500)."),
+    order_by: z6.string().optional().describe("Coluna para ordenar."),
+    ordem: z6.enum(["asc", "desc"]).optional().describe("Dire\xE7\xE3o da ordena\xE7\xE3o (padr\xE3o asc).")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ tabela, colunas, limit, order_by, ordem }, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "N\xE3o autenticado." }], isError: true };
+    }
+    const sb = supabaseForUser7(ctx);
+    const { data: allowed, error: errAllowed } = await sb.from("mcp_tabelas_expostas").select("tabela").eq("tabela", tabela).maybeSingle();
+    if (errAllowed) return { content: [{ type: "text", text: errAllowed.message }], isError: true };
+    if (!allowed) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Tabela "${tabela}" n\xE3o est\xE1 liberada. Pe\xE7a ao administrador para adicion\xE1-la em Listas \u2192 Disponibilizar dados para Cloud Code / Cursor / ChatGPT.`
+          }
+        ],
+        isError: true
+      };
+    }
+    let q = sb.from(tabela).select(colunas && colunas.trim() ? colunas : "*").limit(limit ?? 50);
+    if (order_by) q = q.order(order_by, { ascending: (ordem ?? "asc") === "asc" });
+    const { data, error } = await q;
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    return {
+      content: [{ type: "text", text: JSON.stringify(data ?? []) }],
+      structuredContent: { tabela, registros: data ?? [], count: (data ?? []).length }
+    };
+  }
+});
+
+// src/lib/mcp/tools/listar-tabelas-disponiveis.ts
+import { createClient as createClient8 } from "npm:@supabase/supabase-js@^2.75.0";
+import { defineTool as defineTool8 } from "npm:@lovable.dev/mcp-js@0.23.0";
+function supabaseForUser8(ctx) {
+  return createClient8(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+var listar_tabelas_disponiveis_default = defineTool8({
+  name: "listar_tabelas_disponiveis",
+  title: "Listar tabelas liberadas para consulta",
+  description: "Retorna a lista de tabelas do Pilar que est\xE3o liberadas para consulta via MCP (configuradas na tela 'Disponibilizar dados para Cloud Code / Cursor / ChatGPT'). Use antes de 'consultar_tabela'.",
+  inputSchema: {},
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async (_input, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "N\xE3o autenticado." }], isError: true };
+    }
+    const sb = supabaseForUser8(ctx);
+    const { data, error } = await sb.from("mcp_tabelas_expostas").select("tabela, descricao").order("tabela");
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    return {
+      content: [{ type: "text", text: JSON.stringify(data ?? []) }],
+      structuredContent: { tabelas: data ?? [], count: (data ?? []).length }
+    };
+  }
+});
+
 // src/lib/mcp/index.ts
 var projectRef = "ioxugupvxlcdweldocmq";
 var mcp_default = defineMcp({
   name: "pilar-mcp",
   title: "Pilar CRM MCP",
-  version: "0.2.0",
-  instructions: "Ferramentas do Pilar CRM.\nLeitura: `whoami`, `list_segmentos`, `list_empresas` (filtros UF/cidade/segmento/e-mail/WhatsApp), `list_produtos`.\nEscrita \u2014 Prospec\xE7\xE3o: `salvar_empresa_prospectada` insere UMA empresa pesquisada na web na tela 'Prospec\xE7\xE3o Empresas' do Listas; `salvar_empresas_prospectadas` insere um lote (at\xE9 100). Use SEMPRE que o usu\xE1rio pedir para pesquisar empresas na internet e trazer os resultados para dentro do Pilar. O usu\xE1rio depois revisa e importa para o cadastro definitivo. Todas as ferramentas respeitam as permiss\xF5es (RLS) do usu\xE1rio autenticado.",
+  version: "0.3.0",
+  instructions: "Ferramentas do Pilar CRM.\nLeitura: `whoami`, `list_segmentos`, `list_empresas` (filtros UF/cidade/segmento/e-mail/WhatsApp), `list_produtos`.\nConsulta gen\xE9rica: `listar_tabelas_disponiveis` mostra as tabelas liberadas pelo administrador, e `consultar_tabela` retorna registros de qualquer uma dessas tabelas (respeitando RLS).\nEscrita \u2014 Prospec\xE7\xE3o: `salvar_empresa_prospectada` insere UMA empresa pesquisada na web na tela 'Prospec\xE7\xE3o Via Cloud Code / Cursor ou ChatGPT'; `salvar_empresas_prospectadas` insere um lote (at\xE9 100). Use SEMPRE que o usu\xE1rio pedir para pesquisar empresas na internet e trazer os resultados para dentro do Pilar. O usu\xE1rio depois revisa e importa para o cadastro definitivo. Todas as ferramentas respeitam as permiss\xF5es (RLS) do usu\xE1rio autenticado.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
@@ -359,6 +439,8 @@ var mcp_default = defineMcp({
     list_empresas_default,
     list_produtos_default,
     list_segmentos_default,
+    listar_tabelas_disponiveis_default,
+    consultar_tabela_default,
     add_prospeccao_empresa_default,
     add_prospeccao_empresas_bulk_default
   ]
