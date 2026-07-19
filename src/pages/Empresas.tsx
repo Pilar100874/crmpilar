@@ -81,6 +81,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   const [searchParams] = useSearchParams();
   const [showForm, setShowForm] = useState(false);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [empresasParaVincular, setEmpresasParaVincular] = useState<Array<{ id: string; nome_fantasia: string; nome: string; cnpj?: string }>>([]);
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -438,6 +439,19 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       .eq('tipo_cliente', 'vendedor')
       .order('nome_fantasia');
     setVendedoresLista(vendedoresData || []);
+
+    // Carregar empresas reais (para uso na aba de vínculos em vendedor/transportadora)
+    if (variant !== "empresa") {
+      const { data: empresasReaisData } = await supabase
+        .from('empresas')
+        .select('id, nome_fantasia, nome, cnpj')
+        .eq('estabelecimento_id', estabId)
+        .not('tipo_cliente', 'in', '("vendedor","transportadora")')
+        .order('nome_fantasia');
+      setEmpresasParaVincular(empresasReaisData || []);
+    } else {
+      setEmpresasParaVincular([]);
+    }
 
     // Carregar vínculos
     const { data: vinculosData, error: vinculosError } = await supabase
@@ -1915,7 +1929,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 Cancelar
               </Button>
               <Button onClick={handleSaveEmpresa} className="shadow-sm">
-                {editingEmpresa ? "Salvar Alterações" : "Criar Empresa"}
+                {editingEmpresa ? "Salvar Alterações" : `Criar ${entityConfig.singular}`}
               </Button>
             </div>
           </TabsContent>
@@ -2389,8 +2403,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   {editingEmpresa ? (() => {
                     const key = variant === "vendedor" ? "vendedor_id" : "transportadora_id";
                     const vinculosDesta = vinculos.filter((v) => v[key] === editingEmpresa.id);
-                    const idsJaVinculados = new Set(vinculosDesta.map((v) => v.empresa_id));
-                    const empresasDisponiveis = empresas.filter((e) => !idsJaVinculados.has(e.id));
+                     const idsJaVinculados = new Set(vinculosDesta.map((v) => v.empresa_id));
+                    const listaEmpresasReais = empresasParaVincular;
+                    const empresasDisponiveis = listaEmpresasReais.filter((e) => !idsJaVinculados.has(e.id));
                     return (
                       <div className="space-y-4">
                         <Card className="border-primary/20 bg-primary/5">
@@ -2428,7 +2443,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                           {vinculosDesta.length > 0 ? (
                             <div className="space-y-2">
                               {vinculosDesta.map((v) => {
-                                const emp = empresas.find((x) => x.id === v.empresa_id);
+                                const emp = listaEmpresasReais.find((x) => x.id === v.empresa_id);
                                 return (
                                   <div key={v.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors">
                                     <div>
