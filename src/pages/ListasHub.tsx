@@ -96,6 +96,8 @@ const ListasHub: React.FC = () => {
         return <VinculosContatos />;
       case 'vinculos-empresa-vendedor':
         return <VinculosEmpresaVendedor />;
+      case 'vinculos-vendedor-usuario':
+        return <VinculosVendedorUsuario />;
       case 'mapa-clientes':
         return <MapaClientesView />;
       case 'prospeccao-b2b':
