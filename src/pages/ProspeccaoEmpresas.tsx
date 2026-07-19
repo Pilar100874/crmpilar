@@ -9,8 +9,35 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { RefreshCw, Trash2, Download, ExternalLink, Search, Bot } from 'lucide-react';
+import { RefreshCw, Trash2, Download, ExternalLink, Search, Bot, Copy, Terminal, Sparkles, HelpCircle } from 'lucide-react';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+
+const MCP_URL = 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/mcp';
+
+const copy = (t: string) => {
+  navigator.clipboard.writeText(t);
+  toast.success('Copiado!');
+};
+
+const exemplosPrompt = [
+  {
+    titulo: '10 indústrias de embalagem em SP com WhatsApp',
+    prompt:
+      'Pesquise na web 10 indústrias de embalagem plástica no estado de SP que tenham WhatsApp e site. Para cada uma, colete: nome, nome fantasia, CNPJ (se disponível), WhatsApp, e-mail, site, cidade, UF, e uma breve descrição. Depois adicione todas na Prospecção do Pilar usando add_prospeccao_empresas_bulk.',
+  },
+  {
+    titulo: '20 restaurantes em Curitiba',
+    prompt:
+      'Pesquise 20 restaurantes bem avaliados em Curitiba/PR com WhatsApp e Instagram. Adicione na Prospecção do Pilar com nome, whatsapp, endereço, cidade, UF, redes_sociais.instagram e descrição.',
+  },
+  {
+    titulo: 'Concorrentes de um segmento',
+    prompt:
+      'Encontre 15 concorrentes brasileiros da empresa "X" (segmento: SaaS de gestão). Adicione na Prospecção do Pilar com nome, site, e-mail comercial, cidade, UF, descrição e linkedin em redes_sociais.',
+  },
+];
 
 interface ProspeccaoRow {
   id: string;
@@ -145,6 +172,115 @@ export default function ProspeccaoEmpresas() {
 
   return (
     <div className="p-4 space-y-4">
+      <Collapsible defaultOpen>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <HelpCircle className="h-4 w-4 text-primary" />
+                Como usar — pesquisar na internet e trazer para o Pilar
+                <Badge variant="outline" className="ml-auto">clique para expandir/recolher</Badge>
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-4 text-sm">
+              <Alert>
+                <Sparkles className="h-4 w-4" />
+                <AlertDescription>
+                  Esta tela recebe empresas que o <strong>Claude Code</strong>, <strong>Claude Desktop</strong>, <strong>ChatGPT</strong> ou <strong>Cursor</strong>{' '}
+                  pesquisou na internet e enviou ao Pilar via MCP. Aqui você <strong>revisa</strong>, <strong>seleciona</strong> e <strong>importa</strong> as empresas para o cadastro definitivo.
+                </AlertDescription>
+              </Alert>
+
+              <div>
+                <div className="font-semibold mb-2 flex items-center gap-2">
+                  <Terminal className="h-4 w-4" /> 1. Conectar o Claude Code / ChatGPT ao Pilar (uma vez)
+                </div>
+                <p className="mb-2">No <strong>Claude Code</strong> (terminal), rode:</p>
+                <div className="flex items-center gap-2 bg-muted p-3 rounded font-mono text-xs">
+                  <code className="flex-1 break-all">claude mcp add --transport http pilar {MCP_URL}</code>
+                  <Button size="sm" variant="ghost" onClick={() => copy(`claude mcp add --transport http pilar ${MCP_URL}`)}>
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+                <p className="mt-2 text-muted-foreground">
+                  No <strong>ChatGPT / Cursor / Claude Desktop</strong>, adicione um servidor MCP apontando para:
+                </p>
+                <div className="flex items-center gap-2 bg-muted p-3 rounded font-mono text-xs mt-1">
+                  <code className="flex-1 break-all">{MCP_URL}</code>
+                  <Button size="sm" variant="ghost" onClick={() => copy(MCP_URL)}>
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+                <p className="mt-2 text-muted-foreground">
+                  Na primeira chamada, será aberta uma janela para você <strong>fazer login no Pilar e autorizar</strong> o assistente.
+                  Depois, ele passa a agir com o seu usuário (respeitando permissões e RLS). Um manual completo dessa etapa está em <strong>Listas → Prospecção Claude Code</strong>.
+                </p>
+              </div>
+
+              <div>
+                <div className="font-semibold mb-2">2. Peça a pesquisa em linguagem natural</div>
+                <p className="text-muted-foreground mb-2">
+                  Deixe claro <strong>o que pesquisar</strong>, <strong>onde</strong> (cidade/UF/segmento) e <strong>quais campos coletar</strong>.
+                  O assistente usa a ferramenta <code className="bg-muted px-1 rounded">add_prospeccao_empresa</code> (uma) ou{' '}
+                  <code className="bg-muted px-1 rounded">add_prospeccao_empresas_bulk</code> (várias) automaticamente.
+                </p>
+                <div className="space-y-2">
+                  {exemplosPrompt.map((ex, i) => (
+                    <div key={i} className="border rounded p-3 bg-muted/30">
+                      <div className="font-medium text-xs uppercase text-muted-foreground mb-1">{ex.titulo}</div>
+                      <div className="flex items-start gap-2">
+                        <p className="flex-1 text-sm italic">"{ex.prompt}"</p>
+                        <Button size="sm" variant="ghost" onClick={() => copy(ex.prompt)}>
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="font-semibold mb-2">3. Campos que o assistente pode preencher</div>
+                <p className="text-muted-foreground mb-2">
+                  Peça explicitamente para o assistente coletar o máximo desses campos ao pesquisar:
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-1 text-xs">
+                  {[
+                    'nome', 'nome_fantasia', 'cnpj', 'email', 'telefone', 'whatsapp',
+                    'site', 'endereco', 'bairro', 'cidade', 'estado (UF)', 'cep',
+                    'cnae_principal', 'cnae_descricao', 'segmento_nome', 'descricao',
+                    'redes_sociais.instagram', 'redes_sociais.facebook',
+                    'redes_sociais.linkedin', 'redes_sociais.youtube', 'redes_sociais.tiktok',
+                    'fontes (URLs)',
+                  ].map((c) => (
+                    <Badge key={c} variant="secondary" className="justify-start font-mono">{c}</Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="font-semibold mb-2">4. Revisar e importar</div>
+                <ol className="list-decimal ml-5 space-y-1 text-muted-foreground">
+                  <li>Clique em <strong>Atualizar</strong> para carregar o que o assistente enviou.</li>
+                  <li>Marque as linhas que quiser importar (ou o checkbox do cabeçalho para todas).</li>
+                  <li>Clique em <strong>Importar selecionadas</strong> — as empresas viram cadastro em <strong>Listas → Empresas</strong>.</li>
+                  <li>O que já foi importado aparece com o selo <Badge variant="default" className="ml-1">Importado</Badge> e não pode ser importado de novo.</li>
+                </ol>
+              </div>
+
+              <Alert>
+                <AlertDescription className="text-xs">
+                  <strong>Dica:</strong> se o assistente disser "não tenho ferramenta para isso", confirme que ele está conectado ao servidor MCP{' '}
+                  <code className="bg-muted px-1 rounded">pilar</code> e que fez o login. Você só vê aqui as prospecções feitas <strong>com o seu usuário</strong>.
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
