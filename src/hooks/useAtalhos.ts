@@ -163,7 +163,7 @@ export const useAtalhos = () => {
 
     // Realtime subscription
     const channel = supabase
-      .channel("user_atalhos_changes")
+      .channel(`user_atalhos_changes_${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         {
