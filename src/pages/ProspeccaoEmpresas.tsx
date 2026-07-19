@@ -9,8 +9,35 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { RefreshCw, Trash2, Download, ExternalLink, Search, Bot } from 'lucide-react';
+import { RefreshCw, Trash2, Download, ExternalLink, Search, Bot, Copy, Terminal, Sparkles, HelpCircle } from 'lucide-react';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+
+const MCP_URL = 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/mcp';
+
+const copy = (t: string) => {
+  navigator.clipboard.writeText(t);
+  toast.success('Copiado!');
+};
+
+const exemplosPrompt = [
+  {
+    titulo: '10 indústrias de embalagem em SP com WhatsApp',
+    prompt:
+      'Pesquise na web 10 indústrias de embalagem plástica no estado de SP que tenham WhatsApp e site. Para cada uma, colete: nome, nome fantasia, CNPJ (se disponível), WhatsApp, e-mail, site, cidade, UF, e uma breve descrição. Depois adicione todas na Prospecção do Pilar usando add_prospeccao_empresas_bulk.',
+  },
+  {
+    titulo: '20 restaurantes em Curitiba',
+    prompt:
+      'Pesquise 20 restaurantes bem avaliados em Curitiba/PR com WhatsApp e Instagram. Adicione na Prospecção do Pilar com nome, whatsapp, endereço, cidade, UF, redes_sociais.instagram e descrição.',
+  },
+  {
+    titulo: 'Concorrentes de um segmento',
+    prompt:
+      'Encontre 15 concorrentes brasileiros da empresa "X" (segmento: SaaS de gestão). Adicione na Prospecção do Pilar com nome, site, e-mail comercial, cidade, UF, descrição e linkedin em redes_sociais.',
+  },
+];
 
 interface ProspeccaoRow {
   id: string;
