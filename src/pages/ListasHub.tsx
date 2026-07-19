@@ -54,8 +54,8 @@ const tabItems: TabItem[] = [
   { id: 'vinculos-vendedor-usuario', label: 'Vínculo Vend. x Usuário', icon: Link2, description: 'Vínculo Vendedores X Usuário' },
   { id: 'mapa-clientes', label: 'Mapa Clientes', icon: MapPin, description: 'Visualização geográfica das empresas' },
   { id: 'prospeccao-b2b', label: 'Prospecção B2B', icon: Target, description: 'Busca de empresas por região e segmento' },
-  { id: 'prospeccao-claude-code', label: 'Prospecção Claude Code', icon: Bot, description: 'Consulte o CRM via Claude Code / ChatGPT usando MCP' },
-  { id: 'prospeccao-empresas', label: 'Prospecção Empresas', icon: Target, description: 'Empresas trazidas via Claude Code / ChatGPT para importar' },
+  { id: 'prospeccao-claude-code', label: 'Disponibilizar dados p/ Cloud Code / Cursor / ChatGPT', icon: Bot, description: 'Configure quais tabelas do sistema ficam disponíveis para consulta via MCP (Claude Code, Cursor, ChatGPT)' },
+  { id: 'prospeccao-empresas', label: 'Prospecção Via Cloud Code / Cursor ou ChatGPT', icon: Target, description: 'Empresas trazidas via Claude Code / Cursor / ChatGPT para revisar e importar' },
 ];
 
 const ListasHub: React.FC = () => {

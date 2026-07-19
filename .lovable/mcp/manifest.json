@@ -12,7 +12,7 @@
   "mcp": {
     "server": {
       "name": "pilar-mcp",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "title": "Pilar CRM MCP"
     },
     "tools": [
@@ -138,6 +138,69 @@
               "description": "Máximo (padrão 100)."
             }
           },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "listar_tabelas_disponiveis",
+        "title": "Listar tabelas liberadas para consulta",
+        "description": "Retorna a lista de tabelas do Pilar que estão liberadas para consulta via MCP (configuradas na tela 'Disponibilizar dados para Cloud Code / Cursor / ChatGPT'). Use antes de 'consultar_tabela'.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "consultar_tabela",
+        "title": "Consultar uma tabela liberada",
+        "description": "Consulta uma tabela do sistema Pilar que foi previamente liberada pelo administrador na tela 'Disponibilizar dados para Cloud Code / Cursor / ChatGPT'. Use 'listar_tabelas_disponiveis' primeiro para saber quais tabelas estão disponíveis. Retorna os registros (respeitando RLS do usuário autenticado).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "tabela": {
+              "type": "string",
+              "description": "Nome exato da tabela (ex.: empresas, produtos, orcamentos). Precisa estar na lista de tabelas liberadas."
+            },
+            "colunas": {
+              "type": "string",
+              "description": "Colunas separadas por vírgula (padrão: *)."
+            },
+            "limit": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 500,
+              "description": "Máximo de registros (padrão 50, máx 500)."
+            },
+            "order_by": {
+              "type": "string",
+              "description": "Coluna para ordenar."
+            },
+            "ordem": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "description": "Direção da ordenação (padrão asc)."
+            }
+          },
+          "required": [
+            "tabela"
+          ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },

@@ -359,7 +359,7 @@ export default function ProspeccaoEmpresas() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Bot className="h-5 w-5 text-primary" />
-              Prospecção Empresas
+              Prospecção Via Cloud Code / Cursor ou ChatGPT
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
               Empresas trazidas via Claude Code / ChatGPT (MCP). Revise e importe para o cadastro definitivo.
