@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import OAuthConsent from "./pages/OAuthConsent";
 import Dashboard from "./pages/Dashboard";
 import Atendimento from "./pages/Atendimento";
 import BotBuilder from "./pages/BotBuilder";
@@ -324,6 +325,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Splash />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/espelho-funcionario/:token" element={<EspelhoFuncionario />} />
             <Route path="/ponto/totem" element={<PontoTotem />} />
             <Route element={<LayoutWrapper />}>
