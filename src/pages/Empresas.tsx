@@ -2404,7 +2404,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                     const key = variant === "vendedor" ? "vendedor_id" : "transportadora_id";
                     const vinculosDesta = vinculos.filter((v) => v[key] === editingEmpresa.id);
                      const idsJaVinculados = new Set(vinculosDesta.map((v) => v.empresa_id));
-                    const listaEmpresasReais = variant === "empresa" ? empresas : empresasParaVincular;
+                    const listaEmpresasReais = empresasParaVincular;
                     const empresasDisponiveis = listaEmpresasReais.filter((e) => !idsJaVinculados.has(e.id));
                     return (
                       <div className="space-y-4">
