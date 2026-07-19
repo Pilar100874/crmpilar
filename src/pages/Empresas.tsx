@@ -1929,7 +1929,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 Cancelar
               </Button>
               <Button onClick={handleSaveEmpresa} className="shadow-sm">
-                {editingEmpresa ? "Salvar Alterações" : "Criar Empresa"}
+                {editingEmpresa ? "Salvar Alterações" : `Criar ${entityConfig.singular}`}
               </Button>
             </div>
           </TabsContent>
