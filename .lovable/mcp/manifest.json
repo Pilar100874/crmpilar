@@ -34,8 +34,8 @@
       },
       {
         "name": "list_empresas",
-        "title": "Listar empresas",
-        "description": "Lista empresas do CRM Pilar visíveis para o usuário autenticado. Suporta busca textual e limite.",
+        "title": "Listar empresas (com filtros)",
+        "description": "Lista empresas do CRM Pilar visíveis para o usuário autenticado. Permite filtrar por UF (estado), cidade, segmento (por id ou nome), e exigir presença de e-mail e/ou WhatsApp. Retorna nome, nome fantasia, CNPJ, e-mail(s), telefone, WhatsApp(s), cidade, UF e segmento — pronto para o assistente montar tabela.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -46,13 +46,40 @@
           "properties": {
             "search": {
               "type": "string",
-              "description": "Texto a buscar em razão social, nome fantasia ou CNPJ/CPF."
+              "description": "Texto livre em nome, nome fantasia ou CNPJ."
+            },
+            "uf": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 2,
+              "description": "UF (2 letras), ex: SP, RJ, MG."
+            },
+            "cidade": {
+              "type": "string",
+              "description": "Cidade (busca parcial, case-insensitive)."
+            },
+            "segmento_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "ID do segmento (use list_segmentos para descobrir)."
+            },
+            "segmento_nome": {
+              "type": "string",
+              "description": "Nome do segmento (busca parcial). Alternativa a segmento_id."
+            },
+            "com_email": {
+              "type": "boolean",
+              "description": "Se true, retorna somente empresas com e-mail cadastrado."
+            },
+            "com_whatsapp": {
+              "type": "boolean",
+              "description": "Se true, retorna somente empresas com WhatsApp/telefone cadastrado."
             },
             "limit": {
               "type": "integer",
               "exclusiveMinimum": 0,
-              "maximum": 100,
-              "description": "Número máximo de registros (padrão 25, máx 100)."
+              "maximum": 500,
+              "description": "Máximo de registros (padrão 50, máx 500)."
             }
           },
           "additionalProperties": false,
@@ -81,6 +108,34 @@
               "exclusiveMinimum": 0,
               "maximum": 100,
               "description": "Número máximo (padrão 25, máx 100)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_segmentos",
+        "title": "Listar segmentos",
+        "description": "Lista os segmentos de empresa cadastrados no Pilar. Use para descobrir o id/nome de um segmento antes de filtrar em list_empresas.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "search": {
+              "type": "string",
+              "description": "Filtro parcial pelo nome do segmento."
+            },
+            "limit": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 200,
+              "description": "Máximo (padrão 100)."
             }
           },
           "additionalProperties": false,

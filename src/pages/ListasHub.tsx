@@ -10,7 +10,8 @@ import {
   PanelLeftClose,
   LucideIcon,
   MapPin,
-  Target
+  Target,
+  Bot
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -31,6 +32,7 @@ import VinculosEmpresaVendedor from './VinculosEmpresaVendedor';
 import VinculosVendedorUsuario from './VinculosVendedorUsuario';
 import MapaClientesView from '@/components/listas/MapaClientesView';
 import { ProspeccaoB2BView } from '@/components/listas/prospeccao-b2b';
+import ProspeccaoClaudeCode from './ProspeccaoClaudeCode';
 
 interface TabItem {
   id: string;
@@ -51,6 +53,7 @@ const tabItems: TabItem[] = [
   { id: 'vinculos-vendedor-usuario', label: 'Vínculo Vend. x Usuário', icon: Link2, description: 'Vínculo Vendedores X Usuário' },
   { id: 'mapa-clientes', label: 'Mapa Clientes', icon: MapPin, description: 'Visualização geográfica das empresas' },
   { id: 'prospeccao-b2b', label: 'Prospecção B2B', icon: Target, description: 'Busca de empresas por região e segmento' },
+  { id: 'prospeccao-claude-code', label: 'Prospecção Claude Code', icon: Bot, description: 'Consulte o CRM via Claude Code / ChatGPT usando MCP' },
 ];
 
 const ListasHub: React.FC = () => {
@@ -102,6 +105,8 @@ const ListasHub: React.FC = () => {
         return <MapaClientesView />;
       case 'prospeccao-b2b':
         return <ProspeccaoB2BView />;
+      case 'prospeccao-claude-code':
+        return <ProspeccaoClaudeCode />;
       default:
         return null;
     }

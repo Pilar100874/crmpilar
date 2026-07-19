@@ -46,28 +46,68 @@ function supabaseForUser2(ctx) {
 }
 var list_empresas_default = defineTool2({
   name: "list_empresas",
-  title: "Listar empresas",
-  description: "Lista empresas do CRM Pilar vis\xEDveis para o usu\xE1rio autenticado. Suporta busca textual e limite.",
+  title: "Listar empresas (com filtros)",
+  description: "Lista empresas do CRM Pilar vis\xEDveis para o usu\xE1rio autenticado. Permite filtrar por UF (estado), cidade, segmento (por id ou nome), e exigir presen\xE7a de e-mail e/ou WhatsApp. Retorna nome, nome fantasia, CNPJ, e-mail(s), telefone, WhatsApp(s), cidade, UF e segmento \u2014 pronto para o assistente montar tabela.",
   inputSchema: {
-    search: z.string().optional().describe("Texto a buscar em raz\xE3o social, nome fantasia ou CNPJ/CPF."),
-    limit: z.number().int().positive().max(100).optional().describe("N\xFAmero m\xE1ximo de registros (padr\xE3o 25, m\xE1x 100).")
+    search: z.string().optional().describe("Texto livre em nome, nome fantasia ou CNPJ."),
+    uf: z.string().length(2).optional().describe("UF (2 letras), ex: SP, RJ, MG."),
+    cidade: z.string().optional().describe("Cidade (busca parcial, case-insensitive)."),
+    segmento_id: z.string().uuid().optional().describe("ID do segmento (use list_segmentos para descobrir)."),
+    segmento_nome: z.string().optional().describe("Nome do segmento (busca parcial). Alternativa a segmento_id."),
+    com_email: z.boolean().optional().describe("Se true, retorna somente empresas com e-mail cadastrado."),
+    com_whatsapp: z.boolean().optional().describe("Se true, retorna somente empresas com WhatsApp/telefone cadastrado."),
+    limit: z.number().int().positive().max(500).optional().describe("M\xE1ximo de registros (padr\xE3o 50, m\xE1x 500).")
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ search, limit }, ctx) => {
+  handler: async ({ search, uf, cidade, segmento_id, segmento_nome, com_email, com_whatsapp, limit }, ctx) => {
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "N\xE3o autenticado." }], isError: true };
     }
     const sb = supabaseForUser2(ctx);
-    let q = sb.from("empresas").select("id, razao_social, nome_fantasia, cpf_cnpj, tipo_pessoa, email, telefone, cidade, uf").order("razao_social").limit(limit ?? 25);
+    let segIds = null;
+    if (segmento_id) {
+      segIds = [segmento_id];
+    } else if (segmento_nome && segmento_nome.trim()) {
+      const { data: segs, error: segErr } = await sb.from("segmentos").select("id, nome").ilike("nome", `%${segmento_nome.trim()}%`);
+      if (segErr) return { content: [{ type: "text", text: segErr.message }], isError: true };
+      if (!segs || segs.length === 0) {
+        return {
+          content: [{ type: "text", text: `Nenhum segmento encontrado com nome "${segmento_nome}".` }],
+          structuredContent: { empresas: [], count: 0 }
+        };
+      }
+      segIds = segs.map((s) => s.id);
+    }
+    let q = sb.from("empresas").select(
+      "id, nome, nome_fantasia, cnpj, email, emails_vinculados, telefone, whatsapps_vinculados, cidade, estado, segmento_id, segmentos(nome)"
+    ).order("nome").limit(limit ?? 50);
     if (search && search.trim()) {
       const s = `%${search.trim()}%`;
-      q = q.or(`razao_social.ilike.${s},nome_fantasia.ilike.${s},cpf_cnpj.ilike.${s}`);
+      q = q.or(`nome.ilike.${s},nome_fantasia.ilike.${s},cnpj.ilike.${s}`);
     }
+    if (uf) q = q.ilike("estado", uf.trim());
+    if (cidade && cidade.trim()) q = q.ilike("cidade", `%${cidade.trim()}%`);
+    if (segIds) q = q.in("segmento_id", segIds);
+    if (com_email) q = q.not("email", "is", null).neq("email", "");
+    if (com_whatsapp) q = q.not("telefone", "is", null).neq("telefone", "");
     const { data, error } = await q;
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    const rows = (data ?? []).map((r) => ({
+      id: r.id,
+      nome: r.nome,
+      nome_fantasia: r.nome_fantasia,
+      cnpj: r.cnpj,
+      email: r.email,
+      emails_extras: r.emails_vinculados ?? [],
+      whatsapp: r.telefone,
+      whatsapps_extras: r.whatsapps_vinculados ?? [],
+      cidade: r.cidade,
+      uf: r.estado,
+      segmento: r.segmentos?.nome ?? null
+    }));
     return {
-      content: [{ type: "text", text: JSON.stringify(data ?? []) }],
-      structuredContent: { empresas: data ?? [], count: data?.length ?? 0 }
+      content: [{ type: "text", text: JSON.stringify(rows) }],
+      structuredContent: { empresas: rows, count: rows.length }
     };
   }
 });
@@ -110,18 +150,53 @@ var list_produtos_default = defineTool3({
   }
 });
 
+// src/lib/mcp/tools/list-segmentos.ts
+import { createClient as createClient4 } from "npm:@supabase/supabase-js@^2.75.0";
+import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.23.0";
+import { z as z3 } from "npm:zod@^3.25.76";
+function supabaseForUser4(ctx) {
+  return createClient4(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+var list_segmentos_default = defineTool4({
+  name: "list_segmentos",
+  title: "Listar segmentos",
+  description: "Lista os segmentos de empresa cadastrados no Pilar. Use para descobrir o id/nome de um segmento antes de filtrar em list_empresas.",
+  inputSchema: {
+    search: z3.string().optional().describe("Filtro parcial pelo nome do segmento."),
+    limit: z3.number().int().positive().max(200).optional().describe("M\xE1ximo (padr\xE3o 100).")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ search, limit }, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "N\xE3o autenticado." }], isError: true };
+    }
+    const sb = supabaseForUser4(ctx);
+    let q = sb.from("segmentos").select("id, nome").order("nome").limit(limit ?? 100);
+    if (search && search.trim()) q = q.ilike("nome", `%${search.trim()}%`);
+    const { data, error } = await q;
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    return {
+      content: [{ type: "text", text: JSON.stringify(data ?? []) }],
+      structuredContent: { segmentos: data ?? [], count: data?.length ?? 0 }
+    };
+  }
+});
+
 // src/lib/mcp/index.ts
 var projectRef = "ioxugupvxlcdweldocmq";
 var mcp_default = defineMcp({
   name: "pilar-mcp",
   title: "Pilar CRM MCP",
   version: "0.1.0",
-  instructions: "Ferramentas do Pilar CRM. Use `whoami` para verificar o usu\xE1rio autenticado, `list_empresas` para consultar empresas/clientes cadastrados e `list_produtos` para consultar o cat\xE1logo de produtos. Todas respeitam as permiss\xF5es do usu\xE1rio.",
+  instructions: "Ferramentas do Pilar CRM. Use `whoami` para verificar o usu\xE1rio autenticado, `list_segmentos` para descobrir segmentos dispon\xEDveis, `list_empresas` para consultar empresas/clientes (com filtros de UF, cidade, segmento, presen\xE7a de e-mail/WhatsApp) e `list_produtos` para consultar o cat\xE1logo de produtos. Todas respeitam as permiss\xF5es (RLS) do usu\xE1rio.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
   }),
-  tools: [whoami_default, list_empresas_default, list_produtos_default]
+  tools: [whoami_default, list_empresas_default, list_produtos_default, list_segmentos_default]
 });
 
 // lovable-mcp-supabase-entry.ts
