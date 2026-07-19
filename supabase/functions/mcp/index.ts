@@ -6,7 +6,7 @@
 import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.23.0";
 
 // src/lib/mcp/tools/whoami.ts
-import { createClient } from "npm:@supabase/supabase-js@^2.75.0";
+import { createClient } from "npm:@supabase/supabase-js@^2.110.7";
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.23.0";
 function supabaseForUser(ctx) {
   return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
@@ -35,7 +35,7 @@ var whoami_default = defineTool({
 });
 
 // src/lib/mcp/tools/list-empresas.ts
-import { createClient as createClient2 } from "npm:@supabase/supabase-js@^2.75.0";
+import { createClient as createClient2 } from "npm:@supabase/supabase-js@^2.110.7";
 import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.23.0";
 import { z } from "npm:zod@^3.25.76";
 function supabaseForUser2(ctx) {
@@ -113,7 +113,7 @@ var list_empresas_default = defineTool2({
 });
 
 // src/lib/mcp/tools/list-produtos.ts
-import { createClient as createClient3 } from "npm:@supabase/supabase-js@^2.75.0";
+import { createClient as createClient3 } from "npm:@supabase/supabase-js@^2.110.7";
 import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.23.0";
 import { z as z2 } from "npm:zod@^3.25.76";
 function supabaseForUser3(ctx) {
@@ -151,7 +151,7 @@ var list_produtos_default = defineTool3({
 });
 
 // src/lib/mcp/tools/list-segmentos.ts
-import { createClient as createClient4 } from "npm:@supabase/supabase-js@^2.75.0";
+import { createClient as createClient4 } from "npm:@supabase/supabase-js@^2.110.7";
 import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.23.0";
 import { z as z3 } from "npm:zod@^3.25.76";
 function supabaseForUser4(ctx) {
@@ -186,7 +186,7 @@ var list_segmentos_default = defineTool4({
 });
 
 // src/lib/mcp/tools/add-prospeccao-empresa.ts
-import { createClient as createClient5 } from "npm:@supabase/supabase-js@^2.75.0";
+import { createClient as createClient5 } from "npm:@supabase/supabase-js@^2.110.7";
 import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.23.0";
 import { z as z4 } from "npm:zod@^3.25.76";
 function supabaseForUser5(ctx) {
@@ -266,7 +266,7 @@ var add_prospeccao_empresa_default = defineTool5({
 });
 
 // src/lib/mcp/tools/add-prospeccao-empresas-bulk.ts
-import { createClient as createClient6 } from "npm:@supabase/supabase-js@^2.75.0";
+import { createClient as createClient6 } from "npm:@supabase/supabase-js@^2.110.7";
 import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.23.0";
 import { z as z5 } from "npm:zod@^3.25.76";
 function supabaseForUser6(ctx) {
@@ -344,7 +344,7 @@ var add_prospeccao_empresas_bulk_default = defineTool6({
 });
 
 // src/lib/mcp/tools/consultar-tabela.ts
-import { createClient as createClient7 } from "npm:@supabase/supabase-js@^2.75.0";
+import { createClient as createClient7 } from "npm:@supabase/supabase-js@^2.110.7";
 import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.23.0";
 import { z as z6 } from "npm:zod@^3.25.76";
 function supabaseForUser7(ctx) {
@@ -395,7 +395,7 @@ var consultar_tabela_default = defineTool7({
 });
 
 // src/lib/mcp/tools/listar-tabelas-disponiveis.ts
-import { createClient as createClient8 } from "npm:@supabase/supabase-js@^2.75.0";
+import { createClient as createClient8 } from "npm:@supabase/supabase-js@^2.110.7";
 import { defineTool as defineTool8 } from "npm:@lovable.dev/mcp-js@0.23.0";
 function supabaseForUser8(ctx) {
   return createClient8(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
