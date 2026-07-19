@@ -846,7 +846,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         estabelecimento_id: estabId,
         nome_fantasia: formData.company_fantasia,
         nome: formData.company_name,
-        cnpj: formData.company_type === "Pessoa Jurídica" ? formData.cpf_cnpj : null,
+        cnpj: formData.cpf_cnpj || null,
         telefone: formData.telefone || null,
         email: formData.email || null,
         endereco: formData.address,
