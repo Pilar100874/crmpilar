@@ -5,14 +5,25 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, ShieldCheck } from "lucide-react";
 
-type SupabaseOAuth = {
-  getAuthorizationDetails: (id: string) => Promise<{ data: any; error: any }>;
-  approveAuthorization: (id: string) => Promise<{ data: any; error: any }>;
-  denyAuthorization: (id: string) => Promise<{ data: any; error: any }>;
-};
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
-function oauthApi(): SupabaseOAuth {
-  return (supabase.auth as unknown as { oauth: SupabaseOAuth }).oauth;
+async function callOAuth(path: string, token: string, method: "GET" | "POST" = "GET") {
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/oauth/authorizations/${path}`, {
+    method,
+    headers: {
+      apikey: ANON_KEY,
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  const text = await res.text();
+  let data: any = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = { raw: text }; }
+  if (!res.ok) {
+    return { data: null, error: { message: data?.msg || data?.error_description || data?.error || `HTTP ${res.status}` } };
+  }
+  return { data, error: null };
 }
 
 export default function OAuthConsent() {
@@ -32,45 +43,39 @@ export default function OAuthConsent() {
         window.location.href = "/login?next=" + encodeURIComponent(next);
         return;
       }
-      try {
-        const { data, error } = await oauthApi().getAuthorizationDetails(authorizationId);
-        if (!active) return;
-        if (error) return setError(error.message || "Falha ao carregar autorização.");
-        const immediate = data?.redirect_url ?? data?.redirect_to;
-        if (immediate && !data?.client) {
-          window.location.href = immediate;
-          return;
-        }
-        setDetails(data);
-      } catch (e: any) {
-        setError(e?.message ?? "Erro inesperado ao carregar autorização.");
+      const token = sess.session.access_token;
+      const { data, error } = await callOAuth(authorizationId, token, "GET");
+      if (!active) return;
+      if (error) return setError(error.message || "Falha ao carregar autorização.");
+      const immediate = data?.redirect_url ?? data?.redirect_to;
+      if (immediate && !data?.client) {
+        window.location.href = immediate;
+        return;
       }
+      setDetails(data);
     })();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [authorizationId]);
 
   async function decide(approve: boolean) {
     setBusy(true);
-    try {
-      const { data, error } = approve
-        ? await oauthApi().approveAuthorization(authorizationId)
-        : await oauthApi().denyAuthorization(authorizationId);
-      if (error) {
-        setBusy(false);
-        return setError(error.message || "Falha ao processar decisão.");
-      }
-      const target = data?.redirect_url ?? data?.redirect_to;
-      if (!target) {
-        setBusy(false);
-        return setError("O servidor de autorização não retornou URL de redirecionamento.");
-      }
-      window.location.href = target;
-    } catch (e: any) {
+    const { data: sess } = await supabase.auth.getSession();
+    const token = sess.session?.access_token ?? "";
+    const { data, error } = await callOAuth(
+      `${authorizationId}/${approve ? "approve" : "deny"}`,
+      token,
+      "POST",
+    );
+    if (error) {
       setBusy(false);
-      setError(e?.message ?? "Erro inesperado.");
+      return setError(error.message || "Falha ao processar decisão.");
     }
+    const target = data?.redirect_url ?? data?.redirect_to;
+    if (!target) {
+      setBusy(false);
+      return setError("O servidor de autorização não retornou URL de redirecionamento.");
+    }
+    window.location.href = target;
   }
 
   if (error) {
