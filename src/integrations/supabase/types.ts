@@ -16737,6 +16737,99 @@ export type Database = {
           },
         ]
       }
+      prospeccao_empresas: {
+        Row: {
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
+          cnae_descricao: string | null
+          cnae_principal: string | null
+          cnpj: string | null
+          created_at: string
+          descricao: string | null
+          email: string | null
+          empresa_id: string | null
+          endereco: string | null
+          estado: string | null
+          extras: Json | null
+          fontes: Json | null
+          id: string
+          importado_em: string | null
+          nome: string
+          nome_fantasia: string | null
+          origem: string | null
+          redes_sociais: Json | null
+          segmento_id: string | null
+          segmento_nome: string | null
+          site: string | null
+          status: string
+          telefone: string | null
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
+        }
+        Insert: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cnae_descricao?: string | null
+          cnae_principal?: string | null
+          cnpj?: string | null
+          created_at?: string
+          descricao?: string | null
+          email?: string | null
+          empresa_id?: string | null
+          endereco?: string | null
+          estado?: string | null
+          extras?: Json | null
+          fontes?: Json | null
+          id?: string
+          importado_em?: string | null
+          nome: string
+          nome_fantasia?: string | null
+          origem?: string | null
+          redes_sociais?: Json | null
+          segmento_id?: string | null
+          segmento_nome?: string | null
+          site?: string | null
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+          user_id: string
+          whatsapp?: string | null
+        }
+        Update: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cnae_descricao?: string | null
+          cnae_principal?: string | null
+          cnpj?: string | null
+          created_at?: string
+          descricao?: string | null
+          email?: string | null
+          empresa_id?: string | null
+          endereco?: string | null
+          estado?: string | null
+          extras?: Json | null
+          fontes?: Json | null
+          id?: string
+          importado_em?: string | null
+          nome?: string
+          nome_fantasia?: string | null
+          origem?: string | null
+          redes_sociais?: Json | null
+          segmento_id?: string | null
+          segmento_nome?: string | null
+          site?: string | null
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       prospects_b2b: {
         Row: {
           area_busca: Json | null

@@ -185,18 +185,183 @@ var list_segmentos_default = defineTool4({
   }
 });
 
+// src/lib/mcp/tools/add-prospeccao-empresa.ts
+import { createClient as createClient5 } from "npm:@supabase/supabase-js@^2.75.0";
+import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.23.0";
+import { z as z4 } from "npm:zod@^3.25.76";
+function supabaseForUser5(ctx) {
+  return createClient5(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+var EmpresaSchema = z4.object({
+  nome: z4.string().min(1).describe("Raz\xE3o social ou nome da empresa (obrigat\xF3rio)."),
+  nome_fantasia: z4.string().optional(),
+  cnpj: z4.string().optional(),
+  email: z4.string().optional(),
+  telefone: z4.string().optional().describe("Telefone geral."),
+  whatsapp: z4.string().optional().describe("N\xFAmero WhatsApp com DDD."),
+  site: z4.string().optional(),
+  endereco: z4.string().optional(),
+  bairro: z4.string().optional(),
+  cidade: z4.string().optional(),
+  estado: z4.string().optional().describe("UF (2 letras)."),
+  cep: z4.string().optional(),
+  cnae_principal: z4.string().optional(),
+  cnae_descricao: z4.string().optional(),
+  segmento_nome: z4.string().optional().describe("Segmento (texto livre)."),
+  descricao: z4.string().optional().describe("Descri\xE7\xE3o / resumo da empresa."),
+  redes_sociais: z4.object({
+    instagram: z4.string().optional(),
+    facebook: z4.string().optional(),
+    linkedin: z4.string().optional(),
+    youtube: z4.string().optional(),
+    tiktok: z4.string().optional()
+  }).partial().optional(),
+  fontes: z4.array(z4.string().url()).optional().describe("URLs das fontes usadas na pesquisa."),
+  extras: z4.record(z4.any()).optional().describe("Qualquer dado extra relevante em JSON.")
+});
+var add_prospeccao_empresa_default = defineTool5({
+  name: "add_prospeccao_empresa",
+  title: "Adicionar empresa \xE0 Prospec\xE7\xE3o",
+  description: "Insere uma empresa pesquisada na web na tela 'Prospec\xE7\xE3o Empresas' do Listas. Use para trazer leads pesquisados de fontes externas (site, Google, LinkedIn, etc.) para dentro do CRM Pilar. Depois o usu\xE1rio revisa e importa para o cadastro definitivo de Empresas. Use `add_prospeccao_empresas_bulk` para v\xE1rios de uma vez.",
+  inputSchema: EmpresaSchema.shape,
+  annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+  handler: async (input, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "N\xE3o autenticado." }], isError: true };
+    }
+    const sb = supabaseForUser5(ctx);
+    const { data, error } = await sb.from("prospeccao_empresas").insert({
+      user_id: ctx.getUserId(),
+      nome: input.nome,
+      nome_fantasia: input.nome_fantasia ?? null,
+      cnpj: input.cnpj ?? null,
+      email: input.email ?? null,
+      telefone: input.telefone ?? null,
+      whatsapp: input.whatsapp ?? null,
+      site: input.site ?? null,
+      endereco: input.endereco ?? null,
+      bairro: input.bairro ?? null,
+      cidade: input.cidade ?? null,
+      estado: input.estado ?? null,
+      cep: input.cep ?? null,
+      cnae_principal: input.cnae_principal ?? null,
+      cnae_descricao: input.cnae_descricao ?? null,
+      segmento_nome: input.segmento_nome ?? null,
+      descricao: input.descricao ?? null,
+      redes_sociais: input.redes_sociais ?? {},
+      fontes: input.fontes ?? [],
+      extras: input.extras ?? {},
+      origem: "claude-code",
+      status: "novo"
+    }).select("id, nome").single();
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    return {
+      content: [{ type: "text", text: `Adicionada: ${data.nome} (id ${data.id})` }],
+      structuredContent: { id: data.id, nome: data.nome }
+    };
+  }
+});
+
+// src/lib/mcp/tools/add-prospeccao-empresas-bulk.ts
+import { createClient as createClient6 } from "npm:@supabase/supabase-js@^2.75.0";
+import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.23.0";
+import { z as z5 } from "npm:zod@^3.25.76";
+function supabaseForUser6(ctx) {
+  return createClient6(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+var Empresa = z5.object({
+  nome: z5.string().min(1),
+  nome_fantasia: z5.string().optional(),
+  cnpj: z5.string().optional(),
+  email: z5.string().optional(),
+  telefone: z5.string().optional(),
+  whatsapp: z5.string().optional(),
+  site: z5.string().optional(),
+  endereco: z5.string().optional(),
+  bairro: z5.string().optional(),
+  cidade: z5.string().optional(),
+  estado: z5.string().optional(),
+  cep: z5.string().optional(),
+  cnae_principal: z5.string().optional(),
+  cnae_descricao: z5.string().optional(),
+  segmento_nome: z5.string().optional(),
+  descricao: z5.string().optional(),
+  redes_sociais: z5.record(z5.string()).optional(),
+  fontes: z5.array(z5.string()).optional(),
+  extras: z5.record(z5.any()).optional()
+});
+var add_prospeccao_empresas_bulk_default = defineTool6({
+  name: "add_prospeccao_empresas_bulk",
+  title: "Adicionar v\xE1rias empresas \xE0 Prospec\xE7\xE3o",
+  description: "Insere um lote de empresas pesquisadas em 'Prospec\xE7\xE3o Empresas'. Use quando o assistente j\xE1 compilou uma lista (ex.: 20 ind\xFAstrias em SP). M\xE1ximo 100 por chamada.",
+  inputSchema: {
+    empresas: z5.array(Empresa).min(1).max(100).describe("Lista de empresas a inserir.")
+  },
+  annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+  handler: async ({ empresas }, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "N\xE3o autenticado." }], isError: true };
+    }
+    const sb = supabaseForUser6(ctx);
+    const userId = ctx.getUserId();
+    const rows = empresas.map((e) => ({
+      user_id: userId,
+      nome: e.nome,
+      nome_fantasia: e.nome_fantasia ?? null,
+      cnpj: e.cnpj ?? null,
+      email: e.email ?? null,
+      telefone: e.telefone ?? null,
+      whatsapp: e.whatsapp ?? null,
+      site: e.site ?? null,
+      endereco: e.endereco ?? null,
+      bairro: e.bairro ?? null,
+      cidade: e.cidade ?? null,
+      estado: e.estado ?? null,
+      cep: e.cep ?? null,
+      cnae_principal: e.cnae_principal ?? null,
+      cnae_descricao: e.cnae_descricao ?? null,
+      segmento_nome: e.segmento_nome ?? null,
+      descricao: e.descricao ?? null,
+      redes_sociais: e.redes_sociais ?? {},
+      fontes: e.fontes ?? [],
+      extras: e.extras ?? {},
+      origem: "claude-code",
+      status: "novo"
+    }));
+    const { data, error } = await sb.from("prospeccao_empresas").insert(rows).select("id");
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    return {
+      content: [{ type: "text", text: `Inseridas ${data?.length ?? 0} empresas na Prospec\xE7\xE3o.` }],
+      structuredContent: { inseridas: data?.length ?? 0 }
+    };
+  }
+});
+
 // src/lib/mcp/index.ts
 var projectRef = "ioxugupvxlcdweldocmq";
 var mcp_default = defineMcp({
   name: "pilar-mcp",
   title: "Pilar CRM MCP",
-  version: "0.1.0",
-  instructions: "Ferramentas do Pilar CRM. Use `whoami` para verificar o usu\xE1rio autenticado, `list_segmentos` para descobrir segmentos dispon\xEDveis, `list_empresas` para consultar empresas/clientes (com filtros de UF, cidade, segmento, presen\xE7a de e-mail/WhatsApp) e `list_produtos` para consultar o cat\xE1logo de produtos. Todas respeitam as permiss\xF5es (RLS) do usu\xE1rio.",
+  version: "0.2.0",
+  instructions: "Ferramentas do Pilar CRM.\nLeitura: `whoami`, `list_segmentos`, `list_empresas` (filtros UF/cidade/segmento/e-mail/WhatsApp), `list_produtos`.\nEscrita \u2014 Prospec\xE7\xE3o: `add_prospeccao_empresa` insere UMA empresa pesquisada na web na tela 'Prospec\xE7\xE3o Empresas' do Listas; `add_prospeccao_empresas_bulk` insere um lote (at\xE9 100). Use SEMPRE que o usu\xE1rio pedir para pesquisar empresas na internet e trazer os resultados para dentro do Pilar. O usu\xE1rio depois revisa e importa para o cadastro definitivo. Todas as ferramentas respeitam as permiss\xF5es (RLS) do usu\xE1rio autenticado.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
   }),
-  tools: [whoami_default, list_empresas_default, list_produtos_default, list_segmentos_default]
+  tools: [
+    whoami_default,
+    list_empresas_default,
+    list_produtos_default,
+    list_segmentos_default,
+    add_prospeccao_empresa_default,
+    add_prospeccao_empresas_bulk_default
+  ]
 });
 
 // lovable-mcp-supabase-entry.ts
