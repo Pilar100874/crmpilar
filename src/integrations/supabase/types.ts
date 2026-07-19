@@ -9160,6 +9160,30 @@ export type Database = {
         }
         Relationships: []
       }
+      mcp_tabelas_expostas: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          tabela: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          tabela: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          tabela?: string
+        }
+        Relationships: []
+      }
       media_gallery: {
         Row: {
           created_at: string | null
