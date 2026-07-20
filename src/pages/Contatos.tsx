@@ -1893,6 +1893,12 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const filteredContacts = contacts.filter(contact => {
     // Filtrar apenas contatos ativos
     if (!contact.active) return false;
+
+    // Filtro cliente/prospect
+    if (tipoContatoFilter === 'clientes' && contact.customFields?.tipo_operador === false) return false;
+    if (tipoContatoFilter === 'prospects' && contact.customFields?.tipo_operador !== false) return false;
+
+
     
     // Busca unificada apenas em nome, telefone/WhatsApp e e-mail
     if (searchFilters.unifiedSearch) {
