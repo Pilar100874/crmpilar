@@ -545,7 +545,7 @@ export default function ProspeccaoEmpresas() {
 
 
       <Collapsible defaultOpen>
-        <Card>
+        <Card id="secao-wizard" className="scroll-mt-4">
           <CollapsibleTrigger asChild>
             <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors">
               <CardTitle className="flex items-center gap-2 text-base">
@@ -563,9 +563,9 @@ export default function ProspeccaoEmpresas() {
         </Card>
       </Collapsible>
 
-      <Collapsible>
+      <Collapsible defaultOpen>
 
-        <Card>
+        <Card id="secao-mcp" className="scroll-mt-4">
           <CollapsibleTrigger asChild>
             <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors">
               <CardTitle className="flex items-center gap-2 text-base">
