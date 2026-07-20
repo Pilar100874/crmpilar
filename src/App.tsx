@@ -8,7 +8,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import OAuthConsent from "./pages/OAuthConsent";
-import AgentIntegrations from "./pages/AgentIntegrations";
+
 import Dashboard from "./pages/Dashboard";
 import Atendimento from "./pages/Atendimento";
 import BotBuilder from "./pages/BotBuilder";
@@ -331,7 +331,7 @@ const App = () => (
             <Route path="/ponto/totem" element={<PontoTotem />} />
             <Route element={<LayoutWrapper />}>
             <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/agent-integrations" element={<AgentIntegrations />} />
+              
               <Route path="/menu" element={<MenuHub />} />
               <Route path="/menu-visual" element={<MenuVisual />} />
               <Route path="/atendimento" element={<Atendimento />} />
