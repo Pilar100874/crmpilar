@@ -426,8 +426,43 @@ export default function ProspeccaoEmpresas() {
   };
 
 
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <div className="p-4 space-y-4">
+      {/* Atalhos diretos para os dois modos de uso */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <button
+          onClick={() => scrollTo('secao-wizard')}
+          className="text-left p-4 border-2 border-primary/30 rounded-lg hover:border-primary hover:bg-primary/5 transition-all group"
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <Wand2 className="h-5 w-5 text-primary" />
+            <span className="font-semibold">Usar o Wizard (mais fácil)</span>
+            <ArrowDown className="h-4 w-4 ml-auto text-muted-foreground group-hover:text-primary transition-colors" />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Preencha 5 passos guiados e a IA busca e insere os prospects direto na listagem — sem sair do Pilar.
+          </p>
+        </button>
+        <button
+          onClick={() => scrollTo('secao-mcp')}
+          className="text-left p-4 border-2 border-primary/30 rounded-lg hover:border-primary hover:bg-primary/5 transition-all group"
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <Terminal className="h-5 w-5 text-primary" />
+            <span className="font-semibold">Usar Claude / ChatGPT / Cursor</span>
+            <ArrowDown className="h-4 w-4 ml-auto text-muted-foreground group-hover:text-primary transition-colors" />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Conecte seu assistente externo ao Pilar via MCP e peça em linguagem natural — ele salva os prospects aqui.
+          </p>
+        </button>
+      </div>
+
       <div className="flex flex-wrap gap-2">
         <Dialog>
           <DialogTrigger asChild>
@@ -456,7 +491,7 @@ export default function ProspeccaoEmpresas() {
                 <li><strong>Execução:</strong> escolha o provedor de IA e clique em executar.
                   <ul className="list-disc pl-5 mt-1 space-y-1">
                     <li><em>Modo Auto</em>: a IA busca e importa direto (requer chave em "Configurar IAs de Prospecção").</li>
-                    <li><em>Modo Prompt</em>: gera um texto pronto para colar no Claude/ChatGPT/Cursor.</li>
+                    <li><em>Modo Prompt</em>: gera um texto pronto para colar no Claude/ChatGPT/Cursor — já com instrução MCP e todos os parâmetros para inserir direto no sistema.</li>
                   </ul>
                 </li>
                 <li>Os resultados aparecem automaticamente na <strong>listagem abaixo</strong> para você revisar e importar.</li>
@@ -506,6 +541,7 @@ export default function ProspeccaoEmpresas() {
           </DialogContent>
         </Dialog>
       </div>
+
 
 
       <Collapsible defaultOpen>
