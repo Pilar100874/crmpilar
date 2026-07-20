@@ -248,8 +248,16 @@ export default function ProspeccaoEmpresas() {
           cep = cep || normCEP(receita.cep);
           cnae_principal = cnae_principal || (receita.cnae_fiscal ? String(receita.cnae_fiscal) : null);
           cnae_descricao = cnae_descricao || receita.cnae_fiscal_descricao || null;
+          // Enriquecer telefone a partir da Receita se ainda não temos
+          if (!telefone) {
+            const telReceita = normWhats(receita.ddd_telefone_1 || receita.ddd_telefone_2 || '');
+            if (telReceita) telefone = telReceita;
+          }
         }
       }
+
+      // Fallback: se ainda não temos telefone, usar o whatsapp
+      if (!telefone) telefone = whatsapp;
 
       // ===== 3) Enriquecer via CEP (ViaCEP) se ainda faltar endereço/cidade/UF =====
       if (cep && (!endereco || !cidade || !uf || !bairro)) {
