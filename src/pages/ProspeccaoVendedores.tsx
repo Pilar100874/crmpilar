@@ -183,6 +183,40 @@ export default function ProspeccaoVendedores() {
     setConfirmDelete(null);
   };
 
+  const limparTudo = async () => {
+    const ids = filtradas.map((r) => r.id);
+    if (ids.length === 0) return;
+    const { error } = await supabase.from('prospeccao_empresas').delete().in('id', ids);
+    if (error) return toast.error('Erro ao limpar: ' + error.message);
+    toast.success(`${ids.length} registro(s) excluído(s)`);
+    setSelecionadas(new Set());
+    setConfirmClearAll(false);
+    carregar();
+  };
+
+  const exportarPdf = () => {
+    const alvo = selecionadas.size > 0 ? filtradas.filter((r) => selecionadas.has(r.id)) : filtradas;
+    if (alvo.length === 0) return toast.info('Nenhum registro para exportar');
+    gerarPdfProspeccao(
+      'Prospecção de Representantes / Vendedores',
+      [
+        { header: 'Nome', key: 'nome' },
+        { header: 'Cidade', key: 'cidade' },
+        { header: 'UF', key: 'estado' },
+        { header: 'WhatsApp', key: 'whatsapp' },
+        { header: 'Telefone', key: 'telefone' },
+        { header: 'E-mail', key: 'email' },
+        { header: 'Site', key: 'site' },
+        { header: 'Segmento', key: 'segmento_nome' },
+        { header: 'Score', key: 'score' },
+        { header: 'Prioridade', key: 'prioridade' },
+        { header: 'Status', key: 'status' },
+      ],
+      alvo,
+      `prospeccao-vendedores-${new Date().toISOString().slice(0, 10)}.pdf`,
+    );
+  };
+
   const importarSelecionadas = async () => {
     if (selecionadas.size === 0) return toast.info('Selecione ao menos um representante');
     const estabId = await getEstabelecimentoId();
