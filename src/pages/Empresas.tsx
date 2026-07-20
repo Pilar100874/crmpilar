@@ -85,6 +85,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("nao_prospect");
   
   // Estados para confirmação de exclusão
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
