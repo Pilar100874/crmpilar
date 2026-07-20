@@ -529,6 +529,9 @@
                   "observacoes_internas": {
                     "type": "string"
                   },
+                  "origem": {
+                    "type": "string"
+                  },
                   "extras": {
                     "type": "object",
                     "additionalProperties": {}

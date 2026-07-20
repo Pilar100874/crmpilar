@@ -347,6 +347,7 @@ var Empresa = z5.object({
   longitude: z5.number().optional(),
   tags: z5.array(z5.string()).optional(),
   observacoes_internas: z5.string().optional(),
+  origem: z5.string().optional(),
   extras: z5.record(z5.any()).optional()
 });
 var add_prospeccao_empresas_bulk_default = defineTool6({

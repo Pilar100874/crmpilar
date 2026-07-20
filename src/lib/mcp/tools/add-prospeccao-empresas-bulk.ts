@@ -45,6 +45,7 @@ const Empresa = z.object({
   longitude: z.number().optional(),
   tags: z.array(z.string()).optional(),
   observacoes_internas: z.string().optional(),
+  origem: z.string().optional(),
   extras: z.record(z.any()).optional(),
 });
 
