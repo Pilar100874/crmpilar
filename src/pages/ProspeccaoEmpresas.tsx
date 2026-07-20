@@ -432,6 +432,26 @@ export default function ProspeccaoEmpresas() {
           <CollapsibleTrigger asChild>
             <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors">
               <CardTitle className="flex items-center gap-2 text-base">
+                <Wand2 className="h-4 w-4 text-primary" />
+                Wizard de Prospecção — preencher critérios e trazer prospects
+                <Badge variant="outline" className="ml-auto">clique para expandir/recolher</Badge>
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent>
+              <WizardProspeccao embedded onCompleted={carregar} />
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      <Collapsible>
+
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <HelpCircle className="h-4 w-4 text-primary" />
                 Como usar — pesquisar na internet e trazer para o Pilar
                 <Badge variant="outline" className="ml-auto">clique para expandir/recolher</Badge>
