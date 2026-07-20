@@ -2615,6 +2615,13 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         onOpenChange={setSoftphoneOpen}
         initialNumber={softphoneNumber}
       />
+
+      <ConvertProspectDialog
+        empresa={convertProspect}
+        open={!!convertProspect}
+        onOpenChange={(v) => !v && setConvertProspect(null)}
+        onConverted={() => estabelecimentoId && fetchEmpresas(estabelecimentoId)}
+      />
     </>
   );
 }
