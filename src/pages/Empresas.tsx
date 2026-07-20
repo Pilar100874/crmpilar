@@ -876,6 +876,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         telefone: formData.telefone || null,
         whatsapp: formData.whatsapp || null,
         email: formData.email || null,
+        site: formData.site || null,
         endereco: formData.address,
         cidade: formData.city,
         estado: formData.state,
