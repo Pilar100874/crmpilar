@@ -2076,11 +2076,23 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               </Button>
             )}
             
+            <Select value={tipoContatoFilter} onValueChange={(v: any) => setTipoContatoFilter(v)}>
+              <SelectTrigger className="w-[180px] h-9 sm:h-10 text-xs sm:text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os contatos</SelectItem>
+                <SelectItem value="clientes">Somente clientes</SelectItem>
+                <SelectItem value="prospects">Somente prospects</SelectItem>
+              </SelectContent>
+            </Select>
+
             <div className="ml-auto text-xs sm:text-sm font-light text-muted-foreground whitespace-nowrap">
               {sortedContacts.length} {sortedContacts.length === 1 ? 'contato' : 'contatos'}
             </div>
           </div>
         </div>
+
 
         <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6">
           {sortedContacts.length === 0 ? (
