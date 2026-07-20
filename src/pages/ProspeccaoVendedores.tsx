@@ -336,28 +336,14 @@ export default function ProspeccaoVendedores() {
       )}
 
       {metodo === 'wizard' && (
-        <>
-          <Alert>
-            <Sparkles className="h-4 w-4" />
-            <AlertDescription className="text-xs">
-              O Wizard busca prospects em geral. Para direcionar a representantes, no campo <b>Segmento</b> use algo como
-              <i> "representantes comerciais de [seu segmento]"</i> e nas <b>palavras-chave</b> inclua "representante multimarca", "escritório de representação".
-              Os resultados entram na listagem geral de prospecção — <b>para vê-los aqui, filtre depois na tela "Prospecção Via Cloud Code / Cursor ou ChatGPT" </b>.
-              Ou use o modo <b>Claude / ChatGPT / Cursor</b> abaixo, que já garante <code>origem = "vendedor"</code>.
-            </AlertDescription>
-          </Alert>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Wand2 className="h-4 w-4 text-primary" />
-                Wizard de Prospecção
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <WizardProspeccao embedded onCompleted={carregar} />
-            </CardContent>
-          </Card>
-        </>
+        <VendedorWizard
+          segmento={segmento} setSegmento={setSegmento}
+          produto={produto} setProduto={setProduto}
+          regiao={regiao} setRegiao={setRegiao}
+          qtd={qtd} setQtd={setQtd}
+          prompt={prompt}
+          onSaltarParaLista={carregar}
+        />
       )}
 
       {metodo === 'mcp' && (
