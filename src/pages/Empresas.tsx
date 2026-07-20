@@ -1882,6 +1882,14 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 Segmentos
               </TabsTrigger>
             )}
+            {entityConfig.showSegmento && (
+              <TabsTrigger 
+                value="segmentos-prospect"
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+              >
+                Segmento Prospect
+              </TabsTrigger>
+            )}
             {(variant === "empresa" || variant === "vendedor" || variant === "transportadora") && (
               <TabsTrigger
                 value="usuarios"
