@@ -5975,6 +5975,10 @@ export type Database = {
           cnae_principal: string | null
           cnaes_secundarios: string[] | null
           cnpj: string | null
+          contato_cargo: string | null
+          contato_email: string | null
+          contato_nome: string | null
+          contato_telefone: string | null
           created_at: string | null
           custom_fields: Json | null
           data_fundacao: string | null
@@ -5990,6 +5994,7 @@ export type Database = {
           longitude: number | null
           nome: string | null
           nome_fantasia: string | null
+          observacoes_internas: string | null
           origem_prospeccao: string | null
           porte: string | null
           prioridade: string | null
@@ -6000,6 +6005,7 @@ export type Database = {
           site: string | null
           situacao_cadastral: string | null
           status_comercial: string
+          tags: string[] | null
           telefone: string | null
           tipo_cliente: string
           updated_at: string | null
@@ -6014,6 +6020,10 @@ export type Database = {
           cnae_principal?: string | null
           cnaes_secundarios?: string[] | null
           cnpj?: string | null
+          contato_cargo?: string | null
+          contato_email?: string | null
+          contato_nome?: string | null
+          contato_telefone?: string | null
           created_at?: string | null
           custom_fields?: Json | null
           data_fundacao?: string | null
@@ -6029,6 +6039,7 @@ export type Database = {
           longitude?: number | null
           nome?: string | null
           nome_fantasia?: string | null
+          observacoes_internas?: string | null
           origem_prospeccao?: string | null
           porte?: string | null
           prioridade?: string | null
@@ -6039,6 +6050,7 @@ export type Database = {
           site?: string | null
           situacao_cadastral?: string | null
           status_comercial?: string
+          tags?: string[] | null
           telefone?: string | null
           tipo_cliente?: string
           updated_at?: string | null
@@ -6053,6 +6065,10 @@ export type Database = {
           cnae_principal?: string | null
           cnaes_secundarios?: string[] | null
           cnpj?: string | null
+          contato_cargo?: string | null
+          contato_email?: string | null
+          contato_nome?: string | null
+          contato_telefone?: string | null
           created_at?: string | null
           custom_fields?: Json | null
           data_fundacao?: string | null
@@ -6068,6 +6084,7 @@ export type Database = {
           longitude?: number | null
           nome?: string | null
           nome_fantasia?: string | null
+          observacoes_internas?: string | null
           origem_prospeccao?: string | null
           porte?: string | null
           prioridade?: string | null
@@ -6078,6 +6095,7 @@ export type Database = {
           site?: string | null
           situacao_cadastral?: string | null
           status_comercial?: string
+          tags?: string[] | null
           telefone?: string | null
           tipo_cliente?: string
           updated_at?: string | null
