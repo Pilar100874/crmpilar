@@ -2182,8 +2182,10 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 </div>
 
                 {editingEmpresa ? (() => {
+                  const segmentosNormais = segmentos.filter(s => !s.is_prospect);
+                  const idsNormais = new Set(segmentosNormais.map(s => s.id));
                   const vinculosDaEmpresa = vinculos.filter(v => v.empresa_id === editingEmpresa.id);
-                  const vinculosSegmentos = vinculosDaEmpresa.filter(v => v.segmento_id !== null);
+                  const vinculosSegmentos = vinculosDaEmpresa.filter(v => v.segmento_id !== null && idsNormais.has(v.segmento_id));
 
                   return (
                     <div className="space-y-4">
@@ -2194,7 +2196,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                           
                           <div className="space-y-2">
                             <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
-                              {segmentos.map((segmento) => (
+                              {segmentosNormais.map((segmento) => (
                                 <div key={segmento.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
                                   <Checkbox
                                     id={`new-seg-${segmento.id}`}
@@ -2275,6 +2277,119 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               </div>
             </Card>
             
+            <div className="flex justify-end gap-3 mt-6">
+              <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">
+                Fechar
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="segmentos-prospect" className="p-6">
+            <Card className="p-6">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Segmentos de Prospect</h3>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Segmentos usados especificamente para classificar prospects. Novos prospects trazidos via Cloud Code / Cursor / ChatGPT são automaticamente vinculados aqui pelo nome de segmento retornado pela IA. Use a tela <strong>Vínculo Segmento Prospect x Usuário</strong> para direcionar o atendimento desses segmentos a usuários.
+                  </p>
+                </div>
+
+                {editingEmpresa ? (() => {
+                  const segmentosProspect = segmentos.filter(s => s.is_prospect);
+                  const idsProspect = new Set(segmentosProspect.map(s => s.id));
+                  const vinculosDaEmpresa = vinculos.filter(v => v.empresa_id === editingEmpresa.id);
+                  const vinculosSegmentos = vinculosDaEmpresa.filter(v => v.segmento_id !== null && idsProspect.has(v.segmento_id));
+                  const idsJaVinculados = new Set(vinculosSegmentos.map(v => v.segmento_id));
+                  const disponiveis = segmentosProspect.filter(s => !idsJaVinculados.has(s.id));
+
+                  return (
+                    <div className="space-y-4">
+                      <Card className="border-primary/20 bg-primary/5">
+                        <CardContent className="p-4 space-y-4">
+                          <h4 className="text-sm font-semibold">Adicionar Segmentos de Prospect</h4>
+                          <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
+                            {disponiveis.length === 0 ? (
+                              <p className="text-xs text-muted-foreground p-2">
+                                Nenhum segmento de prospect disponível. Segmentos de prospect são criados automaticamente ao importar registros da Prospecção via Cloud Code / Cursor / ChatGPT.
+                              </p>
+                            ) : disponiveis.map((segmento) => (
+                              <div key={segmento.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
+                                <Checkbox
+                                  id={`new-segp-${segmento.id}`}
+                                  checked={novosSegmentosVinculo.includes(segmento.id)}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setNovosSegmentosVinculo([...novosSegmentosVinculo, segmento.id]);
+                                    } else {
+                                      setNovosSegmentosVinculo(novosSegmentosVinculo.filter(id => id !== segmento.id));
+                                    }
+                                  }}
+                                />
+                                <label htmlFor={`new-segp-${segmento.id}`} className="text-sm cursor-pointer flex-1">
+                                  {segmento.nome}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                          <Button
+                            onClick={async () => {
+                              if (novosSegmentosVinculo.length === 0) {
+                                toast.error("Selecione pelo menos um segmento");
+                                return;
+                              }
+                              await handleAdicionarVinculo();
+                            }}
+                            className="w-full"
+                            size="sm"
+                            disabled={disponiveis.length === 0}
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Adicionar Segmentos Selecionados
+                          </Button>
+                        </CardContent>
+                      </Card>
+
+                      <div>
+                        <h4 className="text-sm font-semibold mb-3">Segmentos de Prospect Vinculados</h4>
+                        {vinculosSegmentos.length > 0 ? (
+                          <div className="space-y-2">
+                            {vinculosSegmentos.map((vinculo) => {
+                              const segmento = segmentos.find(s => s.id === vinculo.segmento_id);
+                              return (
+                                <div key={vinculo.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors">
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium">
+                                      {segmento?.nome || <span className="text-muted-foreground">Segmento não encontrado</span>}
+                                    </p>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={() => handleRemoverVinculo(vinculo.id)}
+                                  >
+                                    <Trash2 className="w-4 h-4 text-destructive" />
+                                  </Button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="p-4 border rounded-lg bg-muted/30 text-center">
+                            <p className="text-sm text-muted-foreground">Nenhum segmento de prospect vinculado</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })() : (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    Salve a empresa primeiro para gerenciar os segmentos de prospect.
+                  </p>
+                )}
+              </div>
+            </Card>
+
             <div className="flex justify-end gap-3 mt-6">
               <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">
                 Fechar
