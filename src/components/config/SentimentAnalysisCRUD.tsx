@@ -90,7 +90,7 @@ export default function SentimentAnalysisCRUD({ estabelecimentoId: propEstabelec
         .upsert({
           estabelecimento_id: estabelecimentoId,
           ...config,
-        });
+        } as any);
 
       if (error) throw error;
 

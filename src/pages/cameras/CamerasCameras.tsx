@@ -327,7 +327,7 @@ export default function CamerasCameras() {
     if (!selected.size) return;
     setBulkBusy(true);
     const ids = Array.from(selected);
-    const { error } = await supabase.from("cv_cameras").update(patch).in("id", ids);
+    const { error } = await supabase.from("cv_cameras").update(patch as any).in("id", ids);
     setBulkBusy(false);
     if (error) return toast.error(error.message);
     toast.success(`${msg} (${ids.length} câmera${ids.length > 1 ? "s" : ""})`);

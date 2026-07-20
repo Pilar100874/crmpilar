@@ -81,7 +81,7 @@ export default function EcommerceFeaturesEditor() {
     if (!estId) { setSaving(false); return; }
     const { error } = await supabase
       .from("ecommerce_config")
-      .update(toggles)
+      .update(toggles as any)
       .eq("estabelecimento_id", estId);
     if (error) {
       toast.error("Erro ao salvar configurações");

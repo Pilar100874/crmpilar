@@ -66,7 +66,7 @@ export function useCreateCredential() {
     mutationFn: async (credential: Omit<N8nCredential, 'id' | 'created_at' | 'updated_at'>) => {
       const { data, error } = await supabase
         .from('n8n_credenciais')
-        .insert(credential)
+        .insert(credential as any)
         .select()
         .single();
       

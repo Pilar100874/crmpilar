@@ -57,7 +57,7 @@ export abstract class BaseMarketplaceService implements IMarketplaceService {
 
     await supabase
       .from('contas_marketplace')
-      .update(updateData)
+      .update(updateData as any)
       .eq('id', contaMarketplaceId);
   }
 

@@ -127,7 +127,7 @@ const ProspeccaoScrapingDiretoView: React.FC<ProspeccaoScrapingDiretoViewProps> 
 
       const { error } = await supabase
         .from('prospects_b2b')
-        .insert(prospectsToInsert);
+        .insert(prospectsToInsert as any);
 
       if (error) throw error;
 
