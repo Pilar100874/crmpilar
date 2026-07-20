@@ -134,20 +134,24 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
     setResult(null);
   };
 
+  const wrapperClass = embedded ? 'space-y-4' : 'p-4 sm:p-6 max-w-4xl mx-auto space-y-4';
+
   // ============ Result view ============
   if (result) {
     return (
-      <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-4">
-        <div className="flex items-center gap-2">
-          <Wand2 className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold">Wizard de Prospecção — Resultado</h1>
-        </div>
+      <div className={wrapperClass}>
+        {!embedded && (
+          <div className="flex items-center gap-2">
+            <Wand2 className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl font-bold">Wizard de Prospecção — Resultado</h1>
+          </div>
+        )}
 
         {result.modo === 'auto' && (result.inseridas ?? 0) > 0 && (
           <Alert>
             <CheckCircle2 className="h-4 w-4" />
             <AlertDescription>
-              <strong>{result.inseridas}</strong> empresa(s) inseridas na tela <em>Prospecção Via Cloud Code / Cursor ou ChatGPT</em>. Revise e importe de lá.
+              <strong>{result.inseridas}</strong> empresa(s) inseridas na listagem abaixo. Revise e importe.
             </AlertDescription>
           </Alert>
         )}
@@ -157,7 +161,7 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
             <CardHeader>
               <CardTitle>Prompt pronto</CardTitle>
               <CardDescription>
-                {result.motivo}. Copie o prompt abaixo e cole no Claude Code, ChatGPT ou Cursor — eles vão pesquisar na web e salvar os prospects direto aqui via MCP.
+                {result.motivo}. Copie o prompt abaixo e cole no Claude Code, ChatGPT ou Cursor — eles vão pesquisar na web e salvar os prospects direto aqui via MCP. Clique em <strong>Atualizar</strong> na listagem quando terminarem.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -181,13 +185,16 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
 
         <div className="flex gap-2">
           <Button variant="outline" onClick={reset}>Nova busca</Button>
-          <Button onClick={() => navigate('/listas?tab=prospeccao-empresas')}>
-            Ver prospects <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
+          {!embedded && (
+            <Button onClick={() => navigate('/listas?tab=prospeccao-empresas')}>
+              Ver prospects <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          )}
         </div>
       </div>
     );
   }
+
 
   // ============ Wizard steps ============
   return (
