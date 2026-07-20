@@ -200,38 +200,105 @@ export default function ProspeccaoEmpresas() {
   const importarSelecionadas = async () => {
     if (selecionadas.size === 0) return toast.info('Selecione ao menos uma empresa');
     setImportando(true);
-    let ok = 0, fail = 0;
+    let ok = 0, fail = 0, enriquecidos = 0;
+    const errosDetalhe: string[] = [];
+
     for (const id of selecionadas) {
       const r = rows.find((x) => x.id === id);
       if (!r || r.empresa_id) continue;
+
+      // ===== 1) Normalização básica =====
+      let cnpj = normCNPJ(r.cnpj);
+      let cep = normCEP(r.cep);
+      let uf = normUF(r.estado);
+      const email = normEmail(r.email);
+      const whatsapp = normWhats(r.whatsapp || r.telefone);
+      const telefone = normWhats(r.telefone) || whatsapp;
+      const site = normSite(r.site);
+
+      let nome = r.nome?.trim() || '';
+      let nome_fantasia = r.nome_fantasia?.trim() || null;
+      let endereco = r.endereco?.trim() || null;
+      let bairro = r.bairro?.trim() || null;
+      let cidade = r.cidade?.trim() || null;
+      let cnae_principal = r.cnae_principal?.trim() || null;
+      let cnae_descricao = r.cnae_descricao?.trim() || null;
+
+      // ===== 2) Enriquecer via CNPJ (Receita/BrasilAPI) =====
+      if (cnpj) {
+        const dig = removeMask(cnpj);
+        const receita = await fetchCNPJ(dig);
+        if (receita) {
+          enriquecidos++;
+          nome = nome || receita.razao_social || receita.nome_fantasia || '';
+          nome_fantasia = nome_fantasia || receita.nome_fantasia || null;
+          if (!endereco) {
+            const tipo = receita.descricao_tipo_de_logradouro || '';
+            const log = receita.logradouro || '';
+            const num = receita.numero ? `, ${receita.numero}` : '';
+            const comp = receita.complemento ? ` - ${receita.complemento}` : '';
+            endereco = `${tipo} ${log}${num}${comp}`.trim() || null;
+          }
+          bairro = bairro || receita.bairro || null;
+          cidade = cidade || receita.municipio || null;
+          uf = uf || normUF(receita.uf);
+          cep = cep || normCEP(receita.cep);
+          cnae_principal = cnae_principal || (receita.cnae_fiscal ? String(receita.cnae_fiscal) : null);
+          cnae_descricao = cnae_descricao || receita.cnae_fiscal_descricao || null;
+        }
+      }
+
+      // ===== 3) Enriquecer via CEP (ViaCEP) se ainda faltar endereço/cidade/UF =====
+      if (cep && (!endereco || !cidade || !uf || !bairro)) {
+        const via = await fetchCEP(removeMask(cep));
+        if (via) {
+          enriquecidos++;
+          endereco = endereco || via.logradouro || null;
+          bairro = bairro || via.bairro || null;
+          cidade = cidade || via.localidade || null;
+          uf = uf || normUF(via.uf);
+        }
+      }
+
+      // ===== 4) Validações mínimas =====
+      if (!nome) {
+        fail++;
+        errosDetalhe.push(`${r.nome || '(sem nome)'}: nome obrigatório`);
+        continue;
+      }
+
       const { data: emp, error } = await supabase
         .from('empresas')
         .insert({
-          nome: r.nome,
-          nome_fantasia: r.nome_fantasia,
-          cnpj: r.cnpj,
-          email: r.email,
-          telefone: r.whatsapp || r.telefone,
-          endereco: r.endereco,
-          bairro: r.bairro,
-          cidade: r.cidade,
-          estado: r.estado,
-          cep: r.cep,
-          cnae_principal: r.cnae_principal,
-          cnae_descricao: r.cnae_descricao,
-          site: r.site,
+          nome,
+          nome_fantasia,
+          cnpj,
+          email,
+          telefone,
+          whatsapp,
+          endereco,
+          bairro,
+          cidade,
+          estado: uf,
+          cep,
+          cnae_principal,
+          cnae_descricao,
+          site,
           status_comercial: 'prospect',
           origem_prospeccao: r.origem || 'claude-code',
+          tipo_cliente: 'B2B',
           custom_fields: {
             descricao: r.descricao,
             redes_sociais: r.redes_sociais,
             fontes: r.fontes,
+            segmento_nome: r.segmento_nome,
           },
         } as any)
         .select('id')
         .single();
       if (error || !emp) {
         fail++;
+        errosDetalhe.push(`${nome}: ${error?.message || 'erro'}`);
         continue;
       }
       await supabase
@@ -242,9 +309,11 @@ export default function ProspeccaoEmpresas() {
     }
     setImportando(false);
     setSelecionadas(new Set());
-    toast.success(`${ok} importadas${fail ? `, ${fail} com erro` : ''}`);
+    if (ok > 0) toast.success(`${ok} importadas como prospect${enriquecidos ? ` · ${enriquecidos} enriquecimentos (Receita/CEP)` : ''}`);
+    if (fail > 0) toast.error(`${fail} com erro: ${errosDetalhe.slice(0, 3).join(' | ')}${errosDetalhe.length > 3 ? '…' : ''}`);
     carregar();
   };
+
 
   return (
     <div className="p-4 space-y-4">
