@@ -11,11 +11,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
+import { Progress } from '@/components/ui/progress';
 import {
-  ArrowLeft, Bot, Copy, Download, ExternalLink, HelpCircle, RefreshCw, Search,
+  ArrowLeft, ArrowRight, Bot, CheckCircle2, Copy, Download, ExternalLink, HelpCircle, RefreshCw, Search,
   Sparkles, Terminal, Trash2, UserSearch, Wand2,
 } from 'lucide-react';
-import WizardProspeccao from './WizardProspeccao';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { validateEmail } from '@/lib/validators';
 import { maskWhatsApp, removeMask } from '@/lib/masks';
@@ -336,28 +336,14 @@ export default function ProspeccaoVendedores() {
       )}
 
       {metodo === 'wizard' && (
-        <>
-          <Alert>
-            <Sparkles className="h-4 w-4" />
-            <AlertDescription className="text-xs">
-              O Wizard busca prospects em geral. Para direcionar a representantes, no campo <b>Segmento</b> use algo como
-              <i> "representantes comerciais de [seu segmento]"</i> e nas <b>palavras-chave</b> inclua "representante multimarca", "escritório de representação".
-              Os resultados entram na listagem geral de prospecção — <b>para vê-los aqui, filtre depois na tela "Prospecção Via Cloud Code / Cursor ou ChatGPT" </b>.
-              Ou use o modo <b>Claude / ChatGPT / Cursor</b> abaixo, que já garante <code>origem = "vendedor"</code>.
-            </AlertDescription>
-          </Alert>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Wand2 className="h-4 w-4 text-primary" />
-                Wizard de Prospecção
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <WizardProspeccao embedded onCompleted={carregar} />
-            </CardContent>
-          </Card>
-        </>
+        <VendedorWizard
+          segmento={segmento} setSegmento={setSegmento}
+          produto={produto} setProduto={setProduto}
+          regiao={regiao} setRegiao={setRegiao}
+          qtd={qtd} setQtd={setQtd}
+          prompt={prompt}
+          onSaltarParaLista={carregar}
+        />
       )}
 
       {metodo === 'mcp' && (
@@ -583,6 +569,166 @@ export default function ProspeccaoVendedores() {
         title="Excluir prospecção"
         description="Tem certeza que deseja excluir este representante da prospecção?"
       />
+    </div>
+  );
+}
+
+// ============================================================================
+// Wizard dedicado para prospecção de REPRESENTANTES COMERCIAIS AUTÔNOMOS
+// ============================================================================
+interface VendedorWizardProps {
+  segmento: string; setSegmento: (v: string) => void;
+  produto: string; setProduto: (v: string) => void;
+  regiao: string; setRegiao: (v: string) => void;
+  qtd: string; setQtd: (v: string) => void;
+  prompt: string;
+  onSaltarParaLista: () => void;
+}
+
+function VendedorWizard({
+  segmento, setSegmento, produto, setProduto, regiao, setRegiao, qtd, setQtd, prompt, onSaltarParaLista,
+}: VendedorWizardProps) {
+  const [step, setStep] = useState(0);
+  const total = 5;
+  const progress = ((step + 1) / total) * 100;
+
+  const canNext = () => {
+    if (step === 0) return produto.trim().length > 2;
+    if (step === 1) return segmento.trim().length > 2;
+    if (step === 2) return regiao.trim().length > 1;
+    if (step === 3) return Number(qtd) > 0;
+    return true;
+  };
+
+  return (
+    <div className="space-y-4">
+      <Alert>
+        <Sparkles className="h-4 w-4" />
+        <AlertDescription className="text-xs">
+          Este wizard monta um pedido para a IA <b>encontrar representantes comerciais autônomos</b> que possam vender o seu produto.
+          Ao final, copie o prompt e cole no Claude / ChatGPT / Cursor conectado ao Pilar via MCP — os representantes aparecem na listagem abaixo.
+        </AlertDescription>
+      </Alert>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Wand2 className="h-4 w-4 text-primary" />
+            Wizard — Encontrar representantes para vender seu produto
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Progress value={progress} />
+
+          {step === 0 && (
+            <div className="space-y-2">
+              <h3 className="font-semibold text-sm">1. Qual produto/serviço o representante vai vender?</h3>
+              <Label>Produto ou linha de produtos *</Label>
+              <Input
+                value={produto}
+                onChange={(e) => setProduto(e.target.value)}
+                placeholder="Ex.: Papel de mascaramento automotivo, tintas industriais, autopeças..."
+              />
+              <p className="text-xs text-muted-foreground">
+                Descreva o que você fabrica/distribui e quer que o representante venda em campo.
+              </p>
+            </div>
+          )}
+
+          {step === 1 && (
+            <div className="space-y-2">
+              <h3 className="font-semibold text-sm">2. Para qual segmento/mercado o representante deve vender?</h3>
+              <Label>Segmento de atuação dos clientes finais *</Label>
+              <Input
+                value={segmento}
+                onChange={(e) => setSegmento(e.target.value)}
+                placeholder="Ex.: Oficinas de funilaria e pintura, indústria automotiva, lojas de autopeças..."
+              />
+              <p className="text-xs text-muted-foreground">
+                O que os clientes finais do representante fazem. Isso ajuda a IA a achar representantes que já visitam esse tipo de cliente.
+              </p>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-2">
+              <h3 className="font-semibold text-sm">3. Região onde procurar representantes</h3>
+              <Label>Estados / regiões / cidades *</Label>
+              <Input
+                value={regiao}
+                onChange={(e) => setRegiao(e.target.value)}
+                placeholder='Ex.: "SP e MG", "Sul do Brasil", "Nacional", "Grande São Paulo"'
+              />
+              <p className="text-xs text-muted-foreground">
+                Onde o representante deve estar baseado e atender.
+              </p>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-2">
+              <h3 className="font-semibold text-sm">4. Quantos representantes trazer?</h3>
+              <Label>Quantidade desejada</Label>
+              <Input type="number" min={1} max={100} value={qtd} onChange={(e) => setQtd(e.target.value)} />
+              <p className="text-xs text-muted-foreground">Recomendado entre 20 e 50. Máximo por chamada MCP: 100.</p>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm">5. Prompt pronto — copie e cole no seu assistente</h3>
+              <div className="text-xs bg-muted/50 rounded p-3 space-y-1">
+                <div><b>Produto:</b> {produto || '—'}</div>
+                <div><b>Segmento dos clientes finais:</b> {segmento || '—'}</div>
+                <div><b>Região:</b> {regiao || '—'}</div>
+                <div><b>Quantidade:</b> {qtd}</div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="flex items-center gap-2"><Terminal className="h-4 w-4" /> Prompt</Label>
+                  <Button size="sm" onClick={() => { navigator.clipboard.writeText(prompt); toast.success('Prompt copiado!'); }}>
+                    <Copy className="h-4 w-4 mr-1" /> Copiar prompt
+                  </Button>
+                </div>
+                <Textarea value={prompt} readOnly className="min-h-[260px] font-mono text-xs" />
+              </div>
+              <Alert>
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                  Cole o prompt no <b>Claude Code, ChatGPT ou Cursor</b> conectado ao Pilar via MCP. A IA vai pesquisar e salvar os representantes
+                  automaticamente com <code>origem = "vendedor"</code>. Depois, clique em <b>Atualizar</b> na listagem abaixo.
+                </AlertDescription>
+              </Alert>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <a href="https://chat.openai.com" target="_blank" rel="noreferrer"><ExternalLink className="h-3 w-3 mr-1" /> Abrir ChatGPT</a>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                  <a href="https://claude.ai" target="_blank" rel="noreferrer"><ExternalLink className="h-3 w-3 mr-1" /> Abrir Claude</a>
+                </Button>
+                <Button variant="outline" size="sm" onClick={onSaltarParaLista}>
+                  <RefreshCw className="h-3 w-3 mr-1" /> Atualizar listagem
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-between pt-4 border-t">
+            <Button variant="outline" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0}>
+              <ArrowLeft className="h-4 w-4 mr-2" />Voltar
+            </Button>
+            {step < total - 1 ? (
+              <Button onClick={() => setStep((s) => s + 1)} disabled={!canNext()}>
+                Próximo <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            ) : (
+              <Button variant="outline" onClick={() => setStep(0)}>
+                Recomeçar
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
