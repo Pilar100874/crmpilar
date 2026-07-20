@@ -227,7 +227,7 @@ export const menuItems: MenuItem[] = [
     ]
   },
   { id: "Mapa de Calor", title: "Mapa de Calor", url: "/mapa-calor-sistema", icon: LucideIcons.Flame },
-  { id: "Integrações IA (MCP)", title: "Integrações IA (MCP)", url: "/agent-integrations", icon: LucideIcons.Bot },
+  
   { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
 ];
 
