@@ -29,6 +29,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { APIImportDialogEmpresas } from "@/components/config/APIImportDialogEmpresas";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { ConvertProspectDialog } from "@/components/empresas/ConvertProspectDialog";
+import { EmpresaLocalizacaoTab } from "@/components/empresas/EmpresaLocalizacaoTab";
 import { UserCheck } from "lucide-react";
 
 
