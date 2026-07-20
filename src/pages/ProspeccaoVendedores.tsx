@@ -13,10 +13,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from 'sonner';
 import { Progress } from '@/components/ui/progress';
 import {
-  ArrowLeft, ArrowRight, Bot, CheckCircle2, Copy, Download, ExternalLink, HelpCircle, RefreshCw, Search,
+  ArrowLeft, ArrowRight, Bot, CheckCircle2, Copy, Download, Eraser, ExternalLink, FileText, HelpCircle, RefreshCw, Search,
   Sparkles, Terminal, Trash2, UserSearch, Wand2,
 } from 'lucide-react';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
+import { gerarPdfProspeccao } from '@/lib/prospeccaoPdf';
 import { validateEmail } from '@/lib/validators';
 import { maskWhatsApp, removeMask } from '@/lib/masks';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
@@ -128,6 +129,7 @@ export default function ProspeccaoVendedores() {
   const [busca, setBusca] = useState('');
   const [selecionadas, setSelecionadas] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
   const [importando, setImportando] = useState(false);
 
   // ----- Prompt builder state -----
@@ -179,6 +181,40 @@ export default function ProspeccaoVendedores() {
     toast.success('Excluído');
     setRows((prev) => prev.filter((r) => r.id !== id));
     setConfirmDelete(null);
+  };
+
+  const limparTudo = async () => {
+    const ids = filtradas.map((r) => r.id);
+    if (ids.length === 0) return;
+    const { error } = await supabase.from('prospeccao_empresas').delete().in('id', ids);
+    if (error) return toast.error('Erro ao limpar: ' + error.message);
+    toast.success(`${ids.length} registro(s) excluído(s)`);
+    setSelecionadas(new Set());
+    setConfirmClearAll(false);
+    carregar();
+  };
+
+  const exportarPdf = () => {
+    const alvo = selecionadas.size > 0 ? filtradas.filter((r) => selecionadas.has(r.id)) : filtradas;
+    if (alvo.length === 0) return toast.info('Nenhum registro para exportar');
+    gerarPdfProspeccao(
+      'Prospecção de Representantes / Vendedores',
+      [
+        { header: 'Nome', key: 'nome' },
+        { header: 'Cidade', key: 'cidade' },
+        { header: 'UF', key: 'estado' },
+        { header: 'WhatsApp', key: 'whatsapp' },
+        { header: 'Telefone', key: 'telefone' },
+        { header: 'E-mail', key: 'email' },
+        { header: 'Site', key: 'site' },
+        { header: 'Segmento', key: 'segmento_nome' },
+        { header: 'Score', key: 'score' },
+        { header: 'Prioridade', key: 'prioridade' },
+        { header: 'Status', key: 'status' },
+      ],
+      alvo,
+      `prospeccao-vendedores-${new Date().toISOString().slice(0, 10)}.pdf`,
+    );
   };
 
   const importarSelecionadas = async () => {
@@ -474,10 +510,24 @@ export default function ProspeccaoVendedores() {
               Registros trazidos com <code>origem = "vendedor"</code>. Revise e importe para o cadastro de vendedores.
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={carregar} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Atualizar
+            </Button>
+            <Button variant="outline" size="sm" onClick={exportarPdf} disabled={filtradas.length === 0}>
+              <FileText className="h-4 w-4 mr-2" />
+              Gerar PDF {selecionadas.size > 0 ? `(${selecionadas.size})` : ''}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmClearAll(true)}
+              disabled={filtradas.length === 0}
+              className="text-destructive hover:text-destructive"
+            >
+              <Eraser className="h-4 w-4 mr-2" />
+              Limpar tudo
             </Button>
             <Button size="sm" onClick={importarSelecionadas} disabled={importando || selecionadas.size === 0}>
               <Download className="h-4 w-4 mr-2" />
@@ -568,6 +618,13 @@ export default function ProspeccaoVendedores() {
         onConfirm={() => confirmDelete && excluir(confirmDelete)}
         title="Excluir prospecção"
         description="Tem certeza que deseja excluir este representante da prospecção?"
+      />
+      <DeleteConfirmDialog
+        open={confirmClearAll}
+        onOpenChange={setConfirmClearAll}
+        onConfirm={limparTudo}
+        title="Limpar toda a lista"
+        description={`Excluir ${filtradas.length} registro(s) da prospecção de vendedores? Esta ação não pode ser desfeita.`}
       />
     </div>
   );

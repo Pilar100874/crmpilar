@@ -9,7 +9,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { RefreshCw, Trash2, Download, ExternalLink, Search, Bot, Copy, Terminal, Sparkles, HelpCircle, Wand2, ChevronDown as ArrowDown, ArrowLeft } from 'lucide-react';
+import { RefreshCw, Trash2, Download, ExternalLink, Search, Bot, Copy, Terminal, Sparkles, HelpCircle, Wand2, ChevronDown as ArrowDown, ArrowLeft, FileText, Eraser } from 'lucide-react';
+import { gerarPdfProspeccao } from '@/lib/prospeccaoPdf';
 import WizardProspeccao from './WizardProspeccao';
 
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
@@ -168,8 +169,43 @@ export default function ProspeccaoEmpresas() {
   const [busca, setBusca] = useState('');
   const [selecionadas, setSelecionadas] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
   const [importando, setImportando] = useState(false);
   const [metodo, setMetodo] = useState<'wizard' | 'mcp' | null>(null);
+
+  const limparTudo = async () => {
+    const ids = filtradas.map((r) => r.id);
+    if (ids.length === 0) return;
+    const { error } = await supabase.from('prospeccao_empresas').delete().in('id', ids);
+    if (error) return toast.error('Erro ao limpar: ' + error.message);
+    toast.success(`${ids.length} registro(s) excluído(s)`);
+    setSelecionadas(new Set());
+    setConfirmClearAll(false);
+    carregar();
+  };
+
+  const exportarPdf = () => {
+    const alvo = selecionadas.size > 0 ? filtradas.filter((r) => selecionadas.has(r.id)) : filtradas;
+    if (alvo.length === 0) return toast.info('Nenhum registro para exportar');
+    gerarPdfProspeccao(
+      'Prospecção de Empresas',
+      [
+        { header: 'Nome', key: 'nome' },
+        { header: 'CNPJ', key: 'cnpj' },
+        { header: 'Cidade', key: 'cidade' },
+        { header: 'UF', key: 'estado' },
+        { header: 'WhatsApp', key: 'whatsapp' },
+        { header: 'Telefone', key: 'telefone' },
+        { header: 'E-mail', key: 'email' },
+        { header: 'Site', key: 'site' },
+        { header: 'Segmento', key: 'segmento_nome' },
+        { header: 'Origem', key: 'origem' },
+        { header: 'Status', key: 'status' },
+      ],
+      alvo,
+      `prospeccao-empresas-${new Date().toISOString().slice(0, 10)}.pdf`,
+    );
+  };
 
   const carregar = async () => {
     setLoading(true);
@@ -770,10 +806,24 @@ export default function ProspeccaoEmpresas() {
               Empresas trazidas via Claude Code / ChatGPT (MCP). Revise e importe para o cadastro definitivo.
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={carregar} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Atualizar
+            </Button>
+            <Button variant="outline" size="sm" onClick={exportarPdf} disabled={filtradas.length === 0}>
+              <FileText className="h-4 w-4 mr-2" />
+              Gerar PDF {selecionadas.size > 0 ? `(${selecionadas.size})` : ''}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmClearAll(true)}
+              disabled={filtradas.length === 0}
+              className="text-destructive hover:text-destructive"
+            >
+              <Eraser className="h-4 w-4 mr-2" />
+              Limpar tudo
             </Button>
             <Button
               size="sm"
@@ -916,6 +966,13 @@ export default function ProspeccaoEmpresas() {
         onConfirm={() => confirmDelete && excluir(confirmDelete)}
         title="Excluir prospecção"
         description="Tem certeza que deseja excluir esta empresa da prospecção?"
+      />
+      <DeleteConfirmDialog
+        open={confirmClearAll}
+        onOpenChange={setConfirmClearAll}
+        onConfirm={limparTudo}
+        title="Limpar toda a lista"
+        description={`Excluir ${filtradas.length} registro(s) da prospecção? Esta ação não pode ser desfeita.`}
       />
     </div>
   );
