@@ -42,6 +42,7 @@ import ProspeccaoEmpresas from './ProspeccaoEmpresas';
 import VinculosSegmentoProspectUsuario from './VinculosSegmentoProspectUsuario';
 import WizardProspeccao from './WizardProspeccao';
 import ConfigIAProspec from './ConfigIAProspec';
+import ProspeccaoVendedores from './ProspeccaoVendedores';
 
 
 interface TabItem {
