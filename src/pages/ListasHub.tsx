@@ -13,7 +13,8 @@ import {
   Target,
   Bot,
   Wand2,
-  Sparkles
+  Sparkles,
+  UserSearch
 
 } from 'lucide-react';
 
