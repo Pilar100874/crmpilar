@@ -5994,6 +5994,7 @@ export type Database = {
           telefone: string | null
           tipo_cliente: string
           updated_at: string | null
+          whatsapp: string | null
           whatsapps_vinculados: string[] | null
         }
         Insert: {
@@ -6023,6 +6024,7 @@ export type Database = {
           telefone?: string | null
           tipo_cliente?: string
           updated_at?: string | null
+          whatsapp?: string | null
           whatsapps_vinculados?: string[] | null
         }
         Update: {
@@ -6052,6 +6054,7 @@ export type Database = {
           telefone?: string | null
           tipo_cliente?: string
           updated_at?: string | null
+          whatsapp?: string | null
           whatsapps_vinculados?: string[] | null
         }
         Relationships: [
