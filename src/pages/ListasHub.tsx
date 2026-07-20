@@ -63,10 +63,10 @@ const tabItems: TabItem[] = [
   { id: 'vinculos-segmento-prospect-usuario', label: 'Vínculo Segmento Prospect x Usuário', icon: Link2, description: 'Direcione o atendimento de prospects por segmento a usuários' },
   { id: 'mapa-clientes', label: 'Mapa Clientes', icon: MapPin, description: 'Visualização geográfica das empresas' },
   { id: 'prospeccao-b2b', label: 'Prospecção B2B', icon: Target, description: 'Busca de empresas por região e segmento' },
-  { id: 'wizard-prospeccao', label: 'Wizard de Prospecção', icon: Wand2, description: 'Preencha critérios e o sistema pesquisa prospects na web' },
+  { id: 'prospeccao-empresas', label: 'Prospecção Via Cloud Code / Cursor ou ChatGPT', icon: Wand2, description: 'Wizard de prospecção + empresas trazidas via Claude Code / Cursor / ChatGPT para revisar e importar' },
   { id: 'config-ia-prospec', label: 'Configurar IAs de Prospecção', icon: Sparkles, description: 'Insira as chaves das IAs (OpenAI, Anthropic) usadas no Wizard' },
   { id: 'prospeccao-claude-code', label: 'Disponibilizar dados p/ Cloud Code / Cursor / ChatGPT', icon: Bot, description: 'Configure quais tabelas do sistema ficam disponíveis para consulta via MCP (Claude Code, Cursor, ChatGPT)' },
-  { id: 'prospeccao-empresas', label: 'Prospecção Via Cloud Code / Cursor ou ChatGPT', icon: Target, description: 'Empresas trazidas via Claude Code / Cursor / ChatGPT para revisar e importar' },
+  
 ];
 
 const ListasHub: React.FC = () => {
@@ -74,10 +74,11 @@ const ListasHub: React.FC = () => {
   const tabParam = searchParams.get('tab');
   const idParam = searchParams.get('id');
   
+  const resolveTab = (t: string | null) => (t === 'wizard-prospeccao' ? 'prospeccao-empresas' : t);
   const [activeTab, setActiveTab] = useState(() => {
-    // Inicializa com a aba passada por URL ou 'contatos'
     const validTabs = tabItems.map(t => t.id);
-    return tabParam && validTabs.includes(tabParam) ? tabParam : 'contatos';
+    const resolved = resolveTab(tabParam);
+    return resolved && validTabs.includes(resolved) ? resolved : 'contatos';
   });
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
 
@@ -85,11 +86,13 @@ const ListasHub: React.FC = () => {
   useEffect(() => {
     if (tabParam) {
       const validTabs = tabItems.map(t => t.id);
-      if (validTabs.includes(tabParam)) {
-        setActiveTab(tabParam);
+      const resolved = resolveTab(tabParam);
+      if (resolved && validTabs.includes(resolved)) {
+        setActiveTab(resolved);
       }
     }
   }, [tabParam]);
+
 
   const currentTabItem = tabItems.find(t => t.id === activeTab) || tabItems[0];
   const CurrentIcon = currentTabItem.icon;
@@ -125,7 +128,8 @@ const ListasHub: React.FC = () => {
       case 'prospeccao-empresas':
         return <ProspeccaoEmpresas />;
       case 'wizard-prospeccao':
-        return <WizardProspeccao />;
+        return <ProspeccaoEmpresas />;
+
       case 'config-ia-prospec':
         return <ConfigIAProspec />;
 

@@ -64,10 +64,16 @@ const PROVIDER_LABELS: Record<Provider, string> = {
   anthropic: 'Anthropic (Claude 3.5 Sonnet + Web Search)',
 };
 
-export default function WizardProspeccao() {
+interface WizardProspeccaoProps {
+  embedded?: boolean;
+  onCompleted?: () => void;
+}
+
+export default function WizardProspeccao({ embedded = false, onCompleted }: WizardProspeccaoProps = {}) {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormState>(initialState);
+
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ modo: string; inseridas?: number; prompt?: string; motivo?: string; aviso?: string } | null>(null);
   const [providers, setProviders] = useState<Record<Provider, boolean>>({ lovable: true, openai: false, anthropic: false });
@@ -107,12 +113,14 @@ export default function WizardProspeccao() {
       } else if ((data as any).modo === 'prompt') {
         toast.info('Prompt gerado — copie e cole no Claude Code / ChatGPT / Cursor');
       }
+      onCompleted?.();
     } catch (e: any) {
       toast.error(e?.message ?? 'Erro ao executar wizard');
     } finally {
       setLoading(false);
     }
   };
+
 
   const copiarPrompt = () => {
     if (!result?.prompt) return;
@@ -126,20 +134,24 @@ export default function WizardProspeccao() {
     setResult(null);
   };
 
+  const wrapperClass = embedded ? 'space-y-4' : 'p-4 sm:p-6 max-w-4xl mx-auto space-y-4';
+
   // ============ Result view ============
   if (result) {
     return (
-      <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-4">
-        <div className="flex items-center gap-2">
-          <Wand2 className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold">Wizard de Prospecção — Resultado</h1>
-        </div>
+      <div className={wrapperClass}>
+        {!embedded && (
+          <div className="flex items-center gap-2">
+            <Wand2 className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl font-bold">Wizard de Prospecção — Resultado</h1>
+          </div>
+        )}
 
         {result.modo === 'auto' && (result.inseridas ?? 0) > 0 && (
           <Alert>
             <CheckCircle2 className="h-4 w-4" />
             <AlertDescription>
-              <strong>{result.inseridas}</strong> empresa(s) inseridas na tela <em>Prospecção Via Cloud Code / Cursor ou ChatGPT</em>. Revise e importe de lá.
+              <strong>{result.inseridas}</strong> empresa(s) inseridas na listagem abaixo. Revise e importe.
             </AlertDescription>
           </Alert>
         )}
@@ -149,7 +161,7 @@ export default function WizardProspeccao() {
             <CardHeader>
               <CardTitle>Prompt pronto</CardTitle>
               <CardDescription>
-                {result.motivo}. Copie o prompt abaixo e cole no Claude Code, ChatGPT ou Cursor — eles vão pesquisar na web e salvar os prospects direto aqui via MCP.
+                {result.motivo}. Copie o prompt abaixo e cole no Claude Code, ChatGPT ou Cursor — eles vão pesquisar na web e salvar os prospects direto aqui via MCP. Clique em <strong>Atualizar</strong> na listagem quando terminarem.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -173,24 +185,30 @@ export default function WizardProspeccao() {
 
         <div className="flex gap-2">
           <Button variant="outline" onClick={reset}>Nova busca</Button>
-          <Button onClick={() => navigate('/listas?tab=prospeccao-empresas')}>
-            Ver prospects <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
+          {!embedded && (
+            <Button onClick={() => navigate('/listas?tab=prospeccao-empresas')}>
+              Ver prospects <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          )}
         </div>
       </div>
     );
   }
 
+
   // ============ Wizard steps ============
   return (
-    <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-4">
-      <div className="flex items-center gap-2">
-        <Wand2 className="h-6 w-6 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Wizard de Prospecção</h1>
-          <p className="text-sm text-muted-foreground">Preencha os critérios; o sistema pesquisa na web e traz os prospects.</p>
+    <div className={embedded ? 'space-y-4' : 'p-4 sm:p-6 max-w-3xl mx-auto space-y-4'}>
+      {!embedded && (
+        <div className="flex items-center gap-2">
+          <Wand2 className="h-6 w-6 text-primary" />
+          <div>
+            <h1 className="text-2xl font-bold">Wizard de Prospecção</h1>
+            <p className="text-sm text-muted-foreground">Preencha os critérios; o sistema pesquisa na web e traz os prospects.</p>
+          </div>
         </div>
-      </div>
+      )}
+
 
       <Progress value={progress} />
 
