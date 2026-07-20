@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { validateCNPJ, validateEmail } from '@/lib/validators';
 import { maskCNPJ, maskCEP, maskWhatsApp, removeMask } from '@/lib/masks';
+import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 
 // ===== Helpers de normalização/enriquecimento =====
 const UF_VALIDAS = new Set(['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO']);
@@ -199,6 +200,8 @@ export default function ProspeccaoEmpresas() {
 
   const importarSelecionadas = async () => {
     if (selecionadas.size === 0) return toast.info('Selecione ao menos uma empresa');
+    const estabId = await getEstabelecimentoId();
+    if (!estabId) return toast.error('Estabelecimento não encontrado para o usuário atual');
     setImportando(true);
     let ok = 0, fail = 0, enriquecidos = 0;
     const errosDetalhe: string[] = [];
@@ -270,6 +273,7 @@ export default function ProspeccaoEmpresas() {
       const { data: emp, error } = await supabase
         .from('empresas')
         .insert({
+          estabelecimento_id: estabId,
           nome,
           nome_fantasia,
           cnpj,
