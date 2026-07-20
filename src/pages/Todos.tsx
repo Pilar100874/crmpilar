@@ -320,14 +320,49 @@ export default function Todos() {
 
         if (contatosData) setContatos(contatosData);
 
-        // Buscar empresas
+        // Buscar empresas (todos os tipos)
         const { data: empresasData } = await supabase
           .from('empresas')
           .select('*')
           .eq('estabelecimento_id', estabId)
           .order('nome_fantasia');
 
-        if (empresasData) setEmpresas(empresasData);
+        if (empresasData) {
+          const clientes = empresasData.filter((e: any) => !['vendedor', 'transportadora'].includes(e.tipo_cliente));
+          const vends = empresasData.filter((e: any) => e.tipo_cliente === 'vendedor');
+          const transps = empresasData.filter((e: any) => e.tipo_cliente === 'transportadora');
+          setEmpresas(clientes);
+          setVendedores(vends);
+          setTransportadoras(transps);
+        }
+
+        // Buscar usuários do sistema
+        const { data: usuariosData } = await supabase
+          .from('usuarios')
+          .select('id, nome, email, telefone')
+          .eq('estabelecimento_id', estabId)
+          .order('nome');
+        if (usuariosData) setUsuarios(usuariosData);
+
+        // Vínculos vendedor/usuário -> empresas
+        const { data: vinculosEmp } = await supabase
+          .from('empresa_vinculos')
+          .select('empresa_id, usuario_id, vendedor_id, empresas:empresa_id (id, nome_fantasia, cnpj)');
+
+        if (vinculosEmp) {
+          const vendMap: Record<string, any[]> = {};
+          const userMap: Record<string, any[]> = {};
+          vinculosEmp.forEach((v: any) => {
+            if (v.vendedor_id && v.empresas) {
+              (vendMap[v.vendedor_id] ||= []).push(v.empresas);
+            }
+            if (v.usuario_id && v.empresas) {
+              (userMap[v.usuario_id] ||= []).push(v.empresas);
+            }
+          });
+          setVendedorEmpresas(vendMap);
+          setUsuarioEmpresas(userMap);
+        }
 
         // Buscar vínculos
         const { data: vinculos } = await supabase
