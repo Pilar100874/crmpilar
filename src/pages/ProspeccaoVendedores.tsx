@@ -13,10 +13,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from 'sonner';
 import { Progress } from '@/components/ui/progress';
 import {
-  ArrowLeft, ArrowRight, Bot, CheckCircle2, Copy, Download, ExternalLink, HelpCircle, RefreshCw, Search,
+  ArrowLeft, ArrowRight, Bot, CheckCircle2, Copy, Download, Eraser, ExternalLink, FileText, HelpCircle, RefreshCw, Search,
   Sparkles, Terminal, Trash2, UserSearch, Wand2,
 } from 'lucide-react';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
+import { gerarPdfProspeccao } from '@/lib/prospeccaoPdf';
 import { validateEmail } from '@/lib/validators';
 import { maskWhatsApp, removeMask } from '@/lib/masks';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
