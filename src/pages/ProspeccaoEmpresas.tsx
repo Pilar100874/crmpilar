@@ -665,7 +665,7 @@ export default function ProspeccaoEmpresas() {
               <TableBody>
                 {filtradas.length === 0 && !loading && (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={15} className="text-center text-muted-foreground py-8">
                       Nenhuma prospecção ainda. Peça ao Claude Code / ChatGPT para pesquisar empresas na web e trazer para cá.
                     </TableCell>
                   </TableRow>
