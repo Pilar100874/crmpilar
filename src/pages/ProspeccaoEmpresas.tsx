@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { validateCNPJ, validateEmail } from '@/lib/validators';
 import { maskCNPJ, maskCEP, maskWhatsApp, removeMask } from '@/lib/masks';
+import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 
 // ===== Helpers de normalização/enriquecimento =====
 const UF_VALIDAS = new Set(['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO']);
