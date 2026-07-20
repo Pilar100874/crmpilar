@@ -15,6 +15,7 @@ import WizardProspeccao from './WizardProspeccao';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { validateCNPJ, validateEmail } from '@/lib/validators';
 import { maskCNPJ, maskCEP, maskWhatsApp, removeMask } from '@/lib/masks';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
@@ -427,6 +428,86 @@ export default function ProspeccaoEmpresas() {
 
   return (
     <div className="p-4 space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2">
+              <Wand2 className="h-4 w-4 text-primary" />
+              Como funciona o Modo Wizard
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Wand2 className="h-5 w-5 text-primary" /> Modo Wizard — passo a passo
+              </DialogTitle>
+              <DialogDescription>
+                Um assistente guiado que faz toda a prospecção por você, sem sair do Pilar.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 text-sm">
+              <p>Ideal para quem quer resultados rápidos sem precisar aprender a usar Claude, ChatGPT ou Cursor.</p>
+              <ol className="list-decimal pl-5 space-y-2">
+                <li><strong>Abra o card "Wizard de Prospecção"</strong> logo abaixo.</li>
+                <li><strong>Segmento:</strong> escolha o tipo de empresa (ex.: restaurantes, farmácias).</li>
+                <li><strong>Região:</strong> defina cidade/estado ou raio de atuação.</li>
+                <li><strong>Porte:</strong> selecione o tamanho da empresa desejada.</li>
+                <li><strong>Palavras-chave:</strong> refine com termos específicos do seu nicho.</li>
+                <li><strong>Execução:</strong> escolha o provedor de IA e clique em executar.
+                  <ul className="list-disc pl-5 mt-1 space-y-1">
+                    <li><em>Modo Auto</em>: a IA busca e importa direto (requer chave em "Configurar IAs de Prospecção").</li>
+                    <li><em>Modo Prompt</em>: gera um texto pronto para colar no Claude/ChatGPT/Cursor.</li>
+                  </ul>
+                </li>
+                <li>Os resultados aparecem automaticamente na <strong>listagem abaixo</strong> para você revisar e importar.</li>
+              </ol>
+              <Alert>
+                <Sparkles className="h-4 w-4" />
+                <AlertDescription>
+                  Recomendado para: usuários que querem simplicidade e velocidade, sem instalar nada externo.
+                </AlertDescription>
+              </Alert>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2">
+              <Terminal className="h-4 w-4 text-primary" />
+              Como usar via Claude / ChatGPT / Cursor
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Terminal className="h-5 w-5 text-primary" /> Modo Direto (MCP) — Claude Code, ChatGPT ou Cursor
+              </DialogTitle>
+              <DialogDescription>
+                Conecte seu assistente de IA preferido ao Pilar via MCP e prospecte diretamente por lá.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 text-sm">
+              <p>Ideal para quem já usa Claude, ChatGPT ou Cursor e quer controle total sobre a busca.</p>
+              <ol className="list-decimal pl-5 space-y-2">
+                <li><strong>Conecte o assistente ao Pilar</strong> (uma vez só) — veja as instruções no card <em>"Como usar — pesquisar na internet e trazer para o Pilar"</em> logo abaixo, com o passo a passo para cada ferramenta.</li>
+                <li>Use as credenciais fixas: <code className="bg-muted px-1 rounded">pilar@pilar.com.br</code> / <code className="bg-muted px-1 rounded">Ceotto2468</code>.</li>
+                <li>No seu assistente, peça: <em>"pesquise empresas de [segmento] em [cidade] e salve no Pilar"</em>.</li>
+                <li>A IA pesquisa na internet, extrai os dados e envia via MCP (<code className="bg-muted px-1 rounded">salvar_empresas_prospectadas</code>).</li>
+                <li>Os resultados aparecem na <strong>listagem abaixo</strong> — revise, selecione e importe.</li>
+              </ol>
+              <Alert>
+                <Bot className="h-4 w-4" />
+                <AlertDescription>
+                  Recomendado para: usuários avançados que querem usar recursos nativos de pesquisa e raciocínio dos assistentes externos.
+                </AlertDescription>
+              </Alert>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+
       <Collapsible defaultOpen>
         <Card>
           <CollapsibleTrigger asChild>
