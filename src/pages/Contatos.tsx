@@ -243,6 +243,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     tasks: "",
     tags: "",
   });
+  const [tipoContatoFilter, setTipoContatoFilter] = useState<'all' | 'clientes' | 'prospects'>('all');
+
 
   // Campos base obrigatórios de contato (sempre devem existir)
   const baseContactFields: CustomField[] = [
