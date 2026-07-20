@@ -273,6 +273,7 @@ export default function ProspeccaoEmpresas() {
       const { data: emp, error } = await supabase
         .from('empresas')
         .insert({
+          estabelecimento_id: estabId,
           nome,
           nome_fantasia,
           cnpj,
