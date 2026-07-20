@@ -510,10 +510,24 @@ export default function ProspeccaoVendedores() {
               Registros trazidos com <code>origem = "vendedor"</code>. Revise e importe para o cadastro de vendedores.
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={carregar} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Atualizar
+            </Button>
+            <Button variant="outline" size="sm" onClick={exportarPdf} disabled={filtradas.length === 0}>
+              <FileText className="h-4 w-4 mr-2" />
+              Gerar PDF {selecionadas.size > 0 ? `(${selecionadas.size})` : ''}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmClearAll(true)}
+              disabled={filtradas.length === 0}
+              className="text-destructive hover:text-destructive"
+            >
+              <Eraser className="h-4 w-4 mr-2" />
+              Limpar tudo
             </Button>
             <Button size="sm" onClick={importarSelecionadas} disabled={importando || selecionadas.size === 0}>
               <Download className="h-4 w-4 mr-2" />
