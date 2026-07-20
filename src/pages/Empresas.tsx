@@ -1448,12 +1448,22 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     }
   };
 
-  const filteredEmpresas = empresas.filter(e =>
-    e.nome_fantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.cnpj?.includes(searchTerm) ||
-    e.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredEmpresas = empresas.filter(e => {
+    const status = (e as any).status_comercial || null;
+    if (statusFilter === "nao_prospect" && status === "prospect") return false;
+    if (statusFilter === "somente_prospect" && status !== "prospect") return false;
+    if (statusFilter !== "all" && statusFilter !== "nao_prospect" && statusFilter !== "somente_prospect") {
+      if (status !== statusFilter) return false;
+    }
+    const term = searchTerm.toLowerCase();
+    if (!term) return true;
+    return (
+      e.nome_fantasia?.toLowerCase().includes(term) ||
+      e.nome?.toLowerCase().includes(term) ||
+      e.cnpj?.includes(searchTerm) ||
+      e.email?.toLowerCase().includes(term)
+    );
+  });
 
   const sortedEmpresas = React.useMemo(() => {
     if (!sortConfig) return filteredEmpresas;
