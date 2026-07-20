@@ -967,6 +967,13 @@ export default function ProspeccaoEmpresas() {
         title="Excluir prospecção"
         description="Tem certeza que deseja excluir esta empresa da prospecção?"
       />
+      <DeleteConfirmDialog
+        open={confirmClearAll}
+        onOpenChange={setConfirmClearAll}
+        onConfirm={limparTudo}
+        title="Limpar toda a lista"
+        description={`Excluir ${filtradas.length} registro(s) da prospecção? Esta ação não pode ser desfeita.`}
+      />
     </div>
   );
 }
