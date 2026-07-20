@@ -113,6 +113,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   
   // Estado para softphone
   const [softphoneOpen, setSoftphoneOpen] = useState(false);
+  const [convertProspect, setConvertProspect] = useState<Empresa | null>(null);
   const [softphoneNumber, setSoftphoneNumber] = useState("");
   
   // Estados para emails e WhatsApps vinculados
