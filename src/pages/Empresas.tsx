@@ -2264,27 +2264,13 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
           <TabsContent value="qualificacao" className="p-6">
             <Card className="p-6 space-y-8">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">Contato / Decisor</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Nome do contato</Label>
-                    <Input value={formData.contato_nome || ""} onChange={(e) => setFormData({ ...formData, contato_nome: e.target.value })} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Cargo</Label>
-                    <Input value={formData.contato_cargo || ""} onChange={(e) => setFormData({ ...formData, contato_cargo: e.target.value })} placeholder="Sócio, Diretor Comercial..." />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>E-mail do contato</Label>
-                    <Input type="email" value={formData.contato_email || ""} onChange={(e) => setFormData({ ...formData, contato_email: e.target.value })} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Telefone / WhatsApp do contato</Label>
-                    <Input value={formData.contato_telefone || ""} onChange={(e) => setFormData({ ...formData, contato_telefone: e.target.value })} />
-                  </div>
-                </div>
+              <div className="rounded-md border border-border/40 bg-muted/30 p-3 text-xs text-muted-foreground">
+                Contatos / decisores desta empresa são gerenciados na aba <strong>Contatos Vinculados</strong> (ou na tela de Contatos). Prospects importados criam automaticamente um contato marcado como prospect.
               </div>
+
+
+
+
 
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">Perfil da Empresa</h3>

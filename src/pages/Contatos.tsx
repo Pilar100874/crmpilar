@@ -243,6 +243,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     tasks: "",
     tags: "",
   });
+  const [tipoContatoFilter, setTipoContatoFilter] = useState<'all' | 'clientes' | 'prospects'>('all');
+
 
   // Campos base obrigatórios de contato (sempre devem existir)
   const baseContactFields: CustomField[] = [
@@ -552,10 +554,12 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         customFields: {
           ...r.custom_fields,
           empresa_id: r.empresa_id,
+          tipo_operador: r.tipo_operador,
           company_name: r.empresas?.nome_fantasia || r.custom_fields?.company_name,
           company_fantasia: r.empresas?.nome_fantasia || r.custom_fields?.company_fantasia,
           cpf_cnpj: r.empresas?.cnpj || r.custom_fields?.cpf_cnpj,
         },
+
         active: true,
         segmentos: segmentsByCustomer[r.id] || [],
       }));
@@ -1889,6 +1893,12 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const filteredContacts = contacts.filter(contact => {
     // Filtrar apenas contatos ativos
     if (!contact.active) return false;
+
+    // Filtro cliente/prospect
+    if (tipoContatoFilter === 'clientes' && contact.customFields?.tipo_operador === false) return false;
+    if (tipoContatoFilter === 'prospects' && contact.customFields?.tipo_operador !== false) return false;
+
+
     
     // Busca unificada apenas em nome, telefone/WhatsApp e e-mail
     if (searchFilters.unifiedSearch) {
@@ -2066,11 +2076,23 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               </Button>
             )}
             
+            <Select value={tipoContatoFilter} onValueChange={(v: any) => setTipoContatoFilter(v)}>
+              <SelectTrigger className="w-[180px] h-9 sm:h-10 text-xs sm:text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os contatos</SelectItem>
+                <SelectItem value="clientes">Somente clientes</SelectItem>
+                <SelectItem value="prospects">Somente prospects</SelectItem>
+              </SelectContent>
+            </Select>
+
             <div className="ml-auto text-xs sm:text-sm font-light text-muted-foreground whitespace-nowrap">
               {sortedContacts.length} {sortedContacts.length === 1 ? 'contato' : 'contatos'}
             </div>
           </div>
         </div>
+
 
         <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6">
           {sortedContacts.length === 0 ? (
