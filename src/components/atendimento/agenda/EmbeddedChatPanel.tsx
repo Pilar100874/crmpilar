@@ -180,7 +180,8 @@ export function EmbeddedChatPanel({
           content_type: contentType,
           file_url: fileUrl,
           file_name: fileName,
-        });
+        } as any);
+
       }
     } catch (error) {
       console.error("Error sending message:", error);
