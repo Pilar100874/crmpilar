@@ -66,7 +66,7 @@ const tabItems: TabItem[] = [
   { id: 'prospeccao-empresas', label: 'Prospecção Via Cloud Code / Cursor ou ChatGPT', icon: Wand2, description: 'Wizard de prospecção + empresas trazidas via Claude Code / Cursor / ChatGPT para revisar e importar' },
   { id: 'config-ia-prospec', label: 'Configurar IAs de Prospecção', icon: Sparkles, description: 'Insira as chaves das IAs (OpenAI, Anthropic) usadas no Wizard' },
   { id: 'prospeccao-claude-code', label: 'Disponibilizar dados p/ Cloud Code / Cursor / ChatGPT', icon: Bot, description: 'Configure quais tabelas do sistema ficam disponíveis para consulta via MCP (Claude Code, Cursor, ChatGPT)' },
-  { id: 'prospeccao-empresas', label: 'Prospecção Via Cloud Code / Cursor ou ChatGPT', icon: Target, description: 'Empresas trazidas via Claude Code / Cursor / ChatGPT para revisar e importar' },
+  
 ];
 
 const ListasHub: React.FC = () => {
