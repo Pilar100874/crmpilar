@@ -303,6 +303,76 @@
               },
               "description": "URLs das fontes usadas na pesquisa."
             },
+            "contato_nome": {
+              "type": "string",
+              "description": "Nome do decisor/contato principal."
+            },
+            "contato_cargo": {
+              "type": "string",
+              "description": "Cargo do contato (ex.: Sócio, Diretor Comercial)."
+            },
+            "contato_email": {
+              "type": "string"
+            },
+            "contato_telefone": {
+              "type": "string"
+            },
+            "porte": {
+              "type": "string",
+              "description": "MEI, ME, EPP, Médio, Grande."
+            },
+            "faturamento_estimado": {
+              "type": "string",
+              "description": "Faixa de faturamento anual estimado."
+            },
+            "funcionarios_estimado": {
+              "type": "string",
+              "description": "Faixa de nº de funcionários (ex.: 1-9, 10-49)."
+            },
+            "data_fundacao": {
+              "type": "string",
+              "description": "Data de fundação em YYYY-MM-DD."
+            },
+            "situacao_cadastral": {
+              "type": "string",
+              "description": "ATIVA, BAIXADA, SUSPENSA, INAPTA."
+            },
+            "score": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Score de qualificação 0-100."
+            },
+            "score_motivo": {
+              "type": "string",
+              "description": "Justificativa curta do score."
+            },
+            "produtos_interesse": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Produtos/serviços de interesse."
+            },
+            "prioridade": {
+              "type": "string",
+              "description": "alta, media, baixa."
+            },
+            "latitude": {
+              "type": "number"
+            },
+            "longitude": {
+              "type": "number"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "observacoes_internas": {
+              "type": "string"
+            },
             "extras": {
               "type": "object",
               "additionalProperties": {},
@@ -395,6 +465,65 @@
                     "items": {
                       "type": "string"
                     }
+                  },
+                  "contato_nome": {
+                    "type": "string"
+                  },
+                  "contato_cargo": {
+                    "type": "string"
+                  },
+                  "contato_email": {
+                    "type": "string"
+                  },
+                  "contato_telefone": {
+                    "type": "string"
+                  },
+                  "porte": {
+                    "type": "string"
+                  },
+                  "faturamento_estimado": {
+                    "type": "string"
+                  },
+                  "funcionarios_estimado": {
+                    "type": "string"
+                  },
+                  "data_fundacao": {
+                    "type": "string"
+                  },
+                  "situacao_cadastral": {
+                    "type": "string"
+                  },
+                  "score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "score_motivo": {
+                    "type": "string"
+                  },
+                  "produtos_interesse": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "prioridade": {
+                    "type": "string"
+                  },
+                  "latitude": {
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "type": "number"
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "observacoes_internas": {
+                    "type": "string"
                   },
                   "extras": {
                     "type": "object",
