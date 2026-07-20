@@ -122,12 +122,24 @@ async function chamarAnthropic(prompt: string, apiKey: string) {
   return extractJson(texto);
 }
 
-function providersDisponiveis() {
+async function providersDisponiveis(sb?: any, userId?: string) {
+  let dbKeys: any = null;
+  if (sb && userId) {
+    const { data } = await sb.from("ia_prospec_keys").select("openai_api_key,anthropic_api_key").eq("user_id", userId).maybeSingle();
+    dbKeys = data;
+  }
   return {
     lovable: !!Deno.env.get("LOVABLE_API_KEY"),
-    openai: !!Deno.env.get("OPENAI_API_KEY"),
-    anthropic: !!Deno.env.get("ANTHROPIC_API_KEY"),
+    openai: !!(dbKeys?.openai_api_key || Deno.env.get("OPENAI_API_KEY")),
+    anthropic: !!(dbKeys?.anthropic_api_key || Deno.env.get("ANTHROPIC_API_KEY")),
   };
+}
+
+async function getKey(provider: Provider, sb: any, userId: string): Promise<string | undefined> {
+  if (provider === "lovable") return Deno.env.get("LOVABLE_API_KEY") ?? undefined;
+  const { data } = await sb.from("ia_prospec_keys").select("openai_api_key,anthropic_api_key").eq("user_id", userId).maybeSingle();
+  if (provider === "openai") return data?.openai_api_key || Deno.env.get("OPENAI_API_KEY") || undefined;
+  if (provider === "anthropic") return data?.anthropic_api_key || Deno.env.get("ANTHROPIC_API_KEY") || undefined;
 }
 
 Deno.serve(async (req) => {
