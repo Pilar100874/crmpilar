@@ -277,7 +277,7 @@ export function UserMonitorRow({
       hoje.setHours(0, 0, 0, 0);
 
       // @ts-ignore - tipo muito complexo para inferir
-      const result = await supabase
+      const result = await (supabase as any)
         .from('orcamentos')
         .select('id, numero, status, total, created_at, cliente_nome')
         .eq('estabelecimento_id', estabelecimentoId)
@@ -285,6 +285,7 @@ export function UserMonitorRow({
         .gte('created_at', hoje.toISOString())
         .order('created_at', { ascending: false })
         .limit(20);
+
 
       const data: any[] = result.data || [];
       
