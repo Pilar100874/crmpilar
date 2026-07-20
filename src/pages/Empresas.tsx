@@ -49,6 +49,7 @@ interface Empresa {
   nome: string | null;
   cnpj: string | null;
   telefone: string | null;
+  whatsapp: string | null;
   email: string | null;
   endereco: string | null;
   cidade: string | null;
@@ -134,6 +135,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
       { id: "nome", label: "Nome", visible: true, width: 250 },
       { id: "cnpj", label: "CNPJ", visible: true, width: 180 },
       { id: "telefone", label: "Telefone", visible: true, width: 150 },
+      { id: "whatsapp", label: "WhatsApp", visible: false, width: 150 },
       { id: "email", label: "E-mail", visible: true, width: 250 },
       { id: "cidade", label: "Cidade", visible: false, width: 150 },
       { id: "estado", label: "UF", visible: false, width: 80 },
@@ -171,6 +173,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
     { id: "state", label: "UF", type: "text", category: "company", required: true, locked: true },
     { id: "inscricao", label: "Inscrição", type: "text", category: "company", required: false, locked: true },
     { id: "telefone", label: "Telefone", type: "phone", category: "company", required: false, locked: true },
+    { id: "whatsapp", label: "WhatsApp", type: "phone", category: "company", required: false, locked: true },
     { id: "email", label: "E-mail", type: "email", category: "company", required: false, locked: true },
   ]);
 
@@ -527,6 +530,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       company_name: empresa.nome || "",
       company_fantasia: empresa.nome_fantasia || "",
       telefone: empresa.telefone || "",
+      whatsapp: (empresa as any).whatsapp || "",
       email: empresa.email || "",
       cep: empresa.cep || "",
       address: empresa.endereco || "",
@@ -832,7 +836,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }
 
       // Separar campos padrão de campos customizados
-      const standardFields = ['company_type', 'tipo_cliente', 'cpf_cnpj', 'company_name', 'company_fantasia', 'cep', 'address', 'city', 'neighborhood', 'state', 'inscricao', 'telefone', 'email'];
+      const standardFields = ['company_type', 'tipo_cliente', 'cpf_cnpj', 'company_name', 'company_fantasia', 'cep', 'address', 'city', 'neighborhood', 'state', 'inscricao', 'telefone', 'whatsapp', 'email'];
       const customFieldsData: any = {
         company_type: formData.company_type,
         neighborhood: formData.neighborhood,
@@ -852,6 +856,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         nome: formData.company_name,
         cnpj: formData.cpf_cnpj || null,
         telefone: formData.telefone || null,
+        whatsapp: formData.whatsapp || null,
         email: formData.email || null,
         endereco: formData.address,
         cidade: formData.city,
