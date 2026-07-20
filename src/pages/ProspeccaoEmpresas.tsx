@@ -9,7 +9,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { RefreshCw, Trash2, Download, ExternalLink, Search, Bot, Copy, Terminal, Sparkles, HelpCircle } from 'lucide-react';
+import { RefreshCw, Trash2, Download, ExternalLink, Search, Bot, Copy, Terminal, Sparkles, HelpCircle, Wand2 } from 'lucide-react';
+import WizardProspeccao from './WizardProspeccao';
+
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
