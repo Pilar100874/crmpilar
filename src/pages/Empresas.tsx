@@ -873,6 +873,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
       // Separar campos padrão de campos customizados
       const standardFields = ['company_type', 'tipo_cliente', 'cpf_cnpj', 'company_name', 'company_fantasia', 'cep', 'address', 'city', 'neighborhood', 'state', 'inscricao', 'telefone', 'whatsapp', 'email', 'site'];
+      const qualificationFields = ['contato_nome','contato_cargo','contato_email','contato_telefone','porte','faturamento_estimado','funcionarios_estimado','data_fundacao','situacao_cadastral','score_prospect','score_motivo','prioridade','produtos_interesse','tags','observacoes_internas'];
       const customFieldsData: any = {
         company_type: formData.company_type,
         neighborhood: formData.neighborhood,
@@ -881,10 +882,16 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       
       // Adicionar campos customizados do formulário
       Object.keys(formData).forEach(key => {
-        if (!standardFields.includes(key) && !key.startsWith('contact_')) {
+        if (!standardFields.includes(key) && !qualificationFields.includes(key) && !key.startsWith('contact_')) {
           customFieldsData[key] = formData[key];
         }
       });
+
+      const toArr = (v: any): string[] => {
+        if (Array.isArray(v)) return v.map(String).map((s) => s.trim()).filter(Boolean);
+        if (typeof v === 'string') return v.split(',').map((s) => s.trim()).filter(Boolean);
+        return [];
+      };
 
       const empresaPayload: any = {
         estabelecimento_id: estabId,
@@ -903,8 +910,25 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         tipo_cliente: variant !== "empresa" ? entityConfig.tipo_cliente : (formData.tipo_cliente || "B2B"),
         custom_fields: customFieldsData,
         emails_vinculados: emailsVinculados,
-        whatsapps_vinculados: whatsappsVinculados
+        whatsapps_vinculados: whatsappsVinculados,
+        // Qualificação
+        contato_nome: formData.contato_nome || null,
+        contato_cargo: formData.contato_cargo || null,
+        contato_email: formData.contato_email || null,
+        contato_telefone: formData.contato_telefone || null,
+        porte: formData.porte || null,
+        faturamento_estimado: formData.faturamento_estimado || null,
+        funcionarios_estimado: formData.funcionarios_estimado || null,
+        data_fundacao: formData.data_fundacao || null,
+        situacao_cadastral: formData.situacao_cadastral || null,
+        score_prospect: formData.score_prospect === "" || formData.score_prospect == null ? null : Number(formData.score_prospect),
+        score_motivo: formData.score_motivo || null,
+        prioridade: formData.prioridade || null,
+        produtos_interesse: toArr(formData.produtos_interesse),
+        tags: toArr(formData.tags),
+        observacoes_internas: formData.observacoes_internas || null,
       };
+
 
       let empresaId: string;
 
