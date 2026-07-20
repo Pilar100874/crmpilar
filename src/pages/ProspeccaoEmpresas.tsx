@@ -649,17 +649,23 @@ export default function ProspeccaoEmpresas() {
                   <TableHead>CNPJ</TableHead>
                   <TableHead>Cidade/UF</TableHead>
                   <TableHead>WhatsApp</TableHead>
+                  <TableHead>Telefone</TableHead>
                   <TableHead>E-mail</TableHead>
                   <TableHead>Site</TableHead>
                   <TableHead>Segmento</TableHead>
+                  <TableHead>Porte</TableHead>
+                  <TableHead>Score</TableHead>
+                  <TableHead>Prior.</TableHead>
+                  <TableHead>Contato</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-16"></TableHead>
                 </TableRow>
               </TableHeader>
+
               <TableBody>
                 {filtradas.length === 0 && !loading && (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={15} className="text-center text-muted-foreground py-8">
                       Nenhuma prospecção ainda. Peça ao Claude Code / ChatGPT para pesquisar empresas na web e trazer para cá.
                     </TableCell>
                   </TableRow>
@@ -683,7 +689,8 @@ export default function ProspeccaoEmpresas() {
                     <TableCell className="text-sm">
                       {[r.cidade, r.estado].filter(Boolean).join(' / ') || '-'}
                     </TableCell>
-                    <TableCell className="text-sm">{r.whatsapp || r.telefone || '-'}</TableCell>
+                    <TableCell className="text-sm">{r.whatsapp || '-'}</TableCell>
+                    <TableCell className="text-sm">{r.telefone || '-'}</TableCell>
                     <TableCell className="text-sm">{r.email || '-'}</TableCell>
                     <TableCell className="text-sm">
                       {r.site ? (
@@ -700,6 +707,23 @@ export default function ProspeccaoEmpresas() {
                       )}
                     </TableCell>
                     <TableCell className="text-sm">{r.segmento_nome || '-'}</TableCell>
+                    <TableCell className="text-sm">{(r as any).porte || '-'}</TableCell>
+                    <TableCell className="text-sm">
+                      {(r as any).score != null ? (
+                        <Badge variant={((r as any).score >= 70) ? 'default' : 'secondary'}>{(r as any).score}</Badge>
+                      ) : '-'}
+                    </TableCell>
+                    <TableCell className="text-sm capitalize">{(r as any).prioridade || '-'}</TableCell>
+                    <TableCell className="text-sm">
+                      {(r as any).contato_nome ? (
+                        <div>
+                          <div className="font-medium">{(r as any).contato_nome}</div>
+                          {(r as any).contato_cargo && (
+                            <div className="text-xs text-muted-foreground">{(r as any).contato_cargo}</div>
+                          )}
+                        </div>
+                      ) : '-'}
+                    </TableCell>
                     <TableCell>
                       {r.empresa_id ? (
                         <Badge variant="default">Importado</Badge>
@@ -707,6 +731,7 @@ export default function ProspeccaoEmpresas() {
                         <Badge variant="secondary">Novo</Badge>
                       )}
                     </TableCell>
+
                     <TableCell>
                       <Button
                         variant="ghost"

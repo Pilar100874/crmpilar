@@ -557,7 +557,24 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       neighborhood: (empresa as any).bairro || empresa.custom_fields?.neighborhood || "",
       inscricao: empresa.custom_fields?.inscricao || "",
       site: (empresa as any).site || empresa.custom_fields?.site || "",
+      // Qualificação
+      contato_nome: (empresa as any).contato_nome || "",
+      contato_cargo: (empresa as any).contato_cargo || "",
+      contato_email: (empresa as any).contato_email || "",
+      contato_telefone: (empresa as any).contato_telefone || "",
+      porte: (empresa as any).porte || "",
+      faturamento_estimado: (empresa as any).faturamento_estimado || "",
+      funcionarios_estimado: (empresa as any).funcionarios_estimado || "",
+      data_fundacao: (empresa as any).data_fundacao || "",
+      situacao_cadastral: (empresa as any).situacao_cadastral || "",
+      score_prospect: (empresa as any).score_prospect ?? "",
+      score_motivo: (empresa as any).score_motivo || "",
+      prioridade: (empresa as any).prioridade || "",
+      produtos_interesse: Array.isArray((empresa as any).produtos_interesse) ? (empresa as any).produtos_interesse.join(", ") : ((empresa as any).produtos_interesse || ""),
+      tags: Array.isArray((empresa as any).tags) ? (empresa as any).tags.join(", ") : ((empresa as any).tags || ""),
+      observacoes_internas: (empresa as any).observacoes_internas || "",
     };
+
     
     // Carregar campos customizados do custom_fields
     if (empresa.custom_fields) {
@@ -856,6 +873,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
       // Separar campos padrão de campos customizados
       const standardFields = ['company_type', 'tipo_cliente', 'cpf_cnpj', 'company_name', 'company_fantasia', 'cep', 'address', 'city', 'neighborhood', 'state', 'inscricao', 'telefone', 'whatsapp', 'email', 'site'];
+      const qualificationFields = ['contato_nome','contato_cargo','contato_email','contato_telefone','porte','faturamento_estimado','funcionarios_estimado','data_fundacao','situacao_cadastral','score_prospect','score_motivo','prioridade','produtos_interesse','tags','observacoes_internas'];
       const customFieldsData: any = {
         company_type: formData.company_type,
         neighborhood: formData.neighborhood,
@@ -864,10 +882,16 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       
       // Adicionar campos customizados do formulário
       Object.keys(formData).forEach(key => {
-        if (!standardFields.includes(key) && !key.startsWith('contact_')) {
+        if (!standardFields.includes(key) && !qualificationFields.includes(key) && !key.startsWith('contact_')) {
           customFieldsData[key] = formData[key];
         }
       });
+
+      const toArr = (v: any): string[] => {
+        if (Array.isArray(v)) return v.map(String).map((s) => s.trim()).filter(Boolean);
+        if (typeof v === 'string') return v.split(',').map((s) => s.trim()).filter(Boolean);
+        return [];
+      };
 
       const empresaPayload: any = {
         estabelecimento_id: estabId,
@@ -886,8 +910,25 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         tipo_cliente: variant !== "empresa" ? entityConfig.tipo_cliente : (formData.tipo_cliente || "B2B"),
         custom_fields: customFieldsData,
         emails_vinculados: emailsVinculados,
-        whatsapps_vinculados: whatsappsVinculados
+        whatsapps_vinculados: whatsappsVinculados,
+        // Qualificação
+        contato_nome: formData.contato_nome || null,
+        contato_cargo: formData.contato_cargo || null,
+        contato_email: formData.contato_email || null,
+        contato_telefone: formData.contato_telefone || null,
+        porte: formData.porte || null,
+        faturamento_estimado: formData.faturamento_estimado || null,
+        funcionarios_estimado: formData.funcionarios_estimado || null,
+        data_fundacao: formData.data_fundacao || null,
+        situacao_cadastral: formData.situacao_cadastral || null,
+        score_prospect: formData.score_prospect === "" || formData.score_prospect == null ? null : Number(formData.score_prospect),
+        score_motivo: formData.score_motivo || null,
+        prioridade: formData.prioridade || null,
+        produtos_interesse: toArr(formData.produtos_interesse),
+        tags: toArr(formData.tags),
+        observacoes_internas: formData.observacoes_internas || null,
       };
+
 
       let empresaId: string;
 
@@ -1905,6 +1946,13 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             >
               Localização
             </TabsTrigger>
+            <TabsTrigger
+              value="qualificacao"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+            >
+              Qualificação
+            </TabsTrigger>
+
             {entityConfig.showSegmento && (
               <TabsTrigger 
                 value="vinculos"
@@ -2213,6 +2261,113 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               nome={formData.company_fantasia || formData.company_name}
             />
           </TabsContent>
+
+          <TabsContent value="qualificacao" className="p-6">
+            <Card className="p-6 space-y-8">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">Contato / Decisor</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Nome do contato</Label>
+                    <Input value={formData.contato_nome || ""} onChange={(e) => setFormData({ ...formData, contato_nome: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Cargo</Label>
+                    <Input value={formData.contato_cargo || ""} onChange={(e) => setFormData({ ...formData, contato_cargo: e.target.value })} placeholder="Sócio, Diretor Comercial..." />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>E-mail do contato</Label>
+                    <Input type="email" value={formData.contato_email || ""} onChange={(e) => setFormData({ ...formData, contato_email: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Telefone / WhatsApp do contato</Label>
+                    <Input value={formData.contato_telefone || ""} onChange={(e) => setFormData({ ...formData, contato_telefone: e.target.value })} />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">Perfil da Empresa</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Porte</Label>
+                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={formData.porte || ""} onChange={(e) => setFormData({ ...formData, porte: e.target.value })}>
+                      <option value="">Selecione...</option>
+                      <option value="MEI">MEI</option>
+                      <option value="ME">ME</option>
+                      <option value="EPP">EPP</option>
+                      <option value="Médio">Médio</option>
+                      <option value="Grande">Grande</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Situação Cadastral</Label>
+                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={formData.situacao_cadastral || ""} onChange={(e) => setFormData({ ...formData, situacao_cadastral: e.target.value })}>
+                      <option value="">Selecione...</option>
+                      <option value="ATIVA">ATIVA</option>
+                      <option value="BAIXADA">BAIXADA</option>
+                      <option value="SUSPENSA">SUSPENSA</option>
+                      <option value="INAPTA">INAPTA</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Faturamento estimado</Label>
+                    <Input value={formData.faturamento_estimado || ""} onChange={(e) => setFormData({ ...formData, faturamento_estimado: e.target.value })} placeholder="Ex.: R$ 500k - 2M/ano" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Nº de funcionários (estimado)</Label>
+                    <Input value={formData.funcionarios_estimado || ""} onChange={(e) => setFormData({ ...formData, funcionarios_estimado: e.target.value })} placeholder="Ex.: 10-49" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Data de fundação</Label>
+                    <Input type="date" value={formData.data_fundacao || ""} onChange={(e) => setFormData({ ...formData, data_fundacao: e.target.value })} />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">Qualificação Comercial</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Score (0-100)</Label>
+                    <Input type="number" min={0} max={100} value={formData.score_prospect ?? ""} onChange={(e) => setFormData({ ...formData, score_prospect: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Prioridade</Label>
+                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={formData.prioridade || ""} onChange={(e) => setFormData({ ...formData, prioridade: e.target.value })}>
+                      <option value="">Selecione...</option>
+                      <option value="alta">Alta</option>
+                      <option value="media">Média</option>
+                      <option value="baixa">Baixa</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label>Motivo do score</Label>
+                    <Input value={formData.score_motivo || ""} onChange={(e) => setFormData({ ...formData, score_motivo: e.target.value })} />
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label>Produtos de interesse (separe por vírgula)</Label>
+                    <Input value={formData.produtos_interesse || ""} onChange={(e) => setFormData({ ...formData, produtos_interesse: e.target.value })} placeholder="Ex.: Cimento, Areia, Blocos" />
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label>Tags (separe por vírgula)</Label>
+                    <Input value={formData.tags || ""} onChange={(e) => setFormData({ ...formData, tags: e.target.value })} placeholder="Ex.: construtora, obra-publica" />
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label>Observações internas</Label>
+                    <Textarea rows={4} value={formData.observacoes_internas || ""} onChange={(e) => setFormData({ ...formData, observacoes_internas: e.target.value })} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
+                <Button onClick={handleSaveEmpresa}>{editingEmpresa ? "Salvar Alterações" : `Criar ${entityConfig.singular}`}</Button>
+              </div>
+            </Card>
+          </TabsContent>
+
+
           
           
           <TabsContent value="vinculos" className="p-6">
