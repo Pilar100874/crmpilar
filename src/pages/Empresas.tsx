@@ -85,6 +85,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("nao_prospect");
   
   // Estados para confirmação de exclusão
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -1447,12 +1448,22 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     }
   };
 
-  const filteredEmpresas = empresas.filter(e =>
-    e.nome_fantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.cnpj?.includes(searchTerm) ||
-    e.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredEmpresas = empresas.filter(e => {
+    const status = (e as any).status_comercial || null;
+    if (statusFilter === "nao_prospect" && status === "prospect") return false;
+    if (statusFilter === "somente_prospect" && status !== "prospect") return false;
+    if (statusFilter !== "all" && statusFilter !== "nao_prospect" && statusFilter !== "somente_prospect") {
+      if (status !== statusFilter) return false;
+    }
+    const term = searchTerm.toLowerCase();
+    if (!term) return true;
+    return (
+      e.nome_fantasia?.toLowerCase().includes(term) ||
+      e.nome?.toLowerCase().includes(term) ||
+      e.cnpj?.includes(searchTerm) ||
+      e.email?.toLowerCase().includes(term)
+    );
+  });
 
   const sortedEmpresas = React.useMemo(() => {
     if (!sortConfig) return filteredEmpresas;
@@ -1558,7 +1569,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   ) : (
                     <div className="text-center text-muted-foreground">
                       Carregando configurações...
-                    </div>
+            </div>
                   )
                 }
               />
@@ -1575,6 +1586,24 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 />
               </div>
             </div>
+
+            {variant === "empresa" && (
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[200px] h-9 sm:h-10 text-xs sm:text-sm">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nao_prospect">Ocultar prospects</SelectItem>
+                  <SelectItem value="all">Todos (incluir prospects)</SelectItem>
+                  <SelectItem value="somente_prospect">Somente prospects</SelectItem>
+                  <SelectItem value="cliente_ativo">Clientes ativos</SelectItem>
+                  <SelectItem value="cliente_inativo">Clientes inativos</SelectItem>
+                  <SelectItem value="lead_qualificado">Leads qualificados</SelectItem>
+                  <SelectItem value="perdido">Perdidos</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+            
             
             {searchTerm && (
               <Button
