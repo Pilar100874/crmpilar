@@ -279,6 +279,7 @@ export default function ProspeccaoEmpresas() {
           cnpj,
           email,
           telefone,
+          whatsapp,
           whatsapps_vinculados: whatsapp ? [whatsapp] : [],
           endereco,
           bairro,
