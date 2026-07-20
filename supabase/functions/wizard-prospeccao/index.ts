@@ -1,7 +1,6 @@
-// Wizard Prospecção — Híbrido
-// Se OPENAI_API_KEY estiver configurada, usa a Responses API da OpenAI com web_search
-// e insere os prospects direto em `prospeccao_empresas`.
-// Caso contrário, retorna o prompt pronto para o usuário colar no Claude Code / ChatGPT / Cursor.
+// Wizard Prospecção — Multi-provider
+// Suporta: lovable (Gemini via LOVABLE_API_KEY), openai, anthropic.
+// mode="status" retorna quais provedores estão disponíveis.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -10,6 +9,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+type Provider = "lovable" | "openai" | "anthropic";
 
 interface WizardInput {
   segmento?: string;
@@ -23,12 +24,13 @@ interface WizardInput {
   fontes?: string;
   quantidade?: number;
   criterios?: string[];
-  modo?: "auto" | "prompt";
+  modo?: "auto" | "prompt" | "status";
+  provider?: Provider;
 }
 
 function montarPrompt(w: WizardInput): string {
   const linhas = [
-    `Pesquise na internet e retorne empresas reais que sejam potenciais clientes com os critérios abaixo.`,
+    `Pesquise empresas reais que sejam potenciais clientes com os critérios abaixo.`,
     ``,
     `## Critérios`,
     w.segmento ? `- Segmento / atividade: ${w.segmento}` : "",
@@ -41,69 +43,106 @@ function montarPrompt(w: WizardInput): string {
     w.criterios?.length ? `- Qualificação obrigatória: ${w.criterios.join(", ")}` : "",
     `- Quantidade: ${w.quantidade ?? 20} empresas`,
     ``,
-    `## Como salvar`,
-    `Para cada empresa encontrada, chame a ferramenta MCP \`salvar_empresas_prospectadas\` (em lote) com os campos:`,
-    `nome, nome_fantasia, cnpj, telefone, whatsapp, email, site, endereco, bairro, cidade, estado, cep,`,
-    `cnae_principal, cnae_descricao, segmento_nome, descricao, porte, faturamento_estimado, funcionarios_estimado,`,
-    `contato_nome, contato_cargo, contato_email, contato_telefone, score (0-100), score_motivo, prioridade (alta/media/baixa),`,
-    `produtos_interesse (array), tags (array), redes_sociais (objeto), fontes (array de URLs).`,
-    ``,
-    `Regras: só empresas reais com pelo menos uma forma de contato. Não invente CNPJ. Se não souber, deixe em branco.`,
+    `## Formato de resposta`,
+    `Retorne APENAS um JSON válido, sem markdown, sem comentários, no formato:`,
+    `{"empresas":[{"nome":"...","nome_fantasia":"...","cnpj":"...","telefone":"...","whatsapp":"...","email":"...","site":"...","endereco":"...","bairro":"...","cidade":"...","estado":"...","cep":"...","cnae_principal":"...","cnae_descricao":"...","segmento_nome":"...","descricao":"...","porte":"...","faturamento_estimado":"...","funcionarios_estimado":"...","contato_nome":"...","contato_cargo":"...","contato_email":"...","contato_telefone":"...","score":0,"score_motivo":"...","prioridade":"alta|media|baixa","produtos_interesse":[],"tags":[],"redes_sociais":{},"fontes":[]}, ...]}`,
+    `Regras: só empresas reais com ao menos uma forma de contato. Não invente CNPJ. Se não souber, deixe em branco.`,
   ];
   return linhas.filter(Boolean).join("\n");
+}
+
+function extractJson(texto: string): any[] {
+  const match = texto.match(/\{[\s\S]*"empresas"[\s\S]*\}/);
+  const jsonStr = match ? match[0] : texto;
+  const parsed = JSON.parse(jsonStr);
+  return parsed.empresas ?? [];
+}
+
+async function chamarLovableGemini(prompt: string, apiKey: string) {
+  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-pro",
+      messages: [
+        { role: "system", content: "Você é um assistente de prospecção B2B. Retorne SEMPRE JSON válido puro (sem markdown, sem ```). Nunca invente dados." },
+        { role: "user", content: prompt },
+      ],
+    }),
+  });
+  if (!resp.ok) throw new Error(`Lovable AI ${resp.status}: ${await resp.text()}`);
+  const data = await resp.json();
+  const texto = data.choices?.[0]?.message?.content ?? "";
+  return extractJson(texto);
 }
 
 async function chamarOpenAI(prompt: string, apiKey: string) {
   const resp = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
+    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: "gpt-4o",
       tools: [{ type: "web_search_preview" }],
       input: [
-        {
-          role: "system",
-          content: "Você é um assistente de prospecção B2B. Pesquisa empresas reais na web e retorna dados estruturados em JSON. Nunca invente dados.",
-        },
-        {
-          role: "user",
-          content: prompt + `\n\nRetorne APENAS um JSON no formato: {"empresas":[{...}, ...]} — sem markdown, sem comentários.`,
-        },
+        { role: "system", content: "Assistente de prospecção B2B. Pesquisa empresas reais na web e retorna JSON puro. Nunca invente dados." },
+        { role: "user", content: prompt },
       ],
     }),
   });
-  if (!resp.ok) {
-    const t = await resp.text();
-    throw new Error(`OpenAI ${resp.status}: ${t}`);
-  }
+  if (!resp.ok) throw new Error(`OpenAI ${resp.status}: ${await resp.text()}`);
   const data = await resp.json();
-  // Extrair texto da resposta
   let texto = "";
   for (const item of data.output ?? []) {
     if (item.type === "message" && Array.isArray(item.content)) {
-      for (const c of item.content) {
-        if (c.type === "output_text") texto += c.text;
-      }
+      for (const c of item.content) if (c.type === "output_text") texto += c.text;
     }
   }
-  // Tenta extrair JSON
-  const match = texto.match(/\{[\s\S]*"empresas"[\s\S]*\}/);
-  const jsonStr = match ? match[0] : texto;
-  try {
-    const parsed = JSON.parse(jsonStr);
-    return parsed.empresas ?? [];
-  } catch {
-    throw new Error("Resposta da OpenAI não pôde ser interpretada como JSON: " + texto.slice(0, 300));
-  }
+  return extractJson(texto);
+}
+
+async function chamarAnthropic(prompt: string, apiKey: string) {
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-3-5-sonnet-latest",
+      max_tokens: 8192,
+      tools: [{ type: "web_search_20250305", name: "web_search" }],
+      system: "Assistente de prospecção B2B. Retorna JSON puro (sem markdown). Nunca invente dados.",
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  if (!resp.ok) throw new Error(`Anthropic ${resp.status}: ${await resp.text()}`);
+  const data = await resp.json();
+  const texto = (data.content ?? []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
+  return extractJson(texto);
+}
+
+function providersDisponiveis() {
+  return {
+    lovable: !!Deno.env.get("LOVABLE_API_KEY"),
+    openai: !!Deno.env.get("OPENAI_API_KEY"),
+    anthropic: !!Deno.env.get("ANTHROPIC_API_KEY"),
+  };
 }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const input: WizardInput = await req.json().catch(() => ({}));
+
+    // Endpoint de status — sem exigir auth
+    if (input.modo === "status") {
+      return new Response(JSON.stringify({ providers: providersDisponiveis() }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Não autenticado" }), {
@@ -125,24 +164,33 @@ Deno.serve(async (req) => {
       });
     }
 
-    const input: WizardInput = await req.json();
     const prompt = montarPrompt(input);
-    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    const disponiveis = providersDisponiveis();
     const forcePrompt = input.modo === "prompt";
+    const provider = input.provider;
 
-    // Modo prompt (ou fallback quando não há chave)
-    if (forcePrompt || !openaiKey) {
+    // Modo prompt (ou fallback quando nenhum provider está disponível/selecionado)
+    if (forcePrompt || !provider || !disponiveis[provider]) {
       return new Response(JSON.stringify({
         modo: "prompt",
         prompt,
-        motivo: forcePrompt ? "solicitado pelo usuário" : "OPENAI_API_KEY não configurada — cole o prompt no Claude Code / ChatGPT / Cursor",
+        motivo: forcePrompt
+          ? "solicitado pelo usuário"
+          : provider
+            ? `chave do provedor "${provider}" não configurada — cole o prompt no Claude Code / ChatGPT / Cursor`
+            : "Nenhum provedor selecionado",
+        providers: disponiveis,
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Modo automático
-    const empresas = await chamarOpenAI(prompt, openaiKey);
+    let empresas: any[] = [];
+    if (provider === "lovable") empresas = await chamarLovableGemini(prompt, Deno.env.get("LOVABLE_API_KEY")!);
+    else if (provider === "openai") empresas = await chamarOpenAI(prompt, Deno.env.get("OPENAI_API_KEY")!);
+    else if (provider === "anthropic") empresas = await chamarAnthropic(prompt, Deno.env.get("ANTHROPIC_API_KEY")!);
+
     if (!Array.isArray(empresas) || empresas.length === 0) {
-      return new Response(JSON.stringify({ modo: "auto", inseridas: 0, prompt, aviso: "OpenAI não retornou empresas" }), {
+      return new Response(JSON.stringify({ modo: "auto", provider, inseridas: 0, prompt, aviso: `${provider} não retornou empresas` }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -185,14 +233,14 @@ Deno.serve(async (req) => {
       tags: e.tags ?? [],
       observacoes_internas: e.observacoes_internas ?? null,
       extras: e.extras ?? {},
-      origem: "wizard-openai",
+      origem: `wizard-${provider}`,
       status: "novo",
     })).filter((r) => r.nome);
 
     const { data: inseridas, error } = await sb.from("prospeccao_empresas").insert(rows).select("id");
     if (error) throw new Error(error.message);
 
-    return new Response(JSON.stringify({ modo: "auto", inseridas: inseridas?.length ?? 0, prompt }), {
+    return new Response(JSON.stringify({ modo: "auto", provider, inseridas: inseridas?.length ?? 0, prompt }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err: any) {
