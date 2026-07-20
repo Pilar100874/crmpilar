@@ -29,6 +29,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { APIImportDialogEmpresas } from "@/components/config/APIImportDialogEmpresas";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { ConvertProspectDialog } from "@/components/empresas/ConvertProspectDialog";
+import { EmpresaLocalizacaoTab } from "@/components/empresas/EmpresaLocalizacaoTab";
 import { UserCheck } from "lucide-react";
 
 
@@ -175,6 +176,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
     { id: "telefone", label: "Telefone", type: "phone", category: "company", required: false, locked: true },
     { id: "whatsapp", label: "WhatsApp", type: "phone", category: "company", required: false, locked: true },
     { id: "email", label: "E-mail", type: "email", category: "company", required: false, locked: true },
+    { id: "site", label: "Site", type: "text", category: "company", required: false, locked: true },
   ]);
 
   const [contactFields, setContactFields] = useState<CustomField[]>([
@@ -554,6 +556,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       state: empresa.estado || "",
       neighborhood: (empresa as any).bairro || empresa.custom_fields?.neighborhood || "",
       inscricao: empresa.custom_fields?.inscricao || "",
+      site: (empresa as any).site || empresa.custom_fields?.site || "",
     };
     
     // Carregar campos customizados do custom_fields
@@ -852,7 +855,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }
 
       // Separar campos padrão de campos customizados
-      const standardFields = ['company_type', 'tipo_cliente', 'cpf_cnpj', 'company_name', 'company_fantasia', 'cep', 'address', 'city', 'neighborhood', 'state', 'inscricao', 'telefone', 'whatsapp', 'email'];
+      const standardFields = ['company_type', 'tipo_cliente', 'cpf_cnpj', 'company_name', 'company_fantasia', 'cep', 'address', 'city', 'neighborhood', 'state', 'inscricao', 'telefone', 'whatsapp', 'email', 'site'];
       const customFieldsData: any = {
         company_type: formData.company_type,
         neighborhood: formData.neighborhood,
@@ -874,6 +877,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         telefone: formData.telefone || null,
         whatsapp: formData.whatsapp || null,
         email: formData.email || null,
+        site: formData.site || null,
         endereco: formData.address,
         cidade: formData.city,
         estado: formData.state,
@@ -1895,6 +1899,12 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             >
               Contatos Vinculados
             </TabsTrigger>
+            <TabsTrigger
+              value="localizacao"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+            >
+              Localização
+            </TabsTrigger>
             {entityConfig.showSegmento && (
               <TabsTrigger 
                 value="vinculos"
@@ -2191,6 +2201,19 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               </Button>
             </div>
           </TabsContent>
+
+          <TabsContent value="localizacao" className="p-6">
+            <EmpresaLocalizacaoTab
+              endereco={formData.address}
+              numero={formData.numero || ""}
+              bairro={formData.neighborhood}
+              cidade={formData.city}
+              estado={formData.state}
+              cep={formData.cep}
+              nome={formData.company_fantasia || formData.company_name}
+            />
+          </TabsContent>
+          
           
           <TabsContent value="vinculos" className="p-6">
             <Card className="p-6">
