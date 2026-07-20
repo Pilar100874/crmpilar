@@ -290,7 +290,7 @@ var add_prospeccao_empresa_default = defineTool5({
       tags: input.tags ?? [],
       observacoes_internas: input.observacoes_internas ?? null,
       extras: input.extras ?? {},
-      origem: "claude-code",
+      origem: input.origem ?? "claude-code",
       status: "novo"
     }).select("id, nome").single();
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };

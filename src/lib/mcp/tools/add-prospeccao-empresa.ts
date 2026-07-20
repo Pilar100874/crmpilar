@@ -111,7 +111,7 @@ export default defineTool({
         tags: input.tags ?? [],
         observacoes_internas: input.observacoes_internas ?? null,
         extras: input.extras ?? {},
-        origem: "claude-code",
+        origem: input.origem ?? "claude-code",
         status: "novo",
       })
       .select("id, nome")
