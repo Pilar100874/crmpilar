@@ -9,7 +9,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { RefreshCw, Trash2, Download, ExternalLink, Search, Bot, Copy, Terminal, Sparkles, HelpCircle, Wand2, ChevronDown as ArrowDown, ArrowLeft } from 'lucide-react';
+import { RefreshCw, Trash2, Download, ExternalLink, Search, Bot, Copy, Terminal, Sparkles, HelpCircle, Wand2, ChevronDown as ArrowDown, ArrowLeft, FileText, Eraser } from 'lucide-react';
+import { gerarPdfProspeccao } from '@/lib/prospeccaoPdf';
 import WizardProspeccao from './WizardProspeccao';
 
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
