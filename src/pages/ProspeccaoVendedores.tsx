@@ -129,6 +129,7 @@ export default function ProspeccaoVendedores() {
   const [busca, setBusca] = useState('');
   const [selecionadas, setSelecionadas] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
   const [importando, setImportando] = useState(false);
 
   // ----- Prompt builder state -----
