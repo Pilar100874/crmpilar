@@ -92,7 +92,7 @@ const sections: TabSection[] = [
     items: [
       { id: 'prospeccao-b2b', label: 'Prospecção B2B', icon: Target, description: 'Busca de empresas por região e segmento' },
       { id: 'prospeccao-empresas', label: 'Prospecção Empresas (IA)', shortLabel: 'Prospecção Empresas', icon: Wand2, description: 'Wizard + empresas trazidas via Claude Code / Cursor / ChatGPT' },
-      { id: 'prospeccao-vendedores', label: 'Prospecção Representantes', shortLabel: 'Representantes', icon: UserSearch, description: 'Prompt guiado para prospectar representantes comerciais' },
+      { id: 'prospeccao-vendedores', label: 'Prospecção Representantes (IA)', shortLabel: 'Representantes (IA)', icon: UserSearch, description: 'Prompt guiado para prospectar representantes comerciais' },
       { id: 'config-ia-prospec', label: 'Configurar IAs', icon: Sparkles, description: 'Insira as chaves das IAs (OpenAI, Anthropic) usadas no Wizard' },
       { id: 'prospeccao-claude-code', label: 'Disponibilizar dados p/ IA', shortLabel: 'Dados p/ IA (MCP)', icon: Bot, description: 'Configure quais tabelas ficam disponíveis via MCP' },
     ],

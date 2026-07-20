@@ -198,7 +198,7 @@ export default function ProspeccaoVendedores() {
     const alvo = selecionadas.size > 0 ? filtradas.filter((r) => selecionadas.has(r.id)) : filtradas;
     if (alvo.length === 0) return toast.info('Nenhum registro para exportar');
     gerarPdfProspeccao(
-      'Prospecção de Representantes / Vendedores',
+      'Prospecção de Representantes (IA)',
       [
         { header: 'Nome', key: 'nome' },
         { header: 'Cidade', key: 'cidade' },
@@ -324,7 +324,7 @@ export default function ProspeccaoVendedores() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserSearch className="h-5 w-5 text-primary" />
-              Prospecção de Representantes / Vendedores
+              Prospecção de Representantes (IA)
             </CardTitle>
             <p className="text-sm text-muted-foreground">
               Escolha o método. Os resultados aparecem na listagem abaixo (origem = vendedor) e podem ser importados como <b>vendedor prospect</b>.
@@ -504,7 +504,7 @@ export default function ProspeccaoVendedores() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Bot className="h-5 w-5 text-primary" />
-              Representantes prospectados
+              Representantes (IA) prospectados
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
               Registros trazidos com <code>origem = "vendedor"</code>. Revise e importe para o cadastro de vendedores.
