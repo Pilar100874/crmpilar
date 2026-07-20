@@ -181,6 +181,11 @@ export default function Todos() {
   const [searchTerm, setSearchTerm] = useState("");
   const [contatos, setContatos] = useState<Contato[]>([]);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [vendedores, setVendedores] = useState<Empresa[]>([]);
+  const [transportadoras, setTransportadoras] = useState<Empresa[]>([]);
+  const [usuarios, setUsuarios] = useState<any[]>([]);
+  const [vendedorEmpresas, setVendedorEmpresas] = useState<Record<string, any[]>>({});
+  const [usuarioEmpresas, setUsuarioEmpresas] = useState<Record<string, any[]>>({});
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [showConfigSheet, setShowConfigSheet] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
