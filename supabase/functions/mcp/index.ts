@@ -238,6 +238,7 @@ var EmpresaSchema = z4.object({
   longitude: z4.number().optional(),
   tags: z4.array(z4.string()).optional(),
   observacoes_internas: z4.string().optional(),
+  origem: z4.string().optional().describe("Origem do lead. Use 'vendedor' para representantes comerciais, 'claude-code' (default) para empresas."),
   extras: z4.record(z4.any()).optional().describe("Qualquer dado extra relevante em JSON.")
 });
 var add_prospeccao_empresa_default = defineTool5({
@@ -289,7 +290,7 @@ var add_prospeccao_empresa_default = defineTool5({
       tags: input.tags ?? [],
       observacoes_internas: input.observacoes_internas ?? null,
       extras: input.extras ?? {},
-      origem: "claude-code",
+      origem: input.origem ?? "claude-code",
       status: "novo"
     }).select("id, nome").single();
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
@@ -346,6 +347,7 @@ var Empresa = z5.object({
   longitude: z5.number().optional(),
   tags: z5.array(z5.string()).optional(),
   observacoes_internas: z5.string().optional(),
+  origem: z5.string().optional(),
   extras: z5.record(z5.any()).optional()
 });
 var add_prospeccao_empresas_bulk_default = defineTool6({
@@ -400,7 +402,7 @@ var add_prospeccao_empresas_bulk_default = defineTool6({
       tags: e.tags ?? [],
       observacoes_internas: e.observacoes_internas ?? null,
       extras: e.extras ?? {},
-      origem: "claude-code",
+      origem: e.origem ?? "claude-code",
       status: "novo"
     }));
     const { data, error } = await sb.from("prospeccao_empresas").insert(rows).select("id");

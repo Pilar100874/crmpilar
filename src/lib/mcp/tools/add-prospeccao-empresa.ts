@@ -55,6 +55,7 @@ const EmpresaSchema = z.object({
   longitude: z.number().optional(),
   tags: z.array(z.string()).optional(),
   observacoes_internas: z.string().optional(),
+  origem: z.string().optional().describe("Origem do lead. Use 'vendedor' para representantes comerciais, 'claude-code' (default) para empresas."),
   extras: z.record(z.any()).optional().describe("Qualquer dado extra relevante em JSON."),
 });
 
@@ -110,7 +111,7 @@ export default defineTool({
         tags: input.tags ?? [],
         observacoes_internas: input.observacoes_internas ?? null,
         extras: input.extras ?? {},
-        origem: "claude-code",
+        origem: input.origem ?? "claude-code",
         status: "novo",
       })
       .select("id, nome")

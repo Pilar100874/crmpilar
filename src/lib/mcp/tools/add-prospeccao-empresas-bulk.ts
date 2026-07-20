@@ -45,6 +45,7 @@ const Empresa = z.object({
   longitude: z.number().optional(),
   tags: z.array(z.string()).optional(),
   observacoes_internas: z.string().optional(),
+  origem: z.string().optional(),
   extras: z.record(z.any()).optional(),
 });
 
@@ -101,7 +102,7 @@ export default defineTool({
       tags: e.tags ?? [],
       observacoes_internas: e.observacoes_internas ?? null,
       extras: e.extras ?? {},
-      origem: "claude-code",
+      origem: e.origem ?? "claude-code",
       status: "novo",
     }));
     const { data, error } = await sb.from("prospeccao_empresas").insert(rows).select("id");
