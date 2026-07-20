@@ -28,6 +28,8 @@ import { EmpresaFieldsCRUD } from "@/components/config/EmpresaFieldsCRUD";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { APIImportDialogEmpresas } from "@/components/config/APIImportDialogEmpresas";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
+import { ConvertProspectDialog } from "@/components/empresas/ConvertProspectDialog";
+import { UserCheck } from "lucide-react";
 
 
 
