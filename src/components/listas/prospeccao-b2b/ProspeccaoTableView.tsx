@@ -56,7 +56,8 @@ const ProspeccaoTableView: React.FC<ProspeccaoTableViewProps> = ({
   prospects,
   loading,
   updateProspectStatus,
-  deleteProspect
+  deleteProspect,
+  importarParaEmpresas
 }) => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
