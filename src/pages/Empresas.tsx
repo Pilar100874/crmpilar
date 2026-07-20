@@ -1586,6 +1586,24 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 />
               </div>
             </div>
+
+            {variant === "empresa" && (
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[200px] h-9 sm:h-10 text-xs sm:text-sm">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nao_prospect">Ocultar prospects</SelectItem>
+                  <SelectItem value="all">Todos (incluir prospects)</SelectItem>
+                  <SelectItem value="somente_prospect">Somente prospects</SelectItem>
+                  <SelectItem value="cliente_ativo">Clientes ativos</SelectItem>
+                  <SelectItem value="cliente_inativo">Clientes inativos</SelectItem>
+                  <SelectItem value="lead_qualificado">Leads qualificados</SelectItem>
+                  <SelectItem value="perdido">Perdidos</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+            
             
             {searchTerm && (
               <Button
