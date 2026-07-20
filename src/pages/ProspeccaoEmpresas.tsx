@@ -169,8 +169,43 @@ export default function ProspeccaoEmpresas() {
   const [busca, setBusca] = useState('');
   const [selecionadas, setSelecionadas] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
   const [importando, setImportando] = useState(false);
   const [metodo, setMetodo] = useState<'wizard' | 'mcp' | null>(null);
+
+  const limparTudo = async () => {
+    const ids = filtradas.map((r) => r.id);
+    if (ids.length === 0) return;
+    const { error } = await supabase.from('prospeccao_empresas').delete().in('id', ids);
+    if (error) return toast.error('Erro ao limpar: ' + error.message);
+    toast.success(`${ids.length} registro(s) excluído(s)`);
+    setSelecionadas(new Set());
+    setConfirmClearAll(false);
+    carregar();
+  };
+
+  const exportarPdf = () => {
+    const alvo = selecionadas.size > 0 ? filtradas.filter((r) => selecionadas.has(r.id)) : filtradas;
+    if (alvo.length === 0) return toast.info('Nenhum registro para exportar');
+    gerarPdfProspeccao(
+      'Prospecção de Empresas',
+      [
+        { header: 'Nome', key: 'nome' },
+        { header: 'CNPJ', key: 'cnpj' },
+        { header: 'Cidade', key: 'cidade' },
+        { header: 'UF', key: 'estado' },
+        { header: 'WhatsApp', key: 'whatsapp' },
+        { header: 'Telefone', key: 'telefone' },
+        { header: 'E-mail', key: 'email' },
+        { header: 'Site', key: 'site' },
+        { header: 'Segmento', key: 'segmento_nome' },
+        { header: 'Origem', key: 'origem' },
+        { header: 'Status', key: 'status' },
+      ],
+      alvo,
+      `prospeccao-empresas-${new Date().toISOString().slice(0, 10)}.pdf`,
+    );
+  };
 
   const carregar = async () => {
     setLoading(true);
