@@ -651,6 +651,24 @@ export default function Todos() {
             >
               Empresas ({filteredEmpresas.length})
             </TabsTrigger>
+            <TabsTrigger 
+              value="vendedores"
+              className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent px-0 font-medium"
+            >
+              Vendedores ({filteredVendedores.length})
+            </TabsTrigger>
+            <TabsTrigger 
+              value="transportadoras"
+              className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent px-0 font-medium"
+            >
+              Transportadoras ({filteredTransportadoras.length})
+            </TabsTrigger>
+            <TabsTrigger 
+              value="usuarios"
+              className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent px-0 font-medium"
+            >
+              Usuários ({filteredUsuarios.length})
+            </TabsTrigger>
           </TabsList>
         </div>
 
