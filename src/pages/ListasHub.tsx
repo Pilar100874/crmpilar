@@ -74,10 +74,11 @@ const ListasHub: React.FC = () => {
   const tabParam = searchParams.get('tab');
   const idParam = searchParams.get('id');
   
+  const resolveTab = (t: string | null) => (t === 'wizard-prospeccao' ? 'prospeccao-empresas' : t);
   const [activeTab, setActiveTab] = useState(() => {
-    // Inicializa com a aba passada por URL ou 'contatos'
     const validTabs = tabItems.map(t => t.id);
-    return tabParam && validTabs.includes(tabParam) ? tabParam : 'contatos';
+    const resolved = resolveTab(tabParam);
+    return resolved && validTabs.includes(resolved) ? resolved : 'contatos';
   });
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
 
@@ -85,11 +86,13 @@ const ListasHub: React.FC = () => {
   useEffect(() => {
     if (tabParam) {
       const validTabs = tabItems.map(t => t.id);
-      if (validTabs.includes(tabParam)) {
-        setActiveTab(tabParam);
+      const resolved = resolveTab(tabParam);
+      if (resolved && validTabs.includes(resolved)) {
+        setActiveTab(resolved);
       }
     }
   }, [tabParam]);
+
 
   const currentTabItem = tabItems.find(t => t.id === activeTab) || tabItems[0];
   const CurrentIcon = currentTabItem.icon;
