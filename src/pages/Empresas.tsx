@@ -2264,11 +2264,11 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
           <TabsContent value="qualificacao" className="p-6">
             <Card className="p-6 space-y-8">
-              <Alert>
-                <AlertDescription className="text-xs">
-                  Contatos / decisores desta empresa são gerenciados na aba <strong>Contatos Vinculados</strong> (ou na tela de Contatos). Prospects importados criam automaticamente um contato marcado como prospect.
-                </AlertDescription>
-              </Alert>
+              <div className="rounded-md border border-border/40 bg-muted/30 p-3 text-xs text-muted-foreground">
+                Contatos / decisores desta empresa são gerenciados na aba <strong>Contatos Vinculados</strong> (ou na tela de Contatos). Prospects importados criam automaticamente um contato marcado como prospect.
+              </div>
+
+
 
 
 
