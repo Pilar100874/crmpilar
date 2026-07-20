@@ -5987,7 +5987,10 @@ export type Database = {
           longitude: number | null
           nome: string | null
           nome_fantasia: string | null
+          origem_prospeccao: string | null
           segmento_id: string | null
+          site: string | null
+          status_comercial: string
           telefone: string | null
           tipo_cliente: string
           updated_at: string | null
@@ -6013,7 +6016,10 @@ export type Database = {
           longitude?: number | null
           nome?: string | null
           nome_fantasia?: string | null
+          origem_prospeccao?: string | null
           segmento_id?: string | null
+          site?: string | null
+          status_comercial?: string
           telefone?: string | null
           tipo_cliente?: string
           updated_at?: string | null
@@ -6039,7 +6045,10 @@ export type Database = {
           longitude?: number | null
           nome?: string | null
           nome_fantasia?: string | null
+          origem_prospeccao?: string | null
           segmento_id?: string | null
+          site?: string | null
+          status_comercial?: string
           telefone?: string | null
           tipo_cliente?: string
           updated_at?: string | null
@@ -16862,6 +16871,7 @@ export type Database = {
           cep: string | null
           cidade: string | null
           created_at: string
+          empresa_id: string | null
           endereco_completo: string | null
           estabelecimento_id: string | null
           estado: string | null
@@ -16888,6 +16898,7 @@ export type Database = {
           cep?: string | null
           cidade?: string | null
           created_at?: string
+          empresa_id?: string | null
           endereco_completo?: string | null
           estabelecimento_id?: string | null
           estado?: string | null
@@ -16914,6 +16925,7 @@ export type Database = {
           cep?: string | null
           cidade?: string | null
           created_at?: string
+          empresa_id?: string | null
           endereco_completo?: string | null
           estabelecimento_id?: string | null
           estado?: string | null
@@ -16934,6 +16946,13 @@ export type Database = {
           website?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "prospects_b2b_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "prospects_b2b_estabelecimento_id_fkey"
             columns: ["estabelecimento_id"]
