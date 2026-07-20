@@ -2200,6 +2200,19 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               </Button>
             </div>
           </TabsContent>
+
+          <TabsContent value="localizacao" className="p-6">
+            <EmpresaLocalizacaoTab
+              endereco={formData.address}
+              numero={formData.numero || ""}
+              bairro={formData.neighborhood}
+              cidade={formData.city}
+              estado={formData.state}
+              cep={formData.cep}
+              nome={formData.company_fantasia || formData.company_name}
+            />
+          </TabsContent>
+          
           
           <TabsContent value="vinculos" className="p-6">
             <Card className="p-6">
