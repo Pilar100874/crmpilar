@@ -726,9 +726,19 @@ export default function Todos() {
                 <tbody>
                   {todosItens.map(item => {
                     const isExpanded = expandedRows.has(item.id);
-                    const hasVinculos = item.type === 'contato' 
-                      ? (contatoEmpresas[item.id]?.length || 0) > 0
-                      : (empresaContatos[item.id]?.length || 0) > 0;
+                    const vinculosLista: any[] =
+                      item.type === 'contato' ? (contatoEmpresas[item.id] || [])
+                      : item.type === 'empresa' ? (empresaContatos[item.id] || [])
+                      : item.type === 'vendedor' ? (vendedorEmpresas[item.id] || [])
+                      : item.type === 'usuario' ? (usuarioEmpresas[item.id] || [])
+                      : [];
+                    const hasVinculos = vinculosLista.length > 0;
+                    const vinculosLabel =
+                      item.type === 'contato' ? 'Empresas Vinculadas:'
+                      : item.type === 'empresa' ? 'Contatos Vinculados:'
+                      : item.type === 'vendedor' ? 'Empresas atendidas por este vendedor:'
+                      : item.type === 'usuario' ? 'Empresas sob responsabilidade deste usuário:'
+                      : 'Vínculos:';
 
                     return (
                       <>
@@ -753,11 +763,11 @@ export default function Todos() {
                             if (col.id === "tipo") {
                               return (
                                 <td key={col.id} className="p-3">
-                                  {item.type === 'contato' ? (
-                                    <User className="w-4 h-4 text-blue-500" />
-                                  ) : (
-                                    <Building2 className="w-4 h-4 text-purple-500" />
-                                  )}
+                                  {item.type === 'contato' && <User className="w-4 h-4 text-blue-500" />}
+                                  {item.type === 'empresa' && <Building2 className="w-4 h-4 text-purple-500" />}
+                                  {item.type === 'vendedor' && <UserCog className="w-4 h-4 text-emerald-500" />}
+                                  {item.type === 'transportadora' && <Truck className="w-4 h-4 text-orange-500" />}
+                                  {item.type === 'usuario' && <Users className="w-4 h-4 text-indigo-500" />}
                                 </td>
                               );
                             }
@@ -765,7 +775,7 @@ export default function Todos() {
                             if (col.id === "nome") {
                               return (
                                 <td key={col.id} className="p-3 font-medium">
-                                  {item.type === 'contato' ? item.nome : item.nome_fantasia}
+                                  {(item.type === 'contato' || item.type === 'usuario') ? item.nome : (item.nome_fantasia || item.nome)}
                                 </td>
                               );
                             }
@@ -787,6 +797,12 @@ export default function Todos() {
                             }
                             
                             if (col.id === "status") {
+                              const badgeMap: Record<string, { label: string; variant: any }> = {
+                                empresa: { label: 'Empresa', variant: 'outline' },
+                                vendedor: { label: 'Vendedor', variant: 'default' },
+                                transportadora: { label: 'Transportadora', variant: 'secondary' },
+                                usuario: { label: 'Usuário', variant: 'outline' },
+                              };
                               return (
                                 <td key={col.id} className="p-3">
                                   {item.type === 'contato' ? (
@@ -794,7 +810,9 @@ export default function Todos() {
                                       {item.tipo_operador ? "Cliente" : "Prospect"}
                                     </Badge>
                                   ) : (
-                                    <Badge variant="outline" className="rounded-full">Empresa</Badge>
+                                    <Badge variant={badgeMap[item.type]?.variant || 'outline'} className="rounded-full">
+                                      {badgeMap[item.type]?.label || '-'}
+                                    </Badge>
                                   )}
                                 </td>
                               );
@@ -808,26 +826,29 @@ export default function Todos() {
                             <td colSpan={visibleTodosColumns.length + 1} className="bg-gradient-to-r from-muted/30 to-muted/10 p-4 border-l-4 border-l-primary/40">
                               <div className="ml-8">
                                 <p className="text-sm font-semibold text-foreground mb-3">
-                                  {item.type === 'contato' ? 'Empresas Vinculadas:' : 'Contatos Vinculados:'}
+                                  {vinculosLabel}
                                 </p>
                                 <div className="space-y-2">
-                                  {item.type === 'contato' ? (
-                                    contatoEmpresas[item.id]?.map((emp: any) => (
-                                      <div key={emp.id} className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2 hover:bg-background/80 transition-colors">
-                                        <Building2 className="w-4 h-4 text-purple-500" />
-                                        <span className="font-medium">{emp.nome_fantasia}</span>
-                                        {emp.cnpj && (
-                                          <span className="text-muted-foreground text-xs">({emp.cnpj})</span>
+                                  {vinculosLista.map((v: any) => {
+                                    const isContato = item.type === 'empresa';
+                                    return (
+                                      <div key={v.id} className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2 hover:bg-background/80 transition-colors">
+                                        {isContato ? <User className="w-4 h-4 text-blue-500" /> : <Building2 className="w-4 h-4 text-purple-500" />}
+                                        <span className="font-medium">{isContato ? v.nome : v.nome_fantasia}</span>
+                                        {(v.cnpj || v.email) && (
+                                          <span className="text-muted-foreground text-xs">({v.cnpj || v.email})</span>
                                         )}
                                       </div>
-                                    ))
-                                  ) : (
-                                    empresaContatos[item.id]?.map((cont: any) => (
-                                      <div key={cont.id} className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2 hover:bg-background/80 transition-colors">
-                                        <User className="w-4 h-4 text-blue-500" />
-                                        <span className="font-medium">{cont.nome}</span>
-                                        {cont.email && (
-                                          <span className="text-muted-foreground text-xs">({cont.email})</span>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </>
+                    );
+                  })}
                                         )}
                                       </div>
                                     ))
