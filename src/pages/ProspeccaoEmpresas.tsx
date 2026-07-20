@@ -140,6 +140,23 @@ interface ProspeccaoRow {
   empresa_id: string | null;
   importado_em: string | null;
   created_at: string;
+  contato_nome?: string | null;
+  contato_cargo?: string | null;
+  contato_email?: string | null;
+  contato_telefone?: string | null;
+  porte?: string | null;
+  faturamento_estimado?: string | null;
+  funcionarios_estimado?: string | null;
+  data_fundacao?: string | null;
+  situacao_cadastral?: string | null;
+  score?: number | null;
+  score_motivo?: string | null;
+  produtos_interesse?: any;
+  prioridade?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  tags?: any;
+  observacoes_internas?: string | null;
 }
 
 export default function ProspeccaoEmpresas() {
@@ -297,6 +314,17 @@ export default function ProspeccaoEmpresas() {
           cnae_principal,
           cnae_descricao,
           site,
+          latitude: r.latitude ?? null,
+          longitude: r.longitude ?? null,
+          porte: r.porte ?? null,
+          faturamento_estimado: r.faturamento_estimado ?? null,
+          funcionarios_estimado: r.funcionarios_estimado ?? null,
+          data_fundacao: r.data_fundacao ?? null,
+          situacao_cadastral: r.situacao_cadastral ?? null,
+          score_prospect: r.score ?? null,
+          score_motivo: r.score_motivo ?? null,
+          produtos_interesse: r.produtos_interesse ?? [],
+          prioridade: r.prioridade ?? null,
           status_comercial: 'prospect',
           origem_prospeccao: r.origem || 'claude-code',
           tipo_cliente: 'B2B',
@@ -305,6 +333,12 @@ export default function ProspeccaoEmpresas() {
             redes_sociais: r.redes_sociais,
             fontes: r.fontes,
             segmento_nome: r.segmento_nome,
+            contato_nome: r.contato_nome,
+            contato_cargo: r.contato_cargo,
+            contato_email: r.contato_email,
+            contato_telefone: r.contato_telefone,
+            tags: r.tags,
+            observacoes_internas: r.observacoes_internas,
           },
         } as any)
         .select('id')
