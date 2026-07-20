@@ -364,6 +364,19 @@ const ProspeccaoTableView: React.FC<ProspeccaoTableViewProps> = ({
                               </a>
                             </DropdownMenuItem>
                           )}
+                          {importarParaEmpresas && (
+                            (prospect as any).empresa_id ? (
+                              <DropdownMenuItem disabled>
+                                <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
+                                Já importado no CRM
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem onClick={() => importarParaEmpresas([prospect.id])}>
+                                <Building2 className="h-4 w-4 mr-2" />
+                                Importar para Empresas (prospect)
+                              </DropdownMenuItem>
+                            )
+                          )}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
                             onClick={() => deleteProspect(prospect.id)}
