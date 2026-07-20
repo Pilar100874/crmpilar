@@ -24,6 +24,8 @@ const CRITERIOS = [
 ];
 const FONTES_SUGERIDAS = ['Google Maps', 'LinkedIn', 'Instagram', 'Sites setoriais', 'Receita Federal', 'Guia comercial local'];
 
+type Provider = 'lovable' | 'openai' | 'anthropic';
+
 interface FormState {
   segmento: string;
   cnae: string;
@@ -37,6 +39,7 @@ interface FormState {
   quantidade: number;
   criterios: string[];
   modo: 'auto' | 'prompt';
+  provider: Provider;
 }
 
 const initialState: FormState = {
@@ -52,6 +55,13 @@ const initialState: FormState = {
   quantidade: 20,
   criterios: [],
   modo: 'auto',
+  provider: 'lovable',
+};
+
+const PROVIDER_LABELS: Record<Provider, string> = {
+  lovable: 'Lovable AI (Gemini) — sem chave extra',
+  openai: 'OpenAI (GPT-4o + Web Search)',
+  anthropic: 'Anthropic (Claude 3.5 Sonnet + Web Search)',
 };
 
 export default function WizardProspeccao() {
