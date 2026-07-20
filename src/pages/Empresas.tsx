@@ -1905,6 +1905,13 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             >
               Localização
             </TabsTrigger>
+            <TabsTrigger
+              value="qualificacao"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+            >
+              Qualificação
+            </TabsTrigger>
+
             {entityConfig.showSegmento && (
               <TabsTrigger 
                 value="vinculos"
