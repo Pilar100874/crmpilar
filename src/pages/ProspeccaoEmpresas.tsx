@@ -200,6 +200,8 @@ export default function ProspeccaoEmpresas() {
 
   const importarSelecionadas = async () => {
     if (selecionadas.size === 0) return toast.info('Selecione ao menos uma empresa');
+    const estabId = await getEstabelecimentoId();
+    if (!estabId) return toast.error('Estabelecimento não encontrado para o usuário atual');
     setImportando(true);
     let ok = 0, fail = 0, enriquecidos = 0;
     const errosDetalhe: string[] = [];
