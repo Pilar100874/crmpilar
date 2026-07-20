@@ -387,12 +387,34 @@ export default function ProspeccaoEmpresas() {
         }
       }
 
+      // Criar contato (prospect) vinculado à empresa, se veio decisor
+      if (r.contato_nome) {
+        try {
+          const telContato = normWhats(r.contato_telefone) || normWhats(r.contato_telefone) || (r.contato_telefone ?? null);
+          await supabase.from('customers').insert({
+            estabelecimento_id: estabId,
+            empresa_id: emp.id,
+            nome: r.contato_nome,
+            telefone: telContato,
+            email: normEmail(r.contato_email),
+            tipo_operador: false, // false = prospect
+            custom_fields: {
+              position: r.contato_cargo || null,
+              origem: r.origem || 'claude-code',
+            },
+          } as any);
+        } catch (e) {
+          console.warn('Falha ao criar contato prospect', e);
+        }
+      }
+
       await supabase
         .from('prospeccao_empresas')
         .update({ empresa_id: emp.id, status: 'importado', importado_em: new Date().toISOString() })
         .eq('id', r.id);
       ok++;
     }
+
     setImportando(false);
     setSelecionadas(new Set());
     if (ok > 0) toast.success(`${ok} importadas como prospect${enriquecidos ? ` · ${enriquecidos} enriquecimentos (Receita/CEP)` : ''}`);
