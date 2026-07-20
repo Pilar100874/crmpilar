@@ -70,6 +70,13 @@ export default function WizardProspeccao() {
   const [form, setForm] = useState<FormState>(initialState);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ modo: string; inseridas?: number; prompt?: string; motivo?: string; aviso?: string } | null>(null);
+  const [providers, setProviders] = useState<Record<Provider, boolean>>({ lovable: true, openai: false, anthropic: false });
+
+  React.useEffect(() => {
+    supabase.functions.invoke('wizard-prospeccao', { body: { modo: 'status' } })
+      .then(({ data }) => { if ((data as any)?.providers) setProviders((data as any).providers); })
+      .catch(() => {});
+  }, []);
 
   const totalSteps = 5;
   const progress = ((step + 1) / totalSteps) * 100;
