@@ -7404,6 +7404,30 @@ export type Database = {
           },
         ]
       }
+      ia_prospec_keys: {
+        Row: {
+          anthropic_api_key: string | null
+          created_at: string
+          openai_api_key: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          anthropic_api_key?: string | null
+          created_at?: string
+          openai_api_key?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          anthropic_api_key?: string | null
+          created_at?: string
+          openai_api_key?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ia_usage_log: {
         Row: {
           completion_tokens: number

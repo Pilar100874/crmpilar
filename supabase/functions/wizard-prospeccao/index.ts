@@ -122,12 +122,24 @@ async function chamarAnthropic(prompt: string, apiKey: string) {
   return extractJson(texto);
 }
 
-function providersDisponiveis() {
+async function providersDisponiveis(sb?: any, userId?: string) {
+  let dbKeys: any = null;
+  if (sb && userId) {
+    const { data } = await sb.from("ia_prospec_keys").select("openai_api_key,anthropic_api_key").eq("user_id", userId).maybeSingle();
+    dbKeys = data;
+  }
   return {
     lovable: !!Deno.env.get("LOVABLE_API_KEY"),
-    openai: !!Deno.env.get("OPENAI_API_KEY"),
-    anthropic: !!Deno.env.get("ANTHROPIC_API_KEY"),
+    openai: !!(dbKeys?.openai_api_key || Deno.env.get("OPENAI_API_KEY")),
+    anthropic: !!(dbKeys?.anthropic_api_key || Deno.env.get("ANTHROPIC_API_KEY")),
   };
+}
+
+async function getKey(provider: Provider, sb: any, userId: string): Promise<string | undefined> {
+  if (provider === "lovable") return Deno.env.get("LOVABLE_API_KEY") ?? undefined;
+  const { data } = await sb.from("ia_prospec_keys").select("openai_api_key,anthropic_api_key").eq("user_id", userId).maybeSingle();
+  if (provider === "openai") return data?.openai_api_key || Deno.env.get("OPENAI_API_KEY") || undefined;
+  if (provider === "anthropic") return data?.anthropic_api_key || Deno.env.get("ANTHROPIC_API_KEY") || undefined;
 }
 
 Deno.serve(async (req) => {
@@ -135,13 +147,6 @@ Deno.serve(async (req) => {
 
   try {
     const input: WizardInput = await req.json().catch(() => ({}));
-
-    // Endpoint de status — sem exigir auth
-    if (input.modo === "status") {
-      return new Response(JSON.stringify({ providers: providersDisponiveis() }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
@@ -164,8 +169,15 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Endpoint de status
+    if (input.modo === "status") {
+      return new Response(JSON.stringify({ providers: await providersDisponiveis(sb, userId) }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const prompt = montarPrompt(input);
-    const disponiveis = providersDisponiveis();
+    const disponiveis = await providersDisponiveis(sb, userId);
     const forcePrompt = input.modo === "prompt";
     const provider = input.provider;
 
@@ -184,10 +196,12 @@ Deno.serve(async (req) => {
     }
 
     // Modo automático
+    const apiKey = await getKey(provider, sb, userId);
+    if (!apiKey) throw new Error(`Chave do provedor ${provider} não encontrada`);
     let empresas: any[] = [];
-    if (provider === "lovable") empresas = await chamarLovableGemini(prompt, Deno.env.get("LOVABLE_API_KEY")!);
-    else if (provider === "openai") empresas = await chamarOpenAI(prompt, Deno.env.get("OPENAI_API_KEY")!);
-    else if (provider === "anthropic") empresas = await chamarAnthropic(prompt, Deno.env.get("ANTHROPIC_API_KEY")!);
+    if (provider === "lovable") empresas = await chamarLovableGemini(prompt, apiKey);
+    else if (provider === "openai") empresas = await chamarOpenAI(prompt, apiKey);
+    else if (provider === "anthropic") empresas = await chamarAnthropic(prompt, apiKey);
 
     if (!Array.isArray(empresas) || empresas.length === 0) {
       return new Response(JSON.stringify({ modo: "auto", provider, inseridas: 0, prompt, aviso: `${provider} não retornou empresas` }), {

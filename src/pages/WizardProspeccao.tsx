@@ -24,6 +24,8 @@ const CRITERIOS = [
 ];
 const FONTES_SUGERIDAS = ['Google Maps', 'LinkedIn', 'Instagram', 'Sites setoriais', 'Receita Federal', 'Guia comercial local'];
 
+type Provider = 'lovable' | 'openai' | 'anthropic';
+
 interface FormState {
   segmento: string;
   cnae: string;
@@ -37,6 +39,7 @@ interface FormState {
   quantidade: number;
   criterios: string[];
   modo: 'auto' | 'prompt';
+  provider: Provider;
 }
 
 const initialState: FormState = {
@@ -52,6 +55,13 @@ const initialState: FormState = {
   quantidade: 20,
   criterios: [],
   modo: 'auto',
+  provider: 'lovable',
+};
+
+const PROVIDER_LABELS: Record<Provider, string> = {
+  lovable: 'Lovable AI (Gemini) — sem chave extra',
+  openai: 'OpenAI (GPT-4o + Web Search)',
+  anthropic: 'Anthropic (Claude 3.5 Sonnet + Web Search)',
 };
 
 export default function WizardProspeccao() {
@@ -60,6 +70,13 @@ export default function WizardProspeccao() {
   const [form, setForm] = useState<FormState>(initialState);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ modo: string; inseridas?: number; prompt?: string; motivo?: string; aviso?: string } | null>(null);
+  const [providers, setProviders] = useState<Record<Provider, boolean>>({ lovable: true, openai: false, anthropic: false });
+
+  React.useEffect(() => {
+    supabase.functions.invoke('wizard-prospeccao', { body: { modo: 'status' } })
+      .then(({ data }) => { if ((data as any)?.providers) setProviders((data as any).providers); })
+      .catch(() => {});
+  }, []);
 
   const totalSteps = 5;
   const progress = ((step + 1) / totalSteps) * 100;
@@ -296,10 +313,10 @@ export default function WizardProspeccao() {
                   <RadioGroup value={form.modo} onValueChange={(v: 'auto' | 'prompt') => setForm({ ...form, modo: v })} className="mt-2 space-y-2">
                     <label className="flex items-start gap-2 cursor-pointer p-3 border rounded-md hover:bg-accent">
                       <RadioGroupItem value="auto" />
-                      <div>
-                        <div className="font-medium text-sm">Automático (via OpenAI)</div>
+                      <div className="flex-1">
+                        <div className="font-medium text-sm">Automático (via IA)</div>
                         <div className="text-xs text-muted-foreground">
-                          Se <code>OPENAI_API_KEY</code> estiver configurada, pesquisa e salva os prospects sozinho. Caso contrário, cai para o modo prompt.
+                          Pesquisa e salva os prospects sozinho usando o provedor selecionado abaixo.
                         </div>
                       </div>
                     </label>
@@ -314,6 +331,24 @@ export default function WizardProspeccao() {
                     </label>
                   </RadioGroup>
                 </div>
+                {form.modo === 'auto' && (
+                  <div>
+                    <Label>Provedor de IA</Label>
+                    <Select value={form.provider} onValueChange={(v: Provider) => setForm({ ...form, provider: v })}>
+                      <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(providers) as Provider[])
+                          .filter((p) => providers[p])
+                          .map((p) => (
+                            <SelectItem key={p} value={p}>{PROVIDER_LABELS[p]}</SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Só aparecem os provedores com chave configurada. Adicione mais em <em>Listas → Configurar IAs de Prospecção</em>.
+                    </p>
+                  </div>
+                )}
               </div>
             </>
           )}
