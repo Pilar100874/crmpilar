@@ -153,14 +153,15 @@ export default function ProspeccaoEmpresas() {
           cep: r.cep,
           cnae_principal: r.cnae_principal,
           cnae_descricao: r.cnae_descricao,
+          site: r.site,
+          status_comercial: 'prospect',
+          origem_prospeccao: r.origem || 'claude-code',
           custom_fields: {
-            site: r.site,
             descricao: r.descricao,
             redes_sociais: r.redes_sociais,
             fontes: r.fontes,
-            origem_prospeccao: r.origem,
           },
-        })
+        } as any)
         .select('id')
         .single();
       if (error || !emp) {

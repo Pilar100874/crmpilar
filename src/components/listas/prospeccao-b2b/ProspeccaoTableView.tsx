@@ -28,7 +28,9 @@ import {
   Globe,
   Star,
   Trash2,
-  ArrowUpDown
+  ArrowUpDown,
+  Building2,
+  CheckCircle2
 } from 'lucide-react';
 import { ProspectB2B } from './types';
 import * as XLSX from 'xlsx';
@@ -39,6 +41,7 @@ interface ProspeccaoTableViewProps {
   loading: boolean;
   updateProspectStatus: (id: string, status: string) => Promise<void>;
   deleteProspect: (id: string) => Promise<void>;
+  importarParaEmpresas?: (ids: string[]) => Promise<{ ok: number; fail: number; jaImportados: number }>;
 }
 
 const statusLabels: Record<string, { label: string; color: string }> = {
@@ -53,7 +56,8 @@ const ProspeccaoTableView: React.FC<ProspeccaoTableViewProps> = ({
   prospects,
   loading,
   updateProspectStatus,
-  deleteProspect
+  deleteProspect,
+  importarParaEmpresas
 }) => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -359,6 +363,19 @@ const ProspeccaoTableView: React.FC<ProspeccaoTableViewProps> = ({
                                 Ver no Google Maps
                               </a>
                             </DropdownMenuItem>
+                          )}
+                          {importarParaEmpresas && (
+                            (prospect as any).empresa_id ? (
+                              <DropdownMenuItem disabled>
+                                <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
+                                Já importado no CRM
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem onClick={() => importarParaEmpresas([prospect.id])}>
+                                <Building2 className="h-4 w-4 mr-2" />
+                                Importar para Empresas (prospect)
+                              </DropdownMenuItem>
+                            )
                           )}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
