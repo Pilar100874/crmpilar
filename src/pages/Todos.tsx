@@ -1225,6 +1225,63 @@ export default function Todos() {
             </div>
           )}
         </TabsContent>
+
+        <TabsContent value="vendedores" className="flex-1 p-8 overflow-auto">
+          <SimpleListaComVinculos
+            titulo="vendedor"
+            icone={<UserCog className="w-4 h-4 text-emerald-500" />}
+            itens={filteredVendedores}
+            getNome={(v: any) => v.nome_fantasia || v.nome}
+            getSub={(v: any) => v.cnpj || v.email}
+            vinculos={vendedorEmpresas}
+            vinculoLabel="Empresas atendidas por este vendedor"
+            expandedRows={expandedRows}
+            toggleRow={toggleRow}
+            renderVinculo={(emp: any) => (
+              <div className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2">
+                <Building2 className="w-4 h-4 text-purple-500" />
+                <span className="font-medium">{emp.nome_fantasia}</span>
+                {emp.cnpj && <span className="text-muted-foreground text-xs">({emp.cnpj})</span>}
+              </div>
+            )}
+          />
+        </TabsContent>
+
+        <TabsContent value="transportadoras" className="flex-1 p-8 overflow-auto">
+          <SimpleListaComVinculos
+            titulo="transportadora"
+            icone={<Truck className="w-4 h-4 text-orange-500" />}
+            itens={filteredTransportadoras}
+            getNome={(v: any) => v.nome_fantasia || v.nome}
+            getSub={(v: any) => v.cnpj || v.email}
+            vinculos={{}}
+            vinculoLabel=""
+            expandedRows={expandedRows}
+            toggleRow={toggleRow}
+            renderVinculo={() => null}
+          />
+        </TabsContent>
+
+        <TabsContent value="usuarios" className="flex-1 p-8 overflow-auto">
+          <SimpleListaComVinculos
+            titulo="usuário"
+            icone={<Users className="w-4 h-4 text-indigo-500" />}
+            itens={filteredUsuarios}
+            getNome={(u: any) => u.nome}
+            getSub={(u: any) => u.email}
+            vinculos={usuarioEmpresas}
+            vinculoLabel="Empresas sob responsabilidade deste usuário"
+            expandedRows={expandedRows}
+            toggleRow={toggleRow}
+            renderVinculo={(emp: any) => (
+              <div className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2">
+                <Building2 className="w-4 h-4 text-purple-500" />
+                <span className="font-medium">{emp.nome_fantasia}</span>
+                {emp.cnpj && <span className="text-muted-foreground text-xs">({emp.cnpj})</span>}
+              </div>
+            )}
+          />
+        </TabsContent>
       </Tabs>
 
       {/* Sheet de Configurações */}
