@@ -198,14 +198,17 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
 
   // ============ Wizard steps ============
   return (
-    <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-4">
-      <div className="flex items-center gap-2">
-        <Wand2 className="h-6 w-6 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Wizard de Prospecção</h1>
-          <p className="text-sm text-muted-foreground">Preencha os critérios; o sistema pesquisa na web e traz os prospects.</p>
+    <div className={embedded ? 'space-y-4' : 'p-4 sm:p-6 max-w-3xl mx-auto space-y-4'}>
+      {!embedded && (
+        <div className="flex items-center gap-2">
+          <Wand2 className="h-6 w-6 text-primary" />
+          <div>
+            <h1 className="text-2xl font-bold">Wizard de Prospecção</h1>
+            <p className="text-sm text-muted-foreground">Preencha os critérios; o sistema pesquisa na web e traz os prospects.</p>
+          </div>
         </div>
-      </div>
+      )}
+
 
       <Progress value={progress} />
 
