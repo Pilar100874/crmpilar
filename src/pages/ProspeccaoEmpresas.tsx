@@ -169,6 +169,7 @@ export default function ProspeccaoEmpresas() {
   const [selecionadas, setSelecionadas] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [importando, setImportando] = useState(false);
+  const [metodo, setMetodo] = useState<'wizard' | 'mcp' | null>(null);
 
   const carregar = async () => {
     setLoading(true);
