@@ -434,149 +434,152 @@ export default function ProspeccaoEmpresas() {
 
   return (
     <div className="p-4 space-y-4">
-      {/* Atalhos diretos para os dois modos de uso */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <button
-          onClick={() => scrollTo('secao-wizard')}
-          className="text-left p-4 border-2 border-primary/30 rounded-lg hover:border-primary hover:bg-primary/5 transition-all group"
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <Wand2 className="h-5 w-5 text-primary" />
-            <span className="font-semibold">Usar o Wizard (mais fácil)</span>
-            <ArrowDown className="h-4 w-4 ml-auto text-muted-foreground group-hover:text-primary transition-colors" />
+      {/* Seletor de método — mostra chooser antes de qualquer UI de prospecção */}
+      {metodo === null && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Como você quer prospectar?
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Escolha um dos dois métodos. Você pode alternar depois clicando em "Trocar método".
+            </p>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <button
+              onClick={() => setMetodo('wizard')}
+              className="text-left p-5 border-2 border-primary/30 rounded-lg hover:border-primary hover:bg-primary/5 transition-all group"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Wand2 className="h-6 w-6 text-primary" />
+                <span className="font-semibold text-base">Usar o Wizard (mais fácil)</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Preencha 5 passos guiados e a IA busca e insere os prospects direto na listagem — sem sair do Pilar.
+              </p>
+            </button>
+            <button
+              onClick={() => setMetodo('mcp')}
+              className="text-left p-5 border-2 border-primary/30 rounded-lg hover:border-primary hover:bg-primary/5 transition-all group"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Terminal className="h-6 w-6 text-primary" />
+                <span className="font-semibold text-base">Usar Claude / ChatGPT / Cursor</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Conecte seu assistente externo ao Pilar via MCP e peça em linguagem natural — ele salva os prospects aqui.
+              </p>
+            </button>
+          </CardContent>
+        </Card>
+      )}
+
+      {metodo !== null && (
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setMetodo(null)} className="gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Trocar método
+          </Button>
+          <Badge variant="outline" className="gap-1">
+            {metodo === 'wizard' ? <><Wand2 className="h-3 w-3" /> Modo Wizard</> : <><Terminal className="h-3 w-3" /> Modo Claude / ChatGPT / Cursor</>}
+          </Badge>
+        </div>
+      )}
+
+      {metodo === 'wizard' && (
+        <>
+          <div className="flex flex-wrap gap-2">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <HelpCircle className="h-4 w-4 text-primary" />
+                  Manual do Modo Wizard
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Wand2 className="h-5 w-5 text-primary" /> Modo Wizard — passo a passo
+                  </DialogTitle>
+                  <DialogDescription>
+                    Um assistente guiado que faz toda a prospecção por você, sem sair do Pilar.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-3 text-sm">
+                  <p>Ideal para quem quer resultados rápidos sem precisar aprender a usar Claude, ChatGPT ou Cursor.</p>
+                  <ol className="list-decimal pl-5 space-y-2">
+                    <li><strong>Segmento:</strong> escolha o tipo de empresa (ex.: restaurantes, farmácias).</li>
+                    <li><strong>Região:</strong> defina cidade/estado ou raio de atuação.</li>
+                    <li><strong>Porte:</strong> selecione o tamanho da empresa desejada.</li>
+                    <li><strong>Palavras-chave:</strong> refine com termos específicos do seu nicho.</li>
+                    <li><strong>Execução:</strong> escolha o provedor de IA e clique em executar.
+                      <ul className="list-disc pl-5 mt-1 space-y-1">
+                        <li><em>Modo Auto</em>: a IA busca e importa direto (requer chave em "Configurar IAs de Prospecção").</li>
+                        <li><em>Modo Prompt</em>: gera um texto pronto para colar no Claude/ChatGPT/Cursor — já com instrução MCP para inserir direto no sistema.</li>
+                      </ul>
+                    </li>
+                    <li>Os resultados aparecem automaticamente na <strong>listagem abaixo</strong> para você revisar e importar.</li>
+                  </ol>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Preencha 5 passos guiados e a IA busca e insere os prospects direto na listagem — sem sair do Pilar.
-          </p>
-        </button>
-        <button
-          onClick={() => scrollTo('secao-mcp')}
-          className="text-left p-4 border-2 border-primary/30 rounded-lg hover:border-primary hover:bg-primary/5 transition-all group"
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <Terminal className="h-5 w-5 text-primary" />
-            <span className="font-semibold">Usar Claude / ChatGPT / Cursor</span>
-            <ArrowDown className="h-4 w-4 ml-auto text-muted-foreground group-hover:text-primary transition-colors" />
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Conecte seu assistente externo ao Pilar via MCP e peça em linguagem natural — ele salva os prospects aqui.
-          </p>
-        </button>
-      </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Wand2 className="h-4 w-4 text-primary" />
-              Como funciona o Modo Wizard
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Wand2 className="h-5 w-5 text-primary" /> Modo Wizard — passo a passo
-              </DialogTitle>
-              <DialogDescription>
-                Um assistente guiado que faz toda a prospecção por você, sem sair do Pilar.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3 text-sm">
-              <p>Ideal para quem quer resultados rápidos sem precisar aprender a usar Claude, ChatGPT ou Cursor.</p>
-              <ol className="list-decimal pl-5 space-y-2">
-                <li><strong>Abra o card "Wizard de Prospecção"</strong> logo abaixo.</li>
-                <li><strong>Segmento:</strong> escolha o tipo de empresa (ex.: restaurantes, farmácias).</li>
-                <li><strong>Região:</strong> defina cidade/estado ou raio de atuação.</li>
-                <li><strong>Porte:</strong> selecione o tamanho da empresa desejada.</li>
-                <li><strong>Palavras-chave:</strong> refine com termos específicos do seu nicho.</li>
-                <li><strong>Execução:</strong> escolha o provedor de IA e clique em executar.
-                  <ul className="list-disc pl-5 mt-1 space-y-1">
-                    <li><em>Modo Auto</em>: a IA busca e importa direto (requer chave em "Configurar IAs de Prospecção").</li>
-                    <li><em>Modo Prompt</em>: gera um texto pronto para colar no Claude/ChatGPT/Cursor — já com instrução MCP e todos os parâmetros para inserir direto no sistema.</li>
-                  </ul>
-                </li>
-                <li>Os resultados aparecem automaticamente na <strong>listagem abaixo</strong> para você revisar e importar.</li>
-              </ol>
-              <Alert>
-                <Sparkles className="h-4 w-4" />
-                <AlertDescription>
-                  Recomendado para: usuários que querem simplicidade e velocidade, sem instalar nada externo.
-                </AlertDescription>
-              </Alert>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Terminal className="h-4 w-4 text-primary" />
-              Como usar via Claude / ChatGPT / Cursor
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Terminal className="h-5 w-5 text-primary" /> Modo Direto (MCP) — Claude Code, ChatGPT ou Cursor
-              </DialogTitle>
-              <DialogDescription>
-                Conecte seu assistente de IA preferido ao Pilar via MCP e prospecte diretamente por lá.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3 text-sm">
-              <p>Ideal para quem já usa Claude, ChatGPT ou Cursor e quer controle total sobre a busca.</p>
-              <ol className="list-decimal pl-5 space-y-2">
-                <li><strong>Conecte o assistente ao Pilar</strong> (uma vez só) — veja as instruções no card <em>"Como usar — pesquisar na internet e trazer para o Pilar"</em> logo abaixo, com o passo a passo para cada ferramenta.</li>
-                <li>Use as credenciais fixas: <code className="bg-muted px-1 rounded">pilar@pilar.com.br</code> / <code className="bg-muted px-1 rounded">Ceotto2468</code>.</li>
-                <li>No seu assistente, peça: <em>"pesquise empresas de [segmento] em [cidade] e salve no Pilar"</em>.</li>
-                <li>A IA pesquisa na internet, extrai os dados e envia via MCP (<code className="bg-muted px-1 rounded">salvar_empresas_prospectadas</code>).</li>
-                <li>Os resultados aparecem na <strong>listagem abaixo</strong> — revise, selecione e importe.</li>
-              </ol>
-              <Alert>
-                <Bot className="h-4 w-4" />
-                <AlertDescription>
-                  Recomendado para: usuários avançados que querem usar recursos nativos de pesquisa e raciocínio dos assistentes externos.
-                </AlertDescription>
-              </Alert>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-
-
-      <Collapsible defaultOpen>
-        <Card id="secao-wizard" className="scroll-mt-4">
-          <CollapsibleTrigger asChild>
-            <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors">
+          <Card id="secao-wizard">
+            <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Wand2 className="h-4 w-4 text-primary" />
                 Wizard de Prospecção — preencher critérios e trazer prospects
-                <Badge variant="outline" className="ml-auto">clique para expandir/recolher</Badge>
               </CardTitle>
             </CardHeader>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
             <CardContent>
               <WizardProspeccao embedded onCompleted={carregar} />
             </CardContent>
-          </CollapsibleContent>
-        </Card>
-      </Collapsible>
+          </Card>
+        </>
+      )}
 
-      <Collapsible defaultOpen>
+      {metodo === 'mcp' && (
+        <>
+          <div className="flex flex-wrap gap-2">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <HelpCircle className="h-4 w-4 text-primary" />
+                  Manual do Modo Claude / ChatGPT / Cursor
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Terminal className="h-5 w-5 text-primary" /> Modo Direto (MCP)
+                  </DialogTitle>
+                  <DialogDescription>
+                    Conecte seu assistente de IA preferido ao Pilar via MCP e prospecte diretamente por lá.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-3 text-sm">
+                  <p>Ideal para quem já usa Claude, ChatGPT ou Cursor e quer controle total sobre a busca.</p>
+                  <ol className="list-decimal pl-5 space-y-2">
+                    <li><strong>Conecte o assistente ao Pilar</strong> (uma vez só) — veja o card de conexão abaixo com passo a passo para cada ferramenta.</li>
+                    <li>Use as credenciais fixas: <code className="bg-muted px-1 rounded">pilar@pilar.com.br</code> / <code className="bg-muted px-1 rounded">Ceotto2468</code>.</li>
+                    <li>No seu assistente, peça: <em>"pesquise empresas de [segmento] em [cidade] e salve no Pilar"</em>.</li>
+                    <li>A IA pesquisa na internet, extrai os dados e envia via MCP (<code className="bg-muted px-1 rounded">salvar_empresas_prospectadas</code>).</li>
+                    <li>Os resultados aparecem na <strong>listagem abaixo</strong> — revise, selecione e importe.</li>
+                  </ol>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
 
-        <Card id="secao-mcp" className="scroll-mt-4">
-          <CollapsibleTrigger asChild>
-            <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors">
+          <Card id="secao-mcp">
+            <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <HelpCircle className="h-4 w-4 text-primary" />
-                Como usar — pesquisar na internet e trazer para o Pilar
-                <Badge variant="outline" className="ml-auto">clique para expandir/recolher</Badge>
+                Como conectar seu assistente ao Pilar
               </CardTitle>
             </CardHeader>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
             <CardContent className="space-y-4 text-sm">
               <Alert>
                 <Sparkles className="h-4 w-4" />
@@ -600,7 +603,6 @@ export default function ProspeccaoEmpresas() {
                   </Button>
                 </div>
 
-                {/* Claude Code */}
                 <div className="border rounded-lg p-3 mb-3 bg-muted/20">
                   <div className="font-medium mb-2">🖥️ Claude Code (terminal)</div>
                   <ol className="list-decimal ml-5 space-y-1 text-sm text-muted-foreground mb-2">
@@ -619,7 +621,6 @@ export default function ProspeccaoEmpresas() {
                   </ol>
                 </div>
 
-                {/* ChatGPT */}
                 <div className="border rounded-lg p-3 mb-3 bg-muted/20">
                   <div className="font-medium mb-2">💬 ChatGPT (Plus / Pro / Business)</div>
                   <ol className="list-decimal ml-5 space-y-1 text-sm text-muted-foreground">
@@ -633,7 +634,6 @@ export default function ProspeccaoEmpresas() {
                   </ol>
                 </div>
 
-                {/* Claude Desktop */}
                 <div className="border rounded-lg p-3 mb-3 bg-muted/20">
                   <div className="font-medium mb-2">🤖 Claude Desktop (Mac / Windows)</div>
                   <ol className="list-decimal ml-5 space-y-1 text-sm text-muted-foreground">
@@ -646,7 +646,6 @@ export default function ProspeccaoEmpresas() {
                   </ol>
                 </div>
 
-                {/* Cursor */}
                 <div className="border rounded-lg p-3 mb-3 bg-muted/20">
                   <div className="font-medium mb-2">✏️ Cursor</div>
                   <ol className="list-decimal ml-5 space-y-1 text-sm text-muted-foreground mb-2">
@@ -719,7 +718,6 @@ export default function ProspeccaoEmpresas() {
                 </div>
               </div>
 
-
               <div>
                 <div className="font-semibold mb-2">3. Campos que o assistente pode preencher</div>
                 <p className="text-muted-foreground mb-2">
@@ -756,9 +754,10 @@ export default function ProspeccaoEmpresas() {
                 </AlertDescription>
               </Alert>
             </CardContent>
-          </CollapsibleContent>
-        </Card>
-      </Collapsible>
+          </Card>
+        </>
+      )}
+
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
