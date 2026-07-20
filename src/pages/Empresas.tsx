@@ -557,7 +557,24 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       neighborhood: (empresa as any).bairro || empresa.custom_fields?.neighborhood || "",
       inscricao: empresa.custom_fields?.inscricao || "",
       site: (empresa as any).site || empresa.custom_fields?.site || "",
+      // Qualificação
+      contato_nome: (empresa as any).contato_nome || "",
+      contato_cargo: (empresa as any).contato_cargo || "",
+      contato_email: (empresa as any).contato_email || "",
+      contato_telefone: (empresa as any).contato_telefone || "",
+      porte: (empresa as any).porte || "",
+      faturamento_estimado: (empresa as any).faturamento_estimado || "",
+      funcionarios_estimado: (empresa as any).funcionarios_estimado || "",
+      data_fundacao: (empresa as any).data_fundacao || "",
+      situacao_cadastral: (empresa as any).situacao_cadastral || "",
+      score_prospect: (empresa as any).score_prospect ?? "",
+      score_motivo: (empresa as any).score_motivo || "",
+      prioridade: (empresa as any).prioridade || "",
+      produtos_interesse: Array.isArray((empresa as any).produtos_interesse) ? (empresa as any).produtos_interesse.join(", ") : ((empresa as any).produtos_interesse || ""),
+      tags: Array.isArray((empresa as any).tags) ? (empresa as any).tags.join(", ") : ((empresa as any).tags || ""),
+      observacoes_internas: (empresa as any).observacoes_internas || "",
     };
+
     
     // Carregar campos customizados do custom_fields
     if (empresa.custom_fields) {
