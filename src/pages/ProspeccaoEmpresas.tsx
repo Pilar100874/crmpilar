@@ -216,7 +216,7 @@ export default function ProspeccaoEmpresas() {
       let uf = normUF(r.estado);
       const email = normEmail(r.email);
       const whatsapp = normWhats(r.whatsapp || r.telefone);
-      const telefone = normWhats(r.telefone) || whatsapp;
+      let telefone = normWhats(r.telefone);
       const site = normSite(r.site);
 
       let nome = r.nome?.trim() || '';
