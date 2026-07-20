@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Filter, Building2, User, Settings2, ChevronDown, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Edit, GripVertical } from "lucide-react";
+import { Search, Filter, Building2, User, Settings2, ChevronDown, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Edit, GripVertical, UserCog, Truck, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import {
@@ -176,11 +176,98 @@ function ColumnConfigPanel({ columns, onColumnsChange }: ColumnConfigPanelProps)
   );
 }
 
+function SimpleListaComVinculos({
+  titulo, icone, itens, getNome, getSub, vinculos, vinculoLabel, expandedRows, toggleRow, renderVinculo,
+}: {
+  titulo: string;
+  icone: React.ReactNode;
+  itens: any[];
+  getNome: (item: any) => string;
+  getSub: (item: any) => string | null | undefined;
+  vinculos: Record<string, any[]>;
+  vinculoLabel: string;
+  expandedRows: Set<string>;
+  toggleRow: (id: string) => void;
+  renderVinculo: (v: any) => React.ReactNode;
+}) {
+  if (itens.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+          {icone}
+        </div>
+        <p className="text-lg font-medium text-muted-foreground mb-1">
+          Nenhum(a) {titulo} encontrado(a)
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-auto">
+      <table className="w-full">
+        <thead className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20">
+          <tr>
+            <th className="px-4 py-3.5 w-[30px]"></th>
+            <th className="px-4 py-3.5 w-[40px]"></th>
+            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Nome</th>
+            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Detalhe</th>
+            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Vínculos</th>
+          </tr>
+        </thead>
+        <tbody>
+          {itens.map((item: any) => {
+            const links = vinculos[item.id] || [];
+            const hasLinks = links.length > 0;
+            const isExpanded = expandedRows.has(item.id);
+            return (
+              <React.Fragment key={item.id}>
+                <tr className="border-b border-border/30 hover:bg-muted/40 transition-colors">
+                  <td className="p-3">
+                    {hasLinks && (
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full" onClick={() => toggleRow(item.id)}>
+                        {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      </Button>
+                    )}
+                  </td>
+                  <td className="p-3">{icone}</td>
+                  <td className="p-3 font-medium">{getNome(item)}</td>
+                  <td className="p-3 text-sm text-muted-foreground">{getSub(item) || "-"}</td>
+                  <td className="p-3 text-sm text-muted-foreground">{links.length}</td>
+                </tr>
+                {isExpanded && hasLinks && (
+                  <tr>
+                    <td colSpan={5} className="bg-muted/20 p-4 border-l-4 border-l-primary/40">
+                      <div className="ml-8">
+                        <p className="text-sm font-semibold mb-3">{vinculoLabel}:</p>
+                        <div className="space-y-2">
+                          {links.map((v: any) => (
+                            <React.Fragment key={v.id}>{renderVinculo(v)}</React.Fragment>
+                          ))}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+
 export default function Todos() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [contatos, setContatos] = useState<Contato[]>([]);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [vendedores, setVendedores] = useState<Empresa[]>([]);
+  const [transportadoras, setTransportadoras] = useState<Empresa[]>([]);
+  const [usuarios, setUsuarios] = useState<any[]>([]);
+  const [vendedorEmpresas, setVendedorEmpresas] = useState<Record<string, any[]>>({});
+  const [usuarioEmpresas, setUsuarioEmpresas] = useState<Record<string, any[]>>({});
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [showConfigSheet, setShowConfigSheet] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -315,14 +402,49 @@ export default function Todos() {
 
         if (contatosData) setContatos(contatosData);
 
-        // Buscar empresas
+        // Buscar empresas (todos os tipos)
         const { data: empresasData } = await supabase
           .from('empresas')
           .select('*')
           .eq('estabelecimento_id', estabId)
           .order('nome_fantasia');
 
-        if (empresasData) setEmpresas(empresasData);
+        if (empresasData) {
+          const clientes = empresasData.filter((e: any) => !['vendedor', 'transportadora'].includes(e.tipo_cliente));
+          const vends = empresasData.filter((e: any) => e.tipo_cliente === 'vendedor');
+          const transps = empresasData.filter((e: any) => e.tipo_cliente === 'transportadora');
+          setEmpresas(clientes);
+          setVendedores(vends);
+          setTransportadoras(transps);
+        }
+
+        // Buscar usuários do sistema
+        const { data: usuariosData } = await supabase
+          .from('usuarios')
+          .select('id, nome, email, telefone')
+          .eq('estabelecimento_id', estabId)
+          .order('nome');
+        if (usuariosData) setUsuarios(usuariosData);
+
+        // Vínculos vendedor/usuário -> empresas
+        const { data: vinculosEmp } = await supabase
+          .from('empresa_vinculos')
+          .select('empresa_id, usuario_id, vendedor_id, empresas:empresa_id (id, nome_fantasia, cnpj)');
+
+        if (vinculosEmp) {
+          const vendMap: Record<string, any[]> = {};
+          const userMap: Record<string, any[]> = {};
+          vinculosEmp.forEach((v: any) => {
+            if (v.vendedor_id && v.empresas) {
+              (vendMap[v.vendedor_id] ||= []).push(v.empresas);
+            }
+            if (v.usuario_id && v.empresas) {
+              (userMap[v.usuario_id] ||= []).push(v.empresas);
+            }
+          });
+          setVendedorEmpresas(vendMap);
+          setUsuarioEmpresas(userMap);
+        }
 
         // Buscar vínculos
         const { data: vinculos } = await supabase
@@ -381,41 +503,47 @@ export default function Todos() {
     e.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const matchTexto = (e: Empresa) =>
+    e.nome_fantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    e.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    e.cnpj?.includes(searchTerm) ||
+    e.email?.toLowerCase().includes(searchTerm.toLowerCase());
+
+  const filteredVendedores = vendedores.filter(matchTexto);
+  const filteredTransportadoras = transportadoras.filter(matchTexto);
+  const filteredUsuarios = usuarios.filter((u: any) =>
+    u.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.telefone?.includes(searchTerm)
+  );
+
   // Aplicar ordenação para Todos
-  let todosItens = [
+  let todosItens: any[] = [
     ...filteredContatos.map(c => ({ ...c, type: 'contato' as const })),
-    ...filteredEmpresas.map(e => ({ ...e, type: 'empresa' as const }))
+    ...filteredEmpresas.map(e => ({ ...e, type: 'empresa' as const })),
+    ...filteredVendedores.map(e => ({ ...e, type: 'vendedor' as const })),
+    ...filteredTransportadoras.map(e => ({ ...e, type: 'transportadora' as const })),
+    ...filteredUsuarios.map(u => ({ ...u, type: 'usuario' as const })),
   ];
+
+  const getNome = (a: any) => (a.type === 'contato' || a.type === 'usuario') ? (a.nome || '') : (a.nome_fantasia || a.nome || '');
 
   if (todosSortConfig) {
     todosItens = [...todosItens].sort((a, b) => {
-      let aValue, bValue;
+      let aValue = '', bValue = '';
       if (todosSortConfig.key === 'nome') {
-        aValue = a.type === 'contato' ? a.nome : a.nome_fantasia;
-        bValue = b.type === 'contato' ? b.nome : b.nome_fantasia;
+        aValue = getNome(a); bValue = getNome(b);
       } else if (todosSortConfig.key === 'email') {
-        aValue = a.email || '';
-        bValue = b.email || '';
+        aValue = a.email || ''; bValue = b.email || '';
       } else if (todosSortConfig.key === 'telefone') {
-        aValue = a.telefone || '';
-        bValue = b.telefone || '';
-      } else {
-        aValue = '';
-        bValue = '';
+        aValue = a.telefone || ''; bValue = b.telefone || '';
       }
-      
-      if (todosSortConfig.direction === 'asc') {
-        return aValue.localeCompare(bValue);
-      } else {
-        return bValue.localeCompare(aValue);
-      }
+      return todosSortConfig.direction === 'asc'
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
     });
   } else {
-    todosItens = todosItens.sort((a, b) => {
-      const nomeA = a.type === 'contato' ? (a.nome || '') : (a.nome_fantasia || '');
-      const nomeB = b.type === 'contato' ? (b.nome || '') : (b.nome_fantasia || '');
-      return nomeA.localeCompare(nomeB);
-    });
+    todosItens = todosItens.sort((a, b) => getNome(a).localeCompare(getNome(b)));
   }
 
   // Aplicar ordenação para Contatos
@@ -605,6 +733,24 @@ export default function Todos() {
             >
               Empresas ({filteredEmpresas.length})
             </TabsTrigger>
+            <TabsTrigger 
+              value="vendedores"
+              className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent px-0 font-medium"
+            >
+              Vendedores ({filteredVendedores.length})
+            </TabsTrigger>
+            <TabsTrigger 
+              value="transportadoras"
+              className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent px-0 font-medium"
+            >
+              Transportadoras ({filteredTransportadoras.length})
+            </TabsTrigger>
+            <TabsTrigger 
+              value="usuarios"
+              className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent px-0 font-medium"
+            >
+              Usuários ({filteredUsuarios.length})
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -680,9 +826,19 @@ export default function Todos() {
                 <tbody>
                   {todosItens.map(item => {
                     const isExpanded = expandedRows.has(item.id);
-                    const hasVinculos = item.type === 'contato' 
-                      ? (contatoEmpresas[item.id]?.length || 0) > 0
-                      : (empresaContatos[item.id]?.length || 0) > 0;
+                    const vinculosLista: any[] =
+                      item.type === 'contato' ? (contatoEmpresas[item.id] || [])
+                      : item.type === 'empresa' ? (empresaContatos[item.id] || [])
+                      : item.type === 'vendedor' ? (vendedorEmpresas[item.id] || [])
+                      : item.type === 'usuario' ? (usuarioEmpresas[item.id] || [])
+                      : [];
+                    const hasVinculos = vinculosLista.length > 0;
+                    const vinculosLabel =
+                      item.type === 'contato' ? 'Empresas Vinculadas:'
+                      : item.type === 'empresa' ? 'Contatos Vinculados:'
+                      : item.type === 'vendedor' ? 'Empresas atendidas por este vendedor:'
+                      : item.type === 'usuario' ? 'Empresas sob responsabilidade deste usuário:'
+                      : 'Vínculos:';
 
                     return (
                       <>
@@ -707,11 +863,11 @@ export default function Todos() {
                             if (col.id === "tipo") {
                               return (
                                 <td key={col.id} className="p-3">
-                                  {item.type === 'contato' ? (
-                                    <User className="w-4 h-4 text-blue-500" />
-                                  ) : (
-                                    <Building2 className="w-4 h-4 text-purple-500" />
-                                  )}
+                                  {item.type === 'contato' && <User className="w-4 h-4 text-blue-500" />}
+                                  {item.type === 'empresa' && <Building2 className="w-4 h-4 text-purple-500" />}
+                                  {item.type === 'vendedor' && <UserCog className="w-4 h-4 text-emerald-500" />}
+                                  {item.type === 'transportadora' && <Truck className="w-4 h-4 text-orange-500" />}
+                                  {item.type === 'usuario' && <Users className="w-4 h-4 text-indigo-500" />}
                                 </td>
                               );
                             }
@@ -719,7 +875,7 @@ export default function Todos() {
                             if (col.id === "nome") {
                               return (
                                 <td key={col.id} className="p-3 font-medium">
-                                  {item.type === 'contato' ? item.nome : item.nome_fantasia}
+                                  {(item.type === 'contato' || item.type === 'usuario') ? item.nome : (item.nome_fantasia || item.nome)}
                                 </td>
                               );
                             }
@@ -741,6 +897,12 @@ export default function Todos() {
                             }
                             
                             if (col.id === "status") {
+                              const badgeMap: Record<string, { label: string; variant: any }> = {
+                                empresa: { label: 'Empresa', variant: 'outline' },
+                                vendedor: { label: 'Vendedor', variant: 'default' },
+                                transportadora: { label: 'Transportadora', variant: 'secondary' },
+                                usuario: { label: 'Usuário', variant: 'outline' },
+                              };
                               return (
                                 <td key={col.id} className="p-3">
                                   {item.type === 'contato' ? (
@@ -748,7 +910,9 @@ export default function Todos() {
                                       {item.tipo_operador ? "Cliente" : "Prospect"}
                                     </Badge>
                                   ) : (
-                                    <Badge variant="outline" className="rounded-full">Empresa</Badge>
+                                    <Badge variant={badgeMap[item.type]?.variant || 'outline'} className="rounded-full">
+                                      {badgeMap[item.type]?.label || '-'}
+                                    </Badge>
                                   )}
                                 </td>
                               );
@@ -762,30 +926,21 @@ export default function Todos() {
                             <td colSpan={visibleTodosColumns.length + 1} className="bg-gradient-to-r from-muted/30 to-muted/10 p-4 border-l-4 border-l-primary/40">
                               <div className="ml-8">
                                 <p className="text-sm font-semibold text-foreground mb-3">
-                                  {item.type === 'contato' ? 'Empresas Vinculadas:' : 'Contatos Vinculados:'}
+                                  {vinculosLabel}
                                 </p>
                                 <div className="space-y-2">
-                                  {item.type === 'contato' ? (
-                                    contatoEmpresas[item.id]?.map((emp: any) => (
-                                      <div key={emp.id} className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2 hover:bg-background/80 transition-colors">
-                                        <Building2 className="w-4 h-4 text-purple-500" />
-                                        <span className="font-medium">{emp.nome_fantasia}</span>
-                                        {emp.cnpj && (
-                                          <span className="text-muted-foreground text-xs">({emp.cnpj})</span>
+                                  {vinculosLista.map((v: any) => {
+                                    const isContato = item.type === 'empresa';
+                                    return (
+                                      <div key={v.id} className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2 hover:bg-background/80 transition-colors">
+                                        {isContato ? <User className="w-4 h-4 text-blue-500" /> : <Building2 className="w-4 h-4 text-purple-500" />}
+                                        <span className="font-medium">{isContato ? v.nome : v.nome_fantasia}</span>
+                                        {(v.cnpj || v.email) && (
+                                          <span className="text-muted-foreground text-xs">({v.cnpj || v.email})</span>
                                         )}
                                       </div>
-                                    ))
-                                  ) : (
-                                    empresaContatos[item.id]?.map((cont: any) => (
-                                      <div key={cont.id} className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2 hover:bg-background/80 transition-colors">
-                                        <User className="w-4 h-4 text-blue-500" />
-                                        <span className="font-medium">{cont.nome}</span>
-                                        {cont.email && (
-                                          <span className="text-muted-foreground text-xs">({cont.email})</span>
-                                        )}
-                                      </div>
-                                    ))
-                                  )}
+                                    );
+                                  })}
                                 </div>
                               </div>
                             </td>
@@ -1151,6 +1306,63 @@ export default function Todos() {
               </table>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="vendedores" className="flex-1 p-8 overflow-auto">
+          <SimpleListaComVinculos
+            titulo="vendedor"
+            icone={<UserCog className="w-4 h-4 text-emerald-500" />}
+            itens={filteredVendedores}
+            getNome={(v: any) => v.nome_fantasia || v.nome}
+            getSub={(v: any) => v.cnpj || v.email}
+            vinculos={vendedorEmpresas}
+            vinculoLabel="Empresas atendidas por este vendedor"
+            expandedRows={expandedRows}
+            toggleRow={toggleRow}
+            renderVinculo={(emp: any) => (
+              <div className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2">
+                <Building2 className="w-4 h-4 text-purple-500" />
+                <span className="font-medium">{emp.nome_fantasia}</span>
+                {emp.cnpj && <span className="text-muted-foreground text-xs">({emp.cnpj})</span>}
+              </div>
+            )}
+          />
+        </TabsContent>
+
+        <TabsContent value="transportadoras" className="flex-1 p-8 overflow-auto">
+          <SimpleListaComVinculos
+            titulo="transportadora"
+            icone={<Truck className="w-4 h-4 text-orange-500" />}
+            itens={filteredTransportadoras}
+            getNome={(v: any) => v.nome_fantasia || v.nome}
+            getSub={(v: any) => v.cnpj || v.email}
+            vinculos={{}}
+            vinculoLabel=""
+            expandedRows={expandedRows}
+            toggleRow={toggleRow}
+            renderVinculo={() => null}
+          />
+        </TabsContent>
+
+        <TabsContent value="usuarios" className="flex-1 p-8 overflow-auto">
+          <SimpleListaComVinculos
+            titulo="usuário"
+            icone={<Users className="w-4 h-4 text-indigo-500" />}
+            itens={filteredUsuarios}
+            getNome={(u: any) => u.nome}
+            getSub={(u: any) => u.email}
+            vinculos={usuarioEmpresas}
+            vinculoLabel="Empresas sob responsabilidade deste usuário"
+            expandedRows={expandedRows}
+            toggleRow={toggleRow}
+            renderVinculo={(emp: any) => (
+              <div className="flex items-center gap-2 text-sm bg-background/50 rounded-lg p-2">
+                <Building2 className="w-4 h-4 text-purple-500" />
+                <span className="font-medium">{emp.nome_fantasia}</span>
+                {emp.cnpj && <span className="text-muted-foreground text-xs">({emp.cnpj})</span>}
+              </div>
+            )}
+          />
         </TabsContent>
       </Tabs>
 
