@@ -34,6 +34,7 @@ import MapaClientesView from '@/components/listas/MapaClientesView';
 import { ProspeccaoB2BView } from '@/components/listas/prospeccao-b2b';
 import ProspeccaoClaudeCode from './ProspeccaoClaudeCode';
 import ProspeccaoEmpresas from './ProspeccaoEmpresas';
+import VinculosSegmentoProspectUsuario from './VinculosSegmentoProspectUsuario';
 
 interface TabItem {
   id: string;
