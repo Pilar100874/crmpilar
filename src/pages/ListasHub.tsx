@@ -12,7 +12,9 @@ import {
   MapPin,
   Target,
   Bot,
-  Wand2
+  Wand2,
+  Sparkles
+
 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
