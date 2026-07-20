@@ -28,7 +28,9 @@ import {
   Globe,
   Star,
   Trash2,
-  ArrowUpDown
+  ArrowUpDown,
+  Building2,
+  CheckCircle2
 } from 'lucide-react';
 import { ProspectB2B } from './types';
 import * as XLSX from 'xlsx';
@@ -39,6 +41,7 @@ interface ProspeccaoTableViewProps {
   loading: boolean;
   updateProspectStatus: (id: string, status: string) => Promise<void>;
   deleteProspect: (id: string) => Promise<void>;
+  importarParaEmpresas?: (ids: string[]) => Promise<{ ok: number; fail: number; jaImportados: number }>;
 }
 
 const statusLabels: Record<string, { label: string; color: string }> = {
