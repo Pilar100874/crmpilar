@@ -11,11 +11,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
+import { Progress } from '@/components/ui/progress';
 import {
-  ArrowLeft, Bot, Copy, Download, ExternalLink, HelpCircle, RefreshCw, Search,
+  ArrowLeft, ArrowRight, Bot, CheckCircle2, Copy, Download, ExternalLink, HelpCircle, RefreshCw, Search,
   Sparkles, Terminal, Trash2, UserSearch, Wand2,
 } from 'lucide-react';
-import WizardProspeccao from './WizardProspeccao';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { validateEmail } from '@/lib/validators';
 import { maskWhatsApp, removeMask } from '@/lib/masks';
