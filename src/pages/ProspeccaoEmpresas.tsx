@@ -649,13 +649,19 @@ export default function ProspeccaoEmpresas() {
                   <TableHead>CNPJ</TableHead>
                   <TableHead>Cidade/UF</TableHead>
                   <TableHead>WhatsApp</TableHead>
+                  <TableHead>Telefone</TableHead>
                   <TableHead>E-mail</TableHead>
                   <TableHead>Site</TableHead>
                   <TableHead>Segmento</TableHead>
+                  <TableHead>Porte</TableHead>
+                  <TableHead>Score</TableHead>
+                  <TableHead>Prior.</TableHead>
+                  <TableHead>Contato</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-16"></TableHead>
                 </TableRow>
               </TableHeader>
+
               <TableBody>
                 {filtradas.length === 0 && !loading && (
                   <TableRow>
