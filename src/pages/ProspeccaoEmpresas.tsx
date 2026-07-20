@@ -13,6 +13,72 @@ import { RefreshCw, Trash2, Download, ExternalLink, Search, Bot, Copy, Terminal,
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { validateCNPJ, validateEmail } from '@/lib/validators';
+import { maskCNPJ, maskCEP, maskWhatsApp, removeMask } from '@/lib/masks';
+
+// ===== Helpers de normalização/enriquecimento =====
+const UF_VALIDAS = new Set(['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO']);
+
+const normEmail = (v?: string | null): string | null => {
+  if (!v) return null;
+  const s = v.trim().toLowerCase();
+  return validateEmail(s) ? s : null;
+};
+
+const normUF = (v?: string | null): string | null => {
+  if (!v) return null;
+  const s = v.trim().toUpperCase().substring(0, 2);
+  return UF_VALIDAS.has(s) ? s : null;
+};
+
+const normCNPJ = (v?: string | null): string | null => {
+  if (!v) return null;
+  const d = removeMask(v);
+  if (d.length !== 14 || !validateCNPJ(d)) return null;
+  return maskCNPJ(d);
+};
+
+const normCEP = (v?: string | null): string | null => {
+  if (!v) return null;
+  const d = removeMask(v).substring(0, 8);
+  return d.length === 8 ? maskCEP(d) : null;
+};
+
+const normWhats = (v?: string | null): string | null => {
+  if (!v) return null;
+  let d = removeMask(v);
+  if (!d) return null;
+  if (!d.startsWith('55')) d = '55' + d;
+  d = d.substring(0, 13);
+  return d.length >= 12 ? maskWhatsApp(d) : null;
+};
+
+const normSite = (v?: string | null): string | null => {
+  if (!v) return null;
+  const s = v.trim();
+  if (!s) return null;
+  return s.startsWith('http') ? s : `https://${s.replace(/^\/+/, '')}`;
+};
+
+// Enriquecer via BrasilAPI (CNPJ → Receita)
+const fetchCNPJ = async (cnpjDigits: string): Promise<any | null> => {
+  try {
+    const r = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjDigits}`);
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
+};
+
+// Enriquecer via ViaCEP
+const fetchCEP = async (cepDigits: string): Promise<any | null> => {
+  try {
+    const r = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`);
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d?.erro ? null : d;
+  } catch { return null; }
+};
+
 
 const MCP_URL = 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/mcp';
 
