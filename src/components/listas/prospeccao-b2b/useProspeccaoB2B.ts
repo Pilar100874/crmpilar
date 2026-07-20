@@ -536,6 +536,7 @@ export function useProspeccaoB2B() {
     if (jaImportados) toast({ title: 'Já importados', description: `${jaImportados} já estavam no CRM` });
 
     return { ok, fail, jaImportados };
+  };
 
   // Calcular gastos
   const getGastosInfo = useCallback(() => {
