@@ -555,6 +555,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       state: empresa.estado || "",
       neighborhood: (empresa as any).bairro || empresa.custom_fields?.neighborhood || "",
       inscricao: empresa.custom_fields?.inscricao || "",
+      site: (empresa as any).site || empresa.custom_fields?.site || "",
     };
     
     // Carregar campos customizados do custom_fields
