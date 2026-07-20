@@ -402,7 +402,7 @@ var add_prospeccao_empresas_bulk_default = defineTool6({
       tags: e.tags ?? [],
       observacoes_internas: e.observacoes_internas ?? null,
       extras: e.extras ?? {},
-      origem: "claude-code",
+      origem: e.origem ?? "claude-code",
       status: "novo"
     }));
     const { data, error } = await sb.from("prospeccao_empresas").insert(rows).select("id");
