@@ -487,7 +487,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   const fetchSegmentos = async (estabId: string) => {
     const { data, error } = await supabase
       .from('segmentos')
-      .select('id, nome')
+      .select('id, nome, is_prospect')
       .eq('estabelecimento_id', estabId)
       .order('nome');
 
@@ -496,7 +496,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       return;
     }
 
-    setSegmentos(data || []);
+    setSegmentos((data as any) || []);
   };
   
   // Filtrar contatos na busca
