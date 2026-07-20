@@ -153,7 +153,7 @@ export function ConjuntoItensEditor({ conjuntoId, onClose }: ConjuntoItensEditor
     try {
       const { error } = await supabase
         .from("orcamento_conjuntos_itens")
-        .update({ [field]: value })
+        .update({ [field]: value } as any)
         .eq("id", id);
 
       if (error) throw error;

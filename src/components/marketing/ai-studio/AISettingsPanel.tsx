@@ -318,7 +318,7 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
 
       const { data: existing } = await supabase.from('ai_api_keys').select('id').eq('estabelecimento_id', estabelecimentoId).eq('provider', providerId).maybeSingle();
       if (existing) {
-        const { error } = await supabase.from('ai_api_keys').update(payload).eq('id', existing.id);
+        const { error } = await supabase.from('ai_api_keys').update(payload as any).eq('id', existing.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from('ai_api_keys').insert([payload] as any);

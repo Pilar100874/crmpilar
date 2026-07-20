@@ -295,7 +295,7 @@ export default function FerramentasAtendimentoCRUD({ estabelecimentoId }: Ferram
     try {
       const { error } = await supabase
         .from('ferramentas_atendimento')
-        .update({ [field]: value })
+        .update({ [field]: value } as any)
         .eq('id', id);
       if (error) throw error;
       loadFerramentas();

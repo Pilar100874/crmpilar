@@ -440,7 +440,8 @@ export default function WhatsAppCatalogo() {
               conta_marketplace_id: marketplaceId, // usar marketplace_id como referência
               marketplace_product_id: produto.codigo,
               status: 'pendente'
-            });
+            } as any);
+
 
           if (insertError) throw insertError;
         }

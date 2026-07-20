@@ -116,7 +116,8 @@ export function CreateEmpresaEmbedded({
             empresa_id: empresaData.id,
             estabelecimento_id: estabelecimentoId,
             is_primary: true,
-          });
+          } as any);
+
 
         if (linkError) {
           console.error("Error linking empresa to customer:", linkError);
