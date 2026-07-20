@@ -421,10 +421,27 @@ export default function Todos() {
     e.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const matchTexto = (e: Empresa) =>
+    e.nome_fantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    e.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    e.cnpj?.includes(searchTerm) ||
+    e.email?.toLowerCase().includes(searchTerm.toLowerCase());
+
+  const filteredVendedores = vendedores.filter(matchTexto);
+  const filteredTransportadoras = transportadoras.filter(matchTexto);
+  const filteredUsuarios = usuarios.filter((u: any) =>
+    u.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.telefone?.includes(searchTerm)
+  );
+
   // Aplicar ordenação para Todos
-  let todosItens = [
+  let todosItens: any[] = [
     ...filteredContatos.map(c => ({ ...c, type: 'contato' as const })),
-    ...filteredEmpresas.map(e => ({ ...e, type: 'empresa' as const }))
+    ...filteredEmpresas.map(e => ({ ...e, type: 'empresa' as const })),
+    ...filteredVendedores.map(e => ({ ...e, type: 'vendedor' as const })),
+    ...filteredTransportadoras.map(e => ({ ...e, type: 'transportadora' as const })),
+    ...filteredUsuarios.map(u => ({ ...u, type: 'usuario' as const })),
   ];
 
   if (todosSortConfig) {
