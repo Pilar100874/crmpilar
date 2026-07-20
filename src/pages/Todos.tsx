@@ -444,35 +444,24 @@ export default function Todos() {
     ...filteredUsuarios.map(u => ({ ...u, type: 'usuario' as const })),
   ];
 
+  const getNome = (a: any) => (a.type === 'contato' || a.type === 'usuario') ? (a.nome || '') : (a.nome_fantasia || a.nome || '');
+
   if (todosSortConfig) {
     todosItens = [...todosItens].sort((a, b) => {
-      let aValue, bValue;
+      let aValue = '', bValue = '';
       if (todosSortConfig.key === 'nome') {
-        aValue = a.type === 'contato' ? a.nome : a.nome_fantasia;
-        bValue = b.type === 'contato' ? b.nome : b.nome_fantasia;
+        aValue = getNome(a); bValue = getNome(b);
       } else if (todosSortConfig.key === 'email') {
-        aValue = a.email || '';
-        bValue = b.email || '';
+        aValue = a.email || ''; bValue = b.email || '';
       } else if (todosSortConfig.key === 'telefone') {
-        aValue = a.telefone || '';
-        bValue = b.telefone || '';
-      } else {
-        aValue = '';
-        bValue = '';
+        aValue = a.telefone || ''; bValue = b.telefone || '';
       }
-      
-      if (todosSortConfig.direction === 'asc') {
-        return aValue.localeCompare(bValue);
-      } else {
-        return bValue.localeCompare(aValue);
-      }
+      return todosSortConfig.direction === 'asc'
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
     });
   } else {
-    todosItens = todosItens.sort((a, b) => {
-      const nomeA = a.type === 'contato' ? (a.nome || '') : (a.nome_fantasia || '');
-      const nomeB = b.type === 'contato' ? (b.nome || '') : (b.nome_fantasia || '');
-      return nomeA.localeCompare(nomeB);
-    });
+    todosItens = todosItens.sort((a, b) => getNome(a).localeCompare(getNome(b)));
   }
 
   // Aplicar ordenação para Contatos
