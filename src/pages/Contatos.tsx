@@ -552,10 +552,12 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         customFields: {
           ...r.custom_fields,
           empresa_id: r.empresa_id,
+          tipo_operador: r.tipo_operador,
           company_name: r.empresas?.nome_fantasia || r.custom_fields?.company_name,
           company_fantasia: r.empresas?.nome_fantasia || r.custom_fields?.company_fantasia,
           cpf_cnpj: r.empresas?.cnpj || r.custom_fields?.cpf_cnpj,
         },
+
         active: true,
         segmentos: segmentsByCustomer[r.id] || [],
       }));
