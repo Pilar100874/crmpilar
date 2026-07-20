@@ -5977,19 +5977,28 @@ export type Database = {
           cnpj: string | null
           created_at: string | null
           custom_fields: Json | null
+          data_fundacao: string | null
           email: string | null
           emails_vinculados: string[] | null
           endereco: string | null
           estabelecimento_id: string | null
           estado: string | null
+          faturamento_estimado: string | null
+          funcionarios_estimado: string | null
           id: string
           latitude: number | null
           longitude: number | null
           nome: string | null
           nome_fantasia: string | null
           origem_prospeccao: string | null
+          porte: string | null
+          prioridade: string | null
+          produtos_interesse: Json | null
+          score_motivo: string | null
+          score_prospect: number | null
           segmento_id: string | null
           site: string | null
+          situacao_cadastral: string | null
           status_comercial: string
           telefone: string | null
           tipo_cliente: string
@@ -6007,19 +6016,28 @@ export type Database = {
           cnpj?: string | null
           created_at?: string | null
           custom_fields?: Json | null
+          data_fundacao?: string | null
           email?: string | null
           emails_vinculados?: string[] | null
           endereco?: string | null
           estabelecimento_id?: string | null
           estado?: string | null
+          faturamento_estimado?: string | null
+          funcionarios_estimado?: string | null
           id?: string
           latitude?: number | null
           longitude?: number | null
           nome?: string | null
           nome_fantasia?: string | null
           origem_prospeccao?: string | null
+          porte?: string | null
+          prioridade?: string | null
+          produtos_interesse?: Json | null
+          score_motivo?: string | null
+          score_prospect?: number | null
           segmento_id?: string | null
           site?: string | null
+          situacao_cadastral?: string | null
           status_comercial?: string
           telefone?: string | null
           tipo_cliente?: string
@@ -6037,19 +6055,28 @@ export type Database = {
           cnpj?: string | null
           created_at?: string | null
           custom_fields?: Json | null
+          data_fundacao?: string | null
           email?: string | null
           emails_vinculados?: string[] | null
           endereco?: string | null
           estabelecimento_id?: string | null
           estado?: string | null
+          faturamento_estimado?: string | null
+          funcionarios_estimado?: string | null
           id?: string
           latitude?: number | null
           longitude?: number | null
           nome?: string | null
           nome_fantasia?: string | null
           origem_prospeccao?: string | null
+          porte?: string | null
+          prioridade?: string | null
+          produtos_interesse?: Json | null
+          score_motivo?: string | null
+          score_prospect?: number | null
           segmento_id?: string | null
           site?: string | null
+          situacao_cadastral?: string | null
           status_comercial?: string
           telefone?: string | null
           tipo_cliente?: string
@@ -16781,24 +16808,41 @@ export type Database = {
           cnae_descricao: string | null
           cnae_principal: string | null
           cnpj: string | null
+          contato_cargo: string | null
+          contato_email: string | null
+          contato_nome: string | null
+          contato_telefone: string | null
           created_at: string
+          data_fundacao: string | null
           descricao: string | null
           email: string | null
           empresa_id: string | null
           endereco: string | null
           estado: string | null
           extras: Json | null
+          faturamento_estimado: string | null
           fontes: Json | null
+          funcionarios_estimado: string | null
           id: string
           importado_em: string | null
+          latitude: number | null
+          longitude: number | null
           nome: string
           nome_fantasia: string | null
+          observacoes_internas: string | null
           origem: string | null
+          porte: string | null
+          prioridade: string | null
+          produtos_interesse: Json | null
           redes_sociais: Json | null
+          score: number | null
+          score_motivo: string | null
           segmento_id: string | null
           segmento_nome: string | null
           site: string | null
+          situacao_cadastral: string | null
           status: string
+          tags: Json | null
           telefone: string | null
           updated_at: string
           user_id: string
@@ -16811,24 +16855,41 @@ export type Database = {
           cnae_descricao?: string | null
           cnae_principal?: string | null
           cnpj?: string | null
+          contato_cargo?: string | null
+          contato_email?: string | null
+          contato_nome?: string | null
+          contato_telefone?: string | null
           created_at?: string
+          data_fundacao?: string | null
           descricao?: string | null
           email?: string | null
           empresa_id?: string | null
           endereco?: string | null
           estado?: string | null
           extras?: Json | null
+          faturamento_estimado?: string | null
           fontes?: Json | null
+          funcionarios_estimado?: string | null
           id?: string
           importado_em?: string | null
+          latitude?: number | null
+          longitude?: number | null
           nome: string
           nome_fantasia?: string | null
+          observacoes_internas?: string | null
           origem?: string | null
+          porte?: string | null
+          prioridade?: string | null
+          produtos_interesse?: Json | null
           redes_sociais?: Json | null
+          score?: number | null
+          score_motivo?: string | null
           segmento_id?: string | null
           segmento_nome?: string | null
           site?: string | null
+          situacao_cadastral?: string | null
           status?: string
+          tags?: Json | null
           telefone?: string | null
           updated_at?: string
           user_id: string
@@ -16841,24 +16902,41 @@ export type Database = {
           cnae_descricao?: string | null
           cnae_principal?: string | null
           cnpj?: string | null
+          contato_cargo?: string | null
+          contato_email?: string | null
+          contato_nome?: string | null
+          contato_telefone?: string | null
           created_at?: string
+          data_fundacao?: string | null
           descricao?: string | null
           email?: string | null
           empresa_id?: string | null
           endereco?: string | null
           estado?: string | null
           extras?: Json | null
+          faturamento_estimado?: string | null
           fontes?: Json | null
+          funcionarios_estimado?: string | null
           id?: string
           importado_em?: string | null
+          latitude?: number | null
+          longitude?: number | null
           nome?: string
           nome_fantasia?: string | null
+          observacoes_internas?: string | null
           origem?: string | null
+          porte?: string | null
+          prioridade?: string | null
+          produtos_interesse?: Json | null
           redes_sociais?: Json | null
+          score?: number | null
+          score_motivo?: string | null
           segmento_id?: string | null
           segmento_nome?: string | null
           site?: string | null
+          situacao_cadastral?: string | null
           status?: string
+          tags?: Json | null
           telefone?: string | null
           updated_at?: string
           user_id?: string
