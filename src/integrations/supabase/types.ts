@@ -18433,6 +18433,7 @@ export type Database = {
           created_at: string | null
           estabelecimento_id: string | null
           id: string
+          is_prospect: boolean
           nome: string
           updated_at: string | null
         }
@@ -18440,6 +18441,7 @@ export type Database = {
           created_at?: string | null
           estabelecimento_id?: string | null
           id?: string
+          is_prospect?: boolean
           nome: string
           updated_at?: string | null
         }
@@ -18447,6 +18449,7 @@ export type Database = {
           created_at?: string | null
           estabelecimento_id?: string | null
           id?: string
+          is_prospect?: boolean
           nome?: string
           updated_at?: string | null
         }
