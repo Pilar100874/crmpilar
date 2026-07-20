@@ -113,12 +113,14 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
       } else if ((data as any).modo === 'prompt') {
         toast.info('Prompt gerado — copie e cole no Claude Code / ChatGPT / Cursor');
       }
+      onCompleted?.();
     } catch (e: any) {
       toast.error(e?.message ?? 'Erro ao executar wizard');
     } finally {
       setLoading(false);
     }
   };
+
 
   const copiarPrompt = () => {
     if (!result?.prompt) return;
