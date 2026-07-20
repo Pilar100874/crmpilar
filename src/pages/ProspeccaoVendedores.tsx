@@ -619,6 +619,13 @@ export default function ProspeccaoVendedores() {
         title="Excluir prospecção"
         description="Tem certeza que deseja excluir este representante da prospecção?"
       />
+      <DeleteConfirmDialog
+        open={confirmClearAll}
+        onOpenChange={setConfirmClearAll}
+        onConfirm={limparTudo}
+        title="Limpar toda a lista"
+        description={`Excluir ${filtradas.length} registro(s) da prospecção de vendedores? Esta ação não pode ser desfeita.`}
+      />
     </div>
   );
 }
