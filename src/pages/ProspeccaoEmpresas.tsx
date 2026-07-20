@@ -305,6 +305,45 @@ export default function ProspeccaoEmpresas() {
         errosDetalhe.push(`${nome}: ${error?.message || 'erro'}`);
         continue;
       }
+
+      // Vincular segmento de prospect (find-or-create com is_prospect=true)
+      const segNome = (r.segmento_nome || '').trim();
+      if (segNome) {
+        try {
+          let segId: string | null = null;
+          const { data: existente } = await supabase
+            .from('segmentos')
+            .select('id, is_prospect')
+            .eq('estabelecimento_id', estabId)
+            .ilike('nome', segNome)
+            .maybeSingle();
+          if (existente?.id) {
+            segId = existente.id;
+            if (!(existente as any).is_prospect) {
+              await supabase.from('segmentos').update({ is_prospect: true } as any).eq('id', segId);
+            }
+          } else {
+            const { data: novo } = await supabase
+              .from('segmentos')
+              .insert({ nome: segNome, estabelecimento_id: estabId, is_prospect: true } as any)
+              .select('id')
+              .single();
+            segId = novo?.id ?? null;
+          }
+          if (segId) {
+            await supabase
+              .from('empresa_vinculos')
+              .insert({
+                empresa_id: emp.id,
+                segmento_id: segId,
+                estabelecimento_id: estabId,
+              } as any);
+          }
+        } catch (e) {
+          console.warn('Falha ao vincular segmento prospect', e);
+        }
+      }
+
       await supabase
         .from('prospeccao_empresas')
         .update({ empresa_id: emp.id, status: 'importado', importado_em: new Date().toISOString() })
