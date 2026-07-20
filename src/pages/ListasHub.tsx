@@ -125,7 +125,8 @@ const ListasHub: React.FC = () => {
       case 'prospeccao-empresas':
         return <ProspeccaoEmpresas />;
       case 'wizard-prospeccao':
-        return <WizardProspeccao />;
+        return <ProspeccaoEmpresas />;
+
       case 'config-ia-prospec':
         return <ConfigIAProspec />;
 
