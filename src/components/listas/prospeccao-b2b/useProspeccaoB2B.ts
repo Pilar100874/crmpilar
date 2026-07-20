@@ -482,6 +482,61 @@ export function useProspeccaoB2B() {
     }
   };
 
+  // Importar prospect(s) B2B para o cadastro de Empresas como "prospect"
+  const importarParaEmpresas = async (prospectIds: string[]): Promise<{ ok: number; fail: number; jaImportados: number }> => {
+    if (!estabelecimentoId) return { ok: 0, fail: 0, jaImportados: 0 };
+    let ok = 0, fail = 0, jaImportados = 0;
+
+    for (const pid of prospectIds) {
+      const p = prospects.find(x => x.id === pid) as any;
+      if (!p) { fail++; continue; }
+      if (p.empresa_id) { jaImportados++; continue; }
+
+      const { data: emp, error } = await supabase
+        .from('empresas')
+        .insert({
+          estabelecimento_id: estabelecimentoId,
+          nome: p.nome,
+          nome_fantasia: p.nome,
+          telefone: p.telefone,
+          endereco: p.endereco_completo,
+          cidade: p.cidade,
+          estado: p.estado,
+          cep: p.cep,
+          latitude: p.latitude,
+          longitude: p.longitude,
+          site: p.website,
+          status_comercial: 'prospect',
+          origem_prospeccao: p.fonte_dados || 'google_places',
+          tipo_cliente: 'B2B',
+          custom_fields: {
+            categoria: p.categoria,
+            rating: p.rating,
+            total_avaliacoes: p.total_avaliacoes,
+            google_maps_link: p.google_maps_link,
+            place_id: p.place_id,
+          },
+        } as any)
+        .select('id')
+        .single();
+
+      if (error || !emp) { fail++; continue; }
+
+      await supabase
+        .from('prospects_b2b')
+        .update({ empresa_id: emp.id, status_lead: 'cliente' } as any)
+        .eq('id', pid);
+
+      setProspects(prev => prev.map(x => x.id === pid ? { ...x, empresa_id: emp.id, status_lead: 'cliente' } as any : x));
+      ok++;
+    }
+
+    if (ok) toast({ title: 'Importado', description: `${ok} empresa(s) criadas como prospect no CRM` });
+    if (fail) toast({ title: 'Atenção', description: `${fail} falharam`, variant: 'destructive' });
+    if (jaImportados) toast({ title: 'Já importados', description: `${jaImportados} já estavam no CRM` });
+
+    return { ok, fail, jaImportados };
+
   // Calcular gastos
   const getGastosInfo = useCallback(() => {
     const cfg = config as any;
