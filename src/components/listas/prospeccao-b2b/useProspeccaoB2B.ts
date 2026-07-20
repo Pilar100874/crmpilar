@@ -588,6 +588,7 @@ export function useProspeccaoB2B() {
     searchPlaces,
     updateProspectStatus,
     deleteProspect,
+    importarParaEmpresas,
     getGastosInfo
   };
 }
