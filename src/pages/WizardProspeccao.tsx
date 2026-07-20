@@ -64,10 +64,16 @@ const PROVIDER_LABELS: Record<Provider, string> = {
   anthropic: 'Anthropic (Claude 3.5 Sonnet + Web Search)',
 };
 
-export default function WizardProspeccao() {
+interface WizardProspeccaoProps {
+  embedded?: boolean;
+  onCompleted?: () => void;
+}
+
+export default function WizardProspeccao({ embedded = false, onCompleted }: WizardProspeccaoProps = {}) {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormState>(initialState);
+
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ modo: string; inseridas?: number; prompt?: string; motivo?: string; aviso?: string } | null>(null);
   const [providers, setProviders] = useState<Record<Provider, boolean>>({ lovable: true, openai: false, anthropic: false });
