@@ -373,6 +373,10 @@
             "observacoes_internas": {
               "type": "string"
             },
+            "origem": {
+              "type": "string",
+              "description": "Origem do lead. Use 'vendedor' para representantes comerciais, 'claude-code' (default) para empresas."
+            },
             "extras": {
               "type": "object",
               "additionalProperties": {},

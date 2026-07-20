@@ -238,6 +238,7 @@ var EmpresaSchema = z4.object({
   longitude: z4.number().optional(),
   tags: z4.array(z4.string()).optional(),
   observacoes_internas: z4.string().optional(),
+  origem: z4.string().optional().describe("Origem do lead. Use 'vendedor' para representantes comerciais, 'claude-code' (default) para empresas."),
   extras: z4.record(z4.any()).optional().describe("Qualquer dado extra relevante em JSON.")
 });
 var add_prospeccao_empresa_default = defineTool5({
