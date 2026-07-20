@@ -1719,6 +1719,20 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                                 >
                                   <Edit className="w-4 h-4" />
                                 </Button>
+                                {((empresa as any).status_comercial === 'prospect' || (empresa as any).status_comercial === 'lead_qualificado') && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-8 px-2 rounded-full hover:bg-green-600 hover:text-white transition-all duration-200 border-green-600/30 text-green-700"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setConvertProspect(empresa);
+                                    }}
+                                    title="Converter em cliente"
+                                  >
+                                    <UserCheck className="w-4 h-4" />
+                                  </Button>
+                                )}
                                 <Button
                                   size="sm"
                                   variant="outline"
