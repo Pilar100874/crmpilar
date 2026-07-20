@@ -216,7 +216,7 @@ export default function ProspeccaoEmpresas() {
       let uf = normUF(r.estado);
       const email = normEmail(r.email);
       const whatsapp = normWhats(r.whatsapp || r.telefone);
-      const telefone = normWhats(r.telefone) || whatsapp;
+      let telefone = normWhats(r.telefone);
       const site = normSite(r.site);
 
       let nome = r.nome?.trim() || '';
@@ -248,8 +248,16 @@ export default function ProspeccaoEmpresas() {
           cep = cep || normCEP(receita.cep);
           cnae_principal = cnae_principal || (receita.cnae_fiscal ? String(receita.cnae_fiscal) : null);
           cnae_descricao = cnae_descricao || receita.cnae_fiscal_descricao || null;
+          // Enriquecer telefone a partir da Receita se ainda não temos
+          if (!telefone) {
+            const telReceita = normWhats(receita.ddd_telefone_1 || receita.ddd_telefone_2 || '');
+            if (telReceita) telefone = telReceita;
+          }
         }
       }
+
+      // Fallback: se ainda não temos telefone, usar o whatsapp
+      if (!telefone) telefone = whatsapp;
 
       // ===== 3) Enriquecer via CEP (ViaCEP) se ainda faltar endereço/cidade/UF =====
       if (cep && (!endereco || !cidade || !uf || !bairro)) {

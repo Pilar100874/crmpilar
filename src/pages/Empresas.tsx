@@ -190,7 +190,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   // Lista final de campos para renderização (prioriza configurações do banco)
   const formFieldsToRender = React.useMemo(() => {
     if (fieldConfigsFromDB && fieldConfigsFromDB.length > 0) {
-      return fieldConfigsFromDB.map((cfg: any): CustomField => {
+      const mapped = fieldConfigsFromDB.map((cfg: any): CustomField => {
         let optionsParsed: any = cfg.options;
         try {
           if (typeof optionsParsed === 'string') {
@@ -216,6 +216,22 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           locked: !!cfg.locked,
         };
       });
+      // Garante que campos padrão (ex.: whatsapp) apareçam mesmo em estabelecimentos
+      // cujos form_field_configs foram criados antes do campo existir.
+      const existingIds = new Set(mapped.map((f) => f.id));
+      const missingStandard = companyFields.filter((f) => !existingIds.has(f.id));
+      if (missingStandard.length === 0) return mapped;
+      const result = [...mapped];
+      for (const f of missingStandard) {
+        if (f.id === 'whatsapp') {
+          const idx = result.findIndex((x) => x.id === 'telefone');
+          if (idx >= 0) result.splice(idx + 1, 0, f);
+          else result.push(f);
+        } else {
+          result.push(f);
+        }
+      }
+      return result;
     }
     return companyFields;
   }, [fieldConfigsFromDB, companyFields]);
