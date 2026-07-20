@@ -66,6 +66,7 @@ const tabItems: TabItem[] = [
   { id: 'mapa-clientes', label: 'Mapa Clientes', icon: MapPin, description: 'Visualização geográfica das empresas' },
   { id: 'prospeccao-b2b', label: 'Prospecção B2B', icon: Target, description: 'Busca de empresas por região e segmento' },
   { id: 'prospeccao-empresas', label: 'Prospecção Via Cloud Code / Cursor ou ChatGPT', icon: Wand2, description: 'Wizard de prospecção + empresas trazidas via Claude Code / Cursor / ChatGPT para revisar e importar' },
+  { id: 'prospeccao-vendedores', label: 'Prospecção de Representantes / Vendedores', icon: UserSearch, description: 'Prompt guiado para prospectar representantes comerciais via Claude Code / Cursor / ChatGPT' },
   { id: 'config-ia-prospec', label: 'Configurar IAs de Prospecção', icon: Sparkles, description: 'Insira as chaves das IAs (OpenAI, Anthropic) usadas no Wizard' },
   { id: 'prospeccao-claude-code', label: 'Disponibilizar dados p/ Cloud Code / Cursor / ChatGPT', icon: Bot, description: 'Configure quais tabelas do sistema ficam disponíveis para consulta via MCP (Claude Code, Cursor, ChatGPT)' },
   
