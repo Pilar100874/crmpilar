@@ -175,6 +175,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
     { id: "telefone", label: "Telefone", type: "phone", category: "company", required: false, locked: true },
     { id: "whatsapp", label: "WhatsApp", type: "phone", category: "company", required: false, locked: true },
     { id: "email", label: "E-mail", type: "email", category: "company", required: false, locked: true },
+    { id: "site", label: "Site", type: "text", category: "company", required: false, locked: true },
   ]);
 
   const [contactFields, setContactFields] = useState<CustomField[]>([
