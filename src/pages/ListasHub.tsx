@@ -11,8 +11,10 @@ import {
   LucideIcon,
   MapPin,
   Target,
-  Bot
+  Bot,
+  Wand2
 } from 'lucide-react';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -35,6 +37,8 @@ import { ProspeccaoB2BView } from '@/components/listas/prospeccao-b2b';
 import ProspeccaoClaudeCode from './ProspeccaoClaudeCode';
 import ProspeccaoEmpresas from './ProspeccaoEmpresas';
 import VinculosSegmentoProspectUsuario from './VinculosSegmentoProspectUsuario';
+import WizardProspeccao from './WizardProspeccao';
+
 
 interface TabItem {
   id: string;
@@ -56,6 +60,7 @@ const tabItems: TabItem[] = [
   { id: 'vinculos-segmento-prospect-usuario', label: 'Vínculo Segmento Prospect x Usuário', icon: Link2, description: 'Direcione o atendimento de prospects por segmento a usuários' },
   { id: 'mapa-clientes', label: 'Mapa Clientes', icon: MapPin, description: 'Visualização geográfica das empresas' },
   { id: 'prospeccao-b2b', label: 'Prospecção B2B', icon: Target, description: 'Busca de empresas por região e segmento' },
+  { id: 'wizard-prospeccao', label: 'Wizard de Prospecção', icon: Wand2, description: 'Preencha critérios e o sistema pesquisa prospects na web (via OpenAI ou prompt p/ Claude/ChatGPT/Cursor)' },
   { id: 'prospeccao-claude-code', label: 'Disponibilizar dados p/ Cloud Code / Cursor / ChatGPT', icon: Bot, description: 'Configure quais tabelas do sistema ficam disponíveis para consulta via MCP (Claude Code, Cursor, ChatGPT)' },
   { id: 'prospeccao-empresas', label: 'Prospecção Via Cloud Code / Cursor ou ChatGPT', icon: Target, description: 'Empresas trazidas via Claude Code / Cursor / ChatGPT para revisar e importar' },
 ];
@@ -115,6 +120,9 @@ const ListasHub: React.FC = () => {
         return <ProspeccaoClaudeCode />;
       case 'prospeccao-empresas':
         return <ProspeccaoEmpresas />;
+      case 'wizard-prospeccao':
+        return <WizardProspeccao />;
+
       default:
         return null;
     }
