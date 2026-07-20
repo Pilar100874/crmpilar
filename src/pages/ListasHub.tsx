@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { 
-  FileText, 
-  User, 
-  Building2, 
-  Users, 
+import {
+  FileText,
+  User,
+  Building2,
+  Users,
   Link2,
   PanelLeft,
   PanelLeftClose,
@@ -14,18 +14,17 @@ import {
   Bot,
   Wand2,
   Sparkles,
-  UserSearch
-
+  UserSearch,
+  Truck,
+  UserCog,
 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectLabel, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-
-import { Truck, UserCog } from 'lucide-react';
 
 // Import existing components
 import Contatos from './Contatos';
@@ -40,43 +39,72 @@ import { ProspeccaoB2BView } from '@/components/listas/prospeccao-b2b';
 import ProspeccaoClaudeCode from './ProspeccaoClaudeCode';
 import ProspeccaoEmpresas from './ProspeccaoEmpresas';
 import VinculosSegmentoProspectUsuario from './VinculosSegmentoProspectUsuario';
-import WizardProspeccao from './WizardProspeccao';
 import ConfigIAProspec from './ConfigIAProspec';
 import ProspeccaoVendedores from './ProspeccaoVendedores';
-
 
 interface TabItem {
   id: string;
   label: string;
+  shortLabel?: string;
   icon: LucideIcon;
   description: string;
 }
 
-const tabItems: TabItem[] = [
-  { id: 'contatos', label: 'Contatos', icon: User, description: 'Gestão de contatos' },
-  { id: 'empresas', label: 'Empresas', icon: Building2, description: 'Gestão de empresas' },
-  { id: 'vendedores', label: 'Vendedores', icon: UserCog, description: 'Gestão de vendedores' },
-  { id: 'transportadoras', label: 'Transportadoras', icon: Truck, description: 'Gestão de transportadoras' },
-  { id: 'todos', label: 'Todos', icon: Users, description: 'Visualização de todos os registros' },
-  { id: 'vinculos-empresas', label: 'Vínculo Empresas', icon: Link2, description: 'Vínculo Empresas X Usuário / Segmento' },
-  { id: 'vinculos-contatos', label: 'Vínculo Contatos', icon: Link2, description: 'Vínculo Contatos X Usuário' },
-  { id: 'vinculos-empresa-vendedor', label: 'Vínculo Emp. x Vendedor', icon: Link2, description: 'Vínculo Empresas X Vendedor' },
-  { id: 'vinculos-vendedor-usuario', label: 'Vínculo Vend. x Usuário', icon: Link2, description: 'Vínculo Vendedores X Usuário' },
-  { id: 'vinculos-segmento-prospect-usuario', label: 'Vínculo Segmento Prospect x Usuário', icon: Link2, description: 'Direcione o atendimento de prospects por segmento a usuários' },
-  { id: 'mapa-clientes', label: 'Mapa Clientes', icon: MapPin, description: 'Visualização geográfica das empresas' },
-  { id: 'prospeccao-b2b', label: 'Prospecção B2B', icon: Target, description: 'Busca de empresas por região e segmento' },
-  { id: 'prospeccao-empresas', label: 'Prospecção Via Cloud Code / Cursor ou ChatGPT', icon: Wand2, description: 'Wizard de prospecção + empresas trazidas via Claude Code / Cursor / ChatGPT para revisar e importar' },
-  { id: 'prospeccao-vendedores', label: 'Prospecção de Representantes / Vendedores', icon: UserSearch, description: 'Prompt guiado para prospectar representantes comerciais via Claude Code / Cursor / ChatGPT' },
-  { id: 'config-ia-prospec', label: 'Configurar IAs de Prospecção', icon: Sparkles, description: 'Insira as chaves das IAs (OpenAI, Anthropic) usadas no Wizard' },
-  { id: 'prospeccao-claude-code', label: 'Disponibilizar dados p/ Cloud Code / Cursor / ChatGPT', icon: Bot, description: 'Configure quais tabelas do sistema ficam disponíveis para consulta via MCP (Claude Code, Cursor, ChatGPT)' },
-  
+interface TabSection {
+  id: string;
+  title: string;
+  items: TabItem[];
+}
+
+const sections: TabSection[] = [
+  {
+    id: 'cadastros',
+    title: 'Cadastros',
+    items: [
+      { id: 'contatos', label: 'Contatos', icon: User, description: 'Gestão de contatos' },
+      { id: 'empresas', label: 'Empresas', icon: Building2, description: 'Gestão de empresas' },
+      { id: 'vendedores', label: 'Vendedores', icon: UserCog, description: 'Gestão de vendedores' },
+      { id: 'transportadoras', label: 'Transportadoras', icon: Truck, description: 'Gestão de transportadoras' },
+      { id: 'todos', label: 'Todos', icon: Users, description: 'Visualização de todos os registros' },
+    ],
+  },
+  {
+    id: 'vinculos',
+    title: 'Vínculos',
+    items: [
+      { id: 'vinculos-empresas', label: 'Vínculo Empresas', shortLabel: 'Emp. x Usuário', icon: Link2, description: 'Vínculo Empresas X Usuário / Segmento' },
+      { id: 'vinculos-contatos', label: 'Vínculo Contatos', shortLabel: 'Contatos x Usuário', icon: Link2, description: 'Vínculo Contatos X Usuário' },
+      { id: 'vinculos-empresa-vendedor', label: 'Vínculo Emp. x Vendedor', shortLabel: 'Emp. x Vendedor', icon: Link2, description: 'Vínculo Empresas X Vendedor' },
+      { id: 'vinculos-vendedor-usuario', label: 'Vínculo Vend. x Usuário', shortLabel: 'Vend. x Usuário', icon: Link2, description: 'Vínculo Vendedores X Usuário' },
+      { id: 'vinculos-segmento-prospect-usuario', label: 'Segmento Prospect x Usuário', shortLabel: 'Segm. Prospect x Usuário', icon: Link2, description: 'Direcione o atendimento de prospects por segmento a usuários' },
+    ],
+  },
+  {
+    id: 'geo',
+    title: 'Geolocalização',
+    items: [
+      { id: 'mapa-clientes', label: 'Mapa Clientes', icon: MapPin, description: 'Visualização geográfica das empresas' },
+    ],
+  },
+  {
+    id: 'prospeccao',
+    title: 'Prospecção',
+    items: [
+      { id: 'prospeccao-b2b', label: 'Prospecção B2B', icon: Target, description: 'Busca de empresas por região e segmento' },
+      { id: 'prospeccao-empresas', label: 'Prospecção Empresas (IA)', shortLabel: 'Prospecção Empresas', icon: Wand2, description: 'Wizard + empresas trazidas via Claude Code / Cursor / ChatGPT' },
+      { id: 'prospeccao-vendedores', label: 'Prospecção Representantes', shortLabel: 'Representantes', icon: UserSearch, description: 'Prompt guiado para prospectar representantes comerciais' },
+      { id: 'config-ia-prospec', label: 'Configurar IAs', icon: Sparkles, description: 'Insira as chaves das IAs (OpenAI, Anthropic) usadas no Wizard' },
+      { id: 'prospeccao-claude-code', label: 'Disponibilizar dados p/ IA', shortLabel: 'Dados p/ IA (MCP)', icon: Bot, description: 'Configure quais tabelas ficam disponíveis via MCP' },
+    ],
+  },
 ];
+
+const tabItems: TabItem[] = sections.flatMap(s => s.items);
 
 const ListasHub: React.FC = () => {
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const idParam = searchParams.get('id');
-  
+
   const resolveTab = (t: string | null) => (t === 'wizard-prospeccao' ? 'prospeccao-empresas' : t);
   const [activeTab, setActiveTab] = useState(() => {
     const validTabs = tabItems.map(t => t.id);
@@ -85,7 +113,6 @@ const ListasHub: React.FC = () => {
   });
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
 
-  // Atualiza a aba ativa quando o parâmetro de URL muda
   useEffect(() => {
     if (tabParam) {
       const validTabs = tabItems.map(t => t.id);
@@ -96,162 +123,184 @@ const ListasHub: React.FC = () => {
     }
   }, [tabParam]);
 
-
   const currentTabItem = tabItems.find(t => t.id === activeTab) || tabItems[0];
   const CurrentIcon = currentTabItem.icon;
+  const currentSection = sections.find(s => s.items.some(i => i.id === activeTab));
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'contatos':
-        return <Contatos />;
-      case 'empresas':
-        return <Empresas />;
-      case 'vendedores':
-        return <Empresas variant="vendedor" />;
-      case 'transportadoras':
-        return <Empresas variant="transportadora" />;
-      case 'todos':
-        return <Todos />;
-      case 'vinculos-empresas':
-        return <VinculosEmpresas />;
-      case 'vinculos-contatos':
-        return <VinculosContatos />;
-      case 'vinculos-empresa-vendedor':
-        return <VinculosEmpresaVendedor />;
-      case 'vinculos-vendedor-usuario':
-        return <VinculosVendedorUsuario />;
-      case 'vinculos-segmento-prospect-usuario':
-        return <VinculosSegmentoProspectUsuario />;
-      case 'mapa-clientes':
-        return <MapaClientesView />;
-      case 'prospeccao-b2b':
-        return <ProspeccaoB2BView />;
-      case 'prospeccao-claude-code':
-        return <ProspeccaoClaudeCode />;
+      case 'contatos': return <Contatos />;
+      case 'empresas': return <Empresas />;
+      case 'vendedores': return <Empresas variant="vendedor" />;
+      case 'transportadoras': return <Empresas variant="transportadora" />;
+      case 'todos': return <Todos />;
+      case 'vinculos-empresas': return <VinculosEmpresas />;
+      case 'vinculos-contatos': return <VinculosContatos />;
+      case 'vinculos-empresa-vendedor': return <VinculosEmpresaVendedor />;
+      case 'vinculos-vendedor-usuario': return <VinculosVendedorUsuario />;
+      case 'vinculos-segmento-prospect-usuario': return <VinculosSegmentoProspectUsuario />;
+      case 'mapa-clientes': return <MapaClientesView />;
+      case 'prospeccao-b2b': return <ProspeccaoB2BView />;
+      case 'prospeccao-claude-code': return <ProspeccaoClaudeCode />;
       case 'prospeccao-empresas':
-        return <ProspeccaoEmpresas />;
       case 'wizard-prospeccao':
         return <ProspeccaoEmpresas />;
-      case 'prospeccao-vendedores':
-        return <ProspeccaoVendedores />;
-
-
-      case 'config-ia-prospec':
-        return <ConfigIAProspec />;
-
-      default:
-        return null;
+      case 'prospeccao-vendedores': return <ProspeccaoVendedores />;
+      case 'config-ia-prospec': return <ConfigIAProspec />;
+      default: return null;
     }
   };
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="border-b bg-card px-3 sm:px-6 py-3 sm:py-4">
-        <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
-          <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-          Listas
-        </h1>
-        <p className="text-muted-foreground text-xs sm:text-sm mt-1">
-          Gestão de contatos, empresas e vínculos
-        </p>
+    <div className="h-full flex flex-col bg-muted/20">
+      {/* Header com gradiente */}
+      <div className="border-b bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-3 sm:px-6 py-3 sm:py-4">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center shrink-0">
+            <FileText className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg sm:text-2xl font-bold tracking-tight truncate">Listas</h1>
+            <p className="text-muted-foreground text-xs sm:text-sm truncate">
+              Gestão de contatos, empresas, vínculos e prospecção
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="flex-1 overflow-hidden">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col lg:flex-row">
-          {/* Mobile: Select dropdown */}
-          <div className="lg:hidden border-b bg-muted/30 p-3">
+          {/* Mobile & Tablet: Select agrupado */}
+          <div className="lg:hidden border-b bg-card/60 backdrop-blur p-3 sticky top-0 z-10">
             <Select value={activeTab} onValueChange={setActiveTab}>
-              <SelectTrigger className="w-full bg-background">
+              <SelectTrigger className="w-full bg-background h-11">
                 <SelectValue>
-                  <div className="flex items-center gap-2">
-                    <CurrentIcon className="h-4 w-4" />
-                    <span>{currentTabItem.label}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <CurrentIcon className="h-4 w-4 shrink-0 text-primary" />
+                    <span className="truncate">{currentTabItem.label}</span>
+                    {currentSection && (
+                      <span className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground shrink-0 hidden sm:inline">
+                        {currentSection.title}
+                      </span>
+                    )}
                   </div>
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent className="bg-popover">
-                {tabItems.map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <SelectItem key={tab.id} value={tab.id}>
-                      <div className="flex items-center gap-2">
-                        <Icon className="h-4 w-4" />
-                        <span>{tab.label}</span>
-                      </div>
-                    </SelectItem>
-                  );
-                })}
+              <SelectContent className="bg-popover max-h-[70vh]">
+                {sections.map((section) => (
+                  <SelectGroup key={section.id}>
+                    <SelectLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {section.title}
+                    </SelectLabel>
+                    {section.items.map((tab) => {
+                      const Icon = tab.icon;
+                      return (
+                        <SelectItem key={tab.id} value={tab.id}>
+                          <div className="flex items-center gap-2">
+                            <Icon className="h-4 w-4 text-muted-foreground" />
+                            <span>{tab.label}</span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectGroup>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Desktop: Sidebar menu */}
-          <div className={cn(
-            "hub-menu hidden lg:flex lg:flex-col lg:p-3 lg:gap-1 lg:overflow-y-auto lg:shrink-0 transition-all duration-300",
-            isMenuCollapsed ? "lg:w-16" : "lg:w-64"
+          {/* Desktop: Sidebar com seções */}
+          <aside className={cn(
+            "hub-menu hidden lg:flex lg:flex-col lg:overflow-y-auto lg:shrink-0 border-r bg-card transition-all duration-300",
+            isMenuCollapsed ? "lg:w-14" : "lg:w-64"
           )}>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setIsMenuCollapsed(!isMenuCollapsed)} 
-              className="mb-2 self-end"
-            >
-              {isMenuCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-            </Button>
+            <div className="flex items-center justify-end p-2 border-b">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsMenuCollapsed(!isMenuCollapsed)}
+                className="h-8 w-8"
+                title={isMenuCollapsed ? 'Expandir menu' : 'Recolher menu'}
+              >
+                {isMenuCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+              </Button>
+            </div>
+
             <TooltipProvider delayDuration={0}>
-              {tabItems.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                const menuButton = (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={cn(
-                      "hub-menu-item flex items-center gap-3 px-3 py-2.5 text-left w-full text-muted-foreground",
-                      isActive && "is-active",
-                      isMenuCollapsed && "justify-center"
+              <nav className="flex-1 p-2 space-y-4">
+                {sections.map((section) => (
+                  <div key={section.id} className="space-y-1">
+                    {!isMenuCollapsed && (
+                      <div className="px-2 pt-1 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                        {section.title}
+                      </div>
                     )}
-                  >
-                    <Icon className={cn("h-4 w-4 shrink-0", !isActive && "opacity-70")} />
-                    {!isMenuCollapsed && <span className="truncate">{tab.label}</span>}
-                  </button>
-                );
-                if (isMenuCollapsed) {
-                  return (
-                    <Tooltip key={tab.id}>
-                      <TooltipTrigger asChild>{menuButton}</TooltipTrigger>
-                      <TooltipContent side="right">{tab.label}</TooltipContent>
-                    </Tooltip>
-                  );
-                }
-                return menuButton;
-              })}
+                    {isMenuCollapsed && (
+                      <div className="mx-2 my-1 border-t border-border/60" aria-hidden />
+                    )}
+                    {section.items.map((tab) => {
+                      const Icon = tab.icon;
+                      const isActive = activeTab === tab.id;
+                      const btn = (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveTab(tab.id)}
+                          className={cn(
+                            "group relative flex items-center gap-3 w-full rounded-md px-2.5 py-2 text-sm text-left transition-colors",
+                            isActive
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                            isMenuCollapsed && "justify-center px-0"
+                          )}
+                        >
+                          {isActive && !isMenuCollapsed && (
+                            <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-primary" />
+                          )}
+                          <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-primary" : "opacity-70")} />
+                          {!isMenuCollapsed && <span className="truncate">{tab.label}</span>}
+                        </button>
+                      );
+                      if (isMenuCollapsed) {
+                        return (
+                          <Tooltip key={tab.id}>
+                            <TooltipTrigger asChild>{btn}</TooltipTrigger>
+                            <TooltipContent side="right" className="font-medium">
+                              {tab.label}
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      }
+                      return btn;
+                    })}
+                  </div>
+                ))}
+              </nav>
             </TooltipProvider>
-          </div>
+          </aside>
 
           {/* Content area */}
-          <div className="flex-1 overflow-auto p-3 sm:p-6">
+          <div className="flex-1 overflow-auto p-2 sm:p-4 lg:p-6">
             {tabItems.map((tab) => {
               const Icon = tab.icon;
-              
               return (
-                <TabsContent 
-                  key={tab.id} 
-                  value={tab.id} 
-                  className="mt-0"
-                >
-                  <Card className="h-full">
-                    <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
-                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                        <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                        {tab.label}
-                      </CardTitle>
-                      <CardDescription className="text-xs sm:text-sm">
-                        {tab.description}
-                      </CardDescription>
+                <TabsContent key={tab.id} value={tab.id} className="mt-0">
+                  <Card className="shadow-sm border-border/60">
+                    <CardHeader className="px-3 sm:px-6 py-3 sm:py-4 border-b bg-muted/30">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="h-8 w-8 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <CardTitle className="text-base sm:text-lg leading-tight truncate">
+                            {tab.label}
+                          </CardTitle>
+                          <CardDescription className="text-xs sm:text-sm mt-0.5 line-clamp-2">
+                            {tab.description}
+                          </CardDescription>
+                        </div>
+                      </div>
                     </CardHeader>
-                    <CardContent className="px-3 sm:px-6">
+                    <CardContent className="p-2 sm:p-4 lg:p-6">
                       {activeTab === tab.id && renderContent()}
                     </CardContent>
                   </Card>
