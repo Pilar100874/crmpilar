@@ -176,6 +176,88 @@ function ColumnConfigPanel({ columns, onColumnsChange }: ColumnConfigPanelProps)
   );
 }
 
+function SimpleListaComVinculos({
+  titulo, icone, itens, getNome, getSub, vinculos, vinculoLabel, expandedRows, toggleRow, renderVinculo,
+}: {
+  titulo: string;
+  icone: React.ReactNode;
+  itens: any[];
+  getNome: (item: any) => string;
+  getSub: (item: any) => string | null | undefined;
+  vinculos: Record<string, any[]>;
+  vinculoLabel: string;
+  expandedRows: Set<string>;
+  toggleRow: (id: string) => void;
+  renderVinculo: (v: any) => React.ReactNode;
+}) {
+  if (itens.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+          {icone}
+        </div>
+        <p className="text-lg font-medium text-muted-foreground mb-1">
+          Nenhum(a) {titulo} encontrado(a)
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-auto">
+      <table className="w-full">
+        <thead className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20">
+          <tr>
+            <th className="px-4 py-3.5 w-[30px]"></th>
+            <th className="px-4 py-3.5 w-[40px]"></th>
+            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Nome</th>
+            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Detalhe</th>
+            <th className="text-left px-4 py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Vínculos</th>
+          </tr>
+        </thead>
+        <tbody>
+          {itens.map((item: any) => {
+            const links = vinculos[item.id] || [];
+            const hasLinks = links.length > 0;
+            const isExpanded = expandedRows.has(item.id);
+            return (
+              <React.Fragment key={item.id}>
+                <tr className="border-b border-border/30 hover:bg-muted/40 transition-colors">
+                  <td className="p-3">
+                    {hasLinks && (
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full" onClick={() => toggleRow(item.id)}>
+                        {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      </Button>
+                    )}
+                  </td>
+                  <td className="p-3">{icone}</td>
+                  <td className="p-3 font-medium">{getNome(item)}</td>
+                  <td className="p-3 text-sm text-muted-foreground">{getSub(item) || "-"}</td>
+                  <td className="p-3 text-sm text-muted-foreground">{links.length}</td>
+                </tr>
+                {isExpanded && hasLinks && (
+                  <tr>
+                    <td colSpan={5} className="bg-muted/20 p-4 border-l-4 border-l-primary/40">
+                      <div className="ml-8">
+                        <p className="text-sm font-semibold mb-3">{vinculoLabel}:</p>
+                        <div className="space-y-2">
+                          {links.map((v: any) => (
+                            <React.Fragment key={v.id}>{renderVinculo(v)}</React.Fragment>
+                          ))}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+
 export default function Todos() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
