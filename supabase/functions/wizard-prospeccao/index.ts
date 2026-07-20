@@ -30,7 +30,7 @@ interface WizardInput {
 
 function montarPrompt(w: WizardInput): string {
   const linhas = [
-    `Pesquise empresas reais que sejam potenciais clientes com os critérios abaixo.`,
+    `Pesquise na internet empresas reais que sejam potenciais clientes com os critérios abaixo e salve TODAS no Pilar CRM usando a ferramenta MCP \`salvar_empresas_prospectadas\` (uma única chamada com o array \`empresas\`).`,
     ``,
     `## Critérios`,
     w.segmento ? `- Segmento / atividade: ${w.segmento}` : "",
@@ -41,12 +41,24 @@ function montarPrompt(w: WizardInput): string {
     w.palavras_chave ? `- Palavras-chave: ${w.palavras_chave}` : "",
     w.fontes ? `- Fontes preferidas: ${w.fontes}` : "",
     w.criterios?.length ? `- Qualificação obrigatória: ${w.criterios.join(", ")}` : "",
-    `- Quantidade: ${w.quantidade ?? 20} empresas`,
+    `- Quantidade: ${w.quantidade ?? 20} empresas (máximo 100 por chamada)`,
     ``,
-    `## Formato de resposta`,
-    `Retorne APENAS um JSON válido, sem markdown, sem comentários, no formato:`,
-    `{"empresas":[{"nome":"...","nome_fantasia":"...","cnpj":"...","telefone":"...","whatsapp":"...","email":"...","site":"...","endereco":"...","bairro":"...","cidade":"...","estado":"...","cep":"...","cnae_principal":"...","cnae_descricao":"...","segmento_nome":"...","descricao":"...","porte":"...","faturamento_estimado":"...","funcionarios_estimado":"...","contato_nome":"...","contato_cargo":"...","contato_email":"...","contato_telefone":"...","score":0,"score_motivo":"...","prioridade":"alta|media|baixa","produtos_interesse":[],"tags":[],"redes_sociais":{},"fontes":[]}, ...]}`,
-    `Regras: só empresas reais com ao menos uma forma de contato. Não invente CNPJ. Se não souber, deixe em branco.`,
+    `## Como salvar no Pilar (OBRIGATÓRIO)`,
+    `Chame a ferramenta MCP \`salvar_empresas_prospectadas\` do servidor \`pilar\` UMA ÚNICA VEZ, passando o array completo em \`empresas\`.`,
+    `Se o servidor MCP \`pilar\` não estiver disponível, retorne o JSON abaixo para o usuário colar manualmente.`,
+    ``,
+    `## Campos por empresa (preencha o máximo que conseguir da pesquisa)`,
+    `nome (obrig.), nome_fantasia, cnpj, email, telefone, whatsapp (com DDI 55), site, endereco, bairro, cidade, estado (UF 2 letras), cep, cnae_principal, cnae_descricao, segmento_nome${w.segmento ? ` (use "${w.segmento}" quando não houver melhor)` : ""}, descricao, porte, faturamento_estimado, funcionarios_estimado, data_fundacao (YYYY-MM-DD), situacao_cadastral, contato_nome, contato_cargo, contato_email, contato_telefone, score (0-100), score_motivo, prioridade ("alta"|"media"|"baixa"), produtos_interesse [array], tags [array], redes_sociais {instagram, facebook, linkedin, youtube, tiktok}, fontes [URLs consultadas], latitude, longitude, observacoes_internas.`,
+    ``,
+    `## Exemplo da chamada MCP`,
+    '```json',
+    `{"empresas":[{"nome":"Empresa Exemplo LTDA","nome_fantasia":"Exemplo","cnpj":"","whatsapp":"5511999999999","email":"contato@exemplo.com.br","site":"https://exemplo.com.br","cidade":"${w.cidade ?? ""}","estado":"${w.uf ?? ""}","segmento_nome":"${w.segmento ?? ""}","descricao":"...","score":80,"prioridade":"alta","redes_sociais":{"instagram":"@exemplo"},"fontes":["https://..."]}]}`,
+    '```',
+    ``,
+    `## Regras`,
+    `- Só empresas reais que você encontrou na web. NÃO invente CNPJ, telefones ou e-mails.`,
+    `- Se um campo não for encontrado, omita-o ou deixe em branco.`,
+    `- Ao terminar, confirme quantas empresas foram salvas via MCP.`,
   ];
   return linhas.filter(Boolean).join("\n");
 }
