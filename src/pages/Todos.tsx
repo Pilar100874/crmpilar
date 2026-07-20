@@ -849,18 +849,6 @@ export default function Todos() {
                       </>
                     );
                   })}
-                                        )}
-                                      </div>
-                                    ))
-                                  )}
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </>
-                    );
-                  })}
                 </tbody>
               </table>
             </div>
