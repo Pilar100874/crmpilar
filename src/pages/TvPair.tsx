@@ -4,8 +4,10 @@ import { QRCodeCanvas } from "qrcode.react";
 import { Download, Smartphone, QrCode as QrIcon, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { downloadApk } from "@/lib/downloadApk";
 
 const APK_URL = "/__l5e/assets-v1/36bb7224-622e-4176-b136-cbdf2dbd49e6/pilar-tv-signage-v1.1.0.apk";
+const APK_FILENAME = "pilar-tv-signage-v1.1.0.apk";
 
 export default function TvPair() {
   const [params] = useSearchParams();
@@ -52,11 +54,9 @@ export default function TvPair() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <a href={APK_URL} download>
-                  <Button size="lg" className="w-full gap-2">
-                    <Download className="w-5 h-5" /> Baixar APK (27 MB)
-                  </Button>
-                </a>
+                <Button size="lg" className="w-full gap-2" onClick={() => downloadApk(APK_URL, APK_FILENAME)}>
+                  <Download className="w-5 h-5" /> Baixar APK (27 MB)
+                </Button>
                 {!isAndroid && (
                   <p className="text-xs text-muted-foreground">
                     ⚠️ Você não está em um dispositivo Android. Baixe o APK e transfira para a TV/tablet Android.
