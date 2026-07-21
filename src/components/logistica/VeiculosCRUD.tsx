@@ -889,11 +889,20 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                 <Label>{isPessoa ? 'Nome *' : 'Placa *'}</Label>
                 <Input
                   value={formData.placa}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    placa: isPessoa ? e.target.value : e.target.value.toUpperCase(),
-                  }))}
-                  placeholder={isPessoa ? 'Nome da pessoa' : 'ABC-1234'}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (isPessoa) {
+                      setFormData(prev => ({ ...prev, placa: raw }));
+                      return;
+                    }
+                    // Máscara: 3 letras + 4 caracteres quaisquer (ex: ABC-1D23)
+                    const cleaned = raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                    const letters = cleaned.slice(0, 3).replace(/[^A-Z]/g, '');
+                    const rest = cleaned.slice(letters.length, letters.length + 4);
+                    const masked = rest ? `${letters}-${rest}` : letters;
+                    setFormData(prev => ({ ...prev, placa: masked }));
+                  }}
+                  placeholder={isPessoa ? 'Nome da pessoa' : 'ABC-1D23'}
                   maxLength={isPessoa ? 100 : 8}
                 />
               </div>
