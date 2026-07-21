@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink } from "lucide-react";
+import { Copy, ExternalLink, Download, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -20,6 +20,41 @@ export default function TvSignageApi() {
 
   return (
     <div className="space-y-4">
+      <Card className="p-5 border-primary/40 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
+          <div className="flex items-start gap-3">
+            <div className="rounded-lg bg-primary/15 p-2.5">
+              <Smartphone className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-base">App Android TV / Google TV</h2>
+              <p className="text-sm text-muted-foreground">
+                Baixe o APK e instale na sua TV para exibir os dashboards em tela cheia.
+                Após instalar, abra o app e informe o <b>código + token</b> gerados na aba <b>Dispositivos</b>.
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Versão 1.0.0 · ~7 MB · Android 7.0+ (API 24)</p>
+            </div>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <Button asChild size="lg" className="gap-2">
+              <a href="/apps/pilar-tv-signage-v1.0.0.apk" download>
+                <Download className="w-4 h-4" /> Baixar APK
+              </a>
+            </Button>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-2 text-xs text-muted-foreground">
+          <div><b className="text-foreground">Como instalar:</b></div>
+          <ol className="list-decimal list-inside space-y-1 pl-1">
+            <li>Nas configurações da TV, habilite <b>Fontes desconhecidas</b> (Segurança / Aplicativos).</li>
+            <li>Baixe o APK diretamente pelo navegador da TV, envie por pendrive USB ou use <code>adb install pilar-tv-signage-v1.0.0.apk</code>.</li>
+            <li>Abra <b>Pilar TV Signage</b> no launcher e digite o <b>código de 8 dígitos + token</b> gerados em <b>TV Signage → Dispositivos → Novo</b>.</li>
+            <li>Pronto: a TV assume o dashboard/playlist configurado e recebe comandos remotos em tempo real.</li>
+          </ol>
+        </div>
+      </Card>
+
+
       <Card className="p-4">
         <h2 className="font-medium mb-2">Como o app Android TV se conecta</h2>
         <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
