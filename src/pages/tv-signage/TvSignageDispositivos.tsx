@@ -244,7 +244,11 @@ export default function TvSignageDispositivos() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEdit(null)}>Cancelar</Button>
-            <Button onClick={() => salvar(edit)} disabled={!edit?.nome}>Salvar</Button>
+            <Button onClick={() => {
+              if (!edit?.nome?.trim()) return toast.error("Informe o nome");
+              if (!edit?.dashboard_atual_id && !edit?.playlist_id) return toast.error("Selecione um Dashboard fixo OU uma Playlist");
+              salvar(edit);
+            }} disabled={!edit?.nome?.trim() || (!edit?.dashboard_atual_id && !edit?.playlist_id)}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
