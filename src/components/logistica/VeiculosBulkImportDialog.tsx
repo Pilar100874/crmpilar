@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { buildTrackerParametersSms, configurarRastreador, TrackerModelLite } from '@/lib/trackerConfig';
 import { OPERADORAS_APN } from '@/lib/operadorasSms';
+import { useGrupoFilter } from '@/lib/logistica/grupoFilter';
 
 const TIPOS = ['Celular', 'Carro', 'Van', 'Caminhão Leve', 'Caminhão Médio', 'Caminhão Pesado', 'Moto', 'Bicicleta', 'Outro'];
 
@@ -54,6 +55,8 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
   const [ativo, setAtivo] = useState(true);
   const [globalTrackerId, setGlobalTrackerId] = useState('');
   const [globalOperadoraId, setGlobalOperadoraId] = useState('');
+  const [globalGrupoId, setGlobalGrupoId] = useState('');
+  const { unidades: grupos } = useGrupoFilter(estabelecimentoId);
 
   const update = (id: string, patch: Partial<Row>) =>
     setRows(rs => rs.map(r => (r.id === id ? { ...r, ...patch } : r)));
@@ -81,6 +84,7 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
         tracker_model_id: globalTrackerId || null,
         apn_operadora: op?.apn || null,
         tipo_chip: 'm2m',
+        logistica_grupo_id: globalGrupoId || null,
       } as any)
       .select('id')
       .single();
@@ -196,7 +200,7 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
           </div>
 
           {/* Configuração fixa aplicada a todas as linhas */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Rastreador (aplicado a todos)</Label>
               <Select value={globalTrackerId} onValueChange={setGlobalTrackerId}>
@@ -212,6 +216,16 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
                 <SelectTrigger className="h-9"><SelectValue placeholder="Selecione a operadora" /></SelectTrigger>
                 <SelectContent>
                   {OPERADORAS_APN.map(o => <SelectItem key={o.id} value={o.id}>{o.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Grupo (aplicado a todos)</Label>
+              <Select value={globalGrupoId || '__none__'} onValueChange={v => setGlobalGrupoId(v === '__none__' ? '' : v)}>
+                <SelectTrigger className="h-9"><SelectValue placeholder="Selecione o grupo" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Sem grupo</SelectItem>
+                  {grupos.map(g => <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
