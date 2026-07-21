@@ -254,19 +254,76 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
           {step === 1 && (
             <>
               <h2 className="font-semibold">2. Região</h2>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2 sm:col-span-1">
-                  <Label>Cidade</Label>
-                  <Input placeholder="Ex.: Vitória" value={form.cidade} onChange={(e) => setForm({ ...form, cidade: e.target.value })} />
-                </div>
+              <div className="space-y-3">
                 <div>
-                  <Label>UF</Label>
-                  <Input maxLength={2} placeholder="ES" value={form.uf} onChange={(e) => setForm({ ...form, uf: e.target.value.toUpperCase() })} />
+                  <Label>Escopo geográfico</Label>
+                  <RadioGroup
+                    value={form.escopo}
+                    onValueChange={(v: EscopoGeo) => setForm({ ...form, escopo: v })}
+                    className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2"
+                  >
+                    <label className="flex items-center gap-2 border rounded-md p-2 cursor-pointer hover:bg-accent">
+                      <RadioGroupItem value="cidade" /> Cidade (com/sem raio)
+                    </label>
+                    <label className="flex items-center gap-2 border rounded-md p-2 cursor-pointer hover:bg-accent">
+                      <RadioGroupItem value="uf" /> Estado inteiro
+                    </label>
+                    <label className="flex items-center gap-2 border rounded-md p-2 cursor-pointer hover:bg-accent">
+                      <RadioGroupItem value="pais" /> País inteiro
+                    </label>
+                  </RadioGroup>
                 </div>
-                <div>
-                  <Label>Raio (km)</Label>
-                  <Input type="number" value={form.raio_km} onChange={(e) => setForm({ ...form, raio_km: Number(e.target.value) })} />
-                </div>
+
+                {form.escopo === 'cidade' && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="col-span-2 sm:col-span-1">
+                      <Label>Cidade *</Label>
+                      <Input placeholder="Ex.: Vitória" value={form.cidade} onChange={(e) => setForm({ ...form, cidade: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label>UF</Label>
+                      <Select value={form.uf} onValueChange={(v) => setForm({ ...form, uf: v })}>
+                        <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
+                        <SelectContent>
+                          {UFS.map((u) => <SelectItem key={u.sigla} value={u.sigla}>{u.sigla} — {u.nome}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-2 flex items-center gap-3">
+                      <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox checked={form.usar_raio} onCheckedChange={(c) => setForm({ ...form, usar_raio: !!c })} />
+                        Usar raio de busca
+                      </label>
+                      {form.usar_raio && (
+                        <div className="flex items-center gap-2">
+                          <Input type="number" className="w-24" value={form.raio_km} onChange={(e) => setForm({ ...form, raio_km: Number(e.target.value) })} />
+                          <span className="text-sm text-muted-foreground">km</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {form.escopo === 'uf' && (
+                  <div>
+                    <Label>Estado *</Label>
+                    <Select value={form.uf} onValueChange={(v) => setForm({ ...form, uf: v })}>
+                      <SelectTrigger><SelectValue placeholder="Selecione o estado" /></SelectTrigger>
+                      <SelectContent>
+                        {UFS.map((u) => <SelectItem key={u.sigla} value={u.sigla}>{u.sigla} — {u.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">Busca em todas as cidades do estado.</p>
+                  </div>
+                )}
+
+                {form.escopo === 'pais' && (
+                  <div>
+                    <Label>País *</Label>
+                    <Input placeholder="Ex.: Brasil, Portugal, Argentina..." value={form.pais} onChange={(e) => setForm({ ...form, pais: e.target.value })} />
+                    <p className="text-xs text-muted-foreground mt-1">Busca em todo o país informado.</p>
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -279,6 +336,13 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
                 <div>
                   <Label>Porte (marque os que interessam)</Label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer col-span-2 sm:col-span-3 border rounded-md p-2 bg-muted/30">
+                      <Checkbox
+                        checked={form.porte.length === 0}
+                        onCheckedChange={() => setForm({ ...form, porte: [] })}
+                      />
+                      <b>Todos os portes</b>
+                    </label>
                     {PORTES.map((p) => (
                       <label key={p} className="flex items-center gap-2 text-sm cursor-pointer">
                         <Checkbox checked={form.porte.includes(p)} onCheckedChange={() => toggleArr('porte', p)} />
@@ -289,9 +353,10 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
                 </div>
                 <div>
                   <Label>Faturamento estimado (faixa)</Label>
-                  <Select value={form.faturamento} onValueChange={(v) => setForm({ ...form, faturamento: v })}>
+                  <Select value={form.faturamento || 'todos'} onValueChange={(v) => setForm({ ...form, faturamento: v === 'todos' ? '' : v })}>
                     <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="todos">Todos (sem filtro)</SelectItem>
                       <SelectItem value="Até 360k/ano">Até R$ 360 mil/ano</SelectItem>
                       <SelectItem value="360k a 4.8M/ano">R$ 360 mil a 4,8 mi</SelectItem>
                       <SelectItem value="4.8M a 30M/ano">R$ 4,8 mi a 30 mi</SelectItem>
@@ -314,10 +379,20 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
                     value={form.palavras_chave} onChange={(e) => setForm({ ...form, palavras_chave: e.target.value })} />
                 </div>
                 <div>
-                  <Label>Fontes preferidas</Label>
-                  <Input placeholder={FONTES_SUGERIDAS.join(', ')}
-                    value={form.fontes} onChange={(e) => setForm({ ...form, fontes: e.target.value })} />
-                  <p className="text-xs text-muted-foreground mt-1">Sugestões: {FONTES_SUGERIDAS.join(' · ')}</p>
+                  <Label>Fontes preferidas (marque as que deseja usar)</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                    {FONTES_SUGERIDAS.map((f) => (
+                      <label key={f} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox checked={form.fontes.includes(f)} onCheckedChange={() => toggleArr('fontes', f)} />
+                        {f}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="mt-3">
+                    <Label>Outras fontes (separe por vírgula)</Label>
+                    <Input placeholder="Ex.: Sympla, Reclame Aqui, associação XYZ..."
+                      value={form.fontes_extras} onChange={(e) => setForm({ ...form, fontes_extras: e.target.value })} />
+                  </div>
                 </div>
               </div>
             </>
@@ -330,8 +405,31 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
               <div className="space-y-4">
                 <div>
                   <Label>Quantidade de prospects</Label>
-                  <Input type="number" min={1} max={100}
-                    value={form.quantidade} onChange={(e) => setForm({ ...form, quantidade: Number(e.target.value) })} />
+                  <div className="flex items-center gap-3 mt-1">
+                    <Input
+                      type="number"
+                      min={1}
+                      value={form.quantidade}
+                      disabled={form.ilimitado}
+                      onChange={(e) => setForm({ ...form, quantidade: Number(e.target.value) })}
+                      className="w-40"
+                    />
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <Checkbox checked={form.ilimitado} onCheckedChange={(c) => setForm({ ...form, ilimitado: !!c })} />
+                      Ilimitada (trazer o máximo possível)
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <Label>Critérios de qualificação obrigatórios</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                    {CRITERIOS.map((c) => (
+                      <label key={c} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox checked={form.criterios.includes(c)} onCheckedChange={() => toggleArr('criterios', c)} />
+                        {c}
+                      </label>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <Label>Critérios de qualificação obrigatórios</Label>
