@@ -35,6 +35,7 @@ function montarPrompt(w: WizardInput): string {
     ``,
     `## Critérios`,
     w.segmento ? `- Segmento / atividade: ${w.segmento}` : "",
+    w.termos_ampliados?.length ? `- Termos de busca ampliados (use TODOS como consultas paralelas): ${w.termos_ampliados.map((t) => `"${t}"`).join(", ")}` : "",
     w.cnae ? `- CNAE: ${w.cnae}` : "",
     w.cidade || w.uf ? `- Região: ${[w.cidade, w.uf].filter(Boolean).join(" - ")}${w.raio_km ? ` (raio ${w.raio_km} km)` : ""}` : "",
     w.porte?.length ? `- Porte: ${w.porte.join(", ")}` : "",
