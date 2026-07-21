@@ -243,6 +243,7 @@ export default function Layout({ children }: LayoutProps) {
     typeof window !== "undefined" &&
     (new URLSearchParams(window.location.search).get("solo") === "1" ||
       !!new URLSearchParams(window.location.search).get("fromtela"));
+  const hideMainMenu = location.pathname.startsWith("/tv-signage");
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [allowedMenus, setAllowedMenus] = useState<Record<string, MenuPermissions>>({});
