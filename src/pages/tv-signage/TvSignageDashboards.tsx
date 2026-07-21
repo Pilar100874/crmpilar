@@ -128,10 +128,10 @@ export default function TvSignageDashboards() {
       </div>
 
       <Dialog open={edit !== null} onOpenChange={(o) => !o && setEdit(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{edit?.id ? "Editar dashboard" : "Novo dashboard"}</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-lg max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="p-6 pb-2"><DialogTitle>{edit?.id ? "Editar dashboard" : "Novo dashboard"}</DialogTitle></DialogHeader>
           {edit && (
-            <div className="space-y-3">
+            <div className="space-y-3 overflow-y-auto px-6 py-2 flex-1">
               <div><Label>Nome</Label><Input value={edit.nome || ""} onChange={(e) => setEdit({ ...edit, nome: e.target.value })} /></div>
               <div><Label>Tipo</Label>
                 <Select value={edit.tipo || "tela_interna"} onValueChange={(v) => setEdit({ ...edit, tipo: v })}>
@@ -235,7 +235,7 @@ export default function TvSignageDashboards() {
               </div>
             </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="p-6 pt-2 border-t">
             <Button variant="outline" onClick={() => setEdit(null)}>Cancelar</Button>
             <Button onClick={salvar} disabled={!edit?.nome?.trim() || !edit?.tipo || (edit?.tipo === "tela_interna" && !edit?.rota_interna) || (edit?.tipo === "url_externa" && !edit?.url?.trim())}>Salvar</Button>
           </DialogFooter>
