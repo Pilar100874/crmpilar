@@ -28,6 +28,7 @@ import { format, startOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ReactECharts from "echarts-for-react";
 import { useFullscreen } from "@/hooks/useFullscreen";
+import { callTvDeviceFunction, getTvDeviceToken } from "@/lib/tvDeviceClient";
 
 interface VendedorMetrics {
   id: string;
@@ -60,6 +61,7 @@ interface VendasMensais {
 export default function TvDashboardVendas() {
   const navigate = useNavigate();
   useFullscreen(true);
+  const tvDeviceToken = useMemo(() => getTvDeviceToken(), []);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
   const [vendedores, setVendedores] = useState<VendedorMetrics[]>([]);
   const [totalVendasHoje, setTotalVendasHoje] = useState(0);
@@ -81,12 +83,18 @@ export default function TvDashboardVendas() {
   }, []);
 
   useEffect(() => {
-    if (!estabelecimentoId) return;
+    if (!estabelecimentoId && !tvDeviceToken) return;
     const interval = setInterval(loadAllData, 30000);
     return () => clearInterval(interval);
-  }, [estabelecimentoId]);
+  }, [estabelecimentoId, tvDeviceToken]);
 
   const init = async () => {
+    if (tvDeviceToken) {
+      await loadAllData();
+      setLoading(false);
+      return;
+    }
+
     const estabId = await getEstabelecimentoId();
     if (estabId) {
       setEstabelecimentoId(estabId);
@@ -97,6 +105,24 @@ export default function TvDashboardVendas() {
   };
 
   const loadAllData = async (estabId?: string) => {
+    if (tvDeviceToken) {
+      const data = await callTvDeviceFunction<any>('tv-dashboard-vendas', tvDeviceToken);
+      setEstabelecimentoId(data.estabelecimento_id || "");
+      setVendedores(data.vendedores || []);
+      setTotalVendasHoje(data.totalVendasHoje || 0);
+      setTotalValorHoje(data.totalValorHoje || 0);
+      setTotalValorMes(data.totalValorMes || 0);
+      setTotalVendasMes(data.totalVendasMes || 0);
+      setTotalValor12Meses(data.totalValor12Meses || 0);
+      setTotalVendas12Meses(data.totalVendas12Meses || 0);
+      setVendasPorHora(data.vendasPorHora || []);
+      setVendasMensais(data.vendasMensais || []);
+      setTaxaConversao(data.taxaConversao || 0);
+      setTempoMedioResposta(data.tempoMedioResposta || 0);
+      setLastUpdate(new Date());
+      return;
+    }
+
     const id = estabId || estabelecimentoId;
     if (!id) return;
 

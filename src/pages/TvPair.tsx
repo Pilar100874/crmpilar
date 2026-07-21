@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { downloadApk } from "@/lib/downloadApk";
 
-const APK_URL = "/__l5e/assets-v1/b35b99ab-4272-4d94-af10-80ffb44fecd3/pilar-remotas-v1.1.2.apk";
-const APK_FILENAME = "pilar-remotas-v1.1.2.apk";
+const APK_URL = "/__l5e/assets-v1/22639f5c-8527-42b2-8fe0-01f9fee05946/pareamento-pilar-remotas-v1.1.3.apk";
+const APK_FILENAME = "pareamento-pilar-remotas.apk";
 
 export default function TvPair() {
   const [params] = useSearchParams();
@@ -30,7 +30,7 @@ export default function TvPair() {
           <div className="inline-flex w-14 h-14 rounded-2xl bg-primary/10 items-center justify-center mx-auto">
             <Smartphone className="w-7 h-7 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold">Pareamento Pilar TV Signage</h1>
+          <h1 className="text-2xl font-bold">Pareamento Pilar Remotas</h1>
           <p className="text-sm text-muted-foreground">
             Instale o aplicativo e finalize o pareamento em segundos.
           </p>
@@ -65,7 +65,7 @@ export default function TvPair() {
                 <ol className="text-xs text-muted-foreground space-y-1 list-decimal pl-4">
                   <li>Toque no arquivo baixado para instalar.</li>
                   <li>Se pedir, autorize <b>Instalar apps desconhecidos</b> nas configurações.</li>
-                  <li>Abra o app <b>Pilar TV Signage</b>.</li>
+                  <li>Abra o app <b>Pilar Remotas</b>.</li>
                 </ol>
               </CardContent>
             </Card>
@@ -104,7 +104,7 @@ export default function TvPair() {
         )}
 
         <div className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
-          <QrIcon className="w-3 h-3" /> Pilar TV Signage
+          <QrIcon className="w-3 h-3" /> Pilar Remotas
         </div>
       </div>
     </div>

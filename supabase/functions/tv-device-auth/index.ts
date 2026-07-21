@@ -26,7 +26,12 @@ Deno.serve(async (req) => {
       status: "online",
     }).eq("id", device.id);
 
-    return json({ device_id: device.id, session_jwt: jwt, expires_in: 60 * 60 * 24 * 7 });
+    return json({
+      device_id: device.id,
+      estabelecimento_id: device.estabelecimento_id,
+      session_jwt: jwt,
+      expires_in: 60 * 60 * 24 * 7,
+    });
   } catch (e) {
     return json({ error: String(e) }, 500);
   }

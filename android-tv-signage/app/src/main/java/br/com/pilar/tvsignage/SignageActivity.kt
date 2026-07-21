@@ -13,6 +13,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
 import br.com.pilar.tvsignage.databinding.ActivitySignageBinding
+import java.net.URLEncoder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -83,6 +84,17 @@ class SignageActivity : AppCompatActivity() {
 
     private fun token() = DeviceStore.token(this).orEmpty()
 
+    private fun addQueryParams(baseUrl: String): String {
+        val separator = if (baseUrl.contains("?")) "&" else "?"
+        val params = listOf(
+            "tv=1",
+            "device=" + URLEncoder.encode(DeviceStore.deviceId(this).orEmpty(), "UTF-8"),
+            "tv_token=" + URLEncoder.encode(token(), "UTF-8"),
+            "estabelecimento_id=" + URLEncoder.encode(DeviceStore.estabelecimentoId(this).orEmpty(), "UTF-8")
+        ).joinToString("&")
+        return baseUrl + separator + params
+    }
+
     private fun loadConfig() {
         configJob = CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -122,8 +134,7 @@ class SignageActivity : AppCompatActivity() {
         val tipo = dash.optString("tipo")
         val url = when (tipo) {
             "url_externa" -> dash.optString("url")
-            "tela_interna" -> BuildConfig.APP_BASE_URL + dash.optString("rota_interna") +
-                "?tv=1&device=" + DeviceStore.deviceId(this).orEmpty()
+            "tela_interna" -> addQueryParams(BuildConfig.APP_BASE_URL + dash.optString("rota_interna"))
             else -> null
         }
         if (url.isNullOrEmpty()) { showStandby("Dashboard inválido"); return }
