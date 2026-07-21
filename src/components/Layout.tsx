@@ -243,7 +243,6 @@ export default function Layout({ children }: LayoutProps) {
     typeof window !== "undefined" &&
     (new URLSearchParams(window.location.search).get("solo") === "1" ||
       !!new URLSearchParams(window.location.search).get("fromtela"));
-  const hideMainMenu = location.pathname.startsWith("/tv-signage");
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [allowedMenus, setAllowedMenus] = useState<Record<string, MenuPermissions>>({});
@@ -650,7 +649,7 @@ export default function Layout({ children }: LayoutProps) {
       return item;
     });
 
-  if (soloMode || hideMainMenu) {
+  if (soloMode) {
     return (
       <div className="min-h-screen bg-background text-foreground">
         <main className="min-h-screen">{children}</main>
