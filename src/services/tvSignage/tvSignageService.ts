@@ -51,18 +51,11 @@ export async function enviarComando(deviceId: string, tipo: TvCommandTipo, paylo
 }
 
 // Rotas internas do sistema que podem ser projetadas em TV
+// IMPORTANTE: apenas rotas preparadas para modo TV (autenticação via tv_token,
+// fora do LayoutWrapper que exige sessão de usuário). Outras rotas do sistema
+// redirecionam para /login quando abertas sem sessão Supabase.
 export const ROTAS_INTERNAS = [
-  { value: "/dashboard", label: "Painel Principal" },
   { value: "/tv/vendas", label: "TV — Vendas" },
   { value: "/tv/veiculos", label: "TV — Veículos" },
   { value: "/tv/cameras", label: "TV — Câmeras (Mosaico)" },
-  { value: "/analytics", label: "Analytics Avançado" },
-  { value: "/logistica/monitoramento", label: "Logística — Monitoramento" },
-  { value: "/logistica/dashboard", label: "Logística — Dashboard" },
-  { value: "/dashboard-supervisor", label: "Dashboard Supervisor" },
-  { value: "/dashboard-atendente", label: "Dashboard Atendente" },
-  { value: "/sla-dashboard", label: "SLA Dashboard" },
-  { value: "/monitor-filas", label: "Monitor de Filas" },
-  { value: "/monitor-funcionarios", label: "Monitor de Funcionários" },
-  { value: "/cameras/dashboard", label: "Câmeras — Dashboard" },
 ];
