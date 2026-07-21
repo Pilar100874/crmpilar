@@ -614,16 +614,6 @@ const App = () => (
             <Route path="/tv/vendas" element={<TvDashboardVendas />} />
             <Route path="/tv/veiculos" element={<TvDashboardVeiculos />} />
             <Route path="/tv/cameras" element={<TvCameras />} />
-            <Route path="/tv-signage" element={<TvSignageLayout />}>
-              <Route index element={<TvSignageDashboard />} />
-              <Route path="dispositivos" element={<TvSignageDispositivos />} />
-              <Route path="dashboards" element={<TvSignageDashboards />} />
-              <Route path="playlists" element={<TvSignagePlaylists />} />
-              <Route path="grupos" element={<TvSignageGrupos />} />
-              <Route path="comandos" element={<TvSignageComandos />} />
-              <Route path="eventos" element={<TvSignageEventos />} />
-              <Route path="api" element={<TvSignageApi />} />
-            </Route>
             <Route path="/tv-pair" element={<TvPair />} />
             <Route path="/p/:slug" element={<PublicPage />} />
             {/* E-commerce routes */}
