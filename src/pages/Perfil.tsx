@@ -126,6 +126,26 @@ export default function Perfil() {
             setGrupoAcessoName(grupoData.nome);
           }
         }
+
+        // Buscar dispositivos vinculados ao usuário
+        const { data: disps } = await supabase
+          .from("dispositivos_rastreamento")
+          .select("id, device_uuid, nome_dispositivo, modelo, plataforma, status, ultimo_acesso, primeiro_acesso, veiculo_id")
+          .eq("usuario_id", usuario.id)
+          .order("ultimo_acesso", { ascending: false });
+        if (disps) {
+          // Enriquecer com placa do veículo vinculado
+          const veicIds = Array.from(new Set(disps.map(d => d.veiculo_id).filter(Boolean)));
+          let veicMap: Record<string, string> = {};
+          if (veicIds.length) {
+            const { data: veics } = await supabase
+              .from("veiculos")
+              .select("id, placa")
+              .in("id", veicIds);
+            veics?.forEach(v => { veicMap[v.id] = v.placa; });
+          }
+          setDispositivos(disps.map(d => ({ ...d, placa: d.veiculo_id ? veicMap[d.veiculo_id] : null })));
+        }
       }
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
