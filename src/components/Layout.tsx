@@ -216,14 +216,15 @@ export const menuItems: MenuItem[] = [
   },
   { id: "Ads", title: "Ads", url: "/ads", icon: LucideIcons.Megaphone },
   { id: "Robô de Preços", title: "Robô de Preços", url: "/robo-precos", icon: LucideIcons.Bot },
-  { 
+  {
     id: "TV",
-    title: "TV", 
+    title: "TV",
     icon: LucideIcons.Tv,
     subItems: [
       { id: "TV Vendas", title: "Dashboard Vendas", url: "/tv/vendas", icon: FileBarChart },
       { id: "TV Veículos", title: "Dashboard Veículos", url: "/tv/veiculos", icon: LucideIcons.Truck },
       { id: "TV Câmeras", title: "Mosaico de Câmeras", url: "/tv/cameras", icon: LucideIcons.Camera },
+      { id: "TV Signage", title: "TV Signage (Android TV)", url: "/tv-signage", icon: LucideIcons.MonitorPlay },
     ]
   },
   { id: "Mapa de Calor", title: "Mapa de Calor", url: "/mapa-calor-sistema", icon: LucideIcons.Flame },
