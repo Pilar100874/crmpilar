@@ -92,6 +92,10 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
   const [form, setForm] = useState<FormState>(initialState);
 
   const [loading, setLoading] = useState(false);
+  const [ampliando, setAmpliando] = useState(false);
+  const [novoTermo, setNovoTermo] = useState('');
+  const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [editValor, setEditValor] = useState('');
   const [result, setResult] = useState<{ modo: string; inseridas?: number; prompt?: string; motivo?: string; aviso?: string } | null>(null);
   const [providers, setProviders] = useState<Record<Provider, boolean>>({ lovable: true, openai: false, anthropic: false });
 
