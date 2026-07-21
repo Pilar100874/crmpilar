@@ -252,6 +252,7 @@ import TvSignageGrupos from "./pages/tv-signage/TvSignageGrupos";
 import TvSignageComandos from "./pages/tv-signage/TvSignageComandos";
 import TvSignageEventos from "./pages/tv-signage/TvSignageEventos";
 import TvSignageApi from "./pages/tv-signage/TvSignageApi";
+import TvPair from "./pages/TvPair";
 import TvCameras from "./pages/TvCameras";
 import PublicPage from "./pages/PublicPage";
 import EcommerceLayout from "./components/ecommerce/EcommerceLayout";
