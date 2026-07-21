@@ -7,7 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import * as Icons from "lucide-react";
 import { X, Plus, Sparkles } from "lucide-react";
 import { setBlockDragPreview } from "@/lib/blockDragPreview";
-import { TV_BLOCK_DEFINITIONS, CATEGORY_LABELS, TvBlockCategory } from "@/types/tvWorkflow";
+import { TV_BLOCK_DEFINITIONS, TV_LIBRARY_GROUPS } from "@/types/tvWorkflow";
 
 interface Props {
   onDragStart: (event: React.DragEvent, nodeType: string) => void;
@@ -15,28 +15,25 @@ interface Props {
   onToggleExpand: () => void;
 }
 
-const CATEGORY_ORDER: { key: TvBlockCategory; icon: string }[] = [
-  { key: "gatilho", icon: "Zap" },
-  { key: "condicao", icon: "GitBranch" },
-  { key: "acao", icon: "Play" },
-];
-
 export function TvBlockLibrary({ onDragStart, isExpanded, onToggleExpand }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [openCategories, setOpenCategories] = useState<TvBlockCategory[]>([
-    "gatilho",
-    "condicao",
-    "acao",
+  const [openCategories, setOpenCategories] = useState<string[]>([
+    "Gatilhos — Genéricos",
+    "Gatilhos — Logística",
+    "Condições",
+    "Ações — Tela",
   ]);
 
-  const toggle = (c: TvBlockCategory) =>
+  const toggle = (c: string) =>
     setOpenCategories((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
 
-  const filteredCategories = CATEGORY_ORDER.map((cat) => ({
-    ...cat,
+  const q = searchQuery.toLowerCase();
+  const filteredCategories = TV_LIBRARY_GROUPS.map((cat) => ({
+    key: cat.name,
+    icon: cat.icon,
     blocks: TV_BLOCK_DEFINITIONS.filter((b) => {
-      if (b.category !== cat.key) return false;
-      const q = searchQuery.toLowerCase();
+      if (b.group !== cat.name) return false;
+      if (!q) return true;
       return b.label.toLowerCase().includes(q) || b.description.toLowerCase().includes(q);
     }),
   })).filter((c) => c.blocks.length > 0);
