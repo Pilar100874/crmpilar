@@ -188,14 +188,13 @@ function TvBuilderInner() {
       } as unknown as Record<string, unknown>,
     };
     setNodes((nds) => nds.concat(node));
-    setEdges((eds) =>
-      addEdge(
+    setEdges((eds) => {
+      const conn: Connection =
         connectMenu.handleType === "source"
-          ? { source: connectMenu.fromNodeId, sourceHandle: connectMenu.fromHandleId, target: node.id, type: "smoothstep", animated: true }
-          : { source: node.id, target: connectMenu.fromNodeId, targetHandle: connectMenu.fromHandleId, type: "smoothstep", animated: true },
-        eds,
-      ),
-    );
+          ? { source: connectMenu.fromNodeId, sourceHandle: connectMenu.fromHandleId ?? null, target: node.id, targetHandle: null }
+          : { source: node.id, sourceHandle: null, target: connectMenu.fromNodeId, targetHandle: connectMenu.fromHandleId ?? null };
+      return addEdge({ ...conn, type: "smoothstep", animated: true } as any, eds);
+    });
     setConnectMenu(null);
     toast.success(`Bloco "${def.label}" adicionado`);
   }, [connectMenu, setNodes, setEdges]);
