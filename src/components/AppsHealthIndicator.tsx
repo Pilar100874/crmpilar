@@ -150,17 +150,19 @@ export function AppsHealthIndicator({
   const [win, setWin] = useState<Health>({ at: null, ago: null });
   const [and, setAnd] = useState<Health>({ at: null, ago: null });
   const [filiais, setFiliais] = useState<FilialHealth[]>([]);
+  const [tvs, setTvs] = useState<TvDeviceHealth[]>([]);
   const [push, setPush] = useState<PushState>(getPushState());
 
   useEffect(() => {
     let alive = true;
     const load = async () => {
       try {
-        const { win: w, and: a, filiais: f } = await fetchHealth();
+        const { win: w, and: a, filiais: f, tvs: tv } = await fetchHealth();
         if (!alive) return;
         setWin(w);
         setAnd(a);
         setFiliais(f);
+        setTvs(tv);
       } catch { /* silencioso */ }
     };
     load();
