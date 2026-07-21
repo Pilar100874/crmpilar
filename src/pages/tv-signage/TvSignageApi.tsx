@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, ExternalLink, Download, Smartphone } from "lucide-react";
 import { toast } from "sonner";
+import { downloadApk } from "@/lib/downloadApk";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const BASE = `${SUPABASE_URL}/functions/v1`;
@@ -37,10 +38,17 @@ export default function TvSignageApi() {
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
-            <Button asChild size="lg" className="gap-2">
-              <a href="/__l5e/assets-v1/36bb7224-622e-4176-b136-cbdf2dbd49e6/pilar-tv-signage-v1.1.0.apk" download>
-                <Download className="w-4 h-4" /> Baixar APK
-              </a>
+            <Button
+              size="lg"
+              className="gap-2"
+              onClick={() =>
+                downloadApk(
+                  "/__l5e/assets-v1/36bb7224-622e-4176-b136-cbdf2dbd49e6/pilar-tv-signage-v1.1.0.apk",
+                  "pilar-tv-signage-v1.1.0.apk",
+                )
+              }
+            >
+              <Download className="w-4 h-4" /> Baixar APK
             </Button>
           </div>
 
