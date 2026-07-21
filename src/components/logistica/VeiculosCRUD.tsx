@@ -1041,13 +1041,24 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                       <SelectItem value="__none__">Nenhum</SelectItem>
                       {dispositivos
                         .filter(d => !d.veiculo_id || d.veiculo_id === selectedVeiculo?.id)
-                        .map(d => (
-                          <SelectItem key={d.id} value={d.id}>
-                            {(d.nome_dispositivo || d.device_uuid)}
-                            {d.plataforma ? ` · ${d.plataforma}` : ''}
-                            {d.status === 'pendente' ? ' — pendente (aprova ao salvar)' : ''}
-                          </SelectItem>
-                        ))}
+                        .sort((a, b) => (b.ultimo_acesso || '').localeCompare(a.ultimo_acesso || ''))
+                        .map(d => {
+                          const partes: string[] = [];
+                          if (d.usuario_nome) partes.push(`👤 ${d.usuario_nome}`);
+                          partes.push(d.nome_dispositivo || d.device_uuid);
+                          if (d.plataforma) partes.push(d.plataforma);
+                          if (d.ultimo_acesso) {
+                            const dt = new Date(d.ultimo_acesso);
+                            partes.push(`último acesso ${dt.toLocaleDateString('pt-BR')} ${dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`);
+                          }
+                          if (d.status === 'pendente') partes.push('pendente (aprova ao salvar)');
+                          if (d.veiculo_placa && d.veiculo_id !== selectedVeiculo?.id) partes.push(`vinculado a ${d.veiculo_placa}`);
+                          return (
+                            <SelectItem key={d.id} value={d.id}>
+                              {partes.join(' · ')}
+                            </SelectItem>
+                          );
+                        })}
                     </SelectContent>
                   </Select>
                   {dispositivos.filter(d => !d.veiculo_id || d.veiculo_id === selectedVeiculo?.id).length === 0 && (
@@ -1055,7 +1066,11 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                       Nenhum dispositivo detectado ainda. Peça para a pessoa abrir o <b>PWA Pilar</b> (com login) ou ativar o <b>Traccar Client</b> apontando para a URL abaixo — o aparelho aparecerá aqui automaticamente.
                     </p>
                   )}
+                  <p className="text-[11px] text-muted-foreground mt-2">
+                    ⚠️ Apenas <b>1 aparelho por usuário</b> pode ficar ativo. Ao vincular um novo aparelho de um usuário que já possui outro aprovado, o anterior é <b>desconectado automaticamente</b> e este passa a receber a localização do veículo.
+                  </p>
                 </div>
+
 
 
                 {/* Ajuda: URL do Traccar/OsmAnd */}
