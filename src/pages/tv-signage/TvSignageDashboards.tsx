@@ -106,23 +106,11 @@ export default function TvSignageDashboards() {
                 </Select>
               </div>
               {edit.tipo === "tela_interna" ? (
-                <div className="space-y-2">
-                  <Label>Tela</Label>
-                  <Select value={ROTAS_INTERNAS.find(r => r.value === edit.rota_interna) ? edit.rota_interna : "__custom__"} onValueChange={(v) => setEdit({ ...edit, rota_interna: v === "__custom__" ? (edit.rota_interna && !ROTAS_INTERNAS.find(r => r.value === edit.rota_interna) ? edit.rota_interna : "") : v })}>
+                <div><Label>Tela</Label>
+                  <Select value={edit.rota_interna || ""} onValueChange={(v) => setEdit({ ...edit, rota_interna: v })}>
                     <SelectTrigger><SelectValue placeholder="Escolha a tela" /></SelectTrigger>
-                    <SelectContent className="max-h-80">
-                      {ROTAS_INTERNAS.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
-                      <SelectItem value="__custom__">✏️ Caminho customizado…</SelectItem>
-                    </SelectContent>
+                    <SelectContent>{ROTAS_INTERNAS.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent>
                   </Select>
-                  <Input
-                    value={edit.rota_interna || ""}
-                    onChange={(e) => setEdit({ ...edit, rota_interna: e.target.value })}
-                    placeholder="/qualquer/rota/do/sistema"
-                  />
-                  <p className="text-[11px] text-muted-foreground">
-                    Pode ser qualquer rota do sistema. Rotas fora de <code>/tv/*</code> exigem que o dispositivo esteja logado com um usuário no navegador.
-                  </p>
                 </div>
               ) : (
                 <div><Label>URL</Label><Input value={edit.url || ""} onChange={(e) => setEdit({ ...edit, url: e.target.value })} placeholder="https://..." /></div>
