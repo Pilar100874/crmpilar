@@ -84,6 +84,7 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
         tracker_model_id: globalTrackerId || null,
         apn_operadora: op?.apn || null,
         tipo_chip: 'm2m',
+        logistica_grupo_id: globalGrupoId || null,
       } as any)
       .select('id')
       .single();
