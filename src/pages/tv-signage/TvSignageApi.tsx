@@ -34,7 +34,7 @@ export default function TvSignageApi() {
                 Aparelhos com câmera (Google TV, tablets, celulares Android) podem parear apenas
                 <b> lendo o QR Code</b> — sem digitar nada. Nas TVs sem câmera, digite o código + token exibidos.
               </p>
-              <p className="text-xs text-muted-foreground mt-1">Versão 1.1.1 · ~27 MB · Android 7.0+ (API 24) · com leitor de QR embutido</p>
+              <p className="text-xs text-muted-foreground mt-1">Versão 1.1.3 · ~27 MB · Android 7.0+ (API 24) · com leitor de QR embutido</p>
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
@@ -43,8 +43,8 @@ export default function TvSignageApi() {
               className="gap-2"
               onClick={() =>
                 downloadApk(
-                  "/__l5e/assets-v1/b35b99ab-4272-4d94-af10-80ffb44fecd3/pilar-remotas-v1.1.2.apk",
-                  "pilar-remotas-v1.1.2.apk",
+                  "/__l5e/assets-v1/22639f5c-8527-42b2-8fe0-01f9fee05946/pareamento-pilar-remotas-v1.1.3.apk",
+                  "pareamento-pilar-remotas.apk",
                 )
               }
             >
@@ -57,8 +57,8 @@ export default function TvSignageApi() {
           <div><b className="text-foreground">Como instalar:</b></div>
           <ol className="list-decimal list-inside space-y-1 pl-1">
             <li>Nas configurações da TV, habilite <b>Fontes desconhecidas</b> (Segurança / Aplicativos).</li>
-            <li>Baixe o APK diretamente pelo navegador da TV, envie por pendrive USB ou use <code>adb install pilar-remotas-v1.1.2.apk</code>.</li>
-            <li>Abra <b>Pilar TV Signage</b> no launcher. <b>Se o aparelho tiver câmera</b>, toque em <b>📷 Ler QR Code</b> e aponte para o QR gerado em <b>Dispositivos → Novo</b> — o pareamento é automático. Caso contrário, digite o código de 8 caracteres + token.</li>
+            <li>Baixe o APK diretamente pelo navegador da TV, envie por pendrive USB ou use <code>adb install pareamento-pilar-remotas.apk</code>.</li>
+            <li>Abra <b>Pilar Remotas</b> no launcher. <b>Se o aparelho tiver câmera</b>, toque em <b>📷 Ler QR Code</b> e aponte para o QR gerado em <b>Dispositivos → Novo</b> — o pareamento é automático. Caso contrário, digite o código de 8 caracteres + token.</li>
             <li>Pronto: a TV assume o dashboard/playlist configurado e recebe comandos remotos em tempo real.</li>
           </ol>
 

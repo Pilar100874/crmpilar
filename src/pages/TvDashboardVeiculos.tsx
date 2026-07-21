@@ -20,6 +20,7 @@ import { useFullscreen } from '@/hooks/useFullscreen';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { fetchMotoristasAtuais } from '@/lib/logistica/cvDriverLookup';
 import { FocusLegend } from '@/components/logistica/FocusLegend';
+import { callTvDeviceFunction, getTvDeviceToken } from '@/lib/tvDeviceClient';
 
 const statusConfig = {
   movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-600', icon: Activity },
@@ -60,6 +61,7 @@ const veiculoCores = [
 export default function TvDashboardVeiculos() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const tvDeviceToken = useMemo(() => getTvDeviceToken(), []);
   const [listaAberta, setListaAberta] = useState(false);
   useFullscreen(true);
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
@@ -200,6 +202,23 @@ export default function TvDashboardVeiculos() {
 
   const fetchVeiculos = useCallback(async () => {
     try {
+      if (tvDeviceToken) {
+        const data = await callTvDeviceFunction<{
+          estabelecimento_id: string;
+          veiculos: VeiculoComStatus[];
+          paradasMarcadas: ParadaMarcada[];
+          kmRodadosHoje: Record<string, number>;
+          precosCombustivel: { gasolina: number; diesel: number; etanol: number };
+        }>('tv-dashboard-veiculos', tvDeviceToken);
+        setEstabelecimentoId(data.estabelecimento_id);
+        setVeiculos(data.veiculos || []);
+        setParadasMarcadas(data.paradasMarcadas || []);
+        setKmRodadosHoje(data.kmRodadosHoje || {});
+        setPrecosCombustivel(data.precosCombustivel || { gasolina: 5.50, diesel: 5.80, etanol: 4.20 });
+        setLastUpdate(new Date());
+        return;
+      }
+
       const { data: veiculosData, error: veiculosError } = await supabase
         .from('veiculos')
         .select('*')
@@ -258,25 +277,25 @@ export default function TvDashboardVeiculos() {
     } finally {
       setLoading(false);
     }
-  }, [estabelecimentoId, fetchParadasMarcadas, fetchKmRodadosHoje]);
+  }, [tvDeviceToken, estabelecimentoId, fetchParadasMarcadas, fetchKmRodadosHoje]);
 
   useEffect(() => {
-    if (estabelecimentoId) {
+    if (estabelecimentoId || tvDeviceToken) {
       fetchVeiculos();
-      fetchPrecosCombustivel();
+      if (!tvDeviceToken) fetchPrecosCombustivel();
     }
-  }, [estabelecimentoId, fetchVeiculos, fetchPrecosCombustivel]);
+  }, [estabelecimentoId, tvDeviceToken, fetchVeiculos, fetchPrecosCombustivel]);
 
   useEffect(() => {
-    if (!estabelecimentoId) return;
+    if (!estabelecimentoId && !tvDeviceToken) return;
 
     const interval = setInterval(fetchVeiculos, 30000);
     return () => clearInterval(interval);
-  }, [estabelecimentoId, fetchVeiculos]);
+  }, [estabelecimentoId, tvDeviceToken, fetchVeiculos]);
 
   // Real-time subscription
   useEffect(() => {
-    if (!estabelecimentoId) return;
+    if (!estabelecimentoId || tvDeviceToken) return;
 
     const channel = supabase
       .channel('tv-veiculos-monitor')
@@ -296,7 +315,7 @@ export default function TvDashboardVeiculos() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [estabelecimentoId, fetchVeiculos]);
+  }, [estabelecimentoId, tvDeviceToken, fetchVeiculos]);
 
   const veiculosFiltrados = useMemo(() => filterByGrupo(veiculos, grupoId), [veiculos, grupoId]);
   const veiculosComPosicao = veiculosFiltrados.filter(v => v.ultima_posicao);

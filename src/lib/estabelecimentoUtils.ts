@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getUrlEstabelecimentoId } from "@/lib/tvDeviceClient";
 
 /**
  * Obtém o estabelecimento_id para o contexto atual.
@@ -16,6 +17,11 @@ export async function getEstabelecimentoId(estabelecimentoId?: string): Promise<
   // 1. Se foi passado como parâmetro, usa ele
   if (estabelecimentoId) {
     return estabelecimentoId;
+  }
+
+  const urlEstabelecimentoId = getUrlEstabelecimentoId();
+  if (urlEstabelecimentoId) {
+    return urlEstabelecimentoId;
   }
 
   // 2. Verifica se há um estabelecimento selecionado no localStorage
