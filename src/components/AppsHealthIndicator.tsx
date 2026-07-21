@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 type State = "online" | "warn" | "offline";
 type Health = { at: string | null; ago: number | null };
 type FilialHealth = { id: string; nome: string; at: string | null; ago: number | null; state: State; equipamentos: number };
+type TvDeviceHealth = { id: string; nome: string; at: string | null; state: State };
 
 function classify(ago: number | null): State {
   if (ago == null) return "offline";
