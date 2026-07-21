@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { DeleteConfirmTrigger } from "@/components/tv-signage/DeleteConfirmTrigger";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, RefreshCw, QrCode, Lock, Unlock, Terminal, Pencil, Trash2, KeyRound, Wifi, WifiOff, AlertTriangle } from "lucide-react";
+import { Plus, Search, RefreshCw, QrCode, Lock, Unlock, Terminal, Pencil, Trash2, KeyRound, Wifi, WifiOff, AlertTriangle, PlayCircle } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -180,6 +180,7 @@ export default function TvSignageDispositivos() {
                   <TableCell className="text-xs">{d.versao_app || "—"}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" title="Simular" onClick={() => window.open(`/tv-signage/simular/${d.id}`, "_blank")}><PlayCircle className="w-4 h-4 text-primary" /></Button>
                       <Button variant="ghost" size="icon" title="Enviar comando" onClick={() => setComandoDialog({ deviceId: d.id, open: true })}><Terminal className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="icon" title={d.bloqueado ? "Desbloquear" : "Bloquear"} onClick={async () => {
                         await supabase.from("tv_devices").update({ bloqueado: !d.bloqueado, status: !d.bloqueado ? "bloqueado" : "offline" }).eq("id", d.id);
