@@ -35,8 +35,8 @@ function aggregate(states: State[]): State {
   return "offline";
 }
 
-async function fetchHealth(): Promise<{ win: Health; and: Health; filiais: FilialHealth[] }> {
-  const [{ data: filiaisRaw }, { data: equipRaw }, { data: dv }] = await Promise.all([
+async function fetchHealth(): Promise<{ win: Health; and: Health; filiais: FilialHealth[]; tvs: TvDeviceHealth[] }> {
+  const [{ data: filiaisRaw }, { data: equipRaw }, { data: dv }, { data: tvRaw }] = await Promise.all([
     supabase.from("ponto_filiais").select("id, nome").order("nome", { ascending: true }),
     supabase
       .from("ponto_equipamentos")
@@ -49,6 +49,10 @@ async function fetchHealth(): Promise<{ win: Health; and: Health; filiais: Filia
       .order("ultimo_heartbeat", { ascending: false, nullsFirst: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("tv_devices")
+      .select("id, nome, ultima_comunicacao, status, bloqueado")
+      .order("ultima_comunicacao", { ascending: false, nullsFirst: false }),
   ]);
 
   const now = Date.now();
