@@ -21,6 +21,7 @@ interface Row {
   tipo_veiculo: string;
   descricao: string;
   telefone_sms: string;
+  imei: string;
   tracker_model_id: string;
   operadora_id: string;
   status: 'pendente' | 'enviando' | 'enviado' | 'falhou';
@@ -33,6 +34,7 @@ const newRow = (): Row => ({
   tipo_veiculo: 'Carro',
   descricao: '',
   telefone_sms: '',
+  imei: '',
   tracker_model_id: '',
   operadora_id: '',
   status: 'pendente',
