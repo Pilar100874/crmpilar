@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { buildTrackerParametersSms, configurarRastreador, TrackerModelLite } from '@/lib/trackerConfig';
 import { OPERADORAS_APN } from '@/lib/operadorasSms';
+import { useGrupoFilter } from '@/lib/logistica/grupoFilter';
 
 const TIPOS = ['Celular', 'Carro', 'Van', 'Caminhão Leve', 'Caminhão Médio', 'Caminhão Pesado', 'Moto', 'Bicicleta', 'Outro'];
 
