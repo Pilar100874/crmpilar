@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
-import { User, Mail, Phone, Building2, Users, Monitor, Download, ExternalLink, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { User, Mail, Phone, Building2, Users, Monitor, Download, ExternalLink, CheckCircle2, XCircle, Loader2, Smartphone, Car } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { useExtensionDownload } from "@/hooks/useExtensionDownload";
 import { ExtensionInstallManual } from "@/components/ExtensionInstallManual";
@@ -20,7 +20,14 @@ export default function Perfil() {
   const [estabelecimentoName, setEstabelecimentoName] = useState("");
   const [grupoAcessoName, setGrupoAcessoName] = useState("");
   const [extensionStatus, setExtensionStatus] = useState<{isSharing: boolean, lastFrameAt: string | null} | null>(null);
+  const [dispositivos, setDispositivos] = useState<any[]>([]);
   const { downloadExtension, isDownloading } = useExtensionDownload();
+
+  const currentDeviceUuid = (() => {
+    try {
+      return localStorage.getItem('crm:pwa:device_uuid') || '';
+    } catch { return ''; }
+  })();
 
   useEffect(() => {
     loadUserData();
@@ -118,6 +125,26 @@ export default function Perfil() {
           if (grupoData) {
             setGrupoAcessoName(grupoData.nome);
           }
+        }
+
+        // Buscar dispositivos vinculados ao usuário
+        const { data: disps } = await supabase
+          .from("dispositivos_rastreamento")
+          .select("id, device_uuid, nome_dispositivo, modelo, plataforma, status, ultimo_acesso, primeiro_acesso, veiculo_id")
+          .eq("usuario_id", usuario.id)
+          .order("ultimo_acesso", { ascending: false });
+        if (disps) {
+          // Enriquecer com placa do veículo vinculado
+          const veicIds = Array.from(new Set(disps.map(d => d.veiculo_id).filter(Boolean)));
+          let veicMap: Record<string, string> = {};
+          if (veicIds.length) {
+            const { data: veics } = await supabase
+              .from("veiculos")
+              .select("id, placa")
+              .in("id", veicIds);
+            veics?.forEach(v => { veicMap[v.id] = v.placa; });
+          }
+          setDispositivos(disps.map(d => ({ ...d, placa: d.veiculo_id ? veicMap[d.veiculo_id] : null })));
         }
       }
     } catch (error) {
@@ -376,6 +403,73 @@ export default function Perfil() {
               
               <ExtensionInstallManual />
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Smartphone className="h-5 w-5" />
+              Meus Dispositivos Vinculados
+            </CardTitle>
+            <CardDescription>
+              Aparelhos usados para rastreamento. Apenas 1 pode estar ativo por vez.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {dispositivos.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum dispositivo vinculado.</p>
+            ) : (
+              <div className="space-y-2">
+                {dispositivos.map((d) => {
+                  const isThisBrowser = currentDeviceUuid && d.device_uuid === currentDeviceUuid;
+                  const isAprovado = d.status === 'aprovado';
+                  return (
+                    <div
+                      key={d.id}
+                      className={`flex items-start justify-between gap-3 p-3 rounded-lg border ${
+                        isAprovado ? 'border-green-500/50 bg-green-500/5' : 'bg-muted/30'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3 min-w-0">
+                        <Smartphone className={`h-5 w-5 mt-0.5 shrink-0 ${isAprovado ? 'text-green-600' : 'text-muted-foreground'}`} />
+                        <div className="min-w-0">
+                          <div className="font-medium text-sm truncate flex items-center gap-2 flex-wrap">
+                            {d.nome_dispositivo || d.modelo || d.device_uuid}
+                            {isThisBrowser && (
+                              <Badge variant="outline" className="text-[10px]">Este aparelho</Badge>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {d.plataforma || 'pwa'}
+                            {d.placa ? ` • Veículo ${d.placa}` : ''}
+                          </div>
+                          {d.ultimo_acesso && (
+                            <div className="text-xs text-muted-foreground">
+                              Último acesso: {new Date(d.ultimo_acesso).toLocaleString('pt-BR')}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        {isAprovado ? (
+                          <Badge className="bg-green-600 hover:bg-green-600 gap-1">
+                            <CheckCircle2 className="h-3 w-3" /> Ativo
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">{d.status || 'pendente'}</Badge>
+                        )}
+                        {d.veiculo_id && (
+                          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            <Car className="h-3 w-3" /> vinculado
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 
