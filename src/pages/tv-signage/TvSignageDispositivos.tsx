@@ -236,8 +236,6 @@ export default function TvSignageDispositivos() {
                   <SelectContent><SelectItem value="dark">Escuro</SelectItem><SelectItem value="light">Claro</SelectItem></SelectContent>
                 </Select>
               </div>
-              <div><Label>Idioma</Label><Input value={edit.idioma || "pt-BR"} onChange={(e) => setEdit({ ...edit, idioma: e.target.value })} /></div>
-              <div><Label>Versão mínima do app</Label><Input value={edit.versao_min_requerida || ""} onChange={(e) => setEdit({ ...edit, versao_min_requerida: e.target.value })} placeholder="ex: 1.0.0" /></div>
               <div className="md:col-span-2"><Label>Observações</Label><Textarea value={edit.observacoes || ""} onChange={(e) => setEdit({ ...edit, observacoes: e.target.value })} /></div>
             </div>
           )}
