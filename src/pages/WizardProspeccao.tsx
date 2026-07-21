@@ -14,29 +14,38 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
+import { UFS } from '@/lib/brAddress';
+
 const PORTES = ['MEI', 'ME (Micro)', 'EPP (Pequena)', 'Média', 'Grande'];
 const CRITERIOS = [
   'Ter site',
   'Ter WhatsApp',
   'Ter e-mail',
+  'Ter telefone',
   'Ter CNPJ ativo',
   'Ter contato/decisor identificado',
 ];
 const FONTES_SUGERIDAS = ['Google Maps', 'LinkedIn', 'Instagram', 'Sites setoriais', 'Receita Federal', 'Guia comercial local'];
 
 type Provider = 'lovable' | 'openai' | 'anthropic';
+type EscopoGeo = 'cidade' | 'uf' | 'pais';
 
 interface FormState {
   segmento: string;
   cnae: string;
+  escopo: EscopoGeo;
   cidade: string;
   uf: string;
+  pais: string;
+  usar_raio: boolean;
   raio_km: number;
   porte: string[];
   faturamento: string;
   palavras_chave: string;
-  fontes: string;
+  fontes: string[];
+  fontes_extras: string;
   quantidade: number;
+  ilimitado: boolean;
   criterios: string[];
   modo: 'auto' | 'prompt';
   provider: Provider;
@@ -45,14 +54,19 @@ interface FormState {
 const initialState: FormState = {
   segmento: '',
   cnae: '',
+  escopo: 'cidade',
   cidade: '',
   uf: '',
+  pais: 'Brasil',
+  usar_raio: false,
   raio_km: 50,
   porte: [],
   faturamento: '',
   palavras_chave: '',
-  fontes: '',
+  fontes: [...FONTES_SUGERIDAS],
+  fontes_extras: '',
   quantidade: 20,
+  ilimitado: false,
   criterios: [],
   modo: 'auto',
   provider: 'lovable',
