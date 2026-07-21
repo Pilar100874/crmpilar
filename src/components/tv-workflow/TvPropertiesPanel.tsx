@@ -82,7 +82,12 @@ export function TvPropertiesPanel({ node, onChange, onDelete, onClose }: Props) 
               <Select value={cfg.evento || "manual"} onValueChange={(v) => setCfg({ evento: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {EVENTOS_SISTEMA.map((e) => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}
+                  {EVENTOS_SISTEMA_GRUPOS.map((g) => (
+                    <div key={g.grupo}>
+                      <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{g.grupo}</div>
+                      {g.itens.map((e) => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}
+                    </div>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
