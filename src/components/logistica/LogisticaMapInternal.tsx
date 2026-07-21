@@ -243,9 +243,9 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
 
       if (existingMarker) {
         existingMarker.setLatLng(pos);
-        existingMarker.setIcon(createVeiculoIcon(veiculo.status, compactIcons, veiculo.cor));
+        existingMarker.setIcon(createVeiculoIcon(veiculo.status, compactIcons, veiculo.cor, veiculo.tipo_veiculo));
       } else {
-        const marker = L.marker(pos, { icon: createVeiculoIcon(veiculo.status, compactIcons, veiculo.cor) })
+        const marker = L.marker(pos, { icon: createVeiculoIcon(veiculo.status, compactIcons, veiculo.cor, veiculo.tipo_veiculo) })
           .addTo(map)
           .bindPopup(`
             <div class="text-sm">
