@@ -27,9 +27,10 @@ import { getEstabelecimentoId } from "@/services/tvSignage/tvSignageService";
 import { TvBlockLibrary } from "@/components/tv-workflow/TvBlockLibrary";
 import { TvFlowNode } from "@/components/tv-workflow/TvFlowNode";
 import { TvPropertiesPanel } from "@/components/tv-workflow/TvPropertiesPanel";
-import { TV_BLOCK_BY_TYPE, TvFlowNodeData } from "@/types/tvWorkflow";
+import { TV_BLOCK_BY_TYPE, TV_BLOCK_DEFINITIONS, TvFlowNodeData } from "@/types/tvWorkflow";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
+import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 
 const nodeTypes = { custom: TvFlowNode };
 
