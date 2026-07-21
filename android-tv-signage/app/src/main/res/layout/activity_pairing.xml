@@ -31,6 +31,33 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/txtTitle" />
 
+    <Button
+        android:id="@+id/btnScanQr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/pair_scan_qr"
+        android:textSize="20sp"
+        android:paddingHorizontal="32dp"
+        android:paddingVertical="14dp"
+        android:layout_marginTop="28dp"
+        android:backgroundTint="#22C55E"
+        android:textColor="#FFFFFF"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/txtSub" />
+
+    <TextView
+        android:id="@+id/txtOr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="— ou digite manualmente —"
+        android:textColor="#7A8599"
+        android:textSize="14sp"
+        android:layout_marginTop="18dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnScanQr" />
+
     <EditText
         android:id="@+id/inputCodigo"
         android:layout_width="480dp"
@@ -43,11 +70,11 @@
         android:background="#1A2033"
         android:inputType="textCapCharacters"
         android:maxLength="8"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="14dp"
         android:importantForAutofill="no"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/txtSub" />
+        app:layout_constraintTop_toBottomOf="@id/txtOr" />
 
     <EditText
         android:id="@+id/inputToken"
@@ -60,7 +87,7 @@
         android:padding="16dp"
         android:background="#1A2033"
         android:inputType="text"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="14dp"
         android:importantForAutofill="no"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -74,7 +101,7 @@
         android:textSize="20sp"
         android:paddingHorizontal="40dp"
         android:paddingVertical="12dp"
-        android:layout_marginTop="28dp"
+        android:layout_marginTop="20dp"
         android:backgroundTint="#3B82F6"
         android:textColor="#FFFFFF"
         app:layout_constraintStart_toStartOf="parent"
@@ -87,7 +114,7 @@
         android:layout_height="wrap_content"
         android:textColor="#F97316"
         android:textSize="16sp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="20dp"
         android:gravity="center"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

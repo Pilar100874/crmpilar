@@ -1,8 +1,11 @@
 package br.com.pilar.tvsignage
 
+import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import br.com.pilar.tvsignage.databinding.ActivityPairingBinding
 import kotlinx.coroutines.CoroutineScope
@@ -13,6 +16,23 @@ import org.json.JSONObject
 
 class PairingActivity : AppCompatActivity() {
     private lateinit var b: ActivityPairingBinding
+
+    private val scanLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val codigo = result.data?.getStringExtra("codigo")?.trim()?.uppercase().orEmpty()
+            val token = result.data?.getStringExtra("token")?.trim().orEmpty()
+            if (codigo.isNotEmpty() && token.isNotEmpty()) {
+                b.inputCodigo.setText(codigo)
+                b.inputToken.setText(token)
+                b.txtStatus.text = "QR Code lido — conectando..."
+                pair(codigo, token)
+            } else {
+                Toast.makeText(this, R.string.qr_invalid, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,6 +45,14 @@ class PairingActivity : AppCompatActivity() {
 
         b = ActivityPairingBinding.inflate(layoutInflater)
         setContentView(b.root)
+
+        // Esconde botão de scanner se o dispositivo não tiver câmera (típico da maioria das TVs)
+        val hasCamera = packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
+        b.btnScanQr.visibility = if (hasCamera) android.view.View.VISIBLE else android.view.View.GONE
+
+        b.btnScanQr.setOnClickListener {
+            scanLauncher.launch(Intent(this, QrScanActivity::class.java))
+        }
 
         b.btnPair.setOnClickListener {
             val codigo = b.inputCodigo.text.toString().trim().uppercase()
@@ -39,6 +67,7 @@ class PairingActivity : AppCompatActivity() {
 
     private fun pair(codigo: String, token: String) {
         b.btnPair.isEnabled = false
+        b.btnScanQr.isEnabled = false
         b.txtStatus.text = "Conectando..."
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -55,12 +84,14 @@ class PairingActivity : AppCompatActivity() {
                     } else {
                         b.txtStatus.text = "Erro: $resp"
                         b.btnPair.isEnabled = true
+                        b.btnScanQr.isEnabled = true
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     b.txtStatus.text = "Falha: ${e.message}"
                     b.btnPair.isEnabled = true
+                    b.btnScanQr.isEnabled = true
                 }
             }
         }
