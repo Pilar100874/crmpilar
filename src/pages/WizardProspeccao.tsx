@@ -129,6 +129,63 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
     }));
   };
 
+  const ampliarTermos = async () => {
+    if (!form.segmento.trim() && !form.cnae.trim()) {
+      toast.error('Informe o segmento antes de ampliar');
+      return;
+    }
+    setAmpliando(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('wizard-prospeccao', {
+        body: { modo: 'ampliar', segmento: form.segmento || form.cnae, palavras_chave: form.palavras_chave },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const termos: string[] = Array.isArray((data as any)?.termos) ? (data as any).termos : [];
+      if (termos.length === 0) {
+        toast.info('Nenhum termo foi retornado — adicione manualmente abaixo.');
+        return;
+      }
+      // Mescla mantendo os existentes (sem duplicar, case-insensitive)
+      setForm((f) => {
+        const existentes = new Set(f.termos_ampliados.map((t) => t.toLowerCase()));
+        const novos = termos.filter((t) => !existentes.has(t.toLowerCase()));
+        return { ...f, termos_ampliados: [...f.termos_ampliados, ...novos] };
+      });
+      toast.success(`${termos.length} sugestões geradas`);
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Falha ao ampliar termos');
+    } finally {
+      setAmpliando(false);
+    }
+  };
+
+  const adicionarTermo = () => {
+    const v = novoTermo.trim();
+    if (!v) return;
+    setForm((f) => f.termos_ampliados.some((t) => t.toLowerCase() === v.toLowerCase())
+      ? f
+      : { ...f, termos_ampliados: [...f.termos_ampliados, v] });
+    setNovoTermo('');
+  };
+  const removerTermo = (idx: number) => {
+    setForm((f) => ({ ...f, termos_ampliados: f.termos_ampliados.filter((_, i) => i !== idx) }));
+  };
+  const iniciarEdicao = (idx: number) => {
+    setEditIdx(idx);
+    setEditValor(form.termos_ampliados[idx]);
+  };
+  const salvarEdicao = () => {
+    if (editIdx === null) return;
+    const v = editValor.trim();
+    setForm((f) => ({
+      ...f,
+      termos_ampliados: f.termos_ampliados.map((t, i) => (i === editIdx ? (v || t) : t)),
+    }));
+    setEditIdx(null);
+    setEditValor('');
+  };
+
   const executar = async () => {
     setLoading(true);
     setResult(null);
