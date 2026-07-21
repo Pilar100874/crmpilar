@@ -60,11 +60,17 @@ function SortableCameraRow({ id, index, nome }: { id: string; index: number; nom
 
 
 const PAGE_SIZE = 16;
-const ROTATE_MS = 10_000;
 const ORDER_KEY = "tv-cameras-order-v1";
 
 export default function TvCameras() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const gruposParam = searchParams.get("grupos") || "";
+  const camerasParam = searchParams.get("cameras") || "";
+  const rotateSec = Math.max(0, parseInt(searchParams.get("rotate") || "0") || 0);
+  const gruposIds = useMemo(() => gruposParam.split(",").map((s) => s.trim()).filter(Boolean), [gruposParam]);
+  const camerasIds = useMemo(() => camerasParam.split(",").map((s) => s.trim()).filter(Boolean), [camerasParam]);
+
   const [cams, setCams] = useState<any[] | null>(null);
   const [pageIdx, setPageIdx] = useState(0);
   const [zoomed, setZoomed] = useState<any | null>(null);
@@ -73,34 +79,40 @@ export default function TvCameras() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
+      let q = supabase
         .from("cv_cameras")
-        .select("id,nome,filial_id,ativo")
+        .select("id,nome,filial_id,grupo_id,ativo")
         .eq("ativo", true)
         .order("nome");
+      if (camerasIds.length) q = q.in("id", camerasIds);
+      else if (gruposIds.length) q = q.in("grupo_id", gruposIds);
+      const { data } = await q;
       const list = data ?? [];
-      // Aplica ordem salva do usuário, se houver
-      try {
-        const raw = localStorage.getItem(ORDER_KEY);
-        if (raw) {
-          const savedIds: string[] = JSON.parse(raw);
-          const map = new Map(list.map((c: any) => [c.id, c]));
-          const ordered: any[] = [];
-          savedIds.forEach((id) => {
-            const c = map.get(id);
-            if (c) {
-              ordered.push(c);
-              map.delete(id);
-            }
-          });
-          map.forEach((c) => ordered.push(c));
-          setCams(ordered);
-          return;
-        }
-      } catch {}
+      // Aplica ordem salva do usuário, se houver (apenas quando sem filtro específico)
+      if (!camerasIds.length && !gruposIds.length) {
+        try {
+          const raw = localStorage.getItem(ORDER_KEY);
+          if (raw) {
+            const savedIds: string[] = JSON.parse(raw);
+            const map = new Map(list.map((c: any) => [c.id, c]));
+            const ordered: any[] = [];
+            savedIds.forEach((id) => {
+              const c = map.get(id);
+              if (c) {
+                ordered.push(c);
+                map.delete(id);
+              }
+            });
+            map.forEach((c) => ordered.push(c));
+            setCams(ordered);
+            return;
+          }
+        } catch {}
+      }
       setCams(list);
     })();
-  }, []);
+  }, [gruposParam, camerasParam]);
+
 
   const pages = useMemo(() => {
     const list = cams ?? [];
