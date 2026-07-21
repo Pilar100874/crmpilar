@@ -165,21 +165,40 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
 
   const fetchDispositivos = async () => {
     try {
-      // Busca TODOS os dispositivos (aprovados e pendentes) — a aprovação acontece
-      // automaticamente ao selecionar e salvar o vínculo aqui.
       const { data, error } = await supabase
         .from('dispositivos_rastreamento')
-        .select('id, device_uuid, nome_dispositivo, veiculo_id, estabelecimento_id, status, plataforma, ultimo_acesso')
+        .select('id, device_uuid, nome_dispositivo, veiculo_id, estabelecimento_id, status, plataforma, ultimo_acesso, usuario_id')
         .in('status', ['aprovado', 'pendente']);
 
-
       if (error) throw error;
-      console.log('Dispositivos encontrados:', data);
-      setDispositivos(data || []);
+
+      const usuarioIds = Array.from(new Set((data || []).map(d => d.usuario_id).filter(Boolean))) as string[];
+      const veiculoIds = Array.from(new Set((data || []).map(d => d.veiculo_id).filter(Boolean))) as string[];
+
+      const [usuariosRes, veiculosRes] = await Promise.all([
+        usuarioIds.length
+          ? supabase.from('usuarios').select('id, nome').in('id', usuarioIds)
+          : Promise.resolve({ data: [] as any[] }),
+        veiculoIds.length
+          ? supabase.from('veiculos').select('id, placa').in('id', veiculoIds)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+
+      const uMap = new Map((usuariosRes.data || []).map((u: any) => [u.id, u.nome]));
+      const vMap = new Map((veiculosRes.data || []).map((v: any) => [v.id, v.placa]));
+
+      const enriched = (data || []).map(d => ({
+        ...d,
+        usuario_nome: d.usuario_id ? (uMap.get(d.usuario_id) || null) : null,
+        veiculo_placa: d.veiculo_id ? (vMap.get(d.veiculo_id) || null) : null,
+      }));
+
+      setDispositivos(enriched);
     } catch (error) {
       console.error('Error fetching devices:', error);
     }
   };
+
 
 
   const handleOpenDialog = (veiculo?: any) => {
