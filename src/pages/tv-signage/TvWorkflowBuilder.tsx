@@ -29,6 +29,7 @@ import { TvFlowNode } from "@/components/tv-workflow/TvFlowNode";
 import { TvPropertiesPanel } from "@/components/tv-workflow/TvPropertiesPanel";
 import { TV_BLOCK_BY_TYPE, TvFlowNodeData } from "@/types/tvWorkflow";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 
 const nodeTypes = { custom: TvFlowNode };
 
@@ -48,6 +49,7 @@ function TvBuilderInner() {
   const [libraryOpen, setLibraryOpen] = useState(true);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [noteNodeId, setNoteNodeId] = useState<string | null>(null);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
@@ -133,6 +135,71 @@ function TvBuilderInner() {
     setSelected(null);
     setConfirmDelete(null);
   };
+
+  const duplicateNode = (id: string) => {
+    setNodes((nds) => {
+      const src = nds.find((n) => n.id === id);
+      if (!src) return nds;
+      const clone: Node = {
+        ...src,
+        id: newId(),
+        position: { x: src.position.x + 40, y: src.position.y + 40 },
+        data: JSON.parse(JSON.stringify(src.data)),
+        selected: false,
+      };
+      return nds.concat(clone);
+    });
+  };
+
+  const toggleFlag = (id: string, flag: "isBreakpoint" | "isSkipped") => {
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === id
+          ? ({ ...n, data: { ...(n.data as any), [flag]: !(n.data as any)?.[flag] } } as Node)
+          : n,
+      ),
+    );
+  };
+
+  const clearDebug = (id: string) => {
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === id
+          ? ({ ...n, data: { ...(n.data as any), isBreakpoint: false, isSkipped: false } } as Node)
+          : n,
+      ),
+    );
+  };
+
+  const saveNote = (nota: string) => {
+    if (!noteNodeId) return;
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === noteNodeId ? ({ ...n, data: { ...(n.data as any), nota } } as Node) : n,
+      ),
+    );
+    setNoteNodeId(null);
+  };
+
+  // Inject handlers into every node's data so TvFlowNode can call them.
+  const nodesWithHandlers = useMemo(
+    () =>
+      nodes.map((n) => ({
+        ...n,
+        data: {
+          ...(n.data as any),
+          onDelete: (id: string) => setConfirmDelete(id),
+          onDuplicate: duplicateNode,
+          onSetBreakpoint: (id: string) => toggleFlag(id, "isBreakpoint"),
+          onSetSkip: (id: string) => toggleFlag(id, "isSkipped"),
+          onAddNote: (id: string) => setNoteNodeId(id),
+          onClearDebug: clearDebug,
+        },
+      })),
+    [nodes],
+  );
+
+  const noteNode = nodes.find((n) => n.id === noteNodeId);
 
   // ─── Salvar ────────────────────────────────────────────
   const primeiroGatilho = useMemo(() => {
@@ -223,7 +290,7 @@ function TvBuilderInner() {
 
         <div ref={wrapperRef} className="flex-1 relative" onDrop={onDrop} onDragOver={onDragOver}>
           <ReactFlow
-            nodes={nodes}
+            nodes={nodesWithHandlers}
             edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
@@ -265,6 +332,13 @@ function TvBuilderInner() {
         onConfirm={() => confirmDelete && deleteNode(confirmDelete)}
         title="Excluir bloco?"
         description="O bloco e suas conexões serão removidos do fluxo."
+      />
+
+      <BlockNoteDialog
+        open={!!noteNodeId}
+        onOpenChange={(o) => !o && setNoteNodeId(null)}
+        currentNote={(noteNode?.data as any)?.nota || ""}
+        onSave={saveNote}
       />
     </div>
   );
