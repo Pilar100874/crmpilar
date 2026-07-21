@@ -36,7 +36,11 @@ interface DispositivoAprovado {
   status?: string;
   plataforma?: string | null;
   ultimo_acesso?: string | null;
+  usuario_id?: string | null;
+  usuario_nome?: string | null;
+  veiculo_placa?: string | null;
 }
+
 
 
 const tipos = [
