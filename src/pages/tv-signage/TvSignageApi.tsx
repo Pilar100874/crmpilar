@@ -34,7 +34,7 @@ export default function TvSignageApi() {
                 Aparelhos com câmera (Google TV, tablets, celulares Android) podem parear apenas
                 <b> lendo o QR Code</b> — sem digitar nada. Nas TVs sem câmera, digite o código + token exibidos.
               </p>
-              <p className="text-xs text-muted-foreground mt-1">Versão 1.1.0 · ~27 MB · Android 7.0+ (API 24) · com leitor de QR embutido</p>
+              <p className="text-xs text-muted-foreground mt-1">Versão 1.1.1 · ~27 MB · Android 7.0+ (API 24) · com leitor de QR embutido</p>
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
@@ -43,8 +43,8 @@ export default function TvSignageApi() {
               className="gap-2"
               onClick={() =>
                 downloadApk(
-                  "/__l5e/assets-v1/36bb7224-622e-4176-b136-cbdf2dbd49e6/pilar-tv-signage-v1.1.0.apk",
-                  "pilar-tv-signage-v1.1.0.apk",
+                  "/__l5e/assets-v1/136d1f21-8b36-45d7-bc72-6b92c110da9c/pilar-tv-signage-v1.1.1.apk",
+                  "pilar-tv-signage-v1.1.1.apk",
                 )
               }
             >
@@ -57,7 +57,7 @@ export default function TvSignageApi() {
           <div><b className="text-foreground">Como instalar:</b></div>
           <ol className="list-decimal list-inside space-y-1 pl-1">
             <li>Nas configurações da TV, habilite <b>Fontes desconhecidas</b> (Segurança / Aplicativos).</li>
-            <li>Baixe o APK diretamente pelo navegador da TV, envie por pendrive USB ou use <code>adb install pilar-tv-signage-v1.1.0.apk</code>.</li>
+            <li>Baixe o APK diretamente pelo navegador da TV, envie por pendrive USB ou use <code>adb install pilar-tv-signage-v1.1.1.apk</code>.</li>
             <li>Abra <b>Pilar TV Signage</b> no launcher. <b>Se o aparelho tiver câmera</b>, toque em <b>📷 Ler QR Code</b> e aponte para o QR gerado em <b>Dispositivos → Novo</b> — o pareamento é automático. Caso contrário, digite o código de 8 caracteres + token.</li>
             <li>Pronto: a TV assume o dashboard/playlist configurado e recebe comandos remotos em tempo real.</li>
           </ol>

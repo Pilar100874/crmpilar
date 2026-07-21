@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { downloadApk } from "@/lib/downloadApk";
 
-const APK_URL = "/__l5e/assets-v1/36bb7224-622e-4176-b136-cbdf2dbd49e6/pilar-tv-signage-v1.1.0.apk";
-const APK_FILENAME = "pilar-tv-signage-v1.1.0.apk";
+const APK_URL = "/__l5e/assets-v1/136d1f21-8b36-45d7-bc72-6b92c110da9c/pilar-tv-signage-v1.1.1.apk";
+const APK_FILENAME = "pilar-tv-signage-v1.1.1.apk";
 
 export default function TvPair() {
   const [params] = useSearchParams();
