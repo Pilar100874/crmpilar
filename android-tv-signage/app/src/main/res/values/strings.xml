@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Pilar TV Signage</string>
+    <string name="pair_title">Parear esta TV</string>
+    <string name="pair_sub">No painel Pilar acesse TV Signage → Dispositivos → Novo e copie o código e o token exibidos no QR.</string>
+    <string name="pair_code_hint">Código (8 caracteres)</string>
+    <string name="pair_token_hint">Token</string>
+    <string name="pair_button">Conectar</string>
+</resources>
