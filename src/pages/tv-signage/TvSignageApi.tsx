@@ -34,7 +34,7 @@ export default function TvSignageApi() {
                 Aparelhos com câmera (Google TV, tablets, celulares Android) podem parear apenas
                 <b> lendo o QR Code</b> — sem digitar nada. Nas TVs sem câmera, digite o código + token exibidos.
               </p>
-              <p className="text-xs text-muted-foreground mt-1">Versão 1.1.0 · ~27 MB · Android 7.0+ (API 24) · com leitor de QR embutido</p>
+              <p className="text-xs text-muted-foreground mt-1">Versão 1.1.1 · ~27 MB · Android 7.0+ (API 24) · com leitor de QR embutido</p>
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
