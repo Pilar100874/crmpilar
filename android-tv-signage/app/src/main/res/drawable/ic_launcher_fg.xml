@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
-    <solid android:color="#3B82F6" />
-    <size android:width="72dp" android:height="72dp" />
-</shape>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- Monitor / TV frame -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,36 h48 a4,4 0 0 1 4,4 v26 a4,4 0 0 1 -4,4 h-48 a4,4 0 0 1 -4,-4 v-26 a4,4 0 0 1 4,-4 z M30,40 v26 h48 v-26 z" />
+    <!-- Screen inner accent -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M34,44 h40 v18 h-40 z" />
+    <!-- Stand -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M46,72 h16 v3 h-16 z M42,75 h24 v3 h-24 z" />
+</vector>
