@@ -115,6 +115,92 @@ function TvBuilderInner() {
     setEdges((eds) => addEdge({ ...c, type: "smoothstep", animated: true }, eds));
   }, [setEdges]);
 
+  // ─── Smart connect (arrastar linha → menu de blocos compatíveis) ───
+  const connectStartRef = useRef<{
+    nodeId: string | null;
+    handleId: string | null;
+    handleType: "source" | "target";
+  } | null>(null);
+  const [connectMenu, setConnectMenu] = useState<null | {
+    x: number; y: number; flowX: number; flowY: number;
+    fromNodeId: string; fromHandleId: string | null;
+    handleType: "source" | "target";
+  }>(null);
+
+  const onConnectStart = useCallback((_: any, params: any) => {
+    connectStartRef.current = {
+      nodeId: params.nodeId,
+      handleId: params.handleId,
+      handleType: params.handleType,
+    };
+  }, []);
+
+  const onConnectEnd = useCallback((event: any) => {
+    const start = connectStartRef.current;
+    connectStartRef.current = null;
+    if (!start || !start.nodeId) return;
+    const target = event.target as HTMLElement;
+    const droppedOnPane = target?.classList?.contains("react-flow__pane");
+    if (!droppedOnPane) return;
+    const clientX = event.clientX ?? event.changedTouches?.[0]?.clientX;
+    const clientY = event.clientY ?? event.changedTouches?.[0]?.clientY;
+    if (clientX == null) return;
+    const flowPos = screenToFlowPosition({ x: clientX, y: clientY });
+    setConnectMenu({
+      x: clientX, y: clientY,
+      flowX: flowPos.x, flowY: flowPos.y,
+      fromNodeId: start.nodeId,
+      fromHandleId: start.handleId,
+      handleType: start.handleType,
+    });
+  }, [screenToFlowPosition]);
+
+  const smartBlockOptions: SmartBlockOption[] = useMemo(() => {
+    if (!connectMenu) return [];
+    // Arrastando da SAÍDA → precisa que o próximo bloco tenha entrada (hasInput !== false)
+    // Arrastando da ENTRADA → precisa que o bloco anterior possa gerar saída (sempre pode)
+    return TV_BLOCK_DEFINITIONS.filter((b) => {
+      if (connectMenu.handleType === "source") {
+        return b.hasInput !== false; // exclui gatilhos como destino
+      }
+      return true;
+    }).map((b) => ({
+      type: b.type,
+      label: b.label,
+      description: b.description,
+      icon: "▫️",
+      category: b.group,
+    }));
+  }, [connectMenu]);
+
+  const handleSmartPick = useCallback((type: string) => {
+    if (!connectMenu) return;
+    const def = TV_BLOCK_BY_TYPE[type];
+    if (!def) return;
+    const node: Node = {
+      id: newId(),
+      type: "custom",
+      position: { x: connectMenu.flowX - 120, y: connectMenu.flowY - 40 },
+      data: {
+        type,
+        label: def.label,
+        config: JSON.parse(JSON.stringify(def.defaultData)),
+      } as unknown as Record<string, unknown>,
+    };
+    setNodes((nds) => nds.concat(node));
+    setEdges((eds) =>
+      addEdge(
+        connectMenu.handleType === "source"
+          ? { source: connectMenu.fromNodeId, sourceHandle: connectMenu.fromHandleId, target: node.id, type: "smoothstep", animated: true }
+          : { source: node.id, target: connectMenu.fromNodeId, targetHandle: connectMenu.fromHandleId, type: "smoothstep", animated: true },
+        eds,
+      ),
+    );
+    setConnectMenu(null);
+    toast.success(`Bloco "${def.label}" adicionado`);
+  }, [connectMenu, setNodes, setEdges]);
+
+
   // ─── Atualizar / excluir bloco ─────────────────────────
   const updateNode = (id: string, patch: Partial<TvFlowNodeData>) => {
     setNodes((nds) => nds.map((n) => {
