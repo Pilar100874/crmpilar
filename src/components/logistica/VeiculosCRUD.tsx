@@ -914,16 +914,6 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   placeholder={isPessoa ? 'Ex: Vendedor externo' : 'Ex: Fiorino Branca'}
                 />
               </div>
-              {!isPessoa && (
-                <div>
-                  <Label>Motorista</Label>
-                  <Input
-                    value={formData.motorista}
-                    onChange={(e) => setFormData(prev => ({ ...prev, motorista: e.target.value }))}
-                    placeholder="Nome do motorista"
-                  />
-                </div>
-              )}
               <div>
                 <Label>Grupo</Label>
                 <Select
