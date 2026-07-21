@@ -24,8 +24,9 @@ interface WizardInput {
   fontes?: string;
   quantidade?: number;
   criterios?: string[];
-  modo?: "auto" | "prompt" | "status";
+  modo?: "auto" | "prompt" | "status" | "ampliar";
   provider?: Provider;
+  termos_ampliados?: string[];
 }
 
 function montarPrompt(w: WizardInput): string {
