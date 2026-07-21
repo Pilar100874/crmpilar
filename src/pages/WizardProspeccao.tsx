@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
 import { UFS } from '@/lib/brAddress';
+import { CidadePorUFCombobox } from '@/components/common/CidadePorUFCombobox';
 
 const PORTES = ['MEI', 'ME (Micro)', 'EPP (Pequena)', 'Média', 'Grande'];
 const CRITERIOS = [
