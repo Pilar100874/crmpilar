@@ -190,6 +190,65 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Ampliação de termos de busca via IA (Lovable/Gemini)
+    if (input.modo === "ampliar") {
+      const base = (input.segmento ?? "").trim();
+      if (!base) {
+        return new Response(JSON.stringify({ termos: [] }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const apiKey = Deno.env.get("LOVABLE_API_KEY");
+      if (!apiKey) {
+        return new Response(JSON.stringify({ error: "LOVABLE_API_KEY não configurada" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const promptAmpliar = `Você recebe uma descrição curta do que o usuário quer prospectar. Gere entre 6 e 10 variações/consultas de busca em português (Brasil) que ampliem sinônimos, categorias correlatas, nomes de fabricantes, tipos de produto e usos finais. Retorne SOMENTE JSON puro no formato {"termos":["termo 1","termo 2",...]} — sem markdown, sem comentários. Não repita termos, mantenha cada termo curto (2 a 8 palavras).\n\nDescrição do usuário: "${base}"${input.palavras_chave ? `\nPalavras-chave adicionais: ${input.palavras_chave}` : ""}`;
+      try {
+        const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            messages: [
+              { role: "system", content: "Retorne SEMPRE JSON puro." },
+              { role: "user", content: promptAmpliar },
+            ],
+            response_format: { type: "json_object" },
+          }),
+        });
+        if (resp.status === 429) {
+          return new Response(JSON.stringify({ error: "Limite de requisições atingido — tente novamente em instantes." }), {
+            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        if (resp.status === 402) {
+          return new Response(JSON.stringify({ error: "Créditos de IA esgotados no workspace." }), {
+            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const j = await resp.json();
+        const content = j?.choices?.[0]?.message?.content ?? "{}";
+        let termos: string[] = [];
+        try {
+          const parsed = JSON.parse(content);
+          termos = Array.isArray(parsed?.termos) ? parsed.termos : [];
+        } catch {
+          const m = content.match(/\[[\s\S]*?\]/);
+          if (m) termos = JSON.parse(m[0]);
+        }
+        termos = termos.map((t) => String(t).trim()).filter(Boolean).slice(0, 12);
+        return new Response(JSON.stringify({ termos }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (e: any) {
+        return new Response(JSON.stringify({ error: e?.message ?? "Falha ao ampliar termos" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const prompt = montarPrompt(input);
     const disponiveis = await providersDisponiveis(sb, userId);
     const forcePrompt = input.modo === "prompt";
