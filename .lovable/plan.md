@@ -1,106 +1,101 @@
-# Workflows do Gerenciador de Telas Remotas
+## Objetivo
 
-Sistema de regras que dispara **mensagens temporárias em uma barra inferior** das telas remotas (Android/simulador) em resposta a eventos do sistema (ex.: caminhão parado, venda realizada, alerta de câmera, ponto batido, etc.).
+Trocar o CRUD de formulário atual da aba **Workflows** (Gerenciador de Telas Remotas) por um **editor visual em blocos** com o mesmo look & feel do **BotBuilder**: paleta lateral de blocos arrastáveis, canvas ReactFlow com fundo pontilhado, painel de propriedades à direita, MiniMap, botão de salvar/testar e simulador.
 
-## Como funcionará
+---
 
-1. **Cadastro do workflow** (nova tela `Gerenciador de Telas Remotas → Workflows`):
-   - Nome / ativo
-   - **Evento gatilho** (dropdown): `caminhao_parado`, `caminhao_movimento`, `venda_realizada`, `pedido_novo`, `alerta_camera`, `visita_iniciada`, `manual` (disparo por botão/API), etc.
-   - **Filtros opcionais** do evento (ex.: valor mínimo da venda, veículo específico, grupo logístico).
-   - **Mensagem** (texto com variáveis tipo `{placa}`, `{motorista}`, `{valor}`).
-   - **Duração** (segundos que a barra fica visível).
-   - **Estilo**: cor de fundo, cor do texto, ícone, posição (bottom/top), animação (slide/fade).
-   - **Escopo de exibição**:
-     - Todos os dispositivos
-     - Dispositivos específicos (multi-select)
-     - Grupos de dispositivos
-     - Apenas quando dashboard atual = X (ex.: só na tela de vendas)
-   - **Som** opcional (beep curto).
-
-2. **Fila de exibição** (nova tabela `tv_workflow_execucoes`):
-   - Quando um evento acontece, o workflow gera uma linha por dispositivo alvo com `mensagem_renderizada`, `expira_em`, `exibido_em`.
-   - Cada dispositivo consome sua fila via Supabase Realtime.
-
-3. **Overlay nas telas**:
-   - Componente `TvNotificationBar` renderizado em `SignageActivity` (WebView Android) e nas rotas `/tv/*` + `/tv-signage/simulador`.
-   - Escuta Realtime na tabela `tv_workflow_execucoes` filtrando pelo `device_id` (ou token) atual.
-   - Empilha múltiplas mensagens em ordem, respeitando duração de cada.
-
-4. **Gatilhos**:
-   - **Automáticos**: hooks nos pontos onde eventos já existem (veículos, pedidos, câmeras, visitas) chamam edge function `tv-workflow-dispatch({evento, payload})`.
-   - **Manual**: botão "Disparar agora" na tela do workflow (útil para avisos operacionais).
-   - **API/Webhook**: endpoint público para integrações externas.
-
-5. **Resolução de alvos** (edge function):
-   - Recebe `{evento, payload}`.
-   - Lista workflows ativos que casam com o evento + filtros.
-   - Para cada workflow, resolve dispositivos:
-     - Todos → todos os `tv_devices` do estabelecimento
-     - Específicos → lista fixa
-     - Por dashboard atual → filtra `dashboard_atual_id`
-   - Interpola variáveis do payload na mensagem.
-   - Insere execuções na fila com `expira_em = now() + duração`.
-
-## Estrutura de dados
+## Estrutura da tela
 
 ```text
-tv_workflows
-├─ id, estabelecimento_id, nome, ativo
-├─ evento (text)                  -- 'caminhao_parado', 'venda_realizada', ...
-├─ filtros (jsonb)                -- {valor_min, veiculo_ids, grupo_ids}
-├─ mensagem_template (text)       -- "Venda de {valor} realizada!"
-├─ duracao_segundos (int)
-├─ estilo (jsonb)                 -- {bg, fg, icone, posicao, animacao, som}
-├─ escopo_tipo (text)             -- 'todos' | 'dispositivos' | 'grupos' | 'dashboard'
-├─ escopo_ids (uuid[])
-├─ dashboard_id (uuid, nullable)  -- só aparece nesta tela
-└─ timestamps
-
-tv_workflow_execucoes
-├─ id, workflow_id, device_id, estabelecimento_id
-├─ mensagem_renderizada (text)
-├─ estilo (jsonb)
-├─ duracao_segundos, expira_em
-├─ exibido_em (nullable)
-└─ created_at
++--------------------------------------------------------------+
+| ⚡ Workflow XYZ    [Salvar] [Testar] [Simular] [◁ Voltar]     |
++---------+------------------------------------------+---------+
+|         |                                          |         |
+| Blocos  |            Canvas ReactFlow              | Props   |
+| (lib)   |         (drag & drop, conexões)          | do bloco|
+|         |                                          |         |
++---------+------------------------------------------+---------+
 ```
 
-Realtime habilitado em `tv_workflow_execucoes`. RLS + GRANT normais.
+Reaproveita a mesma linguagem visual do BotBuilder: `BlockLibrary` estilo cartões coloridos por categoria, `FlowNode` custom com ícone + título + descrição, edges animadas, MiniMap e Controls do ReactFlow.
 
-## Componentes e arquivos
+---
 
-- **Backend**
-  - Migração criando as duas tabelas + índices + realtime + RLS + GRANT.
-  - Edge function `tv-workflow-dispatch` (recebe evento e enfileira execuções).
-  - Cron/edge para limpar execuções expiradas (7 dias).
+## Blocos disponíveis
 
-- **Frontend admin**
-  - `src/pages/tv-signage/TvSignageWorkflows.tsx` — CRUD com dialog de edição (evento, filtros, mensagem, estilo, escopo, duração, botão "Disparar agora").
-  - Link no menu lateral do Gerenciador de Telas Remotas.
-  - Preview do estilo da barra em tempo real dentro do editor.
+**Gatilhos (roxo)**
+- Evento do sistema (venda, caminhão parado, câmera, ponto, visita, manual…)
+- Agendado (cron)
+- Webhook externo
 
-- **Overlay nas telas TV**
-  - `src/components/tv/TvNotificationBar.tsx` — barra animada, fila, som opcional.
-  - Injetada em `TvDashboardVeiculos`, `TvDashboardVendas`, `TvCameras`, `TvSignageSimulador`.
-  - Usa `device_id` da URL (ou do token) para filtrar Realtime.
+**Condições (amarelo)**
+- Filtro por variável do evento (`placa`, `valor`, `motorista`, etc.) com operadores `=, ≠, >, <, contém`
+- Horário / dia da semana
+- Escopo do dispositivo (grupo, dashboard atual, ID)
 
-- **Integração de eventos existentes**
-  - Chamada em `logistica-tracker-ingest` (veículo parado detectado) → dispara `caminhao_parado`.
-  - Chamada ao criar pedido/venda → `venda_realizada`.
-  - Alerta de câmera → `alerta_camera`.
-  - (Só nos pontos que já existem; sem criar nova lógica de detecção.)
+**Ações (azul/verde)**
+- Mostrar barra de notificação (mensagem, ícone, cores, posição, duração)
+- Aguardar N segundos
+- Trocar dashboard do dispositivo
+- Enviar comando (reiniciar app, limpar cache, brilho…)
+- Tocar som/beep (via app Android)
+- Registrar evento no log
+
+Cada bloco tem `defaultData`, ícone Lucide, cor da categoria, e um form próprio no painel de propriedades.
+
+---
+
+## Modelo de dados
+
+Reaproveita `tv_workflows` já existente, adicionando:
+- `flow_json` (jsonb) — nodes + edges do ReactFlow
+- `versao` (int) — incrementa a cada salvamento
+
+Mantém colunas antigas (`evento`, `mensagem_template`, `estilo`, `duracao_segundos`) como cache do **primeiro gatilho + primeira ação de barra** — assim a edge function `tv-workflow-dispatch` continua funcionando sem quebrar nada, mas passa a interpretar `flow_json` quando presente.
+
+---
+
+## Fluxo de execução
+
+Quando um evento chega em `tv-workflow-dispatch`:
+1. Carrega workflows ativos com `flow_json`.
+2. Encontra nós **Gatilho** que casam com o evento.
+3. Percorre as edges executando os blocos: condições filtram, ações produzem execuções.
+4. Cada nó "Mostrar barra" gera uma linha em `tv_workflow_execucoes` para cada dispositivo alvo.
+5. `TvNotificationBar` continua consumindo `tv_workflow_execucoes` via Realtime — nenhuma mudança no cliente.
+
+---
+
+## Arquivos afetados
+
+Novos:
+- `src/pages/tv-signage/TvWorkflowBuilder.tsx` — editor visual (equivalente enxuto do BotBuilder)
+- `src/components/tv-workflow/TvBlockLibrary.tsx` — paleta lateral
+- `src/components/tv-workflow/TvFlowNode.tsx` — nó customizado
+- `src/components/tv-workflow/TvPropertiesPanel.tsx` — painel de propriedades
+- `src/types/tvWorkflow.ts` — `BLOCK_DEFINITIONS` (tipos, ícones, cores, defaults)
+- `supabase/functions/tv-workflow-dispatch/index.ts` — passa a interpretar `flow_json`
+
+Alterados:
+- `src/pages/tv-signage/TvSignageWorkflows.tsx` — vira lista simples (nome, gatilho, status) com botão "Editar no builder" que abre `/tv-signage/workflows/:id/builder`
+- `src/App.tsx` — registra a rota do builder
+- Migration para `ALTER TABLE tv_workflows ADD COLUMN flow_json jsonb, versao int DEFAULT 1`
+
+---
 
 ## Detalhes técnicos
 
-- Interpolação de variáveis: função simples `str.replace(/\{(\w+)\}/g, (_, k) => payload[k] ?? '')`.
-- Barra: `position: fixed; bottom: 0` (ou top conforme estilo), altura ~72px, texto grande legível a distância, ícone Lucide.
-- Fila local: array de execuções em `useState`, remove ao expirar `duracao_segundos`.
-- Realtime: `postgres_changes INSERT` em `tv_workflow_execucoes` com filtro `device_id=eq.<id>`.
-- APK Android: a WebView já carrega as rotas `/tv/*`, então o overlay funciona automaticamente sem release novo do APK. Nenhum trabalho no lado nativo.
+- ReactFlow já está instalado (`@xyflow/react`) e reutilizado em outros builders (bot, logistica, omnichannel), então nenhuma dependência nova.
+- O `FlowNode` do bot é reaproveitável mas prefiro um `TvFlowNode` mais enxuto para não trazer ruído (variáveis, sub-fluxos, etc. que não fazem sentido aqui).
+- Salvamento debounced, com atalho `Ctrl+S`.
+- Templates prontos ("Alerta de caminhão parado", "Aviso de venda grande") disponíveis no primeiro acesso.
 
-## Fora do escopo desta entrega
+---
 
-- Criação de novos detectores de eventos (só ligamos aos que já disparam algo hoje + gatilho manual).
-- Novo release do APK.
-- Editor visual estilo drag-and-drop — usaremos formulário estruturado.
+## Fora de escopo desta iteração
+
+- Simulador passo-a-passo com dados fake (fica como próximo passo).
+- Versionamento com rollback visual (só guarda `versao`).
+- Sub-fluxos / nós reutilizáveis.
+
+Confirma que posso seguir por esse caminho? Se quiser, posso restringir o conjunto inicial de blocos ou trocar a lista principal por thumbnails do canvas em vez de tabela.
