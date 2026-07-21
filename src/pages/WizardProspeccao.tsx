@@ -33,6 +33,7 @@ type EscopoGeo = 'cidade' | 'uf' | 'pais';
 
 interface FormState {
   segmento: string;
+  termos_ampliados: string[];
   cnae: string;
   escopo: EscopoGeo;
   cidade: string;
@@ -54,6 +55,7 @@ interface FormState {
 
 const initialState: FormState = {
   segmento: '',
+  termos_ampliados: [],
   cnae: '',
   escopo: 'cidade',
   cidade: '',
