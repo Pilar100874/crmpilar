@@ -319,3 +319,21 @@ verify_jwt = false
 [functions.extract-encomenda-photo]
 verify_jwt = false
 
+[functions.tv-device-auth]
+verify_jwt = false
+
+[functions.tv-device-config]
+verify_jwt = false
+
+[functions.tv-device-heartbeat]
+verify_jwt = false
+
+[functions.tv-device-log]
+verify_jwt = false
+
+[functions.tv-device-commands]
+verify_jwt = false
+
+[functions.tv-device-command-confirm]
+verify_jwt = false
+

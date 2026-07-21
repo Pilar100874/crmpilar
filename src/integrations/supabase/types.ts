@@ -20351,6 +20351,406 @@ export type Database = {
         }
         Relationships: []
       }
+      tv_commands: {
+        Row: {
+          confirmado_em: string | null
+          created_at: string
+          criado_por: string | null
+          device_id: string
+          estabelecimento_id: string
+          id: string
+          payload: Json
+          resultado: Json | null
+          status: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          confirmado_em?: string | null
+          created_at?: string
+          criado_por?: string | null
+          device_id: string
+          estabelecimento_id: string
+          id?: string
+          payload?: Json
+          resultado?: Json | null
+          status?: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          confirmado_em?: string | null
+          created_at?: string
+          criado_por?: string | null
+          device_id?: string
+          estabelecimento_id?: string
+          id?: string
+          payload?: Json
+          resultado?: Json | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tv_commands_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "tv_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tv_dashboards: {
+        Row: {
+          auto_update: boolean
+          cache_offline: boolean
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          fullscreen: boolean
+          id: string
+          nome: string
+          refresh_segundos: number
+          rota_interna: string | null
+          timeout_segundos: number
+          tipo: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          auto_update?: boolean
+          cache_offline?: boolean
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          fullscreen?: boolean
+          id?: string
+          nome: string
+          refresh_segundos?: number
+          rota_interna?: string | null
+          timeout_segundos?: number
+          tipo?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          auto_update?: boolean
+          cache_offline?: boolean
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          fullscreen?: boolean
+          id?: string
+          nome?: string
+          refresh_segundos?: number
+          rota_interna?: string | null
+          timeout_segundos?: number
+          tipo?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      tv_devices: {
+        Row: {
+          armazenamento: number | null
+          bloqueado: boolean
+          codigo: string
+          cpu_uso: number | null
+          created_at: string
+          dashboard_atual_id: string | null
+          emparelhado_em: string | null
+          estabelecimento_id: string
+          grupo_id: string | null
+          id: string
+          idioma: string | null
+          ip: string | null
+          local: string | null
+          memoria_uso: number | null
+          nome: string
+          observacoes: string | null
+          playlist_id: string | null
+          resolucao: string | null
+          status: string
+          tema: string | null
+          token_hash: string
+          ultima_comunicacao: string | null
+          updated_at: string
+          uptime_segundos: number | null
+          versao_app: string | null
+          versao_min_requerida: string | null
+        }
+        Insert: {
+          armazenamento?: number | null
+          bloqueado?: boolean
+          codigo: string
+          cpu_uso?: number | null
+          created_at?: string
+          dashboard_atual_id?: string | null
+          emparelhado_em?: string | null
+          estabelecimento_id: string
+          grupo_id?: string | null
+          id?: string
+          idioma?: string | null
+          ip?: string | null
+          local?: string | null
+          memoria_uso?: number | null
+          nome: string
+          observacoes?: string | null
+          playlist_id?: string | null
+          resolucao?: string | null
+          status?: string
+          tema?: string | null
+          token_hash: string
+          ultima_comunicacao?: string | null
+          updated_at?: string
+          uptime_segundos?: number | null
+          versao_app?: string | null
+          versao_min_requerida?: string | null
+        }
+        Update: {
+          armazenamento?: number | null
+          bloqueado?: boolean
+          codigo?: string
+          cpu_uso?: number | null
+          created_at?: string
+          dashboard_atual_id?: string | null
+          emparelhado_em?: string | null
+          estabelecimento_id?: string
+          grupo_id?: string | null
+          id?: string
+          idioma?: string | null
+          ip?: string | null
+          local?: string | null
+          memoria_uso?: number | null
+          nome?: string
+          observacoes?: string | null
+          playlist_id?: string | null
+          resolucao?: string | null
+          status?: string
+          tema?: string | null
+          token_hash?: string
+          ultima_comunicacao?: string | null
+          updated_at?: string
+          uptime_segundos?: number | null
+          versao_app?: string | null
+          versao_min_requerida?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tv_devices_dashboard_atual_id_fkey"
+            columns: ["dashboard_atual_id"]
+            isOneToOne: false
+            referencedRelation: "tv_dashboards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tv_devices_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "tv_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tv_devices_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "tv_playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tv_events: {
+        Row: {
+          contexto: Json | null
+          created_at: string
+          device_id: string | null
+          estabelecimento_id: string
+          id: string
+          mensagem: string | null
+          nivel: string
+          tipo: string | null
+        }
+        Insert: {
+          contexto?: Json | null
+          created_at?: string
+          device_id?: string | null
+          estabelecimento_id: string
+          id?: string
+          mensagem?: string | null
+          nivel?: string
+          tipo?: string | null
+        }
+        Update: {
+          contexto?: Json | null
+          created_at?: string
+          device_id?: string | null
+          estabelecimento_id?: string
+          id?: string
+          mensagem?: string | null
+          nivel?: string
+          tipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tv_events_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "tv_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tv_groups: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          id: string
+          local: string | null
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          id?: string
+          local?: string | null
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          id?: string
+          local?: string | null
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tv_heartbeats: {
+        Row: {
+          armazenamento: number | null
+          cpu_uso: number | null
+          created_at: string
+          device_id: string
+          estabelecimento_id: string
+          id: string
+          ip: string | null
+          memoria_uso: number | null
+          resolucao: string | null
+          uptime_segundos: number | null
+          versao_app: string | null
+        }
+        Insert: {
+          armazenamento?: number | null
+          cpu_uso?: number | null
+          created_at?: string
+          device_id: string
+          estabelecimento_id: string
+          id?: string
+          ip?: string | null
+          memoria_uso?: number | null
+          resolucao?: string | null
+          uptime_segundos?: number | null
+          versao_app?: string | null
+        }
+        Update: {
+          armazenamento?: number | null
+          cpu_uso?: number | null
+          created_at?: string
+          device_id?: string
+          estabelecimento_id?: string
+          id?: string
+          ip?: string | null
+          memoria_uso?: number | null
+          resolucao?: string | null
+          uptime_segundos?: number | null
+          versao_app?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tv_heartbeats_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "tv_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tv_playlist_items: {
+        Row: {
+          created_at: string
+          dashboard_id: string
+          duracao_segundos: number
+          id: string
+          ordem: number
+          playlist_id: string
+        }
+        Insert: {
+          created_at?: string
+          dashboard_id: string
+          duracao_segundos?: number
+          id?: string
+          ordem?: number
+          playlist_id: string
+        }
+        Update: {
+          created_at?: string
+          dashboard_id?: string
+          duracao_segundos?: number
+          id?: string
+          ordem?: number
+          playlist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tv_playlist_items_dashboard_id_fkey"
+            columns: ["dashboard_id"]
+            isOneToOne: false
+            referencedRelation: "tv_dashboards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tv_playlist_items_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "tv_playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tv_playlists: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          loop: boolean
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          loop?: boolean
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          loop?: boolean
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       twilio_config: {
         Row: {
           account_sid: string | null

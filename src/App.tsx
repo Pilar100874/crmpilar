@@ -243,6 +243,15 @@ import WatchLogisticaRota from "./pages/watch/WatchLogisticaRota";
 import WatchLogisticaHistorico from "./pages/watch/WatchLogisticaHistorico";
 import TvDashboardVendas from "./pages/TvDashboardVendas";
 import TvDashboardVeiculos from "./pages/TvDashboardVeiculos";
+import TvSignageLayout from "./pages/tv-signage/TvSignageLayout";
+import TvSignageDashboard from "./pages/tv-signage/TvSignageDashboard";
+import TvSignageDispositivos from "./pages/tv-signage/TvSignageDispositivos";
+import TvSignageDashboards from "./pages/tv-signage/TvSignageDashboards";
+import TvSignagePlaylists from "./pages/tv-signage/TvSignagePlaylists";
+import TvSignageGrupos from "./pages/tv-signage/TvSignageGrupos";
+import TvSignageComandos from "./pages/tv-signage/TvSignageComandos";
+import TvSignageEventos from "./pages/tv-signage/TvSignageEventos";
+import TvSignageApi from "./pages/tv-signage/TvSignageApi";
 import TvCameras from "./pages/TvCameras";
 import PublicPage from "./pages/PublicPage";
 import EcommerceLayout from "./components/ecommerce/EcommerceLayout";
@@ -594,6 +603,16 @@ const App = () => (
             <Route path="/tv/vendas" element={<TvDashboardVendas />} />
             <Route path="/tv/veiculos" element={<TvDashboardVeiculos />} />
             <Route path="/tv/cameras" element={<TvCameras />} />
+            <Route path="/tv-signage" element={<TvSignageLayout />}>
+              <Route index element={<TvSignageDashboard />} />
+              <Route path="dispositivos" element={<TvSignageDispositivos />} />
+              <Route path="dashboards" element={<TvSignageDashboards />} />
+              <Route path="playlists" element={<TvSignagePlaylists />} />
+              <Route path="grupos" element={<TvSignageGrupos />} />
+              <Route path="comandos" element={<TvSignageComandos />} />
+              <Route path="eventos" element={<TvSignageEventos />} />
+              <Route path="api" element={<TvSignageApi />} />
+            </Route>
             <Route path="/p/:slug" element={<PublicPage />} />
             {/* E-commerce routes */}
             <Route path="/ecommerce" element={<WishlistProvider><CartProvider><QuoteRequestProvider><EcommerceLayout /></QuoteRequestProvider></CartProvider></WishlistProvider>}>
