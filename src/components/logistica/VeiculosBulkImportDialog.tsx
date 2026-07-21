@@ -227,6 +227,7 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
                   <TableHead className="w-[140px]">Tipo</TableHead>
                   <TableHead>Descrição</TableHead>
                   <TableHead className="w-[160px]">Telefone (M2M)</TableHead>
+                  <TableHead className="w-[170px]">IMEI</TableHead>
                   <TableHead className="w-[110px]">Status</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
