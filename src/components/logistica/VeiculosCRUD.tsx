@@ -320,6 +320,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
 
         // Then link the selected device (if any) — auto-aprova se ainda estava pendente
         if (formData.dispositivo_id) {
+          const novoDisp = dispositivos.find(d => d.id === formData.dispositivo_id);
           const { error: dispErr } = await supabase
             .from('dispositivos_rastreamento')
             .update({
@@ -333,7 +334,27 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             console.error('Erro ao ativar dispositivo:', dispErr);
             toast.error('Vínculo salvo, mas não foi possível ativar o dispositivo: ' + dispErr.message);
           }
+
+          // Regra: apenas 1 aparelho ativo por usuário — revoga os demais aprovados
+          // do mesmo usuário e transfere o vínculo do veículo para este novo aparelho.
+          if (novoDisp?.usuario_id) {
+            const { data: outros } = await supabase
+              .from('dispositivos_rastreamento')
+              .select('id, veiculo_id')
+              .eq('usuario_id', novoDisp.usuario_id)
+              .eq('status', 'aprovado')
+              .neq('id', formData.dispositivo_id);
+
+            if (outros && outros.length > 0) {
+              await supabase
+                .from('dispositivos_rastreamento')
+                .update({ status: 'revogado', veiculo_id: null })
+                .in('id', outros.map(o => o.id));
+              toast.info(`${outros.length} aparelho(s) anterior(es) do mesmo usuário foram desconectados.`);
+            }
+          }
         }
+
 
       }
 
