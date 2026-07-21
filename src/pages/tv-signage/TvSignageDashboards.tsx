@@ -140,15 +140,90 @@ export default function TvSignageDashboards() {
                 </Select>
               </div>
               {edit.tipo === "tela_interna" ? (
-                <div><Label>Tela</Label>
-                  <Select value={edit.rota_interna || ""} onValueChange={(v) => setEdit({ ...edit, rota_interna: v })}>
-                    <SelectTrigger><SelectValue placeholder="Escolha a tela" /></SelectTrigger>
-                    <SelectContent>{ROTAS_INTERNAS.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
+                <>
+                  <div><Label>Tela</Label>
+                    <Select
+                      value={(edit.rota_interna || "").split("?")[0] || ""}
+                      onValueChange={(v) => setEdit({ ...edit, rota_interna: v })}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Escolha a tela" /></SelectTrigger>
+                      <SelectContent>{ROTAS_INTERNAS.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  {isCamsRoute(edit.rota_interna) && (
+                    <div className="space-y-3 rounded-md border p-3 bg-muted/30">
+                      <div className="text-xs font-medium">Configuração do mosaico de câmeras</div>
+                      <div>
+                        <Label className="text-xs">Grupos de câmeras (opcional)</Label>
+                        <p className="text-[11px] text-muted-foreground mb-1">
+                          Selecione um ou mais grupos. Se nada for escolhido, todas as câmeras ativas serão exibidas.
+                        </p>
+                        <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+                          {grupos.map((g) => {
+                            const on = camsCfg.grupos.includes(g.id);
+                            return (
+                              <button
+                                key={g.id}
+                                type="button"
+                                onClick={() => {
+                                  const next = on ? camsCfg.grupos.filter((x) => x !== g.id) : [...camsCfg.grupos, g.id];
+                                  updateCamsCfg({ grupos: next, cameras: [] });
+                                }}
+                                className={`px-2 py-1 rounded-md text-xs border ${on ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"}`}
+                              >
+                                <span className="inline-block h-2 w-2 rounded-full mr-1 align-middle" style={{ background: g.cor || "#f97316" }} />
+                                {g.nome}
+                              </button>
+                            );
+                          })}
+                          {grupos.length === 0 && <span className="text-xs text-muted-foreground">Nenhum grupo cadastrado</span>}
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Câmeras específicas (opcional)</Label>
+                        <p className="text-[11px] text-muted-foreground mb-1">
+                          Se preencher, sobrepõe a seleção por grupos.
+                        </p>
+                        <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+                          {camerasList.map((c) => {
+                            const on = camsCfg.cameras.includes(c.id);
+                            return (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => {
+                                  const next = on ? camsCfg.cameras.filter((x) => x !== c.id) : [...camsCfg.cameras, c.id];
+                                  updateCamsCfg({ cameras: next });
+                                }}
+                                className={`px-2 py-1 rounded-md text-xs border ${on ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"}`}
+                              >
+                                {c.nome}
+                              </button>
+                            );
+                          })}
+                          {camerasList.length === 0 && <span className="text-xs text-muted-foreground">Nenhuma câmera ativa</span>}
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Rotação automática entre páginas (segundos)</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={camsCfg.rotate}
+                          onChange={(e) => updateCamsCfg({ rotate: Math.max(0, parseInt(e.target.value) || 0) })}
+                          placeholder="0 = manual"
+                        />
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Cada página exibe 16 câmeras. Use 0 para avanço manual.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div><Label>URL</Label><Input value={edit.url || ""} onChange={(e) => setEdit({ ...edit, url: e.target.value })} placeholder="https://..." /></div>
               )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Refresh (segundos)</Label><Input type="number" value={edit.refresh_segundos} onChange={(e) => setEdit({ ...edit, refresh_segundos: parseInt(e.target.value) || 60 })} /></div>
                 <div><Label>Timeout (segundos)</Label><Input type="number" value={edit.timeout_segundos} onChange={(e) => setEdit({ ...edit, timeout_segundos: parseInt(e.target.value) || 30 })} /></div>
