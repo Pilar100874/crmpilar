@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Wand2, ArrowLeft, ArrowRight, Loader2, Copy, CheckCircle2, ExternalLink } from 'lucide-react';
+import { Wand2, ArrowLeft, ArrowRight, Loader2, Copy, CheckCircle2, ExternalLink, Sparkles, Plus, X, Pencil, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,7 @@ type EscopoGeo = 'cidade' | 'uf' | 'pais';
 
 interface FormState {
   segmento: string;
+  termos_ampliados: string[];
   cnae: string;
   escopo: EscopoGeo;
   cidade: string;
@@ -54,6 +55,7 @@ interface FormState {
 
 const initialState: FormState = {
   segmento: '',
+  termos_ampliados: [],
   cnae: '',
   escopo: 'cidade',
   cidade: '',
@@ -90,6 +92,10 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
   const [form, setForm] = useState<FormState>(initialState);
 
   const [loading, setLoading] = useState(false);
+  const [ampliando, setAmpliando] = useState(false);
+  const [novoTermo, setNovoTermo] = useState('');
+  const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [editValor, setEditValor] = useState('');
   const [result, setResult] = useState<{ modo: string; inseridas?: number; prompt?: string; motivo?: string; aviso?: string } | null>(null);
   const [providers, setProviders] = useState<Record<Provider, boolean>>({ lovable: true, openai: false, anthropic: false });
 
@@ -103,7 +109,11 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
   const progress = ((step + 1) / totalSteps) * 100;
 
   const canNext = () => {
-    if (step === 0) return form.segmento.trim().length > 0 || form.cnae.trim().length > 0;
+    if (step === 0) {
+      const hasBase = form.segmento.trim().length > 0 || form.cnae.trim().length > 0;
+      // Exige que o usuário tenha ampliado os termos via IA antes de avançar
+      return hasBase && form.termos_ampliados.length > 0;
+    }
     if (step === 1) {
       if (form.escopo === 'cidade') return form.cidade.trim().length > 0;
       if (form.escopo === 'uf') return form.uf.trim().length === 2;
@@ -117,6 +127,63 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
       ...f,
       [key]: f[key].includes(value) ? f[key].filter((v) => v !== value) : [...f[key], value],
     }));
+  };
+
+  const ampliarTermos = async () => {
+    if (!form.segmento.trim() && !form.cnae.trim()) {
+      toast.error('Informe o segmento antes de ampliar');
+      return;
+    }
+    setAmpliando(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('wizard-prospeccao', {
+        body: { modo: 'ampliar', segmento: form.segmento || form.cnae, palavras_chave: form.palavras_chave },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const termos: string[] = Array.isArray((data as any)?.termos) ? (data as any).termos : [];
+      if (termos.length === 0) {
+        toast.info('Nenhum termo foi retornado — adicione manualmente abaixo.');
+        return;
+      }
+      // Mescla mantendo os existentes (sem duplicar, case-insensitive)
+      setForm((f) => {
+        const existentes = new Set(f.termos_ampliados.map((t) => t.toLowerCase()));
+        const novos = termos.filter((t) => !existentes.has(t.toLowerCase()));
+        return { ...f, termos_ampliados: [...f.termos_ampliados, ...novos] };
+      });
+      toast.success(`${termos.length} sugestões geradas`);
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Falha ao ampliar termos');
+    } finally {
+      setAmpliando(false);
+    }
+  };
+
+  const adicionarTermo = () => {
+    const v = novoTermo.trim();
+    if (!v) return;
+    setForm((f) => f.termos_ampliados.some((t) => t.toLowerCase() === v.toLowerCase())
+      ? f
+      : { ...f, termos_ampliados: [...f.termos_ampliados, v] });
+    setNovoTermo('');
+  };
+  const removerTermo = (idx: number) => {
+    setForm((f) => ({ ...f, termos_ampliados: f.termos_ampliados.filter((_, i) => i !== idx) }));
+  };
+  const iniciarEdicao = (idx: number) => {
+    setEditIdx(idx);
+    setEditValor(form.termos_ampliados[idx]);
+  };
+  const salvarEdicao = () => {
+    if (editIdx === null) return;
+    const v = editValor.trim();
+    setForm((f) => ({
+      ...f,
+      termos_ampliados: f.termos_ampliados.map((t, i) => (i === editIdx ? (v || t) : t)),
+    }));
+    setEditIdx(null);
+    setEditValor('');
   };
 
   const executar = async () => {
@@ -239,13 +306,86 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
               <h2 className="font-semibold">1. Segmento e atividade</h2>
               <div className="space-y-3">
                 <div>
-                  <Label>Segmento / atividade *</Label>
-                  <Input placeholder="Ex.: Materiais de construção, restaurantes, indústria metalúrgica..."
+                  <Label>O que quer pesquisar? *</Label>
+                  <Input placeholder="Ex.: Sacos de papel para padaria, restaurantes veganos, indústria metalúrgica..."
                     value={form.segmento} onChange={(e) => setForm({ ...form, segmento: e.target.value })} />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Descreva de forma simples. A IA vai ampliar em várias variações de busca.
+                  </p>
                 </div>
                 <div>
                   <Label>CNAE (opcional)</Label>
                   <Input placeholder="Ex.: 4744-0/01" value={form.cnae} onChange={(e) => setForm({ ...form, cnae: e.target.value })} />
+                </div>
+
+                <div className="rounded-lg border p-3 space-y-3 bg-muted/30">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div>
+                      <div className="text-sm font-medium flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-primary" /> Termos de busca ampliados
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Clique em <b>IA</b> para gerar variações. Você pode adicionar, editar ou remover antes de avançar.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={ampliarTermos}
+                      disabled={ampliando || (!form.segmento.trim() && !form.cnae.trim())}
+                    >
+                      {ampliando ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Ampliando…</> : <><Sparkles className="h-4 w-4 mr-2" />IA — Ampliar</>}
+                    </Button>
+                  </div>
+
+                  {form.termos_ampliados.length === 0 ? (
+                    <p className="text-xs text-muted-foreground italic">
+                      Nenhum termo ainda. Clique em <b>IA — Ampliar</b> ou adicione manualmente abaixo. É obrigatório ter ao menos 1 termo para avançar.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {form.termos_ampliados.map((t, i) => (
+                        <div key={i} className="flex items-center gap-1 rounded-full bg-background border pl-3 pr-1 py-1 text-sm">
+                          {editIdx === i ? (
+                            <>
+                              <Input
+                                autoFocus
+                                value={editValor}
+                                onChange={(e) => setEditValor(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') salvarEdicao(); if (e.key === 'Escape') setEditIdx(null); }}
+                                className="h-7 w-56"
+                              />
+                              <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={salvarEdicao}>
+                                <Check className="h-3.5 w-3.5" />
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <span>{t}</span>
+                              <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => iniciarEdicao(i)}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removerTermo(i)}>
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <Input
+                      placeholder='Adicionar termo (ex.: "saco kraft para pão francês")'
+                      value={novoTermo}
+                      onChange={(e) => setNovoTermo(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); adicionarTermo(); } }}
+                    />
+                    <Button type="button" variant="outline" size="sm" onClick={adicionarTermo} disabled={!novoTermo.trim()}>
+                      <Plus className="h-4 w-4 mr-1" /> Adicionar
+                    </Button>
+                  </div>
                 </div>
               </div>
             </>
