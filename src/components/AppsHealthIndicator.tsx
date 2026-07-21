@@ -103,10 +103,18 @@ async function fetchHealth(): Promise<{ win: Health; and: Health; filiais: Filia
   const winAt = winLatest || null;
   const andAt = (dv as any)?.ultimo_heartbeat ?? (dv as any)?.ultimo_ping ?? null;
 
+  const tvs: TvDeviceHealth[] = (tvRaw || []).map((t: any) => {
+    const at = t.ultima_comunicacao || null;
+    const ago = at ? now - new Date(at).getTime() : null;
+    const state: State = t.bloqueado ? "offline" : classify(ago);
+    return { id: t.id, nome: t.nome, at, state };
+  });
+
   return {
     win: { at: winAt, ago: winAt ? now - new Date(winAt).getTime() : null },
     and: { at: andAt, ago: andAt ? now - new Date(andAt).getTime() : null },
     filiais,
+    tvs,
   };
 }
 
