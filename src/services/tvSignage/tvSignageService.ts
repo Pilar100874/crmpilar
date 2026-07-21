@@ -50,12 +50,47 @@ export async function enviarComando(deviceId: string, tipo: TvCommandTipo, paylo
   } as any);
 }
 
-// Rotas internas do sistema que podem ser projetadas em TV
-// IMPORTANTE: apenas rotas preparadas para modo TV (autenticação via tv_token,
-// fora do LayoutWrapper que exige sessão de usuário). Outras rotas do sistema
-// redirecionam para /login quando abertas sem sessão Supabase.
+// Rotas internas do sistema que podem ser projetadas.
+// As rotas "/tv/*" são preparadas para modo TV (auth via tv_token, sem LayoutWrapper).
+// Demais rotas exigem sessão de usuário logado no navegador do dispositivo.
 export const ROTAS_INTERNAS = [
-  { value: "/tv/vendas", label: "TV — Vendas" },
-  { value: "/tv/veiculos", label: "TV — Veículos" },
-  { value: "/tv/cameras", label: "TV — Câmeras (Mosaico)" },
+  { value: "/tv/vendas", label: "TV — Vendas (recomendado)" },
+  { value: "/tv/veiculos", label: "TV — Veículos (recomendado)" },
+  { value: "/tv/cameras", label: "TV — Câmeras / Mosaico (recomendado)" },
+  { value: "/dashboard", label: "Dashboard principal" },
+  { value: "/atendimento", label: "Atendimento" },
+  { value: "/monitor-filas", label: "Monitor de Filas" },
+  { value: "/monitor-funcionarios", label: "Monitor de Funcionários" },
+  { value: "/dashboard-atendente", label: "Dashboard Atendente" },
+  { value: "/dashboard-supervisor", label: "Dashboard Supervisor" },
+  { value: "/sla-dashboard", label: "SLA Dashboard" },
+  { value: "/advanced-analytics", label: "Análises Avançadas" },
+  { value: "/dashboard-pesquisas-satisfacao", label: "Dashboard Pesquisas Satisfação" },
+  { value: "/quality-assurance", label: "Quality Assurance" },
+  { value: "/funil", label: "Funil" },
+  { value: "/orcamentos", label: "Orçamentos" },
+  { value: "/campanhas", label: "Campanhas" },
+  { value: "/calendario", label: "Calendário" },
+  { value: "/logistica" , label: "Logística — Hub" },
+  { value: "/logistica/monitoramento", label: "Logística — Monitoramento" },
+  { value: "/logistica/historico", label: "Logística — Histórico" },
+  { value: "/logistica/veiculos", label: "Logística — Veículos" },
+  { value: "/logistica/rotas", label: "Logística — Rotas" },
+  { value: "/pedido-tracking", label: "Rastreamento de Pedidos" },
+  { value: "/pedidos-recebidos", label: "Pedidos Recebidos" },
+  { value: "/marketplaces", label: "Marketplaces" },
+  { value: "/marketing", label: "Marketing — Hub" },
+  { value: "/marketing/campanhas", label: "Marketing — Campanhas" },
+  { value: "/robo-precos", label: "Robô de Preços" },
+  { value: "/relatorios", label: "Relatórios" },
+  { value: "/mapa-calor-sistema", label: "Mapa de Calor" },
+  { value: "/cameras", label: "Câmeras" },
+  { value: "/controle-veiculos", label: "Controle de Veículos" },
+  { value: "/controle-visitantes", label: "Controle de Visitantes" },
+  { value: "/livro-ocorrencia", label: "Livro de Ocorrências" },
+  { value: "/ponto", label: "Ponto" },
+  { value: "/contagem", label: "Contagem" },
+  { value: "/ads", label: "Ads — Hub" },
+  { value: "/ecommerce", label: "E-commerce" },
 ];
+
