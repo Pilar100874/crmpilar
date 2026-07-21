@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { DeleteConfirmTrigger } from "@/components/tv-signage/DeleteConfirmTrigger";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Search, RefreshCw, QrCode, Lock, Unlock, Terminal, Pencil, Trash2, KeyRound, Wifi, WifiOff, AlertTriangle } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
@@ -188,7 +188,7 @@ export default function TvSignageDispositivos() {
                       <Button variant="ghost" size="icon" title="Reemitir token" onClick={() => reemitirToken(d)}><KeyRound className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="icon" title="Ver QR Code" onClick={() => setPairing({ codigo: d.codigo, token: "(reemita para ver o token)" })}><QrCode className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="icon" title="Editar" onClick={() => setEdit(d)}><Pencil className="w-4 h-4" /></Button>
-                      <DeleteConfirmDialog
+                      <DeleteConfirmTrigger
                         onConfirm={() => excluir(d.id)}
                         title="Excluir dispositivo?"
                         description={`Remove "${d.nome}" e todo o histórico. Ação não pode ser desfeita.`}

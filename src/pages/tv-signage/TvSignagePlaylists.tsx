@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { DeleteConfirmTrigger } from "@/components/tv-signage/DeleteConfirmTrigger";
 import { Plus, Trash2, Pencil, GripVertical, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 import { getEstabelecimentoId } from "@/services/tvSignage/tvSignageService";
@@ -92,7 +92,7 @@ export default function TvSignagePlaylists() {
               </div>
               <div className="flex gap-1">
                 <Button variant="ghost" size="icon" onClick={() => abrirEditor(p)}><Pencil className="w-4 h-4" /></Button>
-                <DeleteConfirmDialog
+                <DeleteConfirmTrigger
                   onConfirm={async () => { await supabase.from("tv_playlists").delete().eq("id", p.id); carregar(); }}
                   title="Excluir playlist?"
                   description={`"${p.nome}" será removida.`}

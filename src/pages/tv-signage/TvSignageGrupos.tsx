@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { DeleteConfirmTrigger } from "@/components/tv-signage/DeleteConfirmTrigger";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { getEstabelecimentoId } from "@/services/tvSignage/tvSignageService";
@@ -48,7 +48,7 @@ export default function TvSignageGrupos() {
             </div>
             <div className="flex gap-1">
               <Button variant="ghost" size="icon" onClick={() => setEdit(g)}><Pencil className="w-4 h-4" /></Button>
-              <DeleteConfirmDialog
+              <DeleteConfirmTrigger
                 onConfirm={async () => { await supabase.from("tv_groups").delete().eq("id", g.id); carregar(); }}
                 title="Excluir grupo?"
                 description={`"${g.nome}" será removido. Dispositivos ficarão sem grupo.`}
