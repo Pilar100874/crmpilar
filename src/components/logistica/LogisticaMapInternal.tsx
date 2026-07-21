@@ -12,14 +12,38 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-const createVeiculoIcon = (status: string, compact = false, customColor?: string) => {
+// SVG paths (lucide) para cada tipo de veículo
+const TIPO_ICON_SVG: Record<string, string> = {
+  'pessoa': '<circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/>',
+  'celular': '<rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/>',
+  'carro': '<path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/>',
+  'van': '<path d="M10 17h4V5H2v12h3"/><path d="M20 17h2v-3.34a4 4 0 0 0-1.17-2.83L19 9h-5"/><path d="M14 17h1"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+  'caminhão leve': '<path d="M5 18H3c-.6 0-1-.4-1-1V7c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v11"/><path d="M14 9h4l4 4v4c0 .6-.4 1-1 1h-2"/><circle cx="7" cy="18" r="2"/><path d="M15 18H9"/><circle cx="17" cy="18" r="2"/>',
+  'caminhão médio': '<path d="M5 18H3c-.6 0-1-.4-1-1V7c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v11"/><path d="M14 9h4l4 4v4c0 .6-.4 1-1 1h-2"/><circle cx="7" cy="18" r="2"/><path d="M15 18H9"/><circle cx="17" cy="18" r="2"/>',
+  'caminhão pesado': '<path d="M5 18H3c-.6 0-1-.4-1-1V7c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v11"/><path d="M14 9h4l4 4v4c0 .6-.4 1-1 1h-2"/><circle cx="7" cy="18" r="2"/><path d="M15 18H9"/><circle cx="17" cy="18" r="2"/>',
+  'moto': '<circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/>',
+  'bicicleta': '<circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 5-1 2 3h2"/>',
+  'outro': '',
+};
+
+const getTipoIconSvg = (tipo?: string) => {
+  if (!tipo) return '';
+  return TIPO_ICON_SVG[tipo.toLowerCase()] ?? '';
+};
+
+const createVeiculoIcon = (status: string, compact = false, customColor?: string, tipoVeiculo?: string) => {
   // Se tiver cor customizada, usa ela; senão usa cor do status
   const color = customColor || (status === 'movendo' ? '#22c55e' : status === 'parado' ? '#eab308' : '#6b7280');
-  const size = compact ? 14 : 24;
+  const size = compact ? 18 : 30;
   const borderWidth = compact ? 2 : 3;
+  const iconSize = compact ? 10 : 16;
+  const svgPath = getTipoIconSvg(tipoVeiculo);
+  const inner = svgPath
+    ? `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${svgPath}</svg>`
+    : '';
   return L.divIcon({
     className: 'custom-vehicle-icon',
-    html: `<div style="background-color: ${color}; width: ${size}px; height: ${size}px; border-radius: 50%; border: ${borderWidth}px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+    html: `<div style="background-color: ${color}; width: ${size}px; height: ${size}px; border-radius: 50%; border: ${borderWidth}px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;">${inner}</div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
