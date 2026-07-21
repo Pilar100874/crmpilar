@@ -23,7 +23,7 @@ export default function TvSignageLayout() {
             <Tv className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-foreground">TV Signage</h1>
+            <h1 className="text-xl font-semibold text-foreground">Gerenciador de Telas Remotas</h1>
             <p className="text-xs text-muted-foreground">Gerenciamento remoto de Android TV / Google TV</p>
           </div>
         </div>
