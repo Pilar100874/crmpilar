@@ -266,6 +266,10 @@ export function AppsHealthIndicator({
         </TooltipContent>
       </Tooltip>
 
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="relative inline-flex items-center gap-1">
+            <Bell className={iconClass} />
             <span className={`${dotClassSize} rounded-full ${pushDotClass(push)}`} />
           </span>
         </TooltipTrigger>
