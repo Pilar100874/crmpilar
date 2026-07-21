@@ -21,6 +21,7 @@ interface Row {
   tipo_veiculo: string;
   descricao: string;
   telefone_sms: string;
+  imei: string;
   tracker_model_id: string;
   operadora_id: string;
   status: 'pendente' | 'enviando' | 'enviado' | 'falhou';
@@ -33,6 +34,7 @@ const newRow = (): Row => ({
   tipo_veiculo: 'Carro',
   descricao: '',
   telefone_sms: '',
+  imei: '',
   tracker_model_id: '',
   operadora_id: '',
   status: 'pendente',
@@ -75,6 +77,7 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
         tipo_veiculo: r.tipo_veiculo || null,
         ativo,
         telefone_sms: r.telefone_sms,
+        traccar_device_id: r.imei?.trim() || null,
         tracker_model_id: globalTrackerId || null,
         apn_operadora: op?.apn || null,
         tipo_chip: 'm2m',
@@ -224,6 +227,7 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
                   <TableHead className="w-[140px]">Tipo</TableHead>
                   <TableHead>Descrição</TableHead>
                   <TableHead className="w-[160px]">Telefone (M2M)</TableHead>
+                  <TableHead className="w-[170px]">IMEI</TableHead>
                   <TableHead className="w-[110px]">Status</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
@@ -245,6 +249,16 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
                     </TableCell>
                     <TableCell>
                       <Input value={r.telefone_sms} onChange={e => update(r.id, { telefone_sms: e.target.value })} placeholder="+5511..." className="h-9" />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        value={r.imei}
+                        onChange={e => update(r.id, { imei: e.target.value.replace(/\D/g, '') })}
+                        placeholder="Ex: 353456789012345"
+                        inputMode="numeric"
+                        maxLength={17}
+                        className="h-9 font-mono"
+                      />
                     </TableCell>
 
                     <TableCell>{statusBadge(r)}</TableCell>
@@ -298,6 +312,18 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
                 <div className="space-y-1">
                   <Label className="text-[11px] text-muted-foreground">Telefone (M2M)</Label>
                   <Input value={r.telefone_sms} onChange={e => update(r.id, { telefone_sms: e.target.value })} placeholder="+5511..." className="h-9" inputMode="tel" />
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-[11px] text-muted-foreground">IMEI do rastreador</Label>
+                  <Input
+                    value={r.imei}
+                    onChange={e => update(r.id, { imei: e.target.value.replace(/\D/g, '') })}
+                    placeholder="Ex: 353456789012345"
+                    className="h-9 font-mono"
+                    inputMode="numeric"
+                    maxLength={17}
+                  />
                 </div>
 
 
