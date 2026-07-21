@@ -650,7 +650,7 @@ export default function Layout({ children }: LayoutProps) {
       return item;
     });
 
-  if (soloMode) {
+  if (soloMode || hideMainMenu) {
     return (
       <div className="min-h-screen bg-background text-foreground">
         <main className="min-h-screen">{children}</main>
