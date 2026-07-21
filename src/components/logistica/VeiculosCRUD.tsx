@@ -348,9 +348,9 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             if (outros && outros.length > 0) {
               await supabase
                 .from('dispositivos_rastreamento')
-                .update({ status: 'revogado', veiculo_id: null })
+                .delete()
                 .in('id', outros.map(o => o.id));
-              toast.info(`${outros.length} aparelho(s) anterior(es) do mesmo usuário foram desconectados.`);
+              toast.info(`${outros.length} aparelho(s) anterior(es) do mesmo usuário foram removidos.`);
             }
           }
         }
