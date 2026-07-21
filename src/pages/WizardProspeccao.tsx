@@ -103,11 +103,15 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
 
   const canNext = () => {
     if (step === 0) return form.segmento.trim().length > 0 || form.cnae.trim().length > 0;
-    if (step === 1) return form.cidade.trim().length > 0 || form.uf.trim().length > 0;
+    if (step === 1) {
+      if (form.escopo === 'cidade') return form.cidade.trim().length > 0;
+      if (form.escopo === 'uf') return form.uf.trim().length === 2;
+      if (form.escopo === 'pais') return form.pais.trim().length > 0;
+    }
     return true;
   };
 
-  const toggleArr = (key: 'porte' | 'criterios', value: string) => {
+  const toggleArr = (key: 'porte' | 'criterios' | 'fontes', value: string) => {
     setForm((f) => ({
       ...f,
       [key]: f[key].includes(value) ? f[key].filter((v) => v !== value) : [...f[key], value],
