@@ -797,6 +797,7 @@ export default function TvDashboardVendas() {
           </Card>
         </div>
       </div>
+      <TvNotificationBarAuto />
     </div>
   );
 }

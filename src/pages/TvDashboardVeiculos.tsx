@@ -578,6 +578,7 @@ export default function TvDashboardVeiculos() {
           )}
         </div>
       </div>
+      <TvNotificationBarAuto />
     </>
   );
 }

@@ -1,136 +1,106 @@
+# Workflows do Gerenciador de Telas Remotas
 
-# Plataforma TV Signage — Painel + Backend
+Sistema de regras que dispara **mensagens temporárias em uma barra inferior** das telas remotas (Android/simulador) em resposta a eventos do sistema (ex.: caminhão parado, venda realizada, alerta de câmera, ponto batido, etc.).
 
-Plataforma multi-tenant para gerenciar milhares de dispositivos Android TV / Google TV remotamente. O Lovable entrega **painel administrativo + banco + APIs + Realtime**. O app Android nativo (Kotlin/Compose) fica para uma fase posterior e apenas consumirá as APIs desta plataforma.
+## Como funcionará
 
-Isolamento por `estabelecimento_id` (padrão já usado no CRM), com RLS em todas as tabelas e token por dispositivo para autenticação do app.
+1. **Cadastro do workflow** (nova tela `Gerenciador de Telas Remotas → Workflows`):
+   - Nome / ativo
+   - **Evento gatilho** (dropdown): `caminhao_parado`, `caminhao_movimento`, `venda_realizada`, `pedido_novo`, `alerta_camera`, `visita_iniciada`, `manual` (disparo por botão/API), etc.
+   - **Filtros opcionais** do evento (ex.: valor mínimo da venda, veículo específico, grupo logístico).
+   - **Mensagem** (texto com variáveis tipo `{placa}`, `{motorista}`, `{valor}`).
+   - **Duração** (segundos que a barra fica visível).
+   - **Estilo**: cor de fundo, cor do texto, ícone, posição (bottom/top), animação (slide/fade).
+   - **Escopo de exibição**:
+     - Todos os dispositivos
+     - Dispositivos específicos (multi-select)
+     - Grupos de dispositivos
+     - Apenas quando dashboard atual = X (ex.: só na tela de vendas)
+   - **Som** opcional (beep curto).
 
----
+2. **Fila de exibição** (nova tabela `tv_workflow_execucoes`):
+   - Quando um evento acontece, o workflow gera uma linha por dispositivo alvo com `mensagem_renderizada`, `expira_em`, `exibido_em`.
+   - Cada dispositivo consome sua fila via Supabase Realtime.
 
-## Módulo no menu principal
+3. **Overlay nas telas**:
+   - Componente `TvNotificationBar` renderizado em `SignageActivity` (WebView Android) e nas rotas `/tv/*` + `/tv-signage/simulador`.
+   - Escuta Realtime na tabela `tv_workflow_execucoes` filtrando pelo `device_id` (ou token) atual.
+   - Empilha múltiplas mensagens em ordem, respeitando duração de cada.
 
-Novo item **"TV Signage"** no menu principal, com sub-rotas:
+4. **Gatilhos**:
+   - **Automáticos**: hooks nos pontos onde eventos já existem (veículos, pedidos, câmeras, visitas) chamam edge function `tv-workflow-dispatch({evento, payload})`.
+   - **Manual**: botão "Disparar agora" na tela do workflow (útil para avisos operacionais).
+   - **API/Webhook**: endpoint público para integrações externas.
 
-- `/tv-signage` — Dashboard (visão geral)
-- `/tv-signage/dispositivos` — Lista/CRUD de TVs + pareamento (QR Code)
-- `/tv-signage/dashboards` — Cadastro de "dashboards" (telas do sistema ou URLs externas) que podem ser projetadas
-- `/tv-signage/playlists` — Playlists (ordem + tempo por tela) para uma TV rodar múltiplas telas em rotação
-- `/tv-signage/grupos` — Grupos e locais (para aplicar dashboards em massa)
-- `/tv-signage/comandos` — Fila de comandos remotos + histórico
-- `/tv-signage/eventos` — Logs e heartbeats
-- `/tv-signage/config-api` — Guia de integração da API + chaves
+5. **Resolução de alvos** (edge function):
+   - Recebe `{evento, payload}`.
+   - Lista workflows ativos que casam com o evento + filtros.
+   - Para cada workflow, resolve dispositivos:
+     - Todos → todos os `tv_devices` do estabelecimento
+     - Específicos → lista fixa
+     - Por dashboard atual → filtra `dashboard_atual_id`
+   - Interpola variáveis do payload na mensagem.
+   - Insere execuções na fila com `expira_em = now() + duração`.
 
-Design: dark mode, cards, gráficos (recharts), sidebar interno, tabela paginada com busca e filtros, responsivo. Segue tokens semânticos (bg-background/text-foreground) do sistema.
+## Estrutura de dados
 
----
+```text
+tv_workflows
+├─ id, estabelecimento_id, nome, ativo
+├─ evento (text)                  -- 'caminhao_parado', 'venda_realizada', ...
+├─ filtros (jsonb)                -- {valor_min, veiculo_ids, grupo_ids}
+├─ mensagem_template (text)       -- "Venda de {valor} realizada!"
+├─ duracao_segundos (int)
+├─ estilo (jsonb)                 -- {bg, fg, icone, posicao, animacao, som}
+├─ escopo_tipo (text)             -- 'todos' | 'dispositivos' | 'grupos' | 'dashboard'
+├─ escopo_ids (uuid[])
+├─ dashboard_id (uuid, nullable)  -- só aparece nesta tela
+└─ timestamps
 
-## Seleção de telas do sistema para projetar
+tv_workflow_execucoes
+├─ id, workflow_id, device_id, estabelecimento_id
+├─ mensagem_renderizada (text)
+├─ estilo (jsonb)
+├─ duracao_segundos, expira_em
+├─ exibido_em (nullable)
+└─ created_at
+```
 
-Além de URLs externas, o admin pode escolher **qualquer rota interna do CRM** para projetar. As rotas disponíveis vêm do `MENU_CONFIG` já existente em `src/lib/menus.ts` + rotas TV (`/tv-vendas`, `/tv-veiculos`, `/cameras/dashboard`, etc). Ao selecionar uma tela interna, a plataforma monta a URL absoluta com um token de "modo TV" para o app abrir em kiosk.
+Realtime habilitado em `tv_workflow_execucoes`. RLS + GRANT normais.
 
-Quando o admin adiciona **múltiplas telas** para a mesma TV → vira uma **playlist automática** com temporizador configurável por item (segundos), ordem e loop.
+## Componentes e arquivos
 
----
+- **Backend**
+  - Migração criando as duas tabelas + índices + realtime + RLS + GRANT.
+  - Edge function `tv-workflow-dispatch` (recebe evento e enfileira execuções).
+  - Cron/edge para limpar execuções expiradas (7 dias).
 
-## Banco de dados (novas tabelas — todas com RLS + GRANTs)
+- **Frontend admin**
+  - `src/pages/tv-signage/TvSignageWorkflows.tsx` — CRUD com dialog de edição (evento, filtros, mensagem, estilo, escopo, duração, botão "Disparar agora").
+  - Link no menu lateral do Gerenciador de Telas Remotas.
+  - Preview do estilo da barra em tempo real dentro do editor.
 
-- `tv_devices` — dispositivos
-  - `codigo` (único, 8 chars), `token_hash`, `nome`, `estabelecimento_id`, `grupo_id`, `local`, `status` (online/offline/erro/bloqueado), `dashboard_atual_id` OU `playlist_id`, `ultima_comunicacao`, `versao_app`, `versao_min_requerida`, `resolucao`, `ip`, `memoria_uso`, `cpu_uso`, `armazenamento`, `uptime_segundos`, `tema`, `idioma`, `bloqueado`, `parado_em`, `emparelhado_em`
-- `tv_dashboards` — telas configuráveis
-  - `nome`, `tipo` (`url_externa` | `tela_interna`), `url`, `rota_interna`, `refresh_segundos`, `fullscreen`, `cache_offline`, `auto_update`, `timeout_segundos`, `estabelecimento_id`
-- `tv_playlists` + `tv_playlist_items` — sequência de dashboards com `ordem` e `duracao_segundos`
-- `tv_groups` — agrupamento lógico (empresa/local/andar)
-- `tv_commands` — fila de comandos por device
-  - `device_id`, `tipo` (atualizar_dashboard, atualizar_url, reiniciar_app, limpar_cache, atualizar_config, alterar_refresh, bloquear, desbloquear, sincronizar, atualizar_versao), `payload jsonb`, `status` (pendente/enviado/confirmado/erro), `criado_por`, `confirmado_em`
-- `tv_events` — logs enviados pelo dispositivo (heartbeat resumido + eventos livres)
-- `tv_heartbeats` — snapshots leves para gráfico (particionável por data mais tarde)
+- **Overlay nas telas TV**
+  - `src/components/tv/TvNotificationBar.tsx` — barra animada, fila, som opcional.
+  - Injetada em `TvDashboardVeiculos`, `TvDashboardVendas`, `TvCameras`, `TvSignageSimulador`.
+  - Usa `device_id` da URL (ou do token) para filtrar Realtime.
 
-Regras:
-- RLS por `estabelecimento_id` via `get_auth_user_estabelecimento_id()` (já existe no projeto).
-- Realtime habilitado em `tv_devices`, `tv_commands`, `tv_dashboards`, `tv_playlists`, `tv_playlist_items` para o app receber alterações imediatamente.
-- Token do dispositivo: só o **hash** fica no banco; o token cru é mostrado uma única vez no pareamento.
-
----
-
-## APIs (Edge Functions, `verify_jwt=false`, autenticadas por token do device)
-
-Prefixo lógico `tv-` para não colidir com nada existente:
-
-- `POST tv-device-auth` — recebe `{ codigo, token }`, retorna `{ device_id, session_jwt }` (JWT curto assinado com secret gerado).
-- `GET  tv-device-config` — retorna dashboard atual OU playlist, refresh, fullscreen, timeout, tema, idioma, versão mínima.
-- `GET  tv-device-dashboard` — payload completo do dashboard/playlist para render.
-- `POST tv-device-heartbeat` — status, versão, mem, cpu, storage, ip, resolução, uptime.
-- `POST tv-device-log` — evento livre (nível, mensagem, contexto).
-- `GET  tv-device-commands` — comandos `pendente` para o device (o app pode fazer long-poll ou usar Realtime).
-- `POST tv-device-command-confirm` — marca comando `confirmado`/`erro`.
-
-Todas com CORS, validação Zod, checagem do JWT do device em cada request. Segredo de assinatura: `TV_DEVICE_JWT_SECRET` (gerado via `generate_secret`).
-
----
-
-## Pareamento (QR Code)
-
-No cadastro:
-1. Gera `codigo` (8 chars A-Z0-9) único.
-2. Gera `token` opaco (32 bytes → base64url), salva `token_hash` (sha-256).
-3. Mostra 1x: código + token + **QR Code** com JSON `{codigo, token, api_url}` para o app ler.
-4. Admin pode **reemitir token** (invalida o anterior).
-
----
-
-## Painel — telas
-
-- **Dashboard** (`/tv-signage`): cards com TVs Online / Offline / Erro / Total / Atualizações pendentes / Consumo API (24h); gráfico de heartbeats; lista dos últimos eventos.
-- **Dispositivos**: tabela paginada (Nome, Código, Empresa, Local, Grupo, Status, Dashboard atual, Última comunicação, Versão, Ações). Filtros: Online/Offline/Empresa/Grupo/Local. Busca. Ação por linha: enviar comando, ver detalhes, editar, reemitir token, excluir (com `DeleteConfirmDialog` conforme regra do projeto).
-- **Detalhe do dispositivo**: abas "Configuração" (dashboard/playlist, refresh, fullscreen, tema, idioma), "Comandos", "Eventos/Heartbeats", "Pareamento".
-- **Dashboards**: CRUD; ao criar, escolher URL externa **ou** tela interna do sistema (combobox alimentado por lista de rotas).
-- **Playlists**: builder com drag-and-drop (ordem) + duração em segundos por item + loop.
-- **Comandos**: botões para disparar comandos em massa a um grupo ou a um device.
-
-Realtime no painel: status dos devices atualiza em tempo real via `postgres_changes` em `tv_devices` (dentro de `useEffect` conforme regra do projeto).
-
----
-
-## Segurança
-
-- RLS em todas as tabelas com política por `estabelecimento_id`.
-- GRANT `authenticated`/`service_role` em cada tabela pública (nunca `anon`).
-- Token do device: guardado apenas como hash.
-- JWT de sessão do device (`TV_DEVICE_JWT_SECRET`) com expiração e refresh via reautenticação com `codigo`+`token`.
-- Bloqueio remoto (`bloqueado=true`) → APIs recusam config/commands.
-- Logs de auditoria em `tv_events` para todo comando executado.
-
----
+- **Integração de eventos existentes**
+  - Chamada em `logistica-tracker-ingest` (veículo parado detectado) → dispara `caminhao_parado`.
+  - Chamada ao criar pedido/venda → `venda_realizada`.
+  - Alerta de câmera → `alerta_camera`.
+  - (Só nos pontos que já existem; sem criar nova lógica de detecção.)
 
 ## Detalhes técnicos
 
-- Estrutura: `src/pages/tv-signage/*`, `src/components/tv-signage/*`, `src/hooks/tv-signage/*`, `src/services/tvSignage/*`, `src/types/tvSignage.ts`.
-- Roteamento adicionado em `src/App.tsx`, menu em `src/components/Layout.tsx` e `src/lib/menus.ts` (nova categoria "TV Signage").
-- QR code via `qrcode.react` (já compatível; adicionar dep se ausente).
-- Gráficos: `recharts` (já usado no projeto).
-- Textos em português (regra do projeto).
-- Confirmação obrigatória em toda exclusão com `DeleteConfirmDialog` (regra do projeto).
-- Segredo `TV_DEVICE_JWT_SECRET` gerado automaticamente com `generate_secret`.
+- Interpolação de variáveis: função simples `str.replace(/\{(\w+)\}/g, (_, k) => payload[k] ?? '')`.
+- Barra: `position: fixed; bottom: 0` (ou top conforme estilo), altura ~72px, texto grande legível a distância, ícone Lucide.
+- Fila local: array de execuções em `useState`, remove ao expirar `duracao_segundos`.
+- Realtime: `postgres_changes INSERT` em `tv_workflow_execucoes` com filtro `device_id=eq.<id>`.
+- APK Android: a WebView já carrega as rotas `/tv/*`, então o overlay funciona automaticamente sem release novo do APK. Nenhum trabalho no lado nativo.
 
----
+## Fora do escopo desta entrega
 
-## Fora de escopo desta entrega
-
-- App Android TV nativo (Kotlin + Compose) — fase posterior.
-- Distribuição de APK / atualização OTA de binário — só marcamos a versão mínima requerida.
-- Streaming de vídeo dedicado (por enquanto, dashboards são páginas web/kiosk).
-
----
-
-## Ordem de implementação
-
-1. Migração SQL (tabelas, RLS, GRANTs, Realtime, triggers `updated_at`).
-2. Segredo `TV_DEVICE_JWT_SECRET`.
-3. Edge functions `tv-device-*` + config em `supabase/config.toml`.
-4. Types + services + hooks.
-5. Páginas: Dashboard → Dispositivos → Dashboards → Playlists → Grupos → Comandos → Eventos.
-6. Integração no menu principal.
-7. QR code de pareamento + fluxo de reemissão de token.
-8. Guia de integração da API (`/tv-signage/config-api`) com exemplos para o futuro app Android.
-
-Confirmar para eu começar pela migração e edge functions.
+- Criação de novos detectores de eventos (só ligamos aos que já disparam algo hoje + gatilho manual).
+- Novo release do APK.
+- Editor visual estilo drag-and-drop — usaremos formulário estruturado.
