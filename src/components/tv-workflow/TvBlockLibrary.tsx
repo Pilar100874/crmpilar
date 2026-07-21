@@ -86,7 +86,7 @@ export function TvBlockLibrary({ onDragStart, isExpanded, onToggleExpand }: Prop
                         className={`w-4 h-4 ${isOpen ? "text-background" : "text-muted-foreground"}`}
                       />
                     )}
-                    <span className="text-xs font-medium">{CATEGORY_LABELS[cat.key]}</span>
+                    <span className="text-xs font-medium">{cat.key}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span
