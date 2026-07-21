@@ -22658,6 +22658,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string
       }
+      get_user_ponto_empresa_ids: { Args: never; Returns: string[] }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
