@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
-import { User, Mail, Phone, Building2, Users, Monitor, Download, ExternalLink, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { User, Mail, Phone, Building2, Users, Monitor, Download, ExternalLink, CheckCircle2, XCircle, Loader2, Smartphone, Car } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { useExtensionDownload } from "@/hooks/useExtensionDownload";
 import { ExtensionInstallManual } from "@/components/ExtensionInstallManual";
