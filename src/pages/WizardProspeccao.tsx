@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
 import { UFS } from '@/lib/brAddress';
+import { CidadePorUFCombobox } from '@/components/common/CidadePorUFCombobox';
 
 const PORTES = ['MEI', 'ME (Micro)', 'EPP (Pequena)', 'Média', 'Grande'];
 const CRITERIOS = [
@@ -276,18 +277,18 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
 
                 {form.escopo === 'cidade' && (
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="col-span-2 sm:col-span-1">
-                      <Label>Cidade *</Label>
-                      <Input placeholder="Ex.: Vitória" value={form.cidade} onChange={(e) => setForm({ ...form, cidade: e.target.value })} />
-                    </div>
                     <div>
-                      <Label>UF</Label>
-                      <Select value={form.uf} onValueChange={(v) => setForm({ ...form, uf: v })}>
+                      <Label>UF *</Label>
+                      <Select value={form.uf} onValueChange={(v) => setForm({ ...form, uf: v, cidade: '' })}>
                         <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
                         <SelectContent>
                           {UFS.map((u) => <SelectItem key={u.sigla} value={u.sigla}>{u.sigla} — {u.nome}</SelectItem>)}
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div>
+                      <Label>Cidade *</Label>
+                      <CidadePorUFCombobox uf={form.uf} value={form.cidade} onChange={(v) => setForm({ ...form, cidade: v })} />
                     </div>
                     <div className="col-span-2 flex items-center gap-3">
                       <label className="flex items-center gap-2 text-sm cursor-pointer">

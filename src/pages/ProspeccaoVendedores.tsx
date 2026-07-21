@@ -24,6 +24,7 @@ import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { UFS } from '@/lib/brAddress';
+import { CidadePorUFCombobox } from '@/components/common/CidadePorUFCombobox';
 
 const MCP_URL = 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/mcp';
 
@@ -753,18 +754,18 @@ function VendedorWizard({
 
               {escopo === 'cidade' && (
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="col-span-2 sm:col-span-1">
-                    <Label>Cidade *</Label>
-                    <Input value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder="Ex.: Vitória" />
-                  </div>
                   <div>
-                    <Label>UF</Label>
-                    <Select value={uf} onValueChange={setUf}>
+                    <Label>UF *</Label>
+                    <Select value={uf} onValueChange={(v) => { setUf(v); setCidade(''); }}>
                       <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
                       <SelectContent>
                         {UFS.map((u) => <SelectItem key={u.sigla} value={u.sigla}>{u.sigla} — {u.nome}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div>
+                    <Label>Cidade *</Label>
+                    <CidadePorUFCombobox uf={uf} value={cidade} onChange={setCidade} />
                   </div>
                   <div className="col-span-2 flex items-center gap-3">
                     <label className="flex items-center gap-2 text-sm cursor-pointer">
