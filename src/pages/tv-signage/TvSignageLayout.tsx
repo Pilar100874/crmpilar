@@ -1,6 +1,7 @@
-import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { LayoutDashboard, Tv, MonitorPlay, ListVideo, Users, Terminal, Activity, Code2 } from "lucide-react";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { LayoutDashboard, Tv, MonitorPlay, ListVideo, Users, Terminal, Activity, Code2, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const items = [
   { to: "/tv-signage", icon: LayoutDashboard, label: "Visão Geral", end: true },
@@ -15,10 +16,20 @@ const items = [
 
 export default function TvSignageLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-background">
+    <div className="min-h-screen bg-background">
       <div className="border-b border-border bg-card/40 backdrop-blur">
         <div className="px-4 sm:px-6 py-4 flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/menu")}
+            className="shrink-0"
+            title="Voltar ao menu"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
             <Tv className="w-5 h-5 text-primary" />
           </div>
