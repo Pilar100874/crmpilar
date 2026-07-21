@@ -120,7 +120,7 @@ export default function TvSignageSimulador() {
                 <Button size="icon" variant="ghost" className="text-white hover:bg-white/10" onClick={() => setIdx((i) => (i + 1) % items.length)}><ChevronRight className="w-4 h-4" /></Button>
               </>
             )}
-            <Button size="icon" variant="ghost" className="text-white hover:bg-white/10" onClick={() => window.close() || navigate(-1)}><X className="w-4 h-4" /></Button>
+            <Button size="icon" variant="ghost" className="text-white hover:bg-white/10" onClick={() => { window.close(); navigate(-1); }}><X className="w-4 h-4" /></Button>
           </div>
         </div>
       )}
