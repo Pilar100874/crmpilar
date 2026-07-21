@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Monitor, Smartphone, Bell } from "lucide-react";
+import { Monitor, Smartphone, Bell, Tv } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type State = "online" | "warn" | "offline";
 type Health = { at: string | null; ago: number | null };
 type FilialHealth = { id: string; nome: string; at: string | null; ago: number | null; state: State; equipamentos: number };
+type TvDeviceHealth = { id: string; nome: string; at: string | null; state: State };
 
 function classify(ago: number | null): State {
   if (ago == null) return "offline";
@@ -34,8 +35,8 @@ function aggregate(states: State[]): State {
   return "offline";
 }
 
-async function fetchHealth(): Promise<{ win: Health; and: Health; filiais: FilialHealth[] }> {
-  const [{ data: filiaisRaw }, { data: equipRaw }, { data: dv }] = await Promise.all([
+async function fetchHealth(): Promise<{ win: Health; and: Health; filiais: FilialHealth[]; tvs: TvDeviceHealth[] }> {
+  const [{ data: filiaisRaw }, { data: equipRaw }, { data: dv }, { data: tvRaw }] = await Promise.all([
     supabase.from("ponto_filiais").select("id, nome").order("nome", { ascending: true }),
     supabase
       .from("ponto_equipamentos")
@@ -48,6 +49,10 @@ async function fetchHealth(): Promise<{ win: Health; and: Health; filiais: Filia
       .order("ultimo_heartbeat", { ascending: false, nullsFirst: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("tv_devices")
+      .select("id, nome, ultima_comunicacao, status, bloqueado")
+      .order("ultima_comunicacao", { ascending: false, nullsFirst: false }),
   ]);
 
   const now = Date.now();
@@ -98,10 +103,18 @@ async function fetchHealth(): Promise<{ win: Health; and: Health; filiais: Filia
   const winAt = winLatest || null;
   const andAt = (dv as any)?.ultimo_heartbeat ?? (dv as any)?.ultimo_ping ?? null;
 
+  const tvs: TvDeviceHealth[] = (tvRaw || []).map((t: any) => {
+    const at = t.ultima_comunicacao || null;
+    const ago = at ? now - new Date(at).getTime() : null;
+    const state: State = t.bloqueado ? "offline" : classify(ago);
+    return { id: t.id, nome: t.nome, at, state };
+  });
+
   return {
     win: { at: winAt, ago: winAt ? now - new Date(winAt).getTime() : null },
     and: { at: andAt, ago: andAt ? now - new Date(andAt).getTime() : null },
     filiais,
+    tvs,
   };
 }
 
@@ -137,17 +150,19 @@ export function AppsHealthIndicator({
   const [win, setWin] = useState<Health>({ at: null, ago: null });
   const [and, setAnd] = useState<Health>({ at: null, ago: null });
   const [filiais, setFiliais] = useState<FilialHealth[]>([]);
+  const [tvs, setTvs] = useState<TvDeviceHealth[]>([]);
   const [push, setPush] = useState<PushState>(getPushState());
 
   useEffect(() => {
     let alive = true;
     const load = async () => {
       try {
-        const { win: w, and: a, filiais: f } = await fetchHealth();
+        const { win: w, and: a, filiais: f, tvs: tv } = await fetchHealth();
         if (!alive) return;
         setWin(w);
         setAnd(a);
         setFiliais(f);
+        setTvs(tv);
       } catch { /* silencioso */ }
     };
     load();
@@ -166,6 +181,7 @@ export function AppsHealthIndicator({
     ? aggregate(filiais.map((f) => f.state))
     : classify(win.ago);
   const andState = classify(and.ago);
+  const tvState = tvs.length ? aggregate(tvs.map((t) => t.state)) : "offline";
 
   const iconClass = small
     ? "h-4 w-4 text-foreground/70"
@@ -218,6 +234,35 @@ export function AppsHealthIndicator({
         <TooltipContent side={tooltipSide} className="text-xs">
           <div className="font-semibold">Pilar Hub (Android)</div>
           <div className="text-muted-foreground">{label(andState, and.at)}</div>
+        </TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="relative inline-flex items-center gap-1">
+            <Tv className={iconClass} />
+            <span className={`${dotClassSize} rounded-full ${dotClass(tvState)}`} />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side={tooltipSide} className="text-xs max-w-[280px]">
+          <div className="font-semibold">Telas Remotas (Pilar Remotas)</div>
+          {tvs.length > 0 ? (
+            <div className="flex flex-col gap-1 max-h-56 overflow-auto">
+              {tvs.map((t) => (
+                <div key={t.id} className="flex items-center gap-1.5">
+                  <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotClass(t.state)}`} />
+                  <span className="truncate">{t.nome}</span>
+                  <span className="text-muted-foreground ml-auto text-[10px] whitespace-nowrap">
+                    {t.at
+                      ? new Date(t.at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+                      : "nunca"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-muted-foreground">Nenhum dispositivo pareado</div>
+          )}
         </TooltipContent>
       </Tooltip>
 
