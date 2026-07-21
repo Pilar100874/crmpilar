@@ -252,6 +252,7 @@ import TvSignageGrupos from "./pages/tv-signage/TvSignageGrupos";
 import TvSignageComandos from "./pages/tv-signage/TvSignageComandos";
 import TvSignageEventos from "./pages/tv-signage/TvSignageEventos";
 import TvSignageApi from "./pages/tv-signage/TvSignageApi";
+import TvPair from "./pages/TvPair";
 import TvCameras from "./pages/TvCameras";
 import PublicPage from "./pages/PublicPage";
 import EcommerceLayout from "./components/ecommerce/EcommerceLayout";
@@ -613,6 +614,7 @@ const App = () => (
               <Route path="eventos" element={<TvSignageEventos />} />
               <Route path="api" element={<TvSignageApi />} />
             </Route>
+            <Route path="/tv-pair" element={<TvPair />} />
             <Route path="/p/:slug" element={<PublicPage />} />
             {/* E-commerce routes */}
             <Route path="/ecommerce" element={<WishlistProvider><CartProvider><QuoteRequestProvider><EcommerceLayout /></QuoteRequestProvider></CartProvider></WishlistProvider>}>
