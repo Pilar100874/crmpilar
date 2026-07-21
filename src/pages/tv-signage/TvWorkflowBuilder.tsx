@@ -29,6 +29,7 @@ import { TvFlowNode } from "@/components/tv-workflow/TvFlowNode";
 import { TvPropertiesPanel } from "@/components/tv-workflow/TvPropertiesPanel";
 import { TV_BLOCK_BY_TYPE, TvFlowNodeData } from "@/types/tvWorkflow";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 
 const nodeTypes = { custom: TvFlowNode };
 
