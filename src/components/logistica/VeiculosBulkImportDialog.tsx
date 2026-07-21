@@ -55,6 +55,8 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
   const [ativo, setAtivo] = useState(true);
   const [globalTrackerId, setGlobalTrackerId] = useState('');
   const [globalOperadoraId, setGlobalOperadoraId] = useState('');
+  const [globalGrupoId, setGlobalGrupoId] = useState('');
+  const { unidades: grupos } = useGrupoFilter(estabelecimentoId);
 
   const update = (id: string, patch: Partial<Row>) =>
     setRows(rs => rs.map(r => (r.id === id ? { ...r, ...patch } : r)));
