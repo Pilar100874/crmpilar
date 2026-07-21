@@ -49,6 +49,7 @@ function TvBuilderInner() {
   const [libraryOpen, setLibraryOpen] = useState(true);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [noteNodeId, setNoteNodeId] = useState<string | null>(null);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
