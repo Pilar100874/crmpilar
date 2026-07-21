@@ -594,6 +594,7 @@ const App = () => (
                 <Route path="grupos" element={<TvSignageGrupos />} />
                 <Route path="comandos" element={<TvSignageComandos />} />
                 <Route path="eventos" element={<TvSignageEventos />} />
+                <Route path="workflows" element={<TvSignageWorkflows />} />
                 <Route path="api" element={<TvSignageApi />} />
               </Route>
             </Route>
