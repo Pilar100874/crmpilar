@@ -1,0 +1,2 @@
+ALTER TABLE public.dispositivos_rastreamento ADD COLUMN IF NOT EXISTS usuario_id uuid REFERENCES public.usuarios(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_dispositivos_usuario ON public.dispositivos_rastreamento(usuario_id);

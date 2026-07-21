@@ -4697,6 +4697,7 @@ export type Database = {
           status: string
           ultimo_acesso: string | null
           updated_at: string
+          usuario_id: string | null
           veiculo_id: string | null
         }
         Insert: {
@@ -4713,6 +4714,7 @@ export type Database = {
           status?: string
           ultimo_acesso?: string | null
           updated_at?: string
+          usuario_id?: string | null
           veiculo_id?: string | null
         }
         Update: {
@@ -4729,6 +4731,7 @@ export type Database = {
           status?: string
           ultimo_acesso?: string | null
           updated_at?: string
+          usuario_id?: string | null
           veiculo_id?: string | null
         }
         Relationships: [
@@ -4744,6 +4747,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispositivos_rastreamento_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
             referencedColumns: ["id"]
           },
           {

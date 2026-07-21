@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
 
       const { data: existente } = await admin
         .from("dispositivos_rastreamento")
-        .select("id, veiculo_id, estabelecimento_id, status")
+        .select("id, veiculo_id, estabelecimento_id, status, usuario_id")
         .eq("device_uuid", device.device_uuid)
         .maybeSingle();
 
@@ -100,6 +100,7 @@ Deno.serve(async (req) => {
             plataforma: device.plataforma ?? null,
             modelo: device.modelo ?? null,
             nome_dispositivo: nomeDispositivo,
+            usuario_id: usuario.id,
           })
           .eq("id", existente.id);
         if (existente.veiculo_id) {
@@ -112,6 +113,7 @@ Deno.serve(async (req) => {
         await admin.from("dispositivos_rastreamento").insert({
           device_uuid: device.device_uuid,
           estabelecimento_id: usuario.estabelecimento_id,
+          usuario_id: usuario.id,
           nome_dispositivo: nomeDispositivo,
           modelo: device.modelo ?? null,
           plataforma: device.plataforma ?? "pwa",
@@ -120,6 +122,7 @@ Deno.serve(async (req) => {
           ultimo_acesso: nowIso,
         });
       }
+
     }
 
     if (rows.length === 0) {

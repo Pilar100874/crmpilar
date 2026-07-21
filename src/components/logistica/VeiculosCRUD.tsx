@@ -36,7 +36,11 @@ interface DispositivoAprovado {
   status?: string;
   plataforma?: string | null;
   ultimo_acesso?: string | null;
+  usuario_id?: string | null;
+  usuario_nome?: string | null;
+  veiculo_placa?: string | null;
 }
+
 
 
 const tipos = [
@@ -161,21 +165,40 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
 
   const fetchDispositivos = async () => {
     try {
-      // Busca TODOS os dispositivos (aprovados e pendentes) — a aprovação acontece
-      // automaticamente ao selecionar e salvar o vínculo aqui.
       const { data, error } = await supabase
         .from('dispositivos_rastreamento')
-        .select('id, device_uuid, nome_dispositivo, veiculo_id, estabelecimento_id, status, plataforma, ultimo_acesso')
+        .select('id, device_uuid, nome_dispositivo, veiculo_id, estabelecimento_id, status, plataforma, ultimo_acesso, usuario_id')
         .in('status', ['aprovado', 'pendente']);
 
-
       if (error) throw error;
-      console.log('Dispositivos encontrados:', data);
-      setDispositivos(data || []);
+
+      const usuarioIds = Array.from(new Set((data || []).map(d => d.usuario_id).filter(Boolean))) as string[];
+      const veiculoIds = Array.from(new Set((data || []).map(d => d.veiculo_id).filter(Boolean))) as string[];
+
+      const [usuariosRes, veiculosRes] = await Promise.all([
+        usuarioIds.length
+          ? supabase.from('usuarios').select('id, nome').in('id', usuarioIds)
+          : Promise.resolve({ data: [] as any[] }),
+        veiculoIds.length
+          ? supabase.from('veiculos').select('id, placa').in('id', veiculoIds)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+
+      const uMap = new Map((usuariosRes.data || []).map((u: any) => [u.id, u.nome]));
+      const vMap = new Map((veiculosRes.data || []).map((v: any) => [v.id, v.placa]));
+
+      const enriched = (data || []).map(d => ({
+        ...d,
+        usuario_nome: d.usuario_id ? (uMap.get(d.usuario_id) || null) : null,
+        veiculo_placa: d.veiculo_id ? (vMap.get(d.veiculo_id) || null) : null,
+      }));
+
+      setDispositivos(enriched);
     } catch (error) {
       console.error('Error fetching devices:', error);
     }
   };
+
 
 
   const handleOpenDialog = (veiculo?: any) => {
@@ -297,6 +320,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
 
         // Then link the selected device (if any) — auto-aprova se ainda estava pendente
         if (formData.dispositivo_id) {
+          const novoDisp = dispositivos.find(d => d.id === formData.dispositivo_id);
           const { error: dispErr } = await supabase
             .from('dispositivos_rastreamento')
             .update({
@@ -310,7 +334,27 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             console.error('Erro ao ativar dispositivo:', dispErr);
             toast.error('Vínculo salvo, mas não foi possível ativar o dispositivo: ' + dispErr.message);
           }
+
+          // Regra: apenas 1 aparelho ativo por usuário — revoga os demais aprovados
+          // do mesmo usuário e transfere o vínculo do veículo para este novo aparelho.
+          if (novoDisp?.usuario_id) {
+            const { data: outros } = await supabase
+              .from('dispositivos_rastreamento')
+              .select('id, veiculo_id')
+              .eq('usuario_id', novoDisp.usuario_id)
+              .eq('status', 'aprovado')
+              .neq('id', formData.dispositivo_id);
+
+            if (outros && outros.length > 0) {
+              await supabase
+                .from('dispositivos_rastreamento')
+                .update({ status: 'revogado', veiculo_id: null })
+                .in('id', outros.map(o => o.id));
+              toast.info(`${outros.length} aparelho(s) anterior(es) do mesmo usuário foram desconectados.`);
+            }
+          }
         }
+
 
       }
 
@@ -997,13 +1041,24 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                       <SelectItem value="__none__">Nenhum</SelectItem>
                       {dispositivos
                         .filter(d => !d.veiculo_id || d.veiculo_id === selectedVeiculo?.id)
-                        .map(d => (
-                          <SelectItem key={d.id} value={d.id}>
-                            {(d.nome_dispositivo || d.device_uuid)}
-                            {d.plataforma ? ` · ${d.plataforma}` : ''}
-                            {d.status === 'pendente' ? ' — pendente (aprova ao salvar)' : ''}
-                          </SelectItem>
-                        ))}
+                        .sort((a, b) => (b.ultimo_acesso || '').localeCompare(a.ultimo_acesso || ''))
+                        .map(d => {
+                          const partes: string[] = [];
+                          if (d.usuario_nome) partes.push(`👤 ${d.usuario_nome}`);
+                          partes.push(d.nome_dispositivo || d.device_uuid);
+                          if (d.plataforma) partes.push(d.plataforma);
+                          if (d.ultimo_acesso) {
+                            const dt = new Date(d.ultimo_acesso);
+                            partes.push(`último acesso ${dt.toLocaleDateString('pt-BR')} ${dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`);
+                          }
+                          if (d.status === 'pendente') partes.push('pendente (aprova ao salvar)');
+                          if (d.veiculo_placa && d.veiculo_id !== selectedVeiculo?.id) partes.push(`vinculado a ${d.veiculo_placa}`);
+                          return (
+                            <SelectItem key={d.id} value={d.id}>
+                              {partes.join(' · ')}
+                            </SelectItem>
+                          );
+                        })}
                     </SelectContent>
                   </Select>
                   {dispositivos.filter(d => !d.veiculo_id || d.veiculo_id === selectedVeiculo?.id).length === 0 && (
@@ -1011,7 +1066,11 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                       Nenhum dispositivo detectado ainda. Peça para a pessoa abrir o <b>PWA Pilar</b> (com login) ou ativar o <b>Traccar Client</b> apontando para a URL abaixo — o aparelho aparecerá aqui automaticamente.
                     </p>
                   )}
+                  <p className="text-[11px] text-muted-foreground mt-2">
+                    ⚠️ Apenas <b>1 aparelho por usuário</b> pode ficar ativo. Ao vincular um novo aparelho de um usuário que já possui outro aprovado, o anterior é <b>desconectado automaticamente</b> e este passa a receber a localização do veículo.
+                  </p>
                 </div>
+
 
 
                 {/* Ajuda: URL do Traccar/OsmAnd */}
