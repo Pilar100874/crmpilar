@@ -2,8 +2,13 @@
 <resources>
     <string name="app_name">Pilar TV Signage</string>
     <string name="pair_title">Parear esta TV</string>
-    <string name="pair_sub">No painel Pilar acesse TV Signage → Dispositivos → Novo e copie o código e o token exibidos no QR.</string>
+    <string name="pair_sub">No painel Pilar acesse TV Signage → Dispositivos → Novo. Aponte a câmera para o QR Code exibido ou digite o código e o token manualmente.</string>
     <string name="pair_code_hint">Código (8 caracteres)</string>
     <string name="pair_token_hint">Token</string>
     <string name="pair_button">Conectar</string>
+    <string name="pair_scan_qr">📷 Ler QR Code</string>
+    <string name="qr_no_camera">Este dispositivo não possui câmera disponível.</string>
+    <string name="qr_permission_denied">Permissão de câmera negada. Digite o código manualmente.</string>
+    <string name="qr_hint">Aponte para o QR Code exibido no painel</string>
+    <string name="qr_invalid">QR Code inválido — não parece ser um pareamento Pilar.</string>
 </resources>
