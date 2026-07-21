@@ -290,7 +290,7 @@ function TvBuilderInner() {
 
         <div ref={wrapperRef} className="flex-1 relative" onDrop={onDrop} onDragOver={onDragOver}>
           <ReactFlow
-            nodes={nodes}
+            nodes={nodesWithHandlers}
             edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
@@ -332,6 +332,13 @@ function TvBuilderInner() {
         onConfirm={() => confirmDelete && deleteNode(confirmDelete)}
         title="Excluir bloco?"
         description="O bloco e suas conexões serão removidos do fluxo."
+      />
+
+      <BlockNoteDialog
+        open={!!noteNodeId}
+        onOpenChange={(o) => !o && setNoteNodeId(null)}
+        currentNote={(noteNode?.data as any)?.nota || ""}
+        onSave={saveNote}
       />
     </div>
   );
