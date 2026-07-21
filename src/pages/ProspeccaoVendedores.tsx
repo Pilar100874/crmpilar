@@ -24,6 +24,7 @@ import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { UFS } from '@/lib/brAddress';
+import { CidadePorUFCombobox } from '@/components/common/CidadePorUFCombobox';
 
 const MCP_URL = 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/mcp';
 
