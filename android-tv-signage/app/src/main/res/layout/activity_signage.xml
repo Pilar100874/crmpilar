@@ -18,4 +18,16 @@
         android:textColor="#FFFFFF"
         android:textSize="28sp"
         android:visibility="gone" />
+
+    <!-- Zona invisível no canto superior esquerdo: pressione longo (~3s) para sair -->
+    <View
+        android:id="@+id/exitHotspot"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_gravity="top|start"
+        android:background="@android:color/transparent"
+        android:contentDescription="exit"
+        android:focusable="false"
+        android:clickable="true"
+        android:longClickable="true" />
 </FrameLayout>

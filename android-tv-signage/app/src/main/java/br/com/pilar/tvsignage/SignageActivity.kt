@@ -1,16 +1,24 @@
 package br.com.pilar.tvsignage
 
 import android.annotation.SuppressLint
+import android.app.ActivityManager
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
+import android.text.InputType
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import br.com.pilar.tvsignage.databinding.ActivitySignageBinding
 import java.net.URLEncoder
@@ -45,7 +53,7 @@ class SignageActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
+    @SuppressLint("SetJavaScriptEnabled", "ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -58,16 +66,20 @@ class SignageActivity : AppCompatActivity() {
         b = ActivitySignageBinding.inflate(layoutInflater)
         setContentView(b.root)
 
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        window.decorView.systemUiVisibility = (
-            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                or View.SYSTEM_UI_FLAG_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        // Mantém a tela sempre ligada, ignora bloqueio e liga a tela se estiver apagada
+        window.addFlags(
+            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                or WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                or WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
         )
+        applyImmersive()
 
         val pm = getSystemService(POWER_SERVICE) as PowerManager
-        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "PilarTv::signage").also { it.acquire() }
+        wakeLock = pm.newWakeLock(
+            PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+            "PilarTv::signage"
+        ).also { it.acquire() }
 
         val w = b.webview.settings
         w.javaScriptEnabled = true
@@ -77,9 +89,138 @@ class SignageActivity : AppCompatActivity() {
         w.userAgentString = w.userAgentString + " PilarTvSignage/1.0"
         b.webview.webViewClient = WebViewClient()
 
+        // Hotspot invisível (canto superior esquerdo): long-press para pedir senha e sair
+        b.exitHotspot.setOnLongClickListener {
+            promptExitPassword()
+            true
+        }
+
         loadConfig()
         startHeartbeat()
         startCommandsPolling()
+    }
+
+    private fun applyImmersive() {
+        window.decorView.systemUiVisibility = (
+            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                or View.SYSTEM_UI_FLAG_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        )
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) applyImmersive()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        applyImmersive()
+        startKioskMode()
+    }
+
+    /** Ativa modo kiosk (screen pinning). No primeiro uso o Android pede confirmação. */
+    private fun startKioskMode() {
+        try {
+            val am = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            val isInLockTask = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                am.lockTaskModeState != ActivityManager.LOCK_TASK_MODE_NONE
+            } else {
+                @Suppress("DEPRECATION") am.isInLockTaskMode
+            }
+            if (!isInLockTask) {
+                startLockTask()
+            }
+        } catch (_: Exception) {}
+    }
+
+    private fun stopKioskMode() {
+        try { stopLockTask() } catch (_: Exception) {}
+    }
+
+    // Bloqueia botão voltar e teclas de mídia — usuário só sai pelo hotspot com senha
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        return when (keyCode) {
+            KeyEvent.KEYCODE_BACK,
+            KeyEvent.KEYCODE_MENU,
+            KeyEvent.KEYCODE_HOME,
+            KeyEvent.KEYCODE_APP_SWITCH -> true
+            else -> super.onKeyDown(keyCode, event)
+        }
+    }
+
+    override fun onBackPressed() {
+        // ignora — bloqueio de kiosk
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        // Se o usuário tentar sair (home), reabre a activity
+        val i = Intent(this, SignageActivity::class.java)
+        i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+        startActivity(i)
+    }
+
+    private fun promptExitPassword() {
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(48, 32, 48, 8)
+        }
+        val input = EditText(this).apply {
+            hint = "Senha"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        }
+        container.addView(input)
+
+        AlertDialog.Builder(this)
+            .setTitle("Sair do modo kiosk")
+            .setMessage("Digite a senha para desbloquear e sair.")
+            .setView(container)
+            .setPositiveButton("Sair") { d, _ ->
+                val pwd = input.text.toString()
+                if (pwd == DeviceStore.exitPassword(this)) {
+                    stopKioskMode()
+                    d.dismiss()
+                    Toast.makeText(this, "Kiosk desbloqueado", Toast.LENGTH_SHORT).show()
+                    finish()
+                } else {
+                    Toast.makeText(this, "Senha incorreta", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNeutralButton("Alterar senha") { _, _ ->
+                val pwd = input.text.toString()
+                if (pwd == DeviceStore.exitPassword(this)) {
+                    promptChangePassword()
+                } else {
+                    Toast.makeText(this, "Senha atual incorreta", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun promptChangePassword() {
+        val input = EditText(this).apply {
+            hint = "Nova senha"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Nova senha de saída")
+            .setView(input)
+            .setPositiveButton("Salvar") { _, _ ->
+                val nv = input.text.toString().trim()
+                if (nv.length < 4) {
+                    Toast.makeText(this, "Mínimo 4 caracteres", Toast.LENGTH_SHORT).show()
+                } else {
+                    DeviceStore.setExitPassword(this, nv)
+                    Toast.makeText(this, "Senha atualizada", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun token() = DeviceStore.token(this).orEmpty()
@@ -212,6 +353,7 @@ class SignageActivity : AppCompatActivity() {
     }
 
     private fun handleUnauthorized() {
+        stopKioskMode()
         DeviceStore.clear(this)
         startActivity(Intent(this, PairingActivity::class.java))
         finish()
