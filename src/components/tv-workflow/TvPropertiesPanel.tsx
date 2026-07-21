@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Trash2, X, StickyNote } from "lucide-react";
-import { TV_BLOCK_BY_TYPE, TvFlowNodeData, EVENTOS_SISTEMA, ICONES_BARRA } from "@/types/tvWorkflow";
+import { TV_BLOCK_BY_TYPE, TvFlowNodeData, EVENTOS_SISTEMA_GRUPOS, ICONES_BARRA } from "@/types/tvWorkflow";
 
 interface Props {
   node: Node | null;
