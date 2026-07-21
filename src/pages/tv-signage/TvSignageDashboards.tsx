@@ -23,6 +23,10 @@ export default function TvSignageDashboards() {
   useEffect(() => { carregar(); }, []);
 
   const salvar = async () => {
+    if (!edit?.nome?.trim()) return toast.error("Informe o nome do dashboard");
+    if (!edit?.tipo) return toast.error("Selecione o tipo");
+    if (edit.tipo === "tela_interna" && !edit.rota_interna) return toast.error("Selecione a tela do sistema");
+    if (edit.tipo === "url_externa" && !edit.url?.trim()) return toast.error("Informe a URL externa");
     const estId = await getEstabelecimentoId();
     if (!estId) return toast.error("Estabelecimento não encontrado");
     const payload = {
@@ -124,7 +128,7 @@ export default function TvSignageDashboards() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEdit(null)}>Cancelar</Button>
-            <Button onClick={salvar} disabled={!edit?.nome}>Salvar</Button>
+            <Button onClick={salvar} disabled={!edit?.nome?.trim() || !edit?.tipo || (edit?.tipo === "tela_interna" && !edit?.rota_interna) || (edit?.tipo === "url_externa" && !edit?.url?.trim())}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
