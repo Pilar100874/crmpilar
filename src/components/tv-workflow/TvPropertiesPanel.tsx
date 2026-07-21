@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Trash2, X, StickyNote } from "lucide-react";
-import { TV_BLOCK_BY_TYPE, TvFlowNodeData, EVENTOS_SISTEMA, ICONES_BARRA } from "@/types/tvWorkflow";
+import { TV_BLOCK_BY_TYPE, TvFlowNodeData, EVENTOS_SISTEMA_GRUPOS, ICONES_BARRA } from "@/types/tvWorkflow";
 
 interface Props {
   node: Node | null;
@@ -82,7 +82,12 @@ export function TvPropertiesPanel({ node, onChange, onDelete, onClose }: Props) 
               <Select value={cfg.evento || "manual"} onValueChange={(v) => setCfg({ evento: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {EVENTOS_SISTEMA.map((e) => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}
+                  {EVENTOS_SISTEMA_GRUPOS.map((g) => (
+                    <div key={g.grupo}>
+                      <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{g.grupo}</div>
+                      {g.itens.map((e) => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}
+                    </div>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
