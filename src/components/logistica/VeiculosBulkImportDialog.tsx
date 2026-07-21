@@ -200,7 +200,7 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
           </div>
 
           {/* Configuração fixa aplicada a todas as linhas */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Rastreador (aplicado a todos)</Label>
               <Select value={globalTrackerId} onValueChange={setGlobalTrackerId}>
@@ -216,6 +216,16 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
                 <SelectTrigger className="h-9"><SelectValue placeholder="Selecione a operadora" /></SelectTrigger>
                 <SelectContent>
                   {OPERADORAS_APN.map(o => <SelectItem key={o.id} value={o.id}>{o.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Grupo (aplicado a todos)</Label>
+              <Select value={globalGrupoId || '__none__'} onValueChange={v => setGlobalGrupoId(v === '__none__' ? '' : v)}>
+                <SelectTrigger className="h-9"><SelectValue placeholder="Selecione o grupo" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Sem grupo</SelectItem>
+                  {grupos.map(g => <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
