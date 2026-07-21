@@ -251,18 +251,40 @@ export default function TvSignageDispositivos() {
       <Dialog open={!!pairing} onOpenChange={(o) => !o && setPairing(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Pareamento do dispositivo</DialogTitle></DialogHeader>
-          {pairing && (
-            <div className="space-y-4">
-              <div className="flex justify-center bg-white p-4 rounded-lg">
-                <QRCodeCanvas value={JSON.stringify({ codigo: pairing.codigo, token: pairing.token, api_url: window.location.origin })} size={220} />
-              </div>
-              <div className="space-y-2 text-sm">
-                <div><span className="text-muted-foreground">Código: </span><code className="bg-muted px-2 py-0.5 rounded">{pairing.codigo}</code></div>
-                <div><span className="text-muted-foreground">Token: </span><code className="bg-muted px-2 py-0.5 rounded text-xs break-all">{pairing.token}</code></div>
-                <p className="text-xs text-orange-500 mt-2">⚠️ Este token só é exibido uma vez. Guarde ou fotografe o QR agora. Se perder, reemita.</p>
-              </div>
-            </div>
-          )}
+          {pairing && (() => {
+            const pairUrl = `${window.location.origin}/tv-pair?codigo=${encodeURIComponent(pairing.codigo)}&token=${encodeURIComponent(pairing.token)}&api=${encodeURIComponent(window.location.origin)}`;
+            const appPayload = JSON.stringify({ codigo: pairing.codigo, token: pairing.token, api_url: window.location.origin });
+            return (
+              <Tabs defaultValue="universal" className="space-y-4">
+                <TabsList className="grid grid-cols-2 w-full">
+                  <TabsTrigger value="universal">📱 Tablet/Celular</TabsTrigger>
+                  <TabsTrigger value="app">📺 App já instalado</TabsTrigger>
+                </TabsList>
+                <TabsContent value="universal" className="space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    Aponte a câmera do tablet/celular para este QR. Ele abrirá uma página com o link do APK e o pareamento automático.
+                  </p>
+                  <div className="flex justify-center bg-white p-4 rounded-lg">
+                    <QRCodeCanvas value={pairUrl} size={220} />
+                  </div>
+                  <div className="text-xs text-muted-foreground break-all bg-muted/40 p-2 rounded">{pairUrl}</div>
+                </TabsContent>
+                <TabsContent value="app" className="space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    Use este QR dentro do app <b>Pilar TV Signage</b> já instalado (botão <b>📷 Ler QR Code</b>).
+                  </p>
+                  <div className="flex justify-center bg-white p-4 rounded-lg">
+                    <QRCodeCanvas value={appPayload} size={220} />
+                  </div>
+                </TabsContent>
+                <div className="space-y-2 text-sm">
+                  <div><span className="text-muted-foreground">Código: </span><code className="bg-muted px-2 py-0.5 rounded">{pairing.codigo}</code></div>
+                  <div><span className="text-muted-foreground">Token: </span><code className="bg-muted px-2 py-0.5 rounded text-xs break-all">{pairing.token}</code></div>
+                  <p className="text-xs text-orange-500 mt-2">⚠️ Este token só é exibido uma vez. Guarde ou fotografe o QR agora. Se perder, reemita.</p>
+                </div>
+              </Tabs>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 

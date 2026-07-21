@@ -614,6 +614,7 @@ const App = () => (
               <Route path="eventos" element={<TvSignageEventos />} />
               <Route path="api" element={<TvSignageApi />} />
             </Route>
+            <Route path="/tv-pair" element={<TvPair />} />
             <Route path="/p/:slug" element={<PublicPage />} />
             {/* E-commerce routes */}
             <Route path="/ecommerce" element={<WishlistProvider><CartProvider><QuoteRequestProvider><EcommerceLayout /></QuoteRequestProvider></CartProvider></WishlistProvider>}>
