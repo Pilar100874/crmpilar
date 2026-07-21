@@ -15,12 +15,46 @@ import { ROTAS_INTERNAS, getEstabelecimentoId } from "@/services/tvSignage/tvSig
 export default function TvSignageDashboards() {
   const [list, setList] = useState<any[]>([]);
   const [edit, setEdit] = useState<any | null>(null);
+  const [grupos, setGrupos] = useState<any[]>([]);
+  const [camerasList, setCamerasList] = useState<any[]>([]);
 
   const carregar = async () => {
     const { data } = await supabase.from("tv_dashboards").select("*").order("created_at", { ascending: false });
     setList(data || []);
   };
-  useEffect(() => { carregar(); }, []);
+  useEffect(() => {
+    carregar();
+    supabase.from("cameras_grupos").select("id,nome,cor").eq("ativo", true).order("nome").then(({ data }) => setGrupos(data || []));
+    supabase.from("cv_cameras").select("id,nome,grupo_id").eq("ativo", true).order("nome").then(({ data }) => setCamerasList(data || []));
+  }, []);
+
+  // Deriva query params atuais quando a rota é /tv/cameras
+  const parseCamsCfg = (rota: string | null | undefined) => {
+    const cfg = { grupos: [] as string[], cameras: [] as string[], rotate: 0 };
+    if (!rota) return cfg;
+    const qIdx = rota.indexOf("?");
+    if (qIdx < 0) return cfg;
+    const sp = new URLSearchParams(rota.slice(qIdx + 1));
+    cfg.grupos = (sp.get("grupos") || "").split(",").map((s) => s.trim()).filter(Boolean);
+    cfg.cameras = (sp.get("cameras") || "").split(",").map((s) => s.trim()).filter(Boolean);
+    cfg.rotate = parseInt(sp.get("rotate") || "0") || 0;
+    return cfg;
+  };
+  const buildCamsRoute = (cfg: { grupos: string[]; cameras: string[]; rotate: number }) => {
+    const sp = new URLSearchParams();
+    if (cfg.cameras.length) sp.set("cameras", cfg.cameras.join(","));
+    else if (cfg.grupos.length) sp.set("grupos", cfg.grupos.join(","));
+    if (cfg.rotate > 0) sp.set("rotate", String(cfg.rotate));
+    const qs = sp.toString();
+    return qs ? `/tv/cameras?${qs}` : "/tv/cameras";
+  };
+  const isCamsRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/cameras";
+  const camsCfg = isCamsRoute(edit?.rota_interna) ? parseCamsCfg(edit.rota_interna) : { grupos: [], cameras: [], rotate: 0 };
+  const updateCamsCfg = (patch: Partial<{ grupos: string[]; cameras: string[]; rotate: number }>) => {
+    const merged = { ...camsCfg, ...patch };
+    setEdit({ ...edit, rota_interna: buildCamsRoute(merged) });
+  };
+
 
   const salvar = async () => {
     if (!edit?.nome?.trim()) return toast.error("Informe o nome do dashboard");
@@ -106,15 +140,90 @@ export default function TvSignageDashboards() {
                 </Select>
               </div>
               {edit.tipo === "tela_interna" ? (
-                <div><Label>Tela</Label>
-                  <Select value={edit.rota_interna || ""} onValueChange={(v) => setEdit({ ...edit, rota_interna: v })}>
-                    <SelectTrigger><SelectValue placeholder="Escolha a tela" /></SelectTrigger>
-                    <SelectContent>{ROTAS_INTERNAS.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
+                <>
+                  <div><Label>Tela</Label>
+                    <Select
+                      value={(edit.rota_interna || "").split("?")[0] || ""}
+                      onValueChange={(v) => setEdit({ ...edit, rota_interna: v })}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Escolha a tela" /></SelectTrigger>
+                      <SelectContent>{ROTAS_INTERNAS.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  {isCamsRoute(edit.rota_interna) && (
+                    <div className="space-y-3 rounded-md border p-3 bg-muted/30">
+                      <div className="text-xs font-medium">Configuração do mosaico de câmeras</div>
+                      <div>
+                        <Label className="text-xs">Grupos de câmeras (opcional)</Label>
+                        <p className="text-[11px] text-muted-foreground mb-1">
+                          Selecione um ou mais grupos. Se nada for escolhido, todas as câmeras ativas serão exibidas.
+                        </p>
+                        <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+                          {grupos.map((g) => {
+                            const on = camsCfg.grupos.includes(g.id);
+                            return (
+                              <button
+                                key={g.id}
+                                type="button"
+                                onClick={() => {
+                                  const next = on ? camsCfg.grupos.filter((x) => x !== g.id) : [...camsCfg.grupos, g.id];
+                                  updateCamsCfg({ grupos: next, cameras: [] });
+                                }}
+                                className={`px-2 py-1 rounded-md text-xs border ${on ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"}`}
+                              >
+                                <span className="inline-block h-2 w-2 rounded-full mr-1 align-middle" style={{ background: g.cor || "#f97316" }} />
+                                {g.nome}
+                              </button>
+                            );
+                          })}
+                          {grupos.length === 0 && <span className="text-xs text-muted-foreground">Nenhum grupo cadastrado</span>}
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Câmeras específicas (opcional)</Label>
+                        <p className="text-[11px] text-muted-foreground mb-1">
+                          Se preencher, sobrepõe a seleção por grupos.
+                        </p>
+                        <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+                          {camerasList.map((c) => {
+                            const on = camsCfg.cameras.includes(c.id);
+                            return (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => {
+                                  const next = on ? camsCfg.cameras.filter((x) => x !== c.id) : [...camsCfg.cameras, c.id];
+                                  updateCamsCfg({ cameras: next });
+                                }}
+                                className={`px-2 py-1 rounded-md text-xs border ${on ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"}`}
+                              >
+                                {c.nome}
+                              </button>
+                            );
+                          })}
+                          {camerasList.length === 0 && <span className="text-xs text-muted-foreground">Nenhuma câmera ativa</span>}
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Rotação automática entre páginas (segundos)</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={camsCfg.rotate}
+                          onChange={(e) => updateCamsCfg({ rotate: Math.max(0, parseInt(e.target.value) || 0) })}
+                          placeholder="0 = manual"
+                        />
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Cada página exibe 16 câmeras. Use 0 para avanço manual.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div><Label>URL</Label><Input value={edit.url || ""} onChange={(e) => setEdit({ ...edit, url: e.target.value })} placeholder="https://..." /></div>
               )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Refresh (segundos)</Label><Input type="number" value={edit.refresh_segundos} onChange={(e) => setEdit({ ...edit, refresh_segundos: parseInt(e.target.value) || 60 })} /></div>
                 <div><Label>Timeout (segundos)</Label><Input type="number" value={edit.timeout_segundos} onChange={(e) => setEdit({ ...edit, timeout_segundos: parseInt(e.target.value) || 30 })} /></div>
