@@ -306,13 +306,86 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
               <h2 className="font-semibold">1. Segmento e atividade</h2>
               <div className="space-y-3">
                 <div>
-                  <Label>Segmento / atividade *</Label>
-                  <Input placeholder="Ex.: Materiais de construção, restaurantes, indústria metalúrgica..."
+                  <Label>O que quer pesquisar? *</Label>
+                  <Input placeholder="Ex.: Sacos de papel para padaria, restaurantes veganos, indústria metalúrgica..."
                     value={form.segmento} onChange={(e) => setForm({ ...form, segmento: e.target.value })} />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Descreva de forma simples. A IA vai ampliar em várias variações de busca.
+                  </p>
                 </div>
                 <div>
                   <Label>CNAE (opcional)</Label>
                   <Input placeholder="Ex.: 4744-0/01" value={form.cnae} onChange={(e) => setForm({ ...form, cnae: e.target.value })} />
+                </div>
+
+                <div className="rounded-lg border p-3 space-y-3 bg-muted/30">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div>
+                      <div className="text-sm font-medium flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-primary" /> Termos de busca ampliados
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Clique em <b>IA</b> para gerar variações. Você pode adicionar, editar ou remover antes de avançar.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={ampliarTermos}
+                      disabled={ampliando || (!form.segmento.trim() && !form.cnae.trim())}
+                    >
+                      {ampliando ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Ampliando…</> : <><Sparkles className="h-4 w-4 mr-2" />IA — Ampliar</>}
+                    </Button>
+                  </div>
+
+                  {form.termos_ampliados.length === 0 ? (
+                    <p className="text-xs text-muted-foreground italic">
+                      Nenhum termo ainda. Clique em <b>IA — Ampliar</b> ou adicione manualmente abaixo. É obrigatório ter ao menos 1 termo para avançar.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {form.termos_ampliados.map((t, i) => (
+                        <div key={i} className="flex items-center gap-1 rounded-full bg-background border pl-3 pr-1 py-1 text-sm">
+                          {editIdx === i ? (
+                            <>
+                              <Input
+                                autoFocus
+                                value={editValor}
+                                onChange={(e) => setEditValor(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') salvarEdicao(); if (e.key === 'Escape') setEditIdx(null); }}
+                                className="h-7 w-56"
+                              />
+                              <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={salvarEdicao}>
+                                <Check className="h-3.5 w-3.5" />
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <span>{t}</span>
+                              <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => iniciarEdicao(i)}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removerTermo(i)}>
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <Input
+                      placeholder='Adicionar termo (ex.: "saco kraft para pão francês")'
+                      value={novoTermo}
+                      onChange={(e) => setNovoTermo(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); adicionarTermo(); } }}
+                    />
+                    <Button type="button" variant="outline" size="sm" onClick={adicionarTermo} disabled={!novoTermo.trim()}>
+                      <Plus className="h-4 w-4 mr-1" /> Adicionar
+                    </Button>
+                  </div>
                 </div>
               </div>
             </>
