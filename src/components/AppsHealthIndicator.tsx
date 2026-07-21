@@ -240,7 +240,32 @@ export function AppsHealthIndicator({
       <Tooltip>
         <TooltipTrigger asChild>
           <span className="relative inline-flex items-center gap-1">
-            <Bell className={iconClass} />
+            <Tv className={iconClass} />
+            <span className={`${dotClassSize} rounded-full ${dotClass(tvState)}`} />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side={tooltipSide} className="text-xs max-w-[280px]">
+          <div className="font-semibold">Telas Remotas (Pilar Remotas)</div>
+          {tvs.length > 0 ? (
+            <div className="flex flex-col gap-1 max-h-56 overflow-auto">
+              {tvs.map((t) => (
+                <div key={t.id} className="flex items-center gap-1.5">
+                  <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotClass(t.state)}`} />
+                  <span className="truncate">{t.nome}</span>
+                  <span className="text-muted-foreground ml-auto text-[10px] whitespace-nowrap">
+                    {t.at
+                      ? new Date(t.at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+                      : "nunca"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-muted-foreground">Nenhum dispositivo pareado</div>
+          )}
+        </TooltipContent>
+      </Tooltip>
+
             <span className={`${dotClassSize} rounded-full ${pushDotClass(push)}`} />
           </span>
         </TooltipTrigger>
