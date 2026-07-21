@@ -651,6 +651,25 @@ function VendedorWizard({
   const [step, setStep] = useState(0);
   const total = 5;
   const progress = ((step + 1) / total) * 100;
+  const [escopo, setEscopo] = useState<'cidade' | 'uf' | 'pais'>('cidade');
+  const [cidade, setCidade] = useState('');
+  const [uf, setUf] = useState('');
+  const [pais, setPais] = useState('Brasil');
+  const [usarRaio, setUsarRaio] = useState(false);
+  const [raio, setRaio] = useState(50);
+
+  React.useEffect(() => {
+    let r = '';
+    if (escopo === 'cidade') {
+      if (cidade) r = `${cidade}${uf ? '/' + uf : ''}${usarRaio ? ` (raio de ${raio} km)` : ''}`;
+    } else if (escopo === 'uf') {
+      if (uf) r = `Estado inteiro: ${uf}`;
+    } else if (escopo === 'pais') {
+      if (pais) r = `País inteiro: ${pais}`;
+    }
+    setRegiao(r);
+  }, [escopo, cidade, uf, pais, usarRaio, raio, setRegiao]);
+
 
   const canNext = () => {
     if (step === 0) return produto.trim().length > 2;
