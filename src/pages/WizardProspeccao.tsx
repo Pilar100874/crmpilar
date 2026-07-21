@@ -105,7 +105,11 @@ export default function WizardProspeccao({ embedded = false, onCompleted }: Wiza
   const progress = ((step + 1) / totalSteps) * 100;
 
   const canNext = () => {
-    if (step === 0) return form.segmento.trim().length > 0 || form.cnae.trim().length > 0;
+    if (step === 0) {
+      const hasBase = form.segmento.trim().length > 0 || form.cnae.trim().length > 0;
+      // Exige que o usuário tenha ampliado os termos via IA antes de avançar
+      return hasBase && form.termos_ampliados.length > 0;
+    }
     if (step === 1) {
       if (form.escopo === 'cidade') return form.cidade.trim().length > 0;
       if (form.escopo === 'uf') return form.uf.trim().length === 2;
