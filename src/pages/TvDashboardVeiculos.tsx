@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import TvNotificationBarAuto from "@/components/tv/TvNotificationBarAuto";
 import { useNavigate } from 'react-router-dom';
 import { format, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

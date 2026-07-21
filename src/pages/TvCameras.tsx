@@ -1,6 +1,7 @@
 // TV: mosaico 4x4 (16 câmeras) sem espaçamento, rotacionando a cada 10s
 // entre os grupos de 16 quando houver mais câmeras no sistema.
 import { useEffect, useMemo, useState } from "react";
+import TvNotificationBarAuto from "@/components/tv/TvNotificationBarAuto";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import TvNotificationBarAuto from "@/components/tv/TvNotificationBarAuto";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
