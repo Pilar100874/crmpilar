@@ -730,19 +730,82 @@ function VendedorWizard({
           )}
 
           {step === 2 && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <h3 className="font-semibold text-sm">3. Região onde procurar representantes</h3>
-              <Label>Estados / regiões / cidades *</Label>
-              <Input
-                value={regiao}
-                onChange={(e) => setRegiao(e.target.value)}
-                placeholder='Ex.: "SP e MG", "Sul do Brasil", "Nacional", "Grande São Paulo"'
-              />
+              <div>
+                <Label>Escopo geográfico</Label>
+                <RadioGroup
+                  value={escopo}
+                  onValueChange={(v: 'cidade' | 'uf' | 'pais') => setEscopo(v)}
+                  className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2"
+                >
+                  <label className="flex items-center gap-2 border rounded-md p-2 cursor-pointer hover:bg-accent">
+                    <RadioGroupItem value="cidade" /> Cidade (com/sem raio)
+                  </label>
+                  <label className="flex items-center gap-2 border rounded-md p-2 cursor-pointer hover:bg-accent">
+                    <RadioGroupItem value="uf" /> Estado inteiro
+                  </label>
+                  <label className="flex items-center gap-2 border rounded-md p-2 cursor-pointer hover:bg-accent">
+                    <RadioGroupItem value="pais" /> País inteiro
+                  </label>
+                </RadioGroup>
+              </div>
+
+              {escopo === 'cidade' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2 sm:col-span-1">
+                    <Label>Cidade *</Label>
+                    <Input value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder="Ex.: Vitória" />
+                  </div>
+                  <div>
+                    <Label>UF</Label>
+                    <Select value={uf} onValueChange={setUf}>
+                      <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
+                      <SelectContent>
+                        {UFS.map((u) => <SelectItem key={u.sigla} value={u.sigla}>{u.sigla} — {u.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="col-span-2 flex items-center gap-3">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <Checkbox checked={usarRaio} onCheckedChange={(c) => setUsarRaio(!!c)} />
+                      Usar raio de busca
+                    </label>
+                    {usarRaio && (
+                      <div className="flex items-center gap-2">
+                        <Input type="number" className="w-24" value={raio} onChange={(e) => setRaio(Number(e.target.value))} />
+                        <span className="text-sm text-muted-foreground">km</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {escopo === 'uf' && (
+                <div>
+                  <Label>Estado *</Label>
+                  <Select value={uf} onValueChange={setUf}>
+                    <SelectTrigger><SelectValue placeholder="Selecione o estado" /></SelectTrigger>
+                    <SelectContent>
+                      {UFS.map((u) => <SelectItem key={u.sigla} value={u.sigla}>{u.sigla} — {u.nome}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {escopo === 'pais' && (
+                <div>
+                  <Label>País *</Label>
+                  <Input value={pais} onChange={(e) => setPais(e.target.value)} placeholder="Ex.: Brasil, Portugal, Argentina..." />
+                </div>
+              )}
+
               <p className="text-xs text-muted-foreground">
-                Onde o representante deve estar baseado e atender.
+                Região selecionada: <b>{regiao || '—'}</b>
               </p>
             </div>
           )}
+
 
           {step === 3 && (
             <div className="space-y-2">
