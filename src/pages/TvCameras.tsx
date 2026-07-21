@@ -129,6 +129,16 @@ export default function TvCameras() {
     if (pageIdx >= pages.length) setPageIdx(0);
   }, [pages.length, pageIdx]);
 
+  // Rotação automática opcional via ?rotate=<segundos>
+  useEffect(() => {
+    if (!rotateSec || pages.length <= 1 || menuOpen || zoomed) return;
+    const id = setInterval(() => {
+      setPageIdx((i) => (i + 1) % pages.length);
+    }, rotateSec * 1000);
+    return () => clearInterval(id);
+  }, [rotateSec, pages.length, menuOpen, zoomed]);
+
+
   const openMenu = () => {
     setDraftOrder([...(cams ?? [])]);
     setMenuOpen(true);
