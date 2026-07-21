@@ -43,8 +43,8 @@ export default function TvSignageApi() {
               className="gap-2"
               onClick={() =>
                 downloadApk(
-                  "/__l5e/assets-v1/136d1f21-8b36-45d7-bc72-6b92c110da9c/pilar-tv-signage-v1.1.1.apk",
-                  "pilar-tv-signage-v1.1.1.apk",
+                  "/__l5e/assets-v1/b35b99ab-4272-4d94-af10-80ffb44fecd3/pilar-remotas-v1.1.2.apk",
+                  "pilar-remotas-v1.1.2.apk",
                 )
               }
             >
@@ -57,7 +57,7 @@ export default function TvSignageApi() {
           <div><b className="text-foreground">Como instalar:</b></div>
           <ol className="list-decimal list-inside space-y-1 pl-1">
             <li>Nas configurações da TV, habilite <b>Fontes desconhecidas</b> (Segurança / Aplicativos).</li>
-            <li>Baixe o APK diretamente pelo navegador da TV, envie por pendrive USB ou use <code>adb install pilar-tv-signage-v1.1.1.apk</code>.</li>
+            <li>Baixe o APK diretamente pelo navegador da TV, envie por pendrive USB ou use <code>adb install pilar-remotas-v1.1.2.apk</code>.</li>
             <li>Abra <b>Pilar TV Signage</b> no launcher. <b>Se o aparelho tiver câmera</b>, toque em <b>📷 Ler QR Code</b> e aponte para o QR gerado em <b>Dispositivos → Novo</b> — o pareamento é automático. Caso contrário, digite o código de 8 caracteres + token.</li>
             <li>Pronto: a TV assume o dashboard/playlist configurado e recebe comandos remotos em tempo real.</li>
           </ol>
