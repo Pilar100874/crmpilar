@@ -105,7 +105,11 @@ export default function TvSignagePlaylists() {
         {playlists.length === 0 && <Card className="p-8 text-center text-muted-foreground col-span-full">Nenhuma playlist criada.</Card>}
       </div>
 
-      <Dialog open={edit !== null} onOpenChange={(o) => !o && setEdit(null)}>
+      <Dialog open={edit !== null} onOpenChange={(o) => {
+        if (o) return;
+        if (edit?.id && items.length === 0) { toast.error("Adicione pelo menos uma tela à rotação antes de sair"); return; }
+        setEdit(null); carregar();
+      }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{edit?.id ? "Editar playlist" : "Nova playlist"}</DialogTitle></DialogHeader>
           {edit && (
