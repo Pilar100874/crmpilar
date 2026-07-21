@@ -15,12 +15,46 @@ import { ROTAS_INTERNAS, getEstabelecimentoId } from "@/services/tvSignage/tvSig
 export default function TvSignageDashboards() {
   const [list, setList] = useState<any[]>([]);
   const [edit, setEdit] = useState<any | null>(null);
+  const [grupos, setGrupos] = useState<any[]>([]);
+  const [camerasList, setCamerasList] = useState<any[]>([]);
 
   const carregar = async () => {
     const { data } = await supabase.from("tv_dashboards").select("*").order("created_at", { ascending: false });
     setList(data || []);
   };
-  useEffect(() => { carregar(); }, []);
+  useEffect(() => {
+    carregar();
+    supabase.from("cameras_grupos").select("id,nome,cor").eq("ativo", true).order("nome").then(({ data }) => setGrupos(data || []));
+    supabase.from("cv_cameras").select("id,nome,grupo_id").eq("ativo", true).order("nome").then(({ data }) => setCamerasList(data || []));
+  }, []);
+
+  // Deriva query params atuais quando a rota é /tv/cameras
+  const parseCamsCfg = (rota: string | null | undefined) => {
+    const cfg = { grupos: [] as string[], cameras: [] as string[], rotate: 0 };
+    if (!rota) return cfg;
+    const qIdx = rota.indexOf("?");
+    if (qIdx < 0) return cfg;
+    const sp = new URLSearchParams(rota.slice(qIdx + 1));
+    cfg.grupos = (sp.get("grupos") || "").split(",").map((s) => s.trim()).filter(Boolean);
+    cfg.cameras = (sp.get("cameras") || "").split(",").map((s) => s.trim()).filter(Boolean);
+    cfg.rotate = parseInt(sp.get("rotate") || "0") || 0;
+    return cfg;
+  };
+  const buildCamsRoute = (cfg: { grupos: string[]; cameras: string[]; rotate: number }) => {
+    const sp = new URLSearchParams();
+    if (cfg.cameras.length) sp.set("cameras", cfg.cameras.join(","));
+    else if (cfg.grupos.length) sp.set("grupos", cfg.grupos.join(","));
+    if (cfg.rotate > 0) sp.set("rotate", String(cfg.rotate));
+    const qs = sp.toString();
+    return qs ? `/tv/cameras?${qs}` : "/tv/cameras";
+  };
+  const isCamsRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/cameras";
+  const camsCfg = isCamsRoute(edit?.rota_interna) ? parseCamsCfg(edit.rota_interna) : { grupos: [], cameras: [], rotate: 0 };
+  const updateCamsCfg = (patch: Partial<{ grupos: string[]; cameras: string[]; rotate: number }>) => {
+    const merged = { ...camsCfg, ...patch };
+    setEdit({ ...edit, rota_interna: buildCamsRoute(merged) });
+  };
+
 
   const salvar = async () => {
     if (!edit?.nome?.trim()) return toast.error("Informe o nome do dashboard");
