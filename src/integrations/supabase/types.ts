@@ -20810,10 +20810,12 @@ export type Database = {
           estilo: Json
           evento: string
           filtros: Json
+          flow_json: Json | null
           id: string
           mensagem_template: string
           nome: string
           updated_at: string
+          versao: number
         }
         Insert: {
           ativo?: boolean
@@ -20826,10 +20828,12 @@ export type Database = {
           estilo?: Json
           evento: string
           filtros?: Json
+          flow_json?: Json | null
           id?: string
           mensagem_template: string
           nome: string
           updated_at?: string
+          versao?: number
         }
         Update: {
           ativo?: boolean
@@ -20842,10 +20846,12 @@ export type Database = {
           estilo?: Json
           evento?: string
           filtros?: Json
+          flow_json?: Json | null
           id?: string
           mensagem_template?: string
           nome?: string
           updated_at?: string
+          versao?: number
         }
         Relationships: []
       }
