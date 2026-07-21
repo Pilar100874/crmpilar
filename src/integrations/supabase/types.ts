@@ -20751,6 +20751,104 @@ export type Database = {
         }
         Relationships: []
       }
+      tv_workflow_execucoes: {
+        Row: {
+          created_at: string
+          device_id: string
+          duracao_segundos: number
+          estabelecimento_id: string
+          estilo: Json
+          exibido_em: string | null
+          expira_em: string
+          id: string
+          mensagem_renderizada: string
+          workflow_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_id: string
+          duracao_segundos?: number
+          estabelecimento_id: string
+          estilo?: Json
+          exibido_em?: string | null
+          expira_em: string
+          id?: string
+          mensagem_renderizada: string
+          workflow_id: string
+        }
+        Update: {
+          created_at?: string
+          device_id?: string
+          duracao_segundos?: number
+          estabelecimento_id?: string
+          estilo?: Json
+          exibido_em?: string | null
+          expira_em?: string
+          id?: string
+          mensagem_renderizada?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tv_workflow_execucoes_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "tv_workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tv_workflows: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          dashboard_id: string | null
+          duracao_segundos: number
+          escopo_ids: string[]
+          escopo_tipo: string
+          estabelecimento_id: string
+          estilo: Json
+          evento: string
+          filtros: Json
+          id: string
+          mensagem_template: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          dashboard_id?: string | null
+          duracao_segundos?: number
+          escopo_ids?: string[]
+          escopo_tipo?: string
+          estabelecimento_id: string
+          estilo?: Json
+          evento: string
+          filtros?: Json
+          id?: string
+          mensagem_template: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          dashboard_id?: string | null
+          duracao_segundos?: number
+          escopo_ids?: string[]
+          escopo_tipo?: string
+          estabelecimento_id?: string
+          estilo?: Json
+          evento?: string
+          filtros?: Json
+          id?: string
+          mensagem_template?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       twilio_config: {
         Row: {
           account_sid: string | null
