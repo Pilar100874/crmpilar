@@ -128,7 +128,7 @@ export default function TvSignageDashboards() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEdit(null)}>Cancelar</Button>
-            <Button onClick={salvar} disabled={!edit?.nome}>Salvar</Button>
+            <Button onClick={salvar} disabled={!edit?.nome?.trim() || !edit?.tipo || (edit?.tipo === "tela_interna" && !edit?.rota_interna) || (edit?.tipo === "url_externa" && !edit?.url?.trim())}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
