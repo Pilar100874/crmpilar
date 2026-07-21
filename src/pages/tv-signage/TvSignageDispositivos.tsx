@@ -218,17 +218,20 @@ export default function TvSignageDispositivos() {
                   <SelectContent><SelectItem value="none">Sem grupo</SelectItem>{grupos.map((g) => <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Dashboard fixo</Label>
-                <Select value={edit.dashboard_atual_id || "none"} onValueChange={(v) => setEdit({ ...edit, dashboard_atual_id: v === "none" ? null : v, playlist_id: null })}>
-                  <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
-                  <SelectContent><SelectItem value="none">Nenhum</SelectItem>{dashboards.map((d) => <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div><Label>Playlist (rotação)</Label>
-                <Select value={edit.playlist_id || "none"} onValueChange={(v) => setEdit({ ...edit, playlist_id: v === "none" ? null : v, dashboard_atual_id: null })}>
-                  <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
-                  <SelectContent><SelectItem value="none">Nenhuma</SelectItem>{playlists.map((p) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
-                </Select>
+              <div className="md:col-span-2 p-3 rounded-lg border border-border bg-muted/30 space-y-3">
+                <p className="text-xs text-muted-foreground">Escolha <b>um</b>: Dashboard fixo <b>ou</b> Playlist (nunca os dois).</p>
+                <div><Label>Dashboard fixo</Label>
+                  <Select value={edit.dashboard_atual_id || "none"} onValueChange={(v) => setEdit({ ...edit, dashboard_atual_id: v === "none" ? null : v, playlist_id: null })}>
+                    <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
+                    <SelectContent><SelectItem value="none">Nenhum</SelectItem>{dashboards.map((d) => <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div><Label>Playlist (rotação)</Label>
+                  <Select value={edit.playlist_id || "none"} onValueChange={(v) => setEdit({ ...edit, playlist_id: v === "none" ? null : v, dashboard_atual_id: null })}>
+                    <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
+                    <SelectContent><SelectItem value="none">Nenhuma</SelectItem>{playlists.map((p) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
               </div>
               <div><Label>Tema</Label>
                 <Select value={edit.tema || "dark"} onValueChange={(v) => setEdit({ ...edit, tema: v })}>
@@ -236,14 +239,16 @@ export default function TvSignageDispositivos() {
                   <SelectContent><SelectItem value="dark">Escuro</SelectItem><SelectItem value="light">Claro</SelectItem></SelectContent>
                 </Select>
               </div>
-              <div><Label>Idioma</Label><Input value={edit.idioma || "pt-BR"} onChange={(e) => setEdit({ ...edit, idioma: e.target.value })} /></div>
-              <div><Label>Versão mínima do app</Label><Input value={edit.versao_min_requerida || ""} onChange={(e) => setEdit({ ...edit, versao_min_requerida: e.target.value })} placeholder="ex: 1.0.0" /></div>
               <div className="md:col-span-2"><Label>Observações</Label><Textarea value={edit.observacoes || ""} onChange={(e) => setEdit({ ...edit, observacoes: e.target.value })} /></div>
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEdit(null)}>Cancelar</Button>
-            <Button onClick={() => salvar(edit)} disabled={!edit?.nome}>Salvar</Button>
+            <Button onClick={() => {
+              if (!edit?.nome?.trim()) return toast.error("Informe o nome");
+              if (!edit?.dashboard_atual_id && !edit?.playlist_id) return toast.error("Selecione um Dashboard fixo OU uma Playlist");
+              salvar(edit);
+            }} disabled={!edit?.nome?.trim() || (!edit?.dashboard_atual_id && !edit?.playlist_id)}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
