@@ -21,6 +21,9 @@ import { gerarPdfProspeccao } from '@/lib/prospeccaoPdf';
 import { validateEmail } from '@/lib/validators';
 import { maskWhatsApp, removeMask } from '@/lib/masks';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { UFS } from '@/lib/brAddress';
 
 const MCP_URL = 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/mcp';
 
