@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { DeleteConfirmTrigger } from "@/components/tv-signage/DeleteConfirmTrigger";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Search, RefreshCw, QrCode, Lock, Unlock, Terminal, Pencil, Trash2, KeyRound, Wifi, WifiOff, AlertTriangle } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import { toast } from "sonner";
