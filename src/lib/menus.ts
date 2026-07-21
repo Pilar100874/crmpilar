@@ -53,7 +53,7 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   { id: "TV Vendas", label: "TV Vendas", category: "TV" },
   { id: "TV Veículos", label: "TV Veículos", category: "TV" },
   { id: "TV Câmeras", label: "TV Câmeras (Mosaico)", category: "TV" },
-  { id: "TV Signage", label: "TV Signage (Android TV)", category: "TV" },
+  { id: "TV Signage", label: "Gerenciador de Telas Remotas", category: "TV" },
 
   // Controle de Ponto
   { id: "Controle de Ponto", label: "Controle de Ponto (Categoria)", category: "Ponto" },

@@ -224,7 +224,7 @@ export const menuItems: MenuItem[] = [
       { id: "TV Vendas", title: "Dashboard Vendas", url: "/tv/vendas", icon: FileBarChart },
       { id: "TV Veículos", title: "Dashboard Veículos", url: "/tv/veiculos", icon: LucideIcons.Truck },
       { id: "TV Câmeras", title: "Mosaico de Câmeras", url: "/tv/cameras", icon: LucideIcons.Camera },
-      { id: "TV Signage", title: "TV Signage (Android TV)", url: "/tv-signage", icon: LucideIcons.MonitorPlay },
+      { id: "TV Signage", title: "Gerenciador de Telas Remotas", url: "/tv-signage", icon: LucideIcons.MonitorPlay },
     ]
   },
   { id: "Mapa de Calor", title: "Mapa de Calor", url: "/mapa-calor-sistema", icon: LucideIcons.Flame },
