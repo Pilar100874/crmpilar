@@ -148,7 +148,17 @@ export default function TvSignagePlaylists() {
               )}
             </div>
           )}
-          <DialogFooter><Button variant="outline" onClick={() => { setEdit(null); carregar(); }}>Fechar</Button></DialogFooter>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (edit?.id && items.length === 0) {
+                  return toast.error("Adicione pelo menos uma tela à rotação antes de sair");
+                }
+                setEdit(null); carregar();
+              }}
+            >Fechar</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
