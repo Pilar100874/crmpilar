@@ -25,7 +25,7 @@ export default function Perfil() {
 
   const currentDeviceUuid = (() => {
     try {
-      return localStorage.getItem('pilar_device_uuid') || localStorage.getItem('device_uuid') || '';
+      return localStorage.getItem('crm:pwa:device_uuid') || '';
     } catch { return ''; }
   })();
 
