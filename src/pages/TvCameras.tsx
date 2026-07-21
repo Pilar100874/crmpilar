@@ -1,8 +1,9 @@
 // TV: mosaico 4x4 (16 câmeras) sem espaçamento, rotacionando a cada 10s
 // entre os grupos de 16 quando houver mais câmeras no sistema.
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+
 import { CameraLiveTile } from "@/components/cameras/CameraLiveTile";
 import {
   Loader2,
