@@ -381,6 +381,8 @@ function TvBuilderInner() {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            onConnectStart={onConnectStart}
+            onConnectEnd={onConnectEnd}
             onNodeClick={(_, n) => setSelected(n)}
             onPaneClick={() => setSelected(null)}
             nodeTypes={nodeTypes}
@@ -391,6 +393,17 @@ function TvBuilderInner() {
             <Controls />
             <MiniMap pannable zoomable className="!bg-card !border-border" />
           </ReactFlow>
+
+          {connectMenu && (
+            <SmartConnectMenu
+              x={connectMenu.x}
+              y={connectMenu.y}
+              title={connectMenu.handleType === "source" ? "Conectar a…" : "Vir de…"}
+              blocks={smartBlockOptions}
+              onPick={handleSmartPick}
+              onClose={() => setConnectMenu(null)}
+            />
+          )}
 
           {nodes.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
