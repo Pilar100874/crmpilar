@@ -20,7 +20,14 @@ export default function Perfil() {
   const [estabelecimentoName, setEstabelecimentoName] = useState("");
   const [grupoAcessoName, setGrupoAcessoName] = useState("");
   const [extensionStatus, setExtensionStatus] = useState<{isSharing: boolean, lastFrameAt: string | null} | null>(null);
+  const [dispositivos, setDispositivos] = useState<any[]>([]);
   const { downloadExtension, isDownloading } = useExtensionDownload();
+
+  const currentDeviceUuid = (() => {
+    try {
+      return localStorage.getItem('pilar_device_uuid') || localStorage.getItem('device_uuid') || '';
+    } catch { return ''; }
+  })();
 
   useEffect(() => {
     loadUserData();
