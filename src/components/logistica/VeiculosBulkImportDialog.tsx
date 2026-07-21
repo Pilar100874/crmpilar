@@ -314,6 +314,18 @@ export const VeiculosBulkImportDialog: React.FC<Props> = ({ open, onOpenChange, 
                   <Input value={r.telefone_sms} onChange={e => update(r.id, { telefone_sms: e.target.value })} placeholder="+5511..." className="h-9" inputMode="tel" />
                 </div>
 
+                <div className="space-y-1">
+                  <Label className="text-[11px] text-muted-foreground">IMEI do rastreador</Label>
+                  <Input
+                    value={r.imei}
+                    onChange={e => update(r.id, { imei: e.target.value.replace(/\D/g, '') })}
+                    placeholder="Ex: 353456789012345"
+                    className="h-9 font-mono"
+                    inputMode="numeric"
+                    maxLength={17}
+                  />
+                </div>
+
 
 
 
