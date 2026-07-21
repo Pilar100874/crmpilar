@@ -181,6 +181,7 @@ export function AppsHealthIndicator({
     ? aggregate(filiais.map((f) => f.state))
     : classify(win.ago);
   const andState = classify(and.ago);
+  const tvState = tvs.length ? aggregate(tvs.map((t) => t.state)) : "offline";
 
   const iconClass = small
     ? "h-4 w-4 text-foreground/70"
