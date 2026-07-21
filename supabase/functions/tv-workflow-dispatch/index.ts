@@ -8,11 +8,11 @@ const corsHeaders = {
 };
 
 /**
- * Recebe { evento, payload, estabelecimento_id } e enfileira execuções
- * para todos os dispositivos alvo de cada workflow ativo que casa com o evento.
+ * Recebe { evento, payload, estabelecimento_id, workflow_id? } e enfileira
+ * execuções para todos os dispositivos alvo de cada workflow ativo.
  *
- * payload pode conter variáveis usadas na mensagem_template (ex.: {placa}, {valor}).
- * Se `workflow_id` for informado, força o disparo apenas daquele workflow (modo manual).
+ * Interpreta o `flow_json` (nodes+edges) quando presente; caso contrário,
+ * cai no comportamento antigo baseado nos campos flat do workflow.
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -32,10 +32,7 @@ serve(async (req) => {
     } = body;
 
     if (!evento && !workflow_id) {
-      return new Response(JSON.stringify({ error: "evento ou workflow_id é obrigatório" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return json({ error: "evento ou workflow_id é obrigatório" }, 400);
     }
 
     const admin = createClient(
@@ -43,94 +40,240 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Busca workflows ativos correspondentes
-    let query = admin.from("tv_workflows").select("*").eq("ativo", true);
-    if (workflow_id) query = query.eq("id", workflow_id);
-    else query = query.eq("evento", evento!);
-    if (estabelecimento_id) query = query.eq("estabelecimento_id", estabelecimento_id);
+    let q = admin.from("tv_workflows").select("*").eq("ativo", true);
+    if (workflow_id) q = q.eq("id", workflow_id);
+    else q = q.eq("evento", evento!);
+    if (estabelecimento_id) q = q.eq("estabelecimento_id", estabelecimento_id);
 
-    const { data: workflows, error: wfErr } = await query;
-    if (wfErr) throw wfErr;
-    if (!workflows || workflows.length === 0) {
-      return new Response(JSON.stringify({ ok: true, execucoes: 0 }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const { data: workflows, error } = await q;
+    if (error) throw error;
+    if (!workflows?.length) return json({ ok: true, execucoes: 0 });
 
-    const interpolar = (tpl: string, vars: Record<string, any>) =>
-      tpl.replace(/\{(\w+)\}/g, (_, k) => (vars[k] ?? "").toString());
-
-    let totalInseridas = 0;
+    let total = 0;
 
     for (const wf of workflows) {
-      // Filtros (simples: chave/valor exato ou array com contains)
-      const filtros = wf.filtros || {};
-      let match = true;
-      for (const [k, v] of Object.entries(filtros)) {
-        if (v == null || v === "" || (Array.isArray(v) && v.length === 0)) continue;
-        const pv = payload[k];
-        if (Array.isArray(v)) {
-          if (!v.includes(pv)) { match = false; break; }
-        } else if (k.endsWith("_min")) {
-          const base = k.replace(/_min$/, "");
-          if (Number(payload[base]) < Number(v)) { match = false; break; }
-        } else if (pv !== v) {
-          match = false; break;
-        }
-      }
-      if (!match) continue;
+      const inseridas = await processarWorkflow(admin, wf, evento, payload);
+      total += inseridas;
+    }
 
-      // Resolve dispositivos alvo
-      let devQ = admin
-        .from("tv_devices")
-        .select("id,estabelecimento_id,grupo_id,dashboard_atual_id,bloqueado")
-        .eq("estabelecimento_id", wf.estabelecimento_id);
+    return json({ ok: true, execucoes: total });
+  } catch (e) {
+    console.error("tv-workflow-dispatch error", e);
+    return json({ error: e instanceof Error ? e.message : "erro" }, 500);
+  }
+});
 
-      const { data: devs } = await devQ;
-      if (!devs) continue;
+function json(data: any, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
 
-      const alvos = devs.filter((d: any) => {
-        if (d.bloqueado) return false;
-        if (wf.escopo_tipo === "dispositivos") {
-          return (wf.escopo_ids || []).includes(d.id);
-        }
-        if (wf.escopo_tipo === "grupos") {
-          return d.grupo_id && (wf.escopo_ids || []).includes(d.grupo_id);
-        }
-        if (wf.escopo_tipo === "dashboard") {
-          return wf.dashboard_id && d.dashboard_atual_id === wf.dashboard_id;
-        }
-        return true; // 'todos'
-      });
+function interpolar(tpl: string, vars: Record<string, any>) {
+  return (tpl || "").replace(/\{(\w+)\}/g, (_, k) => (vars[k] ?? "").toString());
+}
 
-      if (alvos.length === 0) continue;
+function compararValor(a: any, op: string, b: any): boolean {
+  switch (op) {
+    case "=": return String(a) === String(b);
+    case "!=": return String(a) !== String(b);
+    case ">": return Number(a) > Number(b);
+    case "<": return Number(a) < Number(b);
+    case "contem": return String(a ?? "").toLowerCase().includes(String(b ?? "").toLowerCase());
+    default: return true;
+  }
+}
 
-      const msg = interpolar(wf.mensagem_template, payload);
-      const duracao = wf.duracao_segundos || 8;
-      const expira = new Date(Date.now() + duracao * 1000).toISOString();
+function dentroHorario(cfg: any): boolean {
+  const agora = new Date();
+  const dias: number[] = cfg.dias || [];
+  if (dias.length > 0 && !dias.includes(agora.getDay())) return false;
+  const [hi, mi] = String(cfg.hora_inicio || "00:00").split(":").map(Number);
+  const [hf, mf] = String(cfg.hora_fim || "23:59").split(":").map(Number);
+  const cur = agora.getHours() * 60 + agora.getMinutes();
+  const ini = hi * 60 + (mi || 0);
+  const fim = hf * 60 + (mf || 0);
+  return cur >= ini && cur <= fim;
+}
 
+async function processarWorkflow(admin: any, wf: any, evento: string | undefined, payload: Record<string, any>) {
+  const flow = wf.flow_json || null;
+
+  // Sem flow_json → comportamento legacy (mensagem única)
+  if (!flow || !flow.nodes?.length) {
+    return await enfileirarBarraLegacy(admin, wf, payload);
+  }
+
+  const nodes: any[] = flow.nodes;
+  const edges: any[] = flow.edges || [];
+
+  // Filtra gatilhos que casam
+  const gatilhos = nodes.filter((n) => {
+    const t = n.data?.type;
+    if (!t?.startsWith("gatilho_")) return false;
+    if (t === "gatilho_evento") {
+      const ev = n.data?.config?.evento;
+      return !evento || ev === evento || ev === "manual";
+    }
+    return true;
+  });
+
+  if (gatilhos.length === 0) return 0;
+
+  const proximos = (id: string, handle?: string | null) =>
+    edges
+      .filter((e) => e.source === id && (!handle || !e.sourceHandle || e.sourceHandle === handle))
+      .map((e) => nodes.find((n) => n.id === e.target))
+      .filter(Boolean);
+
+  const dispositivosBase = await carregarDispositivos(admin, wf.estabelecimento_id);
+  let totalInseridas = 0;
+
+  for (const g of gatilhos) {
+    totalInseridas += await percorrer(admin, wf, g, payload, proximos, dispositivosBase);
+  }
+
+  return totalInseridas;
+}
+
+async function percorrer(
+  admin: any,
+  wf: any,
+  node: any,
+  payload: Record<string, any>,
+  proximos: (id: string, handle?: string | null) => any[],
+  devicesBase: any[],
+  escopoAtual?: any,
+): Promise<number> {
+  const cfg = node.data?.config || {};
+  const t = node.data?.type;
+  let inseridas = 0;
+
+  // Condições: escolhem qual saída seguir
+  if (t === "condicao_filtro") {
+    const ok = compararValor(payload[cfg.campo], cfg.operador || "=", cfg.valor);
+    const filhos = proximos(node.id, ok ? "yes" : "no");
+    for (const f of filhos) inseridas += await percorrer(admin, wf, f, payload, proximos, devicesBase, escopoAtual);
+    return inseridas;
+  }
+  if (t === "condicao_horario") {
+    const ok = dentroHorario(cfg);
+    const filhos = proximos(node.id, ok ? "yes" : "no");
+    for (const f of filhos) inseridas += await percorrer(admin, wf, f, payload, proximos, devicesBase, escopoAtual);
+    return inseridas;
+  }
+  if (t === "condicao_escopo") {
+    // aplica filtro sobre os dispositivos que continuarão na cadeia
+    const filtrados = filtrarDispositivos(devicesBase, {
+      escopo_tipo: cfg.escopo_tipo,
+      escopo_ids: cfg.escopo_ids,
+      dashboard_id: cfg.dashboard_id,
+    });
+    const ok = filtrados.length > 0;
+    const filhos = proximos(node.id, ok ? "yes" : "no");
+    for (const f of filhos) inseridas += await percorrer(admin, wf, f, payload, proximos, filtrados, filtrados);
+    return inseridas;
+  }
+
+  // Ações
+  if (t === "acao_barra") {
+    const alvos = escopoAtual || devicesBase;
+    if (alvos.length > 0) {
+      const dur = cfg.duracao_segundos || 8;
       const rows = alvos.map((d: any) => ({
         workflow_id: wf.id,
         device_id: d.id,
         estabelecimento_id: wf.estabelecimento_id,
-        mensagem_renderizada: msg,
-        estilo: wf.estilo || {},
-        duracao_segundos: duracao,
-        expira_em: expira,
+        mensagem_renderizada: interpolar(cfg.mensagem || "", payload),
+        estilo: cfg.estilo || {},
+        duracao_segundos: dur,
+        expira_em: new Date(Date.now() + dur * 1000).toISOString(),
       }));
-
-      const { error: insErr } = await admin.from("tv_workflow_execucoes").insert(rows);
-      if (!insErr) totalInseridas += rows.length;
+      const { error } = await admin.from("tv_workflow_execucoes").insert(rows);
+      if (!error) inseridas += rows.length;
     }
-
-    return new Response(JSON.stringify({ ok: true, execucoes: totalInseridas }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (e) {
-    console.error("tv-workflow-dispatch error", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "erro" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
   }
-});
+  if (t === "acao_comando") {
+    const alvos = escopoAtual || devicesBase;
+    const rows = alvos.map((d: any) => ({
+      device_id: d.id,
+      estabelecimento_id: wf.estabelecimento_id,
+      tipo: cfg.comando,
+      payload: cfg.payload || {},
+    }));
+    if (rows.length) await admin.from("tv_commands").insert(rows);
+  }
+  if (t === "acao_trocar_dashboard") {
+    const alvos = escopoAtual || devicesBase;
+    for (const d of alvos) {
+      await admin.from("tv_commands").insert({
+        device_id: d.id,
+        estabelecimento_id: wf.estabelecimento_id,
+        tipo: "atualizar_dashboard",
+        payload: { dashboard_id: cfg.dashboard_id },
+      });
+    }
+  }
+  if (t === "acao_log") {
+    const alvos = escopoAtual || devicesBase;
+    const rows = alvos.map((d: any) => ({
+      device_id: d.id,
+      estabelecimento_id: wf.estabelecimento_id,
+      nivel: cfg.nivel || "info",
+      tipo: "workflow",
+      titulo: cfg.titulo || wf.nome,
+      mensagem: interpolar(cfg.mensagem || "", payload),
+    }));
+    if (rows.length) await admin.from("tv_events").insert(rows).then(() => {}, () => {});
+  }
+  if (t === "acao_aguardar") {
+    const s = Math.min(30, cfg.segundos || 0); // teto de segurança
+    if (s > 0) await new Promise((r) => setTimeout(r, s * 1000));
+  }
+
+  // Continua para os próximos nós (saída padrão)
+  const filhos = proximos(node.id);
+  for (const f of filhos) inseridas += await percorrer(admin, wf, f, payload, proximos, devicesBase, escopoAtual);
+  return inseridas;
+}
+
+async function carregarDispositivos(admin: any, estId: string) {
+  const { data } = await admin
+    .from("tv_devices")
+    .select("id,estabelecimento_id,grupo_id,dashboard_atual_id,bloqueado")
+    .eq("estabelecimento_id", estId);
+  return (data || []).filter((d: any) => !d.bloqueado);
+}
+
+function filtrarDispositivos(devs: any[], escopo: { escopo_tipo?: string; escopo_ids?: string[]; dashboard_id?: string | null }) {
+  return devs.filter((d) => {
+    if (escopo.escopo_tipo === "dispositivos") return (escopo.escopo_ids || []).includes(d.id);
+    if (escopo.escopo_tipo === "grupos") return d.grupo_id && (escopo.escopo_ids || []).includes(d.grupo_id);
+    if (escopo.escopo_tipo === "dashboard") return escopo.dashboard_id && d.dashboard_atual_id === escopo.dashboard_id;
+    return true;
+  });
+}
+
+// ── Fallback antigo (sem flow_json) ─────────────────────────────
+async function enfileirarBarraLegacy(admin: any, wf: any, payload: Record<string, any>) {
+  const devs = await carregarDispositivos(admin, wf.estabelecimento_id);
+  const alvos = filtrarDispositivos(devs, {
+    escopo_tipo: wf.escopo_tipo,
+    escopo_ids: wf.escopo_ids,
+    dashboard_id: wf.dashboard_id,
+  });
+  if (!alvos.length) return 0;
+  const dur = wf.duracao_segundos || 8;
+  const rows = alvos.map((d: any) => ({
+    workflow_id: wf.id,
+    device_id: d.id,
+    estabelecimento_id: wf.estabelecimento_id,
+    mensagem_renderizada: interpolar(wf.mensagem_template || "", payload),
+    estilo: wf.estilo || {},
+    duracao_segundos: dur,
+    expira_em: new Date(Date.now() + dur * 1000).toISOString(),
+  }));
+  const { error } = await admin.from("tv_workflow_execucoes").insert(rows);
+  return error ? 0 : rows.length;
+}
