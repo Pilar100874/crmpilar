@@ -2997,7 +2997,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                               size="sm"
                             >
                               <Plus className="w-4 h-4 mr-2" />
-                              Adicionar Usuários Selecionados
+                              Adicionar Gerentes Selecionados
                             </Button>
                           </CardContent>
                         </Card>
