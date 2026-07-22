@@ -107,6 +107,45 @@ export function TvPropertiesPanel({ node, onChange, onDelete, onClose }: Props) 
             </div>
           )}
 
+          {nodeData.type === "gatilho_intervalo" && (
+            <div>
+              <Label className="text-xs">Intervalo (minutos)</Label>
+              <Input
+                type="number"
+                min={1}
+                max={1440}
+                value={cfg.intervalo_min ?? 15}
+                onChange={(e) => setCfg({ intervalo_min: parseInt(e.target.value) || 1 })}
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">Dispara a cada N minutos (mín. 1, máx. 1440).</p>
+            </div>
+          )}
+
+          {/* Gatilhos de evento pré-fixado — permitem sobrescrever o evento */}
+          {def.category === "gatilho" &&
+            !["gatilho_evento", "gatilho_agendado", "gatilho_intervalo", "gatilho_webhook"].includes(nodeData.type) && (
+              <Card className="p-3 text-xs space-y-2">
+                <div>
+                  <Label className="text-xs">Evento monitorado</Label>
+                  <Input
+                    value={cfg.evento || def.defaultData.evento || ""}
+                    onChange={(e) => setCfg({ evento: e.target.value })}
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  Este bloco escuta o evento acima. Você pode adicionar filtros extras nos campos abaixo.
+                </p>
+                <div>
+                  <Label className="text-xs">Filtro adicional (opcional)</Label>
+                  <Input
+                    placeholder="Ex.: valor > 1000, placa = ABC1D23"
+                    value={cfg.filtro_extra || ""}
+                    onChange={(e) => setCfg({ filtro_extra: e.target.value })}
+                  />
+                </div>
+              </Card>
+            )}
+
           {nodeData.type === "gatilho_webhook" && (
             <Card className="p-3 text-xs text-muted-foreground">
               Este workflow será disparado quando um POST for enviado para o endpoint público do webhook (mostrado após salvar).
