@@ -384,7 +384,7 @@ export default function Gerentes() {
             </div>
           ) : (
             <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto">
-              <table className="w-full min-w-[720px]">
+              <table className="w-full table-fixed">
                 <thead className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20 backdrop-blur-sm">
                   <tr>
                     <th className="text-center px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-foreground sticky left-0 bg-gradient-to-r from-primary/5 to-primary/10 backdrop-blur-sm border-r border-border/30 z-20" style={{ width: 120 }}>
