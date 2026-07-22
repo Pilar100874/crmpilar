@@ -11,9 +11,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Input } from "@/components/ui/input";
 import { 
   Phone, MessageSquare, Mail, Users, CalendarIcon, 
-  Send, Loader2, CheckSquare, Square, AlertCircle, X
+  Send, Loader2, CheckSquare, Square, AlertCircle, X, Search
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
