@@ -122,6 +122,7 @@ export default function PoliticasInternas() {
   const [wizardPublishing, setWizardPublishing] = useState(false);
   const [wizardInstrucao, setWizardInstrucao] = useState("");
   const [wizardStatus, setWizardStatus] = useState<"ativa" | "inativa">("ativa");
+  const [wizardEditingId, setWizardEditingId] = useState<string | null>(null);
   const [wizardDraft, setWizardDraft] = useState<{
     title: string;
     summary: string;
