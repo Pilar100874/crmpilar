@@ -98,7 +98,35 @@ export function EditorToolbar({
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [linkText, setLinkText] = useState("");
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiContexto, setAiContexto] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
   const isEdit = mode === "editar";
+
+  async function gerarTextoIA() {
+    if (!editor || !aiPrompt.trim()) return;
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("editor-generate-text", {
+        body: { prompt: aiPrompt.trim(), contexto: aiContexto.trim() },
+      });
+      if (error) throw error;
+      if (!data || data.error) throw new Error(data?.error ?? "Falha ao gerar");
+      const html = String(data.html ?? "").trim();
+      if (!html) throw new Error("IA retornou vazio");
+      editor.chain().focus().insertContent(html).run();
+      toast.success("Texto inserido no documento");
+      setAiOpen(false);
+      setAiPrompt("");
+      setAiContexto("");
+    } catch (e: any) {
+      toast.error("Erro na IA: " + (e?.message ?? e));
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
 
   return (
     <div className="sticky top-0 z-20 border-b bg-card">
