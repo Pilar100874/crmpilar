@@ -16,7 +16,8 @@ import { DeleteWithDependenciesDialog } from "@/components/common/DeleteWithDepe
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil, Edit, GripVertical, Phone, Building2, Truck, UserCog, FileText, MapPin, ShieldCheck, Link2, ArrowLeft, AlertCircle } from "lucide-react";
+import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil, Edit, GripVertical, Phone, Building2, Truck, UserCog, FileText, MapPin, ShieldCheck, Link2, ArrowLeft, AlertCircle, Eye } from "lucide-react";
+import { VinculoViewDialog, type VinculoField } from "@/components/common/VinculoViewDialog";
 import { CadastroHeader } from "@/components/cadastros/CadastroHeader";
 import { toast } from "@/lib/toast-config";
 import { validateCPF, validateCNPJ, validateEmail, validateCEP, validateWhatsApp } from "@/lib/validators";
@@ -457,6 +458,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   // Estados para vincular contatos
   const [contatos, setContatos] = useState<Contato[]>([]);
   const [contatosVinculados, setContatosVinculados] = useState<any[]>([]);
+  const [viewingVinculo, setViewingVinculo] = useState<{ title: string; subtitle?: string; fields: VinculoField[] } | null>(null);
   const [buscaContato, setBuscaContato] = useState("");
   const [contatosFiltrados, setContatosFiltrados] = useState<Contato[]>([]);
   const [criarNovoContato, setCriarNovoContato] = useState(false);
@@ -2394,14 +2396,27 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 </h3>
                 <div className="space-y-2">
                   {contatosVinculados.map((vinculo, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-2 border rounded-md hover:bg-accent/50">
+                    <div key={idx} className="flex items-center justify-between p-2 border rounded-md hover:bg-accent/50 cursor-pointer" onClick={() => {
+                      const c = contatos.find(x => x.id === vinculo.contato?.id) || vinculo.contato;
+                      setViewingVinculo({
+                        title: c?.nome || "Contato",
+                        subtitle: vinculo.is_primary ? "Contato principal" : undefined,
+                        fields: [
+                          { label: "Nome", value: c?.nome },
+                          { label: "E-mail", value: c?.email },
+                          { label: "Telefone / WhatsApp", value: c?.telefone },
+                          { label: "Cargo", value: vinculo.cargo },
+                          { label: "Departamento", value: vinculo.departamento },
+                        ],
+                      });
+                    }}>
                       <div className="flex-1">
                         <div className="font-medium text-sm">{vinculo.contato?.nome}</div>
                         <div className="text-xs text-muted-foreground">
                           {vinculo.contato?.email}
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                         {vinculo.is_primary && (
                           <Badge variant="secondary" className="text-xs">Principal</Badge>
                         )}
@@ -3113,12 +3128,27 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                               {vinculosDesta.map((v) => {
                                 const emp = listaEmpresasReais.find((x) => x.id === v.empresa_id);
                                 return (
-                                  <div key={v.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors">
+                                  <div
+                                    key={v.id}
+                                    className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors cursor-pointer"
+                                    onClick={() => setViewingVinculo({
+                                      title: emp?.nome_fantasia || emp?.nome || "Empresa",
+                                      fields: [
+                                        { label: "Razão social", value: emp?.nome },
+                                        { label: "Nome fantasia", value: emp?.nome_fantasia },
+                                        { label: "CNPJ / CPF", value: emp?.cnpj },
+                                        { label: "E-mail", value: (emp as any)?.email },
+                                        { label: "Telefone", value: (emp as any)?.telefone },
+                                        { label: "Cidade", value: (emp as any)?.cidade },
+                                        { label: "Estado", value: (emp as any)?.estado },
+                                      ],
+                                    })}
+                                  >
                                     <div>
                                       <p className="text-sm font-medium">{emp?.nome_fantasia || emp?.nome || "Empresa não encontrada"}</p>
                                       {emp?.cnpj && <p className="text-xs text-muted-foreground">{emp.cnpj}</p>}
                                     </div>
-                                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoverVinculoSimples(v.id)}>
+                                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); handleRemoverVinculoSimples(v.id); }}>
                                       <Trash2 className="w-4 h-4 text-destructive" />
                                     </Button>
                                   </div>
@@ -3153,6 +3183,17 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         </div>
         </div>
       )}
+
+      {/* Visualização somente-leitura de item vinculado */}
+      <VinculoViewDialog
+        open={!!viewingVinculo}
+        onOpenChange={(o) => { if (!o) setViewingVinculo(null); }}
+        title={viewingVinculo?.title || ""}
+        subtitle={viewingVinculo?.subtitle}
+        fields={viewingVinculo?.fields || []}
+      />
+
+
 
       {/* Dialog de exclusão com dependências */}
       {empresaToDelete && (

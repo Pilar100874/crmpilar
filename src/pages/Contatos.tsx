@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus, MoreVertical, Trash2, GripVertical, Search, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Eye, Building2, Truck, UserCheck, User, AlertCircle } from "lucide-react";
+import { VinculoViewDialog, type VinculoField } from "@/components/common/VinculoViewDialog";
 import { CadastroHeader } from "@/components/cadastros/CadastroHeader";
 import { ContatoDetailsPanel } from "@/components/contatos/ContatoDetailsPanel";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -253,6 +254,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const [buscaEmpresa, setBuscaEmpresa] = useState<string>("");
   const [empresasFiltradas, setEmpresasFiltradas] = useState<any[]>([]);
   const [empresasVinculadas, setEmpresasVinculadas] = useState<any[]>([]);
+  const [viewingVinculo, setViewingVinculo] = useState<{ title: string; subtitle?: string; fields: VinculoField[] } | null>(null);
   
   // Sensores para drag and drop
   const sensors = useSensors(
@@ -2807,14 +2809,29 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                 </h3>
                 <div className="space-y-2">
                   {empresasVinculadas.map((empresa) => (
-                    <div key={empresa.id} className="flex items-center justify-between p-2 border rounded-md hover:bg-accent/50">
+                    <div key={empresa.id} className="flex items-center justify-between p-2 border rounded-md hover:bg-accent/50 cursor-pointer" onClick={() => {
+                      const full = empresas.find(e => e.id === empresa.id) || empresa;
+                      setViewingVinculo({
+                        title: full.nome_fantasia || full.nome || "Empresa",
+                        subtitle: empresa.is_primary ? "Empresa principal" : undefined,
+                        fields: [
+                          { label: "Razão social", value: full.nome },
+                          { label: "Nome fantasia", value: full.nome_fantasia },
+                          { label: "CNPJ / CPF", value: full.cnpj || full.custom_fields?.cpf_cnpj },
+                          { label: "E-mail", value: full.email },
+                          { label: "Telefone", value: full.telefone },
+                          { label: "Cidade", value: full.cidade },
+                          { label: "Estado", value: full.estado },
+                        ],
+                      });
+                    }}>
                       <div className="flex-1">
                         <div className="font-medium text-sm">{empresa.nome_fantasia}</div>
                         <div className="text-xs text-muted-foreground">
                           {empresa.cnpj || empresa.custom_fields?.cpf_cnpj}
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                         {empresa.is_primary && (
                           <Badge variant="secondary" className="text-xs">Principal</Badge>
                         )}
@@ -3240,6 +3257,15 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Visualização somente-leitura de item vinculado */}
+      <VinculoViewDialog
+        open={!!viewingVinculo}
+        onOpenChange={(o) => { if (!o) setViewingVinculo(null); }}
+        title={viewingVinculo?.title || ""}
+        subtitle={viewingVinculo?.subtitle}
+        fields={viewingVinculo?.fields || []}
+      />
 
     </div>
   );
