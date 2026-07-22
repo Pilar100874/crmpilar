@@ -1389,28 +1389,41 @@ export default function PoliticasInternas() {
                 onClick={async () => {
                   setWizardPublishing(true);
                   try {
-                    const { data, error } = await supabase
-                      .from("policies")
-                      .insert({
-                        title: wizardDraft.title.trim(),
-                        summary: wizardDraft.summary ?? "",
-                        content: wizardDraft.content,
-                        category_id: wizardCategoriaId || null,
-                        responsible: wizardResponsavel ?? "",
-                        keywords: wizardDraft.keywords ?? [],
-                        status: wizardStatus,
-                        ordem: policies.length,
-                      })
-                      .select("id")
-                      .single();
-                    if (error) throw error;
-                    supabase.functions
-                      .invoke("policies-embed", {
-                        body: { policyId: data.id },
-                      })
-                      .catch(() => {});
-                    toast.success("Política publicada");
+                    const payload = {
+                      title: wizardDraft.title.trim(),
+                      summary: wizardDraft.summary ?? "",
+                      content: wizardDraft.content,
+                      category_id: wizardCategoriaId || null,
+                      responsible: wizardResponsavel ?? "",
+                      keywords: wizardDraft.keywords ?? [],
+                      status: wizardStatus,
+                    };
+                    let policyId = wizardEditingId;
+                    if (wizardEditingId) {
+                      const { error } = await supabase
+                        .from("policies")
+                        .update(payload)
+                        .eq("id", wizardEditingId);
+                      if (error) throw error;
+                    } else {
+                      const { data, error } = await supabase
+                        .from("policies")
+                        .insert({ ...payload, ordem: policies.length })
+                        .select("id")
+                        .single();
+                      if (error) throw error;
+                      policyId = data.id;
+                    }
+                    if (policyId) {
+                      supabase.functions
+                        .invoke("policies-embed", { body: { policyId } })
+                        .catch(() => {});
+                    }
+                    toast.success(
+                      wizardEditingId ? "Política atualizada" : "Política publicada"
+                    );
                     setWizardOpen(false);
+                    setWizardEditingId(null);
                     await loadAll();
                   } catch (e: any) {
                     toast.error("Falha ao publicar: " + (e?.message ?? e));
@@ -1422,7 +1435,7 @@ export default function PoliticasInternas() {
                 {wizardPublishing && (
                   <Loader2 className="w-3 h-3 mr-1 animate-spin" />
                 )}
-                Publicar política
+                {wizardEditingId ? "Salvar alterações" : "Publicar política"}
               </Button>
             )}
           </DialogFooter>
