@@ -204,6 +204,20 @@ export function EditorToolbar({
             <TB onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Desfazer"><Undo className="h-4 w-4" /></TB>
             <TB onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Refazer"><Redo className="h-4 w-4" /></TB>
             <Separator orientation="vertical" className="h-6 mx-1" />
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => setAiOpen(true)}
+              className="h-8 gap-1 px-2 border-primary/40 text-primary hover:bg-primary/10"
+              title="Gerar texto com IA a partir de uma descrição"
+            >
+              <Sparkles className="h-4 w-4" />
+              <span className="text-xs font-medium">Texto por IA</span>
+            </Button>
+
+            <Separator orientation="vertical" className="h-6 mx-1" />
 
             <Select value="" onValueChange={(v) => editor.chain().focus().setFontFamily(v).run()}>
               <SelectTrigger onMouseDown={(e) => e.preventDefault()} className="h-8 w-[130px] text-xs"><SelectValue placeholder="Fonte" /></SelectTrigger>
