@@ -20814,6 +20814,7 @@ export type Database = {
           id: string
           mensagem_template: string
           nome: string
+          ultimo_disparo_em: string | null
           updated_at: string
           versao: number
         }
@@ -20832,6 +20833,7 @@ export type Database = {
           id?: string
           mensagem_template: string
           nome: string
+          ultimo_disparo_em?: string | null
           updated_at?: string
           versao?: number
         }
@@ -20850,6 +20852,7 @@ export type Database = {
           id?: string
           mensagem_template?: string
           nome?: string
+          ultimo_disparo_em?: string | null
           updated_at?: string
           versao?: number
         }
