@@ -169,6 +169,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("empresa");
   const [pendingTab, setPendingTab] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<null | (() => void)>(null);
   const isFormDirty = JSON.stringify(formData) !== formSnapshot;
 
   // Autosave de rascunho (localStorage)
@@ -796,11 +797,24 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   const requestCloseForm = () => {
     if (isFormDirty) {
       setPendingTab(null);
+      setPendingAction(null);
       setDiscardDialogOpen(true);
     } else {
       closeForm();
     }
   };
+
+  // Executa uma ação (abrir novo/editar outro) confirmando descarte se houver alterações
+  const runWithDirtyGuard = (action: () => void) => {
+    if (showForm && isFormDirty) {
+      setPendingTab(null);
+      setPendingAction(() => action);
+      setDiscardDialogOpen(true);
+    } else {
+      action();
+    }
+  };
+
 
   const handleTabChange = (value: string) => {
     if (isFormDirty && value !== activeTab) {
@@ -1763,7 +1777,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           ]}
           actions={
             <>
-              <Button onClick={() => {
+              <Button onClick={() => runWithDirtyGuard(() => {
                 setShowForm(true);
                 setEditingEmpresa(null);
                 setFormData({});
@@ -1775,7 +1789,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 setTimeout(() => {
                   checkForDraft(`empresas_draft:${variant}:new`, {});
                 }, 0);
-              }} className="gap-2 shadow-sm h-9 sm:h-10">
+              })} className="gap-2 shadow-sm h-9 sm:h-10">
                 <Plus className="w-4 h-4" />
                 {variant === "empresa" ? "Nova Empresa" : (variant === "vendedor" ? "Novo Vendedor" : "Nova Transportadora")}
               </Button>
@@ -1952,7 +1966,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                                   size="sm"
                                   variant="outline"
                                   className="h-8 px-2 rounded-full hover:bg-primary hover:text-primary-foreground transition-all duration-200 border-primary/20"
-                                  onClick={() => handleEditEmpresa(empresa)}
+                                  onClick={() => runWithDirtyGuard(() => handleEditEmpresa(empresa))}
                                   title="Editar empresa"
                                 >
                                   <Edit className="w-4 h-4" />
@@ -3189,6 +3203,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             <AlertDialogCancel
               onClick={() => {
                 setPendingTab(null);
+                setPendingAction(null);
                 if (blocker.state === "blocked") blocker.reset();
               }}
             >
@@ -3204,6 +3219,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   if (draftKey) localStorage.removeItem(draftKey);
                 } catch {}
                 setPendingTab(null);
+                setPendingAction(null);
                 if (blocker.state === "blocked") blocker.reset();
                 setDiscardDialogOpen(false);
                 toast.success("Alterações revertidas para o último estado salvo");
@@ -3214,7 +3230,13 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             <AlertDialogAction
               onClick={() => {
                 setDiscardDialogOpen(false);
-                if (pendingTab) {
+                if (pendingAction) {
+                  try { clearDraft(); } catch {}
+                  const action = pendingAction;
+                  setPendingAction(null);
+                  setFormSnapshot(JSON.stringify(formData));
+                  action();
+                } else if (pendingTab) {
                   setFormData(JSON.parse(formSnapshot));
                   setActiveTab(pendingTab);
                   setPendingTab(null);
