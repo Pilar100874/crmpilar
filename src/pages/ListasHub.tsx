@@ -41,6 +41,7 @@ import ProspeccaoEmpresas from './ProspeccaoEmpresas';
 import VinculosSegmentoProspectUsuario from './VinculosSegmentoProspectUsuario';
 import ConfigIAProspec from './ConfigIAProspec';
 import ProspeccaoVendedores from './ProspeccaoVendedores';
+import Gerentes from './Gerentes';
 
 interface TabItem {
   id: string;
