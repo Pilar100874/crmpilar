@@ -180,6 +180,18 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
     return () => window.removeEventListener("beforeunload", handler);
   }, [showForm, isFormDirty]);
 
+  // Bloqueia navegação interna (mudança de rota) com alterações não salvas
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      showForm && isFormDirty && currentLocation.pathname !== nextLocation.pathname
+  );
+
+  useEffect(() => {
+    if (blocker.state === "blocked") {
+      setDiscardDialogOpen(true);
+    }
+  }, [blocker.state]);
+
   // Campos obrigatórios fixos de empresa
   const [companyFields, setCompanyFields] = useState<CustomField[]>([
     { id: "company_type", label: "Tipo", type: "select", category: "company", options: ["Pessoa Física", "Pessoa Jurídica"], required: true, locked: false },
