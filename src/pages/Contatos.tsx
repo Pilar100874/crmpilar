@@ -3109,7 +3109,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
             </Card>
             
             <div className="flex justify-end gap-3 mt-6">
-              <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">
+              <Button variant="outline" onClick={requestCloseForm} className="border-border/40">
                 Fechar
               </Button>
             </div>
