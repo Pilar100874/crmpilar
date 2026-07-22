@@ -435,15 +435,17 @@ export default function PoliticasInternas() {
               Nenhuma política encontrada.
             </Card>
           ) : (
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((p) => (
                 <Card
                   key={p.id}
-                  className="p-4 hover:shadow-md transition cursor-pointer flex flex-col gap-2"
+                  className="p-4 hover:shadow-md transition cursor-pointer flex flex-col gap-2 min-h-[180px] overflow-hidden"
                   onClick={() => setReadingPolicy(p)}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold leading-tight">{p.title}</h3>
+                    <h3 className="font-semibold leading-tight line-clamp-2 break-words">
+                      {p.title}
+                    </h3>
                     {p.status === "inativa" && (
                       <Badge variant="secondary" className="shrink-0">
                         Inativa
@@ -451,19 +453,21 @@ export default function PoliticasInternas() {
                     )}
                   </div>
                   {p.policy_categories?.name && (
-                    <Badge variant="outline" className="w-fit">
+                    <Badge variant="outline" className="w-fit max-w-full truncate">
                       {p.policy_categories.name}
                     </Badge>
                   )}
                   {p.summary && (
-                    <p className="text-sm text-muted-foreground line-clamp-3">{p.summary}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-3 break-words">
+                      {p.summary}
+                    </p>
                   )}
                   <div className="text-xs text-muted-foreground mt-auto">
                     Atualizada em {new Date(p.updated_at).toLocaleDateString("pt-BR")}
                   </div>
                   {isAdmin && (
                     <div
-                      className="flex gap-1 pt-2 border-t"
+                      className="flex flex-wrap gap-1 pt-2 border-t"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <Button size="sm" variant="ghost" onClick={() => openEdit(p)}>
@@ -475,7 +479,7 @@ export default function PoliticasInternas() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-destructive"
+                        className="text-destructive ml-auto"
                         onClick={() => setDeletingId(p.id)}
                       >
                         <Trash2 className="w-3 h-3" />
@@ -485,6 +489,7 @@ export default function PoliticasInternas() {
                 </Card>
               ))}
             </div>
+
           )}
         </TabsContent>
 
@@ -666,12 +671,14 @@ export default function PoliticasInternas() {
 
       {/* ==================== EDITOR ADMIN ==================== */}
       <Dialog open={editorOpen} onOpenChange={setEditorOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] p-0 flex flex-col overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-3 border-b shrink-0">
             <DialogTitle>
               {editing?.id ? "Editar política" : "Nova política"}
             </DialogTitle>
           </DialogHeader>
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+
           {editing && (
             <div className="space-y-3">
               <div>
@@ -791,7 +798,8 @@ export default function PoliticasInternas() {
               )}
             </div>
           )}
-          <DialogFooter>
+          </div>
+          <DialogFooter className="px-6 py-3 border-t shrink-0 bg-background">
             <Button variant="outline" onClick={() => setEditorOpen(false)}>
               Cancelar
             </Button>
@@ -801,6 +809,7 @@ export default function PoliticasInternas() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
 
       {/* ==================== CATEGORIAS ==================== */}
       <Dialog open={catManagerOpen} onOpenChange={setCatManagerOpen}>
