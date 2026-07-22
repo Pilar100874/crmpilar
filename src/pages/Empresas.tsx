@@ -165,6 +165,9 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   // Estados do formulário
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [formSnapshot, setFormSnapshot] = useState<string>("{}");
+  const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
+  const isFormDirty = JSON.stringify(formData) !== formSnapshot;
 
   // Campos obrigatórios fixos de empresa
   const [companyFields, setCompanyFields] = useState<CustomField[]>([
@@ -604,6 +607,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     }
     
     setFormData(data);
+    setFormSnapshot(JSON.stringify(data));
 
     // Carregar contatos vinculados
     const { data: vinculos } = await supabase
@@ -706,6 +710,21 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     setFormData(prev => ({ ...prev, [field]: value }));
     setFieldErrors(prev => ({ ...prev, [field]: '' }));
   };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setFormSnapshot("{}");
+  };
+
+  const requestCloseForm = () => {
+    if (isFormDirty) {
+      setDiscardDialogOpen(true);
+    } else {
+      closeForm();
+    }
+  };
+
+
   
   const checkDuplicateCnpjCpf = async (cnpjCpf: string) => {
     if (!estabelecimentoId) return;
@@ -1075,6 +1094,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
       setShowForm(false);
       setFormData({});
+      setFormSnapshot("{}");
       setContatosVinculados([]);
       setEditingEmpresa(null);
       setCriarNovoContato(false);
@@ -1656,6 +1676,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 setShowForm(true);
                 setEditingEmpresa(null);
                 setFormData({});
+                setFormSnapshot("{}");
                 setContatosVinculados([]);
                 setCriarNovoContato(false);
               }} className="gap-2 shadow-sm h-9 sm:h-10">
@@ -1965,7 +1986,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setShowForm(false)}
+              onClick={requestCloseForm}
               className="rounded-full hover:bg-accent shrink-0"
               aria-label="Voltar"
             >
@@ -1983,7 +2004,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>
+            <Button variant="outline" size="sm" onClick={requestCloseForm}>
               Cancelar
             </Button>
             <Button size="sm" onClick={handleSaveEmpresa} className="shadow-sm shadow-primary/20">
@@ -2202,7 +2223,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               </div>
 
               <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
+                <Button variant="outline" onClick={requestCloseForm}>Cancelar</Button>
                 <Button onClick={handleSaveEmpresa}>{editingEmpresa ? "Salvar Alterações" : `Criar ${entityConfig.singular}`}</Button>
               </div>
             </Card>
@@ -2416,7 +2437,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             )}
 
             <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>
+              <Button variant="outline" size="sm" onClick={requestCloseForm}>
                 Cancelar
               </Button>
               <Button size="sm" onClick={handleSaveEmpresa}>
@@ -2537,7 +2558,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </Card>
             
             <div className="flex justify-end gap-3 mt-6">
-              <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">
+              <Button variant="outline" onClick={requestCloseForm} className="border-border/40">
                 Fechar
               </Button>
             </div>
@@ -2650,7 +2671,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </Card>
 
             <div className="flex justify-end gap-3 mt-6">
-              <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">
+              <Button variant="outline" onClick={requestCloseForm} className="border-border/40">
                 Fechar
               </Button>
             </div>
@@ -2750,7 +2771,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 </div>
               </Card>
               <div className="flex justify-end gap-3 mt-6">
-                <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">Fechar</Button>
+                <Button variant="outline" onClick={requestCloseForm} className="border-border/40">Fechar</Button>
               </div>
             </TabsContent>
           )}
@@ -2833,7 +2854,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 </div>
               </Card>
               <div className="flex justify-end gap-3 mt-6">
-                <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">Fechar</Button>
+                <Button variant="outline" onClick={requestCloseForm} className="border-border/40">Fechar</Button>
               </div>
             </TabsContent>
           )}
@@ -2915,7 +2936,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 </div>
               </Card>
               <div className="flex justify-end gap-3 mt-6">
-                <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">Fechar</Button>
+                <Button variant="outline" onClick={requestCloseForm} className="border-border/40">Fechar</Button>
               </div>
             </TabsContent>
           )}
@@ -3002,7 +3023,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 </div>
               </Card>
               <div className="flex justify-end gap-3 mt-6">
-                <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">Fechar</Button>
+                <Button variant="outline" onClick={requestCloseForm} className="border-border/40">Fechar</Button>
               </div>
             </TabsContent>
           )}
@@ -3038,6 +3059,30 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         />
       )}
       
+      {/* Dialog de confirmação para descartar alterações */}
+      <AlertDialog open={discardDialogOpen} onOpenChange={setDiscardDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem alterações não salvas neste cadastro. Se sair agora, elas serão perdidas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setDiscardDialogOpen(false);
+                closeForm();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Descartar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Dialog de CNPJ/CPF duplicado */}
       <AlertDialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
         <AlertDialogContent>
