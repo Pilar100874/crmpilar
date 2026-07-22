@@ -2988,7 +2988,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                             <Button 
                               onClick={async () => {
                                 if (novosUsuariosVinculo.length === 0) {
-                                  toast.error("Selecione pelo menos um usuário");
+                                  toast.error("Selecione pelo menos um gerente");
                                   return;
                                 }
                                 await handleAdicionarVinculo();
