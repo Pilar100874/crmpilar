@@ -20,15 +20,19 @@ export default function TvSignageLayout() {
     <div className="min-h-[calc(100vh-4rem)] bg-background">
       <div className="border-b border-border bg-card/40 backdrop-blur">
         <div className="px-4 sm:px-6 py-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
             <Tv className="w-5 h-5 text-primary" />
           </div>
-          <div>
-            <h1 className="text-xl font-semibold text-foreground">Gerenciador de Telas Remotas</h1>
-            <p className="text-xs text-muted-foreground">Gerenciamento remoto de Android TV / Google TV</p>
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-xl font-semibold text-foreground truncate">
+              Gerenciador de Telas Remotas
+            </h1>
+            <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
+              Gerenciamento remoto de Android TV / Google TV
+            </p>
           </div>
         </div>
-        <nav className="px-2 sm:px-4 pb-2 flex gap-1 overflow-x-auto">
+        <nav className="px-2 sm:px-4 pb-3 grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-1.5">
           {items.map((it) => (
             <NavLink
               key={it.to}
@@ -36,22 +40,23 @@ export default function TvSignageLayout() {
               end={it.end}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors",
+                  "flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg text-[11px] sm:text-sm text-center sm:text-left transition-colors leading-tight",
                   isActive
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )
               }
             >
-              <it.icon className="w-4 h-4" />
-              {it.label}
+              <it.icon className="w-4 h-4 shrink-0" />
+              <span className="truncate">{it.label}</span>
             </NavLink>
           ))}
         </nav>
       </div>
-      <div className="p-4 sm:p-6" key={location.pathname}>
+      <div className="p-3 sm:p-4 lg:p-6" key={location.pathname}>
         <Outlet />
       </div>
     </div>
   );
 }
+
