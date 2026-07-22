@@ -357,10 +357,32 @@ export default function PoliticasInternas() {
           </div>
         </div>
         {isAdmin && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Badge variant="secondary" className="gap-1">
               <ShieldCheck className="w-3 h-3" /> Administrador
             </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                const active = policies.filter((p) => p.status === "ativa");
+                toast.info(`Reindexando ${active.length} políticas...`);
+                let ok = 0;
+                for (const p of active) {
+                  try {
+                    await supabase.functions.invoke("policies-embed", {
+                      body: { policyId: p.id },
+                    });
+                    ok++;
+                  } catch (e) {
+                    console.warn("embed erro", p.id, e);
+                  }
+                }
+                toast.success(`Reindexação concluída (${ok}/${active.length})`);
+              }}
+            >
+              <Sparkles className="w-4 h-4 mr-1" /> Reindexar IA
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setCatManagerOpen(true)}>
               <FolderPlus className="w-4 h-4 mr-1" /> Categorias
             </Button>
