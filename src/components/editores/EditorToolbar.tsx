@@ -351,6 +351,57 @@ export function EditorToolbar({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={aiOpen} onOpenChange={(o) => !aiLoading && setAiOpen(o)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" /> Gerar texto por IA
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="ai-prompt">O que deseja criar? *</Label>
+              <Textarea
+                id="ai-prompt"
+                rows={3}
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="Ex: Contrato de compra e venda de veículo entre pessoa física e jurídica"
+                disabled={aiLoading}
+                autoFocus
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="ai-contexto">Contexto adicional (opcional)</Label>
+              <Textarea
+                id="ai-contexto"
+                rows={3}
+                value={aiContexto}
+                onChange={(e) => setAiContexto(e.target.value)}
+                placeholder="Ex: valor R$ 50.000, pagamento em 10x, garantia de 90 dias..."
+                disabled={aiLoading}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              O texto será inserido na posição atual do cursor no documento.
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" onClick={() => setAiOpen(false)} disabled={aiLoading}>
+              Cancelar
+            </Button>
+            <Button type="button" onClick={gerarTextoIA} disabled={aiLoading || !aiPrompt.trim()}>
+              {aiLoading ? (
+                <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Gerando...</>
+              ) : (
+                <><Sparkles className="h-4 w-4 mr-1" /> Gerar e inserir</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
