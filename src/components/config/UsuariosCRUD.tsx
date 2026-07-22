@@ -314,6 +314,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       ramal: ramal || null,
       senha_sip: senhaSip || null,
       usuario_sip: usuarioSip || null,
+      tipo: tipo || 'padrao',
     };
 
     if (editingId) {
