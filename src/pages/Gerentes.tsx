@@ -359,7 +359,7 @@ export default function Gerentes() {
           }
         />
 
-        </div>
+
 
         <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 space-y-4">
           <Card className="border-primary/20 bg-primary/5">
