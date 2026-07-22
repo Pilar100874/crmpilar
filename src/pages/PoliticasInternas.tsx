@@ -243,8 +243,23 @@ export default function PoliticasInternas() {
     setEditorOpen(true);
   }
   function openEdit(p: Policy) {
-    setEditing({ ...p });
-    setEditorOpen(true);
+    // Abre o Wizard IA já na etapa 3 (Revisar & Editar) com os dados atuais,
+    // permitindo usar "Ajustar com IA" sobre o texto existente.
+    setWizardEditingId(p.id);
+    setWizardCategoriaId(p.category_id ?? categories[0]?.id ?? "");
+    setWizardResponsavel(p.responsible ?? "");
+    setWizardTopicos("");
+    setWizardContexto("");
+    setWizardInstrucao("");
+    setWizardStatus((p.status as "ativa" | "inativa") ?? "ativa");
+    setWizardDraft({
+      title: p.title ?? "",
+      summary: p.summary ?? "",
+      content: p.content ?? "",
+      keywords: Array.isArray(p.keywords) ? p.keywords : [],
+    });
+    setWizardStep(3);
+    setWizardOpen(true);
   }
 
   async function savePolicy() {
