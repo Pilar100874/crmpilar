@@ -668,7 +668,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         .eq('id', empresaToDelete.id);
 
       if (error) {
-        toast.error("Erro ao excluir empresa");
+        toast.error(`Erro ao excluir ${variant === 'vendedor' ? 'vendedor' : variant === 'transportadora' ? 'transportadora' : 'empresa'}`);
         console.error(error);
         return;
       }
