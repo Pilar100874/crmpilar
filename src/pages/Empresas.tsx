@@ -1768,6 +1768,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 setFormSnapshot("{}");
                 setContatosVinculados([]);
                 setCriarNovoContato(false);
+                setActiveTab("empresa");
+                setPendingTab(null);
                 setTimeout(() => {
                   checkForDraft(`empresas_draft:${variant}:new`, {});
                 }, 0);
