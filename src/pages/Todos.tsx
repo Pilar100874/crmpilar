@@ -838,7 +838,7 @@ export default function Todos() {
                       item.type === 'contato' ? 'Empresas Vinculadas:'
                       : item.type === 'empresa' ? 'Contatos Vinculados:'
                       : item.type === 'vendedor' ? 'Empresas atendidas por este vendedor:'
-                      : item.type === 'usuario' ? 'Empresas sob responsabilidade deste usuário:'
+                      : item.type === 'usuario' ? 'Empresas sob responsabilidade deste gerente:'
                       : 'Vínculos:';
 
                     return (
