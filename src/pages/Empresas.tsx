@@ -2034,13 +2034,20 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </div>
 
 
-          <TabsContent value="empresa" className="space-y-6">
-            <Card className="border-border/40 shadow-sm">
-              <div className="p-6">
-                <h3 className="text-sm font-medium text-muted-foreground mb-6 uppercase tracking-wide">
-                  Informações Principais
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
+          <TabsContent value="empresa" className="space-y-6 p-4 sm:p-8 mt-0">
+            <div className="space-y-8">
+              <section>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-semibold text-foreground">Informações Principais</h2>
+                    <p className="text-xs text-muted-foreground">Dados essenciais de identificação e contato</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+
                 {formFieldsToRender.map((field) => {
                   // Lógica de liberação progressiva
                   const tipoSelecionado = !!formData.company_type;
