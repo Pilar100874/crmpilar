@@ -2266,7 +2266,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
             </div>
           ) : (
             <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto">
-              <table className="w-full min-w-[800px]">
+              <table className="w-full table-fixed">
+
                 <thead className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20 backdrop-blur-sm">
                   <tr>
                     {tableColumns.filter(col => col.visible).map((column, index) => (
