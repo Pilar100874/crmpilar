@@ -1518,6 +1518,42 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
 
   const [contactDeps, setContactDeps] = useState<Record<string, number> | null>(null);
   const [checkingDeps, setCheckingDeps] = useState(false);
+  const [clearingDepKey, setClearingDepKey] = useState<string | null>(null);
+
+  const refreshContactDeps = async (contactId: string) => {
+    setCheckingDeps(true);
+    try {
+      const { data, error } = await supabase.rpc('check_customer_dependencies', { p_customer_id: contactId });
+      if (error) throw error;
+      setContactDeps((data as any) || {});
+    } catch (e: any) {
+      console.error('Erro ao verificar dependências:', e);
+      const msg = e?.message || e?.details || e?.hint || 'erro desconhecido';
+      toast.error(`Não foi possível verificar vínculos: ${msg}`);
+      setContactDeps({});
+    } finally {
+      setCheckingDeps(false);
+    }
+  };
+
+  const handleClearContactDep = async (depKey: string) => {
+    if (!contactToDelete) return;
+    setClearingDepKey(depKey);
+    try {
+      const { error } = await supabase.rpc('clear_entity_dependency', {
+        p_entity: 'contato',
+        p_id: contactToDelete.id,
+        p_dep_key: depKey,
+      });
+      if (error) throw error;
+      toast.success('Vínculo removido');
+      await refreshContactDeps(contactToDelete.id);
+    } catch (e: any) {
+      toast.error(e?.message || 'Falha ao remover vínculo');
+    } finally {
+      setClearingDepKey(null);
+    }
+  };
 
   const handleDeleteContact = async (contactId: string) => {
     const contact = contacts.find(c => c.id === contactId);
