@@ -11,8 +11,12 @@ import {
   Table as TableIcon, Rows, Columns, Trash2, Eraser, Maximize2, ZoomIn, ZoomOut,
   ScanSearch, ArrowLeft, Save, Eye, Lock, Unlock, Copy, Printer, FileDown, SaveAll,
   Database, ClipboardList, Pencil, PanelRightOpen, PanelRightClose,
-  Building2, Package, FormInput,
+  Building2, Package, FormInput, Sparkles, Loader2,
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -94,7 +98,35 @@ export function EditorToolbar({
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [linkText, setLinkText] = useState("");
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiContexto, setAiContexto] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
   const isEdit = mode === "editar";
+
+  async function gerarTextoIA() {
+    if (!editor || !aiPrompt.trim()) return;
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("editor-generate-text", {
+        body: { prompt: aiPrompt.trim(), contexto: aiContexto.trim() },
+      });
+      if (error) throw error;
+      if (!data || data.error) throw new Error(data?.error ?? "Falha ao gerar");
+      const html = String(data.html ?? "").trim();
+      if (!html) throw new Error("IA retornou vazio");
+      editor.chain().focus().insertContent(html).run();
+      toast.success("Texto inserido no documento");
+      setAiOpen(false);
+      setAiPrompt("");
+      setAiContexto("");
+    } catch (e: any) {
+      toast.error("Erro na IA: " + (e?.message ?? e));
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
 
   return (
     <div className="sticky top-0 z-20 border-b bg-card">
@@ -171,6 +203,20 @@ export function EditorToolbar({
             <Separator orientation="vertical" className="h-6 mx-1" />
             <TB onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Desfazer"><Undo className="h-4 w-4" /></TB>
             <TB onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Refazer"><Redo className="h-4 w-4" /></TB>
+            <Separator orientation="vertical" className="h-6 mx-1" />
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => setAiOpen(true)}
+              className="h-8 gap-1 px-2 border-primary/40 text-primary hover:bg-primary/10"
+              title="Gerar texto com IA a partir de uma descrição"
+            >
+              <Sparkles className="h-4 w-4" />
+              <span className="text-xs font-medium">Texto por IA</span>
+            </Button>
+
             <Separator orientation="vertical" className="h-6 mx-1" />
 
             <Select value="" onValueChange={(v) => editor.chain().focus().setFontFamily(v).run()}>
@@ -305,6 +351,57 @@ export function EditorToolbar({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={aiOpen} onOpenChange={(o) => !aiLoading && setAiOpen(o)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" /> Gerar texto por IA
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="ai-prompt">O que deseja criar? *</Label>
+              <Textarea
+                id="ai-prompt"
+                rows={3}
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="Ex: Contrato de compra e venda de veículo entre pessoa física e jurídica"
+                disabled={aiLoading}
+                autoFocus
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="ai-contexto">Contexto adicional (opcional)</Label>
+              <Textarea
+                id="ai-contexto"
+                rows={3}
+                value={aiContexto}
+                onChange={(e) => setAiContexto(e.target.value)}
+                placeholder="Ex: valor R$ 50.000, pagamento em 10x, garantia de 90 dias..."
+                disabled={aiLoading}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              O texto será inserido na posição atual do cursor no documento.
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" onClick={() => setAiOpen(false)} disabled={aiLoading}>
+              Cancelar
+            </Button>
+            <Button type="button" onClick={gerarTextoIA} disabled={aiLoading || !aiPrompt.trim()}>
+              {aiLoading ? (
+                <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Gerando...</>
+              ) : (
+                <><Sparkles className="h-4 w-4 mr-1" /> Gerar e inserir</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
