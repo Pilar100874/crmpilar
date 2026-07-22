@@ -53,7 +53,7 @@ export default function VinculosSegmentoProspectUsuario() {
 
   const adicionar = async () => {
     if (!selectedSegmento || novoUsuarioIds.length === 0) {
-      return toast.error("Selecione um segmento e ao menos um usuário");
+      return toast.error("Selecione um segmento e ao menos um gerente");
     }
     const jaVinculados = new Set(usuariosDoSegmento(selectedSegmento).map(x => x.user!.id));
     const paraInserir = novoUsuarioIds.filter(uid => !jaVinculados.has(uid));
