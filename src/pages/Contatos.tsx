@@ -2650,31 +2650,17 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       <div className="flex-1 overflow-auto p-3 sm:p-6 md:p-8">
         <Tabs defaultValue="contato" className="w-full max-w-6xl mx-auto">
           <TabsList className="bg-muted/30 border border-border/40 p-1 rounded-lg mb-4 sm:mb-6 w-full sm:w-auto flex-wrap sm:flex-nowrap">
-            <TabsTrigger 
+            <TabsTrigger
               value="contato"
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2"
             >
               Dados do Contato
             </TabsTrigger>
-            <TabsTrigger 
-              value="empresa" 
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2"
-              onClick={() => setCriarNovaEmpresa(false)}
-            >
-              <span className="inline-flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5" />
-                <span>/</span>
-                <Truck className="w-3.5 h-3.5" />
-                <span>/</span>
-                <UserCheck className="w-3.5 h-3.5" />
-                <span className="ml-1">Empresa / Transportadora / Vendedor</span>
-              </span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="vinculos"
+            <TabsTrigger
+              value="cadastros-vinculados"
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2"
             >
-              Vínculos
+              Cadastros Vinculados
             </TabsTrigger>
           </TabsList>
 
@@ -2732,6 +2718,24 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               </Button>
             </div>
           </TabsContent>
+
+          <TabsContent value="cadastros-vinculados" className="p-0">
+            <Tabs defaultValue="vinculos" className="w-full">
+              <TabsList className="bg-muted/40 border border-border/30 p-1 rounded-lg mb-4 flex-wrap h-auto">
+                <TabsTrigger value="vinculos" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2">
+                  Gerentes
+                </TabsTrigger>
+                <TabsTrigger value="empresa" onClick={() => setCriarNovaEmpresa(false)} className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>/</span>
+                    <Truck className="w-3.5 h-3.5" />
+                    <span>/</span>
+                    <UserCheck className="w-3.5 h-3.5" />
+                    <span className="ml-1">Empresa / Transportadora / Vendedor</span>
+                  </span>
+                </TabsTrigger>
+              </TabsList>
 
           <TabsContent value="empresa" className="p-6">
             {/* Lista de Empresas Vinculadas */}
@@ -3050,6 +3054,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                 Fechar
               </Button>
             </div>
+          </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </div>

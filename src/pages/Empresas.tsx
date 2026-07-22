@@ -1979,19 +1979,12 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
       <div className="flex-1 overflow-auto p-8">
         <Tabs defaultValue="empresa" className="w-full max-w-6xl mx-auto">
-          <TabsList className="bg-muted/30 border border-border/40 p-1 rounded-lg mb-6">
-            <TabsTrigger 
+          <TabsList className="bg-muted/30 border border-border/40 p-1 rounded-lg mb-6 flex-wrap h-auto">
+            <TabsTrigger
               value="empresa"
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
             >
               Dados {variant === "empresa" ? "da Empresa" : (variant === "vendedor" ? "do Vendedor" : "da Transportadora")}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="contatos"
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-              onClick={() => setCriarNovoContato(false)}
-            >
-              Contatos Vinculados
             </TabsTrigger>
             <TabsTrigger
               value="localizacao"
@@ -2007,56 +2000,12 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 Qualificação
               </TabsTrigger>
             )}
-
-
-            {entityConfig.showSegmento && (
-              <TabsTrigger 
-                value="vinculos"
-                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-              >
-                Segmentos
-              </TabsTrigger>
-            )}
-            {entityConfig.showSegmento && (
-              <TabsTrigger 
-                value="segmentos-prospect"
-                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-              >
-                Segmento Prospect
-              </TabsTrigger>
-            )}
-            {(variant === "empresa" || variant === "vendedor" || variant === "transportadora") && (
-              <TabsTrigger
-                value="usuarios"
-                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-              >
-                Usuários
-              </TabsTrigger>
-            )}
-            {variant === "empresa" && (
-              <TabsTrigger
-                value="vendedores"
-                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-              >
-                Vendedores
-              </TabsTrigger>
-            )}
-            {variant === "empresa" && (
-              <TabsTrigger
-                value="transportadoras"
-                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-              >
-                Transportadoras
-              </TabsTrigger>
-            )}
-            {(variant === "vendedor" || variant === "transportadora") && (
-              <TabsTrigger
-                value="empresas-vinculadas"
-                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-              >
-                Empresas Vinculadas
-              </TabsTrigger>
-            )}
+            <TabsTrigger
+              value="cadastros-vinculados"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+            >
+              Cadastros Vinculados
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="empresa" className="space-y-6">
@@ -2134,6 +2083,147 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </div>
           </TabsContent>
 
+
+          <TabsContent value="localizacao" className="p-6">
+            <EmpresaLocalizacaoTab
+              endereco={formData.address}
+              numero={formData.numero || ""}
+              bairro={formData.neighborhood}
+              cidade={formData.city}
+              estado={formData.state}
+              cep={formData.cep}
+              nome={formData.company_fantasia || formData.company_name}
+            />
+          </TabsContent>
+
+          <TabsContent value="qualificacao" className="p-6">
+            <Card className="p-6 space-y-8">
+              <div className="rounded-md border border-border/40 bg-muted/30 p-3 text-xs text-muted-foreground">
+                Contatos / decisores desta empresa são gerenciados na aba <strong>Contatos Vinculados</strong> (ou na tela de Contatos). Prospects importados criam automaticamente um contato marcado como prospect.
+              </div>
+
+
+
+
+
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">Perfil da Empresa</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Porte</Label>
+                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={formData.porte || ""} onChange={(e) => setFormData({ ...formData, porte: e.target.value })}>
+                      <option value="">Selecione...</option>
+                      <option value="MEI">MEI</option>
+                      <option value="ME">ME</option>
+                      <option value="EPP">EPP</option>
+                      <option value="Médio">Médio</option>
+                      <option value="Grande">Grande</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Situação Cadastral</Label>
+                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={formData.situacao_cadastral || ""} onChange={(e) => setFormData({ ...formData, situacao_cadastral: e.target.value })}>
+                      <option value="">Selecione...</option>
+                      <option value="ATIVA">ATIVA</option>
+                      <option value="BAIXADA">BAIXADA</option>
+                      <option value="SUSPENSA">SUSPENSA</option>
+                      <option value="INAPTA">INAPTA</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Faturamento estimado</Label>
+                    <Input value={formData.faturamento_estimado || ""} onChange={(e) => setFormData({ ...formData, faturamento_estimado: e.target.value })} placeholder="Ex.: R$ 500k - 2M/ano" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Nº de funcionários (estimado)</Label>
+                    <Input value={formData.funcionarios_estimado || ""} onChange={(e) => setFormData({ ...formData, funcionarios_estimado: e.target.value })} placeholder="Ex.: 10-49" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Data de fundação</Label>
+                    <Input type="date" value={formData.data_fundacao || ""} onChange={(e) => setFormData({ ...formData, data_fundacao: e.target.value })} />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">Qualificação Comercial</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Score (0-100)</Label>
+                    <Input type="number" min={0} max={100} value={formData.score_prospect ?? ""} onChange={(e) => setFormData({ ...formData, score_prospect: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Prioridade</Label>
+                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={formData.prioridade || ""} onChange={(e) => setFormData({ ...formData, prioridade: e.target.value })}>
+                      <option value="">Selecione...</option>
+                      <option value="alta">Alta</option>
+                      <option value="media">Média</option>
+                      <option value="baixa">Baixa</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label>Motivo do score</Label>
+                    <Input value={formData.score_motivo || ""} onChange={(e) => setFormData({ ...formData, score_motivo: e.target.value })} />
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label>Produtos de interesse (separe por vírgula)</Label>
+                    <Input value={formData.produtos_interesse || ""} onChange={(e) => setFormData({ ...formData, produtos_interesse: e.target.value })} placeholder="Ex.: Cimento, Areia, Blocos" />
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label>Tags (separe por vírgula)</Label>
+                    <Input value={formData.tags || ""} onChange={(e) => setFormData({ ...formData, tags: e.target.value })} placeholder="Ex.: construtora, obra-publica" />
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label>Observações internas</Label>
+                    <Textarea rows={4} value={formData.observacoes_internas || ""} onChange={(e) => setFormData({ ...formData, observacoes_internas: e.target.value })} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
+                <Button onClick={handleSaveEmpresa}>{editingEmpresa ? "Salvar Alterações" : `Criar ${entityConfig.singular}`}</Button>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="cadastros-vinculados" className="p-0">
+            <Tabs defaultValue="contatos" className="w-full">
+              <TabsList className="bg-muted/40 border border-border/30 p-1 rounded-lg mb-4 flex-wrap h-auto">
+                <TabsTrigger value="contatos" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md">
+                  Contatos
+                </TabsTrigger>
+                {(variant === "empresa" || variant === "vendedor" || variant === "transportadora") && (
+                  <TabsTrigger value="usuarios" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md">
+                    Gerentes
+                  </TabsTrigger>
+                )}
+                {variant === "empresa" && (
+                  <TabsTrigger value="vendedores" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md">
+                    Vendedores
+                  </TabsTrigger>
+                )}
+                {variant === "empresa" && (
+                  <TabsTrigger value="transportadoras" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md">
+                    Transportadoras
+                  </TabsTrigger>
+                )}
+                {(variant === "vendedor" || variant === "transportadora") && (
+                  <TabsTrigger value="empresas-vinculadas" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md">
+                    Empresas
+                  </TabsTrigger>
+                )}
+                {entityConfig.showSegmento && (
+                  <TabsTrigger value="vinculos" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md">
+                    Segmentos
+                  </TabsTrigger>
+                )}
+                {entityConfig.showSegmento && (
+                  <TabsTrigger value="segmentos-prospect" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md">
+                    Segmento Prospect
+                  </TabsTrigger>
+                )}
+              </TabsList>
 
           <TabsContent value="contatos" className="p-6">
             {/* Lista de Contatos Vinculados */}
@@ -2314,108 +2404,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </div>
           </TabsContent>
 
-          <TabsContent value="localizacao" className="p-6">
-            <EmpresaLocalizacaoTab
-              endereco={formData.address}
-              numero={formData.numero || ""}
-              bairro={formData.neighborhood}
-              cidade={formData.city}
-              estado={formData.state}
-              cep={formData.cep}
-              nome={formData.company_fantasia || formData.company_name}
-            />
-          </TabsContent>
 
-          <TabsContent value="qualificacao" className="p-6">
-            <Card className="p-6 space-y-8">
-              <div className="rounded-md border border-border/40 bg-muted/30 p-3 text-xs text-muted-foreground">
-                Contatos / decisores desta empresa são gerenciados na aba <strong>Contatos Vinculados</strong> (ou na tela de Contatos). Prospects importados criam automaticamente um contato marcado como prospect.
-              </div>
-
-
-
-
-
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">Perfil da Empresa</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Porte</Label>
-                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={formData.porte || ""} onChange={(e) => setFormData({ ...formData, porte: e.target.value })}>
-                      <option value="">Selecione...</option>
-                      <option value="MEI">MEI</option>
-                      <option value="ME">ME</option>
-                      <option value="EPP">EPP</option>
-                      <option value="Médio">Médio</option>
-                      <option value="Grande">Grande</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Situação Cadastral</Label>
-                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={formData.situacao_cadastral || ""} onChange={(e) => setFormData({ ...formData, situacao_cadastral: e.target.value })}>
-                      <option value="">Selecione...</option>
-                      <option value="ATIVA">ATIVA</option>
-                      <option value="BAIXADA">BAIXADA</option>
-                      <option value="SUSPENSA">SUSPENSA</option>
-                      <option value="INAPTA">INAPTA</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Faturamento estimado</Label>
-                    <Input value={formData.faturamento_estimado || ""} onChange={(e) => setFormData({ ...formData, faturamento_estimado: e.target.value })} placeholder="Ex.: R$ 500k - 2M/ano" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Nº de funcionários (estimado)</Label>
-                    <Input value={formData.funcionarios_estimado || ""} onChange={(e) => setFormData({ ...formData, funcionarios_estimado: e.target.value })} placeholder="Ex.: 10-49" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Data de fundação</Label>
-                    <Input type="date" value={formData.data_fundacao || ""} onChange={(e) => setFormData({ ...formData, data_fundacao: e.target.value })} />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">Qualificação Comercial</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Score (0-100)</Label>
-                    <Input type="number" min={0} max={100} value={formData.score_prospect ?? ""} onChange={(e) => setFormData({ ...formData, score_prospect: e.target.value })} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Prioridade</Label>
-                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={formData.prioridade || ""} onChange={(e) => setFormData({ ...formData, prioridade: e.target.value })}>
-                      <option value="">Selecione...</option>
-                      <option value="alta">Alta</option>
-                      <option value="media">Média</option>
-                      <option value="baixa">Baixa</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2 col-span-2">
-                    <Label>Motivo do score</Label>
-                    <Input value={formData.score_motivo || ""} onChange={(e) => setFormData({ ...formData, score_motivo: e.target.value })} />
-                  </div>
-                  <div className="space-y-2 col-span-2">
-                    <Label>Produtos de interesse (separe por vírgula)</Label>
-                    <Input value={formData.produtos_interesse || ""} onChange={(e) => setFormData({ ...formData, produtos_interesse: e.target.value })} placeholder="Ex.: Cimento, Areia, Blocos" />
-                  </div>
-                  <div className="space-y-2 col-span-2">
-                    <Label>Tags (separe por vírgula)</Label>
-                    <Input value={formData.tags || ""} onChange={(e) => setFormData({ ...formData, tags: e.target.value })} placeholder="Ex.: construtora, obra-publica" />
-                  </div>
-                  <div className="space-y-2 col-span-2">
-                    <Label>Observações internas</Label>
-                    <Textarea rows={4} value={formData.observacoes_internas || ""} onChange={(e) => setFormData({ ...formData, observacoes_internas: e.target.value })} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
-                <Button onClick={handleSaveEmpresa}>{editingEmpresa ? "Salvar Alterações" : `Criar ${entityConfig.singular}`}</Button>
-              </div>
-            </Card>
-          </TabsContent>
 
 
           
@@ -2996,6 +2985,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               </div>
             </TabsContent>
           )}
+            </Tabs>
+          </TabsContent>
         </Tabs>
         </div>
         </div>
