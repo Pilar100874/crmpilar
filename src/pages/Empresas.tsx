@@ -2040,6 +2040,14 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 Vendedores
               </TabsTrigger>
             )}
+            {variant === "empresa" && (
+              <TabsTrigger
+                value="transportadoras"
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+              >
+                Transportadoras
+              </TabsTrigger>
+            )}
             {(variant === "vendedor" || variant === "transportadora") && (
               <TabsTrigger
                 value="empresas-vinculadas"
