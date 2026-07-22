@@ -1042,35 +1042,37 @@ export default function PoliticasInternas() {
               <Sparkles className="w-5 h-5 text-primary" />
               Wizard IA — {wizardEditingId ? "Editar política" : "Criar política"}
             </DialogTitle>
-            <div className="flex items-center gap-2 pt-2 text-xs">
-              {[
-                { n: 1, label: "Tópicos" },
-                { n: 2, label: "Gerar" },
-                { n: 3, label: "Revisar & Publicar" },
-              ].map((s, i) => (
-                <div key={s.n} className="flex items-center gap-2">
-                  <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center font-semibold ${
-                      wizardStep === s.n
-                        ? "bg-primary text-primary-foreground"
-                        : wizardStep > (s.n as 1 | 2 | 3)
-                        ? "bg-primary/30 text-primary"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {s.n}
+            {!wizardEditingId && (
+              <div className="flex items-center gap-2 pt-2 text-xs">
+                {[
+                  { n: 1, label: "Tópicos" },
+                  { n: 2, label: "Gerar" },
+                  { n: 3, label: "Revisar & Publicar" },
+                ].map((s, i) => (
+                  <div key={s.n} className="flex items-center gap-2">
+                    <div
+                      className={`w-6 h-6 rounded-full flex items-center justify-center font-semibold ${
+                        wizardStep === s.n
+                          ? "bg-primary text-primary-foreground"
+                          : wizardStep > (s.n as 1 | 2 | 3)
+                          ? "bg-primary/30 text-primary"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {s.n}
+                    </div>
+                    <span
+                      className={
+                        wizardStep === s.n ? "font-medium" : "text-muted-foreground"
+                      }
+                    >
+                      {s.label}
+                    </span>
+                    {i < 2 && <div className="w-8 h-px bg-border" />}
                   </div>
-                  <span
-                    className={
-                      wizardStep === s.n ? "font-medium" : "text-muted-foreground"
-                    }
-                  >
-                    {s.label}
-                  </span>
-                  {i < 2 && <div className="w-8 h-px bg-border" />}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
