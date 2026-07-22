@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import * as React from "react";
 import * as XLSX from 'xlsx';
-import { useLocation, useSearchParams, useBlocker } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -683,14 +683,9 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     return () => window.removeEventListener("beforeunload", handler);
   }, [showForm, isFormDirty]);
 
-  // Bloqueia navegação interna (mudança de rota) com alterações não salvas
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      showForm && isFormDirty && currentLocation.pathname !== nextLocation.pathname
-  );
-  useEffect(() => {
-    if (blocker.state === "blocked") setDiscardDialogOpen(true);
-  }, [blocker.state]);
+  // useBlocker requer data router; app usa BrowserRouter, então stub no-op.
+  // A proteção de navegação interna é feita via runWithDirtyGuard nos handlers.
+  const blocker: { state: string; reset: () => void; proceed: () => void } = { state: "unblocked", reset: () => {}, proceed: () => {} };
 
   // Helpers de fechamento/troca com confirmação
   const doCloseForm = () => {
