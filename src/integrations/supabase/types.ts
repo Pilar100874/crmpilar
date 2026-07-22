@@ -8864,6 +8864,36 @@ export type Database = {
           },
         ]
       }
+      logistica_workflow_state: {
+        Row: {
+          ativa_desde: string
+          automacao_id: string | null
+          chave: string
+          condicao: string
+          ultimo_disparo_em: string | null
+          updated_at: string
+          veiculo_id: string | null
+        }
+        Insert: {
+          ativa_desde?: string
+          automacao_id?: string | null
+          chave: string
+          condicao: string
+          ultimo_disparo_em?: string | null
+          updated_at?: string
+          veiculo_id?: string | null
+        }
+        Update: {
+          ativa_desde?: string
+          automacao_id?: string | null
+          chave?: string
+          condicao?: string
+          ultimo_disparo_em?: string | null
+          updated_at?: string
+          veiculo_id?: string | null
+        }
+        Relationships: []
+      }
       logs_monitor_preco: {
         Row: {
           created_at: string | null
