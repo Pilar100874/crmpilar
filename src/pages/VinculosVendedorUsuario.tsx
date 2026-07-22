@@ -165,9 +165,9 @@ export default function VinculosVendedorUsuario() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Vínculo Vendedor X Usuário</h1>
+        <h1 className="text-3xl font-bold text-foreground">Vínculo Vendedor X Gerente</h1>
         <p className="text-muted-foreground mt-2">
-          Assistente para vincular vendedores a usuários do sistema em lote
+          Assistente para vincular vendedores a gerentes do sistema em lote
         </p>
       </div>
 
