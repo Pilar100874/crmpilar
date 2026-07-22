@@ -100,6 +100,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [horaInicial, setHoraInicial] = useState("08:00");
   const [horaFinal, setHoraFinal] = useState("18:00");
   const [ramal, setRamal] = useState("");
+  const [tipo, setTipo] = useState<string>("padrao");
   const [senhaSip, setSenhaSip] = useState("");
   const [usuarioSip, setUsuarioSip] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
