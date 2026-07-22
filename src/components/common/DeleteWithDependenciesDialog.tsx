@@ -76,29 +76,50 @@ export function DeleteWithDependenciesDialog({
 }: Props) {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [clearingKey, setClearingKey] = useState<string | null>(null);
   const [deps, setDeps] = useState<Record<string, number> | null>(null);
+
+  const refreshDeps = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.rpc("check_entity_dependencies", {
+        p_entity: ENTITY_KEY_MAP[entity],
+        p_id: id,
+      });
+      if (error) throw error;
+      setDeps((data as Record<string, number>) || {});
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Erro ao verificar dependências");
+      setDeps({});
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClearDep = async (depKey: string) => {
+    setClearingKey(depKey);
+    try {
+      const { error } = await supabase.rpc("clear_entity_dependency", {
+        p_entity: entity,
+        p_id: id,
+        p_dep_key: depKey,
+      });
+      if (error) throw error;
+      toast.success(`Vínculo "${depKey}" removido`);
+      await refreshDeps();
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao remover vínculo");
+    } finally {
+      setClearingKey(null);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
     setDeps(null);
-    setLoading(true);
-    (async () => {
-      try {
-        const { data, error } = await supabase.rpc("check_entity_dependencies", {
-          p_entity: ENTITY_KEY_MAP[entity],
-          p_id: id,
-        });
-        if (error) {
-          console.error(error);
-          toast.error("Erro ao verificar dependências");
-          setDeps({});
-        } else {
-          setDeps((data as Record<string, number>) || {});
-        }
-      } finally {
-        setLoading(false);
-      }
-    })();
+    refreshDeps();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, entity, id]);
 
   const hasDeps = deps && Object.keys(deps).length > 0;
@@ -156,16 +177,30 @@ export function DeleteWithDependenciesDialog({
                     Este {label} está sendo usado no sistema e <strong>não pode ser excluído</strong>.
                     Você pode <strong>inativá-lo</strong> para preservar o histórico.
                   </p>
-                  <div className="rounded-md border bg-muted/40 p-3 space-y-1 max-h-56 overflow-y-auto">
+                  <div className="rounded-md border bg-muted/40 divide-y max-h-72 overflow-y-auto">
                     {Object.entries(deps!).map(([k, v]) => (
-                      <div key={k} className="flex justify-between text-sm">
-                        <span>{k}</span>
-                        <span className="font-mono font-semibold">{v}</span>
+                      <div key={k} className="flex items-center justify-between gap-2 p-2 text-sm">
+                        <span className="flex-1 truncate">{k}</span>
+                        <span className="font-mono font-semibold min-w-[2rem] text-right">{v}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 text-destructive hover:bg-destructive/10"
+                          disabled={busy || !!clearingKey}
+                          onClick={() => handleClearDep(k)}
+                        >
+                          {clearingKey === k ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3 w-3 mr-1" />
+                          )}
+                          Excluir vínculos
+                        </Button>
                       </div>
                     ))}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Para excluir definitivamente, primeiro remova os vínculos acima.
+                    Remova os vínculos acima um a um para liberar a exclusão definitiva, ou use "Inativar" para preservar o histórico.
                   </p>
                 </>
               ) : (
