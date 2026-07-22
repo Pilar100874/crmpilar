@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserCog, Search, Pencil, Plus, Trash2, X, Info } from "lucide-react";
+import { CadastroHeader } from "@/components/cadastros/CadastroHeader";
 
 interface Gerente {
   id: string;
