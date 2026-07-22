@@ -1986,7 +1986,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setShowForm(false)}
+              onClick={requestCloseForm}
               className="rounded-full hover:bg-accent shrink-0"
               aria-label="Voltar"
             >
@@ -2004,7 +2004,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>
+            <Button variant="outline" size="sm" onClick={requestCloseForm}>
               Cancelar
             </Button>
             <Button size="sm" onClick={handleSaveEmpresa} className="shadow-sm shadow-primary/20">
@@ -2223,7 +2223,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               </div>
 
               <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
+                <Button variant="outline" onClick={requestCloseForm}>Cancelar</Button>
                 <Button onClick={handleSaveEmpresa}>{editingEmpresa ? "Salvar Alterações" : `Criar ${entityConfig.singular}`}</Button>
               </div>
             </Card>
@@ -2437,7 +2437,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             )}
 
             <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>
+              <Button variant="outline" size="sm" onClick={requestCloseForm}>
                 Cancelar
               </Button>
               <Button size="sm" onClick={handleSaveEmpresa}>
@@ -2558,7 +2558,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </Card>
             
             <div className="flex justify-end gap-3 mt-6">
-              <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">
+              <Button variant="outline" onClick={requestCloseForm} className="border-border/40">
                 Fechar
               </Button>
             </div>
@@ -2671,7 +2671,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </Card>
 
             <div className="flex justify-end gap-3 mt-6">
-              <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">
+              <Button variant="outline" onClick={requestCloseForm} className="border-border/40">
                 Fechar
               </Button>
             </div>
@@ -2771,7 +2771,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 </div>
               </Card>
               <div className="flex justify-end gap-3 mt-6">
-                <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">Fechar</Button>
+                <Button variant="outline" onClick={requestCloseForm} className="border-border/40">Fechar</Button>
               </div>
             </TabsContent>
           )}
@@ -2854,7 +2854,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 </div>
               </Card>
               <div className="flex justify-end gap-3 mt-6">
-                <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">Fechar</Button>
+                <Button variant="outline" onClick={requestCloseForm} className="border-border/40">Fechar</Button>
               </div>
             </TabsContent>
           )}
@@ -2936,7 +2936,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 </div>
               </Card>
               <div className="flex justify-end gap-3 mt-6">
-                <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">Fechar</Button>
+                <Button variant="outline" onClick={requestCloseForm} className="border-border/40">Fechar</Button>
               </div>
             </TabsContent>
           )}
@@ -3023,7 +3023,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 </div>
               </Card>
               <div className="flex justify-end gap-3 mt-6">
-                <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">Fechar</Button>
+                <Button variant="outline" onClick={requestCloseForm} className="border-border/40">Fechar</Button>
               </div>
             </TabsContent>
           )}
