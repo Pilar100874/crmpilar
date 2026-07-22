@@ -797,11 +797,24 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   const requestCloseForm = () => {
     if (isFormDirty) {
       setPendingTab(null);
+      setPendingAction(null);
       setDiscardDialogOpen(true);
     } else {
       closeForm();
     }
   };
+
+  // Executa uma ação (abrir novo/editar outro) confirmando descarte se houver alterações
+  const runWithDirtyGuard = (action: () => void) => {
+    if (showForm && isFormDirty) {
+      setPendingTab(null);
+      setPendingAction(() => action);
+      setDiscardDialogOpen(true);
+    } else {
+      action();
+    }
+  };
+
 
   const handleTabChange = (value: string) => {
     if (isFormDirty && value !== activeTab) {
