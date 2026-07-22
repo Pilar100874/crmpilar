@@ -2900,48 +2900,68 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       <AlertDialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>CNPJ/CPF já cadastrado</AlertDialogTitle>
+            <AlertDialogTitle>
+              {duplicateSameVariant ? 'CNPJ/CPF já cadastrado' : 'CNPJ/CPF encontrado em outro cadastro'}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Este CNPJ/CPF já pertence a <strong>{duplicateEmpresa?.nome_fantasia || duplicateEmpresa?.nome}</strong>.
-              {"\n\n"}
-              Deseja criar um novo cadastro já preenchido com os dados dele?
+              {duplicateSameVariant ? (
+                <>
+                  Este CNPJ/CPF já está cadastrado como <strong>{entityConfig.singular}</strong> em <strong>{duplicateEmpresa?.nome_fantasia || duplicateEmpresa?.nome}</strong>.
+                  {"\n\n"}
+                  Não é permitido duplicar dentro do mesmo tipo de cadastro. Limpe o campo para continuar.
+                </>
+              ) : (
+                <>
+                  Este CNPJ/CPF já pertence a <strong>{duplicateEmpresa?.nome_fantasia || duplicateEmpresa?.nome}</strong>
+                  {duplicateEmpresa && (duplicateEmpresa as any).tipo_cliente ? <> (cadastrado como <strong>{(duplicateEmpresa as any).tipo_cliente}</strong>)</> : null}.
+                  {"\n\n"}
+                  Deseja criar um novo cadastro já preenchido com os dados dele?
+                </>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-2">
             <AlertDialogCancel onClick={() => {
               setDuplicateDialogOpen(false);
               setDuplicateEmpresa(null);
-            }}>
-              Cancelar
-            </AlertDialogCancel>
-            <Button variant="secondary" onClick={() => {
-              if (duplicateEmpresa) {
-                const d: any = duplicateEmpresa;
-                setFormData(prev => ({
-                  ...prev,
-                  tipo_cliente: d.tipo_cliente || prev.tipo_cliente,
-                  company_name: d.nome || '',
-                  company_fantasia: d.nome_fantasia || '',
-                  cep: d.cep ? maskCEP(d.cep) : '',
-                  address: d.endereco || '',
-                  city: d.cidade || '',
-                  neighborhood: d.bairro || '',
-                  state: d.estado || '',
-                  telefone: d.telefone ? maskWhatsApp(d.telefone) : '',
-                  whatsapp: d.whatsapp ? maskWhatsApp(d.whatsapp) : '',
-                  email: d.email || '',
-                  site: d.site || '',
-                }));
-                toast.success('Dados preenchidos a partir do cadastro existente');
+              setDuplicateSameVariant(false);
+              if (duplicateSameVariant) {
+                setFormData(prev => ({ ...prev, cpf_cnpj: '' }));
               }
-              setDuplicateDialogOpen(false);
-              setDuplicateEmpresa(null);
             }}>
-              Preencher e criar novo
-            </Button>
+              {duplicateSameVariant ? 'Fechar' : 'Cancelar'}
+            </AlertDialogCancel>
+            {!duplicateSameVariant && (
+              <Button variant="secondary" onClick={() => {
+                if (duplicateEmpresa) {
+                  const d: any = duplicateEmpresa;
+                  setFormData(prev => ({
+                    ...prev,
+                    company_name: d.nome || '',
+                    company_fantasia: d.nome_fantasia || '',
+                    cep: d.cep ? maskCEP(d.cep) : '',
+                    address: d.endereco || '',
+                    city: d.cidade || '',
+                    neighborhood: d.bairro || '',
+                    state: d.estado || '',
+                    telefone: d.telefone ? maskWhatsApp(d.telefone) : '',
+                    whatsapp: d.whatsapp ? maskWhatsApp(d.whatsapp) : '',
+                    email: d.email || '',
+                    site: d.site || '',
+                  }));
+                  toast.success('Dados preenchidos a partir do cadastro existente');
+                }
+                setDuplicateDialogOpen(false);
+                setDuplicateEmpresa(null);
+                setDuplicateSameVariant(false);
+              }}>
+                Preencher e criar novo
+              </Button>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
 
 
       {/* Dialog de Importação via API */}
