@@ -607,6 +607,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     }
     
     setFormData(data);
+    setFormSnapshot(JSON.stringify(data));
 
     // Carregar contatos vinculados
     const { data: vinculos } = await supabase
