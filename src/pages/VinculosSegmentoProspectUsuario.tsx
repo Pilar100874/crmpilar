@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Users, Tag, Trash2, Plus, Search } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
 
 interface Segmento { id: string; nome: string; }
 interface Usuario { id: string; nome: string; email: string; }
@@ -167,27 +168,29 @@ export default function VinculosSegmentoProspectUsuario() {
                 <Card className="border-primary/20 bg-primary/5">
                   <CardContent className="p-4 space-y-3">
                     <h4 className="text-sm font-semibold">Adicionar gerentes</h4>
-                    <div className="space-y-1 max-h-[240px] overflow-y-auto border rounded-lg p-2 bg-background">
-                      {usuarios.map(u => {
-                        const jaVinc = usuariosDoSegmento(selectedSegmento).some(x => x.user!.id === u.id);
-                        return (
-                          <div key={u.id} className={`flex items-center gap-2 p-1.5 rounded ${jaVinc ? "opacity-40" : "hover:bg-accent/50"}`}>
-                            <Checkbox
-                              id={`u-${u.id}`}
-                              disabled={jaVinc}
-                              checked={novoUsuarioIds.includes(u.id)}
-                              onCheckedChange={(c) => {
-                                if (c) setNovoUsuarioIds([...novoUsuarioIds, u.id]);
-                                else setNovoUsuarioIds(novoUsuarioIds.filter(x => x !== u.id));
-                              }}
-                            />
-                            <label htmlFor={`u-${u.id}`} className="text-sm cursor-pointer flex-1">
-                              {u.nome} <span className="text-xs text-muted-foreground">({u.email})</span>
-                            </label>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    {(() => {
+                      const jaVincIds = new Set(
+                        usuariosDoSegmento(selectedSegmento).map((x) => x.user!.id)
+                      );
+                      const disponiveis = usuarios.filter((u) => !jaVincIds.has(u.id));
+                      return (
+                        <FilteredCheckboxList
+                          idPrefix="u"
+                          items={disponiveis.map((u) => ({ id: u.id, label: u.nome, extra: u.email }))}
+                          selected={novoUsuarioIds}
+                          onToggle={(id, checked) =>
+                            setNovoUsuarioIds(
+                              checked
+                                ? [...novoUsuarioIds, id]
+                                : novoUsuarioIds.filter((x) => x !== id)
+                            )
+                          }
+                          searchPlaceholder="Buscar gerente..."
+                          emptyText="Todos os gerentes já foram vinculados."
+                          maxHeightClass="max-h-[240px]"
+                        />
+                      );
+                    })()}
                     <Button onClick={adicionar} className="w-full" size="sm" disabled={novoUsuarioIds.length === 0}>
                       <Plus className="w-4 h-4 mr-2" />
                       Vincular Selecionados
