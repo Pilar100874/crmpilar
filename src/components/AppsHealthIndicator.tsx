@@ -115,11 +115,25 @@ async function fetchHealth(): Promise<{ win: Health; and: Health; filiais: Filia
     return { id: t.id, nome: t.nome, at, state };
   });
 
+  const pollers: PollerHealth[] = (pollersRaw || []).map((p: any) => {
+    const at = p.ultimo_run_em || null;
+    const ago = at ? now - new Date(at).getTime() : null;
+    // Considera online se rodou há < 20 min; warn até 2h; offline depois
+    let state: State = "offline";
+    if (ago != null) {
+      if (ago < 20 * 60_000) state = "online";
+      else if (ago < 120 * 60_000) state = "warn";
+    }
+    if (p.ultimo_status === "erro") state = state === "online" ? "warn" : state;
+    return { poller: p.poller, at, state, status: p.ultimo_status };
+  });
+
   return {
     win: { at: winAt, ago: winAt ? now - new Date(winAt).getTime() : null },
     and: { at: andAt, ago: andAt ? now - new Date(andAt).getTime() : null },
     filiais,
     tvs,
+    pollers,
   };
 }
 
