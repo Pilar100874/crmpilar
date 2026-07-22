@@ -673,7 +673,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         return;
       }
 
-      toast.success("Empresa excluída!");
+      const tipoLabel = empresaToDelete.tipo === 'vendedor' ? 'Vendedor excluído' : empresaToDelete.tipo === 'transportadora' ? 'Transportadora excluída' : 'Empresa excluída';
+      toast.success(`${tipoLabel}!`);
       setDeleteDialogOpen(false);
       setEmpresaToDelete(null);
       if (estabelecimentoId) fetchEmpresas(estabelecimentoId);
