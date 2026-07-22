@@ -165,8 +165,9 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   // Estados do formulário
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [isFormDirty, setIsFormDirty] = useState(false);
+  const [formSnapshot, setFormSnapshot] = useState<string>("{}");
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
+  const isFormDirty = JSON.stringify(formData) !== formSnapshot;
 
   // Campos obrigatórios fixos de empresa
   const [companyFields, setCompanyFields] = useState<CustomField[]>([
