@@ -178,29 +178,38 @@ export function DeleteWithDependenciesDialog({
                     Você pode <strong>inativá-lo</strong> para preservar o histórico.
                   </p>
                   <div className="rounded-md border bg-muted/40 divide-y max-h-72 overflow-y-auto">
-                    {Object.entries(deps!).map(([k, v]) => (
-                      <div key={k} className="flex items-center justify-between gap-2 p-2 text-sm">
-                        <span className="flex-1 truncate">{k}</span>
-                        <span className="font-mono font-semibold min-w-[2rem] text-right">{v}</span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 text-destructive hover:bg-destructive/10"
-                          disabled={busy || !!clearingKey}
-                          onClick={() => handleClearDep(k)}
-                        >
-                          {clearingKey === k ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
+                    {Object.entries(deps!).map(([k, v]) => {
+                      const isProtected = /or[çc]amento/i.test(k);
+                      return (
+                        <div key={k} className="flex items-center justify-between gap-2 p-2 text-sm">
+                          <span className="flex-1 truncate">{k}</span>
+                          <span className="font-mono font-semibold min-w-[2rem] text-right">{v}</span>
+                          {isProtected ? (
+                            <span className="text-[10px] uppercase tracking-wide text-amber-600 dark:text-amber-400 font-semibold px-2">
+                              Protegido
+                            </span>
                           ) : (
-                            <Trash2 className="h-3 w-3 mr-1" />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-destructive hover:bg-destructive/10"
+                              disabled={busy || !!clearingKey}
+                              onClick={() => handleClearDep(k)}
+                            >
+                              {clearingKey === k ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-3 w-3 mr-1" />
+                              )}
+                              Excluir vínculos
+                            </Button>
                           )}
-                          Excluir vínculos
-                        </Button>
-                      </div>
-                    ))}
+                        </div>
+                      );
+                    })}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Remova os vínculos acima um a um para liberar a exclusão definitiva, ou use "Inativar" para preservar o histórico.
+                    Remova os vínculos acima para liberar a exclusão. Itens marcados como <strong>Protegido</strong> (orçamentos) não podem ser removidos — nesse caso use <strong>Inativar</strong> para preservar o histórico.
                   </p>
                 </>
               ) : (
