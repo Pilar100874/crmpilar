@@ -76,7 +76,44 @@ export function DeleteWithDependenciesDialog({
 }: Props) {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [clearingKey, setClearingKey] = useState<string | null>(null);
   const [deps, setDeps] = useState<Record<string, number> | null>(null);
+
+  const refreshDeps = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.rpc("check_entity_dependencies", {
+        p_entity: ENTITY_KEY_MAP[entity],
+        p_id: id,
+      });
+      if (error) throw error;
+      setDeps((data as Record<string, number>) || {});
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Erro ao verificar dependências");
+      setDeps({});
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClearDep = async (depKey: string) => {
+    setClearingKey(depKey);
+    try {
+      const { error } = await supabase.rpc("clear_entity_dependency", {
+        p_entity: entity,
+        p_id: id,
+        p_dep_key: depKey,
+      });
+      if (error) throw error;
+      toast.success(`Vínculo "${depKey}" removido`);
+      await refreshDeps();
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao remover vínculo");
+    } finally {
+      setClearingKey(null);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
