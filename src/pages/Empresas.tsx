@@ -169,6 +169,32 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
   const isFormDirty = JSON.stringify(formData) !== formSnapshot;
 
+  // Autosave de rascunho (localStorage)
+  const draftKey = React.useMemo(
+    () => `empresas_draft:${variant}:${editingEmpresa?.id ?? "new"}`,
+    [variant, editingEmpresa?.id]
+  );
+  const [draftRestore, setDraftRestore] = useState<{ data: Record<string, any>; savedAt: number } | null>(null);
+  const [lastDraftSavedAt, setLastDraftSavedAt] = useState<number | null>(null);
+
+  const clearDraft = React.useCallback((key?: string) => {
+    try { localStorage.removeItem(key ?? draftKey); } catch {}
+    setLastDraftSavedAt(null);
+  }, [draftKey]);
+
+  // Salva rascunho automaticamente (debounced) enquanto o formulário está aberto e sujo
+  useEffect(() => {
+    if (!showForm || !isFormDirty) return;
+    const t = setTimeout(() => {
+      try {
+        const payload = { data: formData, savedAt: Date.now(), snapshot: formSnapshot };
+        localStorage.setItem(draftKey, JSON.stringify(payload));
+        setLastDraftSavedAt(payload.savedAt);
+      } catch {}
+    }, 600);
+    return () => clearTimeout(t);
+  }, [formData, showForm, isFormDirty, draftKey, formSnapshot]);
+
   // Avisa ao fechar/recarregar a aba com alterações não salvas
   useEffect(() => {
     if (!showForm || !isFormDirty) return;
@@ -191,6 +217,23 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
       setDiscardDialogOpen(true);
     }
   }, [blocker.state]);
+
+  // Verifica se existe um rascunho salvo para a chave atual e oferece restauração
+  const checkForDraft = React.useCallback((key: string, currentData: Record<string, any>) => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      const draftData = parsed?.data ?? {};
+      if (JSON.stringify(draftData) === JSON.stringify(currentData)) {
+        localStorage.removeItem(key);
+        return;
+      }
+      setDraftRestore({ data: draftData, savedAt: parsed?.savedAt ?? Date.now() });
+    } catch {
+      try { localStorage.removeItem(key); } catch {}
+    }
+  }, []);
 
   // Campos obrigatórios fixos de empresa
   const [companyFields, setCompanyFields] = useState<CustomField[]>([
@@ -662,6 +705,10 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     setWhatsappsVinculados(empresa.whatsapps_vinculados || []);
 
     setShowForm(true);
+    // Verificar rascunho salvo para este cadastro
+    setTimeout(() => {
+      checkForDraft(`empresas_draft:${variant}:${empresa.id}`, data);
+    }, 0);
   };
 
   const handleDeleteEmpresa = (id: string) => {
@@ -735,6 +782,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   };
 
   const closeForm = () => {
+    clearDraft();
     setShowForm(false);
     setFormSnapshot("{}");
   };
@@ -1115,6 +1163,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           }]);
       }
 
+      clearDraft();
       setShowForm(false);
       setFormData({});
       setFormSnapshot("{}");
@@ -1702,6 +1751,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 setFormSnapshot("{}");
                 setContatosVinculados([]);
                 setCriarNovoContato(false);
+                setTimeout(() => {
+                  checkForDraft(`empresas_draft:${variant}:new`, {});
+                }, 0);
               }} className="gap-2 shadow-sm h-9 sm:h-10">
                 <Plus className="w-4 h-4" />
                 {variant === "empresa" ? "Nova Empresa" : (variant === "vendedor" ? "Novo Vendedor" : "Nova Transportadora")}
@@ -3124,6 +3176,44 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog de restauração de rascunho */}
+      <AlertDialog
+        open={!!draftRestore}
+        onOpenChange={(open) => { if (!open) setDraftRestore(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Recuperar rascunho não salvo?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Encontramos alterações não salvas deste cadastro
+              {draftRestore?.savedAt ? ` de ${new Date(draftRestore.savedAt).toLocaleString('pt-BR')}` : ''}.
+              Deseja restaurá-las?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                clearDraft();
+                setDraftRestore(null);
+              }}
+            >
+              Descartar rascunho
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (draftRestore?.data) {
+                  setFormData(draftRestore.data);
+                }
+                setDraftRestore(null);
+              }}
+            >
+              Restaurar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       {/* Dialog de CNPJ/CPF duplicado */}
       <AlertDialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
