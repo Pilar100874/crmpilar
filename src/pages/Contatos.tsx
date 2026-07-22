@@ -3258,6 +3258,15 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Visualização somente-leitura de item vinculado */}
+      <VinculoViewDialog
+        open={!!viewingVinculo}
+        onOpenChange={(o) => { if (!o) setViewingVinculo(null); }}
+        title={viewingVinculo?.title || ""}
+        subtitle={viewingVinculo?.subtitle}
+        fields={viewingVinculo?.fields || []}
+      />
+
     </div>
   );
 }
