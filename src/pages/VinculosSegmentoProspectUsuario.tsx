@@ -130,11 +130,11 @@ export default function VinculosSegmentoProspectUsuario() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Users className="h-4 w-4" /> Usuários Responsáveis
+              <Users className="h-4 w-4" /> Gerentes Responsáveis
             </CardTitle>
             <CardDescription>
               {selectedSegmento
-                ? `Gerencie os usuários vinculados ao segmento selecionado.`
+                ? `Gerencie os gerentes vinculados ao segmento selecionado.`
                 : "Selecione um segmento à esquerda."}
             </CardDescription>
           </CardHeader>
