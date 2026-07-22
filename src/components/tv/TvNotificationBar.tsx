@@ -80,12 +80,15 @@ export default function TvNotificationBar({ deviceId }: Props) {
   const fg = estilo.fg || "#ffffff";
   const IconeCmp = estilo.icone && (LucideIcons as any)[estilo.icone];
 
+  const piscar = !!estilo.piscar;
+  const blinkCls = piscar ? "animate-tv-blink" : "";
+
   // Pop-up centralizado
   if (formato === "popup") {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 animate-in fade-in">
         <div
-          className="max-w-xl w-[90%] rounded-2xl shadow-2xl p-8 animate-in zoom-in-95"
+          className={`max-w-xl w-[90%] rounded-2xl shadow-2xl p-8 animate-in zoom-in-95 ${blinkCls}`}
           style={{ background: bg, color: fg }}
         >
           <div className="flex items-start gap-4">
@@ -104,7 +107,7 @@ export default function TvNotificationBar({ deviceId }: Props) {
   if (formato === "imagem") {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 animate-in fade-in">
-        <img src={atual.mensagem_renderizada} alt="" className="max-w-[95%] max-h-[95%] object-contain rounded-lg shadow-2xl" />
+        <img src={atual.mensagem_renderizada} alt="" className={`max-w-[95%] max-h-[95%] object-contain rounded-lg shadow-2xl ${blinkCls}`} />
       </div>
     );
   }
@@ -115,7 +118,7 @@ export default function TvNotificationBar({ deviceId }: Props) {
     <div
       className={`fixed left-0 right-0 z-[9999] px-6 py-4 shadow-2xl animate-in ${
         posicao === "top" ? "top-0 slide-in-from-top" : "bottom-0 slide-in-from-bottom"
-      }`}
+      } ${blinkCls}`}
       style={{ background: bg, color: fg }}
     >
       <div className="flex items-center gap-4 max-w-full">
@@ -130,3 +133,4 @@ export default function TvNotificationBar({ deviceId }: Props) {
     </div>
   );
 }
+
