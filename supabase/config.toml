@@ -343,3 +343,22 @@ verify_jwt = false
 
 [functions.vendas-workflow-poller]
 verify_jwt = false
+
+[functions.bot-sla-poller]
+verify_jwt = false
+
+[functions.marketing-poller]
+verify_jwt = false
+
+[functions.ecom-carrinho-poller]
+verify_jwt = false
+
+[functions.ecom-payment-expiry-poller]
+verify_jwt = false
+
+[functions.pedido-tracking-poller]
+verify_jwt = false
+
+[functions.cron-health-writer]
+verify_jwt = false
+
