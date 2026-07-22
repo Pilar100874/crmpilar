@@ -419,6 +419,6 @@ export default function Gerentes() {
           )}
         </div>
       </div>
-    </div>
   );
+}
 }
