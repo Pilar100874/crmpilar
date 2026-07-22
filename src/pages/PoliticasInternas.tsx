@@ -122,6 +122,7 @@ export default function PoliticasInternas() {
   const [wizardPublishing, setWizardPublishing] = useState(false);
   const [wizardInstrucao, setWizardInstrucao] = useState("");
   const [wizardStatus, setWizardStatus] = useState<"ativa" | "inativa">("ativa");
+  const [wizardEditingId, setWizardEditingId] = useState<string | null>(null);
   const [wizardDraft, setWizardDraft] = useState<{
     title: string;
     summary: string;
@@ -242,8 +243,23 @@ export default function PoliticasInternas() {
     setEditorOpen(true);
   }
   function openEdit(p: Policy) {
-    setEditing({ ...p });
-    setEditorOpen(true);
+    // Abre o Wizard IA já na etapa 3 (Revisar & Editar) com os dados atuais,
+    // permitindo usar "Ajustar com IA" sobre o texto existente.
+    setWizardEditingId(p.id);
+    setWizardCategoriaId(p.category_id ?? categories[0]?.id ?? "");
+    setWizardResponsavel(p.responsible ?? "");
+    setWizardTopicos("");
+    setWizardContexto("");
+    setWizardInstrucao("");
+    setWizardStatus((p.status as "ativa" | "inativa") ?? "ativa");
+    setWizardDraft({
+      title: p.title ?? "",
+      summary: p.summary ?? "",
+      content: p.content ?? "",
+      keywords: Array.isArray(p.keywords) ? p.keywords : [],
+    });
+    setWizardStep(3);
+    setWizardOpen(true);
   }
 
   async function savePolicy() {
@@ -421,6 +437,7 @@ export default function PoliticasInternas() {
               size="sm"
               variant="secondary"
               onClick={() => {
+                setWizardEditingId(null);
                 setWizardStep(1);
                 setWizardTopicos("");
                 setWizardCategoriaId(categories[0]?.id ?? "");
@@ -1023,37 +1040,39 @@ export default function PoliticasInternas() {
           <DialogHeader className="px-6 py-3 border-b shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
-              Wizard IA — Criar política
+              Wizard IA — {wizardEditingId ? "Editar política" : "Criar política"}
             </DialogTitle>
-            <div className="flex items-center gap-2 pt-2 text-xs">
-              {[
-                { n: 1, label: "Tópicos" },
-                { n: 2, label: "Gerar" },
-                { n: 3, label: "Revisar & Publicar" },
-              ].map((s, i) => (
-                <div key={s.n} className="flex items-center gap-2">
-                  <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center font-semibold ${
-                      wizardStep === s.n
-                        ? "bg-primary text-primary-foreground"
-                        : wizardStep > (s.n as 1 | 2 | 3)
-                        ? "bg-primary/30 text-primary"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {s.n}
+            {!wizardEditingId && (
+              <div className="flex items-center gap-2 pt-2 text-xs">
+                {[
+                  { n: 1, label: "Tópicos" },
+                  { n: 2, label: "Gerar" },
+                  { n: 3, label: "Revisar & Publicar" },
+                ].map((s, i) => (
+                  <div key={s.n} className="flex items-center gap-2">
+                    <div
+                      className={`w-6 h-6 rounded-full flex items-center justify-center font-semibold ${
+                        wizardStep === s.n
+                          ? "bg-primary text-primary-foreground"
+                          : wizardStep > (s.n as 1 | 2 | 3)
+                          ? "bg-primary/30 text-primary"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {s.n}
+                    </div>
+                    <span
+                      className={
+                        wizardStep === s.n ? "font-medium" : "text-muted-foreground"
+                      }
+                    >
+                      {s.label}
+                    </span>
+                    {i < 2 && <div className="w-8 h-px bg-border" />}
                   </div>
-                  <span
-                    className={
-                      wizardStep === s.n ? "font-medium" : "text-muted-foreground"
-                    }
-                  >
-                    {s.label}
-                  </span>
-                  {i < 2 && <div className="w-8 h-px bg-border" />}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
@@ -1287,7 +1306,7 @@ export default function PoliticasInternas() {
           </div>
 
           <DialogFooter className="px-6 py-3 border-t shrink-0 bg-background gap-2">
-            {wizardStep > 1 && (
+            {wizardStep > 1 && !wizardEditingId && (
               <Button
                 variant="outline"
                 onClick={() => setWizardStep((s) => (s - 1) as 1 | 2 | 3)}
@@ -1370,28 +1389,41 @@ export default function PoliticasInternas() {
                 onClick={async () => {
                   setWizardPublishing(true);
                   try {
-                    const { data, error } = await supabase
-                      .from("policies")
-                      .insert({
-                        title: wizardDraft.title.trim(),
-                        summary: wizardDraft.summary ?? "",
-                        content: wizardDraft.content,
-                        category_id: wizardCategoriaId || null,
-                        responsible: wizardResponsavel ?? "",
-                        keywords: wizardDraft.keywords ?? [],
-                        status: wizardStatus,
-                        ordem: policies.length,
-                      })
-                      .select("id")
-                      .single();
-                    if (error) throw error;
-                    supabase.functions
-                      .invoke("policies-embed", {
-                        body: { policyId: data.id },
-                      })
-                      .catch(() => {});
-                    toast.success("Política publicada");
+                    const payload = {
+                      title: wizardDraft.title.trim(),
+                      summary: wizardDraft.summary ?? "",
+                      content: wizardDraft.content,
+                      category_id: wizardCategoriaId || null,
+                      responsible: wizardResponsavel ?? "",
+                      keywords: wizardDraft.keywords ?? [],
+                      status: wizardStatus,
+                    };
+                    let policyId = wizardEditingId;
+                    if (wizardEditingId) {
+                      const { error } = await supabase
+                        .from("policies")
+                        .update(payload)
+                        .eq("id", wizardEditingId);
+                      if (error) throw error;
+                    } else {
+                      const { data, error } = await supabase
+                        .from("policies")
+                        .insert({ ...payload, ordem: policies.length })
+                        .select("id")
+                        .single();
+                      if (error) throw error;
+                      policyId = data.id;
+                    }
+                    if (policyId) {
+                      supabase.functions
+                        .invoke("policies-embed", { body: { policyId } })
+                        .catch(() => {});
+                    }
+                    toast.success(
+                      wizardEditingId ? "Política atualizada" : "Política publicada"
+                    );
                     setWizardOpen(false);
+                    setWizardEditingId(null);
                     await loadAll();
                   } catch (e: any) {
                     toast.error("Falha ao publicar: " + (e?.message ?? e));
@@ -1403,7 +1435,7 @@ export default function PoliticasInternas() {
                 {wizardPublishing && (
                   <Loader2 className="w-3 h-3 mr-1 animate-spin" />
                 )}
-                Publicar política
+                {wizardEditingId ? "Salvar alterações" : "Publicar política"}
               </Button>
             )}
           </DialogFooter>
