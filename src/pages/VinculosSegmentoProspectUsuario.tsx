@@ -119,7 +119,7 @@ export default function VinculosSegmentoProspectUsuario() {
                     }`}
                   >
                     <span className="text-sm font-medium">{s.nome}</span>
-                    <Badge variant="secondary">{qtd} usuário(s)</Badge>
+                    <Badge variant="secondary">{qtd} gerente(s)</Badge>
                   </button>
                 );
               })}
