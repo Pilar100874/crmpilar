@@ -36,7 +36,7 @@ export default function VinculosSegmentoProspectUsuario() {
     setLoading(true);
     const [segRes, usrRes, vincRes] = await Promise.all([
       supabase.from("segmentos").select("id, nome").eq("estabelecimento_id", estabId).eq("is_prospect", true).order("nome"),
-      supabase.from("usuarios").select("id, nome, email").eq("estabelecimento_id", estabId).order("nome"),
+      supabase.from("usuarios").select("id, nome, email").eq("estabelecimento_id", estabId).eq("tipo", "gerente").order("nome"),
       supabase.from("usuario_segmentos").select("id, usuario_id, segmento_id"),
     ]);
     setSegmentos((segRes.data as any) || []);
