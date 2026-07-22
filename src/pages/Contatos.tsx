@@ -2688,27 +2688,31 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
             variant="ghost" 
             size="icon" 
             onMouseDown={() => {
-              // Garante que dispare antes do onBlur dos inputs
               setIsClosingForm(true);
               isClosingRef.current = true;
               setShouldCheckDuplicate(false);
             }}
-            onClick={() => {
-              setShowForm(false);
-              setTimeout(() => {
-                setIsClosingForm(false);
-                isClosingRef.current = false;
-                setShouldCheckDuplicate(true);
-              }, 150);
-            }}
+            onClick={requestCloseForm}
             className="hover:bg-accent/50 h-8 w-8 sm:h-9 sm:w-9"
           >
             <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-xl sm:text-2xl font-light tracking-tight text-foreground">
-              {editingContact ? "Editar Contato" : "Novo Contato"}
-            </h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl sm:text-2xl font-light tracking-tight text-foreground">
+                {editingContact ? "Editar Contato" : "Novo Contato"}
+              </h1>
+              {isFormDirty && (
+                <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 gap-1.5 px-2 py-0.5 text-[10px] sm:text-xs">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
+                  </span>
+                  <AlertCircle className="w-3 h-3" />
+                  Alterações não salvas
+                </Badge>
+              )}
+            </div>
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               {editingContact ? "Atualize as informações do contato" : "Preencha os dados do novo contato"}
             </p>
@@ -2717,7 +2721,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       </div>
 
       <div className="flex-1 overflow-auto p-3 sm:p-6 md:p-8">
-        <Tabs defaultValue="contato" className="w-full max-w-6xl mx-auto">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full max-w-6xl mx-auto">
           <TabsList className="bg-muted/30 border border-border/40 p-1 rounded-lg mb-4 sm:mb-6 w-full sm:w-auto flex-wrap sm:flex-nowrap">
             <TabsTrigger
               value="contato"
