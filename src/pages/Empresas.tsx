@@ -16,7 +16,8 @@ import { DeleteWithDependenciesDialog } from "@/components/common/DeleteWithDepe
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil, Edit, GripVertical, Phone, Building2, Truck, UserCog, FileText, MapPin, ShieldCheck, Link2, ArrowLeft, AlertCircle } from "lucide-react";
+import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil, Edit, GripVertical, Phone, Building2, Truck, UserCog, FileText, MapPin, ShieldCheck, Link2, ArrowLeft, AlertCircle, Eye } from "lucide-react";
+import { VinculoViewDialog, type VinculoField } from "@/components/common/VinculoViewDialog";
 import { CadastroHeader } from "@/components/cadastros/CadastroHeader";
 import { toast } from "@/lib/toast-config";
 import { validateCPF, validateCNPJ, validateEmail, validateCEP, validateWhatsApp } from "@/lib/validators";
