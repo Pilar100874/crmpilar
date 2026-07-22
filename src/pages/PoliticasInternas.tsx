@@ -671,12 +671,14 @@ export default function PoliticasInternas() {
 
       {/* ==================== EDITOR ADMIN ==================== */}
       <Dialog open={editorOpen} onOpenChange={setEditorOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] p-0 flex flex-col overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-3 border-b shrink-0">
             <DialogTitle>
               {editing?.id ? "Editar política" : "Nova política"}
             </DialogTitle>
           </DialogHeader>
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+
           {editing && (
             <div className="space-y-3">
               <div>
