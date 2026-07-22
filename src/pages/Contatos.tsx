@@ -1611,10 +1611,14 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     }
 
     setFormData(baseFormData);
+    setFormSnapshot(JSON.stringify(baseFormData));
+    setActiveTab("contato");
+    setPendingTab(null);
     setSegmentosSelecionados(contact.segmentos || []);
     setShouldCheckDuplicate(true);
     setIsClosingForm(false);
     setShowForm(true);
+    setTimeout(() => checkForDraft(`contatos_draft:${contact.id}`, baseFormData), 0);
   };
 
   const [contactDeps, setContactDeps] = useState<Record<string, number> | null>(null);
