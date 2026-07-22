@@ -1230,6 +1230,30 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     }
   };
 
+  const handleAdicionarTransportadorasVinculo = async () => {
+    if (!estabelecimentoId || !editingEmpresa || novasTransportadorasVinculo.length === 0) {
+      toast.error("Selecione pelo menos uma transportadora");
+      return;
+    }
+    try {
+      const rows = novasTransportadorasVinculo.map((tid) => ({
+        empresa_id: editingEmpresa.id,
+        transportadora_id: tid,
+        usuario_id: null,
+        vendedor_id: null,
+        segmento_id: null,
+        estabelecimento_id: estabelecimentoId,
+      }));
+      const { error } = await supabase.from("empresa_vinculos").insert(rows);
+      if (error) throw error;
+      toast.success("Transportadoras vinculadas!");
+      setNovasTransportadorasVinculo([]);
+      await fetchEmpresas(estabelecimentoId);
+    } catch (error: any) {
+      toast.error("Erro ao vincular transportadoras: " + error.message);
+    }
+  };
+
   const handleAdicionarEmpresasVinculo = async () => {
     if (!estabelecimentoId || !editingEmpresa || novasEmpresasVinculo.length === 0) {
       toast.error("Selecione pelo menos uma empresa");
