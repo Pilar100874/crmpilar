@@ -2388,7 +2388,53 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               </TabsList>
 
           <TabsContent value="contatos" className="p-6">
-            {/* Lista de Contatos Vinculados */}
+            {/* Busca e Seleção de Contato (topo) */}
+            {!criarNovoContato && (
+              <Card className="p-4 mb-4">
+                <Label className="text-xs">Vincular Contato</Label>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    placeholder="Buscar por nome, e-mail ou WhatsApp..."
+                    value={buscaContato}
+                    className="h-9 text-sm"
+                    onChange={(e) => setBuscaContato(e.target.value)}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setCriarNovoContato(true);
+                    }}
+                  >
+                    + Novo
+                  </Button>
+                </div>
+
+                {/* Lista de contatos filtrados */}
+                {contatosFiltrados.length > 0 && (
+                  <div className="border rounded-md max-h-[160px] overflow-y-auto mt-2">
+                    {contatosFiltrados.map((contato) => (
+                      <button
+                        key={contato.id}
+                        className="w-full text-left p-2 hover:bg-accent transition-colors border-b last:border-b-0"
+                        onClick={() => {
+                          handleAddContatoVinculado(contato.id);
+                          setContatosFiltrados([]);
+                          setBuscaContato("");
+                        }}
+                      >
+                        <div className="font-medium text-sm">{contato.nome}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {contato.email} {contato.telefone && `• ${contato.telefone}`}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            )}
+
+            {/* Lista de Contatos Vinculados (abaixo) */}
             {contatosVinculados.length > 0 && (
               <Card className="p-4 mb-4">
                 <h3 className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
@@ -2443,9 +2489,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                                 neighborhood: formData.neighborhood,
                                 inscricao: formData.inscricao,
                               };
-                              
+
                               // Carregar dados do contato + preservar empresa
-                              // Carregar dados do contato
                               const data: Record<string, any> = {
                                 ...empresaData,
                                 name: contatoCompleto.nome,
@@ -2475,51 +2520,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               </Card>
             )}
 
-            {/* Busca e Seleção de Contato */}
-            {!criarNovoContato && (
-              <Card className="p-4 mb-4">
-                <Label className="text-xs">Vincular Contato</Label>
-                <div className="flex gap-2 mt-2">
-                  <Input
-                    placeholder="Buscar por nome, e-mail ou WhatsApp..."
-                    value={buscaContato}
-                    className="h-9 text-sm"
-                    onChange={(e) => setBuscaContato(e.target.value)}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setCriarNovoContato(true);
-                    }}
-                  >
-                    + Novo
-                  </Button>
-                </div>
-
-                {/* Lista de contatos filtrados */}
-                {contatosFiltrados.length > 0 && (
-                  <div className="border rounded-md max-h-[160px] overflow-y-auto mt-2">
-                    {contatosFiltrados.map((contato) => (
-                      <button
-                        key={contato.id}
-                        className="w-full text-left p-2 hover:bg-accent transition-colors border-b last:border-b-0"
-                        onClick={() => {
-                          handleAddContatoVinculado(contato.id);
-                          setContatosFiltrados([]);
-                          setBuscaContato("");
-                        }}
-                      >
-                        <div className="font-medium text-sm">{contato.nome}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {contato.email} {contato.telefone && `• ${contato.telefone}`}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </Card>
-            )}
 
             {/* Formulário de Novo Contato - igual à tela de Contatos */}
             {criarNovoContato && (
