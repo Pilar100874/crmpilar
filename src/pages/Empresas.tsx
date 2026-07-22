@@ -1966,7 +1966,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                                   size="sm"
                                   variant="outline"
                                   className="h-8 px-2 rounded-full hover:bg-primary hover:text-primary-foreground transition-all duration-200 border-primary/20"
-                                  onClick={() => handleEditEmpresa(empresa)}
+                                  onClick={() => runWithDirtyGuard(() => handleEditEmpresa(empresa))}
                                   title="Editar empresa"
                                 >
                                   <Edit className="w-4 h-4" />
