@@ -76,6 +76,7 @@ import PontoAlertas from "./pages/ponto/PontoAlertas";
 import PontoAuditoria from "./pages/ponto/PontoAuditoria";
 import PontoColetorDownload from "./pages/ponto/PontoColetorDownload";
 import AdminApps from "./pages/AdminApps";
+import PoliticasInternas from "./pages/PoliticasInternas";
 import TelasCustomizadas from "./pages/TelasCustomizadas";
 import TelaCustomizadaView from "./pages/TelaCustomizadaView";
 import ConfigNotificacoesPush from "./pages/ConfigNotificacoesPush";
