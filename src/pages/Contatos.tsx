@@ -3031,7 +3031,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                             </div>
                           ) : (
                             <div className="p-4 border rounded-lg bg-muted/30 text-center">
-                              <p className="text-sm text-muted-foreground">Nenhum usuário vinculado</p>
+                              <p className="text-sm text-muted-foreground">Nenhum gerente vinculado</p>
                             </div>
                           )}
                         </div>

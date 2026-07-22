@@ -181,7 +181,7 @@ export function VinculosWizardStep1Contatos({
                   <TableHead>Nome</TableHead>
                   <TableHead>Telefone</TableHead>
                   <TableHead>E-mail</TableHead>
-                  <TableHead>Usuário Vinculado</TableHead>
+                  <TableHead>Gerente Vinculado</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
