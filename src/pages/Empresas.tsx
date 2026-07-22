@@ -1094,6 +1094,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
       setShowForm(false);
       setFormData({});
+      setFormSnapshot("{}");
       setContatosVinculados([]);
       setEditingEmpresa(null);
       setCriarNovoContato(false);
