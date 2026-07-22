@@ -23,12 +23,19 @@ export default function TvSignageSimulador() {
     if (!dsh) return null;
     let url = "";
     if (dsh.tipo === "tela_interna" && dsh.rota_interna) {
-      url = window.location.origin + dsh.rota_interna + (dsh.rota_interna.includes("?") ? "&" : "?") + "tv_simulacao=1";
+      const sep = dsh.rota_interna.includes("?") ? "&" : "?";
+      url =
+        window.location.origin +
+        dsh.rota_interna +
+        sep +
+        "tv_simulacao=1" +
+        (deviceId ? `&device_id=${deviceId}` : "");
     } else if (dsh.tipo === "url_externa" && dsh.url) {
       url = dsh.url;
     } else return null;
     return { url, nome: dsh.nome, duracao: 0, refresh: dsh.refresh_segundos || 0 };
   };
+
 
   useEffect(() => {
     (async () => {
