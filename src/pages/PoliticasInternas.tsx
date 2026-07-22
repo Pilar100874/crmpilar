@@ -1040,7 +1040,7 @@ export default function PoliticasInternas() {
           <DialogHeader className="px-6 py-3 border-b shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
-              Wizard IA — Criar política
+              Wizard IA — {wizardEditingId ? "Editar política" : "Criar política"}
             </DialogTitle>
             <div className="flex items-center gap-2 pt-2 text-xs">
               {[
