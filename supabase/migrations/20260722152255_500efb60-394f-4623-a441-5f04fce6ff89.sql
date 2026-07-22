@@ -1,0 +1,1 @@
+ALTER TABLE public.empresas DROP CONSTRAINT IF EXISTS empresas_cnpj_estabelecimento_key;
