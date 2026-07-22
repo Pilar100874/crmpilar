@@ -3203,6 +3203,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             <AlertDialogCancel
               onClick={() => {
                 setPendingTab(null);
+                setPendingAction(null);
                 if (blocker.state === "blocked") blocker.reset();
               }}
             >
@@ -3218,6 +3219,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   if (draftKey) localStorage.removeItem(draftKey);
                 } catch {}
                 setPendingTab(null);
+                setPendingAction(null);
                 if (blocker.state === "blocked") blocker.reset();
                 setDiscardDialogOpen(false);
                 toast.success("Alterações revertidas para o último estado salvo");
@@ -3228,7 +3230,13 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             <AlertDialogAction
               onClick={() => {
                 setDiscardDialogOpen(false);
-                if (pendingTab) {
+                if (pendingAction) {
+                  try { clearDraft(); } catch {}
+                  const action = pendingAction;
+                  setPendingAction(null);
+                  setFormSnapshot(JSON.stringify(formData));
+                  action();
+                } else if (pendingTab) {
                   setFormData(JSON.parse(formSnapshot));
                   setActiveTab(pendingTab);
                   setPendingTab(null);
