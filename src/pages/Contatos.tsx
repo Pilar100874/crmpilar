@@ -2960,7 +2960,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                       {/* Adicionar novos usuários */}
                       <Card className="border-primary/20 bg-primary/5">
                           <CardContent className="p-4 space-y-4">
-                            <h4 className="text-sm font-semibold">Adicionar Usuários</h4>
+                            <h4 className="text-sm font-semibold">Adicionar Gerentes</h4>
                             
                             <div className="space-y-2">
                               <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
