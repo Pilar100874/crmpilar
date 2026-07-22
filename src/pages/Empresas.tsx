@@ -705,6 +705,10 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     setWhatsappsVinculados(empresa.whatsapps_vinculados || []);
 
     setShowForm(true);
+    // Verificar rascunho salvo para este cadastro
+    setTimeout(() => {
+      checkForDraft(`empresas_draft:${variant}:${empresa.id}`, data);
+    }, 0);
   };
 
   const handleDeleteEmpresa = (id: string) => {
