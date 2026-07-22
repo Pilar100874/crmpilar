@@ -261,7 +261,7 @@ export default function PontoExportacao() {
           </CardContent></Card>
         ) : (
           <div className="overflow-x-auto rounded-lg border resp-table-wrap">
-            <table className="w-full min-w-[640px] text-sm resp-table">
+            <table className="w-full table-fixed text-sm resp-table">
               <thead className="bg-muted/50"><tr className="text-left">
                 <th className="p-3">Quando</th><th className="p-3">Layout</th>
                 <th className="p-3">Período</th><th className="p-3">Lançamentos</th>

@@ -114,7 +114,7 @@ export default function PontoTratamento() {
         </Card>
       ) : (
         <div className="overflow-x-auto rounded-lg border resp-table-wrap">
-          <div className="overflow-x-auto -mx-1 sm:mx-0"><table className="w-full min-w-[640px] text-sm resp-table">
+          <div className="overflow-x-auto -mx-1 sm:mx-0"><table className="w-full table-fixed text-sm resp-table">
             <thead className="bg-muted/50">
               <tr className="text-left">
                 <th className="p-3">Funcionário</th>

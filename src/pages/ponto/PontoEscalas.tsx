@@ -410,7 +410,7 @@ export default function PontoEscalas() {
               </div>
               {/* Desktop/tablet table */}
               <div className="hidden md:block overflow-x-auto rounded-md border">
-                <table className="w-full min-w-[900px] text-sm">
+                <table className="w-full table-fixed text-sm">
                   <thead className="bg-muted/50">
                     <tr className="text-left">
                       <th className="p-2">Dia</th>
