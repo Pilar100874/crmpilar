@@ -2660,7 +2660,14 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2"
               onClick={() => setCriarNovaEmpresa(false)}
             >
-              Empresa
+              <span className="inline-flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5" />
+                <span>/</span>
+                <Truck className="w-3.5 h-3.5" />
+                <span>/</span>
+                <UserCheck className="w-3.5 h-3.5" />
+                <span className="ml-1">Empresa / Transportadora / Vendedor</span>
+              </span>
             </TabsTrigger>
             <TabsTrigger 
               value="vinculos"
