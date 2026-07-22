@@ -685,7 +685,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
 
   // useBlocker requer data router; app usa BrowserRouter, então stub no-op.
   // A proteção de navegação interna é feita via runWithDirtyGuard nos handlers.
-  const blocker = { state: "unblocked" as const, reset: () => {}, proceed: () => {} };
+  const blocker: { state: string; reset: () => void; proceed: () => void } = { state: "unblocked", reset: () => {}, proceed: () => {} };
 
   // Helpers de fechamento/troca com confirmação
   const doCloseForm = () => {
