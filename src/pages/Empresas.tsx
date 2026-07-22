@@ -704,35 +704,34 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       return;
     }
     
-    let query = supabase
+    // Busca em TODOS os cadastros (empresas, vendedores, transportadoras) para agilizar preenchimento
+    const { data, error } = await supabase
       .from('empresas')
       .select('*')
       .eq('estabelecimento_id', estabelecimentoId);
-
-    // Restringir duplicidade apenas ao mesmo tipo de cadastro
-    if (variant === 'vendedor') {
-      query = query.eq('tipo_cliente', 'vendedor');
-    } else if (variant === 'transportadora') {
-      query = query.eq('tipo_cliente', 'transportadora');
-    } else {
-      query = query.not('tipo_cliente', 'in', '("vendedor","transportadora")');
-    }
-
-    const { data, error } = await query;
 
     if (error) {
       console.error('Erro ao verificar CNPJ/CPF:', error);
       return;
     }
-    
-    // Comparar valores limpos
-    const duplicate = data?.find(emp => emp.cnpj?.replace(/\D/g, '') === cleanValue);
 
-    
-    if (duplicate) {
-      setDuplicateEmpresa(duplicate);
-      setDuplicateDialogOpen(true);
-    }
+    const matches = (data || []).filter(emp => emp.cnpj?.replace(/\D/g, '') === cleanValue);
+    if (matches.length === 0) return;
+
+    const isSameVariant = (emp: any) => {
+      const tc = emp.tipo_cliente;
+      if (variant === 'vendedor') return tc === 'vendedor';
+      if (variant === 'transportadora') return tc === 'transportadora';
+      return tc !== 'vendedor' && tc !== 'transportadora';
+    };
+
+    // Se já existe no mesmo tipo → bloqueia. Caso contrário → oferece preenchimento a partir de outro tipo.
+    const sameVariant = matches.find(isSameVariant);
+    const duplicate = sameVariant || matches[0];
+    setDuplicateEmpresa(duplicate);
+    setDuplicateSameVariant(!!sameVariant);
+    setDuplicateDialogOpen(true);
+
   };
 
   const handleCEPLookup = async (cep: string) => {
