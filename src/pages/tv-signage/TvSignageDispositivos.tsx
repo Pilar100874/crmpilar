@@ -106,20 +106,101 @@ export default function TvSignageDispositivos() {
   };
 
   const statusBadge = (s: string) => {
-    const map: Record<string, { icon: any; cls: string; label: string }> = {
-      online: { icon: Wifi, cls: "bg-green-500/10 text-green-500 border-green-500/20", label: "Online" },
-      offline: { icon: WifiOff, cls: "bg-muted text-muted-foreground", label: "Offline" },
-      erro: { icon: AlertTriangle, cls: "bg-red-500/10 text-red-500 border-red-500/20", label: "Erro" },
-      bloqueado: { icon: Lock, cls: "bg-orange-500/10 text-orange-500 border-orange-500/20", label: "Bloqueado" },
+    const map: Record<string, { icon: any; cls: string; label: string; dot: string }> = {
+      online: { icon: Wifi, cls: "bg-emerald-500/10 text-emerald-500 border-emerald-500/30", label: "Online", dot: "bg-emerald-500 shadow-[0_0_8px_hsl(var(--primary))] animate-pulse" },
+      offline: { icon: WifiOff, cls: "bg-muted text-muted-foreground border-border", label: "Offline", dot: "bg-muted-foreground/50" },
+      erro: { icon: AlertTriangle, cls: "bg-red-500/10 text-red-500 border-red-500/30", label: "Erro", dot: "bg-red-500 animate-pulse" },
+      bloqueado: { icon: Lock, cls: "bg-orange-500/10 text-orange-500 border-orange-500/30", label: "Bloqueado", dot: "bg-orange-500" },
     };
     const it = map[s] || map.offline;
-    return <Badge variant="outline" className={it.cls}><it.icon className="w-3 h-3 mr-1" />{it.label}</Badge>;
+    return (
+      <Badge variant="outline" className={`${it.cls} gap-1.5 font-medium`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${it.dot}`} />
+        <it.icon className="w-3 h-3" />
+        {it.label}
+      </Badge>
+    );
   };
+
+  const stats = {
+    total: devices.length,
+    online: devices.filter((d) => d.status === "online").length,
+    offline: devices.filter((d) => d.status === "offline").length,
+    problemas: devices.filter((d) => d.status === "erro" || d.status === "bloqueado").length,
+  };
+
+  const StatCard = ({ icon: Icon, label, value, tone }: any) => (
+    <Card className={`p-4 border-l-4 ${tone} hover:shadow-md transition-shadow`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{label}</p>
+          <p className="text-2xl font-bold mt-1">{value}</p>
+        </div>
+        <div className="p-2 rounded-lg bg-muted/50">
+          <Icon className="w-5 h-5 text-muted-foreground" />
+        </div>
+      </div>
+    </Card>
+  );
+
+  const DeviceActions = ({ d, compact = false }: { d: any; compact?: boolean }) => (
+    <div className={`flex gap-1 ${compact ? "flex-wrap" : "justify-end"}`}>
+      <Button variant="ghost" size="icon" title="Simular" onClick={() => window.open(`/tv-signage/simular/${d.id}`, "_blank")}><PlayCircle className="w-4 h-4 text-primary" /></Button>
+      <Button variant="ghost" size="icon" title="Enviar comando" onClick={() => setComandoDialog({ deviceId: d.id, open: true })}><Terminal className="w-4 h-4" /></Button>
+      <Button variant="ghost" size="icon" title={d.bloqueado ? "Desbloquear" : "Bloquear"} onClick={async () => {
+        await supabase.from("tv_devices").update({ bloqueado: !d.bloqueado, status: !d.bloqueado ? "bloqueado" : "offline" }).eq("id", d.id);
+        await enviarComando(d.id, d.bloqueado ? "desbloquear" : "bloquear");
+        carregar();
+      }}>{d.bloqueado ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}</Button>
+      <Button variant="ghost" size="icon" title="Reemitir token" onClick={() => reemitirToken(d)}><KeyRound className="w-4 h-4" /></Button>
+      <Button variant="ghost" size="icon" title="Ver QR Code" onClick={() => setPairing({ codigo: d.codigo, token: "(reemita para ver o token)" })}><QrCode className="w-4 h-4" /></Button>
+      <Button variant="ghost" size="icon" title="Editar" onClick={() => setEdit(d)}><Pencil className="w-4 h-4" /></Button>
+      <DeleteConfirmTrigger
+        onConfirm={() => excluir(d.id)}
+        title="Excluir dispositivo?"
+        description={`Remove "${d.nome}" e todo o histórico. Ação não pode ser desfeita.`}
+        trigger={<Button variant="ghost" size="icon" title="Excluir"><Trash2 className="w-4 h-4 text-red-500" /></Button>}
+      />
+    </div>
+  );
 
   return (
     <div className="space-y-4">
-      <Card className="p-4">
-        <div className="flex flex-col md:flex-row gap-3 md:items-center">
+      {/* Header Gradient */}
+      <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-primary/90 via-primary to-primary/70 text-primary-foreground p-5 md:p-6">
+        <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle at 20% 20%, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
+        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-xl bg-white/15 backdrop-blur-sm">
+              <Tv className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold">Dispositivos</h1>
+              <p className="text-sm text-primary-foreground/80">Gerencie suas telas remotas em tempo real</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="secondary" size="sm" onClick={carregar} className="bg-white/15 hover:bg-white/25 text-primary-foreground border-0 backdrop-blur-sm">
+              <RefreshCw className="w-4 h-4 mr-1.5" />Atualizar
+            </Button>
+            <Button size="sm" onClick={() => setEdit({})} className="bg-white text-primary hover:bg-white/90 font-semibold">
+              <Plus className="w-4 h-4 mr-1.5" />Novo dispositivo
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard icon={Monitor} label="Total" value={stats.total} tone="border-l-primary" />
+        <StatCard icon={Wifi} label="Online" value={stats.online} tone="border-l-emerald-500" />
+        <StatCard icon={WifiOff} label="Offline" value={stats.offline} tone="border-l-muted-foreground" />
+        <StatCard icon={AlertTriangle} label="Problemas" value={stats.problemas} tone="border-l-red-500" />
+      </div>
+
+      {/* Filtros */}
+      <Card className="p-3 md:p-4">
+        <div className="flex flex-col md:flex-row gap-2 md:gap-3 md:items-center">
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input placeholder="Buscar por nome, código, local..." value={busca} onChange={(e) => setBusca(e.target.value)} className="pl-9" />
@@ -141,22 +222,53 @@ export default function TvSignageDispositivos() {
               {grupos.map((g) => <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon" onClick={carregar}><RefreshCw className="w-4 h-4" /></Button>
-          <Button onClick={() => setEdit({})}><Plus className="w-4 h-4 mr-1" />Novo</Button>
         </div>
       </Card>
 
-      <Card className="overflow-hidden">
+      {/* Mobile / Tablet: Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:hidden">
+        {filtrados.length === 0 && (
+          <Card className="col-span-full p-10 text-center border-dashed">
+            <Tv className="w-10 h-10 mx-auto text-muted-foreground/50 mb-2" />
+            <p className="text-muted-foreground">Nenhum dispositivo encontrado</p>
+            <Button variant="outline" size="sm" className="mt-3" onClick={() => setEdit({})}><Plus className="w-4 h-4 mr-1" />Cadastrar primeiro</Button>
+          </Card>
+        )}
+        {filtrados.map((d) => (
+          <Card key={d.id} className="p-4 hover:shadow-lg hover:border-primary/30 transition-all group">
+            <div className="flex items-start justify-between gap-2 mb-3">
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold truncate group-hover:text-primary transition-colors">{d.nome}</h3>
+                <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono text-muted-foreground">{d.codigo}</code>
+              </div>
+              {statusBadge(d.status)}
+            </div>
+            <div className="space-y-1.5 text-xs text-muted-foreground mb-3">
+              {d.local && <div className="flex items-center gap-1.5"><MapPin className="w-3 h-3 shrink-0" /><span className="truncate">{d.local}</span></div>}
+              {d.grupo?.nome && <div className="flex items-center gap-1.5"><Layers className="w-3 h-3 shrink-0" /><span className="truncate">{d.grupo.nome}</span></div>}
+              <div className="flex items-center gap-1.5"><PlayCircle className="w-3 h-3 shrink-0 text-primary" /><span className="truncate">{d.playlist?.nome ? `▶ ${d.playlist.nome}` : d.dashboard?.nome || "Sem conteúdo"}</span></div>
+              <div className="flex items-center gap-1.5"><Clock className="w-3 h-3 shrink-0" /><span>{d.ultima_comunicacao ? formatDistanceToNow(new Date(d.ultima_comunicacao), { addSuffix: true, locale: ptBR }) : "Nunca conectou"}</span></div>
+              {d.versao_app && <div className="flex items-center gap-1.5"><Activity className="w-3 h-3 shrink-0" /><span>v{d.versao_app}</span></div>}
+            </div>
+            <div className="pt-2 border-t">
+              <DeviceActions d={d} compact />
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Desktop: Tabela */}
+      <Card className="overflow-hidden hidden lg:block">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
                 <TableHead>Nome</TableHead>
                 <TableHead>Código</TableHead>
                 <TableHead>Local</TableHead>
                 <TableHead>Grupo</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Dashboard</TableHead>
+                <TableHead>Conteúdo</TableHead>
                 <TableHead>Última comunicação</TableHead>
                 <TableHead>Versão</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
@@ -164,12 +276,15 @@ export default function TvSignageDispositivos() {
             </TableHeader>
             <TableBody>
               {filtrados.length === 0 && (
-                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Nenhum dispositivo</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-12">
+                  <Tv className="w-10 h-10 mx-auto text-muted-foreground/40 mb-2" />
+                  Nenhum dispositivo encontrado
+                </TableCell></TableRow>
               )}
               {filtrados.map((d) => (
-                <TableRow key={d.id}>
+                <TableRow key={d.id} className="hover:bg-muted/30">
                   <TableCell className="font-medium">{d.nome}</TableCell>
-                  <TableCell><code className="text-xs bg-muted px-1.5 py-0.5 rounded">{d.codigo}</code></TableCell>
+                  <TableCell><code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{d.codigo}</code></TableCell>
                   <TableCell className="text-muted-foreground text-sm">{d.local || "—"}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">{d.grupo?.nome || "—"}</TableCell>
                   <TableCell>{statusBadge(d.status)}</TableCell>
@@ -179,24 +294,7 @@ export default function TvSignageDispositivos() {
                   </TableCell>
                   <TableCell className="text-xs">{d.versao_app || "—"}</TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" title="Simular" onClick={() => window.open(`/tv-signage/simular/${d.id}`, "_blank")}><PlayCircle className="w-4 h-4 text-primary" /></Button>
-                      <Button variant="ghost" size="icon" title="Enviar comando" onClick={() => setComandoDialog({ deviceId: d.id, open: true })}><Terminal className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" title={d.bloqueado ? "Desbloquear" : "Bloquear"} onClick={async () => {
-                        await supabase.from("tv_devices").update({ bloqueado: !d.bloqueado, status: !d.bloqueado ? "bloqueado" : "offline" }).eq("id", d.id);
-                        await enviarComando(d.id, d.bloqueado ? "desbloquear" : "bloquear");
-                        carregar();
-                      }}>{d.bloqueado ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}</Button>
-                      <Button variant="ghost" size="icon" title="Reemitir token" onClick={() => reemitirToken(d)}><KeyRound className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" title="Ver QR Code" onClick={() => setPairing({ codigo: d.codigo, token: "(reemita para ver o token)" })}><QrCode className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" title="Editar" onClick={() => setEdit(d)}><Pencil className="w-4 h-4" /></Button>
-                      <DeleteConfirmTrigger
-                        onConfirm={() => excluir(d.id)}
-                        title="Excluir dispositivo?"
-                        description={`Remove "${d.nome}" e todo o histórico. Ação não pode ser desfeita.`}
-                        trigger={<Button variant="ghost" size="icon" title="Excluir"><Trash2 className="w-4 h-4 text-red-500" /></Button>}
-                      />
-                    </div>
+                    <DeviceActions d={d} />
                   </TableCell>
                 </TableRow>
               ))}
@@ -204,6 +302,7 @@ export default function TvSignageDispositivos() {
           </Table>
         </div>
       </Card>
+
 
       {/* Editor */}
       <Dialog open={edit !== null} onOpenChange={(o) => !o && setEdit(null)}>
