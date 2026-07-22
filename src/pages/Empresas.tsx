@@ -453,8 +453,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     // Carregar usuários
     const { data: usuariosData, error: usuariosError } = await supabase
       .from('usuarios')
-      .select('id, nome')
+      .select('id, nome, tipo')
       .eq('estabelecimento_id', estabId)
+      .eq('tipo', 'gerente')
       .order('nome');
 
     if (!usuariosError) {
