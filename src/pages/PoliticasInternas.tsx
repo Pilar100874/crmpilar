@@ -437,6 +437,7 @@ export default function PoliticasInternas() {
               size="sm"
               variant="secondary"
               onClick={() => {
+                setWizardEditingId(null);
                 setWizardStep(1);
                 setWizardTopicos("");
                 setWizardCategoriaId(categories[0]?.id ?? "");
