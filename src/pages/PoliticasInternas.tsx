@@ -105,7 +105,12 @@ export default function PoliticasInternas() {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [question, setQuestion] = useState("");
   const [asking, setAsking] = useState(false);
+  const [aiDraftOpen, setAiDraftOpen] = useState(false);
+  const [aiDraftTema, setAiDraftTema] = useState("");
+  const [aiDraftContexto, setAiDraftContexto] = useState("");
+  const [aiDrafting, setAiDrafting] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     (async () => {
