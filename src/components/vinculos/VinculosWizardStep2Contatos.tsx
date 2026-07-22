@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
+import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
 
 interface Usuario {
   id: string;
@@ -50,23 +51,15 @@ export function VinculosWizardStep2Contatos({
 
           <div className="space-y-4">
             <Label>Selecione os Usuários</Label>
-            <div className="space-y-2 max-h-[300px] overflow-y-auto border rounded-lg p-3">
-              {usuarios.map((usuario) => (
-                <div key={usuario.id} className="flex items-center space-x-3 p-2 hover:bg-accent/50 rounded">
-                  <Checkbox
-                    id={`usuario-${usuario.id}`}
-                    checked={novosUsuariosIds.includes(usuario.id)}
-                    onCheckedChange={() => handleUsuarioToggle(usuario.id)}
-                  />
-                  <label
-                    htmlFor={`usuario-${usuario.id}`}
-                    className="flex-1 text-sm font-medium cursor-pointer"
-                  >
-                    {usuario.nome}
-                  </label>
-                </div>
-              ))}
-            </div>
+            <FilteredCheckboxList
+              idPrefix="usuario"
+              items={usuarios.map((u) => ({ id: u.id, label: u.nome, extra: u.email }))}
+              selected={novosUsuariosIds}
+              onToggle={(id) => handleUsuarioToggle(id)}
+              searchPlaceholder="Buscar usuário..."
+              emptyText="Nenhum usuário disponível."
+              maxHeightClass="max-h-[300px]"
+            />
             {novosUsuariosIds.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {novosUsuariosIds.map(id => {

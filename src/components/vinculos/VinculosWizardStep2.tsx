@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Settings } from "lucide-react";
+import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
 
 interface Usuario {
   id: string;
@@ -96,23 +97,14 @@ export function VinculosWizardStep2({
             {alterarUsuario && (
               <div className="ml-8 space-y-3">
                 <Label>Selecione os Usuários</Label>
-                <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-3">
-                  {usuarios.map((usuario) => (
-                    <div key={usuario.id} className="flex items-center space-x-3 p-2 hover:bg-accent/50 rounded">
-                      <Checkbox
-                        id={`usuario-${usuario.id}`}
-                        checked={novosUsuariosIds.includes(usuario.id)}
-                        onCheckedChange={() => handleUsuarioToggle(usuario.id)}
-                      />
-                      <label
-                        htmlFor={`usuario-${usuario.id}`}
-                        className="flex-1 text-sm font-medium cursor-pointer"
-                      >
-                        {usuario.nome}
-                      </label>
-                    </div>
-                  ))}
-                </div>
+                <FilteredCheckboxList
+                  idPrefix="usuario"
+                  items={usuarios.map((u) => ({ id: u.id, label: u.nome, extra: u.email }))}
+                  selected={novosUsuariosIds}
+                  onToggle={(id) => handleUsuarioToggle(id)}
+                  searchPlaceholder="Buscar usuário..."
+                  emptyText="Nenhum usuário disponível."
+                />
                 {novosUsuariosIds.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {novosUsuariosIds.map(id => {
@@ -152,23 +144,14 @@ export function VinculosWizardStep2({
             {alterarSegmento && (
               <div className="ml-8 space-y-3">
                 <Label>Selecione os Segmentos</Label>
-                <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-3">
-                  {segmentos.map((segmento) => (
-                    <div key={segmento.id} className="flex items-center space-x-3 p-2 hover:bg-accent/50 rounded">
-                      <Checkbox
-                        id={`segmento-${segmento.id}`}
-                        checked={novosSegmentosIds.includes(segmento.id)}
-                        onCheckedChange={() => handleSegmentoToggle(segmento.id)}
-                      />
-                      <label
-                        htmlFor={`segmento-${segmento.id}`}
-                        className="flex-1 text-sm font-medium cursor-pointer"
-                      >
-                        {segmento.nome}
-                      </label>
-                    </div>
-                  ))}
-                </div>
+                <FilteredCheckboxList
+                  idPrefix="segmento"
+                  items={segmentos.map((s) => ({ id: s.id, label: s.nome }))}
+                  selected={novosSegmentosIds}
+                  onToggle={(id) => handleSegmentoToggle(id)}
+                  searchPlaceholder="Buscar segmento..."
+                  emptyText="Nenhum segmento disponível."
+                />
                 {novosSegmentosIds.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {novosSegmentosIds.map(id => {
