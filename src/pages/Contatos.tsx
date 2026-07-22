@@ -1533,7 +1533,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       setContactDeps((data as any) || {});
     } catch (e: any) {
       console.error('Erro ao verificar dependências:', e);
-      toast.error('Não foi possível verificar vínculos do contato');
+      const msg = e?.message || e?.details || e?.hint || 'erro desconhecido'; toast.error(`Não foi possível verificar vínculos: ${msg}`);
       setContactDeps({});
     } finally {
       setCheckingDeps(false);
