@@ -11781,6 +11781,189 @@ export type Database = {
           },
         ]
       }
+      policies: {
+        Row: {
+          category_id: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          keywords: string[]
+          ordem: number
+          responsible: string | null
+          status: string
+          summary: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          keywords?: string[]
+          ordem?: number
+          responsible?: string | null
+          status?: string
+          summary?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          keywords?: string[]
+          ordem?: number
+          responsible?: string | null
+          status?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policies_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "policy_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      policy_ai_queries: {
+        Row: {
+          answer: string | null
+          created_at: string
+          id: string
+          policies_used: Json
+          question: string
+          user_id: string
+        }
+        Insert: {
+          answer?: string | null
+          created_at?: string
+          id?: string
+          policies_used?: Json
+          question: string
+          user_id: string
+        }
+        Update: {
+          answer?: string | null
+          created_at?: string
+          id?: string
+          policies_used?: Json
+          question?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      policy_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_url: string
+          id: string
+          mime_type: string | null
+          policy_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          mime_type?: string | null
+          policy_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          mime_type?: string | null
+          policy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_attachments_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      policy_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          ordem: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          ordem?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          ordem?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      policy_chunks: {
+        Row: {
+          chunk_order: number
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          policy_id: string
+          updated_at: string
+        }
+        Insert: {
+          chunk_order?: number
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          policy_id: string
+          updated_at?: string
+        }
+        Update: {
+          chunk_order?: number
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          policy_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_chunks_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ponto_acordos_coletivos: {
         Row: {
           adicional_noturno_percentual: number | null
@@ -23384,6 +23567,16 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      match_policy_chunks: {
+        Args: { match_count?: number; query_embedding: string }
+        Returns: {
+          chunk_order: number
+          content: string
+          id: string
+          policy_id: string
+          similarity: number
+        }[]
       }
       ponto_aprovador_2fa_valido: {
         Args: { _user_id: string }
