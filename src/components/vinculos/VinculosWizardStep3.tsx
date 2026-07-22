@@ -65,7 +65,7 @@ export function VinculosWizardStep3({
               <li>• <strong>{empresasSelecionadas.length}</strong> empresa(s) serão alteradas</li>
               {alterarUsuario && (
                 <li>
-                  • {novosUsuariosIds.length > 0 ? `${novosUsuariosIds.length} usuário(s) vinculado(s)` : "Usuários serão removidos"}
+                  • {novosUsuariosIds.length > 0 ? `${novosUsuariosIds.length} gerente(s) vinculado(s)` : "Gerentes serão removidos"}
                   {novosUsuarios.length > 0 && `: ${novosUsuarios.map(u => u.nome).join(", ")}`}
                 </li>
               )}

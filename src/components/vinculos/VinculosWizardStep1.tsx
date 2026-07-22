@@ -164,7 +164,7 @@ export function VinculosWizardStep1({ empresas, usuarios, segmentos, selectedEmp
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="filter-usuario">Usuário Vinculado</Label>
+              <Label htmlFor="filter-usuario">Gerente Vinculado</Label>
               <Select value={filterUsuario} onValueChange={setFilterUsuario}>
                 <SelectTrigger id="filter-usuario">
                   <SelectValue />

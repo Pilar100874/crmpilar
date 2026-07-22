@@ -57,11 +57,11 @@ export default function VinculosSegmentoProspectUsuario() {
     }
     const jaVinculados = new Set(usuariosDoSegmento(selectedSegmento).map(x => x.user!.id));
     const paraInserir = novoUsuarioIds.filter(uid => !jaVinculados.has(uid));
-    if (paraInserir.length === 0) return toast.info("Usuários já estão vinculados");
+    if (paraInserir.length === 0) return toast.info("Gerentes já estão vinculados");
     const payload = paraInserir.map(uid => ({ segmento_id: selectedSegmento, usuario_id: uid }));
     const { error } = await supabase.from("usuario_segmentos").insert(payload as any);
     if (error) return toast.error(error.message);
-    toast.success(`${paraInserir.length} usuário(s) vinculado(s)`);
+    toast.success(`${paraInserir.length} gerente(s) vinculado(s)`);
     setNovoUsuarioIds([]);
     carregar();
   };
@@ -145,7 +145,7 @@ export default function VinculosSegmentoProspectUsuario() {
                   <h4 className="text-sm font-semibold mb-2">Já vinculados</h4>
                   {usuariosDoSegmento(selectedSegmento).length === 0 ? (
                     <p className="text-sm text-muted-foreground p-3 border rounded-lg bg-muted/30 text-center">
-                      Nenhum usuário vinculado
+                      Nenhum gerente vinculado
                     </p>
                   ) : (
                     <div className="space-y-2">
