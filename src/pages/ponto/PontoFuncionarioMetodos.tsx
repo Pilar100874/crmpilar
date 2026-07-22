@@ -213,18 +213,15 @@ export default function PontoFuncionarioMetodos() {
                 </p>
               </CardHeader>
               <CardContent className="space-y-2">
-                {geos.length === 0 && (
-                  <p className="text-sm text-muted-foreground">Nenhuma área cadastrada. Configure em Antifraude → Áreas permitidas.</p>
-                )}
-                {geos.map((g) => (
-                  <label key={g.id} className="flex items-center gap-3 rounded-md border p-3 cursor-pointer hover:bg-accent">
-                    <Checkbox checked={geoSel.has(g.id)} onCheckedChange={() => toggleGeo(g.id)} />
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">{g.nome}</div>
-                      <div className="text-xs text-muted-foreground">Raio {g.raio_metros}m</div>
-                    </div>
-                  </label>
-                ))}
+                <FilteredCheckboxList
+                  idPrefix="geo"
+                  items={geos.map((g) => ({ id: g.id, label: g.nome, extra: `Raio ${g.raio_metros}m` }))}
+                  selected={Array.from(geoSel)}
+                  onToggle={(id) => toggleGeo(id)}
+                  emptyText="Nenhuma área cadastrada. Configure em Antifraude → Áreas permitidas."
+                  searchPlaceholder="Buscar área..."
+                  maxHeightClass="max-h-[260px]"
+                />
               </CardContent>
             </Card>
 
