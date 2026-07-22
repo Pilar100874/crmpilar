@@ -435,15 +435,17 @@ export default function PoliticasInternas() {
               Nenhuma política encontrada.
             </Card>
           ) : (
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((p) => (
                 <Card
                   key={p.id}
-                  className="p-4 hover:shadow-md transition cursor-pointer flex flex-col gap-2"
+                  className="p-4 hover:shadow-md transition cursor-pointer flex flex-col gap-2 min-h-[180px] overflow-hidden"
                   onClick={() => setReadingPolicy(p)}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold leading-tight">{p.title}</h3>
+                    <h3 className="font-semibold leading-tight line-clamp-2 break-words">
+                      {p.title}
+                    </h3>
                     {p.status === "inativa" && (
                       <Badge variant="secondary" className="shrink-0">
                         Inativa
@@ -451,19 +453,21 @@ export default function PoliticasInternas() {
                     )}
                   </div>
                   {p.policy_categories?.name && (
-                    <Badge variant="outline" className="w-fit">
+                    <Badge variant="outline" className="w-fit max-w-full truncate">
                       {p.policy_categories.name}
                     </Badge>
                   )}
                   {p.summary && (
-                    <p className="text-sm text-muted-foreground line-clamp-3">{p.summary}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-3 break-words">
+                      {p.summary}
+                    </p>
                   )}
                   <div className="text-xs text-muted-foreground mt-auto">
                     Atualizada em {new Date(p.updated_at).toLocaleDateString("pt-BR")}
                   </div>
                   {isAdmin && (
                     <div
-                      className="flex gap-1 pt-2 border-t"
+                      className="flex flex-wrap gap-1 pt-2 border-t"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <Button size="sm" variant="ghost" onClick={() => openEdit(p)}>
@@ -475,7 +479,7 @@ export default function PoliticasInternas() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-destructive"
+                        className="text-destructive ml-auto"
                         onClick={() => setDeletingId(p.id)}
                       >
                         <Trash2 className="w-3 h-3" />
@@ -485,6 +489,7 @@ export default function PoliticasInternas() {
                 </Card>
               ))}
             </div>
+
           )}
         </TabsContent>
 
