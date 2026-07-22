@@ -2719,7 +2719,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                 Cancelar
               </Button>
               <Button onClick={handleSaveContact} className="shadow-sm">
-                {empresaSelecionada ? "Salvar Cliente" : "Salvar Prospect"}
+                Salvar
               </Button>
             </div>
           </TabsContent>
