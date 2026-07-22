@@ -3170,8 +3170,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         open={discardDialogOpen}
         onOpenChange={(open) => {
           setDiscardDialogOpen(open);
-          if (!open && blocker.state === "blocked") {
-            blocker.reset();
+          if (!open) {
+            setPendingTab(null);
+            if (blocker.state === "blocked") blocker.reset();
           }
         }}
       >
@@ -3185,6 +3186,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           <AlertDialogFooter>
             <AlertDialogCancel
               onClick={() => {
+                setPendingTab(null);
                 if (blocker.state === "blocked") blocker.reset();
               }}
             >
@@ -3193,7 +3195,11 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             <AlertDialogAction
               onClick={() => {
                 setDiscardDialogOpen(false);
-                if (blocker.state === "blocked") {
+                if (pendingTab) {
+                  setFormData(JSON.parse(formSnapshot));
+                  setActiveTab(pendingTab);
+                  setPendingTab(null);
+                } else if (blocker.state === "blocked") {
                   setFormSnapshot(JSON.stringify(formData));
                   blocker.proceed();
                 } else {
