@@ -104,6 +104,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
 
   const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string }>>([]);
   const [vendedoresLista, setVendedoresLista] = useState<Array<{ id: string; nome_fantasia: string; nome: string }>>([]);
+  const [transportadorasLista, setTransportadorasLista] = useState<Array<{ id: string; nome_fantasia: string; nome: string }>>([]);
   const [vinculos, setVinculos] = useState<any[]>([]);
   const [segmentos, setSegmentos] = useState<Array<{ id: string; nome: string; is_prospect?: boolean }>>([]);
   
