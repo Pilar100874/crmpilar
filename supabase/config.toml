@@ -368,3 +368,7 @@ verify_jwt = true
 
 [functions.policies-ai-ask]
 verify_jwt = true
+
+[functions.policies-generate-draft]
+verify_jwt = true
+

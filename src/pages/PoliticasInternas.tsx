@@ -105,7 +105,12 @@ export default function PoliticasInternas() {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [question, setQuestion] = useState("");
   const [asking, setAsking] = useState(false);
+  const [aiDraftOpen, setAiDraftOpen] = useState(false);
+  const [aiDraftTema, setAiDraftTema] = useState("");
+  const [aiDraftContexto, setAiDraftContexto] = useState("");
+  const [aiDrafting, setAiDrafting] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     (async () => {
@@ -605,34 +610,32 @@ export default function PoliticasInternas() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           {readingPolicy && (
             <>
-              <DialogHeader>
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <DialogTitle className="text-xl">{readingPolicy.title}</DialogTitle>
-                    <div className="flex flex-wrap items-center gap-2 mt-2 text-sm">
-                      {readingPolicy.policy_categories?.name && (
-                        <Badge variant="outline">{readingPolicy.policy_categories.name}</Badge>
-                      )}
-                      {readingPolicy.responsible && (
-                        <span className="text-muted-foreground">
-                          Responsável: {readingPolicy.responsible}
-                        </span>
-                      )}
-                      <span className="text-muted-foreground">
-                        Atualizada em{" "}
-                        {new Date(readingPolicy.updated_at).toLocaleDateString("pt-BR")}
-                      </span>
-                    </div>
-                  </div>
+              <DialogHeader className="pr-10">
+                <DialogTitle className="text-xl pr-2">{readingPolicy.title}</DialogTitle>
+                <div className="flex flex-wrap items-center gap-2 mt-2 text-sm">
+                  {readingPolicy.policy_categories?.name && (
+                    <Badge variant="outline">{readingPolicy.policy_categories.name}</Badge>
+                  )}
+                  {readingPolicy.responsible && (
+                    <span className="text-muted-foreground">
+                      Responsável: {readingPolicy.responsible}
+                    </span>
+                  )}
+                  <span className="text-muted-foreground">
+                    Atualizada em{" "}
+                    {new Date(readingPolicy.updated_at).toLocaleDateString("pt-BR")}
+                  </span>
                   <Button
                     size="sm"
                     variant="outline"
+                    className="ml-auto"
                     onClick={() => copyLink(readingPolicy.id)}
                   >
                     <Link2 className="w-3 h-3 mr-1" /> Copiar link
                   </Button>
                 </div>
               </DialogHeader>
+
               {readingPolicy.summary && (
                 <p className="text-sm text-muted-foreground border-l-2 border-primary pl-3 italic">
                   {readingPolicy.summary}
@@ -681,6 +684,27 @@ export default function PoliticasInternas() {
 
           {editing && (
             <div className="space-y-3">
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 flex items-start justify-between gap-3">
+                <div className="text-sm">
+                  <div className="font-semibold flex items-center gap-1">
+                    <Sparkles className="w-4 h-4 text-primary" /> Gerar com IA
+                  </div>
+                  <div className="text-muted-foreground text-xs">
+                    Informe o tema e a IA sugere título, resumo, conteúdo e palavras-chave.
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  type="button"
+                  onClick={() => {
+                    setAiDraftTema(editing.title ?? "");
+                    setAiDraftContexto("");
+                    setAiDraftOpen(true);
+                  }}
+                >
+                  <Sparkles className="w-4 h-4 mr-1" /> Sugerir texto
+                </Button>
+              </div>
               <div>
                 <Label>Título *</Label>
                 <Input
@@ -688,6 +712,7 @@ export default function PoliticasInternas() {
                   onChange={(e) => setEditing({ ...editing, title: e.target.value })}
                 />
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Categoria</Label>
@@ -856,6 +881,93 @@ export default function PoliticasInternas() {
         title="Excluir política"
         description="Esta ação não pode ser desfeita. Os anexos e a indexação de IA também serão removidos."
       />
+
+      {/* ==================== AI DRAFT ==================== */}
+      <Dialog open={aiDraftOpen} onOpenChange={(o) => !aiDrafting && setAiDraftOpen(o)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" /> Gerar política com IA
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Tema da política *</Label>
+              <Input
+                value={aiDraftTema}
+                onChange={(e) => setAiDraftTema(e.target.value)}
+                placeholder="Ex: Uso de e-mail corporativo, Home office, Segurança da informação..."
+                disabled={aiDrafting}
+              />
+            </div>
+            <div>
+              <Label>Contexto / instruções extras (opcional)</Label>
+              <Textarea
+                rows={4}
+                value={aiDraftContexto}
+                onChange={(e) => setAiDraftContexto(e.target.value)}
+                placeholder="Ex: aplica-se apenas ao time comercial; deve mencionar LGPD..."
+                disabled={aiDrafting}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              A IA vai preencher título, resumo, conteúdo e palavras-chave. Você pode editar tudo depois.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setAiDraftOpen(false)}
+              disabled={aiDrafting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              disabled={aiDrafting || !aiDraftTema.trim()}
+              onClick={async () => {
+                if (!editing) return;
+                setAiDrafting(true);
+                try {
+                  const catName =
+                    categories.find((c) => c.id === editing.category_id)?.name ?? "";
+                  const { data, error } = await supabase.functions.invoke(
+                    "policies-generate-draft",
+                    {
+                      body: {
+                        tema: aiDraftTema.trim(),
+                        categoria: catName,
+                        responsavel: editing.responsible ?? "",
+                        contexto: aiDraftContexto.trim(),
+                      },
+                    }
+                  );
+                  if (error) throw error;
+                  if (!data || data.error) throw new Error(data?.error ?? "Erro IA");
+                  setEditing({
+                    ...editing,
+                    title: data.title || editing.title || aiDraftTema,
+                    summary: data.summary ?? editing.summary ?? "",
+                    content: data.content ?? editing.content ?? "",
+                    keywords: Array.isArray(data.keywords)
+                      ? data.keywords
+                      : editing.keywords ?? [],
+                  });
+                  toast.success("Rascunho gerado pela IA");
+                  setAiDraftOpen(false);
+                } catch (e: any) {
+                  toast.error("Falha ao gerar: " + (e?.message ?? e));
+                } finally {
+                  setAiDrafting(false);
+                }
+              }}
+            >
+              {aiDrafting && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
+              Gerar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
