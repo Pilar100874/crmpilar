@@ -36,11 +36,17 @@ export function TvPropertiesPanel({ node, onChange, onDelete, onClose }: Props) 
   const [dashboards, setDashboards] = useState<any[]>([]);
   const [devices, setDevices] = useState<any[]>([]);
   const [grupos, setGrupos] = useState<any[]>([]);
+  const [playlists, setPlaylists] = useState<any[]>([]);
+  const [sessoes, setSessoes] = useState<any[]>([]);
+  const [estabelecimentos, setEstabelecimentos] = useState<any[]>([]);
 
   useEffect(() => {
     supabase.from("tv_dashboards").select("id,nome").order("nome").then(({ data }) => setDashboards(data || []));
     supabase.from("tv_devices").select("id,nome").order("nome").then(({ data }) => setDevices(data || []));
     supabase.from("tv_groups").select("id,nome").order("nome").then(({ data }) => setGrupos(data || []));
+    supabase.from("tv_playlists").select("id,nome").order("nome").then(({ data }) => setPlaylists(data || []));
+    supabase.from("whatsapp_sessions").select("id,nome_sessao,status").then(({ data }) => setSessoes(data || []));
+    supabase.from("estabelecimentos").select("id,nome").order("nome").then(({ data }) => setEstabelecimentos(data || []));
   }, []);
 
   if (!node) return null;
