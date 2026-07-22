@@ -80,9 +80,9 @@ export default function VinculosSegmentoProspectUsuario() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Vínculo Segmento Prospect x Usuário</h1>
+        <h1 className="text-3xl font-bold text-foreground">Vínculo Segmento Prospect x Gerente</h1>
         <p className="text-muted-foreground mt-2">
-          Direcione o atendimento de novos prospects para usuários com base no segmento retornado pela IA (Cloud Code / Cursor / ChatGPT).
+          Direcione o atendimento de novos prospects para gerentes com base no segmento retornado pela IA (Cloud Code / Cursor / ChatGPT).
         </p>
       </div>
 
