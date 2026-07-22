@@ -1558,22 +1558,10 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const handleDeleteContact = async (contactId: string) => {
     const contact = contacts.find(c => c.id === contactId);
     if (!contact) return;
-
     setContactToDelete(contact);
     setContactDeps(null);
     setDeleteDialogOpen(true);
-    setCheckingDeps(true);
-    try {
-      const { data, error } = await supabase.rpc('check_customer_dependencies', { p_customer_id: contactId });
-      if (error) throw error;
-      setContactDeps((data as any) || {});
-    } catch (e: any) {
-      console.error('Erro ao verificar dependências:', e);
-      const msg = e?.message || e?.details || e?.hint || 'erro desconhecido'; toast.error(`Não foi possível verificar vínculos: ${msg}`);
-      setContactDeps({});
-    } finally {
-      setCheckingDeps(false);
-    }
+    await refreshContactDeps(contactId);
   };
 
   const confirmDelete = async () => {
