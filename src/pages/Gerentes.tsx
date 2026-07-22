@@ -5,12 +5,10 @@ import { toast } from "@/lib/toast-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserCog, Search, Pencil, Plus, Trash2, Info } from "lucide-react";
+import { UserCog, Search, Pencil, Plus, Trash2, X, Info } from "lucide-react";
 
 interface Gerente {
   id: string;
@@ -170,82 +168,113 @@ export default function Gerentes() {
   const idsEmp = new Set(vinculosEmpresas.map(v => v.empresa_id));
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center">
-          <UserCog className="h-5 w-5" />
-        </div>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">Gerentes</h1>
-          <p className="text-muted-foreground text-sm">
-            Usuários do tipo <strong>Gerente</strong>. Para criar ou editar cadastro, use Configurações → Usuários.
-          </p>
-        </div>
-      </div>
+    <>
+      <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-background to-muted/20">
+        <div className="border-b bg-card/80 backdrop-blur-sm px-3 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-foreground">Gerentes</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                Gerencie os vendedores e empresas sob responsabilidade de cada gerente
+              </p>
+            </div>
+          </div>
 
-      <Card className="p-4 border-info/30 bg-info/5 flex items-start gap-3">
-        <Info className="h-4 w-4 text-primary mt-0.5" />
-        <p className="text-sm text-muted-foreground">
-          Esta tela mostra apenas usuários com tipo <strong>Gerente</strong>. Ajuste o tipo no cadastro de usuário
-          (Configurações → Usuários) para que apareçam aqui. Nesta tela você gerencia os vendedores e empresas
-          sob responsabilidade de cada gerente.
-        </p>
-      </Card>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+            <div className="flex-1 w-full sm:max-w-md">
+              <div className="relative">
+                <Search className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar gerentes..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8 sm:pl-10 h-9 sm:h-10 border-border/40 focus-visible:ring-1 bg-background/50 text-xs sm:text-sm"
+                />
+              </div>
+            </div>
 
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome ou email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Badge variant="secondary">{filtrados.length} gerente(s)</Badge>
-      </div>
-
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Telefone</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtrados.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                  Nenhum gerente encontrado.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filtrados.map(g => (
-                <TableRow key={g.id}>
-                  <TableCell className="font-medium">{g.nome}</TableCell>
-                  <TableCell>{g.email}</TableCell>
-                  <TableCell>{g.telefone || "-"}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => openDetails(g)}>
-                      <Pencil className="h-4 w-4 mr-2" />
-                      Gerenciar vínculos
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+            {searchTerm && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchTerm("")}
+                className="gap-1 sm:gap-2 text-muted-foreground hover:text-foreground text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
+              >
+                <X className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Limpar</span>
+              </Button>
             )}
-          </TableBody>
-        </Table>
-      </Card>
+
+            <div className="ml-auto text-xs sm:text-sm font-light text-muted-foreground whitespace-nowrap">
+              {filtrados.length} {filtrados.length === 1 ? 'gerente' : 'gerentes'}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 space-y-4">
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="p-3 sm:p-4 flex items-start gap-3">
+              <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Esta tela mostra apenas usuários com tipo <strong>Gerente</strong>. Para criar ou editar o cadastro,
+                acesse <strong>Configurações → Usuários</strong>.
+              </p>
+            </CardContent>
+          </Card>
+
+          {filtrados.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center px-4">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-muted/30 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <UserCog className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground/50" />
+                </div>
+                <p className="text-base sm:text-lg font-light text-foreground mb-2">Nenhum gerente encontrado</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Defina o tipo "Gerente" no cadastro de usuários para que apareçam aqui
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto">
+              <table className="w-full min-w-[720px]">
+                <thead className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20 backdrop-blur-sm">
+                  <tr>
+                    <th className="text-center px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-foreground sticky left-0 bg-gradient-to-r from-primary/5 to-primary/10 backdrop-blur-sm border-r border-border/30 z-20" style={{ width: 120 }}>
+                      Ações
+                    </th>
+                    <th className="text-left px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Nome</th>
+                    <th className="text-left px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">E-mail</th>
+                    <th className="text-left px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80">Telefone</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtrados.map(g => (
+                    <tr key={g.id} className="border-b border-border/30 hover:bg-gradient-to-r hover:from-muted/50 hover:to-muted/30 hover:shadow-sm transition-all duration-200 group">
+                      <td className="p-3 sticky left-0 bg-gradient-to-l from-background via-background to-background/95 border-r border-border/30 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.15)] text-center">
+                        <Button variant="ghost" size="sm" onClick={() => openDetails(g)} className="gap-1.5 h-8">
+                          <Pencil className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline text-xs">Vínculos</span>
+                        </Button>
+                      </td>
+                      <td className="px-3 sm:px-4 py-3 text-sm font-medium">{g.nome}</td>
+                      <td className="px-3 sm:px-4 py-3 text-sm text-muted-foreground">{g.email}</td>
+                      <td className="px-3 sm:px-4 py-3 text-sm text-muted-foreground">{g.telefone || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
 
       <Sheet open={showForm} onOpenChange={(o) => { if (!o) { setShowForm(false); setEditing(null); } }}>
         <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
           <SheetHeader>
-            <SheetTitle className="flex items-center gap-2">
-              <UserCog className="h-5 w-5" />
+            <SheetTitle className="flex items-center gap-2 text-xl font-light">
+              <div className="h-9 w-9 rounded-lg bg-primary/15 text-primary flex items-center justify-center">
+                <UserCog className="h-5 w-5" />
+              </div>
               {editing?.nome}
             </SheetTitle>
           </SheetHeader>
@@ -370,6 +399,6 @@ export default function Gerentes() {
           </Tabs>
         </SheetContent>
       </Sheet>
-    </div>
+    </>
   );
 }
