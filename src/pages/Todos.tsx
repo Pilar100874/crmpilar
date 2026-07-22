@@ -902,7 +902,7 @@ export default function Todos() {
                                 empresa: { label: 'Empresa', variant: 'outline' },
                                 vendedor: { label: 'Vendedor', variant: 'default' },
                                 transportadora: { label: 'Transportadora', variant: 'secondary' },
-                                usuario: { label: 'Usuário', variant: 'outline' },
+                                usuario: { label: 'Gerente', variant: 'outline' },
                               };
                               return (
                                 <td key={col.id} className="p-3">
