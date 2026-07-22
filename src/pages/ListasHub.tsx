@@ -66,6 +66,7 @@ const sections: TabSection[] = [
       { id: 'empresas', label: 'Empresas', icon: Building2, description: 'Gestão de empresas' },
       { id: 'vendedores', label: 'Vendedores', icon: UserCog, description: 'Gestão de vendedores' },
       { id: 'transportadoras', label: 'Transportadoras', icon: Truck, description: 'Gestão de transportadoras' },
+      { id: 'gerentes', label: 'Gerentes', icon: UserCog, description: 'Usuários gerentes e seus vendedores/empresas' },
       { id: 'todos', label: 'Todos', icon: Users, description: 'Visualização de todos os registros' },
     ],
   },
