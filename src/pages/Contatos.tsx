@@ -2266,7 +2266,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
             </div>
           ) : (
             <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto">
-              <table className="w-full min-w-[800px]">
+              <table className="w-full table-fixed">
+
                 <thead className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20 backdrop-blur-sm">
                   <tr>
                     {tableColumns.filter(col => col.visible).map((column, index) => (
@@ -2275,7 +2276,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                          className={`text-left px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80 relative ${
                           index === 0 && column.id === 'actions' ? 'sticky left-0 bg-gradient-to-r from-primary/5 to-primary/10 backdrop-blur-sm border-r border-border/30 z-20 text-center text-foreground' : index === 0 ? 'sticky left-0 bg-gradient-to-r from-muted/40 to-muted/20 border-r border-border/40 z-20' : ''
                         }`}
-                        style={{ width: column.width, minWidth: column.width }}
+                        style={{ width: column.width }}
                       >
                        <div className="flex items-center justify-between gap-2 pr-4">
                           <span>{column.label}</span>

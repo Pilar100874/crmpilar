@@ -1890,7 +1890,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </div>
           ) : (
             <div className="bg-card rounded-2xl border border-border/40 shadow-lg overflow-x-auto">
-              <table className="w-full min-w-[800px]">
+              <table className="w-full table-fixed">
+
                 <thead className="border-b border-border/40 bg-gradient-to-r from-muted/40 to-muted/20 backdrop-blur-sm">
                   <tr>
                     {tableColumns.filter(col => col.visible).map((column, index) => (
@@ -1899,7 +1900,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                          className={`text-left px-3 sm:px-4 py-2.5 sm:py-3.5 font-semibold text-xs uppercase tracking-wider text-muted-foreground/80 relative ${
                           index === 0 && column.id === 'actions' ? 'sticky left-0 bg-gradient-to-r from-primary/5 to-primary/10 backdrop-blur-sm border-r border-border/30 z-20 text-center text-foreground' : index === 0 ? 'sticky left-0 bg-gradient-to-r from-muted/40 to-muted/20 border-r border-border/40 z-20' : ''
                         }`}
-                        style={{ width: column.width, minWidth: column.width }}
+                        style={{ width: column.width }}
                       >
                         <div className="flex items-center justify-between gap-2 pr-4">
                           <span>{column.label}</span>
@@ -2139,7 +2140,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full max-w-6xl mx-auto">
           <div className="bg-card border border-border/60 rounded-xl shadow-sm shadow-slate-200/40 dark:shadow-none overflow-hidden">
             <div className="px-2 sm:px-6 border-b border-border/60 bg-card">
-              <TabsList className="bg-transparent p-0 h-auto gap-1 sm:gap-6 rounded-none w-full justify-start overflow-x-auto no-scrollbar">
+              <TabsList className="bg-transparent p-0 h-auto gap-1 sm:gap-6 rounded-none w-full justify-start flex-wrap">
                 <TabsTrigger
                   value="empresa"
                   className="gap-2 py-3 sm:py-4 px-2 sm:px-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground font-medium text-sm whitespace-nowrap"
