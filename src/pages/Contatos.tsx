@@ -3004,7 +3004,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
 
                         {/* Lista de usuários vinculados */}
                         <div>
-                          <h4 className="text-sm font-semibold mb-3">Usuários Vinculados</h4>
+                          <h4 className="text-sm font-semibold mb-3">Gerentes Vinculados</h4>
                           {vinculosUsuarios.length > 0 ? (
                             <div className="space-y-2">
                               {vinculosUsuarios.map((vinculo) => {
