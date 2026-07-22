@@ -3177,6 +3177,44 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Dialog de restauração de rascunho */}
+      <AlertDialog
+        open={!!draftRestore}
+        onOpenChange={(open) => { if (!open) setDraftRestore(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Recuperar rascunho não salvo?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Encontramos alterações não salvas deste cadastro
+              {draftRestore?.savedAt ? ` de ${new Date(draftRestore.savedAt).toLocaleString('pt-BR')}` : ''}.
+              Deseja restaurá-las?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                clearDraft();
+                setDraftRestore(null);
+              }}
+            >
+              Descartar rascunho
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (draftRestore?.data) {
+                  setFormData(draftRestore.data);
+                }
+                setDraftRestore(null);
+              }}
+            >
+              Restaurar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
       {/* Dialog de CNPJ/CPF duplicado */}
       <AlertDialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
         <AlertDialogContent>
