@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserCog, Search, Pencil, Plus, Trash2, X, Info } from "lucide-react";
 import { CadastroHeader } from "@/components/cadastros/CadastroHeader";
+import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
 
 interface Gerente {
   id: string;
@@ -207,26 +208,23 @@ export default function Gerentes() {
               <Card className="border-primary/20 bg-primary/5">
                 <CardContent className="p-4 space-y-3">
                   <h4 className="text-sm font-semibold">Adicionar vendedores</h4>
-                  <div className="space-y-1 max-h-[260px] overflow-y-auto border rounded-lg p-2 bg-background">
-                    {vendedoresLista.filter(v => !idsVend.has(v.id)).length === 0 && (
-                      <p className="text-xs text-muted-foreground p-2">Todos os vendedores já foram vinculados.</p>
-                    )}
-                    {vendedoresLista.filter(v => !idsVend.has(v.id)).map(v => (
-                      <div key={v.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
-                        <Checkbox
-                          id={`v-${v.id}`}
-                          checked={novosVendedores.includes(v.id)}
-                          onCheckedChange={(c) => {
-                            if (c) setNovosVendedores([...novosVendedores, v.id]);
-                            else setNovosVendedores(novosVendedores.filter(x => x !== v.id));
-                          }}
-                        />
-                        <label htmlFor={`v-${v.id}`} className="text-sm cursor-pointer flex-1">
-                          {v.nome_fantasia || v.nome}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
+                  <FilteredCheckboxList
+                    idPrefix="v"
+                    items={vendedoresLista
+                      .filter((v) => !idsVend.has(v.id))
+                      .map((v) => ({ id: v.id, label: v.nome_fantasia || v.nome }))}
+                    selected={novosVendedores}
+                    onToggle={(id, checked) =>
+                      setNovosVendedores(
+                        checked
+                          ? [...novosVendedores, id]
+                          : novosVendedores.filter((x) => x !== id)
+                      )
+                    }
+                    searchPlaceholder="Buscar vendedor..."
+                    emptyText="Todos os vendedores já foram vinculados."
+                    maxHeightClass="max-h-[260px]"
+                  />
                   <Button size="sm" className="w-full" onClick={adicionarVendedores} disabled={novosVendedores.length === 0}>
                     <Plus className="h-4 w-4 mr-2" /> Vincular selecionados
                   </Button>
@@ -261,27 +259,27 @@ export default function Gerentes() {
               <Card className="border-primary/20 bg-primary/5">
                 <CardContent className="p-4 space-y-3">
                   <h4 className="text-sm font-semibold">Adicionar empresas</h4>
-                  <div className="space-y-1 max-h-[260px] overflow-y-auto border rounded-lg p-2 bg-background">
-                    {empresasLista.filter(e => !idsEmp.has(e.id)).length === 0 && (
-                      <p className="text-xs text-muted-foreground p-2">Nenhuma empresa disponível.</p>
-                    )}
-                    {empresasLista.filter(e => !idsEmp.has(e.id)).map(e => (
-                      <div key={e.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
-                        <Checkbox
-                          id={`e-${e.id}`}
-                          checked={novasEmpresas.includes(e.id)}
-                          onCheckedChange={(c) => {
-                            if (c) setNovasEmpresas([...novasEmpresas, e.id]);
-                            else setNovasEmpresas(novasEmpresas.filter(x => x !== e.id));
-                          }}
-                        />
-                        <label htmlFor={`e-${e.id}`} className="text-sm cursor-pointer flex-1">
-                          {e.nome_fantasia || e.nome}
-                          {e.cnpj && <span className="text-xs text-muted-foreground ml-2">{e.cnpj}</span>}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
+                  <FilteredCheckboxList
+                    idPrefix="e"
+                    items={empresasLista
+                      .filter((e) => !idsEmp.has(e.id))
+                      .map((e) => ({
+                        id: e.id,
+                        label: e.nome_fantasia || e.nome,
+                        extra: e.cnpj || undefined,
+                      }))}
+                    selected={novasEmpresas}
+                    onToggle={(id, checked) =>
+                      setNovasEmpresas(
+                        checked
+                          ? [...novasEmpresas, id]
+                          : novasEmpresas.filter((x) => x !== id)
+                      )
+                    }
+                    searchPlaceholder="Buscar empresa por nome ou CNPJ..."
+                    emptyText="Nenhuma empresa disponível."
+                    maxHeightClass="max-h-[260px]"
+                  />
                   <Button size="sm" className="w-full" onClick={adicionarEmpresas} disabled={novasEmpresas.length === 0}>
                     <Plus className="h-4 w-4 mr-2" /> Vincular selecionadas
                   </Button>
