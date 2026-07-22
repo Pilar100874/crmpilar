@@ -750,7 +750,7 @@ export default function Todos() {
               value="usuarios"
               className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent px-0 font-medium"
             >
-              Usuários ({filteredUsuarios.length})
+              Gerentes ({filteredUsuarios.length})
             </TabsTrigger>
           </TabsList>
         </div>
