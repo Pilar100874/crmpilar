@@ -2904,7 +2904,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             <Button variant="secondary" onClick={() => {
               if (duplicateEmpresa) {
                 const d: any = duplicateEmpresa;
-                setFormData(prev => (trunc({
+                setFormData(prev => ({
                   ...prev,
                   tipo_cliente: d.tipo_cliente || prev.tipo_cliente,
                   company_name: d.nome || '',
