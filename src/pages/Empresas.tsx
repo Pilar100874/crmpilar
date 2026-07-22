@@ -3013,7 +3013,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           )}
             </Tabs>
           </TabsContent>
+          </div>
         </Tabs>
+
         </div>
         </div>
       )}
