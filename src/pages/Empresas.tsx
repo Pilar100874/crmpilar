@@ -99,6 +99,8 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   // Estados para CNPJ/CPF duplicado
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [duplicateEmpresa, setDuplicateEmpresa] = useState<Empresa | null>(null);
+  const [duplicateSameVariant, setDuplicateSameVariant] = useState(false);
+
 
   const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string }>>([]);
   const [vendedoresLista, setVendedoresLista] = useState<Array<{ id: string; nome_fantasia: string; nome: string }>>([]);
@@ -702,35 +704,34 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       return;
     }
     
-    let query = supabase
+    // Busca em TODOS os cadastros (empresas, vendedores, transportadoras) para agilizar preenchimento
+    const { data, error } = await supabase
       .from('empresas')
       .select('*')
       .eq('estabelecimento_id', estabelecimentoId);
-
-    // Restringir duplicidade apenas ao mesmo tipo de cadastro
-    if (variant === 'vendedor') {
-      query = query.eq('tipo_cliente', 'vendedor');
-    } else if (variant === 'transportadora') {
-      query = query.eq('tipo_cliente', 'transportadora');
-    } else {
-      query = query.not('tipo_cliente', 'in', '("vendedor","transportadora")');
-    }
-
-    const { data, error } = await query;
 
     if (error) {
       console.error('Erro ao verificar CNPJ/CPF:', error);
       return;
     }
-    
-    // Comparar valores limpos
-    const duplicate = data?.find(emp => emp.cnpj?.replace(/\D/g, '') === cleanValue);
 
-    
-    if (duplicate) {
-      setDuplicateEmpresa(duplicate);
-      setDuplicateDialogOpen(true);
-    }
+    const matches = (data || []).filter(emp => emp.cnpj?.replace(/\D/g, '') === cleanValue);
+    if (matches.length === 0) return;
+
+    const isSameVariant = (emp: any) => {
+      const tc = emp.tipo_cliente;
+      if (variant === 'vendedor') return tc === 'vendedor';
+      if (variant === 'transportadora') return tc === 'transportadora';
+      return tc !== 'vendedor' && tc !== 'transportadora';
+    };
+
+    // Se já existe no mesmo tipo → bloqueia. Caso contrário → oferece preenchimento a partir de outro tipo.
+    const sameVariant = matches.find(isSameVariant);
+    const duplicate = sameVariant || matches[0];
+    setDuplicateEmpresa(duplicate);
+    setDuplicateSameVariant(!!sameVariant);
+    setDuplicateDialogOpen(true);
+
   };
 
   const handleCEPLookup = async (cep: string) => {
@@ -2899,48 +2900,68 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       <AlertDialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>CNPJ/CPF já cadastrado</AlertDialogTitle>
+            <AlertDialogTitle>
+              {duplicateSameVariant ? 'CNPJ/CPF já cadastrado' : 'CNPJ/CPF encontrado em outro cadastro'}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Este CNPJ/CPF já pertence a <strong>{duplicateEmpresa?.nome_fantasia || duplicateEmpresa?.nome}</strong>.
-              {"\n\n"}
-              Deseja criar um novo cadastro já preenchido com os dados dele?
+              {duplicateSameVariant ? (
+                <>
+                  Este CNPJ/CPF já está cadastrado como <strong>{entityConfig.singular}</strong> em <strong>{duplicateEmpresa?.nome_fantasia || duplicateEmpresa?.nome}</strong>.
+                  {"\n\n"}
+                  Não é permitido duplicar dentro do mesmo tipo de cadastro. Limpe o campo para continuar.
+                </>
+              ) : (
+                <>
+                  Este CNPJ/CPF já pertence a <strong>{duplicateEmpresa?.nome_fantasia || duplicateEmpresa?.nome}</strong>
+                  {duplicateEmpresa && (duplicateEmpresa as any).tipo_cliente ? <> (cadastrado como <strong>{(duplicateEmpresa as any).tipo_cliente}</strong>)</> : null}.
+                  {"\n\n"}
+                  Deseja criar um novo cadastro já preenchido com os dados dele?
+                </>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-2">
             <AlertDialogCancel onClick={() => {
               setDuplicateDialogOpen(false);
               setDuplicateEmpresa(null);
-            }}>
-              Cancelar
-            </AlertDialogCancel>
-            <Button variant="secondary" onClick={() => {
-              if (duplicateEmpresa) {
-                const d: any = duplicateEmpresa;
-                setFormData(prev => ({
-                  ...prev,
-                  tipo_cliente: d.tipo_cliente || prev.tipo_cliente,
-                  company_name: d.nome || '',
-                  company_fantasia: d.nome_fantasia || '',
-                  cep: d.cep ? maskCEP(d.cep) : '',
-                  address: d.endereco || '',
-                  city: d.cidade || '',
-                  neighborhood: d.bairro || '',
-                  state: d.estado || '',
-                  telefone: d.telefone ? maskWhatsApp(d.telefone) : '',
-                  whatsapp: d.whatsapp ? maskWhatsApp(d.whatsapp) : '',
-                  email: d.email || '',
-                  site: d.site || '',
-                }));
-                toast.success('Dados preenchidos a partir do cadastro existente');
+              setDuplicateSameVariant(false);
+              if (duplicateSameVariant) {
+                setFormData(prev => ({ ...prev, cpf_cnpj: '' }));
               }
-              setDuplicateDialogOpen(false);
-              setDuplicateEmpresa(null);
             }}>
-              Preencher e criar novo
-            </Button>
+              {duplicateSameVariant ? 'Fechar' : 'Cancelar'}
+            </AlertDialogCancel>
+            {!duplicateSameVariant && (
+              <Button variant="secondary" onClick={() => {
+                if (duplicateEmpresa) {
+                  const d: any = duplicateEmpresa;
+                  setFormData(prev => ({
+                    ...prev,
+                    company_name: d.nome || '',
+                    company_fantasia: d.nome_fantasia || '',
+                    cep: d.cep ? maskCEP(d.cep) : '',
+                    address: d.endereco || '',
+                    city: d.cidade || '',
+                    neighborhood: d.bairro || '',
+                    state: d.estado || '',
+                    telefone: d.telefone ? maskWhatsApp(d.telefone) : '',
+                    whatsapp: d.whatsapp ? maskWhatsApp(d.whatsapp) : '',
+                    email: d.email || '',
+                    site: d.site || '',
+                  }));
+                  toast.success('Dados preenchidos a partir do cadastro existente');
+                }
+                setDuplicateDialogOpen(false);
+                setDuplicateEmpresa(null);
+                setDuplicateSameVariant(false);
+              }}>
+                Preencher e criar novo
+              </Button>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
 
 
       {/* Dialog de Importação via API */}
