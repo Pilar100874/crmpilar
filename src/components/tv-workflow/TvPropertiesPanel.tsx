@@ -429,8 +429,33 @@ export function TvPropertiesPanel({ node, onChange, onDelete, onClose }: Props) 
                 <Input type="number" min={1} max={300} value={cfg.duracao_segundos ?? 10}
                   onChange={(e) => setCfg({ duracao_segundos: parseInt(e.target.value) || 10 })} />
               </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Cor fundo</Label>
+                  <Input type="color" value={cfg.estilo?.bg || "#0f172a"}
+                    onChange={(e) => setCfg({ estilo: { ...cfg.estilo, bg: e.target.value } })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Cor texto</Label>
+                  <Input type="color" value={cfg.estilo?.fg || "#ffffff"}
+                    onChange={(e) => setCfg({ estilo: { ...cfg.estilo, fg: e.target.value } })} />
+                </div>
+              </div>
+              <label className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 cursor-pointer">
+                <div>
+                  <div className="text-xs font-medium">Piscar para chamar atenção</div>
+                  <div className="text-[10px] text-muted-foreground">Popup pisca enquanto estiver visível</div>
+                </div>
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={!!cfg.estilo?.piscar}
+                  onChange={(e) => setCfg({ estilo: { ...cfg.estilo, piscar: e.target.checked } })}
+                />
+              </label>
             </div>
           )}
+
 
           {nodeData.type === "acao_imagem" && (
             <div className="space-y-2">
