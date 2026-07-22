@@ -2801,7 +2801,77 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               </TabsList>
 
           <TabsContent value="empresa" className="p-6">
-            {/* Lista de Empresas Vinculadas */}
+            {/* Busca e Seleção de Empresa (topo) */}
+            {!criarNovaEmpresa && (
+              <Card className="p-4 mb-4">
+                <Label className="text-xs">Vincular Empresa</Label>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    placeholder="Buscar por nome, CNPJ..."
+                    value={buscaEmpresa}
+                    className="h-9 text-sm"
+                    onChange={(e) => {
+                      const valor = e.target.value;
+                      setBuscaEmpresa(valor);
+                      const termo = valor.trim().toLowerCase();
+                      const base = empresas.filter(emp => !empresasVinculadas.some(ev => ev.id === emp.id));
+                      if (!termo) {
+                        setEmpresasFiltradas(base);
+                      } else {
+                        const filtradas = base.filter(emp =>
+                          emp.nome_fantasia?.toLowerCase().includes(termo) ||
+                          emp.nome?.toLowerCase().includes(termo) ||
+                          emp.cnpj?.includes(termo.replace(/\D/g, '')) ||
+                          emp.custom_fields?.cpf_cnpj?.includes(termo.replace(/\D/g, ''))
+                        );
+                        setEmpresasFiltradas(filtradas);
+                      }
+                    }}
+                    onBlur={async () => {
+                      const clean = buscaEmpresa.replace(/\D/g, '');
+                      if ((clean.length === 11 || clean.length === 14) && empresasFiltradas.length === 0) {
+                        if (clean.length === 14) {
+                          await handleCNPJLookup(buscaEmpresa);
+                        }
+                      }
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setCriarNovaEmpresa(true);
+                    }}
+                  >
+                    + Nova
+                  </Button>
+                </div>
+
+                {/* Lista de empresas filtradas */}
+                {empresasFiltradas.length > 0 && (
+                  <div className="border rounded-md max-h-[160px] overflow-y-auto mt-2">
+                    {empresasFiltradas.map((empresa) => (
+                      <button
+                        key={empresa.id}
+                        className="w-full text-left p-2 hover:bg-accent transition-colors border-b last:border-b-0"
+                        onClick={() => {
+                          handleAddEmpresaVinculada(empresa.id);
+                          setEmpresasFiltradas([]);
+                          setBuscaEmpresa("");
+                        }}
+                      >
+                        <div className="font-medium text-sm">{empresa.nome_fantasia}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {empresa.cnpj || empresa.custom_fields?.cpf_cnpj || 'Sem documento'}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            )}
+
+            {/* Lista de Empresas Vinculadas (abaixo) */}
             {empresasVinculadas.length > 0 && (
               <Card className="p-4 mb-4">
                 <h3 className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
@@ -2879,75 +2949,6 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               </Card>
             )}
 
-            {/* Busca e Seleção de Empresa */}
-            {!criarNovaEmpresa && (
-              <Card className="p-4 mb-4">
-                <Label className="text-xs">Vincular Empresa</Label>
-                <div className="flex gap-2 mt-2">
-                  <Input
-                    placeholder="Buscar por nome, CNPJ..."
-                    value={buscaEmpresa}
-                    className="h-9 text-sm"
-                    onChange={(e) => {
-                      const valor = e.target.value;
-                      setBuscaEmpresa(valor);
-                      const termo = valor.trim().toLowerCase();
-                      const base = empresas.filter(emp => !empresasVinculadas.some(ev => ev.id === emp.id));
-                      if (!termo) {
-                        setEmpresasFiltradas(base);
-                      } else {
-                        const filtradas = base.filter(emp =>
-                          emp.nome_fantasia?.toLowerCase().includes(termo) ||
-                          emp.nome?.toLowerCase().includes(termo) ||
-                          emp.cnpj?.includes(termo.replace(/\D/g, '')) ||
-                          emp.custom_fields?.cpf_cnpj?.includes(termo.replace(/\D/g, ''))
-                        );
-                        setEmpresasFiltradas(filtradas);
-                      }
-                    }}
-                    onBlur={async () => {
-                      const clean = buscaEmpresa.replace(/\D/g, '');
-                      if ((clean.length === 11 || clean.length === 14) && empresasFiltradas.length === 0) {
-                        if (clean.length === 14) {
-                          await handleCNPJLookup(buscaEmpresa);
-                        }
-                      }
-                    }}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setCriarNovaEmpresa(true);
-                    }}
-                  >
-                    + Nova
-                  </Button>
-                </div>
-
-                {/* Lista de empresas filtradas */}
-                {empresasFiltradas.length > 0 && (
-                  <div className="border rounded-md max-h-[160px] overflow-y-auto mt-2">
-                    {empresasFiltradas.map((empresa) => (
-                      <button
-                        key={empresa.id}
-                        className="w-full text-left p-2 hover:bg-accent transition-colors border-b last:border-b-0"
-                        onClick={() => {
-                          handleAddEmpresaVinculada(empresa.id);
-                          setEmpresasFiltradas([]);
-                          setBuscaEmpresa("");
-                        }}
-                      >
-                        <div className="font-medium text-sm">{empresa.nome_fantasia}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {empresa.cnpj || empresa.custom_fields?.cpf_cnpj || 'Sem documento'}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </Card>
-            )}
 
             {/* Formulário de Nova Empresa - igual à tela de Empresas */}
             {criarNovaEmpresa && (
