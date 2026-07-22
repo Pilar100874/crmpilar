@@ -684,6 +684,27 @@ export default function PoliticasInternas() {
 
           {editing && (
             <div className="space-y-3">
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 flex items-start justify-between gap-3">
+                <div className="text-sm">
+                  <div className="font-semibold flex items-center gap-1">
+                    <Sparkles className="w-4 h-4 text-primary" /> Gerar com IA
+                  </div>
+                  <div className="text-muted-foreground text-xs">
+                    Informe o tema e a IA sugere título, resumo, conteúdo e palavras-chave.
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  type="button"
+                  onClick={() => {
+                    setAiDraftTema(editing.title ?? "");
+                    setAiDraftContexto("");
+                    setAiDraftOpen(true);
+                  }}
+                >
+                  <Sparkles className="w-4 h-4 mr-1" /> Sugerir texto
+                </Button>
+              </div>
               <div>
                 <Label>Título *</Label>
                 <Input
@@ -691,6 +712,7 @@ export default function PoliticasInternas() {
                   onChange={(e) => setEditing({ ...editing, title: e.target.value })}
                 />
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Categoria</Label>
