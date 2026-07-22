@@ -508,6 +508,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         .from('usuarios')
         .select('id, nome')
         .eq('estabelecimento_id', estabId)
+        .eq('tipo', 'gerente')
         .order('nome');
 
       if (!usuariosError) {
@@ -2959,7 +2960,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                       {/* Adicionar novos usuários */}
                       <Card className="border-primary/20 bg-primary/5">
                           <CardContent className="p-4 space-y-4">
-                            <h4 className="text-sm font-semibold">Adicionar Usuários</h4>
+                            <h4 className="text-sm font-semibold">Adicionar Gerentes</h4>
                             
                             <div className="space-y-2">
                               <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
@@ -2987,7 +2988,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                             <Button 
                               onClick={async () => {
                                 if (novosUsuariosVinculo.length === 0) {
-                                  toast.error("Selecione pelo menos um usuário");
+                                  toast.error("Selecione pelo menos um gerente");
                                   return;
                                 }
                                 await handleAdicionarVinculo();
@@ -2996,14 +2997,14 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                               size="sm"
                             >
                               <Plus className="w-4 h-4 mr-2" />
-                              Adicionar Usuários Selecionados
+                              Adicionar Gerentes Selecionados
                             </Button>
                           </CardContent>
                         </Card>
 
                         {/* Lista de usuários vinculados */}
                         <div>
-                          <h4 className="text-sm font-semibold mb-3">Usuários Vinculados</h4>
+                          <h4 className="text-sm font-semibold mb-3">Gerentes Vinculados</h4>
                           {vinculosUsuarios.length > 0 ? (
                             <div className="space-y-2">
                               {vinculosUsuarios.map((vinculo) => {
@@ -3013,7 +3014,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                                   <div key={vinculo.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors">
                                     <div className="flex-1">
                                       <p className="text-sm font-medium">
-                                        {usuario?.nome || <span className="text-muted-foreground">Usuário não encontrado</span>}
+                                        {usuario?.nome || <span className="text-muted-foreground">Gerente não encontrado</span>}
                                       </p>
                                     </div>
                                     <Button
