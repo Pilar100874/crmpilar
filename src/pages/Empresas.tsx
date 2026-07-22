@@ -782,6 +782,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   };
 
   const closeForm = () => {
+    clearDraft();
     setShowForm(false);
     setFormSnapshot("{}");
   };
