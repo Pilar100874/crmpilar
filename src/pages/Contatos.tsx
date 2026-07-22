@@ -2801,19 +2801,18 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                     onChange={(e) => {
                       const valor = e.target.value;
                       setBuscaEmpresa(valor);
-                      
-                      if (valor.trim()) {
-                        const termo = valor.toLowerCase();
-                        const filtradas = empresas.filter(emp => 
-                          !empresasVinculadas.some(ev => ev.id === emp.id) &&
-                          (emp.nome_fantasia?.toLowerCase().includes(termo) ||
+                      const termo = valor.trim().toLowerCase();
+                      const base = empresas.filter(emp => !empresasVinculadas.some(ev => ev.id === emp.id));
+                      if (!termo) {
+                        setEmpresasFiltradas(base);
+                      } else {
+                        const filtradas = base.filter(emp =>
+                          emp.nome_fantasia?.toLowerCase().includes(termo) ||
                           emp.nome?.toLowerCase().includes(termo) ||
                           emp.cnpj?.includes(termo.replace(/\D/g, '')) ||
-                          emp.custom_fields?.cpf_cnpj?.includes(termo.replace(/\D/g, '')))
+                          emp.custom_fields?.cpf_cnpj?.includes(termo.replace(/\D/g, ''))
                         );
                         setEmpresasFiltradas(filtradas);
-                      } else {
-                        setEmpresasFiltradas([]);
                       }
                     }}
                     onBlur={async () => {
