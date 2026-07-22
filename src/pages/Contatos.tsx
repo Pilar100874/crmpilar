@@ -1547,6 +1547,10 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
 
       await loadContacts();
 
+      clearDraft();
+      setFormSnapshot("{}");
+      setActiveTab("contato");
+      setPendingTab(null);
       setShowForm(false);
       setFormData({});
       setEditingContact(null);
