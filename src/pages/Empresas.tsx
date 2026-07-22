@@ -169,6 +169,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("empresa");
   const [pendingTab, setPendingTab] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<null | (() => void)>(null);
   const isFormDirty = JSON.stringify(formData) !== formSnapshot;
 
   // Autosave de rascunho (localStorage)
