@@ -2277,6 +2277,7 @@ export type Database = {
       }
       canais_atendimento: {
         Row: {
+          ativo: boolean
           created_at: string | null
           estabelecimento_id: string
           id: string
@@ -2286,6 +2287,7 @@ export type Database = {
           whatsapp_enabled: boolean | null
         }
         Insert: {
+          ativo?: boolean
           created_at?: string | null
           estabelecimento_id: string
           id?: string
@@ -2295,6 +2297,7 @@ export type Database = {
           whatsapp_enabled?: boolean | null
         }
         Update: {
+          ativo?: boolean
           created_at?: string | null
           estabelecimento_id?: string
           id?: string
@@ -6014,6 +6017,7 @@ export type Database = {
       }
       empresas: {
         Row: {
+          ativo: boolean
           bairro: string | null
           cep: string | null
           cidade: string | null
@@ -6059,6 +6063,7 @@ export type Database = {
           whatsapps_vinculados: string[] | null
         }
         Insert: {
+          ativo?: boolean
           bairro?: string | null
           cep?: string | null
           cidade?: string | null
@@ -6104,6 +6109,7 @@ export type Database = {
           whatsapps_vinculados?: string[] | null
         }
         Update: {
+          ativo?: boolean
           bairro?: string | null
           cep?: string | null
           cidade?: string | null
@@ -16416,6 +16422,7 @@ export type Database = {
       }
       produto_grupos: {
         Row: {
+          ativo: boolean
           created_at: string | null
           descritivo_catalogo: string | null
           estabelecimento_id: string | null
@@ -16425,6 +16432,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          ativo?: boolean
           created_at?: string | null
           descritivo_catalogo?: string | null
           estabelecimento_id?: string | null
@@ -16434,6 +16442,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          ativo?: boolean
           created_at?: string | null
           descritivo_catalogo?: string | null
           estabelecimento_id?: string | null
@@ -17827,6 +17836,7 @@ export type Database = {
       }
       quick_replies: {
         Row: {
+          ativo: boolean
           categoria: string | null
           content: string
           created_at: string | null
@@ -17840,6 +17850,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          ativo?: boolean
           categoria?: string | null
           content: string
           created_at?: string | null
@@ -17853,6 +17864,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          ativo?: boolean
           categoria?: string | null
           content?: string
           created_at?: string | null
@@ -18960,6 +18972,7 @@ export type Database = {
       }
       skills: {
         Row: {
+          ativo: boolean
           cor: string | null
           created_at: string | null
           descricao: string | null
@@ -18968,6 +18981,7 @@ export type Database = {
           nome: string
         }
         Insert: {
+          ativo?: boolean
           cor?: string | null
           created_at?: string | null
           descricao?: string | null
@@ -18976,6 +18990,7 @@ export type Database = {
           nome: string
         }
         Update: {
+          ativo?: boolean
           cor?: string | null
           created_at?: string | null
           descricao?: string | null
@@ -21448,6 +21463,7 @@ export type Database = {
       }
       usuarios: {
         Row: {
+          ativo: boolean
           auth_user_id: string | null
           created_at: string | null
           email: string
@@ -21477,6 +21493,7 @@ export type Database = {
           whatsapp_numero_id: string | null
         }
         Insert: {
+          ativo?: boolean
           auth_user_id?: string | null
           created_at?: string | null
           email: string
@@ -21506,6 +21523,7 @@ export type Database = {
           whatsapp_numero_id?: string | null
         }
         Update: {
+          ativo?: boolean
           auth_user_id?: string | null
           created_at?: string | null
           email?: string
@@ -23233,6 +23251,10 @@ export type Database = {
         Args: { p_customer_id: string }
         Returns: Json
       }
+      check_entity_dependencies: {
+        Args: { p_entity: string; p_id: string }
+        Returns: Json
+      }
       cleanup_old_agent_chat_sessions: { Args: never; Returns: undefined }
       current_user_is_host: { Args: { host_user_id: string }; Returns: boolean }
       delete_customer_cascade: {
@@ -23271,6 +23293,10 @@ export type Database = {
         Returns: boolean
       }
       inactivate_customer: { Args: { p_customer_id: string }; Returns: boolean }
+      inactivate_entity: {
+        Args: { p_entity: string; p_id: string }
+        Returns: boolean
+      }
       is_screen_share_host: { Args: { session_id: string }; Returns: boolean }
       is_screen_share_participant: {
         Args: { session_id: string }

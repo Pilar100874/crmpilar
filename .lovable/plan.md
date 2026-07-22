@@ -1,101 +1,72 @@
 ## Objetivo
 
-Trocar o CRUD de formulário atual da aba **Workflows** (Gerenciador de Telas Remotas) por um **editor visual em blocos** com o mesmo look & feel do **BotBuilder**: paleta lateral de blocos arrastáveis, canvas ReactFlow com fundo pontilhado, painel de propriedades à direita, MiniMap, botão de salvar/testar e simulador.
+Padronizar em todo o sistema a regra de exclusão dos cadastros:
 
----
+1. Antes de excluir, verificar automaticamente onde o registro está sendo usado (inclusive dentro de workflows, bots, automações, campanhas, blocos de nós etc.).
+2. Se **não** tiver uso → mostrar diálogo de confirmação e permitir excluir.
+3. Se **tiver** uso → listar os locais onde está sendo usado e permitir **apenas inativar** (soft-delete). O botão "Excluir" fica desabilitado com aviso claro: "Remova os vínculos antes de excluir".
 
-## Estrutura da tela
+## Cadastros cobertos
 
-```text
-+--------------------------------------------------------------+
-| ⚡ Workflow XYZ    [Salvar] [Testar] [Simular] [◁ Voltar]     |
-+---------+------------------------------------------+---------+
-|         |                                          |         |
-| Blocos  |            Canvas ReactFlow              | Props   |
-| (lib)   |         (drag & drop, conexões)          | do bloco|
-|         |                                          |         |
-+---------+------------------------------------------+---------+
-```
+Grupo A – Cadastros base:
+- Empresas (cliente / prospect / vendedor / transportadora)
+- Contatos (customers) – já feito, será padronizado ao mesmo componente
+- Produtos, Grupos de produtos, Categorias de produtos
+- Veículos, Grupos de veículos, Motoristas (cv_drivers), Dispositivos de rastreamento
+- Usuários, Atendentes, Filas, Skills
+- Canais de atendimento / sessões WhatsApp – já bloqueia, será alinhado à UI padrão
+- Vendedores e Transportadoras (via empresas)
+- Fornecedores/estabelecimentos aplicáveis
 
-Reaproveita a mesma linguagem visual do BotBuilder: `BlockLibrary` estilo cartões coloridos por categoria, `FlowNode` custom com ícone + título + descrição, edges animadas, MiniMap e Controls do ReactFlow.
+Grupo B – Configuração e conteúdo:
+- Workflows (bot, logística, TV, omnichannel), Bots/Flows, Automações de vendas
+- Mensagens pré-definidas, Quick replies, Macros
+- Tabelas de preço, Condições de pagamento, Cupons
+- Modelos de documento, Templates de e-mail/SMS
+- Campanhas, Envio em massa (templates e contatos)
+- Agentes de IA, Bases de conhecimento
 
----
+## Como será feito
 
-## Blocos disponíveis
+### 1) Coluna `ativo` (soft-delete) onde não existir
+Adicionar `ativo boolean not null default true` nas tabelas dos cadastros acima que ainda não possuem, mais índice parcial `where ativo`.
 
-**Gatilhos (roxo)**
-- Evento do sistema (venda, caminhão parado, câmera, ponto, visita, manual…)
-- Agendado (cron)
-- Webhook externo
+### 2) Função genérica de checagem de dependências
+Criar `public.check_entity_dependencies(p_entity text, p_id uuid) returns jsonb` que:
+- Recebe o nome lógico da entidade (`empresa`, `produto`, `veiculo`, `usuario`, `whatsapp_sessao`, `motorista`, `quick_reply`, `mensagem_grupo`, `workflow`, `bot_flow`, `automacao`, `campanha`, `agente_ia`, `modelo_doc`, `tabela_preco`, `cupom`, `grupo_produto`, `grupo_veiculo`, `fila`, `skill`, `atendente`, `canal`, `vendedor`, `transportadora`, `contato`).
+- Faz `SELECT count(*)` em cada tabela referenciadora, incluindo varredura JSONB nos configs dos workflows/bots/automations com `jsonb_path_exists` para achar o id embutido em nós/blocos.
+- Retorna `{ "tabela_amigavel": n, ... }`.
 
-**Condições (amarelo)**
-- Filtro por variável do evento (`placa`, `valor`, `motorista`, etc.) com operadores `=, ≠, >, <, contém`
-- Horário / dia da semana
-- Escopo do dispositivo (grupo, dashboard atual, ID)
+### 3) Função genérica de exclusão segura
+`public.safe_delete_entity(p_entity text, p_id uuid) returns jsonb`:
+- Chama `check_entity_dependencies`. Se houver qualquer contagem > 0 → `raise exception 'HAS_DEPENDENCIES' using detail = jsonb_texto` (o front lê e mostra).
+- Caso contrário, executa `DELETE` na tabela alvo com cascade dos vínculos puramente de junção (many-to-many).
 
-**Ações (azul/verde)**
-- Mostrar barra de notificação (mensagem, ícone, cores, posição, duração)
-- Aguardar N segundos
-- Trocar dashboard do dispositivo
-- Enviar comando (reiniciar app, limpar cache, brilho…)
-- Tocar som/beep (via app Android)
-- Registrar evento no log
+E `public.inactivate_entity(p_entity text, p_id uuid) returns boolean` que faz `UPDATE ... SET ativo = false`.
 
-Cada bloco tem `defaultData`, ícone Lucide, cor da categoria, e um form próprio no painel de propriedades.
+### 4) Componente único de UI
+`src/components/common/DeleteWithDependenciesDialog.tsx`:
+- Props: `entity`, `id`, `label`, `onDeleted`, `onInactivated`.
+- Ao abrir, chama a RPC de checagem, mostra lista amigável dos vínculos.
+- Botões dinâmicos:
+  - Sem vínculos: **Excluir** (destrutivo) + Cancelar.
+  - Com vínculos: **Inativar** + Cancelar (Excluir desabilitado + tooltip).
+- Sempre passa por confirmação (conforme regra global do projeto).
 
----
+### 5) Adoção nas telas
+Substituir os fluxos de delete atuais pelo novo componente em:
+- Empresas (todos os tipos), Contatos, Produtos, Veículos, Motoristas, Usuários, Atendentes, Filas, Skills, Canais/Sessões WhatsApp, Workflows (bot/logística/TV/omnichannel), Bot Flows, Automações de vendas, Quick Replies, Macros, Mensagens pré-definidas, Tabelas de preço, Cupons, Agentes de IA, Modelos de documento, Campanhas, Envio em massa.
 
-## Modelo de dados
-
-Reaproveita `tv_workflows` já existente, adicionando:
-- `flow_json` (jsonb) — nodes + edges do ReactFlow
-- `versao` (int) — incrementa a cada salvamento
-
-Mantém colunas antigas (`evento`, `mensagem_template`, `estilo`, `duracao_segundos`) como cache do **primeiro gatilho + primeira ação de barra** — assim a edge function `tv-workflow-dispatch` continua funcionando sem quebrar nada, mas passa a interpretar `flow_json` quando presente.
-
----
-
-## Fluxo de execução
-
-Quando um evento chega em `tv-workflow-dispatch`:
-1. Carrega workflows ativos com `flow_json`.
-2. Encontra nós **Gatilho** que casam com o evento.
-3. Percorre as edges executando os blocos: condições filtram, ações produzem execuções.
-4. Cada nó "Mostrar barra" gera uma linha em `tv_workflow_execucoes` para cada dispositivo alvo.
-5. `TvNotificationBar` continua consumindo `tv_workflow_execucoes` via Realtime — nenhuma mudança no cliente.
-
----
-
-## Arquivos afetados
-
-Novos:
-- `src/pages/tv-signage/TvWorkflowBuilder.tsx` — editor visual (equivalente enxuto do BotBuilder)
-- `src/components/tv-workflow/TvBlockLibrary.tsx` — paleta lateral
-- `src/components/tv-workflow/TvFlowNode.tsx` — nó customizado
-- `src/components/tv-workflow/TvPropertiesPanel.tsx` — painel de propriedades
-- `src/types/tvWorkflow.ts` — `BLOCK_DEFINITIONS` (tipos, ícones, cores, defaults)
-- `supabase/functions/tv-workflow-dispatch/index.ts` — passa a interpretar `flow_json`
-
-Alterados:
-- `src/pages/tv-signage/TvSignageWorkflows.tsx` — vira lista simples (nome, gatilho, status) com botão "Editar no builder" que abre `/tv-signage/workflows/:id/builder`
-- `src/App.tsx` — registra a rota do builder
-- Migration para `ALTER TABLE tv_workflows ADD COLUMN flow_json jsonb, versao int DEFAULT 1`
-
----
+### 6) Filtros de "Mostrar inativos"
+Onde já existir listagem, filtrar por `ativo = true` por padrão e adicionar toggle "Mostrar inativos".
 
 ## Detalhes técnicos
 
-- ReactFlow já está instalado (`@xyflow/react`) e reutilizado em outros builders (bot, logistica, omnichannel), então nenhuma dependência nova.
-- O `FlowNode` do bot é reaproveitável mas prefiro um `TvFlowNode` mais enxuto para não trazer ruído (variáveis, sub-fluxos, etc. que não fazem sentido aqui).
-- Salvamento debounced, com atalho `Ctrl+S`.
-- Templates prontos ("Alerta de caminhão parado", "Aviso de venda grande") disponíveis no primeiro acesso.
+- Todas as funções: `SECURITY DEFINER`, `SET search_path = public`, uso de `has_role`/`user_in_estabelecimento` para isolamento multi-tenant onde aplicável.
+- Varredura em workflows/bots usa `jsonb @? '$.** ? (@ == "<uuid>")'` para localizar o id em qualquer nó de fluxo.
+- Nomes amigáveis das entidades e dos vínculos ficam em uma tabela de dicionário no próprio componente (pt-BR), respeitando a Core rule de idioma.
+- Nenhum breaking change no schema atual — só adições (coluna `ativo`, funções, índices).
 
----
+## Entrega
 
-## Fora de escopo desta iteração
-
-- Simulador passo-a-passo com dados fake (fica como próximo passo).
-- Versionamento com rollback visual (só guarda `versao`).
-- Sub-fluxos / nós reutilizáveis.
-
-Confirma que posso seguir por esse caminho? Se quiser, posso restringir o conjunto inicial de blocos ou trocar a lista principal por thumbnails do canvas em vez de tabela.
+1 migração de banco (colunas + funções + índices) + 1 componente React + edits pontuais nas ~25 telas listadas para trocar o handler de delete. Nada muda em regras de negócio já existentes; apenas o fluxo de exclusão fica uniforme e seguro.
