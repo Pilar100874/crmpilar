@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { geocodeAndSaveEmpresa } from "@/hooks/useGeocodingService";
 import * as React from "react";
-import { useLocation, useSearchParams, useBlocker } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -210,16 +210,12 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   }, [showForm, isFormDirty]);
 
   // Bloqueia navegação interna (mudança de rota) com alterações não salvas
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      showForm && isFormDirty && currentLocation.pathname !== nextLocation.pathname
-  );
-
-  useEffect(() => {
-    if (blocker.state === "blocked") {
-      setDiscardDialogOpen(true);
-    }
-  }, [blocker.state]);
+  // useBlocker requer data router; app usa BrowserRouter. Stub no-op.
+  const blocker: { state: string; reset: () => void; proceed: () => void } = {
+    state: "unblocked",
+    reset: () => {},
+    proceed: () => {},
+  };
 
   // Verifica se existe um rascunho salvo para a chave atual e oferece restauração
   const checkForDraft = React.useCallback((key: string, currentData: Record<string, any>) => {
