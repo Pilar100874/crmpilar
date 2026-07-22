@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Monitor, Smartphone, Bell, Tv } from "lucide-react";
+import { Monitor, Smartphone, Bell, Tv, Activity } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -8,6 +8,7 @@ type State = "online" | "warn" | "offline";
 type Health = { at: string | null; ago: number | null };
 type FilialHealth = { id: string; nome: string; at: string | null; ago: number | null; state: State; equipamentos: number };
 type TvDeviceHealth = { id: string; nome: string; at: string | null; state: State };
+type PollerHealth = { poller: string; at: string | null; state: State; status: string | null };
 
 function classify(ago: number | null): State {
   if (ago == null) return "offline";
@@ -35,8 +36,8 @@ function aggregate(states: State[]): State {
   return "offline";
 }
 
-async function fetchHealth(): Promise<{ win: Health; and: Health; filiais: FilialHealth[]; tvs: TvDeviceHealth[] }> {
-  const [{ data: filiaisRaw }, { data: equipRaw }, { data: dv }, { data: tvRaw }] = await Promise.all([
+async function fetchHealth(): Promise<{ win: Health; and: Health; filiais: FilialHealth[]; tvs: TvDeviceHealth[]; pollers: PollerHealth[] }> {
+  const [{ data: filiaisRaw }, { data: equipRaw }, { data: dv }, { data: tvRaw }, { data: pollersRaw }] = await Promise.all([
     supabase.from("ponto_filiais").select("id, nome").order("nome", { ascending: true }),
     supabase
       .from("ponto_equipamentos")
@@ -53,6 +54,10 @@ async function fetchHealth(): Promise<{ win: Health; and: Health; filiais: Filia
       .from("tv_devices")
       .select("id, nome, ultima_comunicacao, status, bloqueado")
       .order("ultima_comunicacao", { ascending: false, nullsFirst: false }),
+    supabase
+      .from("cron_health")
+      .select("poller, ultimo_run_em, ultimo_status")
+      .order("poller"),
   ]);
 
   const now = Date.now();
@@ -110,11 +115,25 @@ async function fetchHealth(): Promise<{ win: Health; and: Health; filiais: Filia
     return { id: t.id, nome: t.nome, at, state };
   });
 
+  const pollers: PollerHealth[] = (pollersRaw || []).map((p: any) => {
+    const at = p.ultimo_run_em || null;
+    const ago = at ? now - new Date(at).getTime() : null;
+    // Considera online se rodou há < 20 min; warn até 2h; offline depois
+    let state: State = "offline";
+    if (ago != null) {
+      if (ago < 20 * 60_000) state = "online";
+      else if (ago < 120 * 60_000) state = "warn";
+    }
+    if (p.ultimo_status === "erro") state = state === "online" ? "warn" : state;
+    return { poller: p.poller, at, state, status: p.ultimo_status };
+  });
+
   return {
     win: { at: winAt, ago: winAt ? now - new Date(winAt).getTime() : null },
     and: { at: andAt, ago: andAt ? now - new Date(andAt).getTime() : null },
     filiais,
     tvs,
+    pollers,
   };
 }
 
@@ -151,18 +170,20 @@ export function AppsHealthIndicator({
   const [and, setAnd] = useState<Health>({ at: null, ago: null });
   const [filiais, setFiliais] = useState<FilialHealth[]>([]);
   const [tvs, setTvs] = useState<TvDeviceHealth[]>([]);
+  const [pollers, setPollers] = useState<PollerHealth[]>([]);
   const [push, setPush] = useState<PushState>(getPushState());
 
   useEffect(() => {
     let alive = true;
     const load = async () => {
       try {
-        const { win: w, and: a, filiais: f, tvs: tv } = await fetchHealth();
+        const { win: w, and: a, filiais: f, tvs: tv, pollers: p } = await fetchHealth();
         if (!alive) return;
         setWin(w);
         setAnd(a);
         setFiliais(f);
         setTvs(tv);
+        setPollers(p);
       } catch { /* silencioso */ }
     };
     load();
@@ -182,6 +203,7 @@ export function AppsHealthIndicator({
     : classify(win.ago);
   const andState = classify(and.ago);
   const tvState = tvs.length ? aggregate(tvs.map((t) => t.state)) : "offline";
+  const pollersState: State = pollers.length ? aggregate(pollers.map((p) => p.state)) : "offline";
 
   const iconClass = small
     ? "h-4 w-4 text-foreground/70"
@@ -262,6 +284,36 @@ export function AppsHealthIndicator({
             </div>
           ) : (
             <div className="text-muted-foreground">Nenhum dispositivo pareado</div>
+          )}
+        </TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="relative inline-flex items-center gap-1">
+            <Activity className={iconClass} />
+            <span className={`${dotClassSize} rounded-full ${dotClass(pollersState)}`} />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side={tooltipSide} className="text-xs max-w-[300px]">
+          <div className="font-semibold">Automações server-side (pollers)</div>
+          {pollers.length > 0 ? (
+            <div className="flex flex-col gap-1 max-h-56 overflow-auto">
+              {pollers.map((p) => (
+                <div key={p.poller} className="flex items-center gap-1.5">
+                  <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotClass(p.state)}`} />
+                  <span className="truncate">{p.poller}</span>
+                  <span className="text-muted-foreground ml-auto text-[10px] whitespace-nowrap">
+                    {p.at
+                      ? new Date(p.at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+                      : "nunca"}
+                    {p.status === "erro" && " ⚠"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-muted-foreground">Aguardando primeira execução</div>
           )}
         </TooltipContent>
       </Tooltip>
