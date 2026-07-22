@@ -523,22 +523,24 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     setSegmentos((data as any) || []);
   };
   
-  // Filtrar contatos na busca
+  // Filtrar contatos na busca (lista todos quando busca vazia)
   useEffect(() => {
-    if (buscaContato.trim()) {
-      const termo = buscaContato.toLowerCase();
-      const termoNumerico = termo.replace(/\D/g, ''); // Remove caracteres não-numéricos para buscar telefone/WhatsApp
-      const filtrados = contatos.filter(c => {
+    const termo = buscaContato.trim().toLowerCase();
+    const jaVinculadosIds = new Set(contatosVinculados.map((v: any) => v?.contato?.id).filter(Boolean));
+    const base = contatos.filter(c => !jaVinculadosIds.has(c.id));
+    if (!termo) {
+      setContatosFiltrados(base);
+    } else {
+      const termoNumerico = termo.replace(/\D/g, '');
+      const filtrados = base.filter(c => {
         const nomeMatch = c.nome?.toLowerCase().includes(termo);
         const emailMatch = c.email?.toLowerCase().includes(termo);
-        const telefoneMatch = c.telefone?.replace(/\D/g, '').includes(termoNumerico);
+        const telefoneMatch = termoNumerico && c.telefone?.replace(/\D/g, '').includes(termoNumerico);
         return nomeMatch || emailMatch || telefoneMatch;
       });
       setContatosFiltrados(filtrados);
-    } else {
-      setContatosFiltrados([]);
     }
-  }, [buscaContato, contatos]);
+  }, [buscaContato, contatos, contatosVinculados]);
 
   const handleEditEmpresa = async (empresa: Empresa) => {
     setEditingEmpresa(empresa);
