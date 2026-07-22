@@ -890,6 +890,19 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
                 required
               />
             </div>
+
+            <div>
+              <Label htmlFor="usuario-tipo">Tipo *</Label>
+              <Select value={tipo} onValueChange={setTipo}>
+                <SelectTrigger id="usuario-tipo">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="padrao">Padrão</SelectItem>
+                  <SelectItem value="gerente">Gerente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </Card>
 
