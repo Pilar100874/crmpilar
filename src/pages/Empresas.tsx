@@ -2885,19 +2885,45 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           <AlertDialogHeader>
             <AlertDialogTitle>CNPJ/CPF já cadastrado</AlertDialogTitle>
             <AlertDialogDescription>
-              Este CNPJ/CPF já está cadastrado para a empresa <strong>{duplicateEmpresa?.nome_fantasia || duplicateEmpresa?.nome}</strong>.
+              Este CNPJ/CPF já pertence a <strong>{duplicateEmpresa?.nome_fantasia || duplicateEmpresa?.nome}</strong>.
               {"\n\n"}
-              Deseja ir para o cadastro existente?
+              Você pode abrir o cadastro existente, ou criar um novo cadastro já preenchido com os dados dele.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
             <AlertDialogCancel onClick={() => {
               setDuplicateDialogOpen(false);
               setDuplicateEmpresa(null);
-              setFormData(prev => ({ ...prev, cpf_cnpj: '' }));
             }}>
               Cancelar
             </AlertDialogCancel>
+            <Button variant="secondary" onClick={() => {
+              if (duplicateEmpresa) {
+                const d: any = duplicateEmpresa;
+                setFormData(prev => ({
+                  ...prev,
+                  company_type: d.company_type || prev.company_type,
+                  tipo_cliente: d.tipo_cliente || prev.tipo_cliente,
+                  company_name: d.nome || '',
+                  company_fantasia: d.nome_fantasia || '',
+                  cep: d.cep ? maskCEP(d.cep) : '',
+                  address: d.endereco || '',
+                  city: d.cidade || '',
+                  neighborhood: d.bairro || '',
+                  state: d.estado || '',
+                  inscricao: d.inscricao_estadual || '',
+                  telefone: d.telefone ? maskWhatsApp(d.telefone) : '',
+                  whatsapp: d.whatsapp ? maskWhatsApp(d.whatsapp) : '',
+                  email: d.email || '',
+                  site: d.site || '',
+                }));
+                toast.success('Dados preenchidos a partir do cadastro existente');
+              }
+              setDuplicateDialogOpen(false);
+              setDuplicateEmpresa(null);
+            }}>
+              Preencher e criar novo
+            </Button>
             <AlertDialogAction onClick={() => {
               if (duplicateEmpresa) {
                 handleEditEmpresa(duplicateEmpresa);
@@ -2910,6 +2936,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
 
       {/* Dialog de Importação via API */}
       {estabelecimentoId && (
