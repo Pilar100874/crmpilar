@@ -2902,7 +2902,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 const d: any = duplicateEmpresa;
                 setFormData(prev => ({
                   ...prev,
-                  company_type: d.company_type || prev.company_type,
                   tipo_cliente: d.tipo_cliente || prev.tipo_cliente,
                   company_name: d.nome || '',
                   company_fantasia: d.nome_fantasia || '',
@@ -2911,7 +2910,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   city: d.cidade || '',
                   neighborhood: d.bairro || '',
                   state: d.estado || '',
-                  inscricao: d.inscricao_estadual || '',
                   telefone: d.telefone ? maskWhatsApp(d.telefone) : '',
                   whatsapp: d.whatsapp ? maskWhatsApp(d.whatsapp) : '',
                   email: d.email || '',
