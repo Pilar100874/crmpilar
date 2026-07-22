@@ -3184,6 +3184,17 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         </div>
       )}
 
+      {/* Visualização somente-leitura de item vinculado */}
+      <VinculoViewDialog
+        open={!!viewingVinculo}
+        onOpenChange={(o) => { if (!o) setViewingVinculo(null); }}
+        title={viewingVinculo?.title || ""}
+        subtitle={viewingVinculo?.subtitle}
+        fields={viewingVinculo?.fields || []}
+      />
+
+
+
       {/* Dialog de exclusão com dependências */}
       {empresaToDelete && (
         <DeleteWithDependenciesDialog
