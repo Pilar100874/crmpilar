@@ -423,6 +423,7 @@ export default function Todos() {
           .from('usuarios')
           .select('id, nome, email, telefone')
           .eq('estabelecimento_id', estabId)
+          .eq('tipo', 'gerente')
           .order('nome');
         if (usuariosData) setUsuarios(usuariosData);
 
