@@ -617,13 +617,14 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     saveCompanyFieldsConfig();
   }, [companyFields, estabelecimentoId]);
 
-  // Filtrar empresas conforme busca
+  // Filtrar empresas conforme busca (lista todas quando busca vazia)
   useEffect(() => {
-    if (buscaEmpresa.trim() === "") {
-      setEmpresasFiltradas([]);
+    const termo = buscaEmpresa.trim().toLowerCase();
+    const base = empresas.filter(e => !empresasVinculadas.some(ev => ev.id === e.id));
+    if (!termo) {
+      setEmpresasFiltradas(base);
     } else {
-      const termo = buscaEmpresa.toLowerCase();
-      const filtradas = empresas.filter(e => 
+      const filtradas = base.filter(e =>
         e.nome_fantasia?.toLowerCase().includes(termo) ||
         e.nome?.toLowerCase().includes(termo) ||
         e.cnpj?.toLowerCase().includes(termo) ||
@@ -631,7 +632,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       );
       setEmpresasFiltradas(filtradas);
     }
-  }, [buscaEmpresa, empresas]);
+  }, [buscaEmpresa, empresas, empresasVinculadas]);
 
   // Salvar contatos (inline/local configs continuam locais)
   const saveContactsToStorage = (updatedContacts: Contact[]) => {
