@@ -2121,7 +2121,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       </div>
 
       <div className="flex-1 overflow-auto px-3 sm:px-6 py-6">
-        <Tabs defaultValue="empresa" className="w-full max-w-6xl mx-auto">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full max-w-6xl mx-auto">
           <div className="bg-card border border-border/60 rounded-xl shadow-sm shadow-slate-200/40 dark:shadow-none overflow-hidden">
             <div className="px-2 sm:px-6 border-b border-border/60 bg-card">
               <TabsList className="bg-transparent p-0 h-auto gap-1 sm:gap-6 rounded-none w-full justify-start overflow-x-auto no-scrollbar">
