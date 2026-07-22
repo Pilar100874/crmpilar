@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import * as React from "react";
 import * as XLSX from 'xlsx';
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams, useBlocker } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, GripVertical, Search, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Eye, Building2, Truck, UserCheck, User } from "lucide-react";
+import { Plus, MoreVertical, Trash2, GripVertical, Search, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Eye, Building2, Truck, UserCheck, User, AlertCircle } from "lucide-react";
 import { CadastroHeader } from "@/components/cadastros/CadastroHeader";
 import { ContatoDetailsPanel } from "@/components/contatos/ContatoDetailsPanel";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -207,6 +207,34 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   ]);
 
   const [formData, setFormData] = useState<Record<string, any>>({});
+  // --- Guarda de alterações não salvas ---
+  const [formSnapshot, setFormSnapshot] = useState<string>("{}");
+  const [activeTab, setActiveTab] = useState<string>("contato");
+  const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
+  const [pendingTab, setPendingTab] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<null | (() => void)>(null);
+  const isFormDirty = JSON.stringify(formData) !== formSnapshot;
+  const draftKey = React.useMemo(
+    () => `contatos_draft:${editingContact?.id ?? "new"}`,
+    [editingContact?.id]
+  );
+  const [draftRestore, setDraftRestore] = useState<{ data: Record<string, any>; savedAt: number } | null>(null);
+  const clearDraft = React.useCallback((key?: string) => {
+    try { localStorage.removeItem(key ?? draftKey); } catch {}
+  }, [draftKey]);
+  const checkForDraft = React.useCallback((key: string, currentData: Record<string, any>) => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      const draftData = parsed?.data ?? {};
+      if (JSON.stringify(draftData) === JSON.stringify(currentData)) {
+        localStorage.removeItem(key);
+        return;
+      }
+      setDraftRestore({ data: draftData, savedAt: parsed?.savedAt ?? Date.now() });
+    } catch {}
+  }, []);
   const [newFieldLabel, setNewFieldLabel] = useState("");
   const [newFieldType, setNewFieldType] = useState<CustomField["type"]>("text");
   const [newFieldOptions, setNewFieldOptions] = useState("");
@@ -635,6 +663,76 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       setEmpresasFiltradas(filtradas);
     }
   }, [buscaEmpresa, empresas, empresasVinculadas]);
+
+  // Autosave rascunho (debounced) enquanto o formulário está aberto e sujo
+  useEffect(() => {
+    if (!showForm || !isFormDirty) return;
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(draftKey, JSON.stringify({ data: formData, savedAt: Date.now() }));
+      } catch {}
+    }, 600);
+    return () => clearTimeout(t);
+  }, [formData, showForm, isFormDirty, draftKey]);
+
+  // Aviso nativo ao fechar/recarregar a aba com alterações
+  useEffect(() => {
+    if (!showForm || !isFormDirty) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [showForm, isFormDirty]);
+
+  // Bloqueia navegação interna (mudança de rota) com alterações não salvas
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      showForm && isFormDirty && currentLocation.pathname !== nextLocation.pathname
+  );
+  useEffect(() => {
+    if (blocker.state === "blocked") setDiscardDialogOpen(true);
+  }, [blocker.state]);
+
+  // Helpers de fechamento/troca com confirmação
+  const doCloseForm = () => {
+    clearDraft();
+    setShowForm(false);
+    setFormData({});
+    setEditingContact(null);
+    setFormSnapshot("{}");
+    setActiveTab("contato");
+    setPendingTab(null);
+    setTimeout(() => {
+      setIsClosingForm(false);
+      isClosingRef.current = false;
+      setShouldCheckDuplicate(true);
+    }, 150);
+  };
+  const requestCloseForm = () => {
+    if (isFormDirty) {
+      setPendingTab(null);
+      setPendingAction(null);
+      setDiscardDialogOpen(true);
+    } else {
+      doCloseForm();
+    }
+  };
+  const runWithDirtyGuard = (action: () => void) => {
+    if (showForm && isFormDirty) {
+      setPendingTab(null);
+      setPendingAction(() => action);
+      setDiscardDialogOpen(true);
+    } else {
+      action();
+    }
+  };
+  const handleTabChange = (value: string) => {
+    if (isFormDirty && value !== activeTab) {
+      setPendingTab(value);
+      setDiscardDialogOpen(true);
+    } else {
+      setActiveTab(value);
+    }
+  };
 
   // Salvar contatos (inline/local configs continuam locais)
   const saveContactsToStorage = (updatedContacts: Contact[]) => {
@@ -1449,6 +1547,10 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
 
       await loadContacts();
 
+      clearDraft();
+      setFormSnapshot("{}");
+      setActiveTab("contato");
+      setPendingTab(null);
       setShowForm(false);
       setFormData({});
       setEditingContact(null);
@@ -1513,10 +1615,14 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     }
 
     setFormData(baseFormData);
+    setFormSnapshot(JSON.stringify(baseFormData));
+    setActiveTab("contato");
+    setPendingTab(null);
     setSegmentosSelecionados(contact.segmentos || []);
     setShouldCheckDuplicate(true);
     setIsClosingForm(false);
     setShowForm(true);
+    setTimeout(() => checkForDraft(`contatos_draft:${contact.id}`, baseFormData), 0);
   };
 
   const [contactDeps, setContactDeps] = useState<Record<string, number> | null>(null);
@@ -2060,12 +2166,15 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                     <span className="sm:hidden">Importar</span>
                   </Button>
                 )}
-                <Button onClick={() => {
+                <Button onClick={() => runWithDirtyGuard(() => {
                   setShouldCheckDuplicate(true);
                   setIsClosingForm(false);
                   setShowForm(true);
                   setEditingContact(null);
                   setFormData({});
+                  setFormSnapshot("{}");
+                  setActiveTab("contato");
+                  setPendingTab(null);
                   setSegmentosSelecionados([]);
                   setEmpresaSelecionada("");
                   setCriarNovaEmpresa(false);
@@ -2073,7 +2182,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                   setBuscaEmpresa("");
                   setEmpresasFiltradas([]);
                   setEmpresasVinculadas([]);
-                }} className="gap-2 shadow-sm h-9 sm:h-10">
+                  setTimeout(() => checkForDraft(`contatos_draft:new`, {}), 0);
+                })} className="gap-2 shadow-sm h-9 sm:h-10">
                   <Plus className="w-4 h-4" />
                   Novo Contato
                 </Button>
@@ -2249,49 +2359,9 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                                   size="sm"
                                   variant="outline"
                                   className="h-8 px-2 rounded-full hover:bg-primary hover:text-primary-foreground transition-all duration-200 border-primary/20"
-                                  onClick={async () => {
-                                    setEditingContact(contact);
-                                    setFormData({
-                                      name: contact.name,
-                                      phone: contact.phone,
-                                      tel: contact.tel,
-                                      email: contact.email,
-                                      position: contact.position,
-                                      ...contact.customFields
-                                    });
-                                    
-                                    // Carregar empresas vinculadas
-                                    const { data: vinculos } = await supabase
-                                      .from('customer_empresas')
-                                      .select(`
-                                        id,
-                                        is_primary,
-                                        empresas:empresa_id (
-                                          id,
-                                          nome_fantasia,
-                                          nome,
-                                          cnpj,
-                                          custom_fields
-                                        )
-                                      `)
-                                      .eq('customer_id', contact.id);
-                                    
-                                    if (vinculos) {
-                                      const empresasFormatadas = vinculos.map(v => ({
-                                        id: v.empresas.id,
-                                        nome_fantasia: v.empresas.nome_fantasia,
-                                        nome: v.empresas.nome,
-                                        cnpj: v.empresas.cnpj,
-                                        custom_fields: v.empresas.custom_fields,
-                                        is_primary: v.is_primary,
-                                        vinculo_id: v.id
-                                      }));
-                                      setEmpresasVinculadas(empresasFormatadas);
-                                    }
-                                    
-                                    setShouldCheckDuplicate(true);
-                                    setIsClosingForm(false);
-                                    setShowForm(true);
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    runWithDirtyGuard(() => handleEditContact(contact));
                                   }}
                                   title="Editar cadastro completo"
                                 >
@@ -2618,27 +2688,31 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
             variant="ghost" 
             size="icon" 
             onMouseDown={() => {
-              // Garante que dispare antes do onBlur dos inputs
               setIsClosingForm(true);
               isClosingRef.current = true;
               setShouldCheckDuplicate(false);
             }}
-            onClick={() => {
-              setShowForm(false);
-              setTimeout(() => {
-                setIsClosingForm(false);
-                isClosingRef.current = false;
-                setShouldCheckDuplicate(true);
-              }, 150);
-            }}
+            onClick={requestCloseForm}
             className="hover:bg-accent/50 h-8 w-8 sm:h-9 sm:w-9"
           >
             <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-xl sm:text-2xl font-light tracking-tight text-foreground">
-              {editingContact ? "Editar Contato" : "Novo Contato"}
-            </h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl sm:text-2xl font-light tracking-tight text-foreground">
+                {editingContact ? "Editar Contato" : "Novo Contato"}
+              </h1>
+              {isFormDirty && (
+                <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 gap-1.5 px-2 py-0.5 text-[10px] sm:text-xs">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
+                  </span>
+                  <AlertCircle className="w-3 h-3" />
+                  Alterações não salvas
+                </Badge>
+              )}
+            </div>
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               {editingContact ? "Atualize as informações do contato" : "Preencha os dados do novo contato"}
             </p>
@@ -2647,7 +2721,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       </div>
 
       <div className="flex-1 overflow-auto p-3 sm:p-6 md:p-8">
-        <Tabs defaultValue="contato" className="w-full max-w-6xl mx-auto">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full max-w-6xl mx-auto">
           <TabsList className="bg-muted/30 border border-border/40 p-1 rounded-lg mb-4 sm:mb-6 w-full sm:w-auto flex-wrap sm:flex-nowrap">
             <TabsTrigger
               value="contato"
@@ -2700,14 +2774,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                   isClosingRef.current = true;
                   setShouldCheckDuplicate(false);
                 }}
-                onClick={() => {
-                  setShowForm(false);
-                  setTimeout(() => {
-                    setIsClosingForm(false);
-                    isClosingRef.current = false;
-                    setShouldCheckDuplicate(true);
-                  }, 150);
-                }}
+                onClick={requestCloseForm}
                 className="border-border/40"
               >
                 Cancelar
@@ -2926,14 +2993,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                   isClosingRef.current = true;
                   setShouldCheckDuplicate(false);
                 }}
-                onClick={() => {
-                  setShowForm(false);
-                  setTimeout(() => {
-                    setIsClosingForm(false);
-                    isClosingRef.current = false;
-                    setShouldCheckDuplicate(true);
-                  }, 150);
-                }}
+                onClick={requestCloseForm}
                 className="border-border/40"
               >
                 Cancelar
@@ -3049,7 +3109,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
             </Card>
             
             <div className="flex justify-end gap-3 mt-6">
-              <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">
+              <Button variant="outline" onClick={requestCloseForm} className="border-border/40">
                 Fechar
               </Button>
             </div>
@@ -3092,6 +3152,99 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de descarte de alterações */}
+      <AlertDialog
+        open={discardDialogOpen}
+        onOpenChange={(open) => {
+          setDiscardDialogOpen(open);
+          if (!open) {
+            setPendingTab(null);
+            setPendingAction(null);
+            if (blocker.state === "blocked") blocker.reset();
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem alterações não salvas neste contato. O que deseja fazer?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel onClick={() => {
+              setPendingTab(null);
+              setPendingAction(null);
+              if (blocker.state === "blocked") blocker.reset();
+            }}>
+              Continuar editando
+            </AlertDialogCancel>
+            <Button
+              variant="outline"
+              onClick={() => {
+                try {
+                  const snap = JSON.parse(formSnapshot);
+                  setFormData(snap);
+                } catch {}
+                clearDraft();
+                setPendingTab(null);
+                setPendingAction(null);
+                if (blocker.state === "blocked") blocker.reset();
+                setDiscardDialogOpen(false);
+                toast.success("Alterações restauradas");
+              }}
+            >
+              Restaurar
+            </Button>
+            <AlertDialogAction
+              onClick={() => {
+                clearDraft();
+                setFormSnapshot(JSON.stringify(formData));
+                const action = pendingAction;
+                const targetTab = pendingTab;
+                setPendingAction(null);
+                setPendingTab(null);
+                if (blocker.state === "blocked") {
+                  blocker.proceed();
+                } else if (action) {
+                  action();
+                } else if (targetTab) {
+                  setActiveTab(targetTab);
+                } else {
+                  doCloseForm();
+                }
+                setDiscardDialogOpen(false);
+              }}
+            >
+              Descartar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog de recuperação de rascunho */}
+      <AlertDialog open={!!draftRestore} onOpenChange={(open) => { if (!open) setDraftRestore(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Rascunho encontrado</AlertDialogTitle>
+            <AlertDialogDescription>
+              Encontramos alterações não salvas de {draftRestore ? new Date(draftRestore.savedAt).toLocaleString("pt-BR") : ""}. Deseja restaurar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { clearDraft(); setDraftRestore(null); }}>
+              Descartar rascunho
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (draftRestore) setFormData(draftRestore.data);
+              setDraftRestore(null);
+            }}>
+              Restaurar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );
