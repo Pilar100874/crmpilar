@@ -2891,7 +2891,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             <AlertDialogDescription>
               Este CNPJ/CPF já pertence a <strong>{duplicateEmpresa?.nome_fantasia || duplicateEmpresa?.nome}</strong>.
               {"\n\n"}
-              Você pode abrir o cadastro existente, ou criar um novo cadastro já preenchido com os dados dele.
+              Deseja criar um novo cadastro já preenchido com os dados dele?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-2">
@@ -2904,7 +2904,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             <Button variant="secondary" onClick={() => {
               if (duplicateEmpresa) {
                 const d: any = duplicateEmpresa;
-                setFormData(prev => ({
+                setFormData(prev => (trunc({
                   ...prev,
                   tipo_cliente: d.tipo_cliente || prev.tipo_cliente,
                   company_name: d.nome || '',
@@ -2926,15 +2926,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             }}>
               Preencher e criar novo
             </Button>
-            <AlertDialogAction onClick={() => {
-              if (duplicateEmpresa) {
-                handleEditEmpresa(duplicateEmpresa);
-              }
-              setDuplicateDialogOpen(false);
-              setDuplicateEmpresa(null);
-            }}>
-              Ir para o cadastro
-            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
