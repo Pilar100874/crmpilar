@@ -60,6 +60,7 @@ export function EnvioMassaPanel({
 }: EnvioMassaPanelProps) {
   const [step, setStep] = useState<'select' | 'compose' | 'sending'>('select');
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
+  const [taskSearch, setTaskSearch] = useState("");
   const [flags, setFlags] = useState<AtendimentoFlag[]>([]);
   const [selectedFlag, setSelectedFlag] = useState<string | null>(null);
   const [mensagem, setMensagem] = useState("");
