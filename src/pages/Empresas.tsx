@@ -169,6 +169,32 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
   const isFormDirty = JSON.stringify(formData) !== formSnapshot;
 
+  // Autosave de rascunho (localStorage)
+  const draftKey = React.useMemo(
+    () => `empresas_draft:${variant}:${editingEmpresa?.id ?? "new"}`,
+    [variant, editingEmpresa?.id]
+  );
+  const [draftRestore, setDraftRestore] = useState<{ data: Record<string, any>; savedAt: number } | null>(null);
+  const [lastDraftSavedAt, setLastDraftSavedAt] = useState<number | null>(null);
+
+  const clearDraft = React.useCallback((key?: string) => {
+    try { localStorage.removeItem(key ?? draftKey); } catch {}
+    setLastDraftSavedAt(null);
+  }, [draftKey]);
+
+  // Salva rascunho automaticamente (debounced) enquanto o formulário está aberto e sujo
+  useEffect(() => {
+    if (!showForm || !isFormDirty) return;
+    const t = setTimeout(() => {
+      try {
+        const payload = { data: formData, savedAt: Date.now(), snapshot: formSnapshot };
+        localStorage.setItem(draftKey, JSON.stringify(payload));
+        setLastDraftSavedAt(payload.savedAt);
+      } catch {}
+    }, 600);
+    return () => clearTimeout(t);
+  }, [formData, showForm, isFormDirty, draftKey, formSnapshot]);
+
   // Avisa ao fechar/recarregar a aba com alterações não salvas
   useEffect(() => {
     if (!showForm || !isFormDirty) return;
@@ -191,6 +217,23 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
       setDiscardDialogOpen(true);
     }
   }, [blocker.state]);
+
+  // Verifica se existe um rascunho salvo para a chave atual e oferece restauração
+  const checkForDraft = React.useCallback((key: string, currentData: Record<string, any>) => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      const draftData = parsed?.data ?? {};
+      if (JSON.stringify(draftData) === JSON.stringify(currentData)) {
+        localStorage.removeItem(key);
+        return;
+      }
+      setDraftRestore({ data: draftData, savedAt: parsed?.savedAt ?? Date.now() });
+    } catch {
+      try { localStorage.removeItem(key); } catch {}
+    }
+  }, []);
 
   // Campos obrigatórios fixos de empresa
   const [companyFields, setCompanyFields] = useState<CustomField[]>([
