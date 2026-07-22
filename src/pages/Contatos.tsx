@@ -508,6 +508,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         .from('usuarios')
         .select('id, nome')
         .eq('estabelecimento_id', estabId)
+        .eq('tipo', 'gerente')
         .order('nome');
 
       if (!usuariosError) {
