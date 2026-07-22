@@ -458,6 +458,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   // Estados para vincular contatos
   const [contatos, setContatos] = useState<Contato[]>([]);
   const [contatosVinculados, setContatosVinculados] = useState<any[]>([]);
+  const [viewingVinculo, setViewingVinculo] = useState<{ title: string; subtitle?: string; fields: VinculoField[] } | null>(null);
   const [buscaContato, setBuscaContato] = useState("");
   const [contatosFiltrados, setContatosFiltrados] = useState<Contato[]>([]);
   const [criarNovoContato, setCriarNovoContato] = useState(false);
