@@ -605,34 +605,32 @@ export default function PoliticasInternas() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           {readingPolicy && (
             <>
-              <DialogHeader>
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <DialogTitle className="text-xl">{readingPolicy.title}</DialogTitle>
-                    <div className="flex flex-wrap items-center gap-2 mt-2 text-sm">
-                      {readingPolicy.policy_categories?.name && (
-                        <Badge variant="outline">{readingPolicy.policy_categories.name}</Badge>
-                      )}
-                      {readingPolicy.responsible && (
-                        <span className="text-muted-foreground">
-                          Responsável: {readingPolicy.responsible}
-                        </span>
-                      )}
-                      <span className="text-muted-foreground">
-                        Atualizada em{" "}
-                        {new Date(readingPolicy.updated_at).toLocaleDateString("pt-BR")}
-                      </span>
-                    </div>
-                  </div>
+              <DialogHeader className="pr-10">
+                <DialogTitle className="text-xl pr-2">{readingPolicy.title}</DialogTitle>
+                <div className="flex flex-wrap items-center gap-2 mt-2 text-sm">
+                  {readingPolicy.policy_categories?.name && (
+                    <Badge variant="outline">{readingPolicy.policy_categories.name}</Badge>
+                  )}
+                  {readingPolicy.responsible && (
+                    <span className="text-muted-foreground">
+                      Responsável: {readingPolicy.responsible}
+                    </span>
+                  )}
+                  <span className="text-muted-foreground">
+                    Atualizada em{" "}
+                    {new Date(readingPolicy.updated_at).toLocaleDateString("pt-BR")}
+                  </span>
                   <Button
                     size="sm"
                     variant="outline"
+                    className="ml-auto"
                     onClick={() => copyLink(readingPolicy.id)}
                   >
                     <Link2 className="w-3 h-3 mr-1" /> Copiar link
                   </Button>
                 </div>
               </DialogHeader>
+
               {readingPolicy.summary && (
                 <p className="text-sm text-muted-foreground border-l-2 border-primary pl-3 italic">
                   {readingPolicy.summary}
