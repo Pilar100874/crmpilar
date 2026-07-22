@@ -2140,7 +2140,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full max-w-6xl mx-auto">
           <div className="bg-card border border-border/60 rounded-xl shadow-sm shadow-slate-200/40 dark:shadow-none overflow-hidden">
             <div className="px-2 sm:px-6 border-b border-border/60 bg-card">
-              <TabsList className="bg-transparent p-0 h-auto gap-1 sm:gap-6 rounded-none w-full justify-start overflow-x-auto no-scrollbar">
+              <TabsList className="bg-transparent p-0 h-auto gap-1 sm:gap-6 rounded-none w-full justify-start flex-wrap">
                 <TabsTrigger
                   value="empresa"
                   className="gap-2 py-3 sm:py-4 px-2 sm:px-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground font-medium text-sm whitespace-nowrap"
