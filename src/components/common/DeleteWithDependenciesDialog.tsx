@@ -177,16 +177,30 @@ export function DeleteWithDependenciesDialog({
                     Este {label} está sendo usado no sistema e <strong>não pode ser excluído</strong>.
                     Você pode <strong>inativá-lo</strong> para preservar o histórico.
                   </p>
-                  <div className="rounded-md border bg-muted/40 p-3 space-y-1 max-h-56 overflow-y-auto">
+                  <div className="rounded-md border bg-muted/40 divide-y max-h-72 overflow-y-auto">
                     {Object.entries(deps!).map(([k, v]) => (
-                      <div key={k} className="flex justify-between text-sm">
-                        <span>{k}</span>
-                        <span className="font-mono font-semibold">{v}</span>
+                      <div key={k} className="flex items-center justify-between gap-2 p-2 text-sm">
+                        <span className="flex-1 truncate">{k}</span>
+                        <span className="font-mono font-semibold min-w-[2rem] text-right">{v}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 text-destructive hover:bg-destructive/10"
+                          disabled={busy || !!clearingKey}
+                          onClick={() => handleClearDep(k)}
+                        >
+                          {clearingKey === k ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3 w-3 mr-1" />
+                          )}
+                          Excluir vínculos
+                        </Button>
                       </div>
                     ))}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Para excluir definitivamente, primeiro remova os vínculos acima.
+                    Remova os vínculos acima um a um para liberar a exclusão definitiva, ou use "Inativar" para preservar o histórico.
                   </p>
                 </>
               ) : (
