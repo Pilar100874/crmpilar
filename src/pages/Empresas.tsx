@@ -1163,6 +1163,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           }]);
       }
 
+      clearDraft();
       setShowForm(false);
       setFormData({});
       setFormSnapshot("{}");
