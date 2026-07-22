@@ -166,7 +166,7 @@ export default function VinculosSegmentoProspectUsuario() {
 
                 <Card className="border-primary/20 bg-primary/5">
                   <CardContent className="p-4 space-y-3">
-                    <h4 className="text-sm font-semibold">Adicionar usuários</h4>
+                    <h4 className="text-sm font-semibold">Adicionar gerentes</h4>
                     <div className="space-y-1 max-h-[240px] overflow-y-auto border rounded-lg p-2 bg-background">
                       {usuarios.map(u => {
                         const jaVinc = usuariosDoSegmento(selectedSegmento).some(x => x.user!.id === u.id);
