@@ -7,13 +7,19 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { tema, categoria, responsavel, contexto } = await req.json();
-    if (!tema || typeof tema !== "string") {
-      return new Response(JSON.stringify({ error: "tema é obrigatório" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const body = await req.json();
+    const {
+      tema,
+      categoria,
+      responsavel,
+      contexto,
+      modo, // 'tema' | 'topicos' | 'ajustar'
+      topicos, // texto livre com tópicos
+      textoAtual, // conteúdo atual (para ajustar)
+      tituloAtual,
+      resumoAtual,
+      instrucao, // instruções extras / ajuste
+    } = body ?? {};
 
     const key = Deno.env.get("LOVABLE_API_KEY");
     if (!key) {
@@ -34,10 +40,53 @@ Formato de saída OBRIGATÓRIO em JSON:
 }
 Não escreva nada fora do JSON.`;
 
-    const userPrompt = `Tema da política: ${tema}
+    let userPrompt = "";
+    if (modo === "topicos") {
+      if (!topicos || typeof topicos !== "string" || !topicos.trim()) {
+        return new Response(JSON.stringify({ error: "topicos é obrigatório" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      userPrompt = `A partir dos tópicos abaixo, produza uma política interna completa, coerente e formal, expandindo cada tópico em texto profissional e agrupando em seções.
+${categoria ? `Categoria: ${categoria}\n` : ""}${responsavel ? `Área responsável: ${responsavel}\n` : ""}${contexto ? `Contexto adicional: ${contexto}\n` : ""}
+TÓPICOS FORNECIDOS PELO USUÁRIO:
+"""
+${topicos.trim()}
+"""`;
+    } else if (modo === "ajustar") {
+      if (!textoAtual || !instrucao) {
+        return new Response(
+          JSON.stringify({ error: "textoAtual e instrucao são obrigatórios" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      userPrompt = `Refine/ajuste a política abaixo seguindo estritamente as instruções do usuário. Mantenha o formato (seções, listas) e apenas retorne o JSON no formato pedido.
+${categoria ? `Categoria: ${categoria}\n` : ""}${responsavel ? `Área responsável: ${responsavel}\n` : ""}
+TÍTULO ATUAL: ${tituloAtual ?? ""}
+RESUMO ATUAL: ${resumoAtual ?? ""}
+CONTEÚDO ATUAL:
+"""
+${textoAtual}
+"""
+
+INSTRUÇÃO DE AJUSTE DO USUÁRIO:
+"""
+${instrucao}
+"""`;
+    } else {
+      // modo tema (padrão)
+      if (!tema || typeof tema !== "string") {
+        return new Response(JSON.stringify({ error: "tema é obrigatório" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      userPrompt = `Tema da política: ${tema}
 ${categoria ? `Categoria: ${categoria}` : ""}
 ${responsavel ? `Área responsável: ${responsavel}` : ""}
 ${contexto ? `Contexto adicional: ${contexto}` : ""}`;
+    }
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
