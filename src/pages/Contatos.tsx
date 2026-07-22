@@ -664,6 +664,76 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     }
   }, [buscaEmpresa, empresas, empresasVinculadas]);
 
+  // Autosave rascunho (debounced) enquanto o formulário está aberto e sujo
+  useEffect(() => {
+    if (!showForm || !isFormDirty) return;
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(draftKey, JSON.stringify({ data: formData, savedAt: Date.now() }));
+      } catch {}
+    }, 600);
+    return () => clearTimeout(t);
+  }, [formData, showForm, isFormDirty, draftKey]);
+
+  // Aviso nativo ao fechar/recarregar a aba com alterações
+  useEffect(() => {
+    if (!showForm || !isFormDirty) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [showForm, isFormDirty]);
+
+  // Bloqueia navegação interna (mudança de rota) com alterações não salvas
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      showForm && isFormDirty && currentLocation.pathname !== nextLocation.pathname
+  );
+  useEffect(() => {
+    if (blocker.state === "blocked") setDiscardDialogOpen(true);
+  }, [blocker.state]);
+
+  // Helpers de fechamento/troca com confirmação
+  const doCloseForm = () => {
+    clearDraft();
+    setShowForm(false);
+    setFormData({});
+    setEditingContact(null);
+    setFormSnapshot("{}");
+    setActiveTab("contato");
+    setPendingTab(null);
+    setTimeout(() => {
+      setIsClosingForm(false);
+      isClosingRef.current = false;
+      setShouldCheckDuplicate(true);
+    }, 150);
+  };
+  const requestCloseForm = () => {
+    if (isFormDirty) {
+      setPendingTab(null);
+      setPendingAction(null);
+      setDiscardDialogOpen(true);
+    } else {
+      doCloseForm();
+    }
+  };
+  const runWithDirtyGuard = (action: () => void) => {
+    if (showForm && isFormDirty) {
+      setPendingTab(null);
+      setPendingAction(() => action);
+      setDiscardDialogOpen(true);
+    } else {
+      action();
+    }
+  };
+  const handleTabChange = (value: string) => {
+    if (isFormDirty && value !== activeTab) {
+      setPendingTab(value);
+      setDiscardDialogOpen(true);
+    } else {
+      setActiveTab(value);
+    }
+  };
+
   // Salvar contatos (inline/local configs continuam locais)
   const saveContactsToStorage = (updatedContacts: Contact[]) => {
     setContacts(updatedContacts);
