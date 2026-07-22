@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserCog, Search, Pencil, Plus, Trash2, X, Info } from "lucide-react";
 
@@ -167,9 +166,162 @@ export default function Gerentes() {
   const idsVend = new Set(vinculosVendedores.map(v => v.vendedor_empresa_id));
   const idsEmp = new Set(vinculosEmpresas.map(v => v.empresa_id));
 
-  return (
-    <>
+  if (showForm && editing) {
+    return (
       <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-background to-muted/20">
+        <div className="border-b bg-card/80 backdrop-blur-sm px-4 sm:px-8 py-4 sm:py-6">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => { setShowForm(false); setEditing(null); }}
+              className="hover:bg-accent/50"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+            <div className="h-10 w-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center">
+              <UserCog className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl font-light tracking-tight text-foreground truncate">
+                {editing.nome}
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 truncate">{editing.email}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-auto p-4 sm:p-8">
+          <Tabs defaultValue="vendedores" className="w-full max-w-4xl mx-auto">
+            <TabsList className="bg-muted/30 border border-border/40 p-1 rounded-lg mb-6">
+              <TabsTrigger value="vendedores" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md">
+                Vendedores
+              </TabsTrigger>
+              <TabsTrigger value="empresas" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md">
+                Empresas
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="vendedores" className="space-y-4 mt-4">
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="p-4 space-y-3">
+                  <h4 className="text-sm font-semibold">Adicionar vendedores</h4>
+                  <div className="space-y-1 max-h-[260px] overflow-y-auto border rounded-lg p-2 bg-background">
+                    {vendedoresLista.filter(v => !idsVend.has(v.id)).length === 0 && (
+                      <p className="text-xs text-muted-foreground p-2">Todos os vendedores já foram vinculados.</p>
+                    )}
+                    {vendedoresLista.filter(v => !idsVend.has(v.id)).map(v => (
+                      <div key={v.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
+                        <Checkbox
+                          id={`v-${v.id}`}
+                          checked={novosVendedores.includes(v.id)}
+                          onCheckedChange={(c) => {
+                            if (c) setNovosVendedores([...novosVendedores, v.id]);
+                            else setNovosVendedores(novosVendedores.filter(x => x !== v.id));
+                          }}
+                        />
+                        <label htmlFor={`v-${v.id}`} className="text-sm cursor-pointer flex-1">
+                          {v.nome_fantasia || v.nome}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  <Button size="sm" className="w-full" onClick={adicionarVendedores} disabled={novosVendedores.length === 0}>
+                    <Plus className="h-4 w-4 mr-2" /> Vincular selecionados
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Vendedores vinculados ({vinculosVendedores.length})</h4>
+                {vinculosVendedores.length === 0 ? (
+                  <div className="p-4 border rounded-lg bg-muted/30 text-center">
+                    <p className="text-sm text-muted-foreground">Nenhum vendedor vinculado</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {vinculosVendedores.map(v => {
+                      const vend = vendedoresLista.find(x => x.id === v.vendedor_empresa_id);
+                      return (
+                        <div key={v.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group">
+                          <p className="text-sm font-medium">{vend?.nome_fantasia || vend?.nome || "Vendedor removido"}</p>
+                          <Button variant="ghost" size="sm" onClick={() => removerVendedor(v.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="empresas" className="space-y-4 mt-4">
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="p-4 space-y-3">
+                  <h4 className="text-sm font-semibold">Adicionar empresas</h4>
+                  <div className="space-y-1 max-h-[260px] overflow-y-auto border rounded-lg p-2 bg-background">
+                    {empresasLista.filter(e => !idsEmp.has(e.id)).length === 0 && (
+                      <p className="text-xs text-muted-foreground p-2">Nenhuma empresa disponível.</p>
+                    )}
+                    {empresasLista.filter(e => !idsEmp.has(e.id)).map(e => (
+                      <div key={e.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
+                        <Checkbox
+                          id={`e-${e.id}`}
+                          checked={novasEmpresas.includes(e.id)}
+                          onCheckedChange={(c) => {
+                            if (c) setNovasEmpresas([...novasEmpresas, e.id]);
+                            else setNovasEmpresas(novasEmpresas.filter(x => x !== e.id));
+                          }}
+                        />
+                        <label htmlFor={`e-${e.id}`} className="text-sm cursor-pointer flex-1">
+                          {e.nome_fantasia || e.nome}
+                          {e.cnpj && <span className="text-xs text-muted-foreground ml-2">{e.cnpj}</span>}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  <Button size="sm" className="w-full" onClick={adicionarEmpresas} disabled={novasEmpresas.length === 0}>
+                    <Plus className="h-4 w-4 mr-2" /> Vincular selecionadas
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Empresas vinculadas ({vinculosEmpresas.length})</h4>
+                {vinculosEmpresas.length === 0 ? (
+                  <div className="p-4 border rounded-lg bg-muted/30 text-center">
+                    <p className="text-sm text-muted-foreground">Nenhuma empresa vinculada</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {vinculosEmpresas.map(v => {
+                      const emp = empresasLista.find(x => x.id === v.empresa_id);
+                      return (
+                        <div key={v.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group">
+                          <div>
+                            <p className="text-sm font-medium">{emp?.nome_fantasia || emp?.nome || "Empresa removida"}</p>
+                            {emp?.cnpj && <p className="text-xs text-muted-foreground">{emp.cnpj}</p>}
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => removerEmpresa(v.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-background to-muted/20">
+
         <div className="border-b bg-card/80 backdrop-blur-sm px-3 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
             <div>
@@ -267,138 +419,5 @@ export default function Gerentes() {
           )}
         </div>
       </div>
-
-      <Sheet open={showForm} onOpenChange={(o) => { if (!o) { setShowForm(false); setEditing(null); } }}>
-        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle className="flex items-center gap-2 text-xl font-light">
-              <div className="h-9 w-9 rounded-lg bg-primary/15 text-primary flex items-center justify-center">
-                <UserCog className="h-5 w-5" />
-              </div>
-              {editing?.nome}
-            </SheetTitle>
-          </SheetHeader>
-
-          <Tabs defaultValue="vendedores" className="mt-6">
-            <TabsList>
-              <TabsTrigger value="vendedores">Vendedores</TabsTrigger>
-              <TabsTrigger value="empresas">Empresas</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="vendedores" className="space-y-4 mt-4">
-              <Card className="border-primary/20 bg-primary/5">
-                <CardContent className="p-4 space-y-3">
-                  <h4 className="text-sm font-semibold">Adicionar vendedores</h4>
-                  <div className="space-y-1 max-h-[220px] overflow-y-auto border rounded-lg p-2 bg-background">
-                    {vendedoresLista.filter(v => !idsVend.has(v.id)).length === 0 && (
-                      <p className="text-xs text-muted-foreground p-2">Todos os vendedores já foram vinculados.</p>
-                    )}
-                    {vendedoresLista.filter(v => !idsVend.has(v.id)).map(v => (
-                      <div key={v.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
-                        <Checkbox
-                          id={`v-${v.id}`}
-                          checked={novosVendedores.includes(v.id)}
-                          onCheckedChange={(c) => {
-                            if (c) setNovosVendedores([...novosVendedores, v.id]);
-                            else setNovosVendedores(novosVendedores.filter(x => x !== v.id));
-                          }}
-                        />
-                        <label htmlFor={`v-${v.id}`} className="text-sm cursor-pointer flex-1">
-                          {v.nome_fantasia || v.nome}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                  <Button size="sm" className="w-full" onClick={adicionarVendedores} disabled={novosVendedores.length === 0}>
-                    <Plus className="h-4 w-4 mr-2" /> Vincular selecionados
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <div>
-                <h4 className="text-sm font-semibold mb-2">Vendedores vinculados ({vinculosVendedores.length})</h4>
-                {vinculosVendedores.length === 0 ? (
-                  <div className="p-4 border rounded-lg bg-muted/30 text-center">
-                    <p className="text-sm text-muted-foreground">Nenhum vendedor vinculado</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {vinculosVendedores.map(v => {
-                      const vend = vendedoresLista.find(x => x.id === v.vendedor_empresa_id);
-                      return (
-                        <div key={v.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group">
-                          <p className="text-sm font-medium">{vend?.nome_fantasia || vend?.nome || "Vendedor removido"}</p>
-                          <Button variant="ghost" size="sm" onClick={() => removerVendedor(v.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="empresas" className="space-y-4 mt-4">
-              <Card className="border-primary/20 bg-primary/5">
-                <CardContent className="p-4 space-y-3">
-                  <h4 className="text-sm font-semibold">Adicionar empresas</h4>
-                  <div className="space-y-1 max-h-[220px] overflow-y-auto border rounded-lg p-2 bg-background">
-                    {empresasLista.filter(e => !idsEmp.has(e.id)).length === 0 && (
-                      <p className="text-xs text-muted-foreground p-2">Nenhuma empresa disponível.</p>
-                    )}
-                    {empresasLista.filter(e => !idsEmp.has(e.id)).map(e => (
-                      <div key={e.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
-                        <Checkbox
-                          id={`e-${e.id}`}
-                          checked={novasEmpresas.includes(e.id)}
-                          onCheckedChange={(c) => {
-                            if (c) setNovasEmpresas([...novasEmpresas, e.id]);
-                            else setNovasEmpresas(novasEmpresas.filter(x => x !== e.id));
-                          }}
-                        />
-                        <label htmlFor={`e-${e.id}`} className="text-sm cursor-pointer flex-1">
-                          {e.nome_fantasia || e.nome}
-                          {e.cnpj && <span className="text-xs text-muted-foreground ml-2">{e.cnpj}</span>}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                  <Button size="sm" className="w-full" onClick={adicionarEmpresas} disabled={novasEmpresas.length === 0}>
-                    <Plus className="h-4 w-4 mr-2" /> Vincular selecionadas
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <div>
-                <h4 className="text-sm font-semibold mb-2">Empresas vinculadas ({vinculosEmpresas.length})</h4>
-                {vinculosEmpresas.length === 0 ? (
-                  <div className="p-4 border rounded-lg bg-muted/30 text-center">
-                    <p className="text-sm text-muted-foreground">Nenhuma empresa vinculada</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {vinculosEmpresas.map(v => {
-                      const emp = empresasLista.find(x => x.id === v.empresa_id);
-                      return (
-                        <div key={v.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group">
-                          <div>
-                            <p className="text-sm font-medium">{emp?.nome_fantasia || emp?.nome || "Empresa removida"}</p>
-                            {emp?.cnpj && <p className="text-xs text-muted-foreground">{emp.cnpj}</p>}
-                          </div>
-                          <Button variant="ghost" size="sm" onClick={() => removerEmpresa(v.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </SheetContent>
-      </Sheet>
-    </>
   );
 }
