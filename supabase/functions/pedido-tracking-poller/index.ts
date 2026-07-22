@@ -40,6 +40,13 @@ serve(async (req) => {
         .eq("id", t.id);
     }
 
+    await admin.from("cron_health").upsert({
+      poller: "pedido-tracking-poller",
+      ultimo_run_em: new Date().toISOString(),
+      ultimo_status: resultado.erros.length ? "erro" : "ok",
+      ultimo_detalhes: resultado,
+    }, { onConflict: "poller" });
+
     return new Response(JSON.stringify({ success: true, ...resultado }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

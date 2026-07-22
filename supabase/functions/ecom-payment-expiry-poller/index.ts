@@ -52,6 +52,13 @@ serve(async (req) => {
       resultado.expirados++;
     }
 
+    await admin.from("cron_health").upsert({
+      poller: "ecom-payment-expiry-poller",
+      ultimo_run_em: new Date().toISOString(),
+      ultimo_status: resultado.erros.length ? "erro" : "ok",
+      ultimo_detalhes: resultado,
+    }, { onConflict: "poller" });
+
     return new Response(JSON.stringify({ success: true, ...resultado }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
