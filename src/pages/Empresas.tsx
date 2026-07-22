@@ -1643,107 +1643,108 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     <>
       {!showForm ? (
         <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-background to-muted/20">
-        <div className="border-b bg-card/80 backdrop-blur-sm px-3 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-foreground">{entityConfig.plural}</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">{entityConfig.subtitle}</p>
-            </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+        <CadastroHeader
+          icon={variant === "vendedor" ? UserCog : variant === "transportadora" ? Truck : Building2}
+          title={entityConfig.plural}
+          subtitle={entityConfig.subtitle}
+          stats={[
+            { label: sortedEmpresas.length === 1 ? entityConfig.singular.toLowerCase() : entityConfig.plural.toLowerCase(), value: sortedEmpresas.length, tone: "primary" },
+          ]}
+          actions={
+            <>
               <Button onClick={() => {
                 setShowForm(true);
                 setEditingEmpresa(null);
                 setFormData({});
                 setContatosVinculados([]);
                 setCriarNovoContato(false);
-              }} className="gap-2 shadow-sm text-xs sm:text-sm h-9 sm:h-10">
-                <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+              }} className="gap-2 shadow-sm h-9 sm:h-10">
+                <Plus className="w-4 h-4" />
                 {variant === "empresa" ? "Nova Empresa" : (variant === "vendedor" ? "Novo Vendedor" : "Nova Transportadora")}
               </Button>
               {!hideAdminButtons && (
-                <Button 
-                  onClick={() => setImportDialogOpen(true)} 
-                  variant="outline" 
-                  className="gap-2 shadow-sm text-xs sm:text-sm h-9 sm:h-10"
+                <Button
+                  onClick={() => setImportDialogOpen(true)}
+                  variant="outline"
+                  className="gap-2 shadow-sm h-9 sm:h-10"
                 >
-                  <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
-                  Importar via API
+                  <Upload className="w-4 h-4" />
+                  <span className="hidden sm:inline">Importar via API</span>
+                  <span className="sm:hidden">Importar</span>
                 </Button>
               )}
-            </div>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-            {!hideAdminButtons && (
-              <TableColumnsConfig 
-                columns={tableColumns} 
-                onColumnsChange={handleColumnsChange}
-                fieldsTabLabel="Campos da Empresa"
-                fieldsConfigComponent={
-                  estabelecimentoId ? (
-                    <EmpresaFieldsCRUD 
-                      estabelecimentoId={estabelecimentoId} 
-                      onChanged={async () => {
-                        if (estabelecimentoId) {
-                          await loadFieldConfigs(estabelecimentoId);
-                        }
-                      }}
-                    />
-                  ) : (
-                    <div className="text-center text-muted-foreground">
-                      Carregando configurações...
-            </div>
-                  )
-                }
-              />
-            )}
-            
-            <div className="flex-1 w-full sm:max-w-md">
-              <div className="relative">
-                <Search className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar empresas..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 sm:pl-10 h-9 sm:h-10 border-border/40 focus-visible:ring-1 bg-background/50 text-xs sm:text-sm"
+            </>
+          }
+          toolbar={
+            <>
+              {!hideAdminButtons && (
+                <TableColumnsConfig
+                  columns={tableColumns}
+                  onColumnsChange={handleColumnsChange}
+                  fieldsTabLabel="Campos da Empresa"
+                  fieldsConfigComponent={
+                    estabelecimentoId ? (
+                      <EmpresaFieldsCRUD
+                        estabelecimentoId={estabelecimentoId}
+                        onChanged={async () => {
+                          if (estabelecimentoId) {
+                            await loadFieldConfigs(estabelecimentoId);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="text-center text-muted-foreground">
+                        Carregando configurações...
+                      </div>
+                    )
+                  }
                 />
-              </div>
-            </div>
+              )}
 
-            {variant === "empresa" && (
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[200px] h-9 sm:h-10 text-xs sm:text-sm">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="nao_prospect">Ocultar prospects</SelectItem>
-                  <SelectItem value="all">Todos (incluir prospects)</SelectItem>
-                  <SelectItem value="somente_prospect">Somente prospects</SelectItem>
-                  <SelectItem value="cliente_ativo">Clientes ativos</SelectItem>
-                  <SelectItem value="cliente_inativo">Clientes inativos</SelectItem>
-                  <SelectItem value="lead_qualificado">Leads qualificados</SelectItem>
-                  <SelectItem value="perdido">Perdidos</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-            
-            
-            {searchTerm && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSearchTerm("")}
-                className="gap-1 sm:gap-2 text-muted-foreground hover:text-foreground text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
-              >
-                <X className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Limpar</span>
-              </Button>
-            )}
-            
-            <div className="ml-auto text-xs sm:text-sm font-light text-muted-foreground whitespace-nowrap">
-              {sortedEmpresas.length} {sortedEmpresas.length === 1 ? 'empresa' : 'empresas'}
-            </div>
-          </div>
+              <div className="flex-1 min-w-0">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder={`Buscar ${entityConfig.plural.toLowerCase()}...`}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 h-9 sm:h-10 rounded-xl border-border/50 focus-visible:ring-1 bg-background text-sm"
+                  />
+                </div>
+              </div>
+
+              {variant === "empresa" && (
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full md:w-[200px] h-9 sm:h-10 rounded-xl text-sm">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nao_prospect">Ocultar prospects</SelectItem>
+                    <SelectItem value="all">Todos (incluir prospects)</SelectItem>
+                    <SelectItem value="somente_prospect">Somente prospects</SelectItem>
+                    <SelectItem value="cliente_ativo">Clientes ativos</SelectItem>
+                    <SelectItem value="cliente_inativo">Clientes inativos</SelectItem>
+                    <SelectItem value="lead_qualificado">Leads qualificados</SelectItem>
+                    <SelectItem value="perdido">Perdidos</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+
+              {searchTerm && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSearchTerm("")}
+                  className="gap-2 text-muted-foreground hover:text-foreground h-9 px-3"
+                >
+                  <X className="w-4 h-4" />
+                  <span className="hidden sm:inline">Limpar</span>
+                </Button>
+              )}
+            </>
+          }
+        />
+
         </div>
 
         <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6">
