@@ -2040,111 +2040,109 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     return (
       <div className="flex-1 flex h-full bg-gradient-to-br from-background to-muted/20">
         <div className="flex-1 flex flex-col min-w-0">
-          <div className="border-b bg-card/80 backdrop-blur-sm px-3 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-foreground">Contatos</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">Gerencie seus contatos e clientes</p>
-            </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
-              {!hideAdminButtons && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowImportPanel(true)} 
-                  className="gap-2 shadow-sm text-xs sm:text-sm h-9 sm:h-10"
-                >
-                  <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
-                  Importação
+          <CadastroHeader
+            icon={User}
+            title="Contatos"
+            subtitle="Gerencie seus contatos e clientes"
+            stats={[
+              { label: sortedContacts.length === 1 ? "contato" : "contatos", value: sortedContacts.length, tone: "primary" },
+            ]}
+            actions={
+              <>
+                {!hideAdminButtons && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowImportPanel(true)}
+                    className="gap-2 shadow-sm h-9 sm:h-10"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span className="hidden sm:inline">Importação</span>
+                    <span className="sm:hidden">Importar</span>
+                  </Button>
+                )}
+                <Button onClick={() => {
+                  setShouldCheckDuplicate(true);
+                  setIsClosingForm(false);
+                  setShowForm(true);
+                  setEditingContact(null);
+                  setFormData({});
+                  setSegmentosSelecionados([]);
+                  setEmpresaSelecionada("");
+                  setCriarNovaEmpresa(false);
+                  setContatosDaEmpresa([]);
+                  setBuscaEmpresa("");
+                  setEmpresasFiltradas([]);
+                  setEmpresasVinculadas([]);
+                }} className="gap-2 shadow-sm h-9 sm:h-10">
+                  <Plus className="w-4 h-4" />
+                  Novo Contato
                 </Button>
-              )}
-              <Button onClick={() => {
-                setShouldCheckDuplicate(true);
-                setIsClosingForm(false);
-                setShowForm(true);
-                setEditingContact(null);
-                setFormData({});
-                setSegmentosSelecionados([]);
-                setEmpresaSelecionada("");
-                setCriarNovaEmpresa(false);
-                setContatosDaEmpresa([]);
-                setBuscaEmpresa("");
-                setEmpresasFiltradas([]);
-                setEmpresasVinculadas([]);
-              }} className="gap-2 shadow-sm text-xs sm:text-sm h-9 sm:h-10">
-                <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                Novo Contato
-              </Button>
-            </div>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-            {!hideAdminButtons && (
-              <TableColumnsConfig
-                columns={tableColumns} 
-                onColumnsChange={handleColumnsChange}
-                fieldsConfigComponent={
-                  estabelecimentoId ? (
-                    <ContatoFieldsCRUD 
-                      estabelecimentoId={estabelecimentoId} 
-                      onChanged={async () => {
-                        console.log('🔄 ContatoFieldsCRUD onChange triggered');
-                        // Recarregar campos customizados no formulário
-                        await loadContactFields(estabelecimentoId);
-                        // Recarregar colunas da tabela
-                        await loadTableColumns(estabelecimentoId);
-                        // Recarregar lista de contatos
-                        await loadContacts();
-                      }}
-                    />
-                  ) : (
-                    <div className="text-center text-muted-foreground">
-                      Carregando configurações...
-                    </div>
-                  )
-                }
-              />
-            )}
-            
-            <div className="flex-1 w-full sm:max-w-md">
-              <div className="relative">
-                <Search className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar contatos..."
-                  value={searchFilters.unifiedSearch}
-                  onChange={(e) => setSearchFilters({ ...searchFilters, unifiedSearch: e.target.value })}
-                  className="pl-8 sm:pl-10 h-9 sm:h-10 border-border/40 focus-visible:ring-1 bg-background/50 text-xs sm:text-sm"
-                />
-              </div>
-            </div>
-            
-            {searchFilters.unifiedSearch && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSearchFilters({ ...searchFilters, unifiedSearch: "" })}
-                className="gap-1 sm:gap-2 text-muted-foreground hover:text-foreground text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
-              >
-                <X className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Limpar</span>
-              </Button>
-            )}
-            
-            <Select value={tipoContatoFilter} onValueChange={(v: any) => setTipoContatoFilter(v)}>
-              <SelectTrigger className="w-[180px] h-9 sm:h-10 text-xs sm:text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os contatos</SelectItem>
-                <SelectItem value="clientes">Somente clientes</SelectItem>
-                <SelectItem value="prospects">Somente prospects</SelectItem>
-              </SelectContent>
-            </Select>
+              </>
+            }
+            toolbar={
+              <>
+                {!hideAdminButtons && (
+                  <TableColumnsConfig
+                    columns={tableColumns}
+                    onColumnsChange={handleColumnsChange}
+                    fieldsConfigComponent={
+                      estabelecimentoId ? (
+                        <ContatoFieldsCRUD
+                          estabelecimentoId={estabelecimentoId}
+                          onChanged={async () => {
+                            await loadContactFields(estabelecimentoId);
+                            await loadTableColumns(estabelecimentoId);
+                            await loadContacts();
+                          }}
+                        />
+                      ) : (
+                        <div className="text-center text-muted-foreground">
+                          Carregando configurações...
+                        </div>
+                      )
+                    }
+                  />
+                )}
 
-            <div className="ml-auto text-xs sm:text-sm font-light text-muted-foreground whitespace-nowrap">
-              {sortedContacts.length} {sortedContacts.length === 1 ? 'contato' : 'contatos'}
-            </div>
-          </div>
-        </div>
+                <div className="flex-1 min-w-0">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar contatos..."
+                      value={searchFilters.unifiedSearch}
+                      onChange={(e) => setSearchFilters({ ...searchFilters, unifiedSearch: e.target.value })}
+                      className="pl-10 h-9 sm:h-10 rounded-xl border-border/50 focus-visible:ring-1 bg-background text-sm"
+                    />
+                  </div>
+                </div>
+
+                <Select value={tipoContatoFilter} onValueChange={(v: any) => setTipoContatoFilter(v)}>
+                  <SelectTrigger className="w-full md:w-[200px] h-9 sm:h-10 rounded-xl text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os contatos</SelectItem>
+                    <SelectItem value="clientes">Somente clientes</SelectItem>
+                    <SelectItem value="prospects">Somente prospects</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {searchFilters.unifiedSearch && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSearchFilters({ ...searchFilters, unifiedSearch: "" })}
+                    className="gap-2 text-muted-foreground hover:text-foreground h-9 px-3"
+                  >
+                    <X className="w-4 h-4" />
+                    <span className="hidden sm:inline">Limpar</span>
+                  </Button>
+                )}
+              </>
+            }
+          />
+
+
 
 
         <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6">
