@@ -417,6 +417,23 @@ export default function PoliticasInternas() {
             <Button variant="outline" size="sm" onClick={() => setCatManagerOpen(true)}>
               <FolderPlus className="w-4 h-4 mr-1" /> Categorias
             </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                setWizardStep(1);
+                setWizardTopicos("");
+                setWizardCategoriaId(categories[0]?.id ?? "");
+                setWizardResponsavel("");
+                setWizardContexto("");
+                setWizardInstrucao("");
+                setWizardStatus("ativa");
+                setWizardDraft({ title: "", summary: "", content: "", keywords: [] });
+                setWizardOpen(true);
+              }}
+            >
+              <Sparkles className="w-4 h-4 mr-1" /> Wizard IA
+            </Button>
             <Button size="sm" onClick={openNew}>
               <Plus className="w-4 h-4 mr-1" /> Nova política
             </Button>
