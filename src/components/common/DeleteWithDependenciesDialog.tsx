@@ -118,24 +118,8 @@ export function DeleteWithDependenciesDialog({
   useEffect(() => {
     if (!open) return;
     setDeps(null);
-    setLoading(true);
-    (async () => {
-      try {
-        const { data, error } = await supabase.rpc("check_entity_dependencies", {
-          p_entity: ENTITY_KEY_MAP[entity],
-          p_id: id,
-        });
-        if (error) {
-          console.error(error);
-          toast.error("Erro ao verificar dependências");
-          setDeps({});
-        } else {
-          setDeps((data as Record<string, number>) || {});
-        }
-      } finally {
-        setLoading(false);
-      }
-    })();
+    refreshDeps();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, entity, id]);
 
   const hasDeps = deps && Object.keys(deps).length > 0;
