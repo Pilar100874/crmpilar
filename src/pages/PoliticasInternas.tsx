@@ -1011,6 +1011,405 @@ export default function PoliticasInternas() {
         </DialogContent>
       </Dialog>
 
+      {/* ==================== WIZARD IA ==================== */}
+      <Dialog
+        open={wizardOpen}
+        onOpenChange={(o) => {
+          if (wizardGenerating || wizardRefining || wizardPublishing) return;
+          setWizardOpen(o);
+        }}
+      >
+        <DialogContent className="max-w-3xl h-[85vh] p-0 flex flex-col overflow-hidden">
+          <DialogHeader className="px-6 py-3 border-b shrink-0">
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              Wizard IA — Criar política
+            </DialogTitle>
+            <div className="flex items-center gap-2 pt-2 text-xs">
+              {[
+                { n: 1, label: "Tópicos" },
+                { n: 2, label: "Gerar" },
+                { n: 3, label: "Revisar & Publicar" },
+              ].map((s, i) => (
+                <div key={s.n} className="flex items-center gap-2">
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center font-semibold ${
+                      wizardStep === s.n
+                        ? "bg-primary text-primary-foreground"
+                        : wizardStep > (s.n as 1 | 2 | 3)
+                        ? "bg-primary/30 text-primary"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {s.n}
+                  </div>
+                  <span
+                    className={
+                      wizardStep === s.n ? "font-medium" : "text-muted-foreground"
+                    }
+                  >
+                    {s.label}
+                  </span>
+                  {i < 2 && <div className="w-8 h-px bg-border" />}
+                </div>
+              ))}
+            </div>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            {/* ---------- STEP 1 ---------- */}
+            {wizardStep === 1 && (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Cole ou digite tudo o que essa política precisa cobrir. Pode ser em
+                  bullets, frases soltas, regras, exemplos — a IA vai organizar tudo em
+                  formato de política.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Categoria</Label>
+                    <Select
+                      value={wizardCategoriaId}
+                      onValueChange={setWizardCategoriaId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Responsável</Label>
+                    <Input
+                      value={wizardResponsavel}
+                      onChange={(e) => setWizardResponsavel(e.target.value)}
+                      placeholder="Ex: RH, Compliance..."
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label>Tópicos / conteúdo bruto *</Label>
+                  <Textarea
+                    rows={14}
+                    value={wizardTopicos}
+                    onChange={(e) => setWizardTopicos(e.target.value)}
+                    placeholder={
+                      "Ex:\n- Home office permitido 2x por semana\n- Precisa aprovação do gestor\n- Reembolso de internet até R$ 100\n- Reuniões obrigatórias presenciais nas terças\n- Aplica-se a todos os CLTs, exceto operacional\n..."
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Contexto extra (opcional)</Label>
+                  <Textarea
+                    rows={2}
+                    value={wizardContexto}
+                    onChange={(e) => setWizardContexto(e.target.value)}
+                    placeholder="Ex: deve mencionar LGPD, tom formal, aplicar a partir de 2026..."
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* ---------- STEP 2 ---------- */}
+            {wizardStep === 2 && (
+              <div className="space-y-4">
+                {wizardGenerating ? (
+                  <div className="flex flex-col items-center justify-center py-16 gap-3">
+                    <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">
+                      A IA está redigindo sua política...
+                    </p>
+                  </div>
+                ) : wizardDraft.content ? (
+                  <>
+                    <div className="text-sm text-muted-foreground">
+                      Pré-visualização gerada. Confira antes de ir para a revisão final.
+                    </div>
+                    <Card className="p-4 space-y-2">
+                      <div className="font-semibold text-lg">{wizardDraft.title}</div>
+                      {wizardDraft.summary && (
+                        <div className="text-sm text-muted-foreground italic">
+                          {wizardDraft.summary}
+                        </div>
+                      )}
+                      <div className="whitespace-pre-wrap text-sm max-h-72 overflow-y-auto border rounded p-3 bg-muted/30">
+                        {wizardDraft.content}
+                      </div>
+                      {wizardDraft.keywords.length > 0 && (
+                        <div className="flex flex-wrap gap-1 pt-1">
+                          {wizardDraft.keywords.map((k) => (
+                            <Badge key={k} variant="outline">
+                              {k}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </Card>
+                  </>
+                ) : (
+                  <div className="text-center text-muted-foreground py-10">
+                    Clique em <b>"Gerar com IA"</b> abaixo para produzir o texto.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ---------- STEP 3 ---------- */}
+            {wizardStep === 3 && (
+              <div className="space-y-3">
+                <div>
+                  <Label>Título *</Label>
+                  <Input
+                    value={wizardDraft.title}
+                    onChange={(e) =>
+                      setWizardDraft({ ...wizardDraft, title: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Resumo</Label>
+                  <Textarea
+                    rows={2}
+                    value={wizardDraft.summary}
+                    onChange={(e) =>
+                      setWizardDraft({ ...wizardDraft, summary: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Conteúdo *</Label>
+                  <Textarea
+                    rows={12}
+                    value={wizardDraft.content}
+                    onChange={(e) =>
+                      setWizardDraft({ ...wizardDraft, content: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Palavras-chave (separadas por vírgula)</Label>
+                  <Input
+                    value={wizardDraft.keywords.join(", ")}
+                    onChange={(e) =>
+                      setWizardDraft({
+                        ...wizardDraft,
+                        keywords: e.target.value
+                          .split(",")
+                          .map((s) => s.trim())
+                          .filter(Boolean),
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="border rounded p-3 bg-muted/30 space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Sparkles className="w-4 h-4 text-primary" /> Peça um ajuste para a
+                    IA
+                  </div>
+                  <Textarea
+                    rows={3}
+                    value={wizardInstrucao}
+                    onChange={(e) => setWizardInstrucao(e.target.value)}
+                    placeholder="Ex: adicionar seção sobre notebooks corporativos; deixar tom mais formal; incluir prazo de 30 dias para adesão..."
+                    disabled={wizardRefining}
+                  />
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={wizardRefining || !wizardInstrucao.trim()}
+                    onClick={async () => {
+                      setWizardRefining(true);
+                      try {
+                        const catName =
+                          categories.find((c) => c.id === wizardCategoriaId)?.name ??
+                          "";
+                        const { data, error } = await supabase.functions.invoke(
+                          "policies-generate-draft",
+                          {
+                            body: {
+                              modo: "ajustar",
+                              categoria: catName,
+                              responsavel: wizardResponsavel,
+                              textoAtual: wizardDraft.content,
+                              tituloAtual: wizardDraft.title,
+                              resumoAtual: wizardDraft.summary,
+                              instrucao: wizardInstrucao.trim(),
+                            },
+                          }
+                        );
+                        if (error) throw error;
+                        if (!data || data.error)
+                          throw new Error(data?.error ?? "Erro IA");
+                        setWizardDraft({
+                          title: data.title || wizardDraft.title,
+                          summary: data.summary ?? wizardDraft.summary,
+                          content: data.content ?? wizardDraft.content,
+                          keywords: Array.isArray(data.keywords)
+                            ? data.keywords
+                            : wizardDraft.keywords,
+                        });
+                        setWizardInstrucao("");
+                        toast.success("Texto ajustado pela IA");
+                      } catch (e: any) {
+                        toast.error("Falha ao ajustar: " + (e?.message ?? e));
+                      } finally {
+                        setWizardRefining(false);
+                      }
+                    }}
+                  >
+                    {wizardRefining ? (
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3 h-3 mr-1" />
+                    )}
+                    Ajustar com IA
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={wizardStatus === "ativa"}
+                    onCheckedChange={(v) =>
+                      setWizardStatus(v ? "ativa" : "inativa")
+                    }
+                  />
+                  <Label>Publicar como ativa</Label>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="px-6 py-3 border-t shrink-0 bg-background gap-2">
+            {wizardStep > 1 && (
+              <Button
+                variant="outline"
+                onClick={() => setWizardStep((s) => (s - 1) as 1 | 2 | 3)}
+                disabled={wizardGenerating || wizardRefining || wizardPublishing}
+              >
+                Voltar
+              </Button>
+            )}
+            <div className="flex-1" />
+            <Button
+              variant="ghost"
+              onClick={() => setWizardOpen(false)}
+              disabled={wizardGenerating || wizardRefining || wizardPublishing}
+            >
+              Cancelar
+            </Button>
+
+            {wizardStep === 1 && (
+              <Button
+                disabled={!wizardTopicos.trim() || wizardGenerating}
+                onClick={async () => {
+                  setWizardStep(2);
+                  setWizardGenerating(true);
+                  try {
+                    const catName =
+                      categories.find((c) => c.id === wizardCategoriaId)?.name ?? "";
+                    const { data, error } = await supabase.functions.invoke(
+                      "policies-generate-draft",
+                      {
+                        body: {
+                          modo: "topicos",
+                          topicos: wizardTopicos.trim(),
+                          categoria: catName,
+                          responsavel: wizardResponsavel,
+                          contexto: wizardContexto.trim(),
+                        },
+                      }
+                    );
+                    if (error) throw error;
+                    if (!data || data.error)
+                      throw new Error(data?.error ?? "Erro IA");
+                    setWizardDraft({
+                      title: data.title ?? "",
+                      summary: data.summary ?? "",
+                      content: data.content ?? "",
+                      keywords: Array.isArray(data.keywords) ? data.keywords : [],
+                    });
+                    toast.success("Rascunho gerado");
+                  } catch (e: any) {
+                    toast.error("Falha ao gerar: " + (e?.message ?? e));
+                    setWizardStep(1);
+                  } finally {
+                    setWizardGenerating(false);
+                  }
+                }}
+              >
+                {wizardGenerating && (
+                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                )}
+                <Sparkles className="w-4 h-4 mr-1" /> Gerar com IA
+              </Button>
+            )}
+
+            {wizardStep === 2 && (
+              <Button
+                disabled={!wizardDraft.content || wizardGenerating}
+                onClick={() => setWizardStep(3)}
+              >
+                Revisar & Editar →
+              </Button>
+            )}
+
+            {wizardStep === 3 && (
+              <Button
+                disabled={
+                  wizardPublishing ||
+                  !wizardDraft.title.trim() ||
+                  !wizardDraft.content.trim()
+                }
+                onClick={async () => {
+                  setWizardPublishing(true);
+                  try {
+                    const { data, error } = await supabase
+                      .from("policies")
+                      .insert({
+                        title: wizardDraft.title.trim(),
+                        summary: wizardDraft.summary ?? "",
+                        content: wizardDraft.content,
+                        category_id: wizardCategoriaId || null,
+                        responsible: wizardResponsavel ?? "",
+                        keywords: wizardDraft.keywords ?? [],
+                        status: wizardStatus,
+                        ordem: policies.length,
+                      })
+                      .select("id")
+                      .single();
+                    if (error) throw error;
+                    supabase.functions
+                      .invoke("policies-embed", {
+                        body: { policyId: data.id },
+                      })
+                      .catch(() => {});
+                    toast.success("Política publicada");
+                    setWizardOpen(false);
+                    await loadAll();
+                  } catch (e: any) {
+                    toast.error("Falha ao publicar: " + (e?.message ?? e));
+                  } finally {
+                    setWizardPublishing(false);
+                  }
+                }}
+              >
+                {wizardPublishing && (
+                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                )}
+                Publicar política
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
