@@ -643,7 +643,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }
 
       if (orcamentos && orcamentos.length > 0) {
-        toast.error("Não é possível excluir esta empresa pois existem orçamentos vinculados a ela");
+        toast.error(`Não é possível excluir ${variant === 'vendedor' ? 'este vendedor' : variant === 'transportadora' ? 'esta transportadora' : 'esta empresa'} pois existem orçamentos vinculados`);
         setDeleteDialogOpen(false);
         setEmpresaToDelete(null);
         return;
