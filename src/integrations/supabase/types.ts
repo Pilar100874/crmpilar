@@ -3954,6 +3954,7 @@ export type Database = {
       }
       customers: {
         Row: {
+          ativo: boolean
           created_at: string | null
           custom_fields: Json | null
           email: string
@@ -3967,6 +3968,7 @@ export type Database = {
           tipo_operador: boolean | null
         }
         Insert: {
+          ativo?: boolean
           created_at?: string | null
           custom_fields?: Json | null
           email: string
@@ -3980,6 +3982,7 @@ export type Database = {
           tipo_operador?: boolean | null
         }
         Update: {
+          ativo?: boolean
           created_at?: string | null
           custom_fields?: Json | null
           email?: string
@@ -23226,6 +23229,10 @@ export type Database = {
       aggregate_heatmap_daily: { Args: never; Returns: undefined }
       auto_close_support_tickets: { Args: never; Returns: undefined }
       check_catalog_expiration: { Args: never; Returns: undefined }
+      check_customer_dependencies: {
+        Args: { p_customer_id: string }
+        Returns: Json
+      }
       cleanup_old_agent_chat_sessions: { Args: never; Returns: undefined }
       current_user_is_host: { Args: { host_user_id: string }; Returns: boolean }
       delete_customer_cascade: {
@@ -23263,6 +23270,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      inactivate_customer: { Args: { p_customer_id: string }; Returns: boolean }
       is_screen_share_host: { Args: { session_id: string }; Returns: boolean }
       is_screen_share_participant: {
         Args: { session_id: string }

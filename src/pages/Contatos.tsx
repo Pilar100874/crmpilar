@@ -1516,38 +1516,64 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     setShowForm(true);
   };
 
-  const handleDeleteContact = (contactId: string) => {
+  const [contactDeps, setContactDeps] = useState<Record<string, number> | null>(null);
+  const [checkingDeps, setCheckingDeps] = useState(false);
+
+  const handleDeleteContact = async (contactId: string) => {
     const contact = contacts.find(c => c.id === contactId);
     if (!contact) return;
-    
+
     setContactToDelete(contact);
+    setContactDeps(null);
     setDeleteDialogOpen(true);
+    setCheckingDeps(true);
+    try {
+      const { data, error } = await supabase.rpc('check_customer_dependencies', { p_customer_id: contactId });
+      if (error) throw error;
+      setContactDeps((data as any) || {});
+    } catch (e: any) {
+      console.error('Erro ao verificar dependências:', e);
+      toast.error('Não foi possível verificar vínculos do contato');
+      setContactDeps({});
+    } finally {
+      setCheckingDeps(false);
+    }
   };
 
   const confirmDelete = async () => {
     if (!contactToDelete) return;
-    
     try {
-      // Usar função SECURITY DEFINER para deletar em cascata
       const { data, error } = await supabase
         .rpc('delete_customer_cascade', { p_customer_id: contactToDelete.id });
-
       if (error) throw error;
-      
-      if (data === false) {
-        throw new Error('Não foi possível excluir o contato. Verifique se há dependências.');
-      }
-
+      if (data === false) throw new Error('Não foi possível excluir o contato.');
       await loadContacts();
       toast.success("Contato excluído com sucesso");
     } catch (e: any) {
       console.error('Erro ao excluir contato:', e);
       toast.error(e?.message || "Erro ao excluir contato");
     }
-    
     setDeleteDialogOpen(false);
     setContactToDelete(null);
+    setContactDeps(null);
   };
+
+  const confirmInactivate = async () => {
+    if (!contactToDelete) return;
+    try {
+      const { error } = await supabase.rpc('inactivate_customer', { p_customer_id: contactToDelete.id });
+      if (error) throw error;
+      await loadContacts();
+      toast.success("Contato inativado");
+    } catch (e: any) {
+      console.error('Erro ao inativar contato:', e);
+      toast.error(e?.message || "Erro ao inativar contato");
+    }
+    setDeleteDialogOpen(false);
+    setContactToDelete(null);
+    setContactDeps(null);
+  };
+
 
   // Função para verificar duplicidade de WhatsApp ou Email
   const checkDuplicate = async (field: 'phone' | 'email', value: string) => {
@@ -2336,22 +2362,67 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tem certeza que deseja excluir o contato <strong>{contactToDelete?.name}</strong>?
-                {"\n\n"}
-                Se o contato estiver em uso no sistema (conversas, pedidos, etc.), 
-                ele será inativado ao invés de excluído.
+              <AlertDialogTitle>
+                {contactDeps && Object.keys(contactDeps).length > 0
+                  ? 'Contato em uso no sistema'
+                  : 'Confirmar exclusão'}
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-2">
+                  {checkingDeps ? (
+                    <div>Verificando vínculos de <strong>{contactToDelete?.name}</strong>...</div>
+                  ) : contactDeps && Object.keys(contactDeps).length > 0 ? (
+                    <>
+                      <div>
+                        O contato <strong>{contactToDelete?.name}</strong> não pode ser excluído porque já está sendo utilizado em:
+                      </div>
+                      <ul className="list-disc pl-5 text-sm">
+                        {Object.entries(contactDeps).map(([k, v]) => {
+                          const labels: Record<string, string> = {
+                            conversas: 'Conversas / Atendimentos',
+                            mensagens: 'Mensagens',
+                            orcamentos: 'Orçamentos',
+                            pedidos_ecommerce: 'Pedidos do e-commerce',
+                            negociacoes_funil: 'Negociações do funil',
+                            tickets_portal: 'Tickets do portal',
+                            tarefas_agenda: 'Tarefas da agenda',
+                            envio_massa: 'Envios em massa',
+                            vendas_atribuidas: 'Vendas atribuídas',
+                            respostas_pesquisa: 'Respostas de pesquisa',
+                            carrinhos_ativos: 'Carrinhos ativos',
+                          };
+                          return (
+                            <li key={k}><strong>{v as number}</strong> {labels[k] || k}</li>
+                          );
+                        })}
+                      </ul>
+                      <div className="text-sm text-muted-foreground pt-2">
+                        Você pode <strong>inativar</strong> este contato para preservar o histórico.
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      Tem certeza que deseja excluir o contato <strong>{contactToDelete?.name}</strong>? Nenhum vínculo foi encontrado.
+                    </div>
+                  )}
+                </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmDelete}>
-                Confirmar
-              </AlertDialogAction>
+              {!checkingDeps && contactDeps && Object.keys(contactDeps).length > 0 ? (
+                <AlertDialogAction onClick={confirmInactivate}>
+                  Inativar contato
+                </AlertDialogAction>
+              ) : (
+                <AlertDialogAction onClick={confirmDelete} disabled={checkingDeps}>
+                  Excluir
+                </AlertDialogAction>
+              )}
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
 
         {/* Confirmação de exclusão de campo personalizado */}
         <AlertDialog open={!!fieldToDelete} onOpenChange={(o) => !o && setFieldToDelete(null)}>
