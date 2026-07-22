@@ -3651,6 +3651,39 @@ export type Database = {
           },
         ]
       }
+      cron_health: {
+        Row: {
+          created_at: string
+          id: string
+          poller: string
+          total_runs: number
+          ultimo_detalhes: Json | null
+          ultimo_run_em: string | null
+          ultimo_status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          poller: string
+          total_runs?: number
+          ultimo_detalhes?: Json | null
+          ultimo_run_em?: string | null
+          ultimo_status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          poller?: string
+          total_runs?: number
+          ultimo_detalhes?: Json | null
+          ultimo_run_em?: string | null
+          ultimo_status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cron_jobs: {
         Row: {
           config: Json | null
