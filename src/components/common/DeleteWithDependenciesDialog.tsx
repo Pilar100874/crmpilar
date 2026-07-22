@@ -82,12 +82,12 @@ export function DeleteWithDependenciesDialog({
     if (!open) return;
     setDeps(null);
     setLoading(true);
-    supabase
-      .rpc("check_entity_dependencies", {
-        p_entity: ENTITY_KEY_MAP[entity],
-        p_id: id,
-      })
-      .then(({ data, error }) => {
+    (async () => {
+      try {
+        const { data, error } = await supabase.rpc("check_entity_dependencies", {
+          p_entity: ENTITY_KEY_MAP[entity],
+          p_id: id,
+        });
         if (error) {
           console.error(error);
           toast.error("Erro ao verificar dependências");
@@ -95,8 +95,10 @@ export function DeleteWithDependenciesDialog({
         } else {
           setDeps((data as Record<string, number>) || {});
         }
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [open, entity, id]);
 
   const hasDeps = deps && Object.keys(deps).length > 0;
