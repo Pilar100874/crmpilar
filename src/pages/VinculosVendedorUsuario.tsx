@@ -66,6 +66,7 @@ export default function VinculosVendedorUsuario() {
         .from("usuarios")
         .select("id, nome, email")
         .eq("estabelecimento_id", estabelecimentoId)
+        .eq("tipo", "gerente")
         .order("nome");
       setUsuarios(usuariosData || []);
 
