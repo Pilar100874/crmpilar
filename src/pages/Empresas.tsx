@@ -3083,7 +3083,15 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       )}
       
       {/* Dialog de confirmação para descartar alterações */}
-      <AlertDialog open={discardDialogOpen} onOpenChange={setDiscardDialogOpen}>
+      <AlertDialog
+        open={discardDialogOpen}
+        onOpenChange={(open) => {
+          setDiscardDialogOpen(open);
+          if (!open && blocker.state === "blocked") {
+            blocker.reset();
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
@@ -3092,11 +3100,22 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+            <AlertDialogCancel
+              onClick={() => {
+                if (blocker.state === "blocked") blocker.reset();
+              }}
+            >
+              Continuar editando
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 setDiscardDialogOpen(false);
-                closeForm();
+                if (blocker.state === "blocked") {
+                  setFormSnapshot(JSON.stringify(formData));
+                  blocker.proceed();
+                } else {
+                  closeForm();
+                }
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
