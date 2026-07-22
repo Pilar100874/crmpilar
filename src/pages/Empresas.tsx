@@ -470,6 +470,15 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       .order('nome_fantasia');
     setVendedoresLista(vendedoresData || []);
 
+    // Carregar transportadoras (empresas com tipo_cliente = transportadora)
+    const { data: transportadorasData } = await supabase
+      .from('empresas')
+      .select('id, nome_fantasia, nome')
+      .eq('estabelecimento_id', estabId)
+      .eq('tipo_cliente', 'transportadora')
+      .order('nome_fantasia');
+    setTransportadorasLista(transportadorasData || []);
+
     // Carregar empresas reais (para uso na aba de vínculos em vendedor/transportadora)
     if (variant !== "empresa") {
       const { data: empresasReaisData } = await supabase
