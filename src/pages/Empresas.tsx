@@ -707,6 +707,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     setWhatsappsVinculados(empresa.whatsapps_vinculados || []);
 
     setShowForm(true);
+    setActiveTab("empresa");
+    setPendingTab(null);
     // Verificar rascunho salvo para este cadastro
     setTimeout(() => {
       checkForDraft(`empresas_draft:${variant}:${empresa.id}`, data);
