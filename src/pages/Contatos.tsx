@@ -2359,49 +2359,9 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                                   size="sm"
                                   variant="outline"
                                   className="h-8 px-2 rounded-full hover:bg-primary hover:text-primary-foreground transition-all duration-200 border-primary/20"
-                                  onClick={async () => {
-                                    setEditingContact(contact);
-                                    setFormData({
-                                      name: contact.name,
-                                      phone: contact.phone,
-                                      tel: contact.tel,
-                                      email: contact.email,
-                                      position: contact.position,
-                                      ...contact.customFields
-                                    });
-                                    
-                                    // Carregar empresas vinculadas
-                                    const { data: vinculos } = await supabase
-                                      .from('customer_empresas')
-                                      .select(`
-                                        id,
-                                        is_primary,
-                                        empresas:empresa_id (
-                                          id,
-                                          nome_fantasia,
-                                          nome,
-                                          cnpj,
-                                          custom_fields
-                                        )
-                                      `)
-                                      .eq('customer_id', contact.id);
-                                    
-                                    if (vinculos) {
-                                      const empresasFormatadas = vinculos.map(v => ({
-                                        id: v.empresas.id,
-                                        nome_fantasia: v.empresas.nome_fantasia,
-                                        nome: v.empresas.nome,
-                                        cnpj: v.empresas.cnpj,
-                                        custom_fields: v.empresas.custom_fields,
-                                        is_primary: v.is_primary,
-                                        vinculo_id: v.id
-                                      }));
-                                      setEmpresasVinculadas(empresasFormatadas);
-                                    }
-                                    
-                                    setShouldCheckDuplicate(true);
-                                    setIsClosingForm(false);
-                                    setShowForm(true);
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    runWithDirtyGuard(() => handleEditContact(contact));
                                   }}
                                   title="Editar cadastro completo"
                                 >
