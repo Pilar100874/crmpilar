@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, MoreVertical, Trash2, GripVertical, Search, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Eye, Building2, Truck, UserCheck, User, AlertCircle } from "lucide-react";
 import { VinculoViewDialog, type VinculoField } from "@/components/common/VinculoViewDialog";
+import { FilteredCheckboxList } from "@/components/common/FilteredCheckboxList";
 import { CadastroHeader } from "@/components/cadastros/CadastroHeader";
 import { ContatoDetailsPanel } from "@/components/contatos/ContatoDetailsPanel";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -2801,7 +2802,77 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               </TabsList>
 
           <TabsContent value="empresa" className="p-6">
-            {/* Lista de Empresas Vinculadas */}
+            {/* Busca e Seleção de Empresa (topo) */}
+            {!criarNovaEmpresa && (
+              <Card className="p-4 mb-4">
+                <Label className="text-xs">Vincular Empresa</Label>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    placeholder="Buscar por nome, CNPJ..."
+                    value={buscaEmpresa}
+                    className="h-9 text-sm"
+                    onChange={(e) => {
+                      const valor = e.target.value;
+                      setBuscaEmpresa(valor);
+                      const termo = valor.trim().toLowerCase();
+                      const base = empresas.filter(emp => !empresasVinculadas.some(ev => ev.id === emp.id));
+                      if (!termo) {
+                        setEmpresasFiltradas(base);
+                      } else {
+                        const filtradas = base.filter(emp =>
+                          emp.nome_fantasia?.toLowerCase().includes(termo) ||
+                          emp.nome?.toLowerCase().includes(termo) ||
+                          emp.cnpj?.includes(termo.replace(/\D/g, '')) ||
+                          emp.custom_fields?.cpf_cnpj?.includes(termo.replace(/\D/g, ''))
+                        );
+                        setEmpresasFiltradas(filtradas);
+                      }
+                    }}
+                    onBlur={async () => {
+                      const clean = buscaEmpresa.replace(/\D/g, '');
+                      if ((clean.length === 11 || clean.length === 14) && empresasFiltradas.length === 0) {
+                        if (clean.length === 14) {
+                          await handleCNPJLookup(buscaEmpresa);
+                        }
+                      }
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setCriarNovaEmpresa(true);
+                    }}
+                  >
+                    + Nova
+                  </Button>
+                </div>
+
+                {/* Lista de empresas filtradas */}
+                {empresasFiltradas.length > 0 && (
+                  <div className="border rounded-md max-h-[160px] overflow-y-auto mt-2">
+                    {empresasFiltradas.map((empresa) => (
+                      <button
+                        key={empresa.id}
+                        className="w-full text-left p-2 hover:bg-accent transition-colors border-b last:border-b-0"
+                        onClick={() => {
+                          handleAddEmpresaVinculada(empresa.id);
+                          setEmpresasFiltradas([]);
+                          setBuscaEmpresa("");
+                        }}
+                      >
+                        <div className="font-medium text-sm">{empresa.nome_fantasia}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {empresa.cnpj || empresa.custom_fields?.cpf_cnpj || 'Sem documento'}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            )}
+
+            {/* Lista de Empresas Vinculadas (abaixo) */}
             {empresasVinculadas.length > 0 && (
               <Card className="p-4 mb-4">
                 <h3 className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
@@ -2879,75 +2950,6 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               </Card>
             )}
 
-            {/* Busca e Seleção de Empresa */}
-            {!criarNovaEmpresa && (
-              <Card className="p-4 mb-4">
-                <Label className="text-xs">Vincular Empresa</Label>
-                <div className="flex gap-2 mt-2">
-                  <Input
-                    placeholder="Buscar por nome, CNPJ..."
-                    value={buscaEmpresa}
-                    className="h-9 text-sm"
-                    onChange={(e) => {
-                      const valor = e.target.value;
-                      setBuscaEmpresa(valor);
-                      const termo = valor.trim().toLowerCase();
-                      const base = empresas.filter(emp => !empresasVinculadas.some(ev => ev.id === emp.id));
-                      if (!termo) {
-                        setEmpresasFiltradas(base);
-                      } else {
-                        const filtradas = base.filter(emp =>
-                          emp.nome_fantasia?.toLowerCase().includes(termo) ||
-                          emp.nome?.toLowerCase().includes(termo) ||
-                          emp.cnpj?.includes(termo.replace(/\D/g, '')) ||
-                          emp.custom_fields?.cpf_cnpj?.includes(termo.replace(/\D/g, ''))
-                        );
-                        setEmpresasFiltradas(filtradas);
-                      }
-                    }}
-                    onBlur={async () => {
-                      const clean = buscaEmpresa.replace(/\D/g, '');
-                      if ((clean.length === 11 || clean.length === 14) && empresasFiltradas.length === 0) {
-                        if (clean.length === 14) {
-                          await handleCNPJLookup(buscaEmpresa);
-                        }
-                      }
-                    }}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setCriarNovaEmpresa(true);
-                    }}
-                  >
-                    + Nova
-                  </Button>
-                </div>
-
-                {/* Lista de empresas filtradas */}
-                {empresasFiltradas.length > 0 && (
-                  <div className="border rounded-md max-h-[160px] overflow-y-auto mt-2">
-                    {empresasFiltradas.map((empresa) => (
-                      <button
-                        key={empresa.id}
-                        className="w-full text-left p-2 hover:bg-accent transition-colors border-b last:border-b-0"
-                        onClick={() => {
-                          handleAddEmpresaVinculada(empresa.id);
-                          setEmpresasFiltradas([]);
-                          setBuscaEmpresa("");
-                        }}
-                      >
-                        <div className="font-medium text-sm">{empresa.nome_fantasia}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {empresa.cnpj || empresa.custom_fields?.cpf_cnpj || 'Sem documento'}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </Card>
-            )}
 
             {/* Formulário de Nova Empresa - igual à tela de Empresas */}
             {criarNovaEmpresa && (
@@ -3037,28 +3039,20 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                           <CardContent className="p-4 space-y-4">
                             <h4 className="text-sm font-semibold">Adicionar Gerentes</h4>
                             
-                            <div className="space-y-2">
-                              <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
-                                {usuarios.map((usuario) => (
-                                  <div key={usuario.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
-                                    <Checkbox
-                                      id={`new-user-${usuario.id}`}
-                                      checked={novosUsuariosVinculo.includes(usuario.id)}
-                                      onCheckedChange={(checked) => {
-                                        if (checked) {
-                                          setNovosUsuariosVinculo([...novosUsuariosVinculo, usuario.id]);
-                                        } else {
-                                          setNovosUsuariosVinculo(novosUsuariosVinculo.filter(id => id !== usuario.id));
-                                        }
-                                      }}
-                                    />
-                                    <label htmlFor={`new-user-${usuario.id}`} className="text-sm cursor-pointer flex-1">
-                                      {usuario.nome}
-                                    </label>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
+                            <FilteredCheckboxList
+                              idPrefix="new-user"
+                              items={usuarios.map((u) => ({ id: u.id, label: u.nome }))}
+                              selected={novosUsuariosVinculo}
+                              onToggle={(id, checked) =>
+                                setNovosUsuariosVinculo(
+                                  checked
+                                    ? [...novosUsuariosVinculo, id]
+                                    : novosUsuariosVinculo.filter((x) => x !== id)
+                                )
+                              }
+                              searchPlaceholder="Buscar gerente..."
+                              emptyText="Nenhum gerente disponível."
+                            />
 
                             <Button 
                               onClick={async () => {
