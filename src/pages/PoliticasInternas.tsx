@@ -1306,7 +1306,7 @@ export default function PoliticasInternas() {
           </div>
 
           <DialogFooter className="px-6 py-3 border-t shrink-0 bg-background gap-2">
-            {wizardStep > 1 && (
+            {wizardStep > 1 && !wizardEditingId && (
               <Button
                 variant="outline"
                 onClick={() => setWizardStep((s) => (s - 1) as 1 | 2 | 3)}
