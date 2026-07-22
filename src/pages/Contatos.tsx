@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, GripVertical, Search, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Eye } from "lucide-react";
+import { Plus, MoreVertical, Trash2, GripVertical, Search, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Eye, Building2, Truck, UserCheck } from "lucide-react";
 import { ContatoDetailsPanel } from "@/components/contatos/ContatoDetailsPanel";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "@/lib/toast-config";
@@ -2660,7 +2660,14 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md text-xs sm:text-sm px-3 sm:px-4 py-2"
               onClick={() => setCriarNovaEmpresa(false)}
             >
-              Empresa
+              <span className="inline-flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5" />
+                <span>/</span>
+                <Truck className="w-3.5 h-3.5" />
+                <span>/</span>
+                <UserCheck className="w-3.5 h-3.5" />
+                <span className="ml-1">Empresa / Transportadora / Vendedor</span>
+              </span>
             </TabsTrigger>
             <TabsTrigger 
               value="vinculos"
