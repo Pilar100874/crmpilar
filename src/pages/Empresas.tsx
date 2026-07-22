@@ -707,7 +707,22 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   const handleFieldChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setFieldErrors(prev => ({ ...prev, [field]: '' }));
+    setIsFormDirty(true);
   };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setIsFormDirty(false);
+  };
+
+  const requestCloseForm = () => {
+    if (isFormDirty) {
+      setDiscardDialogOpen(true);
+    } else {
+      closeForm();
+    }
+  };
+
   
   const checkDuplicateCnpjCpf = async (cnpjCpf: string) => {
     if (!estabelecimentoId) return;
