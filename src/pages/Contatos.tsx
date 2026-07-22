@@ -2774,14 +2774,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                   isClosingRef.current = true;
                   setShouldCheckDuplicate(false);
                 }}
-                onClick={() => {
-                  setShowForm(false);
-                  setTimeout(() => {
-                    setIsClosingForm(false);
-                    isClosingRef.current = false;
-                    setShouldCheckDuplicate(true);
-                  }, 150);
-                }}
+                onClick={requestCloseForm}
                 className="border-border/40"
               >
                 Cancelar
