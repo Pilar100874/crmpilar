@@ -246,6 +246,20 @@ export function TvPropertiesPanel({ node, onChange, onDelete, onClose }: Props) 
             </div>
           )}
 
+          {nodeData.type === "condicao_grupo" && (
+            <div>
+              <Label className="text-xs">Grupos permitidos</Label>
+              <MultiCheck items={grupos} value={cfg.grupo_ids || []} onChange={(ids) => setCfg({ grupo_ids: ids })} />
+            </div>
+          )}
+
+          {nodeData.type === "condicao_estabelecimento" && (
+            <div>
+              <Label className="text-xs">Estabelecimentos permitidos</Label>
+              <MultiCheck items={estabelecimentos} value={cfg.estabelecimento_ids || []} onChange={(ids) => setCfg({ estabelecimento_ids: ids })} />
+            </div>
+          )}
+
           {/* ---------- Ações ---------- */}
           {nodeData.type === "acao_barra" && (
             <div className="space-y-3">
