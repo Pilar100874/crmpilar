@@ -614,6 +614,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setRamal(usuario.ramal || "");
     setSenhaSip(usuario.senha_sip || "");
     setUsuarioSip(usuario.usuario_sip || "");
+    setTipo((usuario as any).tipo || "padrao");
     setEditingId(usuario.id);
 
     // Buscar segmentos do usuário
