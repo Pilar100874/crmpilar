@@ -11,8 +11,12 @@ import {
   Table as TableIcon, Rows, Columns, Trash2, Eraser, Maximize2, ZoomIn, ZoomOut,
   ScanSearch, ArrowLeft, Save, Eye, Lock, Unlock, Copy, Printer, FileDown, SaveAll,
   Database, ClipboardList, Pencil, PanelRightOpen, PanelRightClose,
-  Building2, Package, FormInput,
+  Building2, Package, FormInput, Sparkles, Loader2,
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
