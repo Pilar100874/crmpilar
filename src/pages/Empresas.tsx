@@ -169,6 +169,17 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
   const isFormDirty = JSON.stringify(formData) !== formSnapshot;
 
+  // Avisa ao fechar/recarregar a aba com alterações não salvas
+  useEffect(() => {
+    if (!showForm || !isFormDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [showForm, isFormDirty]);
+
   // Campos obrigatórios fixos de empresa
   const [companyFields, setCompanyFields] = useState<CustomField[]>([
     { id: "company_type", label: "Tipo", type: "select", category: "company", options: ["Pessoa Física", "Pessoa Jurídica"], required: true, locked: false },
