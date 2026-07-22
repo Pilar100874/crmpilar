@@ -3014,7 +3014,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                                   <div key={vinculo.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors">
                                     <div className="flex-1">
                                       <p className="text-sm font-medium">
-                                        {usuario?.nome || <span className="text-muted-foreground">Usuário não encontrado</span>}
+                                        {usuario?.nome || <span className="text-muted-foreground">Gerente não encontrado</span>}
                                       </p>
                                     </div>
                                     <Button
