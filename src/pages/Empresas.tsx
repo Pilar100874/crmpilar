@@ -1676,6 +1676,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 setShowForm(true);
                 setEditingEmpresa(null);
                 setFormData({});
+                setFormSnapshot("{}");
                 setContatosVinculados([]);
                 setCriarNovoContato(false);
               }} className="gap-2 shadow-sm h-9 sm:h-10">
