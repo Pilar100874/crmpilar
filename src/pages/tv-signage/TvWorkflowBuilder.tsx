@@ -338,7 +338,12 @@ function TvBuilderInner() {
       body: { workflow_id: workflowId, evento: primeiroGatilho, payload: {} },
     });
     if (error) { toast.error(error.message); return; }
-    toast.success(`Disparado para ${data?.execucoes ?? 0} dispositivo(s)`);
+    const n = data?.execucoes ?? 0;
+    if (n === 0) {
+      toast.warning(`Nenhuma execução criada${data?.motivo ? ` — ${data.motivo}` : ". Verifique se existe um bloco 'Mostrar barra' e dispositivos ativos."}`);
+    } else {
+      toast.success(`Disparado para ${n} dispositivo(s)`);
+    }
   };
 
   return (

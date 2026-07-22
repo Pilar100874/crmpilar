@@ -40,14 +40,26 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    let q = admin.from("tv_workflows").select("*").eq("ativo", true);
-    if (workflow_id) q = q.eq("id", workflow_id);
-    else q = q.eq("evento", evento!);
+    let q = admin.from("tv_workflows").select("*");
+    if (workflow_id) {
+      q = q.eq("id", workflow_id); // teste manual: ignora ativo
+    } else {
+      q = q.eq("ativo", true).eq("evento", evento!);
+    }
     if (estabelecimento_id) q = q.eq("estabelecimento_id", estabelecimento_id);
 
     const { data: workflows, error } = await q;
     if (error) throw error;
-    if (!workflows?.length) return json({ ok: true, execucoes: 0 });
+    if (!workflows?.length) return json({ ok: true, execucoes: 0, motivo: "nenhum workflow encontrado" });
+
+    let devicesCount = 0;
+    for (const wf of workflows) {
+      const d = await carregarDispositivos(admin, wf.estabelecimento_id);
+      devicesCount += d.length;
+    }
+    if (devicesCount === 0) {
+      return json({ ok: true, execucoes: 0, motivo: "nenhum dispositivo ativo no estabelecimento" });
+    }
 
     let total = 0;
 
