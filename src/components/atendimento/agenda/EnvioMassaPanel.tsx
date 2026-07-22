@@ -222,9 +222,37 @@ export function EnvioMassaPanel({
               </div>
             </div>
 
-            <ScrollArea className="h-[calc(100vh-350px)] border rounded-lg p-2">
+            {tasks.length > 6 && (
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={taskSearch}
+                  onChange={(e) => setTaskSearch(e.target.value)}
+                  placeholder="Buscar contato ou tarefa..."
+                  className="h-8 text-sm pl-8"
+                />
+              </div>
+            )}
+
+            <ScrollArea className="h-[calc(100vh-390px)] border rounded-lg p-2">
               <div className="space-y-2">
-                {tasks.map(task => (
+                {(() => {
+                  const term = taskSearch.trim().toLowerCase();
+                  const visible = term
+                    ? tasks.filter((t) =>
+                        (t.contact_name || "").toLowerCase().includes(term) ||
+                        (t.title || "").toLowerCase().includes(term) ||
+                        (t.origem || "").toLowerCase().includes(term)
+                      )
+                    : tasks;
+                  if (visible.length === 0) {
+                    return (
+                      <p className="text-xs text-muted-foreground p-2">
+                        {term ? `Nenhum resultado para "${taskSearch}".` : "Nenhuma tarefa disponível."}
+                      </p>
+                    );
+                  }
+                  return visible.map(task => (
                   <div
                     key={task.id}
                     className={cn(
@@ -247,7 +275,8 @@ export function EnvioMassaPanel({
                       {task.origem}
                     </Badge>
                   </div>
-                ))}
+                  ));
+                })()}
               </div>
             </ScrollArea>
           </div>
