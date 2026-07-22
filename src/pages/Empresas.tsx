@@ -3128,12 +3128,27 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                               {vinculosDesta.map((v) => {
                                 const emp = listaEmpresasReais.find((x) => x.id === v.empresa_id);
                                 return (
-                                  <div key={v.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors">
+                                  <div
+                                    key={v.id}
+                                    className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors cursor-pointer"
+                                    onClick={() => setViewingVinculo({
+                                      title: emp?.nome_fantasia || emp?.nome || "Empresa",
+                                      fields: [
+                                        { label: "Razão social", value: emp?.nome },
+                                        { label: "Nome fantasia", value: emp?.nome_fantasia },
+                                        { label: "CNPJ / CPF", value: emp?.cnpj },
+                                        { label: "E-mail", value: (emp as any)?.email },
+                                        { label: "Telefone", value: (emp as any)?.telefone },
+                                        { label: "Cidade", value: (emp as any)?.cidade },
+                                        { label: "Estado", value: (emp as any)?.estado },
+                                      ],
+                                    })}
+                                  >
                                     <div>
                                       <p className="text-sm font-medium">{emp?.nome_fantasia || emp?.nome || "Empresa não encontrada"}</p>
                                       {emp?.cnpj && <p className="text-xs text-muted-foreground">{emp.cnpj}</p>}
                                     </div>
-                                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoverVinculoSimples(v.id)}>
+                                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); handleRemoverVinculoSimples(v.id); }}>
                                       <Trash2 className="w-4 h-4 text-destructive" />
                                     </Button>
                                   </div>
