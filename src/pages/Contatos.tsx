@@ -3153,6 +3153,99 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         </DialogContent>
       </Dialog>
 
+      {/* Dialog de descarte de alterações */}
+      <AlertDialog
+        open={discardDialogOpen}
+        onOpenChange={(open) => {
+          setDiscardDialogOpen(open);
+          if (!open) {
+            setPendingTab(null);
+            setPendingAction(null);
+            if (blocker.state === "blocked") blocker.reset();
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem alterações não salvas neste contato. O que deseja fazer?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel onClick={() => {
+              setPendingTab(null);
+              setPendingAction(null);
+              if (blocker.state === "blocked") blocker.reset();
+            }}>
+              Continuar editando
+            </AlertDialogCancel>
+            <Button
+              variant="outline"
+              onClick={() => {
+                try {
+                  const snap = JSON.parse(formSnapshot);
+                  setFormData(snap);
+                } catch {}
+                clearDraft();
+                setPendingTab(null);
+                setPendingAction(null);
+                if (blocker.state === "blocked") blocker.reset();
+                setDiscardDialogOpen(false);
+                toast.success("Alterações restauradas");
+              }}
+            >
+              Restaurar
+            </Button>
+            <AlertDialogAction
+              onClick={() => {
+                clearDraft();
+                setFormSnapshot(JSON.stringify(formData));
+                const action = pendingAction;
+                const targetTab = pendingTab;
+                setPendingAction(null);
+                setPendingTab(null);
+                if (blocker.state === "blocked") {
+                  blocker.proceed();
+                } else if (action) {
+                  action();
+                } else if (targetTab) {
+                  setActiveTab(targetTab);
+                } else {
+                  doCloseForm();
+                }
+                setDiscardDialogOpen(false);
+              }}
+            >
+              Descartar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog de recuperação de rascunho */}
+      <AlertDialog open={!!draftRestore} onOpenChange={(open) => { if (!open) setDraftRestore(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Rascunho encontrado</AlertDialogTitle>
+            <AlertDialogDescription>
+              Encontramos alterações não salvas de {draftRestore ? new Date(draftRestore.savedAt).toLocaleString("pt-BR") : ""}. Deseja restaurar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { clearDraft(); setDraftRestore(null); }}>
+              Descartar rascunho
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (draftRestore) setFormData(draftRestore.data);
+              setDraftRestore(null);
+            }}>
+              Restaurar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 }
