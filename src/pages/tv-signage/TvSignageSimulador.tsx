@@ -64,6 +64,69 @@ export default function TvSignageSimulador() {
     })();
   }, [deviceId]);
 
+  // Agendador local para preview: dispara workflows do tipo intervalo/cron do
+  // estabelecimento deste dispositivo. Cada workflow tem seu próprio timer.
+  useEffect(() => {
+    if (!device?.estabelecimento_id) return;
+    let cancelled = false;
+    const timers: ReturnType<typeof setInterval>[] = [];
+
+    const parseCronMinuto = (cron: string): number | null => {
+      // Suporta apenas o campo minuto para "*/N * * * *" ou "N * * * *"
+      const parts = (cron || "").trim().split(/\s+/);
+      if (parts.length < 5) return null;
+      const m = parts[0];
+      const every = m.match(/^\*\/(\d+)$/);
+      if (every) return Math.max(1, parseInt(every[1], 10));
+      if (/^\d+$/.test(m)) return 60; // fixo em minuto X → 1x por hora
+      if (m === "*") return 1;
+      return null;
+    };
+
+    (async () => {
+      const { data: wfs } = await supabase
+        .from("tv_workflows")
+        .select("id, ativo, flow_json")
+        .eq("estabelecimento_id", device.estabelecimento_id)
+        .eq("ativo", true);
+      if (cancelled || !wfs) return;
+
+      for (const wf of wfs) {
+        const nodes = (wf.flow_json as any)?.nodes || [];
+        let minutos: number | null = null;
+        for (const n of nodes) {
+          const t = n.data?.type;
+          const cfg = n.data?.config || {};
+          if (t === "gatilho_intervalo") {
+            const m = parseInt(cfg.intervalo_min, 10);
+            if (m > 0) minutos = minutos == null ? m : Math.min(minutos, m);
+          } else if (t === "gatilho_agendado") {
+            const m = parseCronMinuto(cfg.cron || "");
+            if (m) minutos = minutos == null ? m : Math.min(minutos, m);
+          }
+        }
+        if (!minutos) continue;
+
+        const disparar = () => {
+          supabase.functions.invoke("tv-workflow-dispatch", {
+            body: { workflow_id: wf.id, payload: { preview: true } },
+          });
+        };
+        // Dispara logo (após 3s) e depois no intervalo configurado
+        const kickoff = setTimeout(disparar, 3000);
+        const timer = setInterval(disparar, minutos * 60 * 1000);
+        timers.push(timer);
+        timers.push(kickoff as any);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      timers.forEach((t) => clearInterval(t));
+    };
+  }, [device?.estabelecimento_id]);
+
+
   // Rotação da playlist
   useEffect(() => {
     if (paused || items.length <= 1) return;

@@ -75,11 +75,42 @@ export default function TvNotificationBar({ deviceId }: Props) {
 
   const atual = fila[0];
   const estilo = atual.estilo || {};
-  const posicao = estilo.posicao === "top" ? "top" : "bottom";
+  const formato = estilo.formato || "barra";
   const bg = estilo.bg || "#0f172a";
   const fg = estilo.fg || "#ffffff";
   const IconeCmp = estilo.icone && (LucideIcons as any)[estilo.icone];
 
+  // Pop-up centralizado
+  if (formato === "popup") {
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 animate-in fade-in">
+        <div
+          className="max-w-xl w-[90%] rounded-2xl shadow-2xl p-8 animate-in zoom-in-95"
+          style={{ background: bg, color: fg }}
+        >
+          <div className="flex items-start gap-4">
+            {IconeCmp && <IconeCmp className="w-10 h-10 flex-shrink-0" />}
+            <div className="flex-1">
+              {estilo.titulo && <div className="text-2xl font-bold mb-2">{estilo.titulo}</div>}
+              <div className="text-xl leading-snug whitespace-pre-wrap">{atual.mensagem_renderizada}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Imagem em destaque
+  if (formato === "imagem") {
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 animate-in fade-in">
+        <img src={atual.mensagem_renderizada} alt="" className="max-w-[95%] max-h-[95%] object-contain rounded-lg shadow-2xl" />
+      </div>
+    );
+  }
+
+  // Barra (padrão)
+  const posicao = estilo.posicao === "top" ? "top" : "bottom";
   return (
     <div
       className={`fixed left-0 right-0 z-[9999] px-6 py-4 shadow-2xl animate-in ${

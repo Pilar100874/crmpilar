@@ -200,17 +200,24 @@ async function percorrer(
     return inseridas;
   }
 
-  // Ações
-  if (t === "acao_barra") {
+  // Ações de tela (barra, popup, imagem) → todas enfileiram em tv_workflow_execucoes
+  if (t === "acao_barra" || t === "acao_popup" || t === "acao_imagem") {
     const alvos = escopoAtual || devicesBase;
     if (alvos.length > 0) {
-      const dur = duracaoOverride ?? cfg.duracao_segundos ?? 8;
+      const defaultDur = t === "acao_popup" ? 10 : 8;
+      const dur = duracaoOverride ?? cfg.duracao_segundos ?? defaultDur;
+      const formato = t === "acao_popup" ? "popup" : t === "acao_imagem" ? "imagem" : "barra";
+      const mensagem =
+        t === "acao_imagem"
+          ? interpolar(cfg.url || "", payload)
+          : interpolar(cfg.mensagem || "", payload);
+      const estiloBase = cfg.estilo || {};
       const rows = alvos.map((d: any) => ({
         workflow_id: wf.id,
         device_id: d.id,
         estabelecimento_id: wf.estabelecimento_id,
-        mensagem_renderizada: interpolar(cfg.mensagem || "", payload),
-        estilo: cfg.estilo || {},
+        mensagem_renderizada: mensagem,
+        estilo: { ...estiloBase, formato, titulo: cfg.titulo || null },
         duracao_segundos: dur,
         expira_em: new Date(Date.now() + dur * 1000).toISOString(),
       }));
