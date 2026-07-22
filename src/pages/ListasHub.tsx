@@ -74,11 +74,11 @@ const sections: TabSection[] = [
     id: 'vinculos',
     title: 'Vínculos',
     items: [
-      { id: 'vinculos-empresas', label: 'Vínculo Empresas', shortLabel: 'Emp. x Usuário', icon: Link2, description: 'Vínculo Empresas X Usuário / Segmento' },
-      { id: 'vinculos-contatos', label: 'Vínculo Contatos', shortLabel: 'Contatos x Usuário', icon: Link2, description: 'Vínculo Contatos X Usuário' },
+      { id: 'vinculos-empresas', label: 'Vínculo Empresas', shortLabel: 'Emp. x Gerente', icon: Link2, description: 'Vínculo Empresas X Gerente / Segmento' },
+      { id: 'vinculos-contatos', label: 'Vínculo Contatos', shortLabel: 'Contatos x Gerente', icon: Link2, description: 'Vínculo Contatos X Gerente' },
       { id: 'vinculos-empresa-vendedor', label: 'Vínculo Emp. x Vendedor', shortLabel: 'Emp. x Vendedor', icon: Link2, description: 'Vínculo Empresas X Vendedor' },
-      { id: 'vinculos-vendedor-usuario', label: 'Vínculo Vend. x Usuário', shortLabel: 'Vend. x Usuário', icon: Link2, description: 'Vínculo Vendedores X Usuário' },
-      { id: 'vinculos-segmento-prospect-usuario', label: 'Segmento Prospect x Usuário', shortLabel: 'Segm. Prospect x Usuário', icon: Link2, description: 'Direcione o atendimento de prospects por segmento a usuários' },
+      { id: 'vinculos-vendedor-usuario', label: 'Vínculo Vend. x Gerente', shortLabel: 'Vend. x Gerente', icon: Link2, description: 'Vínculo Vendedores X Gerente' },
+      { id: 'vinculos-segmento-prospect-usuario', label: 'Segmento Prospect x Gerente', shortLabel: 'Segm. Prospect x Gerente', icon: Link2, description: 'Direcione o atendimento de prospects por segmento a gerentes' },
     ],
   },
   {

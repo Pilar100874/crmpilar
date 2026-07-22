@@ -36,7 +36,7 @@ export default function VinculosSegmentoProspectUsuario() {
     setLoading(true);
     const [segRes, usrRes, vincRes] = await Promise.all([
       supabase.from("segmentos").select("id, nome").eq("estabelecimento_id", estabId).eq("is_prospect", true).order("nome"),
-      supabase.from("usuarios").select("id, nome, email").eq("estabelecimento_id", estabId).order("nome"),
+      supabase.from("usuarios").select("id, nome, email").eq("estabelecimento_id", estabId).eq("tipo", "gerente").order("nome"),
       supabase.from("usuario_segmentos").select("id, usuario_id, segmento_id"),
     ]);
     setSegmentos((segRes.data as any) || []);
@@ -53,7 +53,7 @@ export default function VinculosSegmentoProspectUsuario() {
 
   const adicionar = async () => {
     if (!selectedSegmento || novoUsuarioIds.length === 0) {
-      return toast.error("Selecione um segmento e ao menos um usuário");
+      return toast.error("Selecione um segmento e ao menos um gerente");
     }
     const jaVinculados = new Set(usuariosDoSegmento(selectedSegmento).map(x => x.user!.id));
     const paraInserir = novoUsuarioIds.filter(uid => !jaVinculados.has(uid));
@@ -80,9 +80,9 @@ export default function VinculosSegmentoProspectUsuario() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Vínculo Segmento Prospect x Usuário</h1>
+        <h1 className="text-3xl font-bold text-foreground">Vínculo Segmento Prospect x Gerente</h1>
         <p className="text-muted-foreground mt-2">
-          Direcione o atendimento de novos prospects para usuários com base no segmento retornado pela IA (Cloud Code / Cursor / ChatGPT).
+          Direcione o atendimento de novos prospects para gerentes com base no segmento retornado pela IA (Cloud Code / Cursor / ChatGPT).
         </p>
       </div>
 
@@ -119,7 +119,7 @@ export default function VinculosSegmentoProspectUsuario() {
                     }`}
                   >
                     <span className="text-sm font-medium">{s.nome}</span>
-                    <Badge variant="secondary">{qtd} usuário(s)</Badge>
+                    <Badge variant="secondary">{qtd} gerente(s)</Badge>
                   </button>
                 );
               })}
@@ -130,11 +130,11 @@ export default function VinculosSegmentoProspectUsuario() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Users className="h-4 w-4" /> Usuários Responsáveis
+              <Users className="h-4 w-4" /> Gerentes Responsáveis
             </CardTitle>
             <CardDescription>
               {selectedSegmento
-                ? `Gerencie os usuários vinculados ao segmento selecionado.`
+                ? `Gerencie os gerentes vinculados ao segmento selecionado.`
                 : "Selecione um segmento à esquerda."}
             </CardDescription>
           </CardHeader>
@@ -166,7 +166,7 @@ export default function VinculosSegmentoProspectUsuario() {
 
                 <Card className="border-primary/20 bg-primary/5">
                   <CardContent className="p-4 space-y-3">
-                    <h4 className="text-sm font-semibold">Adicionar usuários</h4>
+                    <h4 className="text-sm font-semibold">Adicionar gerentes</h4>
                     <div className="space-y-1 max-h-[240px] overflow-y-auto border rounded-lg p-2 bg-background">
                       {usuarios.map(u => {
                         const jaVinc = usuariosDoSegmento(selectedSegmento).some(x => x.user!.id === u.id);
@@ -197,7 +197,7 @@ export default function VinculosSegmentoProspectUsuario() {
               </>
             ) : (
               <p className="text-sm text-muted-foreground text-center py-8">
-                Selecione um segmento à esquerda para gerenciar os usuários.
+                Selecione um segmento à esquerda para gerenciar os gerentes.
               </p>
             )}
           </CardContent>
