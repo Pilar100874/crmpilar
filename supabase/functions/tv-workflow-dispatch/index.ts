@@ -166,13 +166,13 @@ async function percorrer(
   if (t === "condicao_filtro") {
     const ok = compararValor(payload[cfg.campo], cfg.operador || "=", cfg.valor);
     const filhos = proximos(node.id, ok ? "yes" : "no");
-    for (const f of filhos) inseridas += await percorrer(admin, wf, f, payload, proximos, devicesBase, escopoAtual);
+    for (const f of filhos) inseridas += await percorrer(admin, wf, f, payload, proximos, devicesBase, escopoAtual, duracaoOverride);
     return inseridas;
   }
   if (t === "condicao_horario") {
     const ok = dentroHorario(cfg);
     const filhos = proximos(node.id, ok ? "yes" : "no");
-    for (const f of filhos) inseridas += await percorrer(admin, wf, f, payload, proximos, devicesBase, escopoAtual);
+    for (const f of filhos) inseridas += await percorrer(admin, wf, f, payload, proximos, devicesBase, escopoAtual, duracaoOverride);
     return inseridas;
   }
   if (t === "condicao_escopo") {
@@ -184,7 +184,7 @@ async function percorrer(
     });
     const ok = filtrados.length > 0;
     const filhos = proximos(node.id, ok ? "yes" : "no");
-    for (const f of filhos) inseridas += await percorrer(admin, wf, f, payload, proximos, filtrados, filtrados);
+    for (const f of filhos) inseridas += await percorrer(admin, wf, f, payload, proximos, filtrados, filtrados, duracaoOverride);
     return inseridas;
   }
 
@@ -192,7 +192,7 @@ async function percorrer(
   if (t === "acao_barra") {
     const alvos = escopoAtual || devicesBase;
     if (alvos.length > 0) {
-      const dur = cfg.duracao_segundos || 8;
+      const dur = duracaoOverride ?? cfg.duracao_segundos ?? 8;
       const rows = alvos.map((d: any) => ({
         workflow_id: wf.id,
         device_id: d.id,
@@ -246,7 +246,7 @@ async function percorrer(
 
   // Continua para os próximos nós (saída padrão)
   const filhos = proximos(node.id);
-  for (const f of filhos) inseridas += await percorrer(admin, wf, f, payload, proximos, devicesBase, escopoAtual);
+  for (const f of filhos) inseridas += await percorrer(admin, wf, f, payload, proximos, devicesBase, escopoAtual, duracaoOverride);
   return inseridas;
 }
 
