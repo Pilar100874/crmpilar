@@ -237,6 +237,16 @@ export const TV_BLOCK_DEFINITIONS: TvBlockDefinition[] = [
 
   // ─── Ações — Barra & UI ──────────────────────────────────────
   {
+    type: "acao_duracao",
+    label: "Definir duração",
+    description: "Define por quantos segundos a próxima mensagem fica na tela",
+    category: "acao",
+    group: "Ações — Tela",
+    icon: Clock,
+    color: C.acaoUi,
+    defaultData: { segundos: 8 },
+  },
+  {
     type: "acao_barra",
     label: "Mostrar barra",
     description: "Exibe a barra de notificação",
