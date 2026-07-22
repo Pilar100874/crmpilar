@@ -271,7 +271,7 @@ export default function VinculosVendedorUsuario() {
                 checked={substituirExistentes}
                 onCheckedChange={(c) => setSubstituirExistentes(!!c)}
               />
-              <span>Substituir usuários já vinculados nos vendedores selecionados</span>
+              <span>Substituir gerentes já vinculados nos vendedores selecionados</span>
             </div>
             <div className="border rounded-lg max-h-[400px] overflow-y-auto divide-y">
               {usuariosFiltrados.map((u) => (
