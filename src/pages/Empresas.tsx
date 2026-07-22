@@ -1777,7 +1777,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           ]}
           actions={
             <>
-              <Button onClick={() => {
+              <Button onClick={() => runWithDirtyGuard(() => {
                 setShowForm(true);
                 setEditingEmpresa(null);
                 setFormData({});
@@ -1789,7 +1789,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 setTimeout(() => {
                   checkForDraft(`empresas_draft:${variant}:new`, {});
                 }, 0);
-              }} className="gap-2 shadow-sm h-9 sm:h-10">
+              })} className="gap-2 shadow-sm h-9 sm:h-10">
                 <Plus className="w-4 h-4" />
                 {variant === "empresa" ? "Nova Empresa" : (variant === "vendedor" ? "Novo Vendedor" : "Nova Transportadora")}
               </Button>
