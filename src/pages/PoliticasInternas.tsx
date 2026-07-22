@@ -109,6 +109,25 @@ export default function PoliticasInternas() {
   const [aiDraftTema, setAiDraftTema] = useState("");
   const [aiDraftContexto, setAiDraftContexto] = useState("");
   const [aiDrafting, setAiDrafting] = useState(false);
+
+  // Wizard IA (tópicos → gera → edita/refina → publica)
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState<1 | 2 | 3>(1);
+  const [wizardTopicos, setWizardTopicos] = useState("");
+  const [wizardCategoriaId, setWizardCategoriaId] = useState<string>("");
+  const [wizardResponsavel, setWizardResponsavel] = useState("");
+  const [wizardContexto, setWizardContexto] = useState("");
+  const [wizardGenerating, setWizardGenerating] = useState(false);
+  const [wizardRefining, setWizardRefining] = useState(false);
+  const [wizardPublishing, setWizardPublishing] = useState(false);
+  const [wizardInstrucao, setWizardInstrucao] = useState("");
+  const [wizardStatus, setWizardStatus] = useState<"ativa" | "inativa">("ativa");
+  const [wizardDraft, setWizardDraft] = useState<{
+    title: string;
+    summary: string;
+    content: string;
+    keywords: string[];
+  }>({ title: "", summary: "", content: "", keywords: [] });
   const chatEndRef = useRef<HTMLDivElement>(null);
 
 
