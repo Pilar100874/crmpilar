@@ -261,6 +261,23 @@ export function TvPropertiesPanel({ node, onChange, onDelete, onClose }: Props) 
           )}
 
           {/* ---------- Ações ---------- */}
+          {nodeData.type === "acao_duracao" && (
+            <div className="space-y-2">
+              <Label className="text-xs">Segundos que a mensagem fica na tela</Label>
+              <Input
+                type="number"
+                min={1}
+                max={300}
+                value={cfg.segundos ?? 8}
+                onChange={(e) => setCfg({ segundos: parseInt(e.target.value) || 8 })}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Coloque este bloco antes de "Mostrar barra" / "Pop-up" / "Imagem"
+                para sobrescrever a duração deles.
+              </p>
+            </div>
+          )}
+
           {nodeData.type === "acao_barra" && (
             <div className="space-y-3">
               <div>
