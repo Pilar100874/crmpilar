@@ -20798,6 +20798,33 @@ export type Database = {
           },
         ]
       }
+      tv_workflow_poller_state: {
+        Row: {
+          chave: string
+          estabelecimento_id: string | null
+          evento: string
+          ultimo_check: string
+          ultimo_ref: string | null
+          updated_at: string
+        }
+        Insert: {
+          chave: string
+          estabelecimento_id?: string | null
+          evento: string
+          ultimo_check?: string
+          ultimo_ref?: string | null
+          updated_at?: string
+        }
+        Update: {
+          chave?: string
+          estabelecimento_id?: string | null
+          evento?: string
+          ultimo_check?: string
+          ultimo_ref?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tv_workflows: {
         Row: {
           ativo: boolean
