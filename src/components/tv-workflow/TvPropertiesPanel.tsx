@@ -323,14 +323,27 @@ export function TvPropertiesPanel({ node, onChange, onDelete, onClose }: Props) 
                   </Select>
                 </div>
               </div>
+              <label className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 cursor-pointer">
+                <div>
+                  <div className="text-xs font-medium">Piscar para chamar atenção</div>
+                  <div className="text-[10px] text-muted-foreground">Alterna opacidade/brilho enquanto exibida</div>
+                </div>
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={!!cfg.estilo?.piscar}
+                  onChange={(e) => setCfg({ estilo: { ...cfg.estilo, piscar: e.target.checked } })}
+                />
+              </label>
               <div
-                className="rounded-md px-3 py-2 text-sm font-bold truncate"
+                className={`rounded-md px-3 py-2 text-sm font-bold truncate ${cfg.estilo?.piscar ? "animate-tv-blink" : ""}`}
                 style={{ background: cfg.estilo?.bg || "#0f172a", color: cfg.estilo?.fg || "#fff" }}
               >
                 {cfg.mensagem || "Sua mensagem aparecerá aqui"}
               </div>
             </div>
           )}
+
 
           {nodeData.type === "acao_aguardar" && (
             <div>
