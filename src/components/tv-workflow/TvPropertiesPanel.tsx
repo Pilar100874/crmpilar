@@ -384,6 +384,139 @@ export function TvPropertiesPanel({ node, onChange, onDelete, onClose }: Props) 
             </div>
           )}
 
+          {nodeData.type === "acao_popup" && (
+            <div className="space-y-2">
+              <div>
+                <Label className="text-xs">Título</Label>
+                <Input value={cfg.titulo || ""} onChange={(e) => setCfg({ titulo: e.target.value })} />
+              </div>
+              <div>
+                <Label className="text-xs">Mensagem</Label>
+                <Textarea rows={3} value={cfg.mensagem || ""} onChange={(e) => setCfg({ mensagem: e.target.value })} />
+              </div>
+              <div>
+                <Label className="text-xs">Duração (segundos)</Label>
+                <Input type="number" min={1} max={300} value={cfg.duracao_segundos ?? 10}
+                  onChange={(e) => setCfg({ duracao_segundos: parseInt(e.target.value) || 10 })} />
+              </div>
+            </div>
+          )}
+
+          {nodeData.type === "acao_imagem" && (
+            <div className="space-y-2">
+              <div>
+                <Label className="text-xs">URL da imagem</Label>
+                <Input value={cfg.url || ""} onChange={(e) => setCfg({ url: e.target.value })} placeholder="https://..." />
+              </div>
+              <div>
+                <Label className="text-xs">Duração (segundos)</Label>
+                <Input type="number" min={1} max={300} value={cfg.duracao_segundos ?? 8}
+                  onChange={(e) => setCfg({ duracao_segundos: parseInt(e.target.value) || 8 })} />
+              </div>
+              {cfg.url && (
+                <img src={cfg.url} alt="preview" className="w-full rounded border max-h-40 object-contain bg-muted" />
+              )}
+            </div>
+          )}
+
+          {nodeData.type === "acao_trocar_playlist" && (
+            <div>
+              <Label className="text-xs">Playlist</Label>
+              <Select value={cfg.playlist_id || ""} onValueChange={(v) => setCfg({ playlist_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Escolha a playlist" /></SelectTrigger>
+                <SelectContent>
+                  {playlists.map((p) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {nodeData.type === "acao_brilho" && (
+            <div>
+              <Label className="text-xs">Brilho (%)</Label>
+              <Input type="number" min={0} max={100} value={cfg.brilho ?? 80}
+                onChange={(e) => setCfg({ brilho: Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) })} />
+            </div>
+          )}
+
+          {nodeData.type === "acao_whatsapp" && (
+            <div className="space-y-2">
+              <div>
+                <Label className="text-xs">Sessão WhatsApp</Label>
+                <Select value={cfg.sessao_id || ""} onValueChange={(v) => setCfg({ sessao_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Escolha a sessão" /></SelectTrigger>
+                  <SelectContent>
+                    {sessoes.map((s: any) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.nome_sessao || s.nome || s.session_name || s.id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Destinatário (número)</Label>
+                <Input value={cfg.destinatario || ""} onChange={(e) => setCfg({ destinatario: e.target.value })} placeholder="5511999999999" />
+              </div>
+              <div>
+                <Label className="text-xs">Mensagem</Label>
+                <Textarea rows={3} value={cfg.mensagem || ""} onChange={(e) => setCfg({ mensagem: e.target.value })} />
+              </div>
+            </div>
+          )}
+
+          {nodeData.type === "acao_push" && (
+            <div className="space-y-2">
+              <div>
+                <Label className="text-xs">Título</Label>
+                <Input value={cfg.titulo || ""} onChange={(e) => setCfg({ titulo: e.target.value })} />
+              </div>
+              <div>
+                <Label className="text-xs">Mensagem</Label>
+                <Textarea rows={2} value={cfg.mensagem || ""} onChange={(e) => setCfg({ mensagem: e.target.value })} />
+              </div>
+              <div>
+                <Label className="text-xs">URL (opcional)</Label>
+                <Input value={cfg.url || ""} onChange={(e) => setCfg({ url: e.target.value })} placeholder="/rota" />
+              </div>
+            </div>
+          )}
+
+          {nodeData.type === "acao_webhook_out" && (
+            <div className="space-y-2">
+              <div>
+                <Label className="text-xs">URL</Label>
+                <Input value={cfg.url || ""} onChange={(e) => setCfg({ url: e.target.value })} placeholder="https://..." />
+              </div>
+              <div>
+                <Label className="text-xs">Método</Label>
+                <Select value={cfg.metodo || "POST"} onValueChange={(v) => setCfg({ metodo: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="GET">GET</SelectItem>
+                    <SelectItem value="POST">POST</SelectItem>
+                    <SelectItem value="PUT">PUT</SelectItem>
+                    <SelectItem value="PATCH">PATCH</SelectItem>
+                    <SelectItem value="DELETE">DELETE</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Body (JSON)</Label>
+                <Textarea rows={3} value={cfg.body || ""} onChange={(e) => setCfg({ body: e.target.value })} placeholder='{"chave":"valor"}' />
+              </div>
+            </div>
+          )}
+
+          {(nodeData.type === "acao_screenshot" ||
+            nodeData.type === "acao_reiniciar" ||
+            nodeData.type === "acao_atualizar") && (
+            <Card className="p-3 text-xs text-muted-foreground">
+              Esta ação não possui parâmetros — será aplicada no dispositivo alvo do escopo do workflow.
+            </Card>
+          )}
+
+
           <div className="pt-2 border-t">
             <Label className="text-xs flex items-center gap-1">
               <StickyNote className="w-3 h-3" /> Nota / comentário
