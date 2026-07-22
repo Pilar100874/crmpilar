@@ -3185,7 +3185,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               Você tem alterações não salvas neste cadastro. Se sair agora, elas serão perdidas.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
             <AlertDialogCancel
               onClick={() => {
                 setPendingTab(null);
@@ -3194,6 +3194,23 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             >
               Continuar editando
             </AlertDialogCancel>
+            <Button
+              variant="outline"
+              onClick={() => {
+                try {
+                  setFormData(JSON.parse(formSnapshot));
+                } catch {}
+                try {
+                  if (draftKey) localStorage.removeItem(draftKey);
+                } catch {}
+                setPendingTab(null);
+                if (blocker.state === "blocked") blocker.reset();
+                setDiscardDialogOpen(false);
+                toast.success("Alterações revertidas para o último estado salvo");
+              }}
+            >
+              Restaurar
+            </Button>
             <AlertDialogAction
               onClick={() => {
                 setDiscardDialogOpen(false);
