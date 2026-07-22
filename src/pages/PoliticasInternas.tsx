@@ -798,7 +798,8 @@ export default function PoliticasInternas() {
               )}
             </div>
           )}
-          <DialogFooter>
+          </div>
+          <DialogFooter className="px-6 py-3 border-t shrink-0 bg-background">
             <Button variant="outline" onClick={() => setEditorOpen(false)}>
               Cancelar
             </Button>
@@ -808,6 +809,7 @@ export default function PoliticasInternas() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
 
       {/* ==================== CATEGORIAS ==================== */}
       <Dialog open={catManagerOpen} onOpenChange={setCatManagerOpen}>
