@@ -167,6 +167,8 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formSnapshot, setFormSnapshot] = useState<string>("{}");
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("empresa");
+  const [pendingTab, setPendingTab] = useState<string | null>(null);
   const isFormDirty = JSON.stringify(formData) !== formSnapshot;
 
   // Autosave de rascunho (localStorage)
