@@ -299,7 +299,7 @@ export default function PontoPortalFuncionario() {
           <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><Clock className="h-4 w-4" /> Espelho do mês</CardTitle></CardHeader>
           <CardContent className="overflow-x-auto">
             {espelho.length === 0 ? <p className="text-sm text-muted-foreground">Sem registros este mês.</p> : (
-              <div className="overflow-x-auto -mx-1 sm:mx-0"><table className="w-full min-w-[480px] text-xs resp-table">
+              <div className="overflow-x-auto -mx-1 sm:mx-0"><table className="w-full table-fixed text-xs resp-table">
                 <thead><tr className="text-left text-muted-foreground"><th className="p-1">Data</th><th>Ent</th><th>Sai</th><th>Atraso</th><th>Extra</th></tr></thead>
                 <tbody>
                   {espelho.slice(0, 15).map(r => (

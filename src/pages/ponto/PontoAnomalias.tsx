@@ -112,7 +112,7 @@ export default function PontoAnomalias() {
       </CardContent></Card>
 
       <div className="overflow-x-auto rounded-lg border resp-table-wrap">
-        <table className="w-full min-w-[800px] text-sm resp-table">
+        <table className="w-full table-fixed text-sm resp-table">
           <thead className="bg-muted/50"><tr className="text-left">
             <th className="p-3">Data</th><th className="p-3">Funcionário</th>
             <th className="p-3">Tipo</th><th className="p-3">Severidade</th>
