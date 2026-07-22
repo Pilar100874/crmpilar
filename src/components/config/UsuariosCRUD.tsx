@@ -593,6 +593,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setRamal("");
     setSenhaSip("");
     setUsuarioSip("");
+    setTipo("padrao");
     setEditingId(null);
   };
 
