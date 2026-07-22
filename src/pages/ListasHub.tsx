@@ -135,6 +135,7 @@ const ListasHub: React.FC = () => {
       case 'empresas': return <Empresas />;
       case 'vendedores': return <Empresas variant="vendedor" />;
       case 'transportadoras': return <Empresas variant="transportadora" />;
+      case 'gerentes': return <Gerentes />;
       case 'todos': return <Todos />;
       case 'vinculos-empresas': return <VinculosEmpresas />;
       case 'vinculos-contatos': return <VinculosContatos />;
