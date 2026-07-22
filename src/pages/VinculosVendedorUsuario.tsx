@@ -330,7 +330,7 @@ export default function VinculosVendedorUsuario() {
             </div>
             {substituirExistentes && (
               <p className="text-sm text-amber-600 dark:text-amber-400">
-                ⚠ Usuários já vinculados nos vendedores selecionados serão substituídos.
+                ⚠ Gerentes já vinculados nos vendedores selecionados serão substituídos.
               </p>
             )}
           </CardContent>
