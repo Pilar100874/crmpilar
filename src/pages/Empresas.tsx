@@ -2098,23 +2098,11 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   );
                 })}
 
-              </div>
-            </div>
-            </Card>
-
-            <div className="flex justify-end gap-3">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowForm(false)}
-                className="border-border/40"
-              >
-                Cancelar
-              </Button>
-              <Button onClick={handleSaveEmpresa} className="shadow-sm">
-                {editingEmpresa ? "Salvar Alterações" : `Criar ${entityConfig.singular}`}
-              </Button>
+                </div>
+              </section>
             </div>
           </TabsContent>
+
 
 
           <TabsContent value="localizacao" className="p-6">
