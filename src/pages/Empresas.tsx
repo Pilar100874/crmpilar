@@ -167,6 +167,8 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formSnapshot, setFormSnapshot] = useState<string>("{}");
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("empresa");
+  const [pendingTab, setPendingTab] = useState<string | null>(null);
   const isFormDirty = JSON.stringify(formData) !== formSnapshot;
 
   // Autosave de rascunho (localStorage)
@@ -705,6 +707,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     setWhatsappsVinculados(empresa.whatsapps_vinculados || []);
 
     setShowForm(true);
+    setActiveTab("empresa");
+    setPendingTab(null);
     // Verificar rascunho salvo para este cadastro
     setTimeout(() => {
       checkForDraft(`empresas_draft:${variant}:${empresa.id}`, data);
@@ -785,13 +789,26 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     clearDraft();
     setShowForm(false);
     setFormSnapshot("{}");
+    setActiveTab("empresa");
+    setPendingTab(null);
   };
 
   const requestCloseForm = () => {
     if (isFormDirty) {
+      setPendingTab(null);
       setDiscardDialogOpen(true);
     } else {
       closeForm();
+    }
+  };
+
+  const handleTabChange = (value: string) => {
+    if (isFormDirty && value !== activeTab) {
+      setPendingTab(value);
+      setDiscardDialogOpen(true);
+    } else {
+      setActiveTab(value);
+      setPendingTab(null);
     }
   };
 
@@ -1167,6 +1184,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       setShowForm(false);
       setFormData({});
       setFormSnapshot("{}");
+      setActiveTab("empresa");
+      setPendingTab(null);
       setContatosVinculados([]);
       setEditingEmpresa(null);
       setCriarNovoContato(false);
@@ -1751,6 +1770,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 setFormSnapshot("{}");
                 setContatosVinculados([]);
                 setCriarNovoContato(false);
+                setActiveTab("empresa");
+                setPendingTab(null);
                 setTimeout(() => {
                   checkForDraft(`empresas_draft:${variant}:new`, {});
                 }, 0);
@@ -2102,7 +2123,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       </div>
 
       <div className="flex-1 overflow-auto px-3 sm:px-6 py-6">
-        <Tabs defaultValue="empresa" className="w-full max-w-6xl mx-auto">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full max-w-6xl mx-auto">
           <div className="bg-card border border-border/60 rounded-xl shadow-sm shadow-slate-200/40 dark:shadow-none overflow-hidden">
             <div className="px-2 sm:px-6 border-b border-border/60 bg-card">
               <TabsList className="bg-transparent p-0 h-auto gap-1 sm:gap-6 rounded-none w-full justify-start overflow-x-auto no-scrollbar">
@@ -3151,8 +3172,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         open={discardDialogOpen}
         onOpenChange={(open) => {
           setDiscardDialogOpen(open);
-          if (!open && blocker.state === "blocked") {
-            blocker.reset();
+          if (!open) {
+            setPendingTab(null);
+            if (blocker.state === "blocked") blocker.reset();
           }
         }}
       >
@@ -3166,6 +3188,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           <AlertDialogFooter>
             <AlertDialogCancel
               onClick={() => {
+                setPendingTab(null);
                 if (blocker.state === "blocked") blocker.reset();
               }}
             >
@@ -3174,7 +3197,11 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             <AlertDialogAction
               onClick={() => {
                 setDiscardDialogOpen(false);
-                if (blocker.state === "blocked") {
+                if (pendingTab) {
+                  setFormData(JSON.parse(formSnapshot));
+                  setActiveTab(pendingTab);
+                  setPendingTab(null);
+                } else if (blocker.state === "blocked") {
                   setFormSnapshot(JSON.stringify(formData));
                   blocker.proceed();
                 } else {
