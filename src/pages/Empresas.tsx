@@ -99,6 +99,8 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   // Estados para CNPJ/CPF duplicado
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [duplicateEmpresa, setDuplicateEmpresa] = useState<Empresa | null>(null);
+  const [duplicateSameVariant, setDuplicateSameVariant] = useState(false);
+
 
   const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string }>>([]);
   const [vendedoresLista, setVendedoresLista] = useState<Array<{ id: string; nome_fantasia: string; nome: string }>>([]);
