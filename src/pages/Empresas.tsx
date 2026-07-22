@@ -643,7 +643,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }
 
       if (orcamentos && orcamentos.length > 0) {
-        toast.error("Não é possível excluir esta empresa pois existem orçamentos vinculados a ela");
+        toast.error(`Não é possível excluir ${variant === 'vendedor' ? 'este vendedor' : variant === 'transportadora' ? 'esta transportadora' : 'esta empresa'} pois existem orçamentos vinculados`);
         setDeleteDialogOpen(false);
         setEmpresaToDelete(null);
         return;
@@ -668,12 +668,13 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         .eq('id', empresaToDelete.id);
 
       if (error) {
-        toast.error("Erro ao excluir empresa");
+        toast.error(`Erro ao excluir ${variant === 'vendedor' ? 'vendedor' : variant === 'transportadora' ? 'transportadora' : 'empresa'}`);
         console.error(error);
         return;
       }
 
-      toast.success("Empresa excluída!");
+      const tipoLabel = variant === 'vendedor' ? 'Vendedor excluído' : variant === 'transportadora' ? 'Transportadora excluída' : 'Empresa excluída';
+      toast.success(`${tipoLabel}!`);
       setDeleteDialogOpen(false);
       setEmpresaToDelete(null);
       if (estabelecimentoId) fetchEmpresas(estabelecimentoId);
