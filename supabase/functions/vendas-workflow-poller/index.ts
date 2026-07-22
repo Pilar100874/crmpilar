@@ -62,11 +62,10 @@ serve(async (req) => {
         titulo: "Orçamento parado",
         mensagem: `Orçamento #${o.id.slice(0, 8)} sem retorno há 3+ dias (R$ ${Number(o.valor_total || 0).toFixed(2)}).`,
         lida: false,
-        metadata: { orcamento_id: o.id, valor_total: o.valor_total },
         estabelecimento_id: o.estabelecimento_id,
       }));
       if (links.length) await admin.from("notificacoes_log").insert(links);
-      await admin.from("logistica_workflow_state").insert({ chave: key, estado: "notificado" });
+      await admin.from("logistica_workflow_state").insert({ chave: key, condicao: "orcamento_parado", ativa_desde: new Date().toISOString(), ultimo_disparo_em: new Date().toISOString() });
       resultados.orcamentos_parados++;
     }
 
@@ -74,9 +73,7 @@ serve(async (req) => {
     const inatividade = new Date();
     inatividade.setDate(inatividade.getDate() - 60);
 
-    const { data: empresasInativas } = await admin.rpc("empresas_inativas_desde", { p_data: inatividade.toISOString() }).select();
-    // fallback caso RPC não exista: consulta direta simples
-    if (!empresasInativas) {
+    {
       const { data: recentes } = await admin
         .from("pedidos_recebidos")
         .select("empresa_id, created_at")
@@ -110,11 +107,10 @@ serve(async (req) => {
           titulo: "Cliente inativo há 60+ dias",
           mensagem: `${e.nome_fantasia || e.razao_social || "Cliente"} está sem compras há mais de 60 dias.`,
           lida: false,
-          metadata: { empresa_id: e.id },
           estabelecimento_id: e.estabelecimento_id,
         }));
         if (links.length) await admin.from("notificacoes_log").insert(links);
-        await admin.from("logistica_workflow_state").insert({ chave: key, estado: "notificado" });
+        await admin.from("logistica_workflow_state").insert({ chave: key, condicao: "cliente_inativo", ativa_desde: new Date().toISOString(), ultimo_disparo_em: new Date().toISOString() });
         resultados.clientes_inativos++;
       }
     }
@@ -152,11 +148,10 @@ serve(async (req) => {
         titulo: "🎂 Aniversário de cliente",
         mensagem: `Hoje é aniversário de ${e.nome_fantasia || e.razao_social}.`,
         lida: false,
-        metadata: { empresa_id: e.id },
         estabelecimento_id: e.estabelecimento_id,
       }));
       if (links.length) await admin.from("notificacoes_log").insert(links);
-      await admin.from("logistica_workflow_state").insert({ chave: key, estado: "notificado" });
+      await admin.from("logistica_workflow_state").insert({ chave: key, condicao: "aniversario", ativa_desde: new Date().toISOString(), ultimo_disparo_em: new Date().toISOString() });
       resultados.aniversarios++;
     }
 

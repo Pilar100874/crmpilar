@@ -68,20 +68,21 @@ serve(async (req) => {
         break;
       }
       case "logistica": {
-        // Marca disparo em logistica_workflow_state e registra log
         await admin.from("logistica_workflow_state").insert({
           chave: `webhook:logistica:${id}:${Date.now()}`,
-          estado: "webhook_recebido",
-          payload: event_data,
-        }).select();
+          automacao_id: id,
+          condicao: "webhook_externo",
+          ativa_desde: new Date().toISOString(),
+          ultimo_disparo_em: new Date().toISOString(),
+        });
         result = { engine: "logistica", enqueued: true };
         break;
       }
       case "vendas": {
         await admin.from("automacoes_vendas_log").insert({
           automacao_id: id,
-          tipo: "webhook_externo",
-          payload: event_data,
+          regra_aplicada: "webhook_externo",
+          detalhes: event_data,
         });
         result = { engine: "vendas", enqueued: true };
         break;
