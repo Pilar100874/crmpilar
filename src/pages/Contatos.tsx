@@ -207,6 +207,34 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   ]);
 
   const [formData, setFormData] = useState<Record<string, any>>({});
+  // --- Guarda de alterações não salvas ---
+  const [formSnapshot, setFormSnapshot] = useState<string>("{}");
+  const [activeTab, setActiveTab] = useState<string>("contato");
+  const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
+  const [pendingTab, setPendingTab] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<null | (() => void)>(null);
+  const isFormDirty = JSON.stringify(formData) !== formSnapshot;
+  const draftKey = React.useMemo(
+    () => `contatos_draft:${editingContact?.id ?? "new"}`,
+    [editingContact?.id]
+  );
+  const [draftRestore, setDraftRestore] = useState<{ data: Record<string, any>; savedAt: number } | null>(null);
+  const clearDraft = React.useCallback((key?: string) => {
+    try { localStorage.removeItem(key ?? draftKey); } catch {}
+  }, [draftKey]);
+  const checkForDraft = React.useCallback((key: string, currentData: Record<string, any>) => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      const draftData = parsed?.data ?? {};
+      if (JSON.stringify(draftData) === JSON.stringify(currentData)) {
+        localStorage.removeItem(key);
+        return;
+      }
+      setDraftRestore({ data: draftData, savedAt: parsed?.savedAt ?? Date.now() });
+    } catch {}
+  }, []);
   const [newFieldLabel, setNewFieldLabel] = useState("");
   const [newFieldType, setNewFieldType] = useState<CustomField["type"]>("text");
   const [newFieldOptions, setNewFieldOptions] = useState("");
