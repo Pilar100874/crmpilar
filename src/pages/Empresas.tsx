@@ -16,7 +16,7 @@ import { DeleteWithDependenciesDialog } from "@/components/common/DeleteWithDepe
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil, Edit, GripVertical, Phone, Building2, Truck, UserCog, FileText, MapPin, ShieldCheck, Link2, ArrowLeft } from "lucide-react";
+import { Plus, MoreVertical, Trash2, Search, X, Loader2, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Pencil, Edit, GripVertical, Phone, Building2, Truck, UserCog, FileText, MapPin, ShieldCheck, Link2, ArrowLeft, AlertCircle } from "lucide-react";
 import { CadastroHeader } from "@/components/cadastros/CadastroHeader";
 import { toast } from "@/lib/toast-config";
 import { validateCPF, validateCNPJ, validateEmail, validateCEP, validateWhatsApp } from "@/lib/validators";
@@ -2068,11 +2068,23 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground truncate">
-                {editingEmpresa
-                  ? (formData.company_fantasia || formData.company_name || `Editar ${entityConfig.singular}`)
-                  : `${variant === "vendedor" ? "Novo" : "Nova"} ${entityConfig.singular}`}
-              </h1>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground truncate">
+                  {editingEmpresa
+                    ? (formData.company_fantasia || formData.company_name || `Editar ${entityConfig.singular}`)
+                    : `${variant === "vendedor" ? "Novo" : "Nova"} ${entityConfig.singular}`}
+                </h1>
+                {isFormDirty && (
+                  <Badge variant="outline" className="gap-1.5 border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 text-xs font-medium shrink-0 animate-in fade-in slide-in-from-left-2 duration-200">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+                    </span>
+                    <AlertCircle className="w-3 h-3" />
+                    Alterações não salvas
+                  </Badge>
+                )}
+              </div>
               <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 truncate">
                 {editingEmpresa ? "Gerencie as informações cadastrais, fiscais e vínculos" : "Preencha os dados para criar um novo cadastro"}
               </p>
