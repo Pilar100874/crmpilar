@@ -145,10 +145,22 @@ async function percorrer(
   proximos: (id: string, handle?: string | null) => any[],
   devicesBase: any[],
   escopoAtual?: any,
+  duracaoOverride?: number,
 ): Promise<number> {
   const cfg = node.data?.config || {};
   const t = node.data?.type;
   let inseridas = 0;
+
+  // Bloco de duração: apenas sobrescreve o tempo dos próximos blocos de tela
+  if (t === "acao_duracao") {
+    const dur = parseInt(cfg.segundos, 10) || 8;
+    const filhos = proximos(node.id);
+    for (const f of filhos)
+      inseridas += await percorrer(admin, wf, f, payload, proximos, devicesBase, escopoAtual, dur);
+    return inseridas;
+  }
+
+
 
   // Condições: escolhem qual saída seguir
   if (t === "condicao_filtro") {
