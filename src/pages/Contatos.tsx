@@ -3039,28 +3039,20 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                           <CardContent className="p-4 space-y-4">
                             <h4 className="text-sm font-semibold">Adicionar Gerentes</h4>
                             
-                            <div className="space-y-2">
-                              <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
-                                {usuarios.map((usuario) => (
-                                  <div key={usuario.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
-                                    <Checkbox
-                                      id={`new-user-${usuario.id}`}
-                                      checked={novosUsuariosVinculo.includes(usuario.id)}
-                                      onCheckedChange={(checked) => {
-                                        if (checked) {
-                                          setNovosUsuariosVinculo([...novosUsuariosVinculo, usuario.id]);
-                                        } else {
-                                          setNovosUsuariosVinculo(novosUsuariosVinculo.filter(id => id !== usuario.id));
-                                        }
-                                      }}
-                                    />
-                                    <label htmlFor={`new-user-${usuario.id}`} className="text-sm cursor-pointer flex-1">
-                                      {usuario.nome}
-                                    </label>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
+                            <FilteredCheckboxList
+                              idPrefix="new-user"
+                              items={usuarios.map((u) => ({ id: u.id, label: u.nome }))}
+                              selected={novosUsuariosVinculo}
+                              onToggle={(id, checked) =>
+                                setNovosUsuariosVinculo(
+                                  checked
+                                    ? [...novosUsuariosVinculo, id]
+                                    : novosUsuariosVinculo.filter((x) => x !== id)
+                                )
+                              }
+                              searchPlaceholder="Buscar gerente..."
+                              emptyText="Nenhum gerente disponível."
+                            />
 
                             <Button 
                               onClick={async () => {

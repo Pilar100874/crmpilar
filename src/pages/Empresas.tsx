@@ -2608,28 +2608,20 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                         <CardContent className="p-4 space-y-4">
                           <h4 className="text-sm font-semibold">Adicionar Segmentos</h4>
                           
-                          <div className="space-y-2">
-                            <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
-                              {segmentosNormais.map((segmento) => (
-                                <div key={segmento.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
-                                  <Checkbox
-                                    id={`new-seg-${segmento.id}`}
-                                    checked={novosSegmentosVinculo.includes(segmento.id)}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) {
-                                        setNovosSegmentosVinculo([...novosSegmentosVinculo, segmento.id]);
-                                      } else {
-                                        setNovosSegmentosVinculo(novosSegmentosVinculo.filter(id => id !== segmento.id));
-                                      }
-                                    }}
-                                  />
-                                  <label htmlFor={`new-seg-${segmento.id}`} className="text-sm cursor-pointer flex-1">
-                                    {segmento.nome}
-                                  </label>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
+                          <FilteredCheckboxList
+                            idPrefix="new-seg"
+                            items={segmentosNormais.map((s) => ({ id: s.id, label: s.nome }))}
+                            selected={novosSegmentosVinculo}
+                            onToggle={(id, checked) =>
+                              setNovosSegmentosVinculo(
+                                checked
+                                  ? [...novosSegmentosVinculo, id]
+                                  : novosSegmentosVinculo.filter((x) => x !== id)
+                              )
+                            }
+                            searchPlaceholder="Buscar segmento..."
+                            emptyText="Nenhum segmento disponível."
+                          />
 
                           <Button 
                             onClick={async () => {
@@ -2721,30 +2713,20 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                       <Card className="border-primary/20 bg-primary/5">
                         <CardContent className="p-4 space-y-4">
                           <h4 className="text-sm font-semibold">Adicionar Segmentos de Prospect</h4>
-                          <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
-                            {disponiveis.length === 0 ? (
-                              <p className="text-xs text-muted-foreground p-2">
-                                Nenhum segmento de prospect disponível. Segmentos de prospect são criados automaticamente ao importar registros da Prospecção via Cloud Code / Cursor / ChatGPT.
-                              </p>
-                            ) : disponiveis.map((segmento) => (
-                              <div key={segmento.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
-                                <Checkbox
-                                  id={`new-segp-${segmento.id}`}
-                                  checked={novosSegmentosVinculo.includes(segmento.id)}
-                                  onCheckedChange={(checked) => {
-                                    if (checked) {
-                                      setNovosSegmentosVinculo([...novosSegmentosVinculo, segmento.id]);
-                                    } else {
-                                      setNovosSegmentosVinculo(novosSegmentosVinculo.filter(id => id !== segmento.id));
-                                    }
-                                  }}
-                                />
-                                <label htmlFor={`new-segp-${segmento.id}`} className="text-sm cursor-pointer flex-1">
-                                  {segmento.nome}
-                                </label>
-                              </div>
-                            ))}
-                          </div>
+                          <FilteredCheckboxList
+                            idPrefix="new-segp"
+                            items={disponiveis.map((s) => ({ id: s.id, label: s.nome }))}
+                            selected={novosSegmentosVinculo}
+                            onToggle={(id, checked) =>
+                              setNovosSegmentosVinculo(
+                                checked
+                                  ? [...novosSegmentosVinculo, id]
+                                  : novosSegmentosVinculo.filter((x) => x !== id)
+                              )
+                            }
+                            searchPlaceholder="Buscar segmento de prospect..."
+                            emptyText="Nenhum segmento de prospect disponível. Segmentos são criados automaticamente ao importar registros da Prospecção via Cloud Code / Cursor / ChatGPT."
+                          />
                           <Button
                             onClick={async () => {
                               if (novosSegmentosVinculo.length === 0) {
@@ -2835,26 +2817,20 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                         <Card className="border-primary/20 bg-primary/5">
                           <CardContent className="p-4 space-y-4">
                             <h4 className="text-sm font-semibold">Adicionar Usuários</h4>
-                            <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
-                              {usuariosDisponiveis.length === 0 && (
-                                <p className="text-xs text-muted-foreground p-2">Nenhum usuário disponível.</p>
-                              )}
-                              {usuariosDisponiveis.map((u) => (
-                                <div key={u.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
-                                  <Checkbox
-                                    id={`new-user-${u.id}`}
-                                    checked={novosUsuariosVinculo.includes(u.id)}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) setNovosUsuariosVinculo([...novosUsuariosVinculo, u.id]);
-                                      else setNovosUsuariosVinculo(novosUsuariosVinculo.filter(id => id !== u.id));
-                                    }}
-                                  />
-                                  <label htmlFor={`new-user-${u.id}`} className="text-sm cursor-pointer flex-1">
-                                    {u.nome}
-                                  </label>
-                                </div>
-                              ))}
-                            </div>
+                            <FilteredCheckboxList
+                              idPrefix="new-user"
+                              items={usuariosDisponiveis.map((u) => ({ id: u.id, label: u.nome }))}
+                              selected={novosUsuariosVinculo}
+                              onToggle={(id, checked) =>
+                                setNovosUsuariosVinculo(
+                                  checked
+                                    ? [...novosUsuariosVinculo, id]
+                                    : novosUsuariosVinculo.filter((x) => x !== id)
+                                )
+                              }
+                              searchPlaceholder="Buscar gerente..."
+                              emptyText="Nenhum gerente disponível."
+                            />
                             <Button onClick={handleAdicionarUsuariosVinculo} className="w-full" size="sm">
                               <Plus className="w-4 h-4 mr-2" />
                               Adicionar Usuários Selecionados
@@ -2930,26 +2906,20 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                         <Card className="border-primary/20 bg-primary/5">
                           <CardContent className="p-4 space-y-4">
                             <h4 className="text-sm font-semibold">Adicionar Vendedores</h4>
-                            <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
-                              {vendedoresDisponiveis.length === 0 && (
-                                <p className="text-xs text-muted-foreground p-2">Nenhum vendedor disponível. Cadastre em Listas → Vendedores.</p>
-                              )}
-                              {vendedoresDisponiveis.map((v) => (
-                                <div key={v.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
-                                  <Checkbox
-                                    id={`new-vend-${v.id}`}
-                                    checked={novosVendedoresVinculo.includes(v.id)}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) setNovosVendedoresVinculo([...novosVendedoresVinculo, v.id]);
-                                      else setNovosVendedoresVinculo(novosVendedoresVinculo.filter(id => id !== v.id));
-                                    }}
-                                  />
-                                  <label htmlFor={`new-vend-${v.id}`} className="text-sm cursor-pointer flex-1">
-                                    {v.nome_fantasia || v.nome}
-                                  </label>
-                                </div>
-                              ))}
-                            </div>
+                            <FilteredCheckboxList
+                              idPrefix="new-vend"
+                              items={vendedoresDisponiveis.map((v) => ({ id: v.id, label: v.nome_fantasia || v.nome }))}
+                              selected={novosVendedoresVinculo}
+                              onToggle={(id, checked) =>
+                                setNovosVendedoresVinculo(
+                                  checked
+                                    ? [...novosVendedoresVinculo, id]
+                                    : novosVendedoresVinculo.filter((x) => x !== id)
+                                )
+                              }
+                              searchPlaceholder="Buscar vendedor..."
+                              emptyText="Nenhum vendedor disponível. Cadastre em Listas → Vendedores."
+                            />
                             <Button onClick={handleAdicionarVendedoresVinculo} className="w-full" size="sm">
                               <Plus className="w-4 h-4 mr-2" />
                               Adicionar Vendedores Selecionados
@@ -3012,26 +2982,20 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                         <Card className="border-primary/20 bg-primary/5">
                           <CardContent className="p-4 space-y-4">
                             <h4 className="text-sm font-semibold">Adicionar Transportadoras</h4>
-                            <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
-                              {transportadorasDisponiveis.length === 0 && (
-                                <p className="text-xs text-muted-foreground p-2">Nenhuma transportadora disponível. Cadastre em Listas → Transportadoras.</p>
-                              )}
-                              {transportadorasDisponiveis.map((t) => (
-                                <div key={t.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
-                                  <Checkbox
-                                    id={`new-transp-${t.id}`}
-                                    checked={novasTransportadorasVinculo.includes(t.id)}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) setNovasTransportadorasVinculo([...novasTransportadorasVinculo, t.id]);
-                                      else setNovasTransportadorasVinculo(novasTransportadorasVinculo.filter(id => id !== t.id));
-                                    }}
-                                  />
-                                  <label htmlFor={`new-transp-${t.id}`} className="text-sm cursor-pointer flex-1">
-                                    {t.nome_fantasia || t.nome}
-                                  </label>
-                                </div>
-                              ))}
-                            </div>
+                            <FilteredCheckboxList
+                              idPrefix="new-transp"
+                              items={transportadorasDisponiveis.map((t) => ({ id: t.id, label: t.nome_fantasia || t.nome }))}
+                              selected={novasTransportadorasVinculo}
+                              onToggle={(id, checked) =>
+                                setNovasTransportadorasVinculo(
+                                  checked
+                                    ? [...novasTransportadorasVinculo, id]
+                                    : novasTransportadorasVinculo.filter((x) => x !== id)
+                                )
+                              }
+                              searchPlaceholder="Buscar transportadora..."
+                              emptyText="Nenhuma transportadora disponível. Cadastre em Listas → Transportadoras."
+                            />
                             <Button onClick={handleAdicionarTransportadorasVinculo} className="w-full" size="sm">
                               <Plus className="w-4 h-4 mr-2" />
                               Adicionar Transportadoras Selecionadas
@@ -3095,27 +3059,25 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                         <Card className="border-primary/20 bg-primary/5">
                           <CardContent className="p-4 space-y-4">
                             <h4 className="text-sm font-semibold">Adicionar Empresas</h4>
-                            <div className="space-y-2 max-h-[240px] overflow-y-auto border rounded-lg p-2 bg-background">
-                              {empresasDisponiveis.length === 0 && (
-                                <p className="text-xs text-muted-foreground p-2">Nenhuma empresa disponível.</p>
-                              )}
-                              {empresasDisponiveis.map((e) => (
-                                <div key={e.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
-                                  <Checkbox
-                                    id={`new-emp-${e.id}`}
-                                    checked={novasEmpresasVinculo.includes(e.id)}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) setNovasEmpresasVinculo([...novasEmpresasVinculo, e.id]);
-                                      else setNovasEmpresasVinculo(novasEmpresasVinculo.filter((id) => id !== e.id));
-                                    }}
-                                  />
-                                  <label htmlFor={`new-emp-${e.id}`} className="text-sm cursor-pointer flex-1">
-                                    {e.nome_fantasia || e.nome}
-                                    {e.cnpj && <span className="text-xs text-muted-foreground ml-2">{e.cnpj}</span>}
-                                  </label>
-                                </div>
-                              ))}
-                            </div>
+                            <FilteredCheckboxList
+                              idPrefix="new-emp"
+                              items={empresasDisponiveis.map((e) => ({
+                                id: e.id,
+                                label: e.nome_fantasia || e.nome,
+                                extra: e.cnpj || undefined,
+                              }))}
+                              selected={novasEmpresasVinculo}
+                              onToggle={(id, checked) =>
+                                setNovasEmpresasVinculo(
+                                  checked
+                                    ? [...novasEmpresasVinculo, id]
+                                    : novasEmpresasVinculo.filter((x) => x !== id)
+                                )
+                              }
+                              searchPlaceholder="Buscar empresa por nome ou CNPJ..."
+                              emptyText="Nenhuma empresa disponível."
+                              maxHeightClass="max-h-[240px]"
+                            />
                             <Button onClick={handleAdicionarEmpresasVinculo} className="w-full" size="sm">
                               <Plus className="w-4 h-4 mr-2" />
                               Adicionar Empresas Selecionadas
