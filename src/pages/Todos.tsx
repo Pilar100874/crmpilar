@@ -423,6 +423,7 @@ export default function Todos() {
           .from('usuarios')
           .select('id, nome, email, telefone')
           .eq('estabelecimento_id', estabId)
+          .eq('tipo', 'gerente')
           .order('nome');
         if (usuariosData) setUsuarios(usuariosData);
 
@@ -749,7 +750,7 @@ export default function Todos() {
               value="usuarios"
               className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent px-0 font-medium"
             >
-              Usuários ({filteredUsuarios.length})
+              Gerentes ({filteredUsuarios.length})
             </TabsTrigger>
           </TabsList>
         </div>
@@ -837,7 +838,7 @@ export default function Todos() {
                       item.type === 'contato' ? 'Empresas Vinculadas:'
                       : item.type === 'empresa' ? 'Contatos Vinculados:'
                       : item.type === 'vendedor' ? 'Empresas atendidas por este vendedor:'
-                      : item.type === 'usuario' ? 'Empresas sob responsabilidade deste usuário:'
+                      : item.type === 'usuario' ? 'Empresas sob responsabilidade deste gerente:'
                       : 'Vínculos:';
 
                     return (
@@ -901,7 +902,7 @@ export default function Todos() {
                                 empresa: { label: 'Empresa', variant: 'outline' },
                                 vendedor: { label: 'Vendedor', variant: 'default' },
                                 transportadora: { label: 'Transportadora', variant: 'secondary' },
-                                usuario: { label: 'Usuário', variant: 'outline' },
+                                usuario: { label: 'Gerente', variant: 'outline' },
                               };
                               return (
                                 <td key={col.id} className="p-3">
