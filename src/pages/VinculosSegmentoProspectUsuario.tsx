@@ -197,7 +197,7 @@ export default function VinculosSegmentoProspectUsuario() {
               </>
             ) : (
               <p className="text-sm text-muted-foreground text-center py-8">
-                Selecione um segmento à esquerda para gerenciar os usuários.
+                Selecione um segmento à esquerda para gerenciar os gerentes.
               </p>
             )}
           </CardContent>
