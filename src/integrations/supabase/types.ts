@@ -23256,6 +23256,10 @@ export type Database = {
         Returns: Json
       }
       cleanup_old_agent_chat_sessions: { Args: never; Returns: undefined }
+      clear_entity_dependency: {
+        Args: { p_dep_key: string; p_entity: string; p_id: string }
+        Returns: number
+      }
       current_user_is_host: { Args: { host_user_id: string }; Returns: boolean }
       delete_customer_cascade: {
         Args: { p_customer_id: string }
