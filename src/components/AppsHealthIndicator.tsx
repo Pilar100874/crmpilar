@@ -203,6 +203,7 @@ export function AppsHealthIndicator({
     : classify(win.ago);
   const andState = classify(and.ago);
   const tvState = tvs.length ? aggregate(tvs.map((t) => t.state)) : "offline";
+  const pollersState: State = pollers.length ? aggregate(pollers.map((p) => p.state)) : "offline";
 
   const iconClass = small
     ? "h-4 w-4 text-foreground/70"
@@ -283,6 +284,36 @@ export function AppsHealthIndicator({
             </div>
           ) : (
             <div className="text-muted-foreground">Nenhum dispositivo pareado</div>
+          )}
+        </TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="relative inline-flex items-center gap-1">
+            <Activity className={iconClass} />
+            <span className={`${dotClassSize} rounded-full ${dotClass(pollersState)}`} />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side={tooltipSide} className="text-xs max-w-[300px]">
+          <div className="font-semibold">Automações server-side (pollers)</div>
+          {pollers.length > 0 ? (
+            <div className="flex flex-col gap-1 max-h-56 overflow-auto">
+              {pollers.map((p) => (
+                <div key={p.poller} className="flex items-center gap-1.5">
+                  <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotClass(p.state)}`} />
+                  <span className="truncate">{p.poller}</span>
+                  <span className="text-muted-foreground ml-auto text-[10px] whitespace-nowrap">
+                    {p.at
+                      ? new Date(p.at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+                      : "nunca"}
+                    {p.status === "erro" && " ⚠"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-muted-foreground">Aguardando primeira execução</div>
           )}
         </TooltipContent>
       </Tooltip>
