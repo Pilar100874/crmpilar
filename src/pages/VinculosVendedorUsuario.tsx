@@ -315,7 +315,7 @@ export default function VinculosVendedorUsuario() {
                 </div>
               </div>
               <div>
-                <h4 className="text-sm font-semibold mb-2">Usuários ({selectedUsuarios.length})</h4>
+                <h4 className="text-sm font-semibold mb-2">Gerentes ({selectedUsuarios.length})</h4>
                 <div className="border rounded-lg p-3 max-h-[300px] overflow-y-auto space-y-1">
                   {selectedUsuarios.map((id) => {
                     const u = usuarios.find((x) => x.id === id);
