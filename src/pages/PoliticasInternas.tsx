@@ -116,10 +116,17 @@ export default function PoliticasInternas() {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (u.user) {
+        // Resolve auth.uid() -> usuarios.id (user_roles.user_id refers to usuarios.id)
+        const { data: usuario } = await supabase
+          .from("usuarios")
+          .select("id")
+          .eq("auth_user_id", u.user.id)
+          .maybeSingle();
+        const usuarioId = usuario?.id ?? u.user.id;
         const { data: role } = await supabase
           .from("user_roles")
           .select("id")
-          .eq("user_id", u.user.id)
+          .in("user_id", [usuarioId, u.user.id])
           .eq("role", "admin")
           .maybeSingle();
         setIsAdmin(!!role);
