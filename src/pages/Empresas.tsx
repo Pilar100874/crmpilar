@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { geocodeAndSaveEmpresa } from "@/hooks/useGeocodingService";
 import * as React from "react";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams, useBlocker } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -179,6 +179,18 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [showForm, isFormDirty]);
+
+  // Bloqueia navegação interna (mudança de rota) com alterações não salvas
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      showForm && isFormDirty && currentLocation.pathname !== nextLocation.pathname
+  );
+
+  useEffect(() => {
+    if (blocker.state === "blocked") {
+      setDiscardDialogOpen(true);
+    }
+  }, [blocker.state]);
 
   // Campos obrigatórios fixos de empresa
   const [companyFields, setCompanyFields] = useState<CustomField[]>([
@@ -3071,7 +3083,15 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       )}
       
       {/* Dialog de confirmação para descartar alterações */}
-      <AlertDialog open={discardDialogOpen} onOpenChange={setDiscardDialogOpen}>
+      <AlertDialog
+        open={discardDialogOpen}
+        onOpenChange={(open) => {
+          setDiscardDialogOpen(open);
+          if (!open && blocker.state === "blocked") {
+            blocker.reset();
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
@@ -3080,11 +3100,22 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+            <AlertDialogCancel
+              onClick={() => {
+                if (blocker.state === "blocked") blocker.reset();
+              }}
+            >
+              Continuar editando
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 setDiscardDialogOpen(false);
-                closeForm();
+                if (blocker.state === "blocked") {
+                  setFormSnapshot(JSON.stringify(formData));
+                  blocker.proceed();
+                } else {
+                  closeForm();
+                }
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
