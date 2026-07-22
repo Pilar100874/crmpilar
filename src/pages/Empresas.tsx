@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { DeleteWithDependenciesDialog } from "@/components/common/DeleteWithDependenciesDialog";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -2859,25 +2860,28 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         </div>
       )}
 
-      {/* Dialog de confirmação de exclusão - renderizado em ambas as visualizações */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir a empresa <strong>{empresaToDelete?.nome_fantasia || empresaToDelete?.nome}</strong>?
-              {"\n\n"}
-              Esta ação não poderá ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteEmpresa}>
-              Confirmar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Dialog de exclusão com dependências */}
+      {empresaToDelete && (
+        <DeleteWithDependenciesDialog
+          open={deleteDialogOpen}
+          onOpenChange={(o) => { setDeleteDialogOpen(o); if (!o) setEmpresaToDelete(null); }}
+          entity="empresa"
+          entityLabel={variant === 'vendedor' ? 'vendedor' : variant === 'transportadora' ? 'transportadora' : 'empresa'}
+          id={empresaToDelete.id}
+          name={empresaToDelete.nome_fantasia || empresaToDelete.nome}
+          onDelete={async () => {
+            const { data: orcs } = await supabase.from('orcamentos').select('id').eq('empresa_id', empresaToDelete.id).limit(1);
+            if (orcs && orcs.length > 0) {
+              throw new Error('Não é possível excluir: existem orçamentos vinculados. Use Inativar.');
+            }
+            await supabase.from('customer_empresas').delete().eq('empresa_id', empresaToDelete.id);
+            const { error } = await supabase.from('empresas').delete().eq('id', empresaToDelete.id);
+            if (error) throw error;
+            if (estabelecimentoId) fetchEmpresas(estabelecimentoId);
+          }}
+          onInactivated={() => { if (estabelecimentoId) fetchEmpresas(estabelecimentoId); }}
+        />
+      )}
       
       {/* Dialog de CNPJ/CPF duplicado */}
       <AlertDialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
