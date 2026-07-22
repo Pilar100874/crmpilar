@@ -2166,12 +2166,15 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                     <span className="sm:hidden">Importar</span>
                   </Button>
                 )}
-                <Button onClick={() => {
+                <Button onClick={() => runWithDirtyGuard(() => {
                   setShouldCheckDuplicate(true);
                   setIsClosingForm(false);
                   setShowForm(true);
                   setEditingContact(null);
                   setFormData({});
+                  setFormSnapshot("{}");
+                  setActiveTab("contato");
+                  setPendingTab(null);
                   setSegmentosSelecionados([]);
                   setEmpresaSelecionada("");
                   setCriarNovaEmpresa(false);
@@ -2179,7 +2182,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                   setBuscaEmpresa("");
                   setEmpresasFiltradas([]);
                   setEmpresasVinculadas([]);
-                }} className="gap-2 shadow-sm h-9 sm:h-10">
+                  setTimeout(() => checkForDraft(`contatos_draft:new`, {}), 0);
+                })} className="gap-2 shadow-sm h-9 sm:h-10">
                   <Plus className="w-4 h-4" />
                   Novo Contato
                 </Button>
