@@ -787,13 +787,26 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     clearDraft();
     setShowForm(false);
     setFormSnapshot("{}");
+    setActiveTab("empresa");
+    setPendingTab(null);
   };
 
   const requestCloseForm = () => {
     if (isFormDirty) {
+      setPendingTab(null);
       setDiscardDialogOpen(true);
     } else {
       closeForm();
+    }
+  };
+
+  const handleTabChange = (value: string) => {
+    if (isFormDirty && value !== activeTab) {
+      setPendingTab(value);
+      setDiscardDialogOpen(true);
+    } else {
+      setActiveTab(value);
+      setPendingTab(null);
     }
   };
 
