@@ -1957,58 +1957,82 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
         </div>
       ) : (
-        <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-background to-muted/20">
-      <div className="border-b bg-card/80 backdrop-blur-sm px-8 py-6">
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setShowForm(false)}
-            className="hover:bg-accent/50"
-          >
-            <X className="w-5 h-5" />
-          </Button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-light tracking-tight text-foreground">
-              {editingEmpresa ? `Editar ${entityConfig.singular}` : `${variant === "transportadora" ? "Nova" : (variant === "vendedor" ? "Novo" : "Nova")} ${entityConfig.singular}`}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {editingEmpresa ? `Atualize as informações` : `Preencha os dados`}
-            </p>
+        <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-muted/30 via-background to-muted/20">
+      {/* Header modernizado com ações */}
+      <div className="sticky top-0 z-20 border-b bg-card/95 backdrop-blur-md shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowForm(false)}
+              className="rounded-full hover:bg-accent shrink-0"
+              aria-label="Voltar"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground truncate">
+                {editingEmpresa
+                  ? (formData.company_fantasia || formData.company_name || `Editar ${entityConfig.singular}`)
+                  : `${variant === "vendedor" ? "Novo" : "Nova"} ${entityConfig.singular}`}
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 truncate">
+                {editingEmpresa ? "Gerencie as informações cadastrais, fiscais e vínculos" : "Preencha os dados para criar um novo cadastro"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>
+              Cancelar
+            </Button>
+            <Button size="sm" onClick={handleSaveEmpresa} className="shadow-sm shadow-primary/20">
+              {editingEmpresa ? "Salvar Alterações" : `Criar ${entityConfig.singular}`}
+            </Button>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-8">
+      <div className="flex-1 overflow-auto px-3 sm:px-6 py-6">
         <Tabs defaultValue="empresa" className="w-full max-w-6xl mx-auto">
-          <TabsList className="bg-muted/30 border border-border/40 p-1 rounded-lg mb-6 flex-wrap h-auto">
-            <TabsTrigger
-              value="empresa"
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-            >
-              Dados {variant === "empresa" ? "da Empresa" : (variant === "vendedor" ? "do Vendedor" : "da Transportadora")}
-            </TabsTrigger>
-            <TabsTrigger
-              value="localizacao"
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-            >
-              Localização
-            </TabsTrigger>
-            {variant !== "vendedor" && (
-              <TabsTrigger
-                value="qualificacao"
-                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-              >
-                Qualificação
-              </TabsTrigger>
-            )}
-            <TabsTrigger
-              value="cadastros-vinculados"
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-            >
-              Cadastros Vinculados
-            </TabsTrigger>
-          </TabsList>
+          <div className="bg-card border border-border/60 rounded-xl shadow-sm shadow-slate-200/40 dark:shadow-none overflow-hidden">
+            <div className="px-2 sm:px-6 border-b border-border/60 bg-card">
+              <TabsList className="bg-transparent p-0 h-auto gap-1 sm:gap-6 rounded-none w-full justify-start overflow-x-auto no-scrollbar">
+                <TabsTrigger
+                  value="empresa"
+                  className="gap-2 py-3 sm:py-4 px-2 sm:px-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground font-medium text-sm whitespace-nowrap"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span className="hidden sm:inline">Dados {variant === "empresa" ? "da Empresa" : (variant === "vendedor" ? "do Vendedor" : "da Transportadora")}</span>
+                  <span className="sm:hidden">Dados</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="localizacao"
+                  className="gap-2 py-3 sm:py-4 px-2 sm:px-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground font-medium text-sm whitespace-nowrap"
+                >
+                  <MapPin className="w-4 h-4" />
+                  Localização
+                </TabsTrigger>
+                {variant !== "vendedor" && (
+                  <TabsTrigger
+                    value="qualificacao"
+                    className="gap-2 py-3 sm:py-4 px-2 sm:px-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground font-medium text-sm whitespace-nowrap"
+                  >
+                    <ShieldCheck className="w-4 h-4" />
+                    Qualificação
+                  </TabsTrigger>
+                )}
+                <TabsTrigger
+                  value="cadastros-vinculados"
+                  className="gap-2 py-3 sm:py-4 px-2 sm:px-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground font-medium text-sm whitespace-nowrap"
+                >
+                  <Link2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Cadastros Vinculados</span>
+                  <span className="sm:hidden">Vínculos</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
 
           <TabsContent value="empresa" className="space-y-6">
             <Card className="border-border/40 shadow-sm">
