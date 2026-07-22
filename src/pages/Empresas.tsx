@@ -702,11 +702,22 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       return;
     }
     
-    const { data, error } = await supabase
+    let query = supabase
       .from('empresas')
       .select('*')
       .eq('estabelecimento_id', estabelecimentoId);
-    
+
+    // Restringir duplicidade apenas ao mesmo tipo de cadastro
+    if (variant === 'vendedor') {
+      query = query.eq('tipo_cliente', 'vendedor');
+    } else if (variant === 'transportadora') {
+      query = query.eq('tipo_cliente', 'transportadora');
+    } else {
+      query = query.not('tipo_cliente', 'in', '("vendedor","transportadora")');
+    }
+
+    const { data, error } = await query;
+
     if (error) {
       console.error('Erro ao verificar CNPJ/CPF:', error);
       return;
@@ -714,6 +725,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     
     // Comparar valores limpos
     const duplicate = data?.find(emp => emp.cnpj?.replace(/\D/g, '') === cleanValue);
+
     
     if (duplicate) {
       setDuplicateEmpresa(duplicate);
