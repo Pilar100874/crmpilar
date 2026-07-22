@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Monitor, Smartphone, Bell, Tv } from "lucide-react";
+import { Monitor, Smartphone, Bell, Tv, Activity } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -8,6 +8,7 @@ type State = "online" | "warn" | "offline";
 type Health = { at: string | null; ago: number | null };
 type FilialHealth = { id: string; nome: string; at: string | null; ago: number | null; state: State; equipamentos: number };
 type TvDeviceHealth = { id: string; nome: string; at: string | null; state: State };
+type PollerHealth = { poller: string; at: string | null; state: State; status: string | null };
 
 function classify(ago: number | null): State {
   if (ago == null) return "offline";
