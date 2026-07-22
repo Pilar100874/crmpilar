@@ -41,6 +41,7 @@ import ProspeccaoEmpresas from './ProspeccaoEmpresas';
 import VinculosSegmentoProspectUsuario from './VinculosSegmentoProspectUsuario';
 import ConfigIAProspec from './ConfigIAProspec';
 import ProspeccaoVendedores from './ProspeccaoVendedores';
+import Gerentes from './Gerentes';
 
 interface TabItem {
   id: string;
@@ -65,6 +66,7 @@ const sections: TabSection[] = [
       { id: 'empresas', label: 'Empresas', icon: Building2, description: 'Gestão de empresas' },
       { id: 'vendedores', label: 'Vendedores', icon: UserCog, description: 'Gestão de vendedores' },
       { id: 'transportadoras', label: 'Transportadoras', icon: Truck, description: 'Gestão de transportadoras' },
+      { id: 'gerentes', label: 'Gerentes', icon: UserCog, description: 'Usuários gerentes e seus vendedores/empresas' },
       { id: 'todos', label: 'Todos', icon: Users, description: 'Visualização de todos os registros' },
     ],
   },
@@ -133,6 +135,7 @@ const ListasHub: React.FC = () => {
       case 'empresas': return <Empresas />;
       case 'vendedores': return <Empresas variant="vendedor" />;
       case 'transportadoras': return <Empresas variant="transportadora" />;
+      case 'gerentes': return <Gerentes />;
       case 'todos': return <Todos />;
       case 'vinculos-empresas': return <VinculosEmpresas />;
       case 'vinculos-contatos': return <VinculosContatos />;

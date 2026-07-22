@@ -7151,6 +7151,55 @@ export type Database = {
           },
         ]
       }
+      gerente_vendedores: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          gerente_usuario_id: string
+          id: string
+          updated_at: string
+          vendedor_empresa_id: string
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          gerente_usuario_id: string
+          id?: string
+          updated_at?: string
+          vendedor_empresa_id: string
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          gerente_usuario_id?: string
+          id?: string
+          updated_at?: string
+          vendedor_empresa_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gerente_vendedores_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gerente_vendedores_gerente_usuario_id_fkey"
+            columns: ["gerente_usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gerente_vendedores_vendedor_empresa_id_fkey"
+            columns: ["vendedor_empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       global_variables: {
         Row: {
           created_at: string
@@ -21486,6 +21535,7 @@ export type Database = {
           senha_sip: string | null
           smtp: string | null
           telefone: string | null
+          tipo: string
           unidade_id: string | null
           updated_at: string | null
           usar_autenticacao: boolean | null
@@ -21516,6 +21566,7 @@ export type Database = {
           senha_sip?: string | null
           smtp?: string | null
           telefone?: string | null
+          tipo?: string
           unidade_id?: string | null
           updated_at?: string | null
           usar_autenticacao?: boolean | null
@@ -21546,6 +21597,7 @@ export type Database = {
           senha_sip?: string | null
           smtp?: string | null
           telefone?: string | null
+          tipo?: string
           unidade_id?: string | null
           updated_at?: string | null
           usar_autenticacao?: boolean | null

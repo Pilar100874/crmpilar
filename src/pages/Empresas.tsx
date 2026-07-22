@@ -104,6 +104,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
 
   const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string }>>([]);
   const [vendedoresLista, setVendedoresLista] = useState<Array<{ id: string; nome_fantasia: string; nome: string }>>([]);
+  const [transportadorasLista, setTransportadorasLista] = useState<Array<{ id: string; nome_fantasia: string; nome: string }>>([]);
   const [vinculos, setVinculos] = useState<any[]>([]);
   const [segmentos, setSegmentos] = useState<Array<{ id: string; nome: string; is_prospect?: boolean }>>([]);
   
@@ -112,6 +113,7 @@ export default function Empresas({ hideAdminButtons = false, variant = "empresa"
   const [novosVendedoresVinculo, setNovosVendedoresVinculo] = useState<string[]>([]);
   const [novosSegmentosVinculo, setNovosSegmentosVinculo] = useState<string[]>([]);
   const [novasEmpresasVinculo, setNovasEmpresasVinculo] = useState<string[]>([]);
+  const [novasTransportadorasVinculo, setNovasTransportadorasVinculo] = useState<string[]>([]);
   
   // Estado para dialog de importação via API
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -467,6 +469,15 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       .eq('tipo_cliente', 'vendedor')
       .order('nome_fantasia');
     setVendedoresLista(vendedoresData || []);
+
+    // Carregar transportadoras (empresas com tipo_cliente = transportadora)
+    const { data: transportadorasData } = await supabase
+      .from('empresas')
+      .select('id, nome_fantasia, nome')
+      .eq('estabelecimento_id', estabId)
+      .eq('tipo_cliente', 'transportadora')
+      .order('nome_fantasia');
+    setTransportadorasLista(transportadorasData || []);
 
     // Carregar empresas reais (para uso na aba de vínculos em vendedor/transportadora)
     if (variant !== "empresa") {
@@ -1216,6 +1227,30 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       await fetchEmpresas(estabelecimentoId);
     } catch (error: any) {
       toast.error("Erro ao vincular vendedores: " + error.message);
+    }
+  };
+
+  const handleAdicionarTransportadorasVinculo = async () => {
+    if (!estabelecimentoId || !editingEmpresa || novasTransportadorasVinculo.length === 0) {
+      toast.error("Selecione pelo menos uma transportadora");
+      return;
+    }
+    try {
+      const rows = novasTransportadorasVinculo.map((tid) => ({
+        empresa_id: editingEmpresa.id,
+        transportadora_id: tid,
+        usuario_id: null,
+        vendedor_id: null,
+        segmento_id: null,
+        estabelecimento_id: estabelecimentoId,
+      }));
+      const { error } = await supabase.from("empresa_vinculos").insert(rows);
+      if (error) throw error;
+      toast.success("Transportadoras vinculadas!");
+      setNovasTransportadorasVinculo([]);
+      await fetchEmpresas(estabelecimentoId);
+    } catch (error: any) {
+      toast.error("Erro ao vincular transportadoras: " + error.message);
     }
   };
 
@@ -2005,6 +2040,14 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 Vendedores
               </TabsTrigger>
             )}
+            {variant === "empresa" && (
+              <TabsTrigger
+                value="transportadoras"
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+              >
+                Transportadoras
+              </TabsTrigger>
+            )}
             {(variant === "vendedor" || variant === "transportadora") && (
               <TabsTrigger
                 value="empresas-vinculadas"
@@ -2774,6 +2817,88 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                   })() : (
                     <p className="text-sm text-muted-foreground text-center py-8">
                       Salve a empresa primeiro para gerenciar os vendedores.
+                    </p>
+                  )}
+                </div>
+              </Card>
+              <div className="flex justify-end gap-3 mt-6">
+                <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">Fechar</Button>
+              </div>
+            </TabsContent>
+          )}
+          {variant === "empresa" && (
+            <TabsContent value="transportadoras" className="p-6">
+              <Card className="p-6">
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Transportadoras Vinculadas</h3>
+                    <p className="text-sm text-muted-foreground mb-6">
+                      Vincule as transportadoras que atendem esta empresa.
+                    </p>
+                  </div>
+                  {editingEmpresa ? (() => {
+                    const vinculosDaEmpresa = vinculos.filter(v => v.empresa_id === editingEmpresa.id);
+                    const vinculosTransp = vinculosDaEmpresa.filter(v => v.transportadora_id !== null && v.transportadora_id !== undefined);
+                    const idsJaVinculados = new Set(vinculosTransp.map(v => v.transportadora_id));
+                    const transportadorasDisponiveis = transportadorasLista.filter(t => !idsJaVinculados.has(t.id));
+                    return (
+                      <div className="space-y-4">
+                        <Card className="border-primary/20 bg-primary/5">
+                          <CardContent className="p-4 space-y-4">
+                            <h4 className="text-sm font-semibold">Adicionar Transportadoras</h4>
+                            <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
+                              {transportadorasDisponiveis.length === 0 && (
+                                <p className="text-xs text-muted-foreground p-2">Nenhuma transportadora disponível. Cadastre em Listas → Transportadoras.</p>
+                              )}
+                              {transportadorasDisponiveis.map((t) => (
+                                <div key={t.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
+                                  <Checkbox
+                                    id={`new-transp-${t.id}`}
+                                    checked={novasTransportadorasVinculo.includes(t.id)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) setNovasTransportadorasVinculo([...novasTransportadorasVinculo, t.id]);
+                                      else setNovasTransportadorasVinculo(novasTransportadorasVinculo.filter(id => id !== t.id));
+                                    }}
+                                  />
+                                  <label htmlFor={`new-transp-${t.id}`} className="text-sm cursor-pointer flex-1">
+                                    {t.nome_fantasia || t.nome}
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                            <Button onClick={handleAdicionarTransportadorasVinculo} className="w-full" size="sm">
+                              <Plus className="w-4 h-4 mr-2" />
+                              Adicionar Transportadoras Selecionadas
+                            </Button>
+                          </CardContent>
+                        </Card>
+                        <div>
+                          <h4 className="text-sm font-semibold mb-3">Transportadoras Vinculadas ({vinculosTransp.length})</h4>
+                          {vinculosTransp.length > 0 ? (
+                            <div className="space-y-2">
+                              {vinculosTransp.map((v) => {
+                                const transp = transportadorasLista.find(x => x.id === v.transportadora_id);
+                                return (
+                                  <div key={v.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors">
+                                    <p className="text-sm font-medium">{transp?.nome_fantasia || transp?.nome || "Transportadora não encontrada"}</p>
+                                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoverVinculoSimples(v.id)}>
+                                      <Trash2 className="w-4 h-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="p-4 border rounded-lg bg-muted/30 text-center">
+                              <p className="text-sm text-muted-foreground">Nenhuma transportadora vinculada</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })() : (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      Salve a empresa primeiro para gerenciar as transportadoras.
                     </p>
                   )}
                 </div>

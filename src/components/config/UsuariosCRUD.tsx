@@ -100,6 +100,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [horaInicial, setHoraInicial] = useState("08:00");
   const [horaFinal, setHoraFinal] = useState("18:00");
   const [ramal, setRamal] = useState("");
+  const [tipo, setTipo] = useState<string>("padrao");
   const [senhaSip, setSenhaSip] = useState("");
   const [usuarioSip, setUsuarioSip] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -313,6 +314,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       ramal: ramal || null,
       senha_sip: senhaSip || null,
       usuario_sip: usuarioSip || null,
+      tipo: tipo || 'padrao',
     };
 
     if (editingId) {
@@ -591,6 +593,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setRamal("");
     setSenhaSip("");
     setUsuarioSip("");
+    setTipo("padrao");
     setEditingId(null);
   };
 
@@ -612,6 +615,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setRamal(usuario.ramal || "");
     setSenhaSip(usuario.senha_sip || "");
     setUsuarioSip(usuario.usuario_sip || "");
+    setTipo((usuario as any).tipo || "padrao");
     setEditingId(usuario.id);
 
     // Buscar segmentos do usuário
@@ -885,6 +889,19 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
                 onChange={(e) => setHoraFinal(e.target.value)}
                 required
               />
+            </div>
+
+            <div>
+              <Label htmlFor="usuario-tipo">Tipo *</Label>
+              <Select value={tipo} onValueChange={setTipo}>
+                <SelectTrigger id="usuario-tipo">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="padrao">Padrão</SelectItem>
+                  <SelectItem value="gerente">Gerente</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </Card>
