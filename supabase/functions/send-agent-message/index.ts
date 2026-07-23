@@ -21,11 +21,12 @@ serve(async (req) => {
       fileName,
       contentType,
       whatsappNumeroId,
+      contact, // { nome, whatsapp } — envia vCard/contato
     } = await req.json();
 
-    if ((!conversationId && (!telefone || !estabelecimento_id)) || (!text && !fileUrl)) {
+    if ((!conversationId && (!telefone || !estabelecimento_id)) || (!text && !fileUrl && !contact)) {
       return new Response(
-        JSON.stringify({ error: "conversationId or (telefone + estabelecimento_id) and text/fileUrl are required" }),
+        JSON.stringify({ error: "conversationId or (telefone + estabelecimento_id) and text/fileUrl/contact are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
