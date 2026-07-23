@@ -255,6 +255,11 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
             onChange={(e) => handleConfigChange("message", e.target.value)}
           />
         )}
+        {usarMensagemPreDefinida && (
+          <p className="text-[10px] text-muted-foreground">
+            Se o bloco anterior gerou imagem/vídeo, a mídia salva em <code>{`{{last_generated_media_url}}`}</code> é enviada automaticamente junto com a frase.
+          </p>
+        )}
       </div>
 
       {/* Envio de contato */}
