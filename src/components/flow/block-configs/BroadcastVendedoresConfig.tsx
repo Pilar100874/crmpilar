@@ -284,19 +284,20 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         const { data: emps } = await qEmp;
 
         const gerIds = Array.from(new Set(Array.from(empresaGerenteMap.values())));
-        const gerentesUsersMap = new Map<string, string>();
+        const gerentesUsersMap = new Map<string, { nome: string; whatsapp: string | null }>();
         if (gerIds.length) {
-          const { data: us } = await supabase.from("usuarios").select("id, nome").in("id", gerIds);
-          (us || []).forEach((u: any) => gerentesUsersMap.set(u.id, u.nome || ""));
+          const { data: us } = await supabase.from("usuarios").select("id, nome, whatsapp, telefone").in("id", gerIds);
+          (us || []).forEach((u: any) => gerentesUsersMap.set(u.id, { nome: u.nome || "", whatsapp: u.whatsapp || u.telefone || null }));
         }
         (emps || []).forEach((e: any) => {
           const phone = (e.whatsapp || e.telefone || "").replace(/\D/g, "");
           if (phone.length < 10) return;
           const gid = empresaGerenteMap.get(e.id) || null;
+          const gInfo = gid ? gerentesUsersMap.get(gid) : null;
           rows.push({
             id: e.id, nome: e.nome, nome_fantasia: e.nome_fantasia,
             whatsapp: e.whatsapp, telefone: e.telefone, segmento_id: e.segmento_id,
-            gerente_usuario_id: gid, gerente_nome: gid ? gerentesUsersMap.get(gid) || null : null,
+            gerente_usuario_id: gid, gerente_nome: gInfo?.nome || null, gerente_whatsapp: gInfo?.whatsapp || null,
             kind: "empresa",
           });
         });
