@@ -37,6 +37,7 @@ export default function MarketingAutomacoes() {
   const [executeDialogOpen, setExecuteDialogOpen] = useState(false);
   const [automacaoToExecute, setAutomacaoToExecute] = useState<any>(null);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [execProgress, setExecProgress] = useState(0);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [automacaoToDelete, setAutomacaoToDelete] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
