@@ -344,9 +344,20 @@ export function EnvioMassaMarketing() {
             </Badge>
           )}
         </div>
-        <Badge variant="outline">
-          Etapa {currentStepIndex + 1} de {STEPS.length}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setTemplatesDialogOpen(true)}
+            className="gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            <span className="hidden sm:inline">Gerenciar templates</span>
+          </Button>
+          <Badge variant="outline">
+            Etapa {currentStepIndex + 1} de {STEPS.length}
+          </Badge>
+        </div>
       </div>
 
       {/* Progress Steps */}
