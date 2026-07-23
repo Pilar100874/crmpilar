@@ -110,7 +110,54 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     fetchVeiculos();
     fetchDispositivos();
     fetchTrackerModels();
+
+    // Refresh periódico das últimas posições (a cada 20s)
+    const interval = setInterval(() => {
+      refreshUltimasPosicoes();
+    }, 20000);
+
+    // Realtime: qualquer INSERT em veiculo_posicoes atualiza o mapa imediatamente
+    const channel = supabase
+      .channel('veiculos-crud-posicoes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'veiculo_posicoes' },
+        (payload: any) => {
+          const row = payload?.new;
+          if (!row?.veiculo_id || !row?.data_hora) return;
+          setUltimasPosicoes(prev => {
+            const cur = prev[row.veiculo_id];
+            if (cur && new Date(cur).getTime() >= new Date(row.data_hora).getTime()) return prev;
+            return { ...prev, [row.veiculo_id]: row.data_hora };
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, [estabelecimentoId]);
+
+  const refreshUltimasPosicoes = async () => {
+    try {
+      const ids = veiculos.map(v => v.id);
+      if (!ids.length) return;
+      const { data: pos } = await supabase
+        .from('veiculo_posicoes')
+        .select('veiculo_id, data_hora')
+        .in('veiculo_id', ids)
+        .order('data_hora', { ascending: false });
+      const map: Record<string, string> = {};
+      (pos || []).forEach((p: any) => {
+        if (!map[p.veiculo_id]) map[p.veiculo_id] = p.data_hora;
+      });
+      setUltimasPosicoes(map);
+    } catch (e) {
+      console.error('Error refreshing positions:', e);
+    }
+  };
 
   const fetchTrackerModels = async () => {
     try {
