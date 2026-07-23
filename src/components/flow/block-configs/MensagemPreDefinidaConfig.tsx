@@ -180,7 +180,7 @@ export const MensagemPreDefinidaConfig = ({ config, handleConfigChange }: Props)
         <Label className="text-xs font-semibold">Como apresentar a frase</Label>
         <RadioGroup value={apresentacao} onValueChange={(v) => handleConfigChange("apresentacao", v)}>
           <div className="flex items-center gap-2"><RadioGroupItem value="texto" id="ap_t" /><label htmlFor="ap_t" className="text-xs flex items-center gap-1"><MessageSquareText className="h-3 w-3" /> Enviar como texto</label></div>
-          <div className="flex items-center gap-2"><RadioGroupItem value="midia" id="ap_m" /><label htmlFor="ap_m" className="text-xs flex items-center gap-1"><Sparkles className="h-3 w-3" /> Enviar frase + imagem/vídeo gerado por IA</label></div>
+          <div className="flex items-center gap-2"><RadioGroupItem value="midia" id="ap_m" /><label htmlFor="ap_m" className="text-xs flex items-center gap-1"><Sparkles className="h-3 w-3" /> Gerar imagem/vídeo com a frase</label></div>
         </RadioGroup>
       </div>
 

@@ -2795,16 +2795,22 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           }
 
           // Resolver mensagem
+          // Regra: Mensagem Pré Definida envia OU a frase (texto) OU a mídia gerada — nunca as duas.
+          // Se a pré definida gerou mídia, não repetimos a frase como texto (ela já está renderizada na imagem/vídeo).
+          const _mediaVarName = (config.mediaVar || "last_generated_media_url").trim();
+          const _preTemMidia = !!config.usarMensagemPreDefinida
+            && !!String(contextRef.current[_mediaVarName] || contextRef.current.last_generated_media_url || "").trim();
           let msg = "";
           if (config.usarMensagemPreDefinida) {
             const varName = config.preDefinidaVar || "last_mensagem_pre_definida";
-            const fromVar = varName ? String(contextRef.current[varName] ?? "") : "";
+            const fromVar = _preTemMidia ? "" : (varName ? String(contextRef.current[varName] ?? "") : "");
             const extra = interpolateVariables(config.message || "", contextRef.current);
             msg = [fromVar, extra].filter((s) => s && s.trim()).join("\n");
           } else {
             msg = interpolateVariables(config.message || "", contextRef.current);
           }
-          if (!msg.trim()) {
+          const _temConteudo = msg.trim() || _preTemMidia || (config.textoAntes || "").trim() || (config.textoDepois || "").trim();
+          if (!_temConteudo) {
             addSystemMessage("⚠️ Envio em massa: mensagem vazia.");
             const newCtx = { ...contextRef.current, [outputVar]: { enviados: 0, falhas: 0, total: 0 } };
             contextRef.current = newCtx; setContext(newCtx);
