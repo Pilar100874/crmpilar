@@ -3011,7 +3011,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           }
 
           const total = destinatarios.length;
-          addSystemMessage(`📢 ${useReal ? "[REAL] " : ""}Broadcast → ${total} destinatário(s)${incluirEmpresas ? (somenteEmpresas ? " (empresas)" : " (vendedores + empresas)") : ""}`);
+          addSystemMessage(`📢 ${useReal ? "[REAL] " : ""}Envio em massa → ${total} destinatário(s)${incluirEmpresas ? (somenteEmpresas ? " (empresas)" : " (vendedores + empresas)") : ""}`);
           let enviados = 0; let falhas = 0;
 
           // Resumo por gerente (agrupamento)
@@ -3144,8 +3144,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
 
           const resultado = { enviados, falhas, total };
-          if (falhas > 0) addSystemMessage(`⚠️ Broadcast finalizado: ${enviados} enviados, ${falhas} falhas.`);
-          else addSuccessMessage(`Broadcast finalizado: ${enviados}/${total} enviados.`);
+          if (falhas > 0) addSystemMessage(`⚠️ Envio em massa finalizado: ${enviados} enviados, ${falhas} falhas.`);
+          else addSuccessMessage(`Envio em massa finalizado: ${enviados}/${total} enviados.`);
 
           // ===== Resumo ao(s) gerente(s) e números extras =====
           const numerosExtras: string[] = String(config.resumoNumerosExtras || "")
