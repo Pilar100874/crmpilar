@@ -579,10 +579,25 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
                           <Badge variant="secondary" className="text-[10px]">{totalGrupo}</Badge>
                         </div>
                         <div className="p-2 space-y-2">
-                          {subsArr.map(([sub, rows]) => (
+                          {subsArr.map(([sub, rows]) => {
+                            const gerWa = rows.find((x) => x.gerente_whatsapp)?.gerente_whatsapp || "";
+                            const gerWaDigits = gerWa.replace(/\D/g, "");
+                            return (
                             <div key={sub} className="rounded border bg-muted/10">
-                              <div className="flex items-center justify-between px-2 py-1 border-b bg-muted/20">
-                                <span className="text-[11px] font-medium">👤 {sub}</span>
+                              <div className="flex items-center justify-between px-2 py-1 border-b bg-muted/20 gap-2">
+                                <span className="text-[11px] font-medium flex items-center gap-1.5 truncate">
+                                  <span>👤 {sub}</span>
+                                  {gerWaDigits.length >= 10 && (
+                                    <a
+                                      href={`https://web.whatsapp.com/send?phone=${gerWaDigits}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[10px] text-muted-foreground hover:text-primary tabular-nums"
+                                    >
+                                      · {gerWa}
+                                    </a>
+                                  )}
+                                </span>
                                 <Badge variant="outline" className="text-[10px]">{rows.length}</Badge>
                               </div>
                               <div className="divide-y">
