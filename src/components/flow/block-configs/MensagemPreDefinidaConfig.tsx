@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 import { MessageSquareText, Sparkles, Image as ImageIcon, Video, Info, Check } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { PROMPT_PRESETS, type PromptPreset } from "@/components/marketing/ai-studio/PromptPresets";
@@ -345,7 +346,17 @@ export const MensagemPreDefinidaConfig = ({ config, handleConfigChange }: Props)
         </div>
       )}
 
-      <div className="space-y-1 border-t pt-3">
+      <div className="space-y-2 border-t pt-3">
+        <div className="flex items-start gap-2 rounded-md border p-2 bg-muted/20">
+          <Checkbox
+            id="ocultar_no_chat"
+            checked={!!config.ocultarNoChat}
+            onCheckedChange={(v) => handleConfigChange("ocultarNoChat", !!v)}
+          />
+          <label htmlFor="ocultar_no_chat" className="text-xs leading-tight">
+            <b>Não exibir/enviar no chat</b> (silencioso) — apenas gera a frase/mídia e guarda em variáveis para o próximo bloco usar. Evita mensagem duplicada quando um Broadcast/WhatsApp posterior for reenviar o conteúdo.
+          </label>
+        </div>
         <Label className="text-xs">Variável de saída</Label>
         <Input
           className="h-8 text-xs"

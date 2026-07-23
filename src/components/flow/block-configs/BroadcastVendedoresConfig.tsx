@@ -260,7 +260,38 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
             Se o bloco anterior gerou imagem/vídeo, a mídia salva em <code>{`{{last_generated_media_url}}`}</code> é enviada automaticamente junto com a frase.
           </p>
         )}
+
+        <div className="grid grid-cols-1 gap-2 pt-2">
+          <div className="space-y-1">
+            <Label className="text-xs">Texto <b>ANTES</b> do conteúdo (opcional)</Label>
+            <Textarea
+              className="text-xs min-h-[60px]"
+              placeholder="Ex.: Olá {{gerente.nome}}, segue material para {{vendedor.nome}}:"
+              value={config.textoAntes || ""}
+              onChange={(e) => handleConfigChange("textoAntes", e.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Texto <b>DEPOIS</b> do conteúdo (opcional)</Label>
+            <Textarea
+              className="text-xs min-h-[60px]"
+              placeholder="Ex.: Qualquer dúvida, chame o gerente {{gerente.nome}} ({{gerente.whatsapp}})."
+              value={config.textoDepois || ""}
+              onChange={(e) => handleConfigChange("textoDepois", e.target.value)}
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Variáveis disponíveis por destinatário: <code>{`{{vendedor.nome}}`}</code>, <code>{`{{vendedor.whatsapp}}`}</code>, <code>{`{{vendedor.telefone}}`}</code>, <code>{`{{gerente.nome}}`}</code>, <code>{`{{gerente.whatsapp}}`}</code>, <code>{`{{gerente.telefone}}`}</code>. Também aceita qualquer <code>{`{{variavel}}`}</code> do fluxo.
+          </p>
+        </div>
       </div>
+
+      <Alert>
+        <MessageSquare className="h-4 w-4" />
+        <AlertDescription className="text-[11px]">
+          Para <b>simular sem enviar de verdade</b>, deixe o botão <b>Modo real</b> do simulador desligado. A pré-visualização mostrará cada destinatário, o texto interpolado e a mídia.
+        </AlertDescription>
+      </Alert>
 
       {/* Envio de contato */}
       <div className="space-y-2 border-t pt-3">
