@@ -2768,7 +2768,155 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         break;
       }
 
-      case "send_sms": {
+      case "broadcast_vendedores": {
+        const outputVar = normalizeVarName(config.outputVariable || "broadcast_vendedores_resultado");
+        const useReal = realModeRef.current;
+        const delayMs = Math.max(0, (parseInt(config.delaySeconds) || 3) * 1000);
+
+        (async () => {
+          const estabelecimentoId = contextRef.current.estabelecimento_id || await getEstabelecimentoId();
+          if (!estabelecimentoId) {
+            addSystemMessage("⚠️ Broadcast Vendedores: estabelecimento não identificado.");
+            const newCtx = { ...contextRef.current, [outputVar]: { enviados: 0, falhas: 0, total: 0 } };
+            contextRef.current = newCtx; setContext(newCtx);
+            const nextNode = getNextNode(node.id);
+            if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+            return;
+          }
+
+          // Resolver mensagem
+          let msg = "";
+          if (config.usarMensagemPreDefinida) {
+            const varName = config.preDefinidaVar || "last_mensagem_pre_definida";
+            msg = String(contextRef.current[varName] || contextRef.current.last_mensagem_pre_definida || "");
+          } else {
+            msg = interpolateVariables(config.message || "", contextRef.current);
+          }
+          if (!msg.trim()) {
+            addSystemMessage("⚠️ Broadcast Vendedores: mensagem vazia.");
+            const newCtx = { ...contextRef.current, [outputVar]: { enviados: 0, falhas: 0, total: 0 } };
+            contextRef.current = newCtx; setContext(newCtx);
+            const nextNode = getNextNode(node.id);
+            if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+            return;
+          }
+
+          // Buscar vendedores
+          let q = supabase
+            .from("empresas")
+            .select("id, nome, nome_fantasia, whatsapp, telefone, segmento_id")
+            .eq("estabelecimento_id", estabelecimentoId)
+            .eq("tipo_cliente", "vendedor")
+            .eq("ativo", true);
+          if (config.filtroTipo === "segmento" && config.segmentoId) q = q.eq("segmento_id", config.segmentoId);
+          if (config.combinarSegmento && config.segmentoId && config.filtroTipo !== "segmento") q = q.eq("segmento_id", config.segmentoId);
+          const { data: vendedoresData } = await q;
+          let vendedores: any[] = vendedoresData || [];
+
+          // Gerentes
+          const ids = vendedores.map((v: any) => v.id);
+          const gerentesMap = new Map<string, { id: string; nome: string; whatsapp?: string; telefone?: string }>();
+          if (ids.length) {
+            const { data: gv } = await supabase
+              .from("gerente_vendedores")
+              .select("vendedor_empresa_id, gerente_usuario_id, usuarios:gerente_usuario_id(id, nome, whatsapp, telefone)")
+              .in("vendedor_empresa_id", ids);
+            (gv || []).forEach((r: any) => {
+              if (r.usuarios?.id) gerentesMap.set(r.vendedor_empresa_id, {
+                id: r.usuarios.id, nome: r.usuarios.nome || "", whatsapp: r.usuarios.whatsapp, telefone: r.usuarios.telefone,
+              });
+            });
+          }
+          if (config.filtroTipo === "com_gerente") vendedores = vendedores.filter((v: any) => gerentesMap.has(v.id));
+          if (config.filtroTipo === "gerente_especifico" && config.gerenteId)
+            vendedores = vendedores.filter((v: any) => gerentesMap.get(v.id)?.id === config.gerenteId);
+          vendedores = vendedores.filter((v: any) => (v.whatsapp || v.telefone || "").replace(/\D/g, "").length >= 10);
+
+          const total = vendedores.length;
+          addSystemMessage(`📢 ${useReal ? "[REAL] " : ""}Broadcast Vendedores → ${total} destinatário(s)`);
+          let enviados = 0; let falhas = 0;
+
+          const { executarBlocoWhatsapp } = useReal ? await import("@/lib/workflowActionsExecutor") : ({} as any);
+
+          for (const v of vendedores) {
+            const phone = (v.whatsapp || v.telefone || "").replace(/\D/g, "");
+            const nome = v.nome_fantasia || v.nome || phone;
+            addBotMessage(`[para ${nome} · ${phone}] ${msg}`, node.id);
+
+            let ok = true;
+            if (useReal) {
+              try {
+                const r = await executarBlocoWhatsapp({ telefone: phone, mensagem: msg }, {
+                  variaveis: contextRef.current, workflow_tipo: "bot", origem: "broadcast_vendedores",
+                });
+                ok = !!r?.ok;
+              } catch { ok = false; }
+            }
+
+            // Contato pós-mensagem
+            if (config.enviarContato) {
+              let cNome = ""; let cPhone = "";
+              const tipoContato = config.contatoTipo || "gerente_do_vendedor";
+              if (tipoContato === "gerente_do_vendedor") {
+                const g = gerentesMap.get(v.id);
+                if (g && (g.whatsapp || g.telefone)) {
+                  cNome = g.nome; cPhone = (g.whatsapp || g.telefone || "").replace(/\D/g, "");
+                } else {
+                  cNome = config.fallbackNome || ""; cPhone = (config.fallbackWhatsapp || "").replace(/\D/g, "");
+                }
+              } else {
+                cNome = config.contatoNome || ""; cPhone = (config.contatoWhatsapp || "").replace(/\D/g, "");
+              }
+              if (cPhone) {
+                const cardMsg = `👤 Contato: *${cNome || cPhone}*\nhttps://wa.me/${cPhone}`;
+                addBotMessage(`[para ${nome}] ${cardMsg}`, node.id);
+                if (useReal) {
+                  try { await executarBlocoWhatsapp({ telefone: phone, mensagem: cardMsg }, {
+                    variaveis: contextRef.current, workflow_tipo: "bot", origem: "broadcast_vendedores_contato",
+                  }); } catch {}
+                }
+              }
+            }
+
+            if (ok) enviados++; else falhas++;
+            if (delayMs) await new Promise((r) => setTimeout(r, delayMs));
+          }
+
+          const resultado = { enviados, falhas, total };
+          if (falhas > 0) addSystemMessage(`⚠️ Broadcast finalizado: ${enviados} enviados, ${falhas} falhas.`);
+          else addSuccessMessage(`Broadcast finalizado: ${enviados}/${total} enviados.`);
+
+          const newCtx = { ...contextRef.current, [outputVar]: resultado };
+          contextRef.current = newCtx; setContext(newCtx);
+          const nextNode = getNextNode(node.id);
+          if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+        })();
+        break;
+      }
+
+      case "send_contact_card": {
+        const modo = config.modo || "gerente_do_vendedor";
+        let cNome = ""; let cPhone = "";
+        if (modo === "fixo") {
+          cNome = interpolateVariables(config.contatoNome || "", contextRef.current);
+          cPhone = interpolateVariables(config.contatoWhatsapp || "", contextRef.current).replace(/\D/g, "");
+        } else {
+          // dinâmico: espera contexto do broadcast/loop atual
+          cNome = String(contextRef.current.gerente_nome || config.fallbackNome || "");
+          cPhone = String(contextRef.current.gerente_whatsapp || config.fallbackWhatsapp || "").replace(/\D/g, "");
+        }
+        const legenda = interpolateVariables(config.legenda || "", contextRef.current);
+        if (!cPhone) {
+          addSystemMessage("⚠️ Enviar Contato: contato não resolvido.");
+        } else {
+          const cardMsg = `${legenda ? legenda + "\n" : ""}👤 *${cNome || cPhone}*\nhttps://wa.me/${cPhone}`;
+          addBotMessage(cardMsg, node.id);
+        }
+        const nextNode = getNextNode(node.id);
+        if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+        break;
+      }
+
         const rawNumbers: string[] = Array.isArray(config.phoneNumbers)
           ? config.phoneNumbers
           : config.phoneNumber ? [config.phoneNumber] : [];
