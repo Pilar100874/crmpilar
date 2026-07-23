@@ -3047,7 +3047,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             const phone = d.phone;
             const nome = d.nome || phone;
             const g = d.gerente || null;
-            const vendedorObj = d.vendedorObj;
+            const vendedorObj = { ...(d.vendedorObj || {}) };
+            if (vendedorObj.nome) vendedorObj.nome = String(vendedorObj.nome).replace(/^\s*vendedor(a)?\s+/i, "").trim() || vendedorObj.nome;
             const empresaObj = d.empresaObj;
             const gerenteObj = {
               nome: g?.nome || config.fallbackNome || "",
