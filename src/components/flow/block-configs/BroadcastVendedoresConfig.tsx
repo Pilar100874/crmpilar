@@ -50,31 +50,23 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
       if (!eid) return;
       setEstabId(eid);
 
-      const [{ data: segs }, { data: gers }] = await Promise.all([
-        supabase.from("segmentos").select("id, nome").eq("estabelecimento_id", eid).order("nome"),
-        supabase
-          .from("usuarios")
-          .select("id, nome")
-          .eq("estabelecimento_id", eid)
-          .eq("is_gerente", true as any)
-          .order("nome"),
-      ]);
+      const { data: segs } = await supabase
+        .from("segmentos")
+        .select("id, nome")
+        .eq("estabelecimento_id", eid)
+        .order("nome");
       setSegmentos((segs as any) || []);
-      // Fallback: se não houver flag is_gerente, buscar por gerente_vendedores
-      if (!gers || (gers as any[]).length === 0) {
-        const { data: gv } = await supabase
-          .from("gerente_vendedores")
-          .select("gerente_usuario_id, usuarios:gerente_usuario_id(id, nome)")
-          .eq("estabelecimento_id", eid);
-        const uniq = new Map<string, string>();
-        (gv || []).forEach((r: any) => {
-          const u = r.usuarios;
-          if (u?.id) uniq.set(u.id, u.nome || u.id);
-        });
-        setGerentes(Array.from(uniq, ([id, nome]) => ({ id, nome })));
-      } else {
-        setGerentes(gers as any);
-      }
+
+      const { data: gv } = await supabase
+        .from("gerente_vendedores")
+        .select("gerente_usuario_id, usuarios:gerente_usuario_id(id, nome)")
+        .eq("estabelecimento_id", eid);
+      const uniq = new Map<string, string>();
+      (gv || []).forEach((r: any) => {
+        const u = r.usuarios;
+        if (u?.id) uniq.set(u.id, u.nome || u.id);
+      });
+      setGerentes(Array.from(uniq, ([id, nome]) => ({ id, nome })));
     })();
   }, []);
 
