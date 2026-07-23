@@ -2839,11 +2839,12 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             const ids = vendedores.map((v: any) => v.id);
             if (ids.length) {
               const { data: gv } = await supabase
-                .from("gerente_vendedores")
-                .select("vendedor_empresa_id, gerente_usuario_id, usuarios:gerente_usuario_id(id, nome, whatsapp)")
-                .in("vendedor_empresa_id", ids);
+                .from("empresa_vinculos")
+                .select("empresa_id, usuario_id, usuarios:usuario_id(id, nome, whatsapp)")
+                .in("empresa_id", ids)
+                .not("usuario_id", "is", null);
               (gv || []).forEach((r: any) => {
-                if (r.usuarios?.id) gerentesMap.set(r.vendedor_empresa_id, {
+                if (r.usuarios?.id && !gerentesMap.has(r.empresa_id)) gerentesMap.set(r.empresa_id, {
                   id: r.usuarios.id, nome: r.usuarios.nome || "", whatsapp: r.usuarios.whatsapp, telefone: r.usuarios.whatsapp,
                 });
               });
