@@ -296,10 +296,12 @@ async function executeBroadcast(
       const phone = ((e as any)?.whatsapp || (e as any)?.telefone || "").replace(/\D/g, "");
       if (e && phone.length >= 10) {
         const isVend = e.tipo_cliente === "vendedor";
+        const rawNomeE = e.nome_fantasia || e.nome || "";
+        const cleanNomeE = rawNomeE.replace(/^\s*vendedor(a)?\s+/i, "").trim() || rawNomeE;
         destinatarios.push({
           kind: isVend ? "vendedor" : "empresa", id: e.id, phone,
-          nome: e.nome_fantasia || e.nome || "",
-          vendedorObj: isVend ? { nome: e.nome_fantasia || e.nome || "", whatsapp: e.whatsapp || "" } : {},
+          nome: isVend ? cleanNomeE : rawNomeE,
+          vendedorObj: isVend ? { nome: cleanNomeE, whatsapp: e.whatsapp || "" } : {},
           empresaObj: {
             nome: e.nome, nome_fantasia: e.nome_fantasia, whatsapp: e.whatsapp,
             telefone: e.telefone, email: e.email, cidade: e.cidade, uf: e.estado, cnpj: e.cnpj,
