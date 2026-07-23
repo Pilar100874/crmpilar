@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
 import { Users, Eye, Loader2, MessageSquare } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
@@ -30,7 +30,7 @@ interface VendedorRow {
 
 export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props) => {
   const [estabId, setEstabId] = useState<string>("");
-  const [segmentos, setSegmentos] = useState<Array<{ id: string; nome: string }>>([]);
+  const [segmentos, setSegmentos] = useState<Array<{ id: string; nome: string; is_prospect: boolean }>>([]);
   const [gerentes, setGerentes] = useState<Array<{ id: string; nome: string }>>([]);
   const [preview, setPreview] = useState<VendedorRow[]>([]);
   const [loadingPreview, setLoadingPreview] = useState(false);
@@ -39,6 +39,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
   const gerenteId = config.gerenteId || "";
   const segmentoId = config.segmentoId || "";
   const combinarSegmento = !!config.combinarSegmento;
+  const publicoEmpresas: string = config.publicoEmpresas || "cliente";
   const message = config.message || "";
   const usarMensagemPreDefinida = !!config.usarMensagemPreDefinida;
   const preDefinidaVar = config.preDefinidaVar || "last_mensagem_pre_definida";
@@ -52,21 +53,19 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
 
       const { data: segs } = await supabase
         .from("segmentos")
-        .select("id, nome")
+        .select("id, nome, is_prospect")
         .eq("estabelecimento_id", eid)
         .order("nome");
       setSegmentos((segs as any) || []);
 
-      const { data: gv } = await supabase
-        .from("gerente_vendedores")
-        .select("gerente_usuario_id, usuarios:gerente_usuario_id(id, nome)")
-        .eq("estabelecimento_id", eid);
-      const uniq = new Map<string, string>();
-      (gv || []).forEach((r: any) => {
-        const u = r.usuarios;
-        if (u?.id) uniq.set(u.id, u.nome || u.id);
-      });
-      setGerentes(Array.from(uniq, ([id, nome]) => ({ id, nome })));
+      // Lista completa de gerentes do estabelecimento (independente de já terem vendedor vinculado)
+      const { data: us } = await supabase
+        .from("usuarios")
+        .select("id, nome, tipo")
+        .eq("estabelecimento_id", eid)
+        .eq("tipo", "gerente")
+        .order("nome");
+      setGerentes(((us as any) || []).map((u: any) => ({ id: u.id, nome: u.nome || u.email || u.id })));
     })();
   }, []);
 
@@ -139,12 +138,15 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
       });
       const empresaIds = Array.from(empresaGerenteMap.keys());
       if (empresaIds.length) {
-        const { data: emps } = await supabase
+        let qEmp = supabase
           .from("empresas")
-          .select("id, nome, nome_fantasia, whatsapp, telefone, segmento_id")
+          .select("id, nome, nome_fantasia, whatsapp, telefone, segmento_id, status_comercial")
           .eq("estabelecimento_id", estabId)
           .eq("ativo", true)
           .in("id", empresaIds);
+        if (publicoEmpresas === "prospect") qEmp = qEmp.eq("status_comercial", "prospect");
+        else if (publicoEmpresas === "cliente") qEmp = qEmp.neq("status_comercial", "prospect");
+        const { data: emps } = await qEmp;
         const gerIds = Array.from(new Set(Array.from(empresaGerenteMap.values())));
         const gerentesUsersMap = new Map<string, string>();
         if (gerIds.length) {
@@ -239,16 +241,52 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
               <label htmlFor="combinar_segmento" className="text-xs">Combinar com filtro de segmento</label>
             </div>
           )}
-          {(filtroTipo === "segmento" || combinarSegmento) && (
-            <Select value={segmentoId} onValueChange={(v) => handleConfigChange("segmentoId", v)}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Selecione o segmento..." /></SelectTrigger>
-              <SelectContent>
-                {segmentos.map((s) => (
-                  <SelectItem key={s.id} value={s.id} className="text-xs">{s.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          {(filtroTipo === "segmento" || combinarSegmento) && (() => {
+            const segClientes = segmentos.filter((s) => !s.is_prospect);
+            const segProspects = segmentos.filter((s) => s.is_prospect);
+            return (
+              <Select value={segmentoId} onValueChange={(v) => handleConfigChange("segmentoId", v)}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Selecione o segmento..." /></SelectTrigger>
+                <SelectContent>
+                  {segClientes.length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel className="text-[10px] uppercase text-muted-foreground">Segmentos de Cliente</SelectLabel>
+                      {segClientes.map((s) => (
+                        <SelectItem key={s.id} value={s.id} className="text-xs">{s.nome}</SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )}
+                  {segProspects.length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel className="text-[10px] uppercase text-muted-foreground">Segmentos de Prospect</SelectLabel>
+                      {segProspects.map((s) => (
+                        <SelectItem key={s.id} value={s.id} className="text-xs">{s.nome}</SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )}
+                  {segmentos.length === 0 && (
+                    <div className="px-2 py-1 text-[11px] text-muted-foreground">Nenhum segmento cadastrado</div>
+                  )}
+                </SelectContent>
+              </Select>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* Público das empresas (quando incluir empresas) */}
+      {["empresas_com_gerente","empresas_gerente_especifico","vendedores_e_empresas_com_gerente","vendedores_e_empresas_gerente_especifico"].includes(filtroTipo) && (
+        <div className="space-y-1">
+          <Label className="text-xs">Público das empresas</Label>
+          <Select value={publicoEmpresas} onValueChange={(v) => handleConfigChange("publicoEmpresas", v)}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="cliente" className="text-xs">Somente clientes</SelectItem>
+              <SelectItem value="prospect" className="text-xs">Somente prospects</SelectItem>
+              <SelectItem value="ambos" className="text-xs">Clientes e prospects</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-[10px] text-muted-foreground">Filtra empresas com base no status comercial (prospect x cliente).</p>
         </div>
       )}
 
