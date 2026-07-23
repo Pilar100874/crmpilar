@@ -13,7 +13,8 @@ import {
   BookOpen, Paperclip, File, Search, LinkIcon, FileUp,
   ImageIcon, FileSpreadsheet, Calendar, Package, Loader2, AlertCircle
 } from "lucide-react";
-import { ContentItem, QuickReply, MediaGalleryItem } from "../types";
+import { ContentItem, QuickReply, MediaGalleryItem, CanalEnvio } from "../types";
+import { Settings } from "lucide-react";
 import { EnvioMassaTemplate } from "../hooks/useEnvioMassaTemplates";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
