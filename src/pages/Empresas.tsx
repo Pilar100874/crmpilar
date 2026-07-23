@@ -2832,80 +2832,168 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                       const e = empresas.find(x => x.id === vid) as any;
                       return e?.nome_fantasia || e?.nome || "vendedor";
                     };
-                    const vendedorJaTemGerente = variant === "vendedor" && vinculosUsuarios.length > 0;
+
+                    // ===== Modo VENDEDOR: apenas 1 gerente, com Select =====
+                    if (variant === "vendedor") {
+                      const gerenteAtual = vinculosUsuarios.find(v => !v.auto_via_vendedor_id);
+                      const gerenteAtualUser = gerenteAtual ? usuarios.find(u => u.id === gerenteAtual.usuario_id) : null;
+
+                      const trocarGerente = async (novoUserId: string) => {
+                        if (!estabelecimentoId) return;
+                        if (novoUserId === (gerenteAtual?.usuario_id || "")) return;
+                        try {
+                          if (gerenteAtual) {
+                            const { error: delErr } = await supabase
+                              .from("empresa_vinculos")
+                              .delete()
+                              .eq("id", gerenteAtual.id);
+                            if (delErr) throw delErr;
+                          }
+                          if (novoUserId && novoUserId !== "__none__") {
+                            const { error: insErr } = await supabase.from("empresa_vinculos").insert({
+                              empresa_id: editingEmpresa.id,
+                              usuario_id: novoUserId,
+                              segmento_id: null,
+                              vendedor_id: editingEmpresa.id,
+                              transportadora_id: null,
+                              estabelecimento_id: estabelecimentoId,
+                            });
+                            if (insErr) throw insErr;
+                            toast.success("Gerente vinculado!");
+                          } else {
+                            toast.success("Gerente removido!");
+                          }
+                          await fetchEmpresas(estabelecimentoId);
+                        } catch (e: any) {
+                          toast.error("Erro ao atualizar gerente: " + e.message);
+                        }
+                      };
+
+                      return (
+                        <div className="space-y-4">
+                          <Card className="border-primary/20 bg-primary/5">
+                            <CardContent className="p-4 space-y-3">
+                              <div>
+                                <h4 className="text-sm font-semibold">Gerente responsável</h4>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Cada vendedor pode ter apenas <strong>1 gerente</strong>. Selecione abaixo para vincular ou trocar.
+                                </p>
+                              </div>
+                              <Select
+                                value={gerenteAtual?.usuario_id || "__none__"}
+                                onValueChange={trocarGerente}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione um gerente" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="__none__">— Sem gerente —</SelectItem>
+                                  {gerenteAtualUser && (
+                                    <SelectItem value={gerenteAtualUser.id}>
+                                      {gerenteAtualUser.nome} (atual)
+                                    </SelectItem>
+                                  )}
+                                  {usuariosDisponiveis.map((u) => (
+                                    <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              {gerenteAtual && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => trocarGerente("__none__")}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2 text-destructive" />
+                                  Remover gerente
+                                </Button>
+                              )}
+                            </CardContent>
+                          </Card>
+
+                          {vinculosUsuarios.filter(v => !!v.auto_via_vendedor_id).length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-semibold mb-3">Vínculos automáticos</h4>
+                              <div className="space-y-2">
+                                {vinculosUsuarios.filter(v => !!v.auto_via_vendedor_id).map((v) => {
+                                  const u = usuarios.find(x => x.id === v.usuario_id);
+                                  return (
+                                    <div key={v.id} className="p-3 border rounded-lg flex items-center justify-between bg-blue-500/5 border-blue-500/30">
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <p className="text-sm font-medium">{u?.nome || "Usuário"}</p>
+                                        <Badge variant="outline" className="text-[10px] border-blue-500/50 text-blue-600 dark:text-blue-400">
+                                          Auto · via {nomeVendedorPorId(v.auto_via_vendedor_id!)}
+                                        </Badge>
+                                      </div>
+                                      <span className="text-[10px] text-muted-foreground italic pr-2">gerenciado pelo vendedor</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    // ===== Demais variants: multi-vínculo (comportamento antigo) =====
                     return (
                       <div className="space-y-4">
-                        {vendedorJaTemGerente ? (
-                          <Card className="border-amber-500/30 bg-amber-500/5">
-                            <CardContent className="p-4">
-                              <p className="text-sm text-amber-700 dark:text-amber-400">
-                                Este vendedor já possui um gerente vinculado. Cada vendedor pode ter apenas <strong>1 gerente</strong>. Remova o atual abaixo para vincular outro.
-                              </p>
-                            </CardContent>
-                          </Card>
-                        ) : (
-                          <Card className="border-primary/20 bg-primary/5">
-                            <CardContent className="p-4 space-y-4">
-                              <h4 className="text-sm font-semibold">
-                                {variant === "vendedor" ? "Adicionar Gerente (apenas 1 permitido)" : "Adicionar Usuários"}
-                              </h4>
-                              <FilteredCheckboxList
-                                idPrefix="new-user"
-                                items={usuariosDisponiveis.map((u) => ({ id: u.id, label: u.nome }))}
-                                selected={novosUsuariosVinculo}
-                                onToggle={(id, checked) => {
-                                  if (variant === "vendedor") {
-                                    setNovosUsuariosVinculo(checked ? [id] : []);
-                                  } else {
-                                    setNovosUsuariosVinculo(
-                                      checked
-                                        ? [...novosUsuariosVinculo, id]
-                                        : novosUsuariosVinculo.filter((x) => x !== id)
-                                    );
-                                  }
-                                }}
-                                searchPlaceholder="Buscar gerente..."
-                                emptyText="Nenhum gerente disponível."
-                              />
-                              <Button onClick={handleAdicionarUsuariosVinculo} className="w-full" size="sm">
-                                <Plus className="w-4 h-4 mr-2" />
-                                {variant === "vendedor" ? "Vincular Gerente" : "Adicionar Usuários Selecionados"}
-                              </Button>
-                            </CardContent>
-                          </Card>
-                        )}
+                        <Card className="border-primary/20 bg-primary/5">
+                          <CardContent className="p-4 space-y-4">
+                            <h4 className="text-sm font-semibold">Adicionar Usuários</h4>
+                            <FilteredCheckboxList
+                              idPrefix="new-user"
+                              items={usuariosDisponiveis.map((u) => ({ id: u.id, label: u.nome }))}
+                              selected={novosUsuariosVinculo}
+                              onToggle={(id, checked) =>
+                                setNovosUsuariosVinculo(
+                                  checked
+                                    ? [...novosUsuariosVinculo, id]
+                                    : novosUsuariosVinculo.filter((x) => x !== id)
+                                )
+                              }
+                              searchPlaceholder="Buscar usuário..."
+                              emptyText="Nenhum usuário disponível."
+                            />
+                            <Button onClick={handleAdicionarUsuariosVinculo} className="w-full" size="sm">
+                              <Plus className="w-4 h-4 mr-2" />
+                              Adicionar Usuários Selecionados
+                            </Button>
+                          </CardContent>
+                        </Card>
 
                         <div>
                           <h4 className="text-sm font-semibold mb-3">Usuários Vinculados</h4>
                           {vinculosUsuarios.length > 0 ? (
                             <div className="space-y-2">
-                               {vinculosUsuarios.map((v) => {
-                                 const u = usuarios.find(x => x.id === v.usuario_id);
-                                 const isAuto = !!v.auto_via_vendedor_id;
-                                 return (
-                                   <div key={v.id} className={`p-3 border rounded-lg flex items-center justify-between group transition-colors ${isAuto ? "bg-blue-500/5 border-blue-500/30" : "bg-muted/30 hover:border-primary/30"}`}>
-                                     <div className="flex items-center gap-2 flex-wrap">
-                                       <p className="text-sm font-medium">{u?.nome || "Usuário não encontrado"}</p>
-                                       {isAuto && (
-                                         <Badge variant="outline" className="text-[10px] border-blue-500/50 text-blue-600 dark:text-blue-400" title={`Vinculado automaticamente por estar no vendedor ${nomeVendedorPorId(v.auto_via_vendedor_id)}`}>
-                                           Auto · via {nomeVendedorPorId(v.auto_via_vendedor_id)}
-                                         </Badge>
-                                       )}
-                                     </div>
-                                     {isAuto ? (
-                                       <span className="text-[10px] text-muted-foreground italic pr-2">gerenciado pelo vendedor</span>
-                                     ) : (
-                                       <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoverVinculoSimples(v.id)}>
-                                         <Trash2 className="w-4 h-4 text-destructive" />
-                                       </Button>
-                                     )}
-                                   </div>
-                                 );
-                               })}
+                              {vinculosUsuarios.map((v) => {
+                                const u = usuarios.find(x => x.id === v.usuario_id);
+                                const isAuto = !!v.auto_via_vendedor_id;
+                                return (
+                                  <div key={v.id} className={`p-3 border rounded-lg flex items-center justify-between group transition-colors ${isAuto ? "bg-blue-500/5 border-blue-500/30" : "bg-muted/30 hover:border-primary/30"}`}>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <p className="text-sm font-medium">{u?.nome || "Usuário não encontrado"}</p>
+                                      {isAuto && (
+                                        <Badge variant="outline" className="text-[10px] border-blue-500/50 text-blue-600 dark:text-blue-400" title={`Vinculado automaticamente por estar no vendedor ${nomeVendedorPorId(v.auto_via_vendedor_id)}`}>
+                                          Auto · via {nomeVendedorPorId(v.auto_via_vendedor_id)}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    {isAuto ? (
+                                      <span className="text-[10px] text-muted-foreground italic pr-2">gerenciado pelo vendedor</span>
+                                    ) : (
+                                      <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoverVinculoSimples(v.id)}>
+                                        <Trash2 className="w-4 h-4 text-destructive" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
                           ) : (
                             <div className="p-4 border rounded-lg bg-muted/30 text-center">
-                              <p className="text-sm text-muted-foreground">Nenhum gerente vinculado</p>
+                              <p className="text-sm text-muted-foreground">Nenhum usuário vinculado</p>
                             </div>
                           )}
                         </div>
