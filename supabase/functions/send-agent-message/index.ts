@@ -197,24 +197,37 @@ serve(async (req) => {
 
     console.log("[AGENT] Enviando via", numero.provider, { nome: numero.nome });
 
+    let sendResult: { ok: boolean; invalid?: boolean; reason?: string } = { ok: true };
     if (numero.provider === "cloud_api") {
       if (fileUrl) {
-        await sendCloudMedia(numero.cloud_phone_number_id, numero.cloud_access_token, toNumberOnly, fileUrl, contentType || "document", text);
+        sendResult = await sendCloudMedia(numero.cloud_phone_number_id, numero.cloud_access_token, toNumberOnly, fileUrl, contentType || "document", text);
       } else {
-        await sendCloudText(numero.cloud_phone_number_id, numero.cloud_access_token, toNumberOnly, text);
+        sendResult = await sendCloudText(numero.cloud_phone_number_id, numero.cloud_access_token, toNumberOnly, text);
       }
     } else {
       const base = (numero.waha_url || "").replace(/\/+$/, "");
       const session = numero.session_name || "default";
       const apiKey = numero.waha_api_key;
       if (fileUrl) {
-        await sendEvolutionMedia(toNumberOnly, text || undefined, contentType || "document", fileUrl, session, base, apiKey);
+        sendResult = await sendEvolutionMedia(toNumberOnly, text || undefined, contentType || "document", fileUrl, session, base, apiKey);
       } else {
-        await sendEvolutionText(toNumberOnly, text, session, base, apiKey);
+        sendResult = await sendEvolutionText(toNumberOnly, text, session, base, apiKey);
       }
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    // Marca whatsapp_status nas tabelas quando o provedor confirma número inválido
+    if (sendResult.invalid) {
+      await markWhatsappStatus(supabase, toNumberOnly, "invalid", sendResult.reason || "provider_reported_invalid");
+    } else if (sendResult.ok) {
+      await markWhatsappStatus(supabase, toNumberOnly, "valid", null);
+    }
+
+    return new Response(JSON.stringify({
+      success: sendResult.ok,
+      invalid_number: !!sendResult.invalid,
+      reason: sendResult.reason || null,
+    }), {
+      status: sendResult.ok ? 200 : (sendResult.invalid ? 422 : 502),
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
@@ -227,20 +240,60 @@ serve(async (req) => {
   }
 });
 
+/* ===== Marcação passiva de status do WhatsApp ===== */
+async function markWhatsappStatus(supabase: any, phone: string, status: "valid" | "invalid", reason: string | null) {
+  try {
+    const digits = String(phone).replace(/\D/g, "");
+    if (!digits || digits.length < 10) return;
+    // Gera variações comuns (com/sem 55, com/sem 9º dígito)
+    const withCountry = digits.startsWith("55") ? digits : `55${digits}`;
+    const withoutCountry = digits.startsWith("55") ? digits.slice(2) : digits;
+    const variants = Array.from(new Set([digits, withCountry, withoutCountry]));
+    const patch = { whatsapp_status: status, whatsapp_status_at: new Date().toISOString(), whatsapp_status_reason: reason };
+
+    // customers.telefone (apenas dígitos)
+    await supabase.from("customers").update(patch).in("telefone", variants).then(() => {}, () => {});
+    // usuarios.telefone (mascarado ou não — comparamos por dígitos via regexp_replace no SQL não é possível pelo client)
+    // Fazemos update por variantes; se estiver mascarado, o update não atinge — o webhook do provedor cobre a longo prazo.
+    await supabase.from("usuarios").update(patch).in("telefone", variants).then(() => {}, () => {});
+    // empresas.whatsapp e empresas.telefone
+    await supabase.from("empresas").update(patch).in("whatsapp", variants).then(() => {}, () => {});
+    await supabase.from("empresas").update(patch).in("telefone", variants).then(() => {}, () => {});
+  } catch (e) {
+    console.error("[AGENT] markWhatsappStatus error:", e);
+  }
+}
+
 /* ===== Evolution senders ===== */
-async function sendEvolutionText(toNumberOnly: string, text: string, sessionName: string, base: string, apiKey: string) {
-  if (!base || !apiKey) return console.error("[AGENT][EVO] Faltam URL/apikey");
+type SendOut = { ok: boolean; invalid?: boolean; reason?: string };
+
+function detectInvalidFromText(bodyTxt: string): { invalid: boolean; reason?: string } {
+  const lower = (bodyTxt || "").toLowerCase();
+  if (/exists["'\s:]+false/.test(lower)) return { invalid: true, reason: "number_not_on_whatsapp" };
+  if (/not.*(exist|registered).*(whatsapp|number)/.test(lower)) return { invalid: true, reason: "number_not_on_whatsapp" };
+  if (/invalid.*(number|phone|jid)/.test(lower)) return { invalid: true, reason: "invalid_number" };
+  if (/"code"\s*:\s*(131026|131047|131051)/.test(lower)) return { invalid: true, reason: `meta_${lower.match(/(131026|131047|131051)/)?.[1]}` };
+  return { invalid: false };
+}
+
+async function sendEvolutionText(toNumberOnly: string, text: string, sessionName: string, base: string, apiKey: string): Promise<SendOut> {
+  if (!base || !apiKey) { console.error("[AGENT][EVO] Faltam URL/apikey"); return { ok: false, reason: "config_missing" }; }
   const number = String(toNumberOnly).replace(/\D/g, "");
   const res = await fetch(`${base}/message/sendText/${encodeURIComponent(sessionName)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", apikey: apiKey },
     body: JSON.stringify({ number, text }),
   });
-  console.log("[AGENT][EVO] sendText:", res.status);
+  const bodyTxt = await res.text().catch(() => "");
+  console.log("[AGENT][EVO] sendText:", res.status, bodyTxt.slice(0, 200));
+  const inv = detectInvalidFromText(bodyTxt);
+  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
+  if (res.status === 400 || res.status === 404) return { ok: false, invalid: true, reason: `http_${res.status}` };
+  return { ok: res.ok, reason: res.ok ? undefined : `http_${res.status}` };
 }
 
-async function sendEvolutionMedia(toNumberOnly: string, caption: string | undefined, mediaType: string, mediaUrl: string, sessionName: string, base: string, apiKey: string) {
-  if (!base || !apiKey) return console.error("[AGENT][EVO] Faltam URL/apikey");
+async function sendEvolutionMedia(toNumberOnly: string, caption: string | undefined, mediaType: string, mediaUrl: string, sessionName: string, base: string, apiKey: string): Promise<SendOut> {
+  if (!base || !apiKey) { console.error("[AGENT][EVO] Faltam URL/apikey"); return { ok: false, reason: "config_missing" }; }
   const number = String(toNumberOnly).replace(/\D/g, "");
   const lower = (mediaType || "").toLowerCase();
   const evoType = ["image", "video", "audio", "document"].includes(lower) ? lower : "document";
@@ -267,23 +320,32 @@ async function sendEvolutionMedia(toNumberOnly: string, caption: string | undefi
     headers: { "Content-Type": "application/json", apikey: apiKey },
     body: JSON.stringify(body),
   });
-  console.log("[AGENT][EVO] sendMedia:", res.status);
+  const bodyTxt = await res.text().catch(() => "");
+  console.log("[AGENT][EVO] sendMedia:", res.status, bodyTxt.slice(0, 200));
+  const inv = detectInvalidFromText(bodyTxt);
+  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
+  if (res.status === 400 || res.status === 404) return { ok: false, invalid: true, reason: `http_${res.status}` };
+  return { ok: res.ok, reason: res.ok ? undefined : `http_${res.status}` };
 }
 
 /* ===== Cloud API senders ===== */
-async function sendCloudText(phoneNumberId: string, accessToken: string, to: string, text: string) {
-  if (!phoneNumberId || !accessToken) return console.error("[AGENT][CLOUD] Faltam credenciais");
+async function sendCloudText(phoneNumberId: string, accessToken: string, to: string, text: string): Promise<SendOut> {
+  if (!phoneNumberId || !accessToken) { console.error("[AGENT][CLOUD] Faltam credenciais"); return { ok: false, reason: "config_missing" }; }
   const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
   const r = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
     body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body: text } }),
   });
-  if (!r.ok) console.error("[AGENT][CLOUD] sendText error:", await r.text().catch(() => ""));
+  const bodyTxt = await r.text().catch(() => "");
+  if (!r.ok) console.error("[AGENT][CLOUD] sendText error:", bodyTxt);
+  const inv = detectInvalidFromText(bodyTxt);
+  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
+  return { ok: r.ok, reason: r.ok ? undefined : `http_${r.status}` };
 }
 
-async function sendCloudMedia(phoneNumberId: string, accessToken: string, to: string, mediaUrl: string, mediaType: string, caption?: string) {
-  if (!phoneNumberId || !accessToken) return console.error("[AGENT][CLOUD] Faltam credenciais");
+async function sendCloudMedia(phoneNumberId: string, accessToken: string, to: string, mediaUrl: string, mediaType: string, caption?: string): Promise<SendOut> {
+  if (!phoneNumberId || !accessToken) { console.error("[AGENT][CLOUD] Faltam credenciais"); return { ok: false, reason: "config_missing" }; }
   const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
   const typeMap: Record<string, string> = { image: "image", video: "video", audio: "audio", file: "document", document: "document" };
   const t = typeMap[(mediaType || "").toLowerCase()] || "document";
@@ -294,5 +356,9 @@ async function sendCloudMedia(phoneNumberId: string, accessToken: string, to: st
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
     body: JSON.stringify(body),
   });
-  if (!r.ok) console.error("[AGENT][CLOUD] sendMedia error:", await r.text().catch(() => ""));
+  const bodyTxt = await r.text().catch(() => "");
+  if (!r.ok) console.error("[AGENT][CLOUD] sendMedia error:", bodyTxt);
+  const inv = detectInvalidFromText(bodyTxt);
+  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
+  return { ok: r.ok, reason: r.ok ? undefined : `http_${r.status}` };
 }

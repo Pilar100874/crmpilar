@@ -3013,7 +3013,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           let enviados = 0; let falhas = 0;
 
           // Resumo por gerente (agrupamento)
-          type ResumoDest = { nome: string; phone: string; tipo: "vendedor" | "empresa"; ok: boolean };
+          type ResumoDest = { nome: string; phone: string; tipo: "vendedor" | "empresa"; ok: boolean; invalid?: boolean };
           const resumoPorGerente = new Map<string, { gerente: { id: string; nome: string; whatsapp?: string; telefone?: string }; itens: ResumoDest[] }>();
 
 
@@ -3071,13 +3071,15 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             }
 
             let ok = true;
+            let invalid = false;
             if (useReal) {
               try {
-                const r = await executarBlocoWhatsapp(
+                const r: any = await executarBlocoWhatsapp(
                   { telefone: phone, mensagem: finalMsg, mediaUrl: mediaUrlPre || undefined },
                   { variaveis: perCtx, workflow_tipo: "bot", origem: "broadcast_vendedores" },
                 );
                 ok = !!r?.ok;
+                invalid = !!r?.invalid_number;
               } catch { ok = false; }
             }
 
@@ -3111,7 +3113,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             if (g && (g.whatsapp || g.telefone)) {
               const key = g.id;
               if (!resumoPorGerente.has(key)) resumoPorGerente.set(key, { gerente: g, itens: [] });
-              resumoPorGerente.get(key)!.itens.push({ nome: d.nome || phone, phone, tipo: d.kind, ok });
+              resumoPorGerente.get(key)!.itens.push({ nome: d.nome || phone, phone, tipo: d.kind, ok, invalid });
             }
 
             if (delayMs) await new Promise((r) => setTimeout(r, delayMs));
@@ -3141,13 +3143,23 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               : "";
 
             const buildResumo = (itens: ResumoDest[]) => {
-              const lista = itens
-                .map((it, i) => `${i + 1}. ${it.nome} — ${it.phone} (${it.tipo})${it.ok ? "" : " ❌"}`)
-                .join("\n");
+              const enviadosOk = itens.filter((i) => i.ok && !i.invalid);
+              const invalidos = itens.filter((i) => i.invalid);
+              const outrasFalhas = itens.filter((i) => !i.ok && !i.invalid);
+              const fmt = (arr: ResumoDest[]) =>
+                arr.map((it, i) => `${i + 1}. ${it.nome} — ${it.phone} (${it.tipo})`).join("\n") || "(nenhum)";
+              const secInvalidos = invalidos.length
+                ? `\n\n⚠️ *WhatsApp inválido/inexistente (${invalidos.length})* — revise os cadastros:\n${fmt(invalidos)}`
+                : "";
+              const secFalhas = outrasFalhas.length
+                ? `\n\n❌ *Falhas de envio (${outrasFalhas.length})*\n${fmt(outrasFalhas)}`
+                : "";
               return (
                 `📋 *Mensagem enviadas pelo sistema automatico de mensagem:* ${dataStr} ${horaStr}\n\n` +
                 `— *Conteúdo enviado* —\n${conteudoMask || "(sem texto)"}${midiaInfo}\n\n` +
-                `— *Destinatários (${itens.length})* —\n${lista}`
+                `— *Entregues (${enviadosOk.length})* —\n${fmt(enviadosOk)}` +
+                secInvalidos +
+                secFalhas
               );
             };
 
