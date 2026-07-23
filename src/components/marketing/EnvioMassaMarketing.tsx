@@ -463,6 +463,21 @@ export function EnvioMassaMarketing() {
           />
         )}
       </div>
+
+      {/* Templates management dialog */}
+      <Dialog open={templatesDialogOpen} onOpenChange={setTemplatesDialogOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Templates de Envio em Massa</DialogTitle>
+            <DialogDescription>
+              Crie e edite templates para usar na etapa "Montar Mensagem".
+            </DialogDescription>
+          </DialogHeader>
+          {estabelecimentoId && (
+            <EnvioMassaTemplatesCRUD estabelecimentoId={estabelecimentoId} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
