@@ -21,6 +21,9 @@ serve(async (req) => {
       fileName,
       contentType,
       whatsappNumeroId,
+      whatsappSessionId,
+      whatsappSessionName,
+      botFlowId,
       contact, // { nome, whatsapp } — envia vCard/contato
     } = await req.json();
 
@@ -140,7 +143,59 @@ serve(async (req) => {
 
     // ===== Resolve número (prioridade: override do atendente > bot > padrão) =====
     let numero: any = null;
-    if (whatsappNumeroId) {
+    const resolveEvolutionSession = async (session: any) => {
+      const scopedEstabelecimentoId = conversation?.estabelecimento_id || estabelecimento_id || session?.estabelecimento_id;
+      const { data: cfg } = scopedEstabelecimentoId
+        ? await supabase
+          .from("whatsapp_config")
+          .select("provider, waha_url, waha_api_key")
+          .eq("estabelecimento_id", scopedEstabelecimentoId)
+          .maybeSingle()
+        : { data: null };
+
+      if (!session?.session_name || !cfg?.waha_url || !cfg?.waha_api_key) return null;
+      return {
+        provider: cfg.provider || "evolution",
+        waha_url: cfg.waha_url,
+        waha_api_key: cfg.waha_api_key,
+        session_name: session.session_name,
+        nome: session.session_name,
+      };
+    };
+
+    // Prioridade máxima: sessão Evolution escolhida no bloco/workflow.
+    if (whatsappSessionId) {
+      const { data: session } = await supabase
+        .from("whatsapp_sessions")
+        .select("id, session_name, estabelecimento_id, status")
+        .eq("id", whatsappSessionId)
+        .maybeSingle();
+      numero = await resolveEvolutionSession(session);
+    }
+    if (!numero && whatsappSessionName) {
+      let q = supabase
+        .from("whatsapp_sessions")
+        .select("id, session_name, estabelecimento_id, status")
+        .eq("session_name", whatsappSessionName)
+        .order("updated_at", { ascending: false })
+        .limit(1);
+      const scopedEstabelecimentoId = conversation?.estabelecimento_id || estabelecimento_id;
+      if (scopedEstabelecimentoId) q = q.eq("estabelecimento_id", scopedEstabelecimentoId);
+      const { data: sessions } = await q;
+      numero = await resolveEvolutionSession(sessions?.[0]);
+    }
+    if (!numero && botFlowId) {
+      const { data: session } = await supabase
+        .from("whatsapp_sessions")
+        .select("id, session_name, estabelecimento_id, status")
+        .eq("bot_flow_id", botFlowId)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      numero = await resolveEvolutionSession(session);
+    }
+
+    if (!numero && whatsappNumeroId) {
       const { data: n } = await supabase
         .from("whatsapp_numeros").select("*").eq("id", whatsappNumeroId).eq("ativo", true).maybeSingle();
       numero = n;
