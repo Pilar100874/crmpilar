@@ -443,13 +443,23 @@ async function executeBroadcast(
           },
         });
       }
-      if (d.gerente?.whatsapp && cfg.enviarContatoGerente) {
-        const gPhone = String(d.gerente.whatsapp).replace(/\D/g, "");
-        if (gPhone) {
+      const enviarContato = !!(cfg.enviarContato || cfg.enviarContatoGerente);
+      if (enviarContato) {
+        const contatoTipo = cfg.contatoTipo || "gerente_do_vendedor";
+        let cNome = "";
+        let cPhone = "";
+        if (contatoTipo === "fixo") {
+          cNome = cfg.contatoNome || "Contato";
+          cPhone = String(cfg.contatoWhatsapp || "").replace(/\D/g, "");
+        } else {
+          cNome = d.gerente?.nome || cfg.fallbackNome || "Gerente";
+          cPhone = String(d.gerente?.whatsapp || cfg.fallbackWhatsapp || "").replace(/\D/g, "");
+        }
+        if (cPhone) {
           await supabase.functions.invoke("send-agent-message", {
             body: {
               estabelecimento_id: estabelecimentoId, telefone: d.phone,
-              contact: { nome: d.gerente.nome || "Gerente", whatsapp: gPhone },
+              contact: { nome: cNome, whatsapp: cPhone },
               whatsappSessionId: cfg.whatsappSessionId || null,
               whatsappSessionName: cfg.whatsappSessionName || null,
               botFlowId: botFlowId || null,
