@@ -2798,7 +2798,9 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           let msg = "";
           if (config.usarMensagemPreDefinida) {
             const varName = config.preDefinidaVar || "last_mensagem_pre_definida";
-            msg = String(contextRef.current[varName] || contextRef.current.last_mensagem_pre_definida || "");
+            const fromVar = varName ? String(contextRef.current[varName] ?? "") : "";
+            const extra = interpolateVariables(config.message || "", contextRef.current);
+            msg = [fromVar, extra].filter((s) => s && s.trim()).join("\n");
           } else {
             msg = interpolateVariables(config.message || "", contextRef.current);
           }
