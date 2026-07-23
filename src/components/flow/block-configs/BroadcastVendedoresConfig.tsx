@@ -722,8 +722,40 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
           onChange={(e) => handleConfigChange("outputVariable", e.target.value)}
         />
       </div>
+
+      {/* Aguardar resposta */}
+      <div className="space-y-2 border-t pt-3">
+        <div className="flex items-start gap-2">
+          <Checkbox
+            id="aguardar_resposta"
+            checked={!!config.aguardarResposta}
+            onCheckedChange={(v) => handleConfigChange("aguardarResposta", !!v)}
+          />
+          <label htmlFor="aguardar_resposta" className="text-xs leading-tight">
+            <b>Aguardar resposta da empresa antes de continuar</b>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              Cria um registro de acompanhamento por destinatário. Quando a empresa responde no WhatsApp, o cadastro é marcado automaticamente como "já respondeu" e aparece no Monitor de Respostas.
+            </p>
+          </label>
+        </div>
+        {config.aguardarResposta && (
+          <div className="pl-6 space-y-1">
+            <Label className="text-xs">Prazo máximo para resposta (horas)</Label>
+            <Input
+              type="number"
+              min={1}
+              max={720}
+              className="h-8 text-xs w-32"
+              value={config.timeoutHoras ?? 24}
+              onChange={(e) => handleConfigChange("timeoutHoras", Math.max(1, Math.min(720, parseInt(e.target.value) || 24)))}
+            />
+            <p className="text-[10px] text-muted-foreground">Após esse prazo, os que não responderem são marcados como "sem resposta".</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
 export default BroadcastVendedoresConfig;
+
