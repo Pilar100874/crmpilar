@@ -2842,8 +2842,86 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             vendedores = vendedores.filter((v: any) => gerentesMap.get(v.id)?.id === config.gerenteId);
           vendedores = vendedores.filter((v: any) => (v.whatsapp || v.telefone || "").replace(/\D/g, "").length >= 10);
 
-          const total = vendedores.length;
-          addSystemMessage(`📢 ${useReal ? "[REAL] " : ""}Broadcast Vendedores → ${total} destinatário(s)`);
+          // Empresas (clientes) com gerente vinculado — opcional
+          type Destinatario = {
+            kind: "vendedor" | "empresa";
+            id: string;
+            phone: string;
+            nome: string;
+            vendedorObj: any;
+            empresaObj: any;
+            gerente?: { id: string; nome: string; whatsapp?: string; telefone?: string } | null;
+          };
+          const destinatarios: Destinatario[] = vendedores.map((v: any) => ({
+            kind: "vendedor" as const,
+            id: v.id,
+            phone: (v.whatsapp || v.telefone || "").replace(/\D/g, ""),
+            nome: v.nome_fantasia || v.nome || "",
+            vendedorObj: {
+              nome: v.nome_fantasia || v.nome || "",
+              whatsapp: v.whatsapp || "",
+              telefone: v.telefone || "",
+            },
+            empresaObj: { nome: "", nome_fantasia: "", whatsapp: "", telefone: "", email: "", cidade: "", uf: "", cnpj: "" },
+            gerente: gerentesMap.get(v.id) || null,
+          }));
+
+          if (config.incluirEmpresas) {
+            const empresasFiltro = config.empresasFiltro || "com_gerente";
+            const { data: vinc } = await supabase
+              .from("empresa_vinculos")
+              .select("empresa_id, usuario_id")
+              .not("usuario_id", "is", null);
+            let empresaGerenteMap = new Map<string, string>();
+            (vinc || []).forEach((r: any) => {
+              if (!r.empresa_id || !r.usuario_id) return;
+              if (empresasFiltro === "gerente_especifico" && config.empresasGerenteId && r.usuario_id !== config.empresasGerenteId) return;
+              if (!empresaGerenteMap.has(r.empresa_id)) empresaGerenteMap.set(r.empresa_id, r.usuario_id);
+            });
+            const empresaIds = Array.from(empresaGerenteMap.keys());
+            if (empresaIds.length) {
+              const { data: emps } = await supabase
+                .from("empresas")
+                .select("id, nome, nome_fantasia, whatsapp, telefone, email, cidade, uf, cnpj")
+                .eq("estabelecimento_id", estabelecimentoId)
+                .eq("ativo", true)
+                .in("id", empresaIds);
+              const gerIds = Array.from(new Set(Array.from(empresaGerenteMap.values())));
+              const gerentesUsersMap = new Map<string, any>();
+              if (gerIds.length) {
+                const { data: us } = await supabase
+                  .from("usuarios").select("id, nome, whatsapp, telefone").in("id", gerIds);
+                (us || []).forEach((u: any) => gerentesUsersMap.set(u.id, u));
+              }
+              (emps || []).forEach((e: any) => {
+                const phone = (e.whatsapp || e.telefone || "").replace(/\D/g, "");
+                if (phone.length < 10) return;
+                const gid = empresaGerenteMap.get(e.id);
+                const gu = gid ? gerentesUsersMap.get(gid) : null;
+                destinatarios.push({
+                  kind: "empresa",
+                  id: e.id,
+                  phone,
+                  nome: e.nome_fantasia || e.nome || "",
+                  vendedorObj: { nome: "", whatsapp: "", telefone: "" },
+                  empresaObj: {
+                    nome: e.nome || "",
+                    nome_fantasia: e.nome_fantasia || "",
+                    whatsapp: e.whatsapp || "",
+                    telefone: e.telefone || "",
+                    email: e.email || "",
+                    cidade: e.cidade || "",
+                    uf: e.uf || "",
+                    cnpj: e.cnpj || "",
+                  },
+                  gerente: gu ? { id: gu.id, nome: gu.nome || "", whatsapp: gu.whatsapp, telefone: gu.telefone } : null,
+                });
+              });
+            }
+          }
+
+          const total = destinatarios.length;
+          addSystemMessage(`📢 ${useReal ? "[REAL] " : ""}Broadcast → ${total} destinatário(s)${config.incluirEmpresas ? " (vendedores + empresas)" : ""}`);
           let enviados = 0; let falhas = 0;
 
           const { executarBlocoWhatsapp } = useReal ? await import("@/lib/workflowActionsExecutor") : ({} as any);
@@ -2856,30 +2934,36 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             ? String(contextRef.current.last_generated_media_type || "")
             : "";
 
-          for (const v of vendedores) {
-            const phone = (v.whatsapp || v.telefone || "").replace(/\D/g, "");
-            const nome = v.nome_fantasia || v.nome || phone;
-            const g = gerentesMap.get(v.id);
-            const vendedorObj = {
-              nome: v.nome_fantasia || v.nome || "",
-              whatsapp: v.whatsapp || "",
-              telefone: v.telefone || "",
-            };
+          for (const d of destinatarios) {
+            const phone = d.phone;
+            const nome = d.nome || phone;
+            const g = d.gerente || null;
+            const vendedorObj = d.vendedorObj;
+            const empresaObj = d.empresaObj;
             const gerenteObj = {
               nome: g?.nome || config.fallbackNome || "",
               whatsapp: g?.whatsapp || config.fallbackWhatsapp || "",
               telefone: g?.telefone || "",
             };
-            const perCtx = {
+            const perCtx: any = {
               ...contextRef.current,
               vendedor: vendedorObj,
               gerente: gerenteObj,
+              empresa: empresaObj,
               "vendedor.nome": vendedorObj.nome,
               "vendedor.whatsapp": vendedorObj.whatsapp,
               "vendedor.telefone": vendedorObj.telefone,
               "gerente.nome": gerenteObj.nome,
               "gerente.whatsapp": gerenteObj.whatsapp,
               "gerente.telefone": gerenteObj.telefone,
+              "empresa.nome": empresaObj.nome,
+              "empresa.nome_fantasia": empresaObj.nome_fantasia,
+              "empresa.whatsapp": empresaObj.whatsapp,
+              "empresa.telefone": empresaObj.telefone,
+              "empresa.email": empresaObj.email,
+              "empresa.cidade": empresaObj.cidade,
+              "empresa.uf": empresaObj.uf,
+              "empresa.cnpj": empresaObj.cnpj,
             };
             const antes = interpolateVariables(config.textoAntes || "", perCtx).trim();
             const depois = interpolateVariables(config.textoDepois || "", perCtx).trim();
