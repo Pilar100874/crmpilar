@@ -25,6 +25,7 @@ interface VendedorRow {
   segmento_id: string | null;
   gerente_usuario_id?: string | null;
   gerente_nome?: string | null;
+  kind?: "vendedor" | "empresa";
 }
 
 export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props) => {
@@ -113,6 +114,55 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
 
     // filtrar quem tem contato válido
     rows = rows.filter((r) => (r.whatsapp || r.telefone || "").replace(/\D/g, "").length >= 10);
+    rows = rows.map((r) => ({ ...r, kind: "vendedor" as const }));
+
+    // Incluir empresas (clientes) com gerente vinculado
+    if (config.incluirEmpresas) {
+      const empresasFiltro = config.empresasFiltro || "com_gerente";
+      const { data: vinc } = await supabase
+        .from("empresa_vinculos")
+        .select("empresa_id, usuario_id")
+        .eq("estabelecimento_id", estabId)
+        .not("usuario_id", "is", null);
+      const empresaGerenteMap = new Map<string, string>();
+      (vinc || []).forEach((r: any) => {
+        if (!r.empresa_id || !r.usuario_id) return;
+        if (empresasFiltro === "gerente_especifico" && config.empresasGerenteId && r.usuario_id !== config.empresasGerenteId) return;
+        if (!empresaGerenteMap.has(r.empresa_id)) empresaGerenteMap.set(r.empresa_id, r.usuario_id);
+      });
+      const empresaIds = Array.from(empresaGerenteMap.keys());
+      if (empresaIds.length) {
+        const { data: emps } = await supabase
+          .from("empresas")
+          .select("id, nome, nome_fantasia, whatsapp, telefone, segmento_id")
+          .eq("estabelecimento_id", estabId)
+          .eq("ativo", true)
+          .in("id", empresaIds);
+        const gerIds = Array.from(new Set(Array.from(empresaGerenteMap.values())));
+        const gerentesUsersMap = new Map<string, string>();
+        if (gerIds.length) {
+          const { data: us } = await supabase.from("usuarios").select("id, nome").in("id", gerIds);
+          (us || []).forEach((u: any) => gerentesUsersMap.set(u.id, u.nome || ""));
+        }
+        (emps || []).forEach((e: any) => {
+          const phone = (e.whatsapp || e.telefone || "").replace(/\D/g, "");
+          if (phone.length < 10) return;
+          const gid = empresaGerenteMap.get(e.id) || null;
+          rows.push({
+            id: e.id,
+            nome: e.nome,
+            nome_fantasia: e.nome_fantasia,
+            whatsapp: e.whatsapp,
+            telefone: e.telefone,
+            segmento_id: e.segmento_id,
+            gerente_usuario_id: gid,
+            gerente_nome: gid ? gerentesUsersMap.get(gid) || null : null,
+            kind: "empresa",
+          });
+        });
+      }
+    }
+
     return rows;
   };
 
@@ -203,11 +253,24 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         </div>
         {preview.length > 0 && (
           <>
-            <Badge variant="secondary" className="text-[10px]">{totalPreview} vendedor(es) receberão</Badge>
+            {(() => {
+              const nv = preview.filter((r) => r.kind !== "empresa").length;
+              const ne = preview.filter((r) => r.kind === "empresa").length;
+              return (
+                <div className="flex flex-wrap gap-1">
+                  <Badge variant="secondary" className="text-[10px]">{totalPreview} destinatário(s)</Badge>
+                  <Badge variant="outline" className="text-[10px]">{nv} vendedor(es)</Badge>
+                  {ne > 0 && <Badge variant="outline" className="text-[10px]">{ne} empresa(s)</Badge>}
+                </div>
+              );
+            })()}
             <div className="max-h-[180px] overflow-y-auto space-y-1">
               {preview.slice(0, 50).map((r) => (
-                <div key={r.id} className="text-[11px] px-2 py-1 rounded bg-background flex items-center justify-between gap-2">
-                  <span className="truncate">
+                <div key={`${r.kind}-${r.id}`} className="text-[11px] px-2 py-1 rounded bg-background flex items-center justify-between gap-2">
+                  <span className="truncate flex items-center gap-1">
+                    <Badge variant={r.kind === "empresa" ? "default" : "secondary"} className="text-[9px] px-1 py-0">
+                      {r.kind === "empresa" ? "empresa" : "vendedor"}
+                    </Badge>
                     {r.nome_fantasia || r.nome || r.id}
                     {r.gerente_nome && <span className="text-muted-foreground"> · gerente: {r.gerente_nome}</span>}
                   </span>
