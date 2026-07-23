@@ -682,6 +682,12 @@ export default function AtendimentoConfig() {
               </Card>
             </TabsContent>
 
+            <TabsContent value="monitor-respostas" className="mt-0 h-full overflow-y-auto">
+              <BotResponseMonitor />
+            </TabsContent>
+
+
+
             <TabsContent value="bot-criar" className="mt-0 h-full">
               <Card className="h-full">
                 <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
