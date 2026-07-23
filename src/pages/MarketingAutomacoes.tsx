@@ -16,6 +16,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import NovaAutomacaoDialog from "@/components/marketing/NovaAutomacaoDialog";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { Progress } from "@/components/ui/progress";
 
 export default function MarketingAutomacoes() {
   const { openSubmenu } = useLayout();
@@ -36,6 +37,7 @@ export default function MarketingAutomacoes() {
   const [executeDialogOpen, setExecuteDialogOpen] = useState(false);
   const [automacaoToExecute, setAutomacaoToExecute] = useState<any>(null);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [execProgress, setExecProgress] = useState(0);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [automacaoToDelete, setAutomacaoToDelete] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -204,6 +206,10 @@ export default function MarketingAutomacoes() {
     if (!automacaoToExecute) return;
 
     setIsExecuting(true);
+    setExecProgress(5);
+    const progressTimer = setInterval(() => {
+      setExecProgress((p) => (p < 90 ? p + Math.max(1, Math.round((90 - p) * 0.08)) : p));
+    }, 500);
     try {
       const { data, error } = await supabase.functions.invoke(
         "marketing-automation-execute",
@@ -213,18 +219,24 @@ export default function MarketingAutomacoes() {
       if (error) throw error;
       if (data && data.success === false) throw new Error(data.error || "Falha");
 
+      setExecProgress(100);
       const metodo = automacaoToExecute.config?.metodo_disparo
         || (automacaoToExecute.config?.bot_id ? "bot" : "webhook");
       toast.success(
         metodo === "bot" ? "Bot disparado com sucesso!" : "Webhook executado com sucesso!",
       );
-      setExecuteDialogOpen(false);
-      setAutomacaoToExecute(null);
+      setTimeout(() => {
+        setExecuteDialogOpen(false);
+        setAutomacaoToExecute(null);
+        setExecProgress(0);
+      }, 400);
       loadAutomacoes();
     } catch (error: any) {
       console.error("Erro ao executar automação:", error);
       toast.error(`Erro ao executar: ${error?.message ?? error}`);
+      setExecProgress(0);
     } finally {
+      clearInterval(progressTimer);
       setIsExecuting(false);
     }
   };
@@ -556,6 +568,15 @@ export default function MarketingAutomacoes() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+          {isExecuting && (
+            <div className="space-y-2 pb-2">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Processando envio...</span>
+                <span>{execProgress}%</span>
+              </div>
+              <Progress value={execProgress} />
             </div>
           )}
           <DialogFooter>

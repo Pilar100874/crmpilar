@@ -2872,19 +2872,23 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             empresaObj: any;
             gerente?: { id: string; nome: string; whatsapp?: string; telefone?: string } | null;
           };
-          const destinatarios: Destinatario[] = vendedores.map((v: any) => ({
-            kind: "vendedor" as const,
-            id: v.id,
-            phone: (v.whatsapp || v.telefone || "").replace(/\D/g, ""),
-            nome: v.nome_fantasia || v.nome || "",
-            vendedorObj: {
-              nome: v.nome_fantasia || v.nome || "",
-              whatsapp: v.whatsapp || "",
-              telefone: v.telefone || "",
-            },
-            empresaObj: { nome: "", nome_fantasia: "", whatsapp: "", telefone: "", email: "", cidade: "", uf: "", cnpj: "" },
-            gerente: gerentesMap.get(v.id) || null,
-          }));
+          const destinatarios: Destinatario[] = vendedores.map((v: any) => {
+            const rawNome = v.nome_fantasia || v.nome || "";
+            const cleanNome = rawNome.replace(/^\s*vendedor(a)?\s+/i, "").trim() || rawNome;
+            return {
+              kind: "vendedor" as const,
+              id: v.id,
+              phone: (v.whatsapp || v.telefone || "").replace(/\D/g, ""),
+              nome: cleanNome,
+              vendedorObj: {
+                nome: cleanNome,
+                whatsapp: v.whatsapp || "",
+                telefone: v.telefone || "",
+              },
+              empresaObj: { nome: "", nome_fantasia: "", whatsapp: "", telefone: "", email: "", cidade: "", uf: "", cnpj: "" },
+              gerente: gerentesMap.get(v.id) || null,
+            };
+          });
 
           // ---- MODO ESPECÍFICO: 1 destinatário ----
           if (modoEspecifico && config.especificoAlvoId) {

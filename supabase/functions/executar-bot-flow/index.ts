@@ -266,11 +266,13 @@ async function executeBroadcast(
       vs = vs.filter((v: any) => gerentesMap.get(v.id)?.id === cfg.gerenteId);
     vs = vs.filter((v: any) => (v.whatsapp || v.telefone || "").replace(/\D/g, "").length >= 10);
     for (const v of vs) {
+      const rawNome = v.nome_fantasia || v.nome || "";
+      const cleanNome = rawNome.replace(/^\s*vendedor(a)?\s+/i, "").trim() || rawNome;
       destinatarios.push({
         kind: "vendedor", id: v.id,
         phone: (v.whatsapp || v.telefone || "").replace(/\D/g, ""),
-        nome: v.nome_fantasia || v.nome || "",
-        vendedorObj: { nome: v.nome_fantasia || v.nome || "", whatsapp: v.whatsapp || "", telefone: v.telefone || "" },
+        nome: cleanNome,
+        vendedorObj: { nome: cleanNome, whatsapp: v.whatsapp || "", telefone: v.telefone || "" },
         empresaObj: {},
         gerente: gerentesMap.get(v.id) || null,
       });
