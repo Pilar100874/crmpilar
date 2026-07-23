@@ -3116,8 +3116,29 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               resumoPorGerente.get(key)!.itens.push({ nome: d.nome || phone, phone, tipo: d.kind, ok, invalid });
             }
 
+            // Aguardar resposta: cria tracking por empresa enviada com sucesso
+            if (ok && !invalid && config.aguardarResposta && d.kind === "empresa") {
+              try {
+                const timeoutHoras = Math.max(1, Math.min(720, parseInt(config.timeoutHoras) || 24));
+                const expira = new Date(Date.now() + timeoutHoras * 3600 * 1000).toISOString();
+                await supabase.from("bot_response_tracking" as any).insert({
+                  estabelecimento_id: estabelecimentoId,
+                  empresa_id: d.id,
+                  contato_telefone: phone,
+                  flow_id: (contextRef.current as any)?.flow_id || null,
+                  flow_nome: (contextRef.current as any)?.flow_nome || "Bot",
+                  block_id: node.id,
+                  bot_execution_id: (contextRef.current as any)?.execution_id || null,
+                  timeout_horas: timeoutHoras,
+                  expira_em: expira,
+                  status: "aguardando",
+                });
+              } catch (e) { console.warn("[broadcast] falha ao criar tracking:", e); }
+            }
+
             if (delayMs) await new Promise((r) => setTimeout(r, delayMs));
           }
+
 
           const resultado = { enviados, falhas, total };
           if (falhas > 0) addSystemMessage(`⚠️ Broadcast finalizado: ${enviados} enviados, ${falhas} falhas.`);
