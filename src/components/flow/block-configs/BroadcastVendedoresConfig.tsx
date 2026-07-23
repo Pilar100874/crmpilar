@@ -473,6 +473,23 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         </div>
       )}
 
+      {/* Filtro: apenas quem já respondeu algum bot */}
+      {audiencia === "empresas" && (
+        <div className="flex items-start gap-2 rounded-md border p-2 bg-muted/10">
+          <Checkbox
+            id="apenas_ja_responderam"
+            checked={!!config.apenasJaResponderam}
+            onCheckedChange={(v) => handleConfigChange("apenasJaResponderam", !!v)}
+          />
+          <label htmlFor="apenas_ja_responderam" className="text-xs leading-tight">
+            <b>Somente empresas que já responderam algum bot</b>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Usa o marcador do cadastro da empresa (atualizado quando a empresa responde a um envio).</p>
+          </label>
+        </div>
+      )}
+
+
+
 
       {/* Preview */}
       <div className="space-y-2 rounded-md border border-dashed p-3 bg-muted/20">
