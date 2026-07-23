@@ -53,21 +53,19 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
 
       const { data: segs } = await supabase
         .from("segmentos")
-        .select("id, nome")
+        .select("id, nome, is_prospect")
         .eq("estabelecimento_id", eid)
         .order("nome");
       setSegmentos((segs as any) || []);
 
-      const { data: gv } = await supabase
-        .from("gerente_vendedores")
-        .select("gerente_usuario_id, usuarios:gerente_usuario_id(id, nome)")
-        .eq("estabelecimento_id", eid);
-      const uniq = new Map<string, string>();
-      (gv || []).forEach((r: any) => {
-        const u = r.usuarios;
-        if (u?.id) uniq.set(u.id, u.nome || u.id);
-      });
-      setGerentes(Array.from(uniq, ([id, nome]) => ({ id, nome })));
+      // Lista completa de gerentes do estabelecimento (independente de já terem vendedor vinculado)
+      const { data: us } = await supabase
+        .from("usuarios")
+        .select("id, nome, tipo")
+        .eq("estabelecimento_id", eid)
+        .eq("tipo", "gerente")
+        .order("nome");
+      setGerentes(((us as any) || []).map((u: any) => ({ id: u.id, nome: u.nome || u.email || u.id })));
     })();
   }, []);
 
