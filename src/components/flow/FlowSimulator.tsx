@@ -3073,13 +3073,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             const msgInterp = interpolateVariables(msg, perCtx);
 
             // Ordem: [texto antes] → [imagem/vídeo com caption=msg] → [texto depois]
-            if (antes) addBotMessage(`[para ${nome} · ${phone}] ${antes}`, node.id);
+            if (antes) addBotMessage(antes, node.id);
             if (mediaUrlPre) {
               addBotMediaMessage(mediaUrlPre, mediaTypePre === "video" ? "video" : "image", msgInterp, node.id);
             } else if (msgInterp) {
-              addBotMessage(`[para ${nome} · ${phone}] ${msgInterp}`, node.id);
+              addBotMessage(msgInterp, node.id);
             }
-            if (depois) addBotMessage(`[para ${nome}] ${depois}`, node.id);
+            if (depois) addBotMessage(depois, node.id);
 
             let ok = true;
             let invalid = false;
