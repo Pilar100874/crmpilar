@@ -43,7 +43,7 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
       // Verificar se o usuário existe
       const { data: usuario, error: userError } = await supabase
         .from("usuarios")
-        .select("telefone")
+        .select("whatsapp")
         .eq("email", email)
         .maybeSingle();
 
@@ -52,7 +52,7 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
         return;
       }
 
-      setUserPhone(usuario.telefone);
+      setUserPhone(usuario.whatsapp);
       setStep("choose-method");
     } catch (error) {
       console.error("Erro:", error);

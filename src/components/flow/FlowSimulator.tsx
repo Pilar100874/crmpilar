@@ -2840,11 +2840,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             if (ids.length) {
               const { data: gv } = await supabase
                 .from("gerente_vendedores")
-                .select("vendedor_empresa_id, gerente_usuario_id, usuarios:gerente_usuario_id(id, nome, whatsapp, telefone)")
+                .select("vendedor_empresa_id, gerente_usuario_id, usuarios:gerente_usuario_id(id, nome, whatsapp)")
                 .in("vendedor_empresa_id", ids);
               (gv || []).forEach((r: any) => {
                 if (r.usuarios?.id) gerentesMap.set(r.vendedor_empresa_id, {
-                  id: r.usuarios.id, nome: r.usuarios.nome || "", whatsapp: r.usuarios.whatsapp, telefone: r.usuarios.telefone,
+                  id: r.usuarios.id, nome: r.usuarios.nome || "", whatsapp: r.usuarios.whatsapp, telefone: r.usuarios.whatsapp,
                 });
               });
             }
@@ -2883,16 +2883,16 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           if (modoEspecifico && config.especificoAlvoId) {
             if (config.especificoTipo === "gerente") {
               const { data: u } = await supabase
-                .from("usuarios").select("id, nome, whatsapp, telefone")
+                .from("usuarios").select("id, nome, whatsapp")
                 .eq("id", config.especificoAlvoId).maybeSingle();
-              const phone = ((u as any)?.whatsapp || (u as any)?.telefone || "").replace(/\D/g, "");
+              const phone = ((u as any)?.whatsapp || "").replace(/\D/g, "");
               if (u && phone.length >= 10) {
                 destinatarios.push({
                   kind: "vendedor", id: (u as any).id, phone,
                   nome: (u as any).nome || "",
-                  vendedorObj: { nome: (u as any).nome || "", whatsapp: (u as any).whatsapp || "", telefone: (u as any).telefone || "" },
+                  vendedorObj: { nome: (u as any).nome || "", whatsapp: (u as any).whatsapp || "", telefone: (u as any).whatsapp || "" },
                   empresaObj: { nome: "", nome_fantasia: "", whatsapp: "", telefone: "", email: "", cidade: "", uf: "", cnpj: "" },
-                  gerente: { id: (u as any).id, nome: (u as any).nome || "", whatsapp: (u as any).whatsapp, telefone: (u as any).telefone },
+                  gerente: { id: (u as any).id, nome: (u as any).nome || "", whatsapp: (u as any).whatsapp, telefone: (u as any).whatsapp },
                 });
               }
             } else {
@@ -2980,7 +2980,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               const gerentesUsersMap = new Map<string, any>();
               if (gerIds.length) {
                 const { data: us } = await supabase
-                  .from("usuarios").select("id, nome, whatsapp, telefone").in("id", gerIds);
+                  .from("usuarios").select("id, nome, whatsapp").in("id", gerIds);
                 (us || []).forEach((u: any) => gerentesUsersMap.set(u.id, u));
               }
               (emps || []).forEach((e: any) => {

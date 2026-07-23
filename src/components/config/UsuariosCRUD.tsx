@@ -27,7 +27,7 @@ interface Usuario {
   id: string;
   nome: string;
   email: string;
-  telefone: string | null;
+  whatsapp: string | null;
   unidade_id: string | null;
   grupo_acesso_id: string | null;
   estabelecimento_id: string | null;
@@ -298,7 +298,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     const usuarioData = {
       nome,
       email,
-      telefone: telefone || null,
+      whatsapp: telefone || null,
       unidade_id: unidadeId || null,
       grupo_acesso_id: grupoAcessoId || null,
       estabelecimento_id: selectedEstabelecimentoId || estabelecimentoId,
@@ -600,7 +600,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const handleEdit = async (usuario: Usuario) => {
     setNome(usuario.nome);
     setEmail(usuario.email);
-    setTelefone(usuario.telefone || "");
+    setTelefone(usuario.whatsapp || "");
     setSmtp(usuario.smtp || "");
     setPortaSmtp(usuario.porta_smtp?.toString() || "");
     setImap(usuario.imap || "");
@@ -1327,8 +1327,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
                       )}
                     </div>
                     <div className="text-xs text-muted-foreground truncate">{usuario.email}</div>
-                    {usuario.telefone && (
-                      <div className="text-xs text-muted-foreground">{usuario.telefone}</div>
+                    {usuario.whatsapp && (
+                      <div className="text-xs text-muted-foreground">{usuario.whatsapp}</div>
                     )}
                     <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-1">
                       {usuario.unidades?.nome && <span>📍 {usuario.unidades.nome}</span>}

@@ -15,7 +15,7 @@ interface Gerente {
   id: string;
   nome: string;
   email: string;
-  telefone: string | null;
+  whatsapp: string | null;
 }
 
 interface Empresa {
@@ -58,7 +58,7 @@ export default function Gerentes() {
     if (!estabelecimentoId) return;
     const { data, error } = await supabase
       .from("usuarios")
-      .select("id, nome, email, telefone")
+      .select("id, nome, email, whatsapp")
       .eq("estabelecimento_id", estabelecimentoId)
       .eq("tipo", "gerente")
       .order("nome");
@@ -406,7 +406,7 @@ export default function Gerentes() {
                       </td>
                       <td className="px-3 sm:px-4 py-3 text-sm font-medium">{g.nome}</td>
                       <td className="px-3 sm:px-4 py-3 text-sm text-muted-foreground">{g.email}</td>
-                      <td className="px-3 sm:px-4 py-3 text-sm text-muted-foreground">{g.telefone || "-"}</td>
+                      <td className="px-3 sm:px-4 py-3 text-sm text-muted-foreground">{g.whatsapp || "-"}</td>
                     </tr>
                   ))}
                 </tbody>

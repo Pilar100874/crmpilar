@@ -42,16 +42,16 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
       // Buscar telefone do usuário
       const { data: usuario, error: userError } = await supabase
         .from("usuarios")
-        .select("telefone")
+        .select("whatsapp")
         .eq("auth_user_id", user.id)
         .maybeSingle();
 
-      if (userError || !usuario?.telefone) {
-        toast.error("Telefone não encontrado no cadastro");
+      if (userError || !usuario?.whatsapp) {
+        toast.error("WhatsApp não encontrado no cadastro");
         return;
       }
 
-      setUserPhone(usuario.telefone);
+      setUserPhone(usuario.whatsapp);
 
       // Gerar código de 6 dígitos
       const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -60,7 +60,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
       // Enviar código via WhatsApp
       const { error: sendError } = await supabase.functions.invoke("enviar-codigo-verificacao", {
         body: {
-          telefone: usuario.telefone,
+          telefone: usuario.whatsapp,
           codigo: code,
         },
       });
