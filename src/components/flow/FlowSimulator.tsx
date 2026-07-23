@@ -2924,6 +2924,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           addSystemMessage(`📢 ${useReal ? "[REAL] " : ""}Broadcast → ${total} destinatário(s)${config.incluirEmpresas ? " (vendedores + empresas)" : ""}`);
           let enviados = 0; let falhas = 0;
 
+          // Resumo por gerente (agrupamento)
+          type ResumoDest = { nome: string; phone: string; tipo: "vendedor" | "empresa"; ok: boolean };
+          const resumoPorGerente = new Map<string, { gerente: { id: string; nome: string; whatsapp?: string; telefone?: string }; itens: ResumoDest[] }>();
+
+
           const { executarBlocoWhatsapp } = useReal ? await import("@/lib/workflowActionsExecutor") : ({} as any);
 
           // Mídia gerada pelo bloco "Mensagem Pré Definida" anterior (se houver)
