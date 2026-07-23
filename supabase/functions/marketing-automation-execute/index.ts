@@ -165,29 +165,35 @@ serve(async (req) => {
 
       if (botErr || !bot) throw new Error("Bot não encontrado");
 
-      // Disponibiliza as variáveis personalizadas no contexto do bot
+      // Executa o fluxo do bot no servidor (suporta bloco "Envio em massa")
       const { data: execData, error: execErr } = await supabase.functions.invoke(
-        "executar-fluxo-omnichannel",
+        "executar-bot-flow",
         {
           body: {
             flowId: botId,
             estabelecimentoId: automation.estabelecimento_id,
-            canal: "marketing_automation",
-            triggerSource: "marketing_automation",
             automationId,
             variaveis: allVars,
-            contexto: { variaveis: allVars, automationId, automationName: automation.name },
+            origem: "marketing_automation",
           },
         },
       );
 
+      const invoked = !execErr && (execData as any)?.success !== false;
       result = {
         type: "bot",
         botName: bot.name,
-        invoked: !execErr,
+        invoked,
         variaveis: allVars,
         details: execData ?? execErr?.message,
       };
+      if (!invoked) {
+        throw new Error(
+          typeof execData === "object" && execData && (execData as any).error
+            ? (execData as any).error
+            : (execErr?.message || "Falha ao executar bot"),
+        );
+      }
     } else if (metodo === "push") {
       const pushCfg = config.push_config || {};
       const { data: pushData, error: pushErr } = await supabase.functions.invoke(
