@@ -354,7 +354,7 @@ export const MensagemPreDefinidaConfig = ({ config, handleConfigChange }: Props)
             onCheckedChange={(v) => handleConfigChange("ocultarNoChat", !!v)}
           />
           <label htmlFor="ocultar_no_chat" className="text-xs leading-tight">
-            <b>Não exibir/enviar no chat</b> (silencioso) — apenas gera a frase/mídia e guarda em variáveis para o próximo bloco usar. Evita mensagem duplicada quando um Broadcast/WhatsApp posterior for reenviar o conteúdo.
+            <b>Não exibir/enviar no chat</b> (silencioso) — apenas gera a frase/mídia e guarda em variáveis para o próximo bloco usar. Evita mensagem duplicada quando um Envio em massa/WhatsApp posterior for reenviar o conteúdo.
           </label>
         </div>
         <Label className="text-xs">Variável de saída</Label>
