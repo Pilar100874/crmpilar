@@ -2924,6 +2924,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           addSystemMessage(`📢 ${useReal ? "[REAL] " : ""}Broadcast → ${total} destinatário(s)${config.incluirEmpresas ? " (vendedores + empresas)" : ""}`);
           let enviados = 0; let falhas = 0;
 
+          // Resumo por gerente (agrupamento)
+          type ResumoDest = { nome: string; phone: string; tipo: "vendedor" | "empresa"; ok: boolean };
+          const resumoPorGerente = new Map<string, { gerente: { id: string; nome: string; whatsapp?: string; telefone?: string }; itens: ResumoDest[] }>();
+
+
           const { executarBlocoWhatsapp } = useReal ? await import("@/lib/workflowActionsExecutor") : ({} as any);
 
           // Mídia gerada pelo bloco "Mensagem Pré Definida" anterior (se houver)
@@ -3013,6 +3018,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             }
 
             if (ok) enviados++; else falhas++;
+
+            // Registrar no resumo do gerente
+            if (g && (g.whatsapp || g.telefone)) {
+              const key = g.id;
+              if (!resumoPorGerente.has(key)) resumoPorGerente.set(key, { gerente: g, itens: [] });
+              resumoPorGerente.get(key)!.itens.push({ nome: d.nome || phone, phone, tipo: d.kind, ok });
+            }
+
             if (delayMs) await new Promise((r) => setTimeout(r, delayMs));
           }
 
@@ -3020,9 +3033,51 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           if (falhas > 0) addSystemMessage(`⚠️ Broadcast finalizado: ${enviados} enviados, ${falhas} falhas.`);
           else addSuccessMessage(`Broadcast finalizado: ${enviados}/${total} enviados.`);
 
+          // ===== Resumo ao(s) gerente(s) =====
+          if (config.enviarResumoGerente !== false && resumoPorGerente.size > 0) {
+            const agora = new Date();
+            const dataStr = agora.toLocaleDateString("pt-BR");
+            const horaStr = agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+            // Mensagem enviada com XXX no lugar das variáveis personalizadas
+            const maskVars = (s: string) => (s || "").replace(/\{\{[^}]+\}\}/g, "XXX");
+            const antesMask = maskVars(config.textoAntes || "").trim();
+            const depoisMask = maskVars(config.textoDepois || "").trim();
+            const msgMask = config.usarMensagemPreDefinida ? msg : maskVars(config.message || "");
+            const conteudoMask = [antesMask, msgMask, depoisMask].filter(Boolean).join("\n\n");
+            const midiaInfo = mediaUrlPre
+              ? `\n\n🖼️ ${mediaTypePre === "video" ? "Vídeo" : "Imagem"} anexada: ${mediaUrlPre}`
+              : "";
+
+            for (const [, entry] of resumoPorGerente) {
+              const gPhone = (entry.gerente.whatsapp || entry.gerente.telefone || "").replace(/\D/g, "");
+              if (!gPhone) continue;
+
+              const lista = entry.itens
+                .map((it, i) => `${i + 1}. ${it.nome} — ${it.phone} (${it.tipo})${it.ok ? "" : " ❌"}`)
+                .join("\n");
+
+              const resumoMsg =
+                `📋 *Mensagem enviadas pelo sistema automatico de mensagem:* ${dataStr} ${horaStr}\n\n` +
+                `— *Conteúdo enviado* —\n${conteudoMask || "(sem texto)"}${midiaInfo}\n\n` +
+                `— *Destinatários (${entry.itens.length})* —\n${lista}`;
+
+              addBotMessage(`[resumo → gerente ${entry.gerente.nome || gPhone}]\n${resumoMsg}`, node.id);
+              if (useReal) {
+                try {
+                  await executarBlocoWhatsapp(
+                    { telefone: gPhone, mensagem: resumoMsg, mediaUrl: mediaUrlPre || undefined },
+                    { variaveis: contextRef.current, workflow_tipo: "bot", origem: "broadcast_vendedores_resumo" },
+                  );
+                } catch {}
+              }
+            }
+          }
+
           const newCtx = { ...contextRef.current, [outputVar]: resultado };
           contextRef.current = newCtx; setContext(newCtx);
           const nextNode = getNextNode(node.id);
+
           if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
         })();
         break;
