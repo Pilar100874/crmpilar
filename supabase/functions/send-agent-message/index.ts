@@ -113,6 +113,7 @@ serve(async (req) => {
             estabelecimento_id,
             canal: "whatsapp",
             status: "open",
+            bot_active: false,
             metadata: { origem: "workflow" },
           })
           .select("id, bot_id, estabelecimento_id")
