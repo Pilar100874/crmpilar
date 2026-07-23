@@ -72,6 +72,8 @@ interface StepComposeProps {
   onUploadMedia: (file: File) => Promise<MediaGalleryItem | null>;
   onBack: () => void;
   onNext: () => void;
+  canal?: CanalEnvio | null;
+  onOpenTemplates?: () => void;
 }
 
 const VARIABLES = [
