@@ -21809,12 +21809,12 @@ export type Database = {
           senha_hash: string
           senha_sip: string | null
           smtp: string | null
-          telefone: string | null
           tipo: string
           unidade_id: string | null
           updated_at: string | null
           usar_autenticacao: boolean | null
           usuario_sip: string | null
+          whatsapp: string | null
           whatsapp_numero_id: string | null
           whatsapp_status: Database["public"]["Enums"]["whatsapp_status_enum"]
           whatsapp_status_at: string | null
@@ -21843,12 +21843,12 @@ export type Database = {
           senha_hash: string
           senha_sip?: string | null
           smtp?: string | null
-          telefone?: string | null
           tipo?: string
           unidade_id?: string | null
           updated_at?: string | null
           usar_autenticacao?: boolean | null
           usuario_sip?: string | null
+          whatsapp?: string | null
           whatsapp_numero_id?: string | null
           whatsapp_status?: Database["public"]["Enums"]["whatsapp_status_enum"]
           whatsapp_status_at?: string | null
@@ -21877,12 +21877,12 @@ export type Database = {
           senha_hash?: string
           senha_sip?: string | null
           smtp?: string | null
-          telefone?: string | null
           tipo?: string
           unidade_id?: string | null
           updated_at?: string | null
           usar_autenticacao?: boolean | null
           usuario_sip?: string | null
+          whatsapp?: string | null
           whatsapp_numero_id?: string | null
           whatsapp_status?: Database["public"]["Enums"]["whatsapp_status_enum"]
           whatsapp_status_at?: string | null

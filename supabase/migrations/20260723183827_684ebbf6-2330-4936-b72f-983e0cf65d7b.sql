@@ -1,0 +1,1 @@
+ALTER TABLE public.usuarios RENAME COLUMN telefone TO whatsapp;

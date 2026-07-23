@@ -253,9 +253,9 @@ async function markWhatsappStatus(supabase: any, phone: string, status: "valid" 
 
     // customers.telefone (apenas dígitos)
     await supabase.from("customers").update(patch).in("telefone", variants).then(() => {}, () => {});
-    // usuarios.telefone (mascarado ou não — comparamos por dígitos via regexp_replace no SQL não é possível pelo client)
+    // usuarios.whatsapp (mascarado ou não — comparamos por dígitos via regexp_replace no SQL não é possível pelo client)
     // Fazemos update por variantes; se estiver mascarado, o update não atinge — o webhook do provedor cobre a longo prazo.
-    await supabase.from("usuarios").update(patch).in("telefone", variants).then(() => {}, () => {});
+    await supabase.from("usuarios").update(patch).in("whatsapp", variants).then(() => {}, () => {});
     // empresas.whatsapp e empresas.telefone
     await supabase.from("empresas").update(patch).in("whatsapp", variants).then(() => {}, () => {});
     await supabase.from("empresas").update(patch).in("telefone", variants).then(() => {}, () => {});

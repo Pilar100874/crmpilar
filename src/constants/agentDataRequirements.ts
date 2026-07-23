@@ -481,7 +481,7 @@ export const SYSTEM_TABLES = [
   { value: 'pedidos_ecommerce_itens', label: 'Itens Pedido E-commerce', colunas: ['id', 'pedido_id', 'produto_id', 'nome_produto', 'quantidade', 'preco_unitario', 'subtotal'] },
   { value: 'agent_cross_sell_rules', label: 'Regras Cross-sell', colunas: ['id', 'produto_origem', 'produto_sugerido', 'tipo', 'motivo', 'prioridade', 'ativo'] },
   { value: 'agent_objections', label: 'Objeções', colunas: ['id', 'categoria', 'objecao', 'resposta_sugerida', 'gatilhos_mentais', 'argumentos', 'eficacia_percentual', 'vezes_usada', 'ativo'] },
-  { value: 'usuarios', label: 'Usuários/Vendedores', colunas: ['id', 'nome', 'email', 'telefone', 'ramal'] },
+  { value: 'usuarios', label: 'Usuários/Vendedores', colunas: ['id', 'nome', 'email', 'whatsapp', 'ramal'] },
   { value: 'customer_segmentos', label: 'Segmentos de Clientes', colunas: ['id', 'customer_id', 'segmento_id'] },
   { value: 'pesquisas_respostas', label: 'Respostas de Pesquisas', colunas: ['id', 'pesquisa_id', 'customer_id', 'atendente_id', 'nota', 'comentario', 'classificacao', 'canal', 'enviada_em', 'respondida_em', 'tempo_resposta_segundos'] },
   { value: 'condicoes_pagamento', label: 'Condições de Pagamento', colunas: ['id', 'nome', 'descricao', 'valor_minimo', 'valor_maximo', 'tipo_pagamento_id', 'ativo'] },

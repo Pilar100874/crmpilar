@@ -193,7 +193,7 @@ export default function Perfil() {
         .from("usuarios")
         .update({
           nome: userData.nome,
-          telefone: userData.telefone,
+          whatsapp: userData.whatsapp,
         })
         .eq("id", userData.id);
 
@@ -259,13 +259,13 @@ export default function Perfil() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="telefone">Telefone</Label>
+              <Label htmlFor="whatsapp">WhatsApp</Label>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="telefone"
-                  value={userData.telefone || ""}
-                  onChange={(e) => setUserData({ ...userData, telefone: e.target.value })}
+                  id="whatsapp"
+                  value={userData.whatsapp || ""}
+                  onChange={(e) => setUserData({ ...userData, whatsapp: e.target.value })}
                   placeholder="(00) 00000-0000"
                 />
               </div>
