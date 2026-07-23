@@ -30,7 +30,7 @@ interface VendedorRow {
 
 export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props) => {
   const [estabId, setEstabId] = useState<string>("");
-  const [segmentos, setSegmentos] = useState<Array<{ id: string; nome: string }>>([]);
+  const [segmentos, setSegmentos] = useState<Array<{ id: string; nome: string; is_prospect: boolean }>>([]);
   const [gerentes, setGerentes] = useState<Array<{ id: string; nome: string }>>([]);
   const [preview, setPreview] = useState<VendedorRow[]>([]);
   const [loadingPreview, setLoadingPreview] = useState(false);
@@ -39,6 +39,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
   const gerenteId = config.gerenteId || "";
   const segmentoId = config.segmentoId || "";
   const combinarSegmento = !!config.combinarSegmento;
+  const publicoEmpresas: string = config.publicoEmpresas || "cliente";
   const message = config.message || "";
   const usarMensagemPreDefinida = !!config.usarMensagemPreDefinida;
   const preDefinidaVar = config.preDefinidaVar || "last_mensagem_pre_definida";
