@@ -54,6 +54,7 @@ export function EnvioMassaMarketing() {
   const [state, setState] = useState<EnvioMassaState>(getInitialState());
   const [isSending, setIsSending] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
+  const [templatesDialogOpen, setTemplatesDialogOpen] = useState(false);
 
   // Load estabelecimento and usuario
   useEffect(() => {
