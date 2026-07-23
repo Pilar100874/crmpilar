@@ -303,6 +303,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
 
   const handlePreview = async () => {
     setLoadingPreview(true);
+    setPreviewOpen(true);
     try {
       const rows = await resolveDestinatarios();
       setPreview(rows);
