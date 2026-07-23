@@ -107,14 +107,15 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
       setAlvosLoading(true);
       try {
         if (especificoTipo === "gerente") {
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from("usuarios")
-            .select("id, nome, whatsapp, telefone")
+            .select("id, nome, email, telefone")
             .eq("estabelecimento_id", estabId)
             .eq("tipo", "gerente")
             .order("nome");
+          if (error) console.error("Erro ao carregar gerentes:", error);
           setAlvos(((data as any) || []).map((u: any) => ({
-            id: u.id, nome: u.nome || u.id, contato: u.whatsapp || u.telefone || "",
+            id: u.id, nome: u.nome || u.email || u.id, contato: u.telefone || "",
           })));
         } else {
           let q = supabase
@@ -123,8 +124,12 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
             .eq("estabelecimento_id", estabId)
             .eq("ativo", true)
             .order("nome");
-          if (especificoTipo === "vendedor") q = q.eq("tipo_cliente", "vendedor");
-          else q = q.neq("tipo_cliente", "vendedor");
+          if (especificoTipo === "vendedor") {
+            q = q.eq("tipo_cliente", "vendedor");
+          } else {
+            // empresa = clientes/prospects (exclui vendedor e transportadora)
+            q = q.not("tipo_cliente", "in", "(vendedor,transportadora)");
+          }
           const { data } = await q;
           setAlvos(((data as any) || []).map((e: any) => ({
             id: e.id,
