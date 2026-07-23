@@ -26,6 +26,7 @@ interface VendedorRow {
   segmento_id: string | null;
   gerente_usuario_id?: string | null;
   gerente_nome?: string | null;
+  gerente_whatsapp?: string | null;
   kind?: "vendedor" | "empresa";
 }
 
