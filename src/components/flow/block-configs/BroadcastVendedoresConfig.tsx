@@ -270,7 +270,9 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
           .in("id", empresaIds);
         if (publicoEmpresas === "prospect") qEmp = qEmp.eq("status_comercial", "prospect");
         else if (publicoEmpresas === "cliente") qEmp = qEmp.neq("status_comercial", "prospect");
+        if (config.apenasJaResponderam) qEmp = qEmp.eq("ja_respondeu_whatsapp", true);
         const { data: emps } = await qEmp;
+
         const gerIds = Array.from(new Set(Array.from(empresaGerenteMap.values())));
         const gerentesUsersMap = new Map<string, string>();
         if (gerIds.length) {
