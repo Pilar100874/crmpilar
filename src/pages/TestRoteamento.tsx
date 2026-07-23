@@ -413,7 +413,7 @@ export default function TestRoteamento() {
                                   <span>
                                     {bot.name}
                                     {bot.whatsapp_type && selectedCanal === "whatsapp" 
-                                      ? ` (${bot.whatsapp_type === "business" ? "Business" : "WAHA"})`
+                                      ? ` (${bot.whatsapp_type === "business" ? "Business" : "Evolution"})`
                                       : ""
                                     }
                                     {bot.active && (
