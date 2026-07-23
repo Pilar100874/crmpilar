@@ -206,6 +206,10 @@ export default function MarketingAutomacoes() {
     if (!automacaoToExecute) return;
 
     setIsExecuting(true);
+    setExecProgress(5);
+    const progressTimer = setInterval(() => {
+      setExecProgress((p) => (p < 90 ? p + Math.max(1, Math.round((90 - p) * 0.08)) : p));
+    }, 500);
     try {
       const { data, error } = await supabase.functions.invoke(
         "marketing-automation-execute",
@@ -215,18 +219,24 @@ export default function MarketingAutomacoes() {
       if (error) throw error;
       if (data && data.success === false) throw new Error(data.error || "Falha");
 
+      setExecProgress(100);
       const metodo = automacaoToExecute.config?.metodo_disparo
         || (automacaoToExecute.config?.bot_id ? "bot" : "webhook");
       toast.success(
         metodo === "bot" ? "Bot disparado com sucesso!" : "Webhook executado com sucesso!",
       );
-      setExecuteDialogOpen(false);
-      setAutomacaoToExecute(null);
+      setTimeout(() => {
+        setExecuteDialogOpen(false);
+        setAutomacaoToExecute(null);
+        setExecProgress(0);
+      }, 400);
       loadAutomacoes();
     } catch (error: any) {
       console.error("Erro ao executar automação:", error);
       toast.error(`Erro ao executar: ${error?.message ?? error}`);
+      setExecProgress(0);
     } finally {
+      clearInterval(progressTimer);
       setIsExecuting(false);
     }
   };
