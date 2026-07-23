@@ -420,6 +420,8 @@ export function EnvioMassaMarketing() {
             onUploadMedia={uploadMedia}
             onBack={() => goToStep('filter')}
             onNext={() => goToStep('preview')}
+            canal={state.canal}
+            onOpenTemplates={() => setTemplatesDialogOpen(true)}
           />
         )}
 
