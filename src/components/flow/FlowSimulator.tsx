@@ -2926,7 +2926,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                     telefone: e.telefone || "",
                     email: e.email || "",
                     cidade: e.cidade || "",
-                    uf: e.uf || "",
+                    uf: e.estado || "",
                     cnpj: e.cnpj || "",
                   },
                   gerente: gu ? { id: gu.id, nome: gu.nome || "", whatsapp: gu.whatsapp, telefone: gu.telefone } : null,
