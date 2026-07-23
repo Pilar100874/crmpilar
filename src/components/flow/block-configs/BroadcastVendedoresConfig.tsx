@@ -419,7 +419,21 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         <p className="text-[11px] text-muted-foreground pl-6">
           Envia ao WhatsApp de cada gerente: data/hora, a mensagem enviada (com XXX no lugar das variáveis personalizadas) e a lista de destinatários.
         </p>
+
+        <div className="space-y-1 pl-6 pt-2">
+          <Label className="text-xs">Números adicionais que também recebem o resumo (opcional)</Label>
+          <Textarea
+            className="text-xs min-h-[60px]"
+            placeholder="Ex.: 5511999998888, 5511777776666 (um por linha ou separados por vírgula)"
+            value={config.resumoNumerosExtras || ""}
+            onChange={(e) => handleConfigChange("resumoNumerosExtras", e.target.value)}
+          />
+          <p className="text-[11px] text-muted-foreground">
+            Use para enviar o mesmo resumo a diretores, supervisores ou grupos fixos. Aceita DDI+DDD+Número.
+          </p>
+        </div>
       </div>
+
 
 
       <div className="space-y-1 border-t pt-3">
