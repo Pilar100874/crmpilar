@@ -3143,13 +3143,23 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               : "";
 
             const buildResumo = (itens: ResumoDest[]) => {
-              const lista = itens
-                .map((it, i) => `${i + 1}. ${it.nome} — ${it.phone} (${it.tipo})${it.ok ? "" : " ❌"}`)
-                .join("\n");
+              const enviadosOk = itens.filter((i) => i.ok && !i.invalid);
+              const invalidos = itens.filter((i) => i.invalid);
+              const outrasFalhas = itens.filter((i) => !i.ok && !i.invalid);
+              const fmt = (arr: ResumoDest[]) =>
+                arr.map((it, i) => `${i + 1}. ${it.nome} — ${it.phone} (${it.tipo})`).join("\n") || "(nenhum)";
+              const secInvalidos = invalidos.length
+                ? `\n\n⚠️ *WhatsApp inválido/inexistente (${invalidos.length})* — revise os cadastros:\n${fmt(invalidos)}`
+                : "";
+              const secFalhas = outrasFalhas.length
+                ? `\n\n❌ *Falhas de envio (${outrasFalhas.length})*\n${fmt(outrasFalhas)}`
+                : "";
               return (
                 `📋 *Mensagem enviadas pelo sistema automatico de mensagem:* ${dataStr} ${horaStr}\n\n` +
                 `— *Conteúdo enviado* —\n${conteudoMask || "(sem texto)"}${midiaInfo}\n\n` +
-                `— *Destinatários (${itens.length})* —\n${lista}`
+                `— *Entregues (${enviadosOk.length})* —\n${fmt(enviadosOk)}` +
+                secInvalidos +
+                secFalhas
               );
             };
 
