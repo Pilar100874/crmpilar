@@ -3969,6 +3969,9 @@ export type Database = {
           tel: string | null
           telefone: string
           tipo_operador: boolean | null
+          whatsapp_status: Database["public"]["Enums"]["whatsapp_status_enum"]
+          whatsapp_status_at: string | null
+          whatsapp_status_reason: string | null
         }
         Insert: {
           ativo?: boolean
@@ -3983,6 +3986,9 @@ export type Database = {
           tel?: string | null
           telefone: string
           tipo_operador?: boolean | null
+          whatsapp_status?: Database["public"]["Enums"]["whatsapp_status_enum"]
+          whatsapp_status_at?: string | null
+          whatsapp_status_reason?: string | null
         }
         Update: {
           ativo?: boolean
@@ -3997,6 +4003,9 @@ export type Database = {
           tel?: string | null
           telefone?: string
           tipo_operador?: boolean | null
+          whatsapp_status?: Database["public"]["Enums"]["whatsapp_status_enum"]
+          whatsapp_status_at?: string | null
+          whatsapp_status_reason?: string | null
         }
         Relationships: [
           {
@@ -6060,6 +6069,9 @@ export type Database = {
           tipo_cliente: string
           updated_at: string | null
           whatsapp: string | null
+          whatsapp_status: Database["public"]["Enums"]["whatsapp_status_enum"]
+          whatsapp_status_at: string | null
+          whatsapp_status_reason: string | null
           whatsapps_vinculados: string[] | null
         }
         Insert: {
@@ -6106,6 +6118,9 @@ export type Database = {
           tipo_cliente?: string
           updated_at?: string | null
           whatsapp?: string | null
+          whatsapp_status?: Database["public"]["Enums"]["whatsapp_status_enum"]
+          whatsapp_status_at?: string | null
+          whatsapp_status_reason?: string | null
           whatsapps_vinculados?: string[] | null
         }
         Update: {
@@ -6152,6 +6167,9 @@ export type Database = {
           tipo_cliente?: string
           updated_at?: string | null
           whatsapp?: string | null
+          whatsapp_status?: Database["public"]["Enums"]["whatsapp_status_enum"]
+          whatsapp_status_at?: string | null
+          whatsapp_status_reason?: string | null
           whatsapps_vinculados?: string[] | null
         }
         Relationships: [
@@ -21724,6 +21742,9 @@ export type Database = {
           usar_autenticacao: boolean | null
           usuario_sip: string | null
           whatsapp_numero_id: string | null
+          whatsapp_status: Database["public"]["Enums"]["whatsapp_status_enum"]
+          whatsapp_status_at: string | null
+          whatsapp_status_reason: string | null
         }
         Insert: {
           ativo?: boolean
@@ -21755,6 +21776,9 @@ export type Database = {
           usar_autenticacao?: boolean | null
           usuario_sip?: string | null
           whatsapp_numero_id?: string | null
+          whatsapp_status?: Database["public"]["Enums"]["whatsapp_status_enum"]
+          whatsapp_status_at?: string | null
+          whatsapp_status_reason?: string | null
         }
         Update: {
           ativo?: boolean
@@ -21786,6 +21810,9 @@ export type Database = {
           usar_autenticacao?: boolean | null
           usuario_sip?: string | null
           whatsapp_numero_id?: string | null
+          whatsapp_status?: Database["public"]["Enums"]["whatsapp_status_enum"]
+          whatsapp_status_at?: string | null
+          whatsapp_status_reason?: string | null
         }
         Relationships: [
           {
@@ -23752,6 +23779,7 @@ export type Database = {
         | "por_disponibilidade"
         | "por_carteira"
         | "por_prioridade"
+      whatsapp_status_enum: "unknown" | "valid" | "invalid"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -23914,6 +23942,7 @@ export const Constants = {
         "por_carteira",
         "por_prioridade",
       ],
+      whatsapp_status_enum: ["unknown", "valid", "invalid"],
     },
   },
 } as const
