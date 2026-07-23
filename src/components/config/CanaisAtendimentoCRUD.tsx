@@ -318,8 +318,8 @@ function WhatsAppBusinessConfig({ estabelecimentoId }: { estabelecimentoId: stri
   );
 }
 
-// WhatsApp WAHA Config
-function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
+// WhatsApp Evolution Config
+function WhatsAppEvolutionConfig({ estabelecimentoId }: { estabelecimentoId: string }) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [config, setConfig] = useState<any>(null);
@@ -438,7 +438,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
 
   const callWahaManager = async (body: Record<string, any>) => {
     const { data, error } = await supabase.functions.invoke('waha-manager', { body });
-    if (error) throw new Error(error.message || 'Erro ao comunicar com o gerenciador WAHA');
+    if (error) throw new Error(error.message || 'Erro ao comunicar com o gerenciador Evolution');
     if ((data as any)?.error) throw new Error((data as any).error);
     return data as any;
   };
@@ -559,7 +559,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
       webhookSyncCacheRef.current = {};
       toast({
         title: "✓ Configuração salva!",
-        description: "Servidor WAHA configurado com sucesso.",
+        description: "Servidor Evolution configurado com sucesso.",
       });
       setShowConfigDialog(false);
       await loadConfig();
@@ -589,7 +589,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
     if (!config) {
       toast({
         title: "Erro",
-        description: "Configure o servidor WAHA primeiro",
+        description: "Configure o servidor Evolution primeiro",
         variant: "destructive",
       });
       return;
@@ -651,7 +651,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
       console.error('Error starting session:', error);
       toast({
         title: 'Erro',
-        description: error?.message || 'Erro ao iniciar sessão no WAHA',
+        description: error?.message || 'Erro ao iniciar sessão na Evolution',
         variant: 'destructive',
       });
     }
@@ -765,7 +765,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
       toast({
         title: '✓ Sessão excluída!',
         description: deletedOnServer
-          ? 'Sessão excluída do WAHA e do banco de dados'
+          ? 'Sessão excluída da Evolution e do banco de dados'
           : 'Sessão removida do app',
       });
       setSessionToDelete(null);
@@ -1041,7 +1041,7 @@ function WhatsAppWAHAConfig({ estabelecimentoId }: { estabelecimentoId: string }
         <Card>
           <CardContent className="pt-6">
             <div className="text-center text-sm text-muted-foreground">
-              Configure o servidor WAHA para começar
+              Configure o servidor Evolution para começar
             </div>
           </CardContent>
         </Card>
@@ -2152,7 +2152,7 @@ export const CanaisAtendimentoCRUD = ({ estabelecimentoId: propEstabId }: Canais
                 </div>
               </AccordionTrigger>
               <AccordionContent>
-                <WhatsAppWAHAConfig estabelecimentoId={estabelecimentoId} />
+                <WhatsAppEvolutionConfig estabelecimentoId={estabelecimentoId} />
               </AccordionContent>
             </AccordionItem>
           </Accordion>

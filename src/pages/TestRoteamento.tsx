@@ -385,7 +385,7 @@ export default function TestRoteamento() {
                               Business: {bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "business").length} ({bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "business" && b.active).length} ativos)
                             </span>
                             <span>
-                              WAHA: {bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "waha").length} ({bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "waha" && b.active).length} ativos)
+                              Evolution: {bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "waha").length} ({bots.filter(b => b.canais?.includes("whatsapp") && b.whatsapp_type === "waha" && b.active).length} ativos)
                             </span>
                           </div>
                         </div>
