@@ -197,24 +197,37 @@ serve(async (req) => {
 
     console.log("[AGENT] Enviando via", numero.provider, { nome: numero.nome });
 
+    let sendResult: { ok: boolean; invalid?: boolean; reason?: string } = { ok: true };
     if (numero.provider === "cloud_api") {
       if (fileUrl) {
-        await sendCloudMedia(numero.cloud_phone_number_id, numero.cloud_access_token, toNumberOnly, fileUrl, contentType || "document", text);
+        sendResult = await sendCloudMedia(numero.cloud_phone_number_id, numero.cloud_access_token, toNumberOnly, fileUrl, contentType || "document", text);
       } else {
-        await sendCloudText(numero.cloud_phone_number_id, numero.cloud_access_token, toNumberOnly, text);
+        sendResult = await sendCloudText(numero.cloud_phone_number_id, numero.cloud_access_token, toNumberOnly, text);
       }
     } else {
       const base = (numero.waha_url || "").replace(/\/+$/, "");
       const session = numero.session_name || "default";
       const apiKey = numero.waha_api_key;
       if (fileUrl) {
-        await sendEvolutionMedia(toNumberOnly, text || undefined, contentType || "document", fileUrl, session, base, apiKey);
+        sendResult = await sendEvolutionMedia(toNumberOnly, text || undefined, contentType || "document", fileUrl, session, base, apiKey);
       } else {
-        await sendEvolutionText(toNumberOnly, text, session, base, apiKey);
+        sendResult = await sendEvolutionText(toNumberOnly, text, session, base, apiKey);
       }
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    // Marca whatsapp_status nas tabelas quando o provedor confirma número inválido
+    if (sendResult.invalid) {
+      await markWhatsappStatus(supabase, toNumberOnly, "invalid", sendResult.reason || "provider_reported_invalid");
+    } else if (sendResult.ok) {
+      await markWhatsappStatus(supabase, toNumberOnly, "valid", null);
+    }
+
+    return new Response(JSON.stringify({
+      success: sendResult.ok,
+      invalid_number: !!sendResult.invalid,
+      reason: sendResult.reason || null,
+    }), {
+      status: sendResult.ok ? 200 : (sendResult.invalid ? 422 : 502),
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
@@ -226,6 +239,30 @@ serve(async (req) => {
     });
   }
 });
+
+/* ===== Marcação passiva de status do WhatsApp ===== */
+async function markWhatsappStatus(supabase: any, phone: string, status: "valid" | "invalid", reason: string | null) {
+  try {
+    const digits = String(phone).replace(/\D/g, "");
+    if (!digits || digits.length < 10) return;
+    // Gera variações comuns (com/sem 55, com/sem 9º dígito)
+    const withCountry = digits.startsWith("55") ? digits : `55${digits}`;
+    const withoutCountry = digits.startsWith("55") ? digits.slice(2) : digits;
+    const variants = Array.from(new Set([digits, withCountry, withoutCountry]));
+    const patch = { whatsapp_status: status, whatsapp_status_at: new Date().toISOString(), whatsapp_status_reason: reason };
+
+    // customers.telefone (apenas dígitos)
+    await supabase.from("customers").update(patch).in("telefone", variants).then(() => {}, () => {});
+    // usuarios.telefone (mascarado ou não — comparamos por dígitos via regexp_replace no SQL não é possível pelo client)
+    // Fazemos update por variantes; se estiver mascarado, o update não atinge — o webhook do provedor cobre a longo prazo.
+    await supabase.from("usuarios").update(patch).in("telefone", variants).then(() => {}, () => {});
+    // empresas.whatsapp e empresas.telefone
+    await supabase.from("empresas").update(patch).in("whatsapp", variants).then(() => {}, () => {});
+    await supabase.from("empresas").update(patch).in("telefone", variants).then(() => {}, () => {});
+  } catch (e) {
+    console.error("[AGENT] markWhatsappStatus error:", e);
+  }
+}
 
 /* ===== Evolution senders ===== */
 async function sendEvolutionText(toNumberOnly: string, text: string, sessionName: string, base: string, apiKey: string) {
