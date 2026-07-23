@@ -2786,7 +2786,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         (async () => {
           const estabelecimentoId = contextRef.current.estabelecimento_id || await getEstabelecimentoId();
           if (!estabelecimentoId) {
-            addSystemMessage("⚠️ Broadcast Vendedores: estabelecimento não identificado.");
+            addSystemMessage("⚠️ Envio em massa: estabelecimento não identificado.");
             const newCtx = { ...contextRef.current, [outputVar]: { enviados: 0, falhas: 0, total: 0 } };
             contextRef.current = newCtx; setContext(newCtx);
             const nextNode = getNextNode(node.id);
@@ -2803,7 +2803,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             msg = interpolateVariables(config.message || "", contextRef.current);
           }
           if (!msg.trim()) {
-            addSystemMessage("⚠️ Broadcast Vendedores: mensagem vazia.");
+            addSystemMessage("⚠️ Envio em massa: mensagem vazia.");
             const newCtx = { ...contextRef.current, [outputVar]: { enviados: 0, falhas: 0, total: 0 } };
             contextRef.current = newCtx; setContext(newCtx);
             const nextNode = getNextNode(node.id);

@@ -804,7 +804,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "broadcast_vendedores",
-    label: "Broadcast Vendedores",
+    label: "Envio em massa",
     description: "Envia mensagem para todos os vendedores filtrados (com/sem gerente, gerente específico, segmento)",
     icon: "Users",
     color: "text-emerald-600",
