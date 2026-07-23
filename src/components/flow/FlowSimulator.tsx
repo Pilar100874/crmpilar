@@ -2932,7 +2932,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           }
 
           const total = destinatarios.length;
-          addSystemMessage(`📢 ${useReal ? "[REAL] " : ""}Broadcast → ${total} destinatário(s)${config.incluirEmpresas ? " (vendedores + empresas)" : ""}`);
+          addSystemMessage(`📢 ${useReal ? "[REAL] " : ""}Broadcast → ${total} destinatário(s)${incluirEmpresas ? (somenteEmpresas ? " (empresas)" : " (vendedores + empresas)") : ""}`);
           let enviados = 0; let falhas = 0;
 
           // Resumo por gerente (agrupamento)
