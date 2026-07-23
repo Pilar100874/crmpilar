@@ -72,25 +72,25 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
 
   const resolveDestinatarios = async (): Promise<VendedorRow[]> => {
     if (!estabId) return [];
-    let q = supabase
-      .from("empresas")
-      .select("id, nome, nome_fantasia, whatsapp, telefone, segmento_id")
-      .eq("estabelecimento_id", estabId)
-      .eq("tipo_cliente", "vendedor")
-      .eq("ativo", true);
+    const somenteEmpresas = filtroTipo === "empresas_com_gerente" || filtroTipo === "empresas_gerente_especifico";
 
-    if (filtroTipo === "segmento" && segmentoId) q = q.eq("segmento_id", segmentoId);
-    if (combinarSegmento && segmentoId && filtroTipo !== "segmento") q = q.eq("segmento_id", segmentoId);
+    let rows: VendedorRow[] = [];
 
-    const { data: vendedores } = await q;
-    let rows: VendedorRow[] = (vendedores as any) || [];
+    if (!somenteEmpresas) {
+      let q = supabase
+        .from("empresas")
+        .select("id, nome, nome_fantasia, whatsapp, telefone, segmento_id")
+        .eq("estabelecimento_id", estabId)
+        .eq("tipo_cliente", "vendedor")
+        .eq("ativo", true);
 
-    // Vínculos gerente↔vendedor
-    if (
-      filtroTipo === "com_gerente" ||
-      filtroTipo === "gerente_especifico" ||
-      rows.length > 0
-    ) {
+      if (filtroTipo === "segmento" && segmentoId) q = q.eq("segmento_id", segmentoId);
+      if (combinarSegmento && segmentoId && filtroTipo !== "segmento") q = q.eq("segmento_id", segmentoId);
+
+      const { data: vendedores } = await q;
+      rows = (vendedores as any) || [];
+
+      // Vínculos gerente↔vendedor
       const ids = rows.map((r) => r.id);
       if (ids.length > 0) {
         const { data: gv } = await supabase
@@ -106,19 +106,25 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
           return { ...r, gerente_usuario_id: g?.id || null, gerente_nome: g?.nome || null };
         });
       }
+
+      if (filtroTipo === "com_gerente") rows = rows.filter((r) => !!r.gerente_usuario_id);
+      if (filtroTipo === "gerente_especifico" && gerenteId)
+        rows = rows.filter((r) => r.gerente_usuario_id === gerenteId);
+
+      // filtrar quem tem contato válido
+      rows = rows.filter((r) => (r.whatsapp || r.telefone || "").replace(/\D/g, "").length >= 10);
+      rows = rows.map((r) => ({ ...r, kind: "vendedor" as const }));
     }
 
-    if (filtroTipo === "com_gerente") rows = rows.filter((r) => !!r.gerente_usuario_id);
-    if (filtroTipo === "gerente_especifico" && gerenteId)
-      rows = rows.filter((r) => r.gerente_usuario_id === gerenteId);
-
-    // filtrar quem tem contato válido
-    rows = rows.filter((r) => (r.whatsapp || r.telefone || "").replace(/\D/g, "").length >= 10);
-    rows = rows.map((r) => ({ ...r, kind: "vendedor" as const }));
+    // Empresas vinculadas ao gerente (via filtroTipo principal)
+    const incluirEmpresasViaFiltroPrincipal = somenteEmpresas;
 
     // Incluir empresas (clientes) com gerente vinculado
-    if (config.incluirEmpresas) {
-      const empresasFiltro = config.empresasFiltro || "com_gerente";
+    if (config.incluirEmpresas || incluirEmpresasViaFiltroPrincipal) {
+      const empresasFiltro = incluirEmpresasViaFiltroPrincipal
+        ? (filtroTipo === "empresas_gerente_especifico" ? "gerente_especifico" : "com_gerente")
+        : (config.empresasFiltro || "com_gerente");
+      const empresasGerenteIdEff = incluirEmpresasViaFiltroPrincipal ? gerenteId : config.empresasGerenteId;
       const { data: vinc } = await supabase
         .from("empresa_vinculos")
         .select("empresa_id, usuario_id")
@@ -127,7 +133,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
       const empresaGerenteMap = new Map<string, string>();
       (vinc || []).forEach((r: any) => {
         if (!r.empresa_id || !r.usuario_id) return;
-        if (empresasFiltro === "gerente_especifico" && config.empresasGerenteId && r.usuario_id !== config.empresasGerenteId) return;
+        if (empresasFiltro === "gerente_especifico" && empresasGerenteIdEff && r.usuario_id !== empresasGerenteIdEff) return;
         if (!empresaGerenteMap.has(r.empresa_id)) empresaGerenteMap.set(r.empresa_id, r.usuario_id);
       });
       const empresaIds = Array.from(empresaGerenteMap.keys());
@@ -198,11 +204,13 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
             <SelectItem value="com_gerente" className="text-xs">Somente vendedores com gerente vinculado</SelectItem>
             <SelectItem value="gerente_especifico" className="text-xs">Vendedores de um gerente específico</SelectItem>
             <SelectItem value="segmento" className="text-xs">Vendedores de um segmento específico</SelectItem>
+            <SelectItem value="empresas_com_gerente" className="text-xs">Empresas (clientes) vinculadas a qualquer gerente</SelectItem>
+            <SelectItem value="empresas_gerente_especifico" className="text-xs">Empresas (clientes) vinculadas a um gerente específico</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {filtroTipo === "gerente_especifico" && (
+      {(filtroTipo === "gerente_especifico" || filtroTipo === "empresas_gerente_especifico") && (
         <div className="space-y-1">
           <Label className="text-xs">Gerente</Label>
           <Select value={gerenteId} onValueChange={(v) => handleConfigChange("gerenteId", v)}>
