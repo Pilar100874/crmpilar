@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { X, ArrowLeft, Settings } from "lucide-react";
+import { X, ArrowLeft } from "lucide-react";
 import { EnvioMassaTemplatesCRUD } from "@/components/config/EnvioMassaTemplatesCRUD";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -345,15 +345,6 @@ export function EnvioMassaMarketing() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setTemplatesDialogOpen(true)}
-            className="gap-2"
-          >
-            <Settings className="h-4 w-4" />
-            <span className="hidden sm:inline">Gerenciar templates</span>
-          </Button>
           <Badge variant="outline">
             Etapa {currentStepIndex + 1} de {STEPS.length}
           </Badge>
@@ -429,6 +420,8 @@ export function EnvioMassaMarketing() {
             onUploadMedia={uploadMedia}
             onBack={() => goToStep('filter')}
             onNext={() => goToStep('preview')}
+            canal={state.canal}
+            onOpenTemplates={() => setTemplatesDialogOpen(true)}
           />
         )}
 

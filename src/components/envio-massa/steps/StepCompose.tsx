@@ -13,7 +13,8 @@ import {
   BookOpen, Paperclip, File, Search, LinkIcon, FileUp,
   ImageIcon, FileSpreadsheet, Calendar, Package, Loader2, AlertCircle
 } from "lucide-react";
-import { ContentItem, QuickReply, MediaGalleryItem } from "../types";
+import { ContentItem, QuickReply, MediaGalleryItem, CanalEnvio } from "../types";
+import { Settings } from "lucide-react";
 import { EnvioMassaTemplate } from "../hooks/useEnvioMassaTemplates";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -71,6 +72,8 @@ interface StepComposeProps {
   onUploadMedia: (file: File) => Promise<MediaGalleryItem | null>;
   onBack: () => void;
   onNext: () => void;
+  canal?: CanalEnvio | null;
+  onOpenTemplates?: () => void;
 }
 
 const VARIABLES = [
@@ -239,7 +242,9 @@ export function StepCompose({
   onContentChange,
   onUploadMedia,
   onBack,
-  onNext
+  onNext,
+  canal,
+  onOpenTemplates
 }: StepComposeProps) {
   const [activeTab, setActiveTab] = useState<'templates' | 'text' | 'media' | 'catalogo' | 'anexos'>('templates');
   const [textInput, setTextInput] = useState('');
@@ -528,12 +533,25 @@ export function StepCompose({
             <TabsContent value="templates" className="m-0 p-0">
               <ScrollArea className="h-[380px]">
                 <div className="p-4 space-y-2">
+                  {canal === 'whatsapp' && onOpenTemplates && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onOpenTemplates}
+                      className="w-full gap-2 mb-2"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Gerenciar templates
+                    </Button>
+                  )}
                   {templates.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <FileText className="h-12 w-12 mx-auto mb-3 opacity-20" />
                       <p>Nenhum template cadastrado</p>
                       <p className="text-sm mt-1">
-                        Clique em "Gerenciar templates" no topo para criar um template.
+                        {canal === 'whatsapp'
+                          ? 'Clique em "Gerenciar templates" acima para criar um template.'
+                          : 'Nenhum template disponível.'}
                       </p>
                     </div>
                   ) : (
