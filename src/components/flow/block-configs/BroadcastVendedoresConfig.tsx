@@ -204,8 +204,10 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
             <SelectItem value="com_gerente" className="text-xs">Somente vendedores com gerente vinculado</SelectItem>
             <SelectItem value="gerente_especifico" className="text-xs">Vendedores de um gerente específico</SelectItem>
             <SelectItem value="segmento" className="text-xs">Vendedores de um segmento específico</SelectItem>
-            <SelectItem value="empresas_com_gerente" className="text-xs">Empresas (clientes) vinculadas a qualquer gerente</SelectItem>
-            <SelectItem value="empresas_gerente_especifico" className="text-xs">Empresas (clientes) vinculadas a um gerente específico</SelectItem>
+            <SelectItem value="empresas_com_gerente" className="text-xs">Somente empresas (clientes) vinculadas a qualquer gerente</SelectItem>
+            <SelectItem value="empresas_gerente_especifico" className="text-xs">Somente empresas (clientes) vinculadas a um gerente específico</SelectItem>
+            <SelectItem value="vendedores_e_empresas_com_gerente" className="text-xs">Vendedores + empresas vinculados a qualquer gerente</SelectItem>
+            <SelectItem value="vendedores_e_empresas_gerente_especifico" className="text-xs">Vendedores + empresas de um gerente específico</SelectItem>
           </SelectContent>
         </Select>
       </div>
