@@ -549,19 +549,63 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
                   </div>
                 );
               })()}
-              <div className="max-h-[55vh] overflow-y-auto space-y-1 border rounded-md p-2 bg-muted/10">
-                {preview.map((r) => (
-                  <div key={`${r.kind}-${r.id}`} className="text-xs px-2 py-1.5 rounded bg-background flex items-center justify-between gap-2">
-                    <span className="truncate flex items-center gap-1.5">
-                      <Badge variant={r.kind === "empresa" ? "default" : "secondary"} className="text-[9px] px-1 py-0">
-                        {r.kind === "empresa" ? "empresa" : "vendedor"}
-                      </Badge>
-                      <span className="font-medium">{r.nome_fantasia || r.nome || r.id}</span>
-                      {r.gerente_nome && <span className="text-muted-foreground">· gerente: {r.gerente_nome}</span>}
-                    </span>
-                    <span className="text-muted-foreground shrink-0 tabular-nums">{r.whatsapp || r.telefone}</span>
-                  </div>
-                ))}
+              <div className="max-h-[55vh] overflow-y-auto space-y-3 border rounded-md p-2 bg-muted/10">
+                {(() => {
+                  const segMap = new Map(segmentos.map((s) => [s.id, s.nome]));
+                  // Grupo = Segmento; Subgrupo = Gerente
+                  const grupos = new Map<string, Map<string, VendedorRow[]>>();
+                  preview.forEach((r) => {
+                    const gNome = (r.segmento_id && segMap.get(r.segmento_id)) || "Sem segmento";
+                    const sNome = r.gerente_nome || "Sem gerente";
+                    if (!grupos.has(gNome)) grupos.set(gNome, new Map());
+                    const sub = grupos.get(gNome)!;
+                    if (!sub.has(sNome)) sub.set(sNome, []);
+                    sub.get(sNome)!.push(r);
+                  });
+                  const gruposArr = Array.from(grupos.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+                  return gruposArr.map(([grupo, subs]) => {
+                    const totalGrupo = Array.from(subs.values()).reduce((acc, arr) => acc + arr.length, 0);
+                    const subsArr = Array.from(subs.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+                    return (
+                      <div key={grupo} className="rounded-md border bg-background">
+                        <div className="flex items-center justify-between px-2 py-1.5 border-b bg-muted/40 rounded-t-md">
+                          <span className="text-xs font-semibold">📁 {grupo}</span>
+                          <Badge variant="secondary" className="text-[10px]">{totalGrupo}</Badge>
+                        </div>
+                        <div className="p-2 space-y-2">
+                          {subsArr.map(([sub, rows]) => (
+                            <div key={sub} className="rounded border bg-muted/10">
+                              <div className="flex items-center justify-between px-2 py-1 border-b bg-muted/20">
+                                <span className="text-[11px] font-medium">👤 {sub}</span>
+                                <Badge variant="outline" className="text-[10px]">{rows.length}</Badge>
+                              </div>
+                              <div className="divide-y">
+                                {rows.map((r) => (
+                                  <div key={`${r.kind}-${r.id}`} className="text-xs px-2 py-1.5 flex items-center justify-between gap-2">
+                                    <span className="truncate flex items-center gap-1.5">
+                                      <Badge variant={r.kind === "empresa" ? "default" : "secondary"} className="text-[9px] px-1 py-0">
+                                        {r.kind === "empresa" ? "empresa" : "vendedor"}
+                                      </Badge>
+                                      <span className="font-medium truncate">{r.nome_fantasia || r.nome || r.id}</span>
+                                    </span>
+                                    <a
+                                      href={`https://web.whatsapp.com/send?phone=${(r.whatsapp || r.telefone || "").replace(/\D/g, "")}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-muted-foreground hover:text-primary shrink-0 tabular-nums"
+                                    >
+                                      {r.whatsapp || r.telefone || "—"}
+                                    </a>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
               <div className="flex justify-end">
                 <Button size="sm" variant="outline" onClick={handlePreview} disabled={loadingPreview}>
