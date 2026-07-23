@@ -12,8 +12,8 @@ import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award, TestTube, Loader2,
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { AtendenteSkillsManager } from "./AtendenteSkillsManager";
 import { MaskedInput } from "@/components/ui/masked-input";
-import { maskPhone } from "@/lib/masks";
-import { validateEmail, validatePhone } from "@/lib/validators";
+import { maskWhatsApp } from "@/lib/masks";
+import { validateEmail, validateWhatsApp } from "@/lib/validators";
 import {
   Dialog,
   DialogContent,
@@ -843,14 +843,14 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               <Label htmlFor="usuario-telefone">WhatsApp</Label>
               <MaskedInput
                 id="usuario-telefone"
-                mask={maskPhone}
+                mask={maskWhatsApp}
                 value={telefone}
                 onValueChange={setTelefone}
-                placeholder="(00) 00000-0000"
-                invalid={!!telefone && !validatePhone(telefone)}
+                placeholder="+55 (XX) XXXXX-XXXX"
+                invalid={!!telefone && !validateWhatsApp(telefone)}
               />
-              {telefone && !validatePhone(telefone) && (
-                <p className="text-xs text-destructive mt-1">WhatsApp inválido</p>
+              {telefone && !validateWhatsApp(telefone) && (
+                <p className="text-xs text-destructive mt-1">WhatsApp inválido (formato: +55 (XX) XXXXX-XXXX)</p>
               )}
             </div>
 
