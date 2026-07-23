@@ -367,3 +367,71 @@ async function sendCloudMedia(phoneNumberId: string, accessToken: string, to: st
   if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
   return { ok: r.ok, reason: r.ok ? undefined : `http_${r.status}` };
 }
+
+/* ===== Contact (vCard) senders ===== */
+function buildVCard(nome: string, whatsapp: string): string {
+  const digits = String(whatsapp || "").replace(/\D/g, "");
+  const displayName = (nome || digits || "Contato").trim();
+  return [
+    "BEGIN:VCARD",
+    "VERSION:3.0",
+    `N:${displayName};;;;`,
+    `FN:${displayName}`,
+    `TEL;type=CELL;type=VOICE;waid=${digits}:+${digits}`,
+    "END:VCARD",
+  ].join("\n");
+}
+
+async function sendEvolutionContact(toNumberOnly: string, contact: { nome?: string; whatsapp: string }, sessionName: string, base: string, apiKey: string): Promise<SendOut> {
+  if (!base || !apiKey) { console.error("[AGENT][EVO] Faltam URL/apikey"); return { ok: false, reason: "config_missing" }; }
+  const number = String(toNumberOnly).replace(/\D/g, "");
+  const contactDigits = String(contact.whatsapp).replace(/\D/g, "");
+  if (!contactDigits) return { ok: false, reason: "contact_missing_phone" };
+  const displayName = (contact.nome || contactDigits).trim();
+  const body = {
+    number,
+    contact: [{
+      fullName: displayName,
+      wuid: contactDigits,
+      phoneNumber: `+${contactDigits}`,
+    }],
+  };
+  const res = await fetch(`${base}/message/sendContact/${encodeURIComponent(sessionName)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: apiKey },
+    body: JSON.stringify(body),
+  });
+  const bodyTxt = await res.text().catch(() => "");
+  console.log("[AGENT][EVO] sendContact:", res.status, bodyTxt.slice(0, 200));
+  const inv = detectInvalidFromText(bodyTxt);
+  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
+  if (res.status === 400 || res.status === 404) return { ok: false, invalid: true, reason: `http_${res.status}` };
+  return { ok: res.ok, reason: res.ok ? undefined : `http_${res.status}` };
+}
+
+async function sendCloudContact(phoneNumberId: string, accessToken: string, to: string, contact: { nome?: string; whatsapp: string }): Promise<SendOut> {
+  if (!phoneNumberId || !accessToken) return { ok: false, reason: "config_missing" };
+  const digits = String(contact.whatsapp).replace(/\D/g, "");
+  if (!digits) return { ok: false, reason: "contact_missing_phone" };
+  const displayName = (contact.nome || digits).trim();
+  const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+  const body = {
+    messaging_product: "whatsapp",
+    to,
+    type: "contacts",
+    contacts: [{
+      name: { formatted_name: displayName, first_name: displayName },
+      phones: [{ phone: `+${digits}`, wa_id: digits, type: "CELL" }],
+    }],
+  };
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify(body),
+  });
+  const bodyTxt = await r.text().catch(() => "");
+  if (!r.ok) console.error("[AGENT][CLOUD] sendContact error:", bodyTxt);
+  const inv = detectInvalidFromText(bodyTxt);
+  if (inv.invalid) return { ok: false, invalid: true, reason: inv.reason };
+  return { ok: r.ok, reason: r.ok ? undefined : `http_${r.status}` };
+}
