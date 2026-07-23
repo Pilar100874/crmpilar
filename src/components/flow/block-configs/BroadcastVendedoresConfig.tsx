@@ -160,15 +160,16 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
       if (!especificoAlvoId) return [];
       if (especificoTipo === "gerente") {
         const { data } = await supabase
-          .from("usuarios").select("id, nome, whatsapp, telefone")
+          .from("usuarios").select("id, nome, telefone")
           .eq("id", especificoAlvoId).maybeSingle();
         if (!data) return [];
-        const phone = ((data as any).whatsapp || (data as any).telefone || "").replace(/\D/g, "");
+        const phone = ((data as any).telefone || "").replace(/\D/g, "");
         if (phone.length < 10) return [];
         return [{
           id: (data as any).id, nome: (data as any).nome, nome_fantasia: null,
-          whatsapp: (data as any).whatsapp, telefone: (data as any).telefone,
+          whatsapp: (data as any).telefone, telefone: (data as any).telefone,
           segmento_id: null, gerente_usuario_id: (data as any).id, gerente_nome: (data as any).nome,
+          gerente_whatsapp: (data as any).telefone,
           kind: "vendedor",
         }];
       }
