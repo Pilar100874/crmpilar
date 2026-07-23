@@ -153,7 +153,7 @@ serve(async (req) => {
             handle = "sem_frase";
           }
         } else if (t === "broadcast_vendedores") {
-          const res = await executeBroadcast(supabase, estId, cfg, ctx, origem || "bot");
+          const res = await executeBroadcast(supabase, estId, cfg, ctx, origem || "bot", bot.id);
           const outputVar = cfg.outputVariable || "broadcast_vendedores_resultado";
           ctx[outputVar] = res;
           trace.push({ node: current.id, broadcast: res });
@@ -173,6 +173,7 @@ serve(async (req) => {
                 contentType: mediaUrl ? inferContentType(mediaUrl) : undefined,
                 whatsappSessionId: cfg.whatsappSessionId || null,
                 whatsappSessionName: cfg.whatsappSessionName || null,
+                botFlowId: bot.id,
                 origem: origem || "bot",
               },
             });
@@ -205,6 +206,7 @@ async function executeBroadcast(
   cfg: any,
   baseCtx: Record<string, any>,
   origem: string,
+  botFlowId?: string,
 ) {
   const _mediaVarName = (cfg.mediaVar || "last_generated_media_url").trim();
   const preTemMidia = !!cfg.usarMensagemPreDefinida
@@ -410,6 +412,7 @@ async function executeBroadcast(
             estabelecimento_id: estabelecimentoId, telefone: d.phone, text: antes,
             whatsappSessionId: cfg.whatsappSessionId || null,
             whatsappSessionName: cfg.whatsappSessionName || null,
+            botFlowId: botFlowId || null,
             origem: `${origem}_antes`,
           },
         });
@@ -423,6 +426,7 @@ async function executeBroadcast(
           contentType: mediaUrlPre ? (mediaType === "video" ? "video" : inferContentType(mediaUrlPre)) : undefined,
           whatsappSessionId: cfg.whatsappSessionId || null,
           whatsappSessionName: cfg.whatsappSessionName || null,
+          botFlowId: botFlowId || null,
           origem,
         },
       });
@@ -434,6 +438,7 @@ async function executeBroadcast(
             estabelecimento_id: estabelecimentoId, telefone: d.phone, text: depois,
             whatsappSessionId: cfg.whatsappSessionId || null,
             whatsappSessionName: cfg.whatsappSessionName || null,
+            botFlowId: botFlowId || null,
             origem: `${origem}_depois`,
           },
         });
@@ -447,6 +452,7 @@ async function executeBroadcast(
               contact: { nome: d.gerente.nome || "Gerente", whatsapp: gPhone },
               whatsappSessionId: cfg.whatsappSessionId || null,
               whatsappSessionName: cfg.whatsappSessionName || null,
+              botFlowId: botFlowId || null,
               origem: `${origem}_contato`,
             },
           });
