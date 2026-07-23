@@ -2634,6 +2634,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                       ...contextRef.current,
                       last_generated_media_url: urls[0],
                       last_generated_media_urls: urls,
+                      last_generated_media_type: mediaType === "video" ? "video" : "image",
                     };
                     contextRef.current = mediaCtx;
                     setContext(mediaCtx);
@@ -2842,12 +2843,19 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           const mediaUrlPre = config.usarMensagemPreDefinida
             ? String(contextRef.current.last_generated_media_url || "")
             : "";
+          const mediaTypePre = config.usarMensagemPreDefinida
+            ? String(contextRef.current.last_generated_media_type || "")
+            : "";
 
           for (const v of vendedores) {
             const phone = (v.whatsapp || v.telefone || "").replace(/\D/g, "");
             const nome = v.nome_fantasia || v.nome || phone;
-            const msgFinal = mediaUrlPre ? `${msg}\n${mediaUrlPre}` : msg;
-            addBotMessage(`[para ${nome} · ${phone}] ${msgFinal}`, node.id);
+            if (mediaUrlPre) {
+              addBotMessage(`[para ${nome} · ${phone}] ${msg}`, node.id);
+              addBotMediaMessage(mediaUrlPre, mediaTypePre === "video" ? "video" : "image", "", node.id);
+            } else {
+              addBotMessage(`[para ${nome} · ${phone}] ${msg}`, node.id);
+            }
 
             let ok = true;
             if (useReal) {

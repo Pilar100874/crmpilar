@@ -12,34 +12,122 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { conversationId, text, fileUrl, fileName, contentType, whatsappNumeroId } = await req.json();
+    const {
+      conversationId,
+      telefone,
+      estabelecimento_id,
+      text,
+      fileUrl,
+      fileName,
+      contentType,
+      whatsappNumeroId,
+    } = await req.json();
 
-    if (!conversationId || (!text && !fileUrl)) {
+    if ((!conversationId && (!telefone || !estabelecimento_id)) || (!text && !fileUrl)) {
       return new Response(
-        JSON.stringify({ error: "conversationId and text/fileUrl are required" }),
+        JSON.stringify({ error: "conversationId or (telefone + estabelecimento_id) and text/fileUrl are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const supabase = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
 
-    const { data: conversation, error: convError } = await supabase
-      .from("conversations")
-      .select(`
-        id, bot_id, estabelecimento_id,
-        customer:customers!conversations_customer_id_fkey ( telefone )
-      `)
-      .eq("id", conversationId)
-      .single();
+    let conversation: any = null;
+    let customerPhone = "";
 
-    if (convError || !conversation) {
-      return new Response(
-        JSON.stringify({ error: "Conversation not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (conversationId) {
+      const { data: conv, error: convError } = await supabase
+        .from("conversations")
+        .select(`
+          id, bot_id, estabelecimento_id,
+          customer:customers!conversations_customer_id_fkey ( telefone )
+        `)
+        .eq("id", conversationId)
+        .single();
+
+      if (convError || !conv) {
+        return new Response(
+          JSON.stringify({ error: "Conversation not found" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      conversation = conv;
+      customerPhone = (conversation as any).customer?.telefone;
+    } else {
+      // Resolve ou cria customer/conversation a partir do telefone + estabelecimento
+      const phoneOnly = String(telefone).replace(/\D/g, "");
+      if (!phoneOnly) {
+        return new Response(
+          JSON.stringify({ error: "Telefone inválido" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { data: existingCustomer } = await supabase
+        .from("customers")
+        .select("id, telefone")
+        .eq("estabelecimento_id", estabelecimento_id)
+        .eq("telefone", phoneOnly)
+        .maybeSingle();
+
+      let customerId = existingCustomer?.id;
+      if (!customerId) {
+        const { data: newCustomer, error: custErr } = await supabase
+          .from("customers")
+          .insert({
+            estabelecimento_id,
+            nome: `Contato ${phoneOnly}`,
+            telefone: phoneOnly,
+            email: `whatsapp-${phoneOnly}@placeholder.local`,
+            ativo: true,
+          })
+          .select("id")
+          .single();
+        if (custErr) {
+          return new Response(
+            JSON.stringify({ error: `Erro ao criar customer: ${custErr.message}` }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        customerId = newCustomer?.id;
+      }
+
+      const { data: existingConv } = await supabase
+        .from("conversations")
+        .select("id, bot_id, estabelecimento_id")
+        .eq("customer_id", customerId)
+        .eq("canal", "whatsapp")
+        .eq("estabelecimento_id", estabelecimento_id)
+        .in("status", ["open", "pending"])
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existingConv) {
+        conversation = existingConv;
+      } else {
+        const { data: newConv, error: newConvErr } = await supabase
+          .from("conversations")
+          .insert({
+            customer_id: customerId,
+            estabelecimento_id,
+            canal: "whatsapp",
+            status: "open",
+            metadata: { origem: "workflow" },
+          })
+          .select("id, bot_id, estabelecimento_id")
+          .single();
+        if (newConvErr) {
+          return new Response(
+            JSON.stringify({ error: `Erro ao criar conversation: ${newConvErr.message}` }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        conversation = newConv;
+      }
+      customerPhone = phoneOnly;
     }
 
-    const customerPhone = (conversation as any).customer?.telefone;
     if (!customerPhone) {
       return new Response(
         JSON.stringify({ error: "Customer phone not found" }),

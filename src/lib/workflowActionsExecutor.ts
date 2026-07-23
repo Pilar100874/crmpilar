@@ -17,6 +17,15 @@ function interpolar(str: any, vars: Record<string, any> = {}): string {
   });
 }
 
+function inferContentType(url: string): string {
+  const lower = url.split("?")[0].split("#")[0].toLowerCase();
+  if (lower.endsWith(".mp4") || lower.endsWith(".mov") || lower.endsWith(".webm")) return "video";
+  if (lower.endsWith(".mp3") || lower.endsWith(".ogg") || lower.endsWith(".wav") || lower.endsWith(".m4a")) return "audio";
+  if (lower.endsWith(".pdf")) return "document";
+  if (/\.(jpg|jpeg|png|webp|gif|bmp|svg)$/.test(lower)) return "image";
+  return "document";
+}
+
 export interface WfCtx {
   variaveis?: Record<string, any>;
   estabelecimento_id?: string;
@@ -96,6 +105,7 @@ export async function executarBlocoWhatsapp(cfg: any, ctx: WfCtx = {}) {
   const whatsappNumeroId = cfg?.whatsappNumeroId || cfg?.canal_id || null;
   try {
     const mediaUrl = interpolar(cfg?.mediaUrl ?? cfg?.imagem ?? cfg?.arquivo_url ?? "", ctx.variaveis);
+    const contentType = mediaUrl ? inferContentType(mediaUrl) : undefined;
     const resultados: any[] = [];
     for (const telefone of telefones) {
       const { data, error } = await supabase.functions.invoke("send-agent-message", {
@@ -107,6 +117,7 @@ export async function executarBlocoWhatsapp(cfg: any, ctx: WfCtx = {}) {
           caption: mediaUrl ? mensagem : undefined,
           fileUrl: mediaUrl || undefined,
           mediaUrl: mediaUrl || undefined,
+          contentType,
           canal: "whatsapp",
           whatsappSessionId,
           whatsappSessionName,
