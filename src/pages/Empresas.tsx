@@ -1316,6 +1316,20 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       toast.error("Selecione pelo menos um usuário");
       return;
     }
+    // Regra: vendedor só pode ter 1 gerente vinculado
+    if (variant === "vendedor") {
+      const jaVinculados = vinculos.filter(
+        (v) => v.empresa_id === editingEmpresa.id && v.usuario_id !== null
+      );
+      if (jaVinculados.length > 0) {
+        toast.error("Este vendedor já possui um gerente. Remova o atual antes de vincular outro.");
+        return;
+      }
+      if (novosUsuariosVinculo.length > 1) {
+        toast.error("Selecione apenas 1 gerente para este vendedor.");
+        return;
+      }
+    }
     try {
       const rows = novosUsuariosVinculo.map((uid) => ({
         empresa_id: editingEmpresa.id,
@@ -1334,6 +1348,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       toast.error("Erro ao vincular usuários: " + error.message);
     }
   };
+
 
   const handleAdicionarVendedoresVinculo = async () => {
     if (!estabelecimentoId || !editingEmpresa || novosVendedoresVinculo.length === 0) {
