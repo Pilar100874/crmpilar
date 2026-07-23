@@ -3071,13 +3071,15 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             }
 
             let ok = true;
+            let invalid = false;
             if (useReal) {
               try {
-                const r = await executarBlocoWhatsapp(
+                const r: any = await executarBlocoWhatsapp(
                   { telefone: phone, mensagem: finalMsg, mediaUrl: mediaUrlPre || undefined },
                   { variaveis: perCtx, workflow_tipo: "bot", origem: "broadcast_vendedores" },
                 );
                 ok = !!r?.ok;
+                invalid = !!r?.invalid_number;
               } catch { ok = false; }
             }
 
@@ -3111,7 +3113,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             if (g && (g.whatsapp || g.telefone)) {
               const key = g.id;
               if (!resumoPorGerente.has(key)) resumoPorGerente.set(key, { gerente: g, itens: [] });
-              resumoPorGerente.get(key)!.itens.push({ nome: d.nome || phone, phone, tipo: d.kind, ok });
+              resumoPorGerente.get(key)!.itens.push({ nome: d.nome || phone, phone, tipo: d.kind, ok, invalid });
             }
 
             if (delayMs) await new Promise((r) => setTimeout(r, delayMs));
