@@ -501,52 +501,79 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
 
 
 
-      {/* Preview */}
-      <div className="space-y-2 rounded-md border border-dashed p-3 bg-muted/20">
-        <div className="flex items-center justify-between">
+      {/* Preview em popup */}
+      <div className="flex items-center justify-between rounded-md border border-dashed p-3 bg-muted/20">
+        <div>
           <Label className="text-xs font-semibold flex items-center gap-1">
             <Eye className="h-3 w-3" /> Pré-visualização dos destinatários
           </Label>
-          <Button size="sm" variant="outline" onClick={handlePreview} disabled={loadingPreview}>
-            {loadingPreview ? <Loader2 className="h-3 w-3 animate-spin" /> : "Verificar agora"}
-          </Button>
+          <p className="text-[10px] text-muted-foreground mt-0.5">
+            Simule a lista final com os filtros escolhidos.
+          </p>
         </div>
-        {preview.length > 0 && (
-          <>
-            {(() => {
-              const nv = preview.filter((r) => r.kind !== "empresa").length;
-              const ne = preview.filter((r) => r.kind === "empresa").length;
-              return (
-                <div className="flex flex-wrap gap-1">
-                  <Badge variant="secondary" className="text-[10px]">{totalPreview} destinatário(s)</Badge>
-                  <Badge variant="outline" className="text-[10px]">{nv} vendedor(es)</Badge>
-                  {ne > 0 && <Badge variant="outline" className="text-[10px]">{ne} empresa(s)</Badge>}
-                </div>
-              );
-            })()}
-            <div className="max-h-[180px] overflow-y-auto space-y-1">
-              {preview.slice(0, 50).map((r) => (
-                <div key={`${r.kind}-${r.id}`} className="text-[11px] px-2 py-1 rounded bg-background flex items-center justify-between gap-2">
-                  <span className="truncate flex items-center gap-1">
-                    <Badge variant={r.kind === "empresa" ? "default" : "secondary"} className="text-[9px] px-1 py-0">
-                      {r.kind === "empresa" ? "empresa" : "vendedor"}
-                    </Badge>
-                    {r.nome_fantasia || r.nome || r.id}
-                    {r.gerente_nome && <span className="text-muted-foreground"> · gerente: {r.gerente_nome}</span>}
-                  </span>
-                  <span className="text-muted-foreground shrink-0">{r.whatsapp || r.telefone}</span>
-                </div>
-              ))}
-              {preview.length > 50 && (
-                <p className="text-[10px] text-muted-foreground">…e mais {preview.length - 50}.</p>
-              )}
-            </div>
-          </>
-        )}
-        {!loadingPreview && preview.length === 0 && (
-          <p className="text-[11px] text-muted-foreground">Clique em Verificar agora para simular a lista.</p>
-        )}
+        <Button size="sm" variant="outline" onClick={handlePreview} disabled={loadingPreview}>
+          {loadingPreview ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Eye className="h-3 w-3 mr-1" />}
+          Ver destinatários
+        </Button>
       </div>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-4 w-4" /> Destinatários do envio
+            </DialogTitle>
+            <DialogDescription>
+              Lista simulada com base nos filtros configurados no bloco.
+            </DialogDescription>
+          </DialogHeader>
+
+          {loadingPreview ? (
+            <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin mr-2" /> Calculando destinatários...
+            </div>
+          ) : preview.length === 0 ? (
+            <div className="py-10 text-center text-sm text-muted-foreground">
+              Nenhum destinatário encontrado com os filtros atuais.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {(() => {
+                const nv = preview.filter((r) => r.kind !== "empresa").length;
+                const ne = preview.filter((r) => r.kind === "empresa").length;
+                return (
+                  <div className="flex flex-wrap gap-1">
+                    <Badge variant="secondary">{totalPreview} destinatário(s)</Badge>
+                    <Badge variant="outline">{nv} vendedor(es)</Badge>
+                    {ne > 0 && <Badge variant="outline">{ne} empresa(s)</Badge>}
+                  </div>
+                );
+              })()}
+              <div className="max-h-[55vh] overflow-y-auto space-y-1 border rounded-md p-2 bg-muted/10">
+                {preview.map((r) => (
+                  <div key={`${r.kind}-${r.id}`} className="text-xs px-2 py-1.5 rounded bg-background flex items-center justify-between gap-2">
+                    <span className="truncate flex items-center gap-1.5">
+                      <Badge variant={r.kind === "empresa" ? "default" : "secondary"} className="text-[9px] px-1 py-0">
+                        {r.kind === "empresa" ? "empresa" : "vendedor"}
+                      </Badge>
+                      <span className="font-medium">{r.nome_fantasia || r.nome || r.id}</span>
+                      {r.gerente_nome && <span className="text-muted-foreground">· gerente: {r.gerente_nome}</span>}
+                    </span>
+                    <span className="text-muted-foreground shrink-0 tabular-nums">{r.whatsapp || r.telefone}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-end">
+                <Button size="sm" variant="outline" onClick={handlePreview} disabled={loadingPreview}>
+                  <Loader2 className={`h-3 w-3 mr-1 ${loadingPreview ? "animate-spin" : "hidden"}`} />
+                  Recalcular
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
 
       {/* Mensagem */}
       <div className="space-y-2 border-t pt-3">
