@@ -200,7 +200,9 @@ serve(async (req) => {
 
     let sendResult: { ok: boolean; invalid?: boolean; reason?: string } = { ok: true };
     if (numero.provider === "cloud_api") {
-      if (fileUrl) {
+      if (contact && contact.whatsapp) {
+        sendResult = await sendCloudContact(numero.cloud_phone_number_id, numero.cloud_access_token, toNumberOnly, contact);
+      } else if (fileUrl) {
         sendResult = await sendCloudMedia(numero.cloud_phone_number_id, numero.cloud_access_token, toNumberOnly, fileUrl, contentType || "document", text);
       } else {
         sendResult = await sendCloudText(numero.cloud_phone_number_id, numero.cloud_access_token, toNumberOnly, text);
@@ -209,7 +211,9 @@ serve(async (req) => {
       const base = (numero.waha_url || "").replace(/\/+$/, "");
       const session = numero.session_name || "default";
       const apiKey = numero.waha_api_key;
-      if (fileUrl) {
+      if (contact && contact.whatsapp) {
+        sendResult = await sendEvolutionContact(toNumberOnly, contact, session, base, apiKey);
+      } else if (fileUrl) {
         sendResult = await sendEvolutionMedia(toNumberOnly, text || undefined, contentType || "document", fileUrl, session, base, apiKey);
       } else {
         sendResult = await sendEvolutionText(toNumberOnly, text, session, base, apiKey);
