@@ -404,6 +404,24 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         )}
       </div>
 
+      {/* Resumo ao gerente */}
+      <div className="space-y-2 border-t pt-3">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="enviar_resumo_gerente"
+            checked={config.enviarResumoGerente !== false}
+            onCheckedChange={(v) => handleConfigChange("enviarResumoGerente", !!v)}
+          />
+          <label htmlFor="enviar_resumo_gerente" className="text-xs font-semibold">
+            Ao finalizar, enviar resumo ao(s) gerente(s)
+          </label>
+        </div>
+        <p className="text-[11px] text-muted-foreground pl-6">
+          Envia ao WhatsApp de cada gerente: data/hora, a mensagem enviada (com XXX no lugar das variáveis personalizadas) e a lista de destinatários.
+        </p>
+      </div>
+
+
       <div className="space-y-1 border-t pt-3">
         <Label className="text-xs">Delay entre envios (segundos)</Label>
         <Input
