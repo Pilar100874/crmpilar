@@ -35,15 +35,48 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
   const [preview, setPreview] = useState<VendedorRow[]>([]);
   const [loadingPreview, setLoadingPreview] = useState(false);
 
-  const filtroTipo: string = config.filtroTipo || "todos";
+  // ---------- Cascata: público → subfiltro → entidade ----------
+  const audiencia: string = config.audiencia || "vendedores";
+  const subFiltro: string = config.subFiltro || (audiencia === "empresas" ? "segmento" : "todos");
+  const especificoTipo: string = config.especificoTipo || "empresa";
+  const especificoAlvoId: string = config.especificoAlvoId || "";
+
   const gerenteId = config.gerenteId || "";
   const segmentoId = config.segmentoId || "";
-  const combinarSegmento = !!config.combinarSegmento;
   const publicoEmpresas: string = config.publicoEmpresas || "cliente";
   const message = config.message || "";
   const usarMensagemPreDefinida = !!config.usarMensagemPreDefinida;
   const preDefinidaVar = config.preDefinidaVar || "last_mensagem_pre_definida";
   const enviarContato = !!config.enviarContato;
+
+  const derivarFiltroTipo = (aud: string, sub: string) => {
+    if (aud === "especifico") return "especifico";
+    if (aud === "empresas") {
+      if (sub === "segmento") return "empresas_segmento";
+      if (sub === "gerente_especifico") return "empresas_gerente_especifico";
+      return "empresas_com_gerente";
+    }
+    if (sub === "com_gerente") return "com_gerente";
+    if (sub === "gerente_especifico") return "gerente_especifico";
+    if (sub === "segmento") return "segmento";
+    return "todos";
+  };
+
+  useEffect(() => {
+    const ft = derivarFiltroTipo(audiencia, subFiltro);
+    if (config.filtroTipo !== ft) handleConfigChange("filtroTipo", ft);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audiencia, subFiltro]);
+
+  const setAudiencia = (v: string) => {
+    handleConfigChange("audiencia", v);
+    const defaultSub = v === "empresas" ? "segmento" : v === "vendedores" ? "todos" : "";
+    handleConfigChange("subFiltro", defaultSub);
+  };
+
+  const [alvosLoading, setAlvosLoading] = useState(false);
+  const [alvos, setAlvos] = useState<Array<{ id: string; nome: string; contato?: string }>>([]);
+  const [alvoSearch, setAlvoSearch] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -58,7 +91,6 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         .order("nome");
       setSegmentos((segs as any) || []);
 
-      // Lista completa de gerentes do estabelecimento (independente de já terem vendedor vinculado)
       const { data: us } = await supabase
         .from("usuarios")
         .select("id, nome, tipo")
@@ -69,11 +101,106 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
     })();
   }, []);
 
+  useEffect(() => {
+    if (audiencia !== "especifico" || !estabId) return;
+    (async () => {
+      setAlvosLoading(true);
+      try {
+        if (especificoTipo === "gerente") {
+          const { data } = await supabase
+            .from("usuarios")
+            .select("id, nome, whatsapp, telefone")
+            .eq("estabelecimento_id", estabId)
+            .eq("tipo", "gerente")
+            .order("nome");
+          setAlvos(((data as any) || []).map((u: any) => ({
+            id: u.id, nome: u.nome || u.id, contato: u.whatsapp || u.telefone || "",
+          })));
+        } else {
+          let q = supabase
+            .from("empresas")
+            .select("id, nome, nome_fantasia, whatsapp, telefone, tipo_cliente")
+            .eq("estabelecimento_id", estabId)
+            .eq("ativo", true)
+            .order("nome");
+          if (especificoTipo === "vendedor") q = q.eq("tipo_cliente", "vendedor");
+          else q = q.neq("tipo_cliente", "vendedor");
+          const { data } = await q;
+          setAlvos(((data as any) || []).map((e: any) => ({
+            id: e.id,
+            nome: e.nome_fantasia || e.nome || e.id,
+            contato: e.whatsapp || e.telefone || "",
+          })));
+        }
+      } finally {
+        setAlvosLoading(false);
+      }
+    })();
+  }, [audiencia, especificoTipo, estabId]);
+
+  const alvosFiltrados = useMemo(() => {
+    const q = alvoSearch.trim().toLowerCase();
+    if (!q) return alvos.slice(0, 100);
+    return alvos.filter((a) => a.nome.toLowerCase().includes(q) || (a.contato || "").toLowerCase().includes(q)).slice(0, 100);
+  }, [alvos, alvoSearch]);
+
   const resolveDestinatarios = async (): Promise<VendedorRow[]> => {
     if (!estabId) return [];
-    const somenteEmpresas = filtroTipo === "empresas_com_gerente" || filtroTipo === "empresas_gerente_especifico";
-    const combinadoVendEmp = filtroTipo === "vendedores_e_empresas_com_gerente" || filtroTipo === "vendedores_e_empresas_gerente_especifico";
-    const gerenteEspecificoAtivo = filtroTipo === "gerente_especifico" || filtroTipo === "empresas_gerente_especifico" || filtroTipo === "vendedores_e_empresas_gerente_especifico";
+    const ft = derivarFiltroTipo(audiencia, subFiltro);
+
+    if (ft === "especifico") {
+      if (!especificoAlvoId) return [];
+      if (especificoTipo === "gerente") {
+        const { data } = await supabase
+          .from("usuarios").select("id, nome, whatsapp, telefone")
+          .eq("id", especificoAlvoId).maybeSingle();
+        if (!data) return [];
+        const phone = ((data as any).whatsapp || (data as any).telefone || "").replace(/\D/g, "");
+        if (phone.length < 10) return [];
+        return [{
+          id: (data as any).id, nome: (data as any).nome, nome_fantasia: null,
+          whatsapp: (data as any).whatsapp, telefone: (data as any).telefone,
+          segmento_id: null, gerente_usuario_id: (data as any).id, gerente_nome: (data as any).nome,
+          kind: "vendedor",
+        }];
+      }
+      const { data } = await supabase
+        .from("empresas").select("id, nome, nome_fantasia, whatsapp, telefone, segmento_id, tipo_cliente")
+        .eq("id", especificoAlvoId).maybeSingle();
+      if (!data) return [];
+      const phone = ((data as any).whatsapp || (data as any).telefone || "").replace(/\D/g, "");
+      if (phone.length < 10) return [];
+      return [{
+        id: (data as any).id, nome: (data as any).nome, nome_fantasia: (data as any).nome_fantasia,
+        whatsapp: (data as any).whatsapp, telefone: (data as any).telefone,
+        segmento_id: (data as any).segmento_id,
+        kind: (data as any).tipo_cliente === "vendedor" ? "vendedor" : "empresa",
+      }];
+    }
+
+    if (ft === "empresas_segmento") {
+      if (!segmentoId) return [];
+      let q = supabase
+        .from("empresas")
+        .select("id, nome, nome_fantasia, whatsapp, telefone, segmento_id, status_comercial")
+        .eq("estabelecimento_id", estabId)
+        .eq("ativo", true)
+        .neq("tipo_cliente", "vendedor")
+        .eq("segmento_id", segmentoId);
+      if (publicoEmpresas === "prospect") q = q.eq("status_comercial", "prospect");
+      else if (publicoEmpresas === "cliente") q = q.neq("status_comercial", "prospect");
+      const { data } = await q;
+      return ((data as any) || [])
+        .filter((e: any) => ((e.whatsapp || e.telefone || "").replace(/\D/g, "").length >= 10))
+        .map((e: any) => ({
+          id: e.id, nome: e.nome, nome_fantasia: e.nome_fantasia,
+          whatsapp: e.whatsapp, telefone: e.telefone, segmento_id: e.segmento_id,
+          kind: "empresa" as const,
+        }));
+    }
+
+    const somenteEmpresas = ft === "empresas_com_gerente" || ft === "empresas_gerente_especifico";
+    const gerenteEspecificoAtivo = ft === "gerente_especifico" || ft === "empresas_gerente_especifico";
 
     let rows: VendedorRow[] = [];
 
@@ -85,13 +212,11 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         .eq("tipo_cliente", "vendedor")
         .eq("ativo", true);
 
-      if (filtroTipo === "segmento" && segmentoId) q = q.eq("segmento_id", segmentoId);
-      if (combinarSegmento && segmentoId && filtroTipo !== "segmento") q = q.eq("segmento_id", segmentoId);
+      if (ft === "segmento" && segmentoId) q = q.eq("segmento_id", segmentoId);
 
       const { data: vendedores } = await q;
       rows = (vendedores as any) || [];
 
-      // Vínculos gerente↔vendedor
       const ids = rows.map((r) => r.id);
       if (ids.length > 0) {
         const { data: gv } = await supabase
@@ -108,23 +233,15 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         });
       }
 
-      if (filtroTipo === "com_gerente" || filtroTipo === "vendedores_e_empresas_com_gerente")
-        rows = rows.filter((r) => !!r.gerente_usuario_id);
-      if (gerenteEspecificoAtivo && filtroTipo !== "empresas_gerente_especifico" && gerenteId)
-        rows = rows.filter((r) => r.gerente_usuario_id === gerenteId);
+      if (ft === "com_gerente") rows = rows.filter((r) => !!r.gerente_usuario_id);
+      if (ft === "gerente_especifico" && gerenteId) rows = rows.filter((r) => r.gerente_usuario_id === gerenteId);
 
-      // filtrar quem tem contato válido
       rows = rows.filter((r) => (r.whatsapp || r.telefone || "").replace(/\D/g, "").length >= 10);
       rows = rows.map((r) => ({ ...r, kind: "vendedor" as const }));
     }
 
-    // Empresas vinculadas ao gerente (via filtroTipo principal)
-    const incluirEmpresasViaFiltroPrincipal = somenteEmpresas || combinadoVendEmp;
-
-    // Incluir empresas (clientes) com gerente vinculado
-    if (incluirEmpresasViaFiltroPrincipal) {
+    if (somenteEmpresas) {
       const empresasFiltro = gerenteEspecificoAtivo ? "gerente_especifico" : "com_gerente";
-      const empresasGerenteIdEff = gerenteId;
       const { data: vinc } = await supabase
         .from("empresa_vinculos")
         .select("empresa_id, usuario_id")
@@ -133,7 +250,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
       const empresaGerenteMap = new Map<string, string>();
       (vinc || []).forEach((r: any) => {
         if (!r.empresa_id || !r.usuario_id) return;
-        if (empresasFiltro === "gerente_especifico" && empresasGerenteIdEff && r.usuario_id !== empresasGerenteIdEff) return;
+        if (empresasFiltro === "gerente_especifico" && gerenteId && r.usuario_id !== gerenteId) return;
         if (!empresaGerenteMap.has(r.empresa_id)) empresaGerenteMap.set(r.empresa_id, r.usuario_id);
       });
       const empresaIds = Array.from(empresaGerenteMap.keys());
@@ -158,14 +275,9 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
           if (phone.length < 10) return;
           const gid = empresaGerenteMap.get(e.id) || null;
           rows.push({
-            id: e.id,
-            nome: e.nome,
-            nome_fantasia: e.nome_fantasia,
-            whatsapp: e.whatsapp,
-            telefone: e.telefone,
-            segmento_id: e.segmento_id,
-            gerente_usuario_id: gid,
-            gerente_nome: gid ? gerentesUsersMap.get(gid) || null : null,
+            id: e.id, nome: e.nome, nome_fantasia: e.nome_fantasia,
+            whatsapp: e.whatsapp, telefone: e.telefone, segmento_id: e.segmento_id,
+            gerente_usuario_id: gid, gerente_nome: gid ? gerentesUsersMap.get(gid) || null : null,
             kind: "empresa",
           });
         });
@@ -187,37 +299,84 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
 
   const totalPreview = preview.length;
 
+  const segClientes = segmentos.filter((s) => !s.is_prospect);
+  const segProspects = segmentos.filter((s) => s.is_prospect);
+  const mostraSegmento = (audiencia === "vendedores" && subFiltro === "segmento")
+    || (audiencia === "empresas" && subFiltro === "segmento");
+  const mostraGerente = (audiencia === "vendedores" && subFiltro === "gerente_especifico")
+    || (audiencia === "empresas" && subFiltro === "gerente_especifico");
+  const mostraPublicoEmpresas = audiencia === "empresas";
+
   return (
     <div className="space-y-4">
       <Alert>
         <Users className="h-4 w-4" />
         <AlertDescription className="text-xs">
-          Envia a mensagem para vários vendedores de uma vez, aplicando os filtros escolhidos.
-          Opcionalmente compartilha um contato (gerente ou fixo) logo depois.
+          Escolha em cascata: público → filtro → entidade. Compartilha um contato opcional após a mensagem.
         </AlertDescription>
       </Alert>
 
-      {/* Filtro de destinatários */}
+      {/* CASCATA 1: Público-alvo */}
       <div className="space-y-2">
-        <Label className="text-xs font-semibold">Quem receberá</Label>
-        <Select value={filtroTipo} onValueChange={(v) => handleConfigChange("filtroTipo", v)}>
+        <Label className="text-xs font-semibold">1. Público-alvo</Label>
+        <Select value={audiencia} onValueChange={setAudiencia}>
           <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="todos" className="text-xs">Todos os vendedores</SelectItem>
-            <SelectItem value="com_gerente" className="text-xs">Somente vendedores com gerente vinculado</SelectItem>
-            <SelectItem value="gerente_especifico" className="text-xs">Vendedores de um gerente específico</SelectItem>
-            <SelectItem value="segmento" className="text-xs">Vendedores de um segmento específico</SelectItem>
-            <SelectItem value="empresas_com_gerente" className="text-xs">Somente empresas (clientes) vinculadas a qualquer gerente</SelectItem>
-            <SelectItem value="empresas_gerente_especifico" className="text-xs">Somente empresas (clientes) vinculadas a um gerente específico</SelectItem>
-            <SelectItem value="vendedores_e_empresas_com_gerente" className="text-xs">Vendedores + empresas vinculados a qualquer gerente</SelectItem>
-            <SelectItem value="vendedores_e_empresas_gerente_especifico" className="text-xs">Vendedores + empresas de um gerente específico</SelectItem>
+            <SelectItem value="vendedores" className="text-xs">Vendedores</SelectItem>
+            <SelectItem value="empresas" className="text-xs">Empresas (clientes/prospects)</SelectItem>
+            <SelectItem value="especifico" className="text-xs">Destinatário específico (empresa, vendedor ou gerente)</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {(filtroTipo === "gerente_especifico" || filtroTipo === "empresas_gerente_especifico") && (
+      {/* CASCATA 2: Filtro */}
+      {audiencia === "vendedores" && (
+        <div className="space-y-2">
+          <Label className="text-xs font-semibold">2. Filtro de vendedores</Label>
+          <Select value={subFiltro} onValueChange={(v) => handleConfigChange("subFiltro", v)}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos" className="text-xs">Todos os vendedores</SelectItem>
+              <SelectItem value="com_gerente" className="text-xs">Somente com gerente vinculado</SelectItem>
+              <SelectItem value="gerente_especifico" className="text-xs">De um gerente específico</SelectItem>
+              <SelectItem value="segmento" className="text-xs">De um segmento específico</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {audiencia === "empresas" && (
+        <div className="space-y-2">
+          <Label className="text-xs font-semibold">2. Filtro de empresas</Label>
+          <Select value={subFiltro} onValueChange={(v) => handleConfigChange("subFiltro", v)}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="segmento" className="text-xs">De um segmento (independe de vínculo)</SelectItem>
+              <SelectItem value="com_gerente" className="text-xs">Vinculadas a qualquer gerente</SelectItem>
+              <SelectItem value="gerente_especifico" className="text-xs">Vinculadas a um gerente específico</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {audiencia === "especifico" && (
+        <div className="space-y-2">
+          <Label className="text-xs font-semibold">2. Tipo do destinatário</Label>
+          <Select value={especificoTipo} onValueChange={(v) => { handleConfigChange("especificoTipo", v); handleConfigChange("especificoAlvoId", ""); setAlvoSearch(""); }}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="empresa" className="text-xs">Empresa</SelectItem>
+              <SelectItem value="vendedor" className="text-xs">Vendedor</SelectItem>
+              <SelectItem value="gerente" className="text-xs">Gerente</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* CASCATA 3 */}
+      {mostraGerente && (
         <div className="space-y-1">
-          <Label className="text-xs">Gerente</Label>
+          <Label className="text-xs font-semibold">3. Gerente</Label>
           <Select value={gerenteId} onValueChange={(v) => handleConfigChange("gerenteId", v)}>
             <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Selecione..." /></SelectTrigger>
             <SelectContent>
@@ -229,53 +388,72 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         </div>
       )}
 
-      {(filtroTipo === "segmento" || filtroTipo !== "segmento") && (
+      {mostraSegmento && (
         <div className="space-y-1">
-          {filtroTipo !== "segmento" && (
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="combinar_segmento"
-                checked={combinarSegmento}
-                onCheckedChange={(v) => handleConfigChange("combinarSegmento", !!v)}
-              />
-              <label htmlFor="combinar_segmento" className="text-xs">Combinar com filtro de segmento</label>
-            </div>
-          )}
-          {(filtroTipo === "segmento" || combinarSegmento) && (() => {
-            const segClientes = segmentos.filter((s) => !s.is_prospect);
-            const segProspects = segmentos.filter((s) => s.is_prospect);
-            return (
-              <Select value={segmentoId} onValueChange={(v) => handleConfigChange("segmentoId", v)}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Selecione o segmento..." /></SelectTrigger>
-                <SelectContent>
-                  {segClientes.length > 0 && (
-                    <SelectGroup>
-                      <SelectLabel className="text-[10px] uppercase text-muted-foreground">Segmentos de Cliente</SelectLabel>
-                      {segClientes.map((s) => (
-                        <SelectItem key={s.id} value={s.id} className="text-xs">{s.nome}</SelectItem>
-                      ))}
-                    </SelectGroup>
-                  )}
-                  {segProspects.length > 0 && (
-                    <SelectGroup>
-                      <SelectLabel className="text-[10px] uppercase text-muted-foreground">Segmentos de Prospect</SelectLabel>
-                      {segProspects.map((s) => (
-                        <SelectItem key={s.id} value={s.id} className="text-xs">{s.nome}</SelectItem>
-                      ))}
-                    </SelectGroup>
-                  )}
-                  {segmentos.length === 0 && (
-                    <div className="px-2 py-1 text-[11px] text-muted-foreground">Nenhum segmento cadastrado</div>
-                  )}
-                </SelectContent>
-              </Select>
-            );
-          })()}
+          <Label className="text-xs font-semibold">3. Segmento</Label>
+          <Select value={segmentoId} onValueChange={(v) => handleConfigChange("segmentoId", v)}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Selecione o segmento..." /></SelectTrigger>
+            <SelectContent>
+              {segClientes.length > 0 && (
+                <SelectGroup>
+                  <SelectLabel className="text-[10px] uppercase text-muted-foreground">Segmentos de Cliente</SelectLabel>
+                  {segClientes.map((s) => (
+                    <SelectItem key={s.id} value={s.id} className="text-xs">{s.nome}</SelectItem>
+                  ))}
+                </SelectGroup>
+              )}
+              {segProspects.length > 0 && (
+                <SelectGroup>
+                  <SelectLabel className="text-[10px] uppercase text-muted-foreground">Segmentos de Prospect</SelectLabel>
+                  {segProspects.map((s) => (
+                    <SelectItem key={s.id} value={s.id} className="text-xs">{s.nome}</SelectItem>
+                  ))}
+                </SelectGroup>
+              )}
+              {segmentos.length === 0 && (
+                <div className="px-2 py-1 text-[11px] text-muted-foreground">Nenhum segmento cadastrado</div>
+              )}
+            </SelectContent>
+          </Select>
         </div>
       )}
 
-      {/* Público das empresas (quando incluir empresas) */}
-      {["empresas_com_gerente","empresas_gerente_especifico","vendedores_e_empresas_com_gerente","vendedores_e_empresas_gerente_especifico"].includes(filtroTipo) && (
+      {audiencia === "especifico" && (
+        <div className="space-y-1">
+          <Label className="text-xs font-semibold">3. Selecione {especificoTipo === "empresa" ? "a empresa" : especificoTipo === "vendedor" ? "o vendedor" : "o gerente"}</Label>
+          <Input
+            className="h-8 text-xs"
+            placeholder="Buscar por nome ou telefone..."
+            value={alvoSearch}
+            onChange={(e) => setAlvoSearch(e.target.value)}
+          />
+          <div className="max-h-[180px] overflow-y-auto rounded border border-dashed bg-muted/10">
+            {alvosLoading && <div className="p-2 text-[11px] text-muted-foreground flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Carregando...</div>}
+            {!alvosLoading && alvosFiltrados.length === 0 && (
+              <div className="p-2 text-[11px] text-muted-foreground">Nenhum resultado.</div>
+            )}
+            {!alvosLoading && alvosFiltrados.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => handleConfigChange("especificoAlvoId", a.id)}
+                className={`w-full text-left px-2 py-1 text-[11px] hover:bg-accent flex items-center justify-between ${especificoAlvoId === a.id ? "bg-accent" : ""}`}
+              >
+                <span className="truncate">{a.nome}</span>
+                <span className="text-muted-foreground shrink-0 ml-2">{a.contato}</span>
+              </button>
+            ))}
+          </div>
+          {especificoAlvoId && (
+            <p className="text-[10px] text-muted-foreground">
+              Selecionado: <b>{alvos.find((a) => a.id === especificoAlvoId)?.nome || especificoAlvoId}</b>
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Público das empresas */}
+      {mostraPublicoEmpresas && (
         <div className="space-y-1">
           <Label className="text-xs">Público das empresas</Label>
           <Select value={publicoEmpresas} onValueChange={(v) => handleConfigChange("publicoEmpresas", v)}>
@@ -286,9 +464,10 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
               <SelectItem value="ambos" className="text-xs">Clientes e prospects</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-[10px] text-muted-foreground">Filtra empresas com base no status comercial (prospect x cliente).</p>
+          <p className="text-[10px] text-muted-foreground">Filtra pelo status comercial (prospect x cliente).</p>
         </div>
       )}
+
 
       {/* Preview */}
       <div className="space-y-2 rounded-md border border-dashed p-3 bg-muted/20">
