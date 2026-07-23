@@ -231,18 +231,22 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
       if (ids.length > 0) {
         const { data: gv } = await supabase
           .from("empresa_vinculos")
-          .select("vendedor_id, usuario_id, usuarios:usuario_id(id, nome)")
+          .select("vendedor_id, usuario_id, usuarios:usuario_id(id, nome, whatsapp, telefone)")
           .in("vendedor_id", ids)
           .not("usuario_id", "is", null);
-        const map = new Map<string, { id: string; nome: string }>();
+        const map = new Map<string, { id: string; nome: string; whatsapp: string | null }>();
         (gv || []).forEach((r: any) => {
           if (r.vendedor_id && r.usuarios?.id && !map.has(r.vendedor_id)) {
-            map.set(r.vendedor_id, { id: r.usuarios.id, nome: r.usuarios.nome || "" });
+            map.set(r.vendedor_id, {
+              id: r.usuarios.id,
+              nome: r.usuarios.nome || "",
+              whatsapp: r.usuarios.whatsapp || r.usuarios.telefone || null,
+            });
           }
         });
         rows = rows.map((r) => {
           const g = map.get(r.id);
-          return { ...r, gerente_usuario_id: g?.id || null, gerente_nome: g?.nome || null };
+          return { ...r, gerente_usuario_id: g?.id || null, gerente_nome: g?.nome || null, gerente_whatsapp: g?.whatsapp || null };
         });
       }
 
