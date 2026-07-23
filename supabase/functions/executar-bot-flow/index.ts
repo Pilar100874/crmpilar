@@ -394,10 +394,13 @@ async function executeBroadcast(
   let enviados = 0, falhas = 0, invalidos = 0;
   const detalhes: any[] = [];
 
+  const stripVendedorPrefix = (n: string) => (n || "").replace(/^\s*vendedor(a)?\s+/i, "").trim() || (n || "");
   for (const d of destinatarios) {
+    const vObj = { ...(d.vendedorObj || {}) };
+    if (vObj.nome) vObj.nome = stripVendedorPrefix(vObj.nome);
     const perCtx: any = {
       ...baseCtx,
-      vendedor: d.vendedorObj, empresa: d.empresaObj,
+      vendedor: vObj, empresa: d.empresaObj,
       gerente: {
         nome: d.gerente?.nome || cfg.fallbackNome || "",
         whatsapp: d.gerente?.whatsapp || cfg.fallbackWhatsapp || "",
