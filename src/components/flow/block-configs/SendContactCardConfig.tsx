@@ -17,7 +17,7 @@ export const SendContactCardConfig = ({ config, handleConfigChange }: Props) => 
         <Contact className="h-4 w-4" />
         <AlertDescription className="text-xs">
           Envia um contato para o destinatário atual (igual quando você compartilha
-          contato no WhatsApp). Use dentro de um <b>Broadcast Vendedores</b> ou após um
+          contato no WhatsApp). Use dentro de um <b>Envio em massa</b> ou após um
           envio ao vendedor para compartilhar o contato do gerente.
         </AlertDescription>
       </Alert>
