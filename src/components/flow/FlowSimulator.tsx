@@ -2870,8 +2870,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             const empresasFiltro = config.empresasFiltro || "com_gerente";
             const { data: vinc } = await supabase
               .from("empresa_vinculos")
-              .select("empresa_id, usuario_id, tipo")
-              .eq("tipo", "gerente");
+              .select("empresa_id, usuario_id")
+              .not("usuario_id", "is", null);
             let empresaGerenteMap = new Map<string, string>();
             (vinc || []).forEach((r: any) => {
               if (!r.empresa_id || !r.usuario_id) return;
