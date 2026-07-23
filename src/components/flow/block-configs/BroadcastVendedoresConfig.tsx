@@ -73,6 +73,8 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
   const resolveDestinatarios = async (): Promise<VendedorRow[]> => {
     if (!estabId) return [];
     const somenteEmpresas = filtroTipo === "empresas_com_gerente" || filtroTipo === "empresas_gerente_especifico";
+    const combinadoVendEmp = filtroTipo === "vendedores_e_empresas_com_gerente" || filtroTipo === "vendedores_e_empresas_gerente_especifico";
+    const gerenteEspecificoAtivo = filtroTipo === "gerente_especifico" || filtroTipo === "empresas_gerente_especifico" || filtroTipo === "vendedores_e_empresas_gerente_especifico";
 
     let rows: VendedorRow[] = [];
 
@@ -107,8 +109,9 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         });
       }
 
-      if (filtroTipo === "com_gerente") rows = rows.filter((r) => !!r.gerente_usuario_id);
-      if (filtroTipo === "gerente_especifico" && gerenteId)
+      if (filtroTipo === "com_gerente" || filtroTipo === "vendedores_e_empresas_com_gerente")
+        rows = rows.filter((r) => !!r.gerente_usuario_id);
+      if (gerenteEspecificoAtivo && filtroTipo !== "empresas_gerente_especifico" && gerenteId)
         rows = rows.filter((r) => r.gerente_usuario_id === gerenteId);
 
       // filtrar quem tem contato válido
@@ -117,14 +120,12 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
     }
 
     // Empresas vinculadas ao gerente (via filtroTipo principal)
-    const incluirEmpresasViaFiltroPrincipal = somenteEmpresas;
+    const incluirEmpresasViaFiltroPrincipal = somenteEmpresas || combinadoVendEmp;
 
     // Incluir empresas (clientes) com gerente vinculado
-    if (config.incluirEmpresas || incluirEmpresasViaFiltroPrincipal) {
-      const empresasFiltro = incluirEmpresasViaFiltroPrincipal
-        ? (filtroTipo === "empresas_gerente_especifico" ? "gerente_especifico" : "com_gerente")
-        : (config.empresasFiltro || "com_gerente");
-      const empresasGerenteIdEff = incluirEmpresasViaFiltroPrincipal ? gerenteId : config.empresasGerenteId;
+    if (incluirEmpresasViaFiltroPrincipal) {
+      const empresasFiltro = gerenteEspecificoAtivo ? "gerente_especifico" : "com_gerente";
+      const empresasGerenteIdEff = gerenteId;
       const { data: vinc } = await supabase
         .from("empresa_vinculos")
         .select("empresa_id, usuario_id")
@@ -204,8 +205,10 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
             <SelectItem value="com_gerente" className="text-xs">Somente vendedores com gerente vinculado</SelectItem>
             <SelectItem value="gerente_especifico" className="text-xs">Vendedores de um gerente específico</SelectItem>
             <SelectItem value="segmento" className="text-xs">Vendedores de um segmento específico</SelectItem>
-            <SelectItem value="empresas_com_gerente" className="text-xs">Empresas (clientes) vinculadas a qualquer gerente</SelectItem>
-            <SelectItem value="empresas_gerente_especifico" className="text-xs">Empresas (clientes) vinculadas a um gerente específico</SelectItem>
+            <SelectItem value="empresas_com_gerente" className="text-xs">Somente empresas (clientes) vinculadas a qualquer gerente</SelectItem>
+            <SelectItem value="empresas_gerente_especifico" className="text-xs">Somente empresas (clientes) vinculadas a um gerente específico</SelectItem>
+            <SelectItem value="vendedores_e_empresas_com_gerente" className="text-xs">Vendedores + empresas vinculados a qualquer gerente</SelectItem>
+            <SelectItem value="vendedores_e_empresas_gerente_especifico" className="text-xs">Vendedores + empresas de um gerente específico</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -357,50 +360,6 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         </div>
       </div>
 
-      {/* Incluir empresas (clientes) com gerente vinculado */}
-      <div className="space-y-2 border-t pt-3">
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="incluir_empresas"
-            checked={!!config.incluirEmpresas}
-            onCheckedChange={(v) => handleConfigChange("incluirEmpresas", !!v)}
-          />
-          <label htmlFor="incluir_empresas" className="text-xs font-semibold">
-            Enviar também para <b>empresas (clientes)</b> que tenham gerente vinculado
-          </label>
-        </div>
-        {config.incluirEmpresas && (
-          <div className="space-y-2 rounded-md border p-3">
-            <Label className="text-xs">Quais empresas</Label>
-            <Select
-              value={config.empresasFiltro || "com_gerente"}
-              onValueChange={(v) => handleConfigChange("empresasFiltro", v)}
-            >
-              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="com_gerente" className="text-xs">Todas as empresas com gerente vinculado</SelectItem>
-                <SelectItem value="gerente_especifico" className="text-xs">Empresas de um gerente específico</SelectItem>
-              </SelectContent>
-            </Select>
-            {(config.empresasFiltro || "com_gerente") === "gerente_especifico" && (
-              <Select
-                value={config.empresasGerenteId || ""}
-                onValueChange={(v) => handleConfigChange("empresasGerenteId", v)}
-              >
-                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Selecione o gerente..." /></SelectTrigger>
-                <SelectContent>
-                  {gerentes.map((g) => (
-                    <SelectItem key={g.id} value={g.id} className="text-xs">{g.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            <p className="text-[10px] text-muted-foreground">
-              Nas mensagens use <code>{`{{empresa.nome}}`}</code>, <code>{`{{empresa.cidade}}`}</code>, etc. Para vendedores esses campos ficam vazios.
-            </p>
-          </div>
-        )}
-      </div>
 
       <Alert>
         <MessageSquare className="h-4 w-4" />
