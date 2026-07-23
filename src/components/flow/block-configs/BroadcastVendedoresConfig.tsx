@@ -232,7 +232,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
       if (ids.length > 0) {
         const { data: gv } = await supabase
           .from("empresa_vinculos")
-          .select("vendedor_id, usuario_id, usuarios:usuario_id(id, nome, whatsapp, telefone)")
+          .select("vendedor_id, usuario_id, usuarios:usuario_id(id, nome, telefone)")
           .in("vendedor_id", ids)
           .not("usuario_id", "is", null);
         const map = new Map<string, { id: string; nome: string; whatsapp: string | null }>();
@@ -241,7 +241,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
             map.set(r.vendedor_id, {
               id: r.usuarios.id,
               nome: r.usuarios.nome || "",
-              whatsapp: r.usuarios.whatsapp || r.usuarios.telefone || null,
+              whatsapp: r.usuarios.telefone || null,
             });
           }
         });
