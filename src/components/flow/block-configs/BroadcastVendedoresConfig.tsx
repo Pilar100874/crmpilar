@@ -34,8 +34,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
   const [preview, setPreview] = useState<VendedorRow[]>([]);
   const [loadingPreview, setLoadingPreview] = useState(false);
 
-  const filtroTipo: "todos" | "com_gerente" | "gerente_especifico" | "segmento" =
-    config.filtroTipo || "todos";
+  const filtroTipo: string = config.filtroTipo || "todos";
   const gerenteId = config.gerenteId || "";
   const segmentoId = config.segmentoId || "";
   const combinarSegmento = !!config.combinarSegmento;
