@@ -114,6 +114,55 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
 
     // filtrar quem tem contato válido
     rows = rows.filter((r) => (r.whatsapp || r.telefone || "").replace(/\D/g, "").length >= 10);
+    rows = rows.map((r) => ({ ...r, kind: "vendedor" as const }));
+
+    // Incluir empresas (clientes) com gerente vinculado
+    if (config.incluirEmpresas) {
+      const empresasFiltro = config.empresasFiltro || "com_gerente";
+      const { data: vinc } = await supabase
+        .from("empresa_vinculos")
+        .select("empresa_id, usuario_id")
+        .eq("estabelecimento_id", estabId)
+        .not("usuario_id", "is", null);
+      const empresaGerenteMap = new Map<string, string>();
+      (vinc || []).forEach((r: any) => {
+        if (!r.empresa_id || !r.usuario_id) return;
+        if (empresasFiltro === "gerente_especifico" && config.empresasGerenteId && r.usuario_id !== config.empresasGerenteId) return;
+        if (!empresaGerenteMap.has(r.empresa_id)) empresaGerenteMap.set(r.empresa_id, r.usuario_id);
+      });
+      const empresaIds = Array.from(empresaGerenteMap.keys());
+      if (empresaIds.length) {
+        const { data: emps } = await supabase
+          .from("empresas")
+          .select("id, nome, nome_fantasia, whatsapp, telefone, segmento_id")
+          .eq("estabelecimento_id", estabId)
+          .eq("ativo", true)
+          .in("id", empresaIds);
+        const gerIds = Array.from(new Set(Array.from(empresaGerenteMap.values())));
+        const gerentesUsersMap = new Map<string, string>();
+        if (gerIds.length) {
+          const { data: us } = await supabase.from("usuarios").select("id, nome").in("id", gerIds);
+          (us || []).forEach((u: any) => gerentesUsersMap.set(u.id, u.nome || ""));
+        }
+        (emps || []).forEach((e: any) => {
+          const phone = (e.whatsapp || e.telefone || "").replace(/\D/g, "");
+          if (phone.length < 10) return;
+          const gid = empresaGerenteMap.get(e.id) || null;
+          rows.push({
+            id: e.id,
+            nome: e.nome,
+            nome_fantasia: e.nome_fantasia,
+            whatsapp: e.whatsapp,
+            telefone: e.telefone,
+            segmento_id: e.segmento_id,
+            gerente_usuario_id: gid,
+            gerente_nome: gid ? gerentesUsersMap.get(gid) || null : null,
+            kind: "empresa",
+          });
+        });
+      }
+    }
+
     return rows;
   };
 
