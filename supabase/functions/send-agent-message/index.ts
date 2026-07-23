@@ -195,7 +195,7 @@ serve(async (req) => {
       numero = await resolveEvolutionSession(session);
     }
 
-    if (whatsappNumeroId) {
+    if (!numero && whatsappNumeroId) {
       const { data: n } = await supabase
         .from("whatsapp_numeros").select("*").eq("id", whatsappNumeroId).eq("ativo", true).maybeSingle();
       numero = n;
