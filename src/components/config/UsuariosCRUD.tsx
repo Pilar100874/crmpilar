@@ -843,14 +843,14 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               <Label htmlFor="usuario-telefone">WhatsApp</Label>
               <MaskedInput
                 id="usuario-telefone"
-                mask={maskPhone}
+                mask={maskWhatsApp}
                 value={telefone}
                 onValueChange={setTelefone}
-                placeholder="(00) 00000-0000"
-                invalid={!!telefone && !validatePhone(telefone)}
+                placeholder="+55 (XX) XXXXX-XXXX"
+                invalid={!!telefone && !validateWhatsApp(telefone)}
               />
-              {telefone && !validatePhone(telefone) && (
-                <p className="text-xs text-destructive mt-1">WhatsApp inválido</p>
+              {telefone && !validateWhatsApp(telefone) && (
+                <p className="text-xs text-destructive mt-1">WhatsApp inválido (formato: +55 (XX) XXXXX-XXXX)</p>
               )}
             </div>
 
