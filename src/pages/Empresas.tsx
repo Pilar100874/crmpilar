@@ -2832,31 +2832,49 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                       const e = empresas.find(x => x.id === vid) as any;
                       return e?.nome_fantasia || e?.nome || "vendedor";
                     };
+                    const vendedorJaTemGerente = variant === "vendedor" && vinculosUsuarios.length > 0;
                     return (
                       <div className="space-y-4">
-                        <Card className="border-primary/20 bg-primary/5">
-                          <CardContent className="p-4 space-y-4">
-                            <h4 className="text-sm font-semibold">Adicionar Usuários</h4>
-                            <FilteredCheckboxList
-                              idPrefix="new-user"
-                              items={usuariosDisponiveis.map((u) => ({ id: u.id, label: u.nome }))}
-                              selected={novosUsuariosVinculo}
-                              onToggle={(id, checked) =>
-                                setNovosUsuariosVinculo(
-                                  checked
-                                    ? [...novosUsuariosVinculo, id]
-                                    : novosUsuariosVinculo.filter((x) => x !== id)
-                                )
-                              }
-                              searchPlaceholder="Buscar gerente..."
-                              emptyText="Nenhum gerente disponível."
-                            />
-                            <Button onClick={handleAdicionarUsuariosVinculo} className="w-full" size="sm">
-                              <Plus className="w-4 h-4 mr-2" />
-                              Adicionar Usuários Selecionados
-                            </Button>
-                          </CardContent>
-                        </Card>
+                        {vendedorJaTemGerente ? (
+                          <Card className="border-amber-500/30 bg-amber-500/5">
+                            <CardContent className="p-4">
+                              <p className="text-sm text-amber-700 dark:text-amber-400">
+                                Este vendedor já possui um gerente vinculado. Cada vendedor pode ter apenas <strong>1 gerente</strong>. Remova o atual abaixo para vincular outro.
+                              </p>
+                            </CardContent>
+                          </Card>
+                        ) : (
+                          <Card className="border-primary/20 bg-primary/5">
+                            <CardContent className="p-4 space-y-4">
+                              <h4 className="text-sm font-semibold">
+                                {variant === "vendedor" ? "Adicionar Gerente (apenas 1 permitido)" : "Adicionar Usuários"}
+                              </h4>
+                              <FilteredCheckboxList
+                                idPrefix="new-user"
+                                items={usuariosDisponiveis.map((u) => ({ id: u.id, label: u.nome }))}
+                                selected={novosUsuariosVinculo}
+                                onToggle={(id, checked) => {
+                                  if (variant === "vendedor") {
+                                    setNovosUsuariosVinculo(checked ? [id] : []);
+                                  } else {
+                                    setNovosUsuariosVinculo(
+                                      checked
+                                        ? [...novosUsuariosVinculo, id]
+                                        : novosUsuariosVinculo.filter((x) => x !== id)
+                                    );
+                                  }
+                                }}
+                                searchPlaceholder="Buscar gerente..."
+                                emptyText="Nenhum gerente disponível."
+                              />
+                              <Button onClick={handleAdicionarUsuariosVinculo} className="w-full" size="sm">
+                                <Plus className="w-4 h-4 mr-2" />
+                                {variant === "vendedor" ? "Vincular Gerente" : "Adicionar Usuários Selecionados"}
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        )}
+
                         <div>
                           <h4 className="text-sm font-semibold mb-3">Usuários Vinculados</h4>
                           {vinculosUsuarios.length > 0 ? (
