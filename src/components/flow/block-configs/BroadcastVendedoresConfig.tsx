@@ -73,6 +73,8 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
   const resolveDestinatarios = async (): Promise<VendedorRow[]> => {
     if (!estabId) return [];
     const somenteEmpresas = filtroTipo === "empresas_com_gerente" || filtroTipo === "empresas_gerente_especifico";
+    const combinadoVendEmp = filtroTipo === "vendedores_e_empresas_com_gerente" || filtroTipo === "vendedores_e_empresas_gerente_especifico";
+    const gerenteEspecificoAtivo = filtroTipo === "gerente_especifico" || filtroTipo === "empresas_gerente_especifico" || filtroTipo === "vendedores_e_empresas_gerente_especifico";
 
     let rows: VendedorRow[] = [];
 
@@ -107,8 +109,9 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         });
       }
 
-      if (filtroTipo === "com_gerente") rows = rows.filter((r) => !!r.gerente_usuario_id);
-      if (filtroTipo === "gerente_especifico" && gerenteId)
+      if (filtroTipo === "com_gerente" || filtroTipo === "vendedores_e_empresas_com_gerente")
+        rows = rows.filter((r) => !!r.gerente_usuario_id);
+      if (gerenteEspecificoAtivo && filtroTipo !== "empresas_gerente_especifico" && gerenteId)
         rows = rows.filter((r) => r.gerente_usuario_id === gerenteId);
 
       // filtrar quem tem contato válido
@@ -117,12 +120,11 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
     }
 
     // Empresas vinculadas ao gerente (via filtroTipo principal)
-    const incluirEmpresasViaFiltroPrincipal = somenteEmpresas;
+    const incluirEmpresasViaFiltroPrincipal = somenteEmpresas || combinadoVendEmp;
 
     // Incluir empresas (clientes) com gerente vinculado
-    if (config.incluirEmpresas || incluirEmpresasViaFiltroPrincipal) {
-      const empresasFiltro = incluirEmpresasViaFiltroPrincipal
-        ? (filtroTipo === "empresas_gerente_especifico" ? "gerente_especifico" : "com_gerente")
+    if (incluirEmpresasViaFiltroPrincipal) {
+      const empresasFiltro = gerenteEspecificoAtivo ? "gerente_especifico" : "com_gerente";
         : (config.empresasFiltro || "com_gerente");
       const empresasGerenteIdEff = incluirEmpresasViaFiltroPrincipal ? gerenteId : config.empresasGerenteId;
       const { data: vinc } = await supabase
