@@ -3013,7 +3013,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           let enviados = 0; let falhas = 0;
 
           // Resumo por gerente (agrupamento)
-          type ResumoDest = { nome: string; phone: string; tipo: "vendedor" | "empresa"; ok: boolean };
+          type ResumoDest = { nome: string; phone: string; tipo: "vendedor" | "empresa"; ok: boolean; invalid?: boolean };
           const resumoPorGerente = new Map<string, { gerente: { id: string; nome: string; whatsapp?: string; telefone?: string }; itens: ResumoDest[] }>();
 
 
