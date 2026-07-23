@@ -106,6 +106,9 @@ export async function executarBlocoWhatsapp(cfg: any, ctx: WfCtx = {}) {
   try {
     const mediaUrl = interpolar(cfg?.mediaUrl ?? cfg?.imagem ?? cfg?.arquivo_url ?? "", ctx.variaveis);
     const contentType = mediaUrl ? inferContentType(mediaUrl) : undefined;
+    const contact = cfg?.contact && cfg.contact.whatsapp
+      ? { nome: interpolar(cfg.contact.nome || "", ctx.variaveis), whatsapp: String(cfg.contact.whatsapp).replace(/\D/g, "") }
+      : undefined;
     const resultados: any[] = [];
     for (const telefone of telefones) {
       const { data, error } = await supabase.functions.invoke("send-agent-message", {
@@ -118,6 +121,7 @@ export async function executarBlocoWhatsapp(cfg: any, ctx: WfCtx = {}) {
           fileUrl: mediaUrl || undefined,
           mediaUrl: mediaUrl || undefined,
           contentType,
+          contact,
           canal: "whatsapp",
           whatsappSessionId,
           whatsappSessionName,
