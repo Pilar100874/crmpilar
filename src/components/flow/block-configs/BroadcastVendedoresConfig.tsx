@@ -287,8 +287,8 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         const gerIds = Array.from(new Set(Array.from(empresaGerenteMap.values())));
         const gerentesUsersMap = new Map<string, { nome: string; whatsapp: string | null }>();
         if (gerIds.length) {
-          const { data: us } = await supabase.from("usuarios").select("id, nome, whatsapp, telefone").in("id", gerIds);
-          (us || []).forEach((u: any) => gerentesUsersMap.set(u.id, { nome: u.nome || "", whatsapp: u.whatsapp || u.telefone || null }));
+          const { data: us } = await supabase.from("usuarios").select("id, nome, telefone").in("id", gerIds);
+          (us || []).forEach((u: any) => gerentesUsersMap.set(u.id, { nome: u.nome || "", whatsapp: u.telefone || null }));
         }
         (emps || []).forEach((e: any) => {
           const phone = (e.whatsapp || e.telefone || "").replace(/\D/g, "");
