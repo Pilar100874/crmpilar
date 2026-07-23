@@ -25,7 +25,7 @@ const blockCategories = [
   {
     name: "Mensagens",
     icon: "MessageSquare",
-    blocks: ["send_message", "media", "message_template", "goodbye"] as NodeType[],
+    blocks: ["send_message", "media", "message_template", "goodbye", "broadcast_vendedores", "send_contact_card"] as NodeType[],
   },
   {
     name: "Botões & Listas",
