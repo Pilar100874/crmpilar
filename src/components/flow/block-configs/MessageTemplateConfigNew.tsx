@@ -184,7 +184,7 @@ export const MessageTemplateConfigNew = ({ config, handleConfigChange }: ConfigP
         {config.numeroId && numeros.find((n) => n.id === config.numeroId)?.provider !== "cloud_api" && (
           <div className="flex items-start gap-2 p-2 rounded bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-xs text-amber-900 dark:text-amber-200">
             <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-            <span>Templates HSM só são enviados via Cloud API (Meta). Para Evolution/WAHA, será enviado o texto de fallback abaixo.</span>
+            <span>Templates HSM só são enviados via Cloud API (Meta). Para Evolution, será enviado o texto de fallback abaixo.</span>
           </div>
         )}
         <Select value={config.templateName || ""} onValueChange={onSelectTemplate} disabled={templates.length === 0}>
@@ -280,7 +280,7 @@ export const MessageTemplateConfigNew = ({ config, handleConfigChange }: ConfigP
         </div>
         <ul className="text-muted-foreground space-y-1 ml-5 list-disc">
           <li>Templates HSM precisam ser aprovados no WhatsApp Business Manager.</li>
-          <li>Só funcionam com Cloud API (Meta oficial). Evolution/WAHA não envia HSM.</li>
+          <li>Só funcionam com Cloud API (Meta oficial). Evolution não envia HSM.</li>
           <li>Templates são obrigatórios para enviar mensagem após 24h fora da janela.</li>
         </ul>
       </div>

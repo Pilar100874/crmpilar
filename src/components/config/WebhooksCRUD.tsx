@@ -59,7 +59,7 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
   const [webhooks, setWebhooks] = useState<WebhookConfig[]>([]);
   const [webhookTypes, setWebhookTypes] = useState<WebhookType[]>([
     { id: "n8n", name: "N8N" },
-    { id: "waha", name: "WAHA" },
+    { id: "evolution", name: "Evolution" },
     { id: "whatsapp", name: "WhatsApp Oficial" },
   ]);
   // Locais de uso fixos para todos os estabelecimentos

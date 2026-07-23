@@ -185,7 +185,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
           .update({ bot_flow_id: botId })
           .eq("id", sessionId);
         
-        // Configurar webhook/status no WAHA pelo backend seguro
+        // Configurar webhook/status na Evolution pelo backend seguro
         if (session) {
           try {
             const { data, error } = await supabase.functions.invoke('waha-manager', {
@@ -197,10 +197,10 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
               },
             });
             if (error || (data as any)?.error) {
-              console.warn("Não foi possível sincronizar o WAHA:", error?.message || (data as any)?.error);
+              console.warn("Não foi possível sincronizar a Evolution:", error?.message || (data as any)?.error);
             }
           } catch (webhookError) {
-            console.error("Erro ao sincronizar WAHA:", webhookError);
+            console.error("Erro ao sincronizar Evolution:", webhookError);
           }
         }
         
