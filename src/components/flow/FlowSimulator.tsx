@@ -2934,30 +2934,36 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             ? String(contextRef.current.last_generated_media_type || "")
             : "";
 
-          for (const v of vendedores) {
-            const phone = (v.whatsapp || v.telefone || "").replace(/\D/g, "");
-            const nome = v.nome_fantasia || v.nome || phone;
-            const g = gerentesMap.get(v.id);
-            const vendedorObj = {
-              nome: v.nome_fantasia || v.nome || "",
-              whatsapp: v.whatsapp || "",
-              telefone: v.telefone || "",
-            };
+          for (const d of destinatarios) {
+            const phone = d.phone;
+            const nome = d.nome || phone;
+            const g = d.gerente || null;
+            const vendedorObj = d.vendedorObj;
+            const empresaObj = d.empresaObj;
             const gerenteObj = {
               nome: g?.nome || config.fallbackNome || "",
               whatsapp: g?.whatsapp || config.fallbackWhatsapp || "",
               telefone: g?.telefone || "",
             };
-            const perCtx = {
+            const perCtx: any = {
               ...contextRef.current,
               vendedor: vendedorObj,
               gerente: gerenteObj,
+              empresa: empresaObj,
               "vendedor.nome": vendedorObj.nome,
               "vendedor.whatsapp": vendedorObj.whatsapp,
               "vendedor.telefone": vendedorObj.telefone,
               "gerente.nome": gerenteObj.nome,
               "gerente.whatsapp": gerenteObj.whatsapp,
               "gerente.telefone": gerenteObj.telefone,
+              "empresa.nome": empresaObj.nome,
+              "empresa.nome_fantasia": empresaObj.nome_fantasia,
+              "empresa.whatsapp": empresaObj.whatsapp,
+              "empresa.telefone": empresaObj.telefone,
+              "empresa.email": empresaObj.email,
+              "empresa.cidade": empresaObj.cidade,
+              "empresa.uf": empresaObj.uf,
+              "empresa.cnpj": empresaObj.cnpj,
             };
             const antes = interpolateVariables(config.textoAntes || "", perCtx).trim();
             const depois = interpolateVariables(config.textoDepois || "", perCtx).trim();
