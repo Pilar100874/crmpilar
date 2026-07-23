@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, ArrowLeft } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { X, ArrowLeft, Settings } from "lucide-react";
+import { EnvioMassaTemplatesCRUD } from "@/components/config/EnvioMassaTemplatesCRUD";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
