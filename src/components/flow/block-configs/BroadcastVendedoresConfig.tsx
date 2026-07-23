@@ -658,37 +658,10 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
           </label>
         </div>
         {usarMensagemPreDefinida ? (
-          <div className="space-y-2 rounded-md border p-2 bg-muted/10">
-            <div className="space-y-1">
-              <Label className="text-[11px]">Variável do <b>texto</b> (opcional)</Label>
-              <Input
-                className="h-8 text-xs"
-                value={preDefinidaVar}
-                onChange={(e) => handleConfigChange("preDefinidaVar", e.target.value)}
-                placeholder="last_mensagem_pre_definida"
-              />
-              <p className="text-[10px] text-muted-foreground">
-                Ex.: <code>last_mensagem_pre_definida</code>, <code>resposta_ia</code>, ou qualquer variável do fluxo. Deixe vazio para enviar só a mídia.
-              </p>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-[11px]">Variável da <b>mídia</b> (imagem/vídeo, opcional)</Label>
-              <Input
-                className="h-8 text-xs"
-                value={config.mediaVar || ""}
-                onChange={(e) => handleConfigChange("mediaVar", e.target.value)}
-                placeholder="last_generated_media_url"
-              />
-              <p className="text-[10px] text-muted-foreground">
-                Padrão: <code>last_generated_media_url</code> (gerada pelo bloco anterior). Aceita URL vinda de qualquer bloco.
-              </p>
-            </div>
-            <Textarea
-              className="text-xs min-h-[60px]"
-              placeholder="Opcional: texto adicional a enviar junto (usa {{variavel}})."
-              value={message}
-              onChange={(e) => handleConfigChange("message", e.target.value)}
-            />
+          <div className="rounded-md border p-2 bg-muted/10">
+            <p className="text-[11px] text-muted-foreground">
+              O texto e a mídia (imagem/vídeo) serão automaticamente reaproveitados do <b>bloco anterior</b> (Mensagem Pré Definida, Gerar Mídia IA, Upload, etc.). Nenhuma configuração adicional é necessária.
+            </p>
           </div>
         ) : (
           <Textarea
