@@ -66,7 +66,9 @@ export type NodeType =
   | "disparar_push"
   | "mensagem_pre_definida"
   | "broadcast_vendedores"
-  | "send_contact_card";
+  | "send_contact_card"
+  | "run_external_agent";
+
 
 
 export interface BlockDefinition {
@@ -841,6 +843,24 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       legenda: "",
     },
   },
+  {
+    type: "run_external_agent",
+    label: "Agente Externo (Claude/ChatGPT/Cursor)",
+    description: "Dispara um agente externo (Claude Code, ChatGPT, Cursor ou HTTP) passando o prompt e variáveis do fluxo.",
+    icon: "BrainCircuit",
+    color: "text-violet-600",
+    defaultData: {
+      provider: "claude",
+      model: "",
+      endpointUrl: "",
+      apiKeySecret: "",
+      prompt: "",
+      systemPrompt: "",
+      timeoutSeconds: 120,
+      outputVariable: "agente_externo_resposta",
+    },
+  },
 ];
+
 
 

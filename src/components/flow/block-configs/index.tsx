@@ -146,6 +146,8 @@ export {
 // Envio em massa para vendedores + envio de contato (vCard)
 export { BroadcastVendedoresConfig } from './BroadcastVendedoresConfig';
 export { SendContactCardConfig } from './SendContactCardConfig';
+export { RunExternalAgentConfig } from './RunExternalAgentConfig';
+
 
 
 
