@@ -427,6 +427,10 @@ export const PropertiesPanel = ({
         return <BlockConfigs.GenerateAIMediaConfig {...configProps} />;
       case "mensagem_pre_definida":
         return <BlockConfigs.MensagemPreDefinidaConfig {...configProps} />;
+      case "broadcast_vendedores":
+        return <BlockConfigs.BroadcastVendedoresConfig {...configProps} />;
+      case "send_contact_card":
+        return <BlockConfigs.SendContactCardConfig {...configProps} />;
 
       // Disparo direto / Loops
       case "send_whatsapp_to_number":

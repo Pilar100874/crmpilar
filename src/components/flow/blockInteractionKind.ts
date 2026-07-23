@@ -165,6 +165,8 @@ const MAP: Record<string, InteractionKind> = {
   crm_cadastro_empresa: SYSTEM,
   crm_agenda_rapida: SYSTEM,
   crm_gerar_relatorio: SYSTEM,
+  broadcast_vendedores: SYSTEM,
+  send_contact_card: SYSTEM,
 };
 
 export function getInteractionKind(blockType: string, config?: any): InteractionKind | null {

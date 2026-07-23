@@ -64,7 +64,9 @@ export type NodeType =
   | "attach_catalog"
   | "global_redirect"
   | "disparar_push"
-  | "mensagem_pre_definida";
+  | "mensagem_pre_definida"
+  | "broadcast_vendedores"
+  | "send_contact_card";
 
 
 export interface BlockDefinition {
@@ -800,5 +802,45 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       url: "/",
     },
   },
+  {
+    type: "broadcast_vendedores",
+    label: "Broadcast Vendedores",
+    description: "Envia mensagem para todos os vendedores filtrados (com/sem gerente, gerente específico, segmento)",
+    icon: "Users",
+    color: "text-emerald-600",
+    defaultData: {
+      filtroTipo: "todos",
+      gerenteId: "",
+      segmentoId: "",
+      combinarSegmento: false,
+      message: "",
+      usarMensagemPreDefinida: false,
+      preDefinidaVar: "last_mensagem_pre_definida",
+      enviarContato: false,
+      contatoTipo: "gerente_do_vendedor",
+      contatoNome: "",
+      contatoWhatsapp: "",
+      fallbackNome: "",
+      fallbackWhatsapp: "",
+      delaySeconds: 3,
+      outputVariable: "broadcast_vendedores_resultado",
+    },
+  },
+  {
+    type: "send_contact_card",
+    label: "Enviar Contato",
+    description: "Compartilha um contato via WhatsApp (gerente do vendedor atual ou contato fixo)",
+    icon: "Contact",
+    color: "text-emerald-600",
+    defaultData: {
+      modo: "gerente_do_vendedor",
+      contatoNome: "",
+      contatoWhatsapp: "",
+      fallbackNome: "",
+      fallbackWhatsapp: "",
+      legenda: "",
+    },
+  },
 ];
+
 
