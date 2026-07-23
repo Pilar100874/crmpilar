@@ -2860,18 +2860,26 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             const phone = (v.whatsapp || v.telefone || "").replace(/\D/g, "");
             const nome = v.nome_fantasia || v.nome || phone;
             const g = gerentesMap.get(v.id);
+            const vendedorObj = {
+              nome: v.nome_fantasia || v.nome || "",
+              whatsapp: v.whatsapp || "",
+              telefone: v.telefone || "",
+            };
+            const gerenteObj = {
+              nome: g?.nome || config.fallbackNome || "",
+              whatsapp: g?.whatsapp || config.fallbackWhatsapp || "",
+              telefone: g?.telefone || "",
+            };
             const perCtx = {
               ...contextRef.current,
-              vendedor: {
-                nome: v.nome_fantasia || v.nome || "",
-                whatsapp: v.whatsapp || "",
-                telefone: v.telefone || "",
-              },
-              gerente: {
-                nome: g?.nome || config.fallbackNome || "",
-                whatsapp: g?.whatsapp || config.fallbackWhatsapp || "",
-                telefone: g?.telefone || "",
-              },
+              vendedor: vendedorObj,
+              gerente: gerenteObj,
+              "vendedor.nome": vendedorObj.nome,
+              "vendedor.whatsapp": vendedorObj.whatsapp,
+              "vendedor.telefone": vendedorObj.telefone,
+              "gerente.nome": gerenteObj.nome,
+              "gerente.whatsapp": gerenteObj.whatsapp,
+              "gerente.telefone": gerenteObj.telefone,
             };
             const antes = interpolateVariables(config.textoAntes || "", perCtx).trim();
             const depois = interpolateVariables(config.textoDepois || "", perCtx).trim();
