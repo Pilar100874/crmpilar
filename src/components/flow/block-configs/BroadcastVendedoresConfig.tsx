@@ -357,50 +357,6 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         </div>
       </div>
 
-      {/* Incluir empresas (clientes) com gerente vinculado */}
-      <div className="space-y-2 border-t pt-3">
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="incluir_empresas"
-            checked={!!config.incluirEmpresas}
-            onCheckedChange={(v) => handleConfigChange("incluirEmpresas", !!v)}
-          />
-          <label htmlFor="incluir_empresas" className="text-xs font-semibold">
-            Enviar também para <b>empresas (clientes)</b> que tenham gerente vinculado
-          </label>
-        </div>
-        {config.incluirEmpresas && (
-          <div className="space-y-2 rounded-md border p-3">
-            <Label className="text-xs">Quais empresas</Label>
-            <Select
-              value={config.empresasFiltro || "com_gerente"}
-              onValueChange={(v) => handleConfigChange("empresasFiltro", v)}
-            >
-              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="com_gerente" className="text-xs">Todas as empresas com gerente vinculado</SelectItem>
-                <SelectItem value="gerente_especifico" className="text-xs">Empresas de um gerente específico</SelectItem>
-              </SelectContent>
-            </Select>
-            {(config.empresasFiltro || "com_gerente") === "gerente_especifico" && (
-              <Select
-                value={config.empresasGerenteId || ""}
-                onValueChange={(v) => handleConfigChange("empresasGerenteId", v)}
-              >
-                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Selecione o gerente..." /></SelectTrigger>
-                <SelectContent>
-                  {gerentes.map((g) => (
-                    <SelectItem key={g.id} value={g.id} className="text-xs">{g.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            <p className="text-[10px] text-muted-foreground">
-              Nas mensagens use <code>{`{{empresa.nome}}`}</code>, <code>{`{{empresa.cidade}}`}</code>, etc. Para vendedores esses campos ficam vazios.
-            </p>
-          </div>
-        )}
-      </div>
 
       <Alert>
         <MessageSquare className="h-4 w-4" />
