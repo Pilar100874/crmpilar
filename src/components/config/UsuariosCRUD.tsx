@@ -12,8 +12,8 @@ import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award, TestTube, Loader2,
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { AtendenteSkillsManager } from "./AtendenteSkillsManager";
 import { MaskedInput } from "@/components/ui/masked-input";
-import { maskPhone } from "@/lib/masks";
-import { validateEmail, validatePhone } from "@/lib/validators";
+import { maskWhatsApp } from "@/lib/masks";
+import { validateEmail, validateWhatsApp } from "@/lib/validators";
 import {
   Dialog,
   DialogContent,
