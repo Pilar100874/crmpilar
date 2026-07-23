@@ -2859,19 +2859,38 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           for (const v of vendedores) {
             const phone = (v.whatsapp || v.telefone || "").replace(/\D/g, "");
             const nome = v.nome_fantasia || v.nome || phone;
+            const g = gerentesMap.get(v.id);
+            const perCtx = {
+              ...contextRef.current,
+              vendedor: {
+                nome: v.nome_fantasia || v.nome || "",
+                whatsapp: v.whatsapp || "",
+                telefone: v.telefone || "",
+              },
+              gerente: {
+                nome: g?.nome || config.fallbackNome || "",
+                whatsapp: g?.whatsapp || config.fallbackWhatsapp || "",
+                telefone: g?.telefone || "",
+              },
+            };
+            const antes = interpolateVariables(config.textoAntes || "", perCtx).trim();
+            const depois = interpolateVariables(config.textoDepois || "", perCtx).trim();
+            const msgInterp = interpolateVariables(msg, perCtx);
+            const finalMsg = [antes, msgInterp, depois].filter(Boolean).join("\n\n");
+
             if (mediaUrlPre) {
-              addBotMessage(`[para ${nome} · ${phone}] ${msg}`, node.id);
+              addBotMessage(`[para ${nome} · ${phone}] ${finalMsg}`, node.id);
               addBotMediaMessage(mediaUrlPre, mediaTypePre === "video" ? "video" : "image", "", node.id);
             } else {
-              addBotMessage(`[para ${nome} · ${phone}] ${msg}`, node.id);
+              addBotMessage(`[para ${nome} · ${phone}] ${finalMsg}`, node.id);
             }
 
             let ok = true;
             if (useReal) {
               try {
                 const r = await executarBlocoWhatsapp(
-                  { telefone: phone, mensagem: msg, mediaUrl: mediaUrlPre || undefined },
-                  { variaveis: contextRef.current, workflow_tipo: "bot", origem: "broadcast_vendedores" },
+                  { telefone: phone, mensagem: finalMsg, mediaUrl: mediaUrlPre || undefined },
+                  { variaveis: perCtx, workflow_tipo: "bot", origem: "broadcast_vendedores" },
                 );
                 ok = !!r?.ok;
               } catch { ok = false; }
@@ -2882,7 +2901,6 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               let cNome = ""; let cPhone = "";
               const tipoContato = config.contatoTipo || "gerente_do_vendedor";
               if (tipoContato === "gerente_do_vendedor") {
-                const g = gerentesMap.get(v.id);
                 if (g && (g.whatsapp || g.telefone)) {
                   cNome = g.nome; cPhone = (g.whatsapp || g.telefone || "").replace(/\D/g, "");
                 } else {
@@ -2896,7 +2914,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 addBotMessage(`[para ${nome}] ${cardMsg}`, node.id);
                 if (useReal) {
                   try { await executarBlocoWhatsapp({ telefone: phone, mensagem: cardMsg }, {
-                    variaveis: contextRef.current, workflow_tipo: "bot", origem: "broadcast_vendedores_contato",
+                    variaveis: perCtx, workflow_tipo: "bot", origem: "broadcast_vendedores_contato",
                   }); } catch {}
                 }
               }
