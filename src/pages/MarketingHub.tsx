@@ -72,7 +72,6 @@ const tabItems: TabItem[] = [
   { id: 'config-apis', label: 'Config APIs', icon: Key, description: 'Gerencie chaves de API dos serviços de IA pagos' },
   { id: 'envio-massa', label: 'Envio em Massa', icon: Send, description: 'Dispare mensagens para múltiplos contatos' },
   { id: 'mensagens-grupo', label: 'Mensagens pré definidas', icon: MessageSquareText, description: 'Frases prontas por tema e grupo de produtos, geradas com IA' },
-  { id: 'monitor-respostas', label: 'Monitor de Respostas', icon: MessageSquareText, description: 'Acompanhe quem respondeu (ou não) aos envios do bot no WhatsApp' },
 
 
   { id: 'galeria', label: 'Galeria', icon: FolderOpen, description: 'Visualize o conteúdo criado' },
