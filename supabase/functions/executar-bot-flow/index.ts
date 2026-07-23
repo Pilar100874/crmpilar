@@ -296,10 +296,12 @@ async function executeBroadcast(
       const phone = ((e as any)?.whatsapp || (e as any)?.telefone || "").replace(/\D/g, "");
       if (e && phone.length >= 10) {
         const isVend = e.tipo_cliente === "vendedor";
+        const rawNomeE = e.nome_fantasia || e.nome || "";
+        const cleanNomeE = rawNomeE.replace(/^\s*vendedor(a)?\s+/i, "").trim() || rawNomeE;
         destinatarios.push({
           kind: isVend ? "vendedor" : "empresa", id: e.id, phone,
-          nome: e.nome_fantasia || e.nome || "",
-          vendedorObj: isVend ? { nome: e.nome_fantasia || e.nome || "", whatsapp: e.whatsapp || "" } : {},
+          nome: isVend ? cleanNomeE : rawNomeE,
+          vendedorObj: isVend ? { nome: cleanNomeE, whatsapp: e.whatsapp || "" } : {},
           empresaObj: {
             nome: e.nome, nome_fantasia: e.nome_fantasia, whatsapp: e.whatsapp,
             telefone: e.telefone, email: e.email, cidade: e.cidade, uf: e.estado, cnpj: e.cnpj,
@@ -392,10 +394,13 @@ async function executeBroadcast(
   let enviados = 0, falhas = 0, invalidos = 0;
   const detalhes: any[] = [];
 
+  const stripVendedorPrefix = (n: string) => (n || "").replace(/^\s*vendedor(a)?\s+/i, "").trim() || (n || "");
   for (const d of destinatarios) {
+    const vObj = { ...(d.vendedorObj || {}) };
+    if (vObj.nome) vObj.nome = stripVendedorPrefix(vObj.nome);
     const perCtx: any = {
       ...baseCtx,
-      vendedor: d.vendedorObj, empresa: d.empresaObj,
+      vendedor: vObj, empresa: d.empresaObj,
       gerente: {
         nome: d.gerente?.nome || cfg.fallbackNome || "",
         whatsapp: d.gerente?.whatsapp || cfg.fallbackWhatsapp || "",
