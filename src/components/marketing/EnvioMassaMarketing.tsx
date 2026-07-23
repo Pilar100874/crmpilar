@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, ArrowLeft } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { X, ArrowLeft, Settings } from "lucide-react";
+import { EnvioMassaTemplatesCRUD } from "@/components/config/EnvioMassaTemplatesCRUD";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
@@ -46,6 +54,7 @@ export function EnvioMassaMarketing() {
   const [state, setState] = useState<EnvioMassaState>(getInitialState());
   const [isSending, setIsSending] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
+  const [templatesDialogOpen, setTemplatesDialogOpen] = useState(false);
 
   // Load estabelecimento and usuario
   useEffect(() => {
@@ -335,9 +344,20 @@ export function EnvioMassaMarketing() {
             </Badge>
           )}
         </div>
-        <Badge variant="outline">
-          Etapa {currentStepIndex + 1} de {STEPS.length}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setTemplatesDialogOpen(true)}
+            className="gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            <span className="hidden sm:inline">Gerenciar templates</span>
+          </Button>
+          <Badge variant="outline">
+            Etapa {currentStepIndex + 1} de {STEPS.length}
+          </Badge>
+        </div>
       </div>
 
       {/* Progress Steps */}
@@ -443,6 +463,21 @@ export function EnvioMassaMarketing() {
           />
         )}
       </div>
+
+      {/* Templates management dialog */}
+      <Dialog open={templatesDialogOpen} onOpenChange={setTemplatesDialogOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Templates de Envio em Massa</DialogTitle>
+            <DialogDescription>
+              Crie e edite templates para usar na etapa "Montar Mensagem".
+            </DialogDescription>
+          </DialogHeader>
+          {estabelecimentoId && (
+            <EnvioMassaTemplatesCRUD estabelecimentoId={estabelecimentoId} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
