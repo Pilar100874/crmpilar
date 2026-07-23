@@ -227,12 +227,15 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
       const ids = rows.map((r) => r.id);
       if (ids.length > 0) {
         const { data: gv } = await supabase
-          .from("gerente_vendedores")
-          .select("vendedor_empresa_id, gerente_usuario_id, usuarios:gerente_usuario_id(id, nome)")
-          .in("vendedor_empresa_id", ids);
+          .from("empresa_vinculos")
+          .select("vendedor_id, usuario_id, usuarios:usuario_id(id, nome)")
+          .in("vendedor_id", ids)
+          .not("usuario_id", "is", null);
         const map = new Map<string, { id: string; nome: string }>();
         (gv || []).forEach((r: any) => {
-          if (r.usuarios?.id) map.set(r.vendedor_empresa_id, { id: r.usuarios.id, nome: r.usuarios.nome || "" });
+          if (r.vendedor_id && r.usuarios?.id && !map.has(r.vendedor_id)) {
+            map.set(r.vendedor_id, { id: r.usuarios.id, nome: r.usuarios.nome || "" });
+          }
         });
         rows = rows.map((r) => {
           const g = map.get(r.id);
