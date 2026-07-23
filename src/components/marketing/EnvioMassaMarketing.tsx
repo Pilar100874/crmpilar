@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { X, ArrowLeft, Settings } from "lucide-react";
+import { X, ArrowLeft } from "lucide-react";
 import { EnvioMassaTemplatesCRUD } from "@/components/config/EnvioMassaTemplatesCRUD";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
