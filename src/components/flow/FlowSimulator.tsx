@@ -2813,15 +2813,17 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
           // Regras derivadas do "Quem receberá"
           const _ft = config.filtroTipo || "todos";
-          const somenteEmpresas = _ft === "empresas_com_gerente" || _ft === "empresas_gerente_especifico";
-          const combinadoVendEmp = _ft === "vendedores_e_empresas_com_gerente" || _ft === "vendedores_e_empresas_gerente_especifico";
+          const modoEspecifico = _ft === "especifico";
+          const modoEmpresasSegmento = _ft === "empresas_segmento";
+          const somenteEmpresas = _ft === "empresas_com_gerente" || _ft === "empresas_gerente_especifico" || modoEmpresasSegmento || (modoEspecifico && config.especificoTipo !== "vendedor" && config.especificoTipo !== "gerente");
+          const combinadoVendEmp = false;
           const incluirEmpresas = somenteEmpresas || combinadoVendEmp;
-          const gerenteEspecificoAtivo = _ft === "gerente_especifico" || _ft === "empresas_gerente_especifico" || _ft === "vendedores_e_empresas_gerente_especifico";
+          const gerenteEspecificoAtivo = _ft === "gerente_especifico" || _ft === "empresas_gerente_especifico";
 
-          // Buscar vendedores (a menos que seja modo "somente empresas")
+          // Buscar vendedores (a menos que seja modo "somente empresas"/específico não-vendedor/segmento empresas)
           let vendedores: any[] = [];
           const gerentesMap = new Map<string, { id: string; nome: string; whatsapp?: string; telefone?: string }>();
-          if (!somenteEmpresas) {
+          if (!somenteEmpresas && !modoEspecifico && !modoEmpresasSegmento) {
             let q = supabase
               .from("empresas")
               .select("id, nome, nome_fantasia, whatsapp, telefone, segmento_id")
@@ -2829,7 +2831,6 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               .eq("tipo_cliente", "vendedor")
               .eq("ativo", true);
             if (_ft === "segmento" && config.segmentoId) q = q.eq("segmento_id", config.segmentoId);
-            if (config.combinarSegmento && config.segmentoId && _ft !== "segmento") q = q.eq("segmento_id", config.segmentoId);
             const { data: vendedoresData } = await q;
             vendedores = vendedoresData || [];
 
@@ -2845,12 +2846,12 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 });
               });
             }
-            if (_ft === "com_gerente" || _ft === "vendedores_e_empresas_com_gerente")
-              vendedores = vendedores.filter((v: any) => gerentesMap.has(v.id));
-            if (gerenteEspecificoAtivo && _ft !== "empresas_gerente_especifico" && config.gerenteId)
+            if (_ft === "com_gerente") vendedores = vendedores.filter((v: any) => gerentesMap.has(v.id));
+            if (_ft === "gerente_especifico" && config.gerenteId)
               vendedores = vendedores.filter((v: any) => gerentesMap.get(v.id)?.id === config.gerenteId);
             vendedores = vendedores.filter((v: any) => (v.whatsapp || v.telefone || "").replace(/\D/g, "").length >= 10);
           }
+
 
           // Destinatários
           type Destinatario = {
