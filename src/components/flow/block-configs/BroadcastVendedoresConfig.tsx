@@ -26,6 +26,7 @@ interface VendedorRow {
   segmento_id: string | null;
   gerente_usuario_id?: string | null;
   gerente_nome?: string | null;
+  gerente_whatsapp?: string | null;
   kind?: "vendedor" | "empresa";
 }
 
@@ -230,18 +231,22 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
       if (ids.length > 0) {
         const { data: gv } = await supabase
           .from("empresa_vinculos")
-          .select("vendedor_id, usuario_id, usuarios:usuario_id(id, nome)")
+          .select("vendedor_id, usuario_id, usuarios:usuario_id(id, nome, whatsapp, telefone)")
           .in("vendedor_id", ids)
           .not("usuario_id", "is", null);
-        const map = new Map<string, { id: string; nome: string }>();
+        const map = new Map<string, { id: string; nome: string; whatsapp: string | null }>();
         (gv || []).forEach((r: any) => {
           if (r.vendedor_id && r.usuarios?.id && !map.has(r.vendedor_id)) {
-            map.set(r.vendedor_id, { id: r.usuarios.id, nome: r.usuarios.nome || "" });
+            map.set(r.vendedor_id, {
+              id: r.usuarios.id,
+              nome: r.usuarios.nome || "",
+              whatsapp: r.usuarios.whatsapp || r.usuarios.telefone || null,
+            });
           }
         });
         rows = rows.map((r) => {
           const g = map.get(r.id);
-          return { ...r, gerente_usuario_id: g?.id || null, gerente_nome: g?.nome || null };
+          return { ...r, gerente_usuario_id: g?.id || null, gerente_nome: g?.nome || null, gerente_whatsapp: g?.whatsapp || null };
         });
       }
 
@@ -279,19 +284,20 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         const { data: emps } = await qEmp;
 
         const gerIds = Array.from(new Set(Array.from(empresaGerenteMap.values())));
-        const gerentesUsersMap = new Map<string, string>();
+        const gerentesUsersMap = new Map<string, { nome: string; whatsapp: string | null }>();
         if (gerIds.length) {
-          const { data: us } = await supabase.from("usuarios").select("id, nome").in("id", gerIds);
-          (us || []).forEach((u: any) => gerentesUsersMap.set(u.id, u.nome || ""));
+          const { data: us } = await supabase.from("usuarios").select("id, nome, whatsapp, telefone").in("id", gerIds);
+          (us || []).forEach((u: any) => gerentesUsersMap.set(u.id, { nome: u.nome || "", whatsapp: u.whatsapp || u.telefone || null }));
         }
         (emps || []).forEach((e: any) => {
           const phone = (e.whatsapp || e.telefone || "").replace(/\D/g, "");
           if (phone.length < 10) return;
           const gid = empresaGerenteMap.get(e.id) || null;
+          const gInfo = gid ? gerentesUsersMap.get(gid) : null;
           rows.push({
             id: e.id, nome: e.nome, nome_fantasia: e.nome_fantasia,
             whatsapp: e.whatsapp, telefone: e.telefone, segmento_id: e.segmento_id,
-            gerente_usuario_id: gid, gerente_nome: gid ? gerentesUsersMap.get(gid) || null : null,
+            gerente_usuario_id: gid, gerente_nome: gInfo?.nome || null, gerente_whatsapp: gInfo?.whatsapp || null,
             kind: "empresa",
           });
         });
@@ -573,10 +579,25 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
                           <Badge variant="secondary" className="text-[10px]">{totalGrupo}</Badge>
                         </div>
                         <div className="p-2 space-y-2">
-                          {subsArr.map(([sub, rows]) => (
+                          {subsArr.map(([sub, rows]) => {
+                            const gerWa = rows.find((x) => x.gerente_whatsapp)?.gerente_whatsapp || "";
+                            const gerWaDigits = gerWa.replace(/\D/g, "");
+                            return (
                             <div key={sub} className="rounded border bg-muted/10">
-                              <div className="flex items-center justify-between px-2 py-1 border-b bg-muted/20">
-                                <span className="text-[11px] font-medium">👤 {sub}</span>
+                              <div className="flex items-center justify-between px-2 py-1 border-b bg-muted/20 gap-2">
+                                <span className="text-[11px] font-medium flex items-center gap-1.5 truncate">
+                                  <span>👤 {sub}</span>
+                                  {gerWaDigits.length >= 10 && (
+                                    <a
+                                      href={`https://web.whatsapp.com/send?phone=${gerWaDigits}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[10px] text-muted-foreground hover:text-primary tabular-nums"
+                                    >
+                                      · {gerWa}
+                                    </a>
+                                  )}
+                                </span>
                                 <Badge variant="outline" className="text-[10px]">{rows.length}</Badge>
                               </div>
                               <div className="divide-y">
@@ -600,7 +621,8 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
                                 ))}
                               </div>
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     );
