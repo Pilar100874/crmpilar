@@ -35,6 +35,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
   const [gerentes, setGerentes] = useState<Array<{ id: string; nome: string }>>([]);
   const [preview, setPreview] = useState<VendedorRow[]>([]);
   const [loadingPreview, setLoadingPreview] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   // ---------- Cascata: público → subfiltro → entidade ----------
   const audiencia: string = config.audiencia || "vendedores";
