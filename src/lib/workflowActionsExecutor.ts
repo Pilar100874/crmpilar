@@ -95,6 +95,7 @@ export async function executarBlocoWhatsapp(cfg: any, ctx: WfCtx = {}) {
   const whatsappSessionName = cfg?.whatsappSessionName || null;
   const whatsappNumeroId = cfg?.whatsappNumeroId || cfg?.canal_id || null;
   try {
+    const mediaUrl = interpolar(cfg?.mediaUrl ?? cfg?.imagem ?? cfg?.arquivo_url ?? "", ctx.variaveis);
     const resultados: any[] = [];
     for (const telefone of telefones) {
       const { data, error } = await supabase.functions.invoke("send-agent-message", {
@@ -102,6 +103,10 @@ export async function executarBlocoWhatsapp(cfg: any, ctx: WfCtx = {}) {
           estabelecimento_id,
           telefone,
           mensagem,
+          text: mensagem,
+          caption: mediaUrl ? mensagem : undefined,
+          fileUrl: mediaUrl || undefined,
+          mediaUrl: mediaUrl || undefined,
           canal: "whatsapp",
           whatsappSessionId,
           whatsappSessionName,

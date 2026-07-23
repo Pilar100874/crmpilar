@@ -2838,17 +2838,24 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
           const { executarBlocoWhatsapp } = useReal ? await import("@/lib/workflowActionsExecutor") : ({} as any);
 
+          // Mídia gerada pelo bloco "Mensagem Pré Definida" anterior (se houver)
+          const mediaUrlPre = config.usarMensagemPreDefinida
+            ? String(contextRef.current.last_generated_media_url || "")
+            : "";
+
           for (const v of vendedores) {
             const phone = (v.whatsapp || v.telefone || "").replace(/\D/g, "");
             const nome = v.nome_fantasia || v.nome || phone;
-            addBotMessage(`[para ${nome} · ${phone}] ${msg}`, node.id);
+            const msgFinal = mediaUrlPre ? `${msg}\n${mediaUrlPre}` : msg;
+            addBotMessage(`[para ${nome} · ${phone}] ${msgFinal}`, node.id);
 
             let ok = true;
             if (useReal) {
               try {
-                const r = await executarBlocoWhatsapp({ telefone: phone, mensagem: msg }, {
-                  variaveis: contextRef.current, workflow_tipo: "bot", origem: "broadcast_vendedores",
-                });
+                const r = await executarBlocoWhatsapp(
+                  { telefone: phone, mensagem: msg, mediaUrl: mediaUrlPre || undefined },
+                  { variaveis: contextRef.current, workflow_tipo: "bot", origem: "broadcast_vendedores" },
+                );
                 ok = !!r?.ok;
               } catch { ok = false; }
             }
