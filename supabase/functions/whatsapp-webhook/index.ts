@@ -291,6 +291,20 @@ serve(async (req) => {
       }).catch((e) => console.log("[PONTO-CONFIRM] falhou:", e?.message));
     }
 
+    // ====== Bot response tracking: marca resposta recebida ======
+    if (from && body) {
+      supabase.rpc("mark_bot_response", {
+        p_telefone: from,
+        p_texto: String(body).slice(0, 2000),
+        p_estabelecimento_id: null,
+      }).then((r: any) => {
+        if (r?.data && Number(r.data) > 0) {
+          console.log(`[BOT-RESPONSE] Marcadas ${r.data} respostas para ${from}`);
+        }
+      }, (e: any) => console.log("[BOT-RESPONSE] falhou:", e?.message));
+    }
+
+
 
     // ====== Busca configuração do WAHA SEMPRE DO BANCO (nunca de secrets) ======
     let WAHA_URL = "";

@@ -194,6 +194,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         .eq("segmento_id", segmentoId);
       if (publicoEmpresas === "prospect") q = q.eq("status_comercial", "prospect");
       else if (publicoEmpresas === "cliente") q = q.neq("status_comercial", "prospect");
+      if (config.apenasJaResponderam) q = q.eq("ja_respondeu_whatsapp", true);
       const { data } = await q;
       return ((data as any) || [])
         .filter((e: any) => ((e.whatsapp || e.telefone || "").replace(/\D/g, "").length >= 10))
@@ -203,6 +204,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
           kind: "empresa" as const,
         }));
     }
+
 
     const somenteEmpresas = ft === "empresas_com_gerente" || ft === "empresas_gerente_especifico";
     const gerenteEspecificoAtivo = ft === "gerente_especifico" || ft === "empresas_gerente_especifico";
@@ -268,7 +270,9 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
           .in("id", empresaIds);
         if (publicoEmpresas === "prospect") qEmp = qEmp.eq("status_comercial", "prospect");
         else if (publicoEmpresas === "cliente") qEmp = qEmp.neq("status_comercial", "prospect");
+        if (config.apenasJaResponderam) qEmp = qEmp.eq("ja_respondeu_whatsapp", true);
         const { data: emps } = await qEmp;
+
         const gerIds = Array.from(new Set(Array.from(empresaGerenteMap.values())));
         const gerentesUsersMap = new Map<string, string>();
         if (gerIds.length) {
@@ -472,6 +476,23 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
           <p className="text-[10px] text-muted-foreground">Filtra pelo status comercial (prospect x cliente).</p>
         </div>
       )}
+
+      {/* Filtro: apenas quem já respondeu algum bot */}
+      {audiencia === "empresas" && (
+        <div className="flex items-start gap-2 rounded-md border p-2 bg-muted/10">
+          <Checkbox
+            id="apenas_ja_responderam"
+            checked={!!config.apenasJaResponderam}
+            onCheckedChange={(v) => handleConfigChange("apenasJaResponderam", !!v)}
+          />
+          <label htmlFor="apenas_ja_responderam" className="text-xs leading-tight">
+            <b>Somente empresas que já responderam algum bot</b>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Usa o marcador do cadastro da empresa (atualizado quando a empresa responde a um envio).</p>
+          </label>
+        </div>
+      )}
+
+
 
 
       {/* Preview */}
@@ -705,8 +726,40 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
           onChange={(e) => handleConfigChange("outputVariable", e.target.value)}
         />
       </div>
+
+      {/* Aguardar resposta */}
+      <div className="space-y-2 border-t pt-3">
+        <div className="flex items-start gap-2">
+          <Checkbox
+            id="aguardar_resposta"
+            checked={!!config.aguardarResposta}
+            onCheckedChange={(v) => handleConfigChange("aguardarResposta", !!v)}
+          />
+          <label htmlFor="aguardar_resposta" className="text-xs leading-tight">
+            <b>Aguardar resposta da empresa antes de continuar</b>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              Cria um registro de acompanhamento por destinatário. Quando a empresa responde no WhatsApp, o cadastro é marcado automaticamente como "já respondeu" e aparece no Monitor de Respostas.
+            </p>
+          </label>
+        </div>
+        {config.aguardarResposta && (
+          <div className="pl-6 space-y-1">
+            <Label className="text-xs">Prazo máximo para resposta (horas)</Label>
+            <Input
+              type="number"
+              min={1}
+              max={720}
+              className="h-8 text-xs w-32"
+              value={config.timeoutHoras ?? 24}
+              onChange={(e) => handleConfigChange("timeoutHoras", Math.max(1, Math.min(720, parseInt(e.target.value) || 24)))}
+            />
+            <p className="text-[10px] text-muted-foreground">Após esse prazo, os que não responderem são marcados como "sem resposta".</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
 export default BroadcastVendedoresConfig;
+

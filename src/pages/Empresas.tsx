@@ -34,6 +34,8 @@ import { APIImportDialogEmpresas } from "@/components/config/APIImportDialogEmpr
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { ConvertProspectDialog } from "@/components/empresas/ConvertProspectDialog";
 import { EmpresaLocalizacaoTab } from "@/components/empresas/EmpresaLocalizacaoTab";
+import { EmpresaAlertsBadge } from "@/components/empresas/EmpresaAlertsBadge";
+
 import { UserCheck } from "lucide-react";
 
 
@@ -1962,6 +1964,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                           return (
                               <td key="actions" className="p-3 sticky left-0 bg-gradient-to-l from-background via-background to-background/95 border-r border-border/30 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.15)] transition-all duration-200">
                                <div className="flex items-center justify-center gap-2">
+                                <EmpresaAlertsBadge empresa={empresa as any} />
+
                                 <Button
                                   size="sm"
                                   variant="outline"

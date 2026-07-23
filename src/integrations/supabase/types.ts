@@ -1829,6 +1829,71 @@ export type Database = {
           },
         ]
       }
+      bot_response_tracking: {
+        Row: {
+          block_id: string | null
+          bot_execution_id: string | null
+          contato_telefone: string
+          created_at: string
+          empresa_id: string | null
+          enviado_em: string
+          estabelecimento_id: string
+          expira_em: string
+          flow_id: string | null
+          flow_nome: string | null
+          id: string
+          respondido_em: string | null
+          resposta_texto: string | null
+          status: Database["public"]["Enums"]["bot_response_status"]
+          timeout_horas: number
+          updated_at: string
+        }
+        Insert: {
+          block_id?: string | null
+          bot_execution_id?: string | null
+          contato_telefone: string
+          created_at?: string
+          empresa_id?: string | null
+          enviado_em?: string
+          estabelecimento_id: string
+          expira_em?: string
+          flow_id?: string | null
+          flow_nome?: string | null
+          id?: string
+          respondido_em?: string | null
+          resposta_texto?: string | null
+          status?: Database["public"]["Enums"]["bot_response_status"]
+          timeout_horas?: number
+          updated_at?: string
+        }
+        Update: {
+          block_id?: string | null
+          bot_execution_id?: string | null
+          contato_telefone?: string
+          created_at?: string
+          empresa_id?: string | null
+          enviado_em?: string
+          estabelecimento_id?: string
+          expira_em?: string
+          flow_id?: string | null
+          flow_nome?: string | null
+          id?: string
+          respondido_em?: string | null
+          resposta_texto?: string | null
+          status?: Database["public"]["Enums"]["bot_response_status"]
+          timeout_horas?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_response_tracking_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendario_regras: {
         Row: {
           ativa: boolean
@@ -6049,6 +6114,7 @@ export type Database = {
           faturamento_estimado: string | null
           funcionarios_estimado: string | null
           id: string
+          ja_respondeu_whatsapp: boolean
           latitude: number | null
           longitude: number | null
           nome: string | null
@@ -6067,6 +6133,8 @@ export type Database = {
           tags: string[] | null
           telefone: string | null
           tipo_cliente: string
+          ultima_resposta_bot_em: string | null
+          ultima_resposta_bot_nome: string | null
           updated_at: string | null
           whatsapp: string | null
           whatsapp_status: Database["public"]["Enums"]["whatsapp_status_enum"]
@@ -6098,6 +6166,7 @@ export type Database = {
           faturamento_estimado?: string | null
           funcionarios_estimado?: string | null
           id?: string
+          ja_respondeu_whatsapp?: boolean
           latitude?: number | null
           longitude?: number | null
           nome?: string | null
@@ -6116,6 +6185,8 @@ export type Database = {
           tags?: string[] | null
           telefone?: string | null
           tipo_cliente?: string
+          ultima_resposta_bot_em?: string | null
+          ultima_resposta_bot_nome?: string | null
           updated_at?: string | null
           whatsapp?: string | null
           whatsapp_status?: Database["public"]["Enums"]["whatsapp_status_enum"]
@@ -6147,6 +6218,7 @@ export type Database = {
           faturamento_estimado?: string | null
           funcionarios_estimado?: string | null
           id?: string
+          ja_respondeu_whatsapp?: boolean
           latitude?: number | null
           longitude?: number | null
           nome?: string | null
@@ -6165,6 +6237,8 @@ export type Database = {
           tags?: string[] | null
           telefone?: string | null
           tipo_cliente?: string
+          ultima_resposta_bot_em?: string | null
+          ultima_resposta_bot_nome?: string | null
           updated_at?: string | null
           whatsapp?: string | null
           whatsapp_status?: Database["public"]["Enums"]["whatsapp_status_enum"]
@@ -23534,6 +23608,7 @@ export type Database = {
       desativar_automacoes_vencidas: { Args: never; Returns: undefined }
       exec_readonly_select: { Args: { sql_query: string }; Returns: Json }
       execute_sql: { Args: { sql_query: string }; Returns: Json }
+      expire_bot_response_tracking: { Args: never; Returns: number }
       generate_orcamento_token: { Args: never; Returns: string }
       get_auth_user_estabelecimento_id: { Args: never; Returns: string }
       get_chat_storage_stats: {
@@ -23594,6 +23669,14 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      mark_bot_response: {
+        Args: {
+          p_estabelecimento_id?: string
+          p_telefone: string
+          p_texto: string
+        }
+        Returns: number
       }
       match_policy_chunks: {
         Args: { match_count?: number; query_embedding: string }
@@ -23755,6 +23838,7 @@ export type Database = {
         | "ausente"
         | "offline"
         | "pausa"
+      bot_response_status: "aguardando" | "respondeu" | "sem_resposta"
       chat_prioridade: "baixa" | "normal" | "alta" | "urgente"
       chat_status:
         | "novo"
@@ -23915,6 +23999,7 @@ export const Constants = {
         "offline",
         "pausa",
       ],
+      bot_response_status: ["aguardando", "respondeu", "sem_resposta"],
       chat_prioridade: ["baixa", "normal", "alta", "urgente"],
       chat_status: [
         "novo",
