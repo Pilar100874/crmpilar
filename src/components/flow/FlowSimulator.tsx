@@ -3033,8 +3033,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           if (falhas > 0) addSystemMessage(`⚠️ Broadcast finalizado: ${enviados} enviados, ${falhas} falhas.`);
           else addSuccessMessage(`Broadcast finalizado: ${enviados}/${total} enviados.`);
 
-          // ===== Resumo ao(s) gerente(s) =====
-          if (config.enviarResumoGerente !== false && resumoPorGerente.size > 0) {
+          // ===== Resumo ao(s) gerente(s) e números extras =====
+          const numerosExtras: string[] = String(config.resumoNumerosExtras || "")
+            .split(/[\n,;]+/).map((n) => n.replace(/\D/g, "")).filter((n) => n.length >= 10);
+          const temResumoGerente = config.enviarResumoGerente !== false && resumoPorGerente.size > 0;
+          if (temResumoGerente || numerosExtras.length > 0) {
             const agora = new Date();
             const dataStr = agora.toLocaleDateString("pt-BR");
             const horaStr = agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
@@ -3049,30 +3052,60 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               ? `\n\n🖼️ ${mediaTypePre === "video" ? "Vídeo" : "Imagem"} anexada: ${mediaUrlPre}`
               : "";
 
-            for (const [, entry] of resumoPorGerente) {
-              const gPhone = (entry.gerente.whatsapp || entry.gerente.telefone || "").replace(/\D/g, "");
-              if (!gPhone) continue;
-
-              const lista = entry.itens
+            const buildResumo = (itens: ResumoDest[]) => {
+              const lista = itens
                 .map((it, i) => `${i + 1}. ${it.nome} — ${it.phone} (${it.tipo})${it.ok ? "" : " ❌"}`)
                 .join("\n");
-
-              const resumoMsg =
+              return (
                 `📋 *Mensagem enviadas pelo sistema automatico de mensagem:* ${dataStr} ${horaStr}\n\n` +
                 `— *Conteúdo enviado* —\n${conteudoMask || "(sem texto)"}${midiaInfo}\n\n` +
-                `— *Destinatários (${entry.itens.length})* —\n${lista}`;
+                `— *Destinatários (${itens.length})* —\n${lista}`
+              );
+            };
 
-              addBotMessage(`[resumo → gerente ${entry.gerente.nome || gPhone}]\n${resumoMsg}`, node.id);
-              if (useReal) {
-                try {
-                  await executarBlocoWhatsapp(
-                    { telefone: gPhone, mensagem: resumoMsg, mediaUrl: mediaUrlPre || undefined },
-                    { variaveis: contextRef.current, workflow_tipo: "bot", origem: "broadcast_vendedores_resumo" },
-                  );
-                } catch {}
+            if (temResumoGerente) {
+              for (const [, entry] of resumoPorGerente) {
+                const gPhone = (entry.gerente.whatsapp || entry.gerente.telefone || "").replace(/\D/g, "");
+                if (!gPhone) continue;
+                const resumoMsg = buildResumo(entry.itens);
+                addBotMessage(`[resumo → gerente ${entry.gerente.nome || gPhone}]\n${resumoMsg}`, node.id);
+                if (useReal) {
+                  try {
+                    await executarBlocoWhatsapp(
+                      { telefone: gPhone, mensagem: resumoMsg, mediaUrl: mediaUrlPre || undefined },
+                      { variaveis: contextRef.current, workflow_tipo: "bot", origem: "broadcast_vendedores_resumo" },
+                    );
+                  } catch {}
+                }
+              }
+            }
+
+            // Números extras recebem TODOS os destinatários (visão global)
+            if (numerosExtras.length > 0) {
+              const todosItens: ResumoDest[] = [];
+              for (const [, entry] of resumoPorGerente) todosItens.push(...entry.itens);
+              // Inclui também destinatários sem gerente vinculado
+              const idsComGerente = new Set(todosItens.map((i) => i.phone));
+              for (const d of destinatarios) {
+                if (!idsComGerente.has(d.phone)) {
+                  todosItens.push({ nome: d.nome || d.phone, phone: d.phone, tipo: d.kind, ok: true });
+                }
+              }
+              const resumoGlobal = buildResumo(todosItens);
+              for (const numero of numerosExtras) {
+                addBotMessage(`[resumo → número extra ${numero}]\n${resumoGlobal}`, node.id);
+                if (useReal) {
+                  try {
+                    await executarBlocoWhatsapp(
+                      { telefone: numero, mensagem: resumoGlobal, mediaUrl: mediaUrlPre || undefined },
+                      { variaveis: contextRef.current, workflow_tipo: "bot", origem: "broadcast_vendedores_resumo_extra" },
+                    );
+                  } catch {}
+                }
               }
             }
           }
+
 
           const newCtx = { ...contextRef.current, [outputVar]: resultado };
           contextRef.current = newCtx; setContext(newCtx);
