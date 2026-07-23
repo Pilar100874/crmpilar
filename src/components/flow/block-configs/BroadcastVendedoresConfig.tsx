@@ -138,12 +138,15 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
       });
       const empresaIds = Array.from(empresaGerenteMap.keys());
       if (empresaIds.length) {
-        const { data: emps } = await supabase
+        let qEmp = supabase
           .from("empresas")
-          .select("id, nome, nome_fantasia, whatsapp, telefone, segmento_id")
+          .select("id, nome, nome_fantasia, whatsapp, telefone, segmento_id, status_comercial")
           .eq("estabelecimento_id", estabId)
           .eq("ativo", true)
           .in("id", empresaIds);
+        if (publicoEmpresas === "prospect") qEmp = qEmp.eq("status_comercial", "prospect");
+        else if (publicoEmpresas === "cliente") qEmp = qEmp.neq("status_comercial", "prospect");
+        const { data: emps } = await qEmp;
         const gerIds = Array.from(new Set(Array.from(empresaGerenteMap.values())));
         const gerentesUsersMap = new Map<string, string>();
         if (gerIds.length) {
