@@ -2798,7 +2798,9 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           let msg = "";
           if (config.usarMensagemPreDefinida) {
             const varName = config.preDefinidaVar || "last_mensagem_pre_definida";
-            msg = String(contextRef.current[varName] || contextRef.current.last_mensagem_pre_definida || "");
+            const fromVar = varName ? String(contextRef.current[varName] ?? "") : "";
+            const extra = interpolateVariables(config.message || "", contextRef.current);
+            msg = [fromVar, extra].filter((s) => s && s.trim()).join("\n");
           } else {
             msg = interpolateVariables(config.message || "", contextRef.current);
           }
@@ -3019,9 +3021,10 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
           const { executarBlocoWhatsapp } = useReal ? await import("@/lib/workflowActionsExecutor") : ({} as any);
 
-          // Mídia gerada pelo bloco "Mensagem Pré Definida" anterior (se houver)
+          // Mídia vinda de um bloco anterior (Mensagem Pré Definida, Gerar Mídia IA, upload, etc.)
+          const mediaVarName = (config.mediaVar || "last_generated_media_url").trim();
           const mediaUrlPre = config.usarMensagemPreDefinida
-            ? String(contextRef.current.last_generated_media_url || "")
+            ? String(contextRef.current[mediaVarName] || contextRef.current.last_generated_media_url || "")
             : "";
           const mediaTypePre = config.usarMensagemPreDefinida
             ? String(contextRef.current.last_generated_media_type || "")

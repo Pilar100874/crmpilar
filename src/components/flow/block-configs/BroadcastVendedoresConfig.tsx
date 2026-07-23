@@ -554,16 +554,42 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
             onCheckedChange={(v) => handleConfigChange("usarMensagemPreDefinida", !!v)}
           />
           <label htmlFor="usar_pre_def" className="text-xs">
-            Usar frase de um bloco <b>Mensagem Pré Definida</b> anterior
+            Usar <b>texto e/ou mídia de um bloco anterior</b> (Mensagem Pré Definida, Gerar Mídia IA, Upload, etc.)
           </label>
         </div>
         {usarMensagemPreDefinida ? (
-          <Input
-            className="h-8 text-xs"
-            value={preDefinidaVar}
-            onChange={(e) => handleConfigChange("preDefinidaVar", e.target.value)}
-            placeholder="last_mensagem_pre_definida"
-          />
+          <div className="space-y-2 rounded-md border p-2 bg-muted/10">
+            <div className="space-y-1">
+              <Label className="text-[11px]">Variável do <b>texto</b> (opcional)</Label>
+              <Input
+                className="h-8 text-xs"
+                value={preDefinidaVar}
+                onChange={(e) => handleConfigChange("preDefinidaVar", e.target.value)}
+                placeholder="last_mensagem_pre_definida"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Ex.: <code>last_mensagem_pre_definida</code>, <code>resposta_ia</code>, ou qualquer variável do fluxo. Deixe vazio para enviar só a mídia.
+              </p>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px]">Variável da <b>mídia</b> (imagem/vídeo, opcional)</Label>
+              <Input
+                className="h-8 text-xs"
+                value={config.mediaVar || ""}
+                onChange={(e) => handleConfigChange("mediaVar", e.target.value)}
+                placeholder="last_generated_media_url"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Padrão: <code>last_generated_media_url</code> (gerada pelo bloco anterior). Aceita URL vinda de qualquer bloco.
+              </p>
+            </div>
+            <Textarea
+              className="text-xs min-h-[60px]"
+              placeholder="Opcional: texto adicional a enviar junto (usa {{variavel}})."
+              value={message}
+              onChange={(e) => handleConfigChange("message", e.target.value)}
+            />
+          </div>
         ) : (
           <Textarea
             className="text-xs min-h-[80px]"
@@ -571,11 +597,6 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
             value={message}
             onChange={(e) => handleConfigChange("message", e.target.value)}
           />
-        )}
-        {usarMensagemPreDefinida && (
-          <p className="text-[10px] text-muted-foreground">
-            Se o bloco anterior gerou imagem/vídeo, a mídia salva em <code>{`{{last_generated_media_url}}`}</code> é enviada automaticamente junto com a frase.
-          </p>
         )}
 
         <div className="grid grid-cols-1 gap-2 pt-2">
