@@ -333,6 +333,7 @@ const App = () => (
           <UnsavedChangesProvider>
           <SystemThemeLoader />
           <BackgroundLocationManager />
+          <WhatsappSessionMonitor />
           <WatchRedirectWrapper />
           <PWAInstallPrompt />
           <PWAUpdateNotifier />
