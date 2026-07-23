@@ -2917,7 +2917,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         break;
       }
 
-        const rawNumbers: string[] = Array.isArray(config.phoneNumbers)
+      case "send_sms": {
           ? config.phoneNumbers
           : config.phoneNumber ? [config.phoneNumber] : [];
         const numbers = rawNumbers
