@@ -112,13 +112,13 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         if (especificoTipo === "gerente") {
           const { data, error } = await supabase
             .from("usuarios")
-            .select("id, nome, email, telefone")
+            .select("id, nome, email, whatsapp")
             .eq("estabelecimento_id", estabId)
             .eq("tipo", "gerente")
             .order("nome");
           if (error) console.error("Erro ao carregar gerentes:", error);
           setAlvos(((data as any) || []).map((u: any) => ({
-            id: u.id, nome: u.nome || u.email || u.id, contato: u.telefone || "",
+            id: u.id, nome: u.nome || u.email || u.id, contato: u.whatsapp || "",
           })));
         } else {
           let q = supabase
@@ -160,16 +160,16 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
       if (!especificoAlvoId) return [];
       if (especificoTipo === "gerente") {
         const { data } = await supabase
-          .from("usuarios").select("id, nome, telefone")
+          .from("usuarios").select("id, nome, whatsapp")
           .eq("id", especificoAlvoId).maybeSingle();
         if (!data) return [];
-        const phone = ((data as any).telefone || "").replace(/\D/g, "");
+        const phone = ((data as any).whatsapp || "").replace(/\D/g, "");
         if (phone.length < 10) return [];
         return [{
           id: (data as any).id, nome: (data as any).nome, nome_fantasia: null,
-          whatsapp: (data as any).telefone, telefone: (data as any).telefone,
+          whatsapp: (data as any).whatsapp, telefone: (data as any).whatsapp,
           segmento_id: null, gerente_usuario_id: (data as any).id, gerente_nome: (data as any).nome,
-          gerente_whatsapp: (data as any).telefone,
+          gerente_whatsapp: (data as any).whatsapp,
           kind: "vendedor",
         }];
       }
@@ -232,7 +232,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
       if (ids.length > 0) {
         const { data: gv } = await supabase
           .from("empresa_vinculos")
-          .select("vendedor_id, usuario_id, usuarios:usuario_id(id, nome, telefone)")
+          .select("vendedor_id, usuario_id, usuarios:usuario_id(id, nome, whatsapp)")
           .in("vendedor_id", ids)
           .not("usuario_id", "is", null);
         const map = new Map<string, { id: string; nome: string; whatsapp: string | null }>();
@@ -241,7 +241,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
             map.set(r.vendedor_id, {
               id: r.usuarios.id,
               nome: r.usuarios.nome || "",
-              whatsapp: r.usuarios.telefone || null,
+              whatsapp: r.usuarios.whatsapp || null,
             });
           }
         });
@@ -287,8 +287,8 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         const gerIds = Array.from(new Set(Array.from(empresaGerenteMap.values())));
         const gerentesUsersMap = new Map<string, { nome: string; whatsapp: string | null }>();
         if (gerIds.length) {
-          const { data: us } = await supabase.from("usuarios").select("id, nome, telefone").in("id", gerIds);
-          (us || []).forEach((u: any) => gerentesUsersMap.set(u.id, { nome: u.nome || "", whatsapp: u.telefone || null }));
+          const { data: us } = await supabase.from("usuarios").select("id, nome, whatsapp").in("id", gerIds);
+          (us || []).forEach((u: any) => gerentesUsersMap.set(u.id, { nome: u.nome || "", whatsapp: u.whatsapp || null }));
         }
         (emps || []).forEach((e: any) => {
           const phone = (e.whatsapp || e.telefone || "").replace(/\D/g, "");
