@@ -38,6 +38,8 @@ import AutoVideoWizardPage from "./pages/AutoVideoWizardPage";
 import MarketingCanvas from "./pages/MarketingCanvas";
 import MarketingAutomacoes from "./pages/MarketingAutomacoes";
 import MarketingCampanhas from "./pages/MarketingCampanhas";
+import BotResponseMonitor from "./pages/BotResponseMonitor";
+
 import ChatWebhook from "./pages/ChatWebhook";
 import MeusTextosProntos from "./pages/MeusTextosProntos";
 import MeusAnexos from "./pages/MeusAnexos";
@@ -397,6 +399,8 @@ const App = () => (
               <Route path="/marketing/canvas" element={<MarketingCanvas />} />
               <Route path="/marketing/automacoes" element={<MarketingAutomacoes />} />
               <Route path="/marketing/campanhas" element={<MarketingCampanhas />} />
+              <Route path="/marketing/monitor-respostas" element={<BotResponseMonitor />} />
+
               <Route path="/relatorios" element={<Relatorios />} />
               <Route path="/relatorios/viewer" element={<ReportBroViewerPage />} />
               <Route path="/importacao-produtos" element={<ImportacaoProdutosLista />} />
