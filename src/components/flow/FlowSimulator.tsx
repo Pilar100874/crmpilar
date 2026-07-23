@@ -2913,10 +2913,12 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               const phone = ((e as any)?.whatsapp || (e as any)?.telefone || "").replace(/\D/g, "");
               if (e && phone.length >= 10) {
                 const isVend = (e as any).tipo_cliente === "vendedor";
+                const rawNomeE = (e as any).nome_fantasia || (e as any).nome || "";
+                const cleanNomeE = rawNomeE.replace(/^\s*vendedor(a)?\s+/i, "").trim() || rawNomeE;
                 destinatarios.push({
                   kind: isVend ? "vendedor" : "empresa", id: (e as any).id, phone,
-                  nome: (e as any).nome_fantasia || (e as any).nome || "",
-                  vendedorObj: isVend ? { nome: (e as any).nome_fantasia || (e as any).nome || "", whatsapp: (e as any).whatsapp || "", telefone: (e as any).telefone || "" } : { nome: "", whatsapp: "", telefone: "" },
+                  nome: isVend ? cleanNomeE : rawNomeE,
+                  vendedorObj: isVend ? { nome: cleanNomeE, whatsapp: (e as any).whatsapp || "", telefone: (e as any).telefone || "" } : { nome: "", whatsapp: "", telefone: "" },
                   empresaObj: {
                     nome: (e as any).nome || "", nome_fantasia: (e as any).nome_fantasia || "",
                     whatsapp: (e as any).whatsapp || "", telefone: (e as any).telefone || "",
