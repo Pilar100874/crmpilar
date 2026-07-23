@@ -143,6 +143,10 @@ export {
   CarouselConfig,
 } from './EvolutionButtonsBlocks';
 
+// Broadcast para vendedores + envio de contato (vCard)
+export { BroadcastVendedoresConfig } from './BroadcastVendedoresConfig';
+export { SendContactCardConfig } from './SendContactCardConfig';
+
 
 
 
