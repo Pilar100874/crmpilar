@@ -241,16 +241,52 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
               <label htmlFor="combinar_segmento" className="text-xs">Combinar com filtro de segmento</label>
             </div>
           )}
-          {(filtroTipo === "segmento" || combinarSegmento) && (
-            <Select value={segmentoId} onValueChange={(v) => handleConfigChange("segmentoId", v)}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Selecione o segmento..." /></SelectTrigger>
-              <SelectContent>
-                {segmentos.map((s) => (
-                  <SelectItem key={s.id} value={s.id} className="text-xs">{s.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          {(filtroTipo === "segmento" || combinarSegmento) && (() => {
+            const segClientes = segmentos.filter((s) => !s.is_prospect);
+            const segProspects = segmentos.filter((s) => s.is_prospect);
+            return (
+              <Select value={segmentoId} onValueChange={(v) => handleConfigChange("segmentoId", v)}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Selecione o segmento..." /></SelectTrigger>
+                <SelectContent>
+                  {segClientes.length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel className="text-[10px] uppercase text-muted-foreground">Segmentos de Cliente</SelectLabel>
+                      {segClientes.map((s) => (
+                        <SelectItem key={s.id} value={s.id} className="text-xs">{s.nome}</SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )}
+                  {segProspects.length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel className="text-[10px] uppercase text-muted-foreground">Segmentos de Prospect</SelectLabel>
+                      {segProspects.map((s) => (
+                        <SelectItem key={s.id} value={s.id} className="text-xs">{s.nome}</SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )}
+                  {segmentos.length === 0 && (
+                    <div className="px-2 py-1 text-[11px] text-muted-foreground">Nenhum segmento cadastrado</div>
+                  )}
+                </SelectContent>
+              </Select>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* Público das empresas (quando incluir empresas) */}
+      {["empresas_com_gerente","empresas_gerente_especifico","vendedores_e_empresas_com_gerente","vendedores_e_empresas_gerente_especifico"].includes(filtroTipo) && (
+        <div className="space-y-1">
+          <Label className="text-xs">Público das empresas</Label>
+          <Select value={publicoEmpresas} onValueChange={(v) => handleConfigChange("publicoEmpresas", v)}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="cliente" className="text-xs">Somente clientes</SelectItem>
+              <SelectItem value="prospect" className="text-xs">Somente prospects</SelectItem>
+              <SelectItem value="ambos" className="text-xs">Clientes e prospects</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-[10px] text-muted-foreground">Filtra empresas com base no status comercial (prospect x cliente).</p>
         </div>
       )}
 
