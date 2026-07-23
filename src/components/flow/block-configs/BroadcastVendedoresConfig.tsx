@@ -72,25 +72,25 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
 
   const resolveDestinatarios = async (): Promise<VendedorRow[]> => {
     if (!estabId) return [];
-    let q = supabase
-      .from("empresas")
-      .select("id, nome, nome_fantasia, whatsapp, telefone, segmento_id")
-      .eq("estabelecimento_id", estabId)
-      .eq("tipo_cliente", "vendedor")
-      .eq("ativo", true);
+    const somenteEmpresas = filtroTipo === "empresas_com_gerente" || filtroTipo === "empresas_gerente_especifico";
 
-    if (filtroTipo === "segmento" && segmentoId) q = q.eq("segmento_id", segmentoId);
-    if (combinarSegmento && segmentoId && filtroTipo !== "segmento") q = q.eq("segmento_id", segmentoId);
+    let rows: VendedorRow[] = [];
 
-    const { data: vendedores } = await q;
-    let rows: VendedorRow[] = (vendedores as any) || [];
+    if (!somenteEmpresas) {
+      let q = supabase
+        .from("empresas")
+        .select("id, nome, nome_fantasia, whatsapp, telefone, segmento_id")
+        .eq("estabelecimento_id", estabId)
+        .eq("tipo_cliente", "vendedor")
+        .eq("ativo", true);
 
-    // Vínculos gerente↔vendedor
-    if (
-      filtroTipo === "com_gerente" ||
-      filtroTipo === "gerente_especifico" ||
-      rows.length > 0
-    ) {
+      if (filtroTipo === "segmento" && segmentoId) q = q.eq("segmento_id", segmentoId);
+      if (combinarSegmento && segmentoId && filtroTipo !== "segmento") q = q.eq("segmento_id", segmentoId);
+
+      const { data: vendedores } = await q;
+      rows = (vendedores as any) || [];
+
+      // Vínculos gerente↔vendedor
       const ids = rows.map((r) => r.id);
       if (ids.length > 0) {
         const { data: gv } = await supabase
@@ -106,15 +106,18 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
           return { ...r, gerente_usuario_id: g?.id || null, gerente_nome: g?.nome || null };
         });
       }
+
+      if (filtroTipo === "com_gerente") rows = rows.filter((r) => !!r.gerente_usuario_id);
+      if (filtroTipo === "gerente_especifico" && gerenteId)
+        rows = rows.filter((r) => r.gerente_usuario_id === gerenteId);
+
+      // filtrar quem tem contato válido
+      rows = rows.filter((r) => (r.whatsapp || r.telefone || "").replace(/\D/g, "").length >= 10);
+      rows = rows.map((r) => ({ ...r, kind: "vendedor" as const }));
     }
 
-    if (filtroTipo === "com_gerente") rows = rows.filter((r) => !!r.gerente_usuario_id);
-    if (filtroTipo === "gerente_especifico" && gerenteId)
-      rows = rows.filter((r) => r.gerente_usuario_id === gerenteId);
-
-    // filtrar quem tem contato válido
-    rows = rows.filter((r) => (r.whatsapp || r.telefone || "").replace(/\D/g, "").length >= 10);
-    rows = rows.map((r) => ({ ...r, kind: "vendedor" as const }));
+    // Empresas vinculadas ao gerente (via filtroTipo principal)
+    const incluirEmpresasViaFiltroPrincipal = somenteEmpresas;
 
     // Incluir empresas (clientes) com gerente vinculado
     if (config.incluirEmpresas) {
