@@ -3163,8 +3163,9 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             const depoisMask = maskVars(config.textoDepois || "").trim();
             const msgMask = config.usarMensagemPreDefinida ? msg : maskVars(config.message || "");
             const conteudoMask = [antesMask, msgMask, depoisMask].filter(Boolean).join("\n\n");
+            // A mídia é anexada de verdade via mediaUrl no envio — não colocamos a URL no texto
             const midiaInfo = mediaUrlPre
-              ? `\n\n🖼️ ${mediaTypePre === "video" ? "Vídeo" : "Imagem"} anexada: ${mediaUrlPre}`
+              ? `\n\n🖼️ ${mediaTypePre === "video" ? "Vídeo" : "Imagem"} anexada (enviada em anexo)`
               : "";
 
             const buildResumo = (itens: ResumoDest[]) => {
