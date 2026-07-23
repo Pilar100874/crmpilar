@@ -242,7 +242,9 @@ export function StepCompose({
   onContentChange,
   onUploadMedia,
   onBack,
-  onNext
+  onNext,
+  canal,
+  onOpenTemplates
 }: StepComposeProps) {
   const [activeTab, setActiveTab] = useState<'templates' | 'text' | 'media' | 'catalogo' | 'anexos'>('templates');
   const [textInput, setTextInput] = useState('');
