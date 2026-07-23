@@ -3123,7 +3123,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 cNome = config.contatoNome || ""; cPhone = (config.contatoWhatsapp || "").replace(/\D/g, "");
               }
               if (cPhone) {
-                addBotMessage(`[para ${nome}] 📇 Cartão de contato: *${cNome || cPhone}* (wa.me/${cPhone})`, node.id);
+                addBotMessage(`📇 Cartão de contato: *${cNome || cPhone}* (wa.me/${cPhone})`, node.id);
                 if (useReal) {
                   try {
                     await executarBlocoWhatsapp(
