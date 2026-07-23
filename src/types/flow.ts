@@ -64,7 +64,9 @@ export type NodeType =
   | "attach_catalog"
   | "global_redirect"
   | "disparar_push"
-  | "mensagem_pre_definida";
+  | "mensagem_pre_definida"
+  | "broadcast_vendedores"
+  | "send_contact_card";
 
 
 export interface BlockDefinition {
