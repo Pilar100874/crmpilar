@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 import { MessageSquareText, Sparkles, Image as ImageIcon, Video, Info, Check } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { PROMPT_PRESETS, type PromptPreset } from "@/components/marketing/ai-studio/PromptPresets";
