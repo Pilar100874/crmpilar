@@ -3219,6 +3219,9 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 if (!gPhone) continue;
                 const resumoMsg = buildResumo(entry.itens);
                 addBotMessage(`[resumo → gerente ${entry.gerente.nome || gPhone}]\n${resumoMsg}`, node.id);
+                if (mediaUrlPre) {
+                  addBotMediaMessage(mediaUrlPre, mediaTypePre === "video" ? "video" : "image", "", node.id);
+                }
                 if (useReal) {
                   try {
                     await executarBlocoWhatsapp(
