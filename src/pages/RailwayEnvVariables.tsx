@@ -84,9 +84,9 @@ const ALL_ENV_VARIABLES: EnvVariable[] = [
   { name: 'SEEDREAM_SECRET_KEY', description: 'Secret Access Key do Seedream', example: '', category: 'ai', required: false },
   
   // WhatsApp
-  { name: 'WAHA_API_URL', description: 'URL da API WAHA (WhatsApp)', example: 'https://waha.seu-servidor.com', category: 'whatsapp', required: false },
-  { name: 'WAHA_API_KEY', description: 'Chave da API WAHA', example: '', category: 'whatsapp', required: false },
-  { name: 'WAHA_SESSION', description: 'Nome da sessão WAHA', example: 'default', category: 'whatsapp', required: false },
+  { name: 'EVOLUTION_API_URL', description: 'URL da API Evolution (WhatsApp)', example: 'https://evolution.seu-servidor.com', category: 'whatsapp', required: false },
+  { name: 'EVOLUTION_API_KEY', description: 'Chave da API Evolution', example: '', category: 'whatsapp', required: false },
+  { name: 'EVOLUTION_SESSION', description: 'Nome da sessão Evolution', example: 'default', category: 'whatsapp', required: false },
   { name: 'EVOLUTION_API_URL', description: 'URL da API Evolution', example: 'https://evolution.seu-servidor.com', category: 'whatsapp', required: false },
   { name: 'EVOLUTION_API_KEY', description: 'Chave da API Evolution', example: '', category: 'whatsapp', required: false },
   { name: 'EVOLUTION_INSTANCE', description: 'Nome da instância Evolution', example: 'minha-instancia', category: 'whatsapp', required: false },
