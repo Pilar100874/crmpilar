@@ -172,16 +172,16 @@ serve(async (req) => {
       numero = n;
     }
 
-    // Fallback antigo (compatibilidade): whatsapp_config singleton
-    if (!numero) {
+    // Fallback antigo (compatibilidade): whatsapp_config por estabelecimento
+    if (!numero && conversation.estabelecimento_id) {
       const { data: wahaConfig } = await supabase
         .from("whatsapp_config")
         .select("*")
-        .limit(1)
+        .eq("estabelecimento_id", conversation.estabelecimento_id)
         .maybeSingle();
       if (wahaConfig?.waha_url && wahaConfig?.waha_api_key) {
         numero = {
-          provider: "evolution",
+          provider: wahaConfig.provider || "evolution",
           waha_url: wahaConfig.waha_url,
           waha_api_key: wahaConfig.waha_api_key,
           session_name: wahaConfig.session_name || "default",
