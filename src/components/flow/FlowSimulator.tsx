@@ -2606,12 +2606,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               contextRef.current = newCtx;
               setContext(newCtx);
 
+              const ocultarNoChat = !!config.ocultarNoChat;
               if ((config.apresentacao || "texto") === "midia") {
                 // Gera mídia com a frase como texto principal
                 const variations = Math.max(1, Math.min(6, config.variations || 1));
                 const mediaType = config.mediaType === "video" ? "video" : "image";
-                addSystemMessage(`🎨 Gerando ${variations} ${mediaType === "video" ? "vídeo(s)" : "imagem(ns)"} com a frase escolhida…`);
-                addBotMessage(frase, node.id);
+                addSystemMessage(`🎨 Gerando ${variations} ${mediaType === "video" ? "vídeo(s)" : "imagem(ns)"} com a frase escolhida${ocultarNoChat ? " (modo silencioso)" : ""}…`);
+                if (!ocultarNoChat) addBotMessage(frase, node.id);
                 try {
                   const { data: genData, error: genErr } = await supabase.functions.invoke("bot-generate-ai-media", {
                     body: {
@@ -2638,18 +2639,26 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                     };
                     contextRef.current = mediaCtx;
                     setContext(mediaCtx);
-                    for (const url of urls.slice(0, variations)) {
-                      addBotMediaMessage(url, mediaType === "video" ? "video" : "image", "", node.id);
+                    if (ocultarNoChat) {
+                      addSystemMessage(`✅ ${urls.length} mídia(s) gerada(s) e guardada(s) em {{last_generated_media_url}} (não enviado ao chat).`);
+                    } else {
+                      for (const url of urls.slice(0, variations)) {
+                        addBotMediaMessage(url, mediaType === "video" ? "video" : "image", "", node.id);
+                      }
                     }
                   } else {
-                    addSystemMessage("⚠️ Não consegui gerar a mídia agora. Enviei apenas o texto.");
+                    addSystemMessage("⚠️ Não consegui gerar a mídia agora." + (ocultarNoChat ? "" : " Enviei apenas o texto."));
                   }
                 } catch (mediaErr: any) {
                   console.error("[SIM] mensagem_pre_definida media error:", mediaErr);
-                  addSystemMessage("⚠️ Falha ao gerar a mídia. Enviei apenas o texto.");
+                  addSystemMessage("⚠️ Falha ao gerar a mídia." + (ocultarNoChat ? "" : " Enviei apenas o texto."));
                 }
               } else {
-                addBotMessage(frase, node.id);
+                if (ocultarNoChat) {
+                  addSystemMessage(`🤫 Frase guardada em {{${config.outputVariable || "last_mensagem_pre_definida"}}} (não enviada ao chat).`);
+                } else {
+                  addBotMessage(frase, node.id);
+                }
               }
             }
           }
