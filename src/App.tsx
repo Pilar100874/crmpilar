@@ -31,6 +31,7 @@ import Config from "./pages/Config";
 import SystemVisualConfig from "./pages/SystemVisualConfig";
 import SystemThemeLoader from "./components/SystemThemeLoader";
 import BackgroundLocationManager from "./components/BackgroundLocationManager";
+import WhatsappSessionMonitor from "./components/WhatsappSessionMonitor";
 import GlobalVariables from "./pages/GlobalVariables";
 import Desenho from "./pages/Desenho";
 import MarketingHub from "./pages/MarketingHub";
