@@ -126,10 +126,17 @@ export async function executarBlocoWhatsapp(cfg: any, ctx: WfCtx = {}) {
         },
       });
       if (error) resultados.push({ telefone, ok: false, erro: error.message });
-      else resultados.push({ telefone, ok: true, response: data });
+      else resultados.push({
+        telefone,
+        ok: data?.success !== false,
+        invalid_number: !!data?.invalid_number,
+        reason: data?.reason || null,
+        response: data,
+      });
     }
     const okAll = resultados.every((r) => r.ok);
-    return { ok: okAll, response: resultados };
+    const anyInvalid = resultados.some((r: any) => r.invalid_number);
+    return { ok: okAll, invalid_number: anyInvalid, response: resultados };
   } catch (e: any) {
     return { ok: false, erro: e?.message || String(e) };
   }
