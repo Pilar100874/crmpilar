@@ -3565,7 +3565,41 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       }
 
 
+      case "run_external_agent": {
+        const outputVar = config.outputVariable || "agente_externo_resposta";
+        const providerLabel = ({
+          claude: "Claude", chatgpt: "ChatGPT", cursor: "Cursor",
+          lovable_ai: "Lovable AI", custom: "Endpoint customizado",
+        } as any)[config.provider || "claude"] || "Agente";
+        addSystemMessage(`🤖 Chamando agente externo (${providerLabel})...`);
+        (async () => {
+          try {
+            const { data, error } = await supabase.functions.invoke("run-external-agent", {
+              body: {
+                provider: config.provider || "claude",
+                prompt: config.prompt || "",
+                systemPrompt: config.systemPrompt || "",
+                model: config.model || undefined,
+                endpointUrl: config.endpointUrl || undefined,
+                apiKeySecret: config.apiKeySecret || undefined,
+                timeoutSeconds: config.timeoutSeconds || 120,
+                variables: contextRef.current,
+              },
+            });
+            if (error) throw error;
+            if (!data?.ok) throw new Error(data?.error || "Falha no agente");
+            setContext((prev) => ({ ...prev, [outputVar]: data.text, [`${outputVar}_raw`]: data.raw }));
+            addBotMessage(data.text || "(sem resposta)", node.id);
+          } catch (e: any) {
+            addSystemMessage(`⚠️ Agente externo: ${e?.message || e}`);
+            setContext((prev) => ({ ...prev, [outputVar]: null, [`${outputVar}_error`]: String(e?.message || e) }));
+          }
+        })();
+        break;
+      }
+
       case "trigger_workflow": {
+
         const modLabels: Record<string, string> = {
           bot: "Bot Builder",
           omnichannel: "Omnichannel",

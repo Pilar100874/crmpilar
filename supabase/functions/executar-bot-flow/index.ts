@@ -178,9 +178,32 @@ serve(async (req) => {
               },
             });
           }
+        } else if (t === "run_external_agent") {
+          try {
+            const { data, error } = await supabase.functions.invoke("run-external-agent", {
+              body: {
+                provider: cfg.provider || "claude",
+                prompt: cfg.prompt || "",
+                systemPrompt: cfg.systemPrompt || "",
+                model: cfg.model || undefined,
+                endpointUrl: cfg.endpointUrl || undefined,
+                apiKeySecret: cfg.apiKeySecret || undefined,
+                timeoutSeconds: cfg.timeoutSeconds || 120,
+                variables: ctx,
+              },
+            });
+            if (error) throw error;
+            const outVar = cfg.outputVariable || "agente_externo_resposta";
+            ctx[outVar] = data?.text ?? null;
+            ctx[`${outVar}_raw`] = data?.raw ?? null;
+            trace.push({ node: current.id, external_agent: { ok: !!data?.ok } });
+          } catch (e) {
+            trace.push({ node: current.id, warn: "run_external_agent error", err: String(e) });
+          }
         } else {
           trace.push({ node: current.id, warn: "tipo ignorado (não implementado no executor server)", type: t });
         }
+
       } catch (e) {
         trace.push({ node: current.id, error: String(e) });
       }

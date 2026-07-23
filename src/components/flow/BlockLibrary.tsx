@@ -65,8 +65,9 @@ const blockCategories = [
   {
     name: "Integrações & Código",
     icon: "Code",
-    blocks: ["webhook", "dynamic_data", "api_loop", "trigger_workflow", "send_whatsapp_to_number", "send_sms", "return_response", "publish_social_post"] as NodeType[],
+    blocks: ["webhook", "dynamic_data", "api_loop", "trigger_workflow", "run_external_agent", "send_whatsapp_to_number", "send_sms", "return_response", "publish_social_post"] as NodeType[],
   },
+
 ];
 
 
