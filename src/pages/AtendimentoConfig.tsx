@@ -78,6 +78,7 @@ import BotTest from './BotTest';
 // Import Telefonia components
 import Softphone from './Softphone';
 import VideoCall from './VideoCall';
+import BotResponseMonitor from './BotResponseMonitor';
 
 interface TabItem {
   id: string;
