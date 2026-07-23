@@ -120,8 +120,11 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
     const incluirEmpresasViaFiltroPrincipal = somenteEmpresas;
 
     // Incluir empresas (clientes) com gerente vinculado
-    if (config.incluirEmpresas) {
-      const empresasFiltro = config.empresasFiltro || "com_gerente";
+    if (config.incluirEmpresas || incluirEmpresasViaFiltroPrincipal) {
+      const empresasFiltro = incluirEmpresasViaFiltroPrincipal
+        ? (filtroTipo === "empresas_gerente_especifico" ? "gerente_especifico" : "com_gerente")
+        : (config.empresasFiltro || "com_gerente");
+      const empresasGerenteIdEff = incluirEmpresasViaFiltroPrincipal ? gerenteId : config.empresasGerenteId;
       const { data: vinc } = await supabase
         .from("empresa_vinculos")
         .select("empresa_id, usuario_id")
@@ -130,7 +133,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
       const empresaGerenteMap = new Map<string, string>();
       (vinc || []).forEach((r: any) => {
         if (!r.empresa_id || !r.usuario_id) return;
-        if (empresasFiltro === "gerente_especifico" && config.empresasGerenteId && r.usuario_id !== config.empresasGerenteId) return;
+        if (empresasFiltro === "gerente_especifico" && empresasGerenteIdEff && r.usuario_id !== empresasGerenteIdEff) return;
         if (!empresaGerenteMap.has(r.empresa_id)) empresaGerenteMap.set(r.empresa_id, r.usuario_id);
       });
       const empresaIds = Array.from(empresaGerenteMap.keys());
