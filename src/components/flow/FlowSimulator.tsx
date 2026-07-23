@@ -3247,6 +3247,9 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               const resumoGlobal = buildResumo(todosItens);
               for (const numero of numerosExtras) {
                 addBotMessage(`[resumo → número extra ${numero}]\n${resumoGlobal}`, node.id);
+                if (mediaUrlPre) {
+                  addBotMediaMessage(mediaUrlPre, mediaTypePre === "video" ? "video" : "image", "", node.id);
+                }
                 if (useReal) {
                   try {
                     await executarBlocoWhatsapp(
