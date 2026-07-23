@@ -570,6 +570,15 @@ export default function MarketingAutomacoes() {
               )}
             </div>
           )}
+          {isExecuting && (
+            <div className="space-y-2 pb-2">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Processando envio...</span>
+                <span>{execProgress}%</span>
+              </div>
+              <Progress value={execProgress} />
+            </div>
+          )}
           <DialogFooter>
             <Button 
               variant="outline" 
