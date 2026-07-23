@@ -3186,13 +3186,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             const antesMask = maskVars(config.textoAntes || "").trim();
             const depoisMask = maskVars(config.textoDepois || "").trim();
             const msgMask = config.usarMensagemPreDefinida ? msg : maskVars(config.message || "");
-            const conteudoMask = [antesMask, msgMask, depoisMask].filter(Boolean).join("\n\n");
-            // A mídia é anexada de verdade via mediaUrl no envio — não colocamos a URL no texto
-            const midiaInfo = mediaUrlPre
-              ? `\n\n🖼️ ${mediaTypePre === "video" ? "Vídeo" : "Imagem"} anexada (enviada em anexo)`
-              : "";
 
-            const buildResumo = (itens: ResumoDest[]) => {
+            const buildEstatisticas = (itens: ResumoDest[]) => {
               const enviadosOk = itens.filter((i) => i.ok && !i.invalid);
               const invalidos = itens.filter((i) => i.invalid);
               const outrasFalhas = itens.filter((i) => !i.ok && !i.invalid);
@@ -3205,31 +3200,79 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 ? `\n\n❌ *Falhas de envio (${outrasFalhas.length})*\n${fmt(outrasFalhas)}`
                 : "";
               return (
-                `📋 *Mensagem enviadas pelo sistema automatico de mensagem:* ${dataStr} ${horaStr}\n\n` +
-                `— *Conteúdo enviado* —\n${conteudoMask || "(sem texto)"}${midiaInfo}\n\n` +
+                `📊 *Estatísticas do envio*\n` +
                 `— *Entregues (${enviadosOk.length})* —\n${fmt(enviadosOk)}` +
                 secInvalidos +
                 secFalhas
               );
             };
 
+            // Emite o resumo em partes na MESMA ordem do envio real:
+            // 1) cabeçalho + texto antes + mensagem   2) mídia (aberta)   3) texto depois   4) estatísticas
+            const emitirResumoEmPartes = async (
+              rotulo: string,
+              telefoneReal: string | null,
+              itens: ResumoDest[],
+              origemReal: string,
+            ) => {
+              const cabecalho = `📋 *Mensagem enviadas pelo sistema automatico de mensagem:* ${dataStr} ${horaStr}`;
+              const parte1 = [cabecalho, antesMask, msgMask].filter(Boolean).join("\n\n") || cabecalho;
+              addBotMessage(`[${rotulo}]\n${parte1}`, node.id);
+              if (useReal && telefoneReal) {
+                try {
+                  await executarBlocoWhatsapp(
+                    { telefone: telefoneReal, mensagem: parte1 },
+                    { variaveis: contextRef.current, workflow_tipo: "bot", origem: origemReal },
+                  );
+                } catch {}
+              }
+
+              if (mediaUrlPre) {
+                addBotMediaMessage(mediaUrlPre, mediaTypePre === "video" ? "video" : "image", "", node.id);
+                if (useReal && telefoneReal) {
+                  try {
+                    await executarBlocoWhatsapp(
+                      { telefone: telefoneReal, mensagem: "", mediaUrl: mediaUrlPre },
+                      { variaveis: contextRef.current, workflow_tipo: "bot", origem: origemReal },
+                    );
+                  } catch {}
+                }
+              }
+
+              if (depoisMask) {
+                addBotMessage(depoisMask, node.id);
+                if (useReal && telefoneReal) {
+                  try {
+                    await executarBlocoWhatsapp(
+                      { telefone: telefoneReal, mensagem: depoisMask },
+                      { variaveis: contextRef.current, workflow_tipo: "bot", origem: origemReal },
+                    );
+                  } catch {}
+                }
+              }
+
+              const stats = buildEstatisticas(itens);
+              addBotMessage(stats, node.id);
+              if (useReal && telefoneReal) {
+                try {
+                  await executarBlocoWhatsapp(
+                    { telefone: telefoneReal, mensagem: stats },
+                    { variaveis: contextRef.current, workflow_tipo: "bot", origem: origemReal },
+                  );
+                } catch {}
+              }
+            };
+
             if (temResumoGerente) {
               for (const [, entry] of resumoPorGerente) {
                 const gPhone = (entry.gerente.whatsapp || entry.gerente.telefone || "").replace(/\D/g, "");
                 if (!gPhone) continue;
-                const resumoMsg = buildResumo(entry.itens);
-                addBotMessage(`[resumo → gerente ${entry.gerente.nome || gPhone}]\n${resumoMsg}`, node.id);
-                if (mediaUrlPre) {
-                  addBotMediaMessage(mediaUrlPre, mediaTypePre === "video" ? "video" : "image", "", node.id);
-                }
-                if (useReal) {
-                  try {
-                    await executarBlocoWhatsapp(
-                      { telefone: gPhone, mensagem: resumoMsg, mediaUrl: mediaUrlPre || undefined },
-                      { variaveis: contextRef.current, workflow_tipo: "bot", origem: "broadcast_vendedores_resumo" },
-                    );
-                  } catch {}
-                }
+                await emitirResumoEmPartes(
+                  `resumo → gerente ${entry.gerente.nome || gPhone}`,
+                  gPhone,
+                  entry.itens,
+                  "broadcast_vendedores_resumo",
+                );
               }
             }
 
@@ -3237,27 +3280,19 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
             if (numerosExtras.length > 0) {
               const todosItens: ResumoDest[] = [];
               for (const [, entry] of resumoPorGerente) todosItens.push(...entry.itens);
-              // Inclui também destinatários sem gerente vinculado
               const idsComGerente = new Set(todosItens.map((i) => i.phone));
               for (const d of destinatarios) {
                 if (!idsComGerente.has(d.phone)) {
                   todosItens.push({ nome: d.nome || d.phone, phone: d.phone, tipo: d.kind, ok: true });
                 }
               }
-              const resumoGlobal = buildResumo(todosItens);
               for (const numero of numerosExtras) {
-                addBotMessage(`[resumo → número extra ${numero}]\n${resumoGlobal}`, node.id);
-                if (mediaUrlPre) {
-                  addBotMediaMessage(mediaUrlPre, mediaTypePre === "video" ? "video" : "image", "", node.id);
-                }
-                if (useReal) {
-                  try {
-                    await executarBlocoWhatsapp(
-                      { telefone: numero, mensagem: resumoGlobal, mediaUrl: mediaUrlPre || undefined },
-                      { variaveis: contextRef.current, workflow_tipo: "bot", origem: "broadcast_vendedores_resumo_extra" },
-                    );
-                  } catch {}
-                }
+                await emitirResumoEmPartes(
+                  `resumo → número extra ${numero}`,
+                  numero,
+                  todosItens,
+                  "broadcast_vendedores_resumo_extra",
+                );
               }
             }
           }
