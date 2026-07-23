@@ -105,6 +105,7 @@ const tabItems: TabItem[] = [
   { id: 'envio-massa', label: 'Webhook de Disparo', icon: Send },
   { id: 'permissao-envio', label: 'Permissão Anti-Bloqueio', icon: Shield },
   { id: 'monitor-envio', label: 'Monitor de Envios', icon: Activity },
+  { id: 'monitor-respostas', label: 'Monitor de Respostas', icon: MessageSquare },
   { id: 'bot-criar', label: 'Criar / Editar Bot', icon: Plus },
   { id: 'bot-testar', label: 'Testar Bot', icon: TestTube2 },
   { id: 'softphone', label: 'Softphone', icon: Phone },
