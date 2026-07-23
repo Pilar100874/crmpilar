@@ -533,7 +533,7 @@ export function StepCompose({
                       <FileText className="h-12 w-12 mx-auto mb-3 opacity-20" />
                       <p>Nenhum template cadastrado</p>
                       <p className="text-sm mt-1">
-                        Configure templates em Configurações → Envio em Massa
+                        Clique em "Gerenciar templates" no topo para criar um template.
                       </p>
                     </div>
                   ) : (
