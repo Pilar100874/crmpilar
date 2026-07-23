@@ -3192,7 +3192,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               const invalidos = itens.filter((i) => i.invalid);
               const outrasFalhas = itens.filter((i) => !i.ok && !i.invalid);
               const fmt = (arr: ResumoDest[]) =>
-                arr.map((it, i) => `${i + 1}. ${it.nome} — ${it.phone} (${it.tipo})`).join("\n") || "(nenhum)";
+                arr.map((it, i) => `${i + 1}. ${it.nome} — ${it.phone}`).join("\n") || "(nenhum)";
               const secInvalidos = invalidos.length
                 ? `\n\n⚠️ *WhatsApp inválido/inexistente (${invalidos.length})* — revise os cadastros:\n${fmt(invalidos)}`
                 : "";
