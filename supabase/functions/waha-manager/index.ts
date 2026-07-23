@@ -234,7 +234,9 @@ serve(async (req) => {
 
     if (action === "start") {
       const created = await createInstance(base, headers, instance, resolvedWebhookUrl);
-      if (!created.ok && created.status !== 409) {
+      // 409 = already exists; 403 "already in use" também significa que a instância já existe — seguimos para connect/QR
+      const alreadyExistsMsg = JSON.stringify(created.data || "").toLowerCase().includes("already in use");
+      if (!created.ok && created.status !== 409 && !alreadyExistsMsg) {
         return json({ error: `Falha ao criar instância Evolution (${created.status}).`, details: created.data }, 500);
       }
       await setWebhook(base, headers, instance, resolvedWebhookUrl);
