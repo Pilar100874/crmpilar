@@ -163,8 +163,19 @@ serve(async (req) => {
       };
     };
 
-    // Prioridade máxima: sessão Evolution escolhida no bloco/workflow.
-    if (whatsappSessionId) {
+    // Prioridade máxima: sessão Evolution vinculada ao bot em execução.
+    if (botFlowId) {
+      const { data: session } = await supabase
+        .from("whatsapp_sessions")
+        .select("id, session_name, estabelecimento_id, status")
+        .eq("bot_flow_id", botFlowId)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      numero = await resolveEvolutionSession(session);
+    }
+    // Sessão Evolution explicitamente escolhida no bloco/workflow.
+    if (!numero && whatsappSessionId) {
       const { data: session } = await supabase
         .from("whatsapp_sessions")
         .select("id, session_name, estabelecimento_id, status")
@@ -183,16 +194,6 @@ serve(async (req) => {
       if (scopedEstabelecimentoId) q = q.eq("estabelecimento_id", scopedEstabelecimentoId);
       const { data: sessions } = await q;
       numero = await resolveEvolutionSession(sessions?.[0]);
-    }
-    if (!numero && botFlowId) {
-      const { data: session } = await supabase
-        .from("whatsapp_sessions")
-        .select("id, session_name, estabelecimento_id, status")
-        .eq("bot_flow_id", botFlowId)
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      numero = await resolveEvolutionSession(session);
     }
 
     if (!numero && whatsappNumeroId) {
