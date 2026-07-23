@@ -840,7 +840,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             </div>
 
             <div>
-              <Label htmlFor="usuario-telefone">Telefone</Label>
+              <Label htmlFor="usuario-telefone">WhatsApp</Label>
               <MaskedInput
                 id="usuario-telefone"
                 mask={maskPhone}
@@ -850,7 +850,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
                 invalid={!!telefone && !validatePhone(telefone)}
               />
               {telefone && !validatePhone(telefone) && (
-                <p className="text-xs text-destructive mt-1">Telefone inválido</p>
+                <p className="text-xs text-destructive mt-1">WhatsApp inválido</p>
               )}
             </div>
 
