@@ -125,8 +125,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
     // Incluir empresas (clientes) com gerente vinculado
     if (incluirEmpresasViaFiltroPrincipal) {
       const empresasFiltro = gerenteEspecificoAtivo ? "gerente_especifico" : "com_gerente";
-        : (config.empresasFiltro || "com_gerente");
-      const empresasGerenteIdEff = incluirEmpresasViaFiltroPrincipal ? gerenteId : config.empresasGerenteId;
+      const empresasGerenteIdEff = gerenteId;
       const { data: vinc } = await supabase
         .from("empresa_vinculos")
         .select("empresa_id, usuario_id")
