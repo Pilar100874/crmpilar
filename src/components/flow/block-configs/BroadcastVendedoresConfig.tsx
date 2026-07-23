@@ -621,7 +621,8 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
                                 ))}
                               </div>
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     );
