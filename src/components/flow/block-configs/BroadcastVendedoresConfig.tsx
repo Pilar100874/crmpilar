@@ -253,11 +253,24 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         </div>
         {preview.length > 0 && (
           <>
-            <Badge variant="secondary" className="text-[10px]">{totalPreview} vendedor(es) receberão</Badge>
+            {(() => {
+              const nv = preview.filter((r) => r.kind !== "empresa").length;
+              const ne = preview.filter((r) => r.kind === "empresa").length;
+              return (
+                <div className="flex flex-wrap gap-1">
+                  <Badge variant="secondary" className="text-[10px]">{totalPreview} destinatário(s)</Badge>
+                  <Badge variant="outline" className="text-[10px]">{nv} vendedor(es)</Badge>
+                  {ne > 0 && <Badge variant="outline" className="text-[10px]">{ne} empresa(s)</Badge>}
+                </div>
+              );
+            })()}
             <div className="max-h-[180px] overflow-y-auto space-y-1">
               {preview.slice(0, 50).map((r) => (
-                <div key={r.id} className="text-[11px] px-2 py-1 rounded bg-background flex items-center justify-between gap-2">
-                  <span className="truncate">
+                <div key={`${r.kind}-${r.id}`} className="text-[11px] px-2 py-1 rounded bg-background flex items-center justify-between gap-2">
+                  <span className="truncate flex items-center gap-1">
+                    <Badge variant={r.kind === "empresa" ? "default" : "secondary"} className="text-[9px] px-1 py-0">
+                      {r.kind === "empresa" ? "empresa" : "vendedor"}
+                    </Badge>
                     {r.nome_fantasia || r.nome || r.id}
                     {r.gerente_nome && <span className="text-muted-foreground"> · gerente: {r.gerente_nome}</span>}
                   </span>
