@@ -194,6 +194,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
         .eq("segmento_id", segmentoId);
       if (publicoEmpresas === "prospect") q = q.eq("status_comercial", "prospect");
       else if (publicoEmpresas === "cliente") q = q.neq("status_comercial", "prospect");
+      if (config.apenasJaResponderam) q = q.eq("ja_respondeu_whatsapp", true);
       const { data } = await q;
       return ((data as any) || [])
         .filter((e: any) => ((e.whatsapp || e.telefone || "").replace(/\D/g, "").length >= 10))
@@ -203,6 +204,7 @@ export const BroadcastVendedoresConfig = ({ config, handleConfigChange }: Props)
           kind: "empresa" as const,
         }));
     }
+
 
     const somenteEmpresas = ft === "empresas_com_gerente" || ft === "empresas_gerente_especifico";
     const gerenteEspecificoAtivo = ft === "gerente_especifico" || ft === "empresas_gerente_especifico";
