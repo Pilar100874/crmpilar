@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, ExternalLink, Download, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { downloadApk } from "@/lib/downloadApk";
+import { getLatestTvSignageApkUrl, TV_SIGNAGE_APK_FILENAME } from "@/lib/tvSignageApkUrl";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const BASE = `${SUPABASE_URL}/functions/v1`;
