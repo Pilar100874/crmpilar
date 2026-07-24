@@ -12,6 +12,11 @@ export default function TvPair() {
   const codigo = params.get("codigo") || "";
   const token = params.get("token") || "";
   const api_url = params.get("api") || window.location.origin;
+  const [apkUrl, setApkUrl] = useState<string>("");
+
+  useEffect(() => {
+    getLatestTvSignageApkUrl().then(setApkUrl);
+  }, []);
 
   const isAndroid = useMemo(() => /android/i.test(navigator.userAgent), []);
   const payload = useMemo(
