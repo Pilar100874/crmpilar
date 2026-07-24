@@ -5,16 +5,16 @@ on:
     branches: [main, master]
     paths:
       - 'android-tv-signage/**'
-  pull_request:
-    branches: [main, master]
-    paths:
-      - 'android-tv-signage/**'
+      - '.github/workflows/build-android-tv-signage.yml'
   workflow_dispatch:
     inputs:
       release_tag:
         description: 'Tag opcional para criar release (ex: v1.2.3)'
         required: false
         default: ''
+
+permissions:
+  contents: write
 
 jobs:
   build:
