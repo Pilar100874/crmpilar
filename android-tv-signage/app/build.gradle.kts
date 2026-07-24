@@ -11,8 +11,8 @@ android {
         applicationId = "br.com.pilar.tvsignage"
         minSdk = 24
         targetSdk = 34
-        versionCode = 13
-        versionName = "1.2.1"
+        versionCode = 14
+        versionName = "1.2.2"
 
 
         buildConfigField("String", "SUPABASE_URL", "\"https://ioxugupvxlcdweldocmq.supabase.co\"")
