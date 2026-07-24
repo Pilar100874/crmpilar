@@ -117,6 +117,14 @@ export default function TvSignageDashboards() {
                 </div>
               </div>
               <div className="flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Prévia sem dispositivo"
+                  onClick={() => window.open(`/tv-signage/simular?dashboard_id=${d.id}`, "_blank")}
+                >
+                  <PlayCircle className="w-4 h-4 text-primary" />
+                </Button>
                 <Button variant="ghost" size="icon" onClick={() => setEdit(d)}><Pencil className="w-4 h-4" /></Button>
                 <DeleteConfirmTrigger
                   onConfirm={async () => { await supabase.from("tv_dashboards").delete().eq("id", d.id); carregar(); }}
