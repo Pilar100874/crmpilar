@@ -69,7 +69,7 @@ export default function TvSignageDispositivos() {
 
   const filtrados = devices.filter((d) => {
     const matchBusca = !busca || `${d.nome} ${d.codigo} ${d.local || ""}`.toLowerCase().includes(busca.toLowerCase());
-    const matchStatus = statusFiltro === "todos" || d.status === statusFiltro;
+    const matchStatus = statusFiltro === "todos" || effectiveStatus(d) === statusFiltro;
     const matchGrupo = grupoFiltro === "todos" || d.grupo_id === grupoFiltro;
     return matchBusca && matchStatus && matchGrupo;
   });
