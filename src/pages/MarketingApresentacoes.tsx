@@ -226,7 +226,7 @@ export default function MarketingApresentacoes() {
                 <Button size="sm" variant="outline" onClick={() => duplicar(a)}>
                   <Copy className="w-3.5 h-3.5 mr-1" /> Nova versão
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => setToDelete(a)}>
+                <Button size="sm" variant="ghost" onClick={() => abrirExcluir(a)}>
                   <Trash2 className="w-3.5 h-3.5" />
                 </Button>
               </div>
