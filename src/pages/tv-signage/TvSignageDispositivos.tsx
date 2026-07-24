@@ -145,7 +145,7 @@ export default function TvSignageDispositivos() {
 
   const DeviceActions = ({ d, compact = false }: { d: any; compact?: boolean }) => (
     <div className={`flex gap-1 ${compact ? "flex-wrap" : "justify-end"}`}>
-      <Button variant="ghost" size="icon" title="Simular" onClick={() => window.open(`/tv-signage/simular/${d.id}`, "_blank")}><PlayCircle className="w-4 h-4 text-primary" /></Button>
+      <Button variant="ghost" size="icon" title="Simular" onClick={() => window.open(`/tv-signage/simular/${encodeURIComponent(d.codigo || d.id)}`, "_blank")}><PlayCircle className="w-4 h-4 text-primary" /></Button>
       <Button variant="ghost" size="icon" title="Enviar comando" onClick={() => setComandoDialog({ deviceId: d.id, open: true })}><Terminal className="w-4 h-4" /></Button>
       <Button variant="ghost" size="icon" title={d.bloqueado ? "Desbloquear" : "Bloquear"} onClick={async () => {
         await supabase.from("tv_devices").update({ bloqueado: !d.bloqueado, status: !d.bloqueado ? "bloqueado" : "offline" }).eq("id", d.id);

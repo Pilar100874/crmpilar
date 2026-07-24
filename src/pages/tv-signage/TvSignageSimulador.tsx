@@ -9,7 +9,7 @@ import { useFullscreen } from "@/hooks/useFullscreen";
 type Item = { url: string; nome: string; duracao: number; refresh: number };
 
 export default function TvSignageSimulador() {
-  const { deviceId } = useParams();
+  const { deviceId, deviceCode } = useParams();
   const navigate = useNavigate();
   useFullscreen(true);
   const [device, setDevice] = useState<any>(null);
@@ -21,7 +21,7 @@ export default function TvSignageSimulador() {
   const [erro, setErro] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
-  const buildUrl = (dsh: any): Item | null => {
+  const buildUrl = (dsh: any, currentDeviceId?: string): Item | null => {
     if (!dsh) return null;
     let url = "";
     if (dsh.tipo === "tela_interna" && dsh.rota_interna) {
@@ -31,7 +31,7 @@ export default function TvSignageSimulador() {
         dsh.rota_interna +
         sep +
         "tv_simulacao=1" +
-        (deviceId ? `&device_id=${deviceId}` : "");
+        (currentDeviceId ? `&device_id=${currentDeviceId}` : deviceId ? `&device_id=${deviceId}` : "");
     } else if (dsh.tipo === "url_externa" && dsh.url) {
       url = dsh.url;
     } else return null;
@@ -42,16 +42,45 @@ export default function TvSignageSimulador() {
   useEffect(() => {
     (async () => {
       setLoading(true);
+      setErro(null);
+      const rawDeviceParam = deviceId || deviceCode || "";
+      const normalizedCode = rawDeviceParam.trim().toUpperCase();
       // 1) Busca o dispositivo isoladamente para evitar que falhas em joins
       //    (RLS de dashboards/playlists) façam parecer que o device não existe.
-      const { data: dev, error } = await supabase
-        .from("tv_devices")
-        .select("*")
-        .eq("id", deviceId)
-        .maybeSingle();
-      if (error || !dev) {
-        console.error("[Simulador] device error", error);
-        setErro(error?.message ? `Dispositivo não encontrado: ${error.message}` : "Dispositivo não encontrado");
+      let dev: any = null;
+      let errorMessage = "";
+
+      if (rawDeviceParam) {
+        const { data, error } = await supabase
+          .from("tv_devices")
+          .select("*")
+          .eq("id", rawDeviceParam)
+          .maybeSingle();
+
+        if (data) {
+          dev = data;
+        } else if (error?.code !== "22P02") {
+          errorMessage = error?.message || "";
+        }
+      }
+
+      if (!dev && normalizedCode) {
+        const { data, error } = await supabase
+          .from("tv_devices")
+          .select("*")
+          .eq("codigo", normalizedCode)
+          .maybeSingle();
+
+        if (data) {
+          dev = data;
+        } else if (error) {
+          errorMessage = error.message;
+        }
+      }
+
+      if (!dev) {
+        console.error("[Simulador] device not found", { rawDeviceParam, errorMessage });
+        setErro(errorMessage ? `Dispositivo não encontrado: ${errorMessage}` : "Dispositivo não encontrado");
         setLoading(false);
         return;
       }
@@ -80,18 +109,18 @@ export default function TvSignageSimulador() {
       let list: Item[] = [];
       if (playlist) {
         list = (playlist.itens || []).map((it: any) => {
-          const b = buildUrl(it.dashboard);
+          const b = buildUrl(it.dashboard, dev.id);
           return b ? { ...b, duracao: it.duracao_segundos || 10 } : null;
         }).filter(Boolean) as Item[];
       } else if (dashboard) {
-        const b = buildUrl(dashboard);
+        const b = buildUrl(dashboard, dev.id);
         if (b) list = [{ ...b, duracao: 0 }];
       }
       if (!list.length) setErro("Nenhum dashboard/playlist configurado neste dispositivo");
       setItems(list);
       setLoading(false);
     })();
-  }, [deviceId]);
+  }, [deviceId, deviceCode]);
 
   // Agendador local para preview: dispara workflows do tipo intervalo/cron do
   // estabelecimento deste dispositivo. Cada workflow tem seu próprio timer.
