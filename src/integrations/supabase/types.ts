@@ -1234,10 +1234,53 @@ export type Database = {
           },
         ]
       }
+      assistente_voz_comandos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          frase_gatilho: string
+          id: string
+          payload: Json
+          resposta_falada: string | null
+          tipo_acao: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          frase_gatilho: string
+          id?: string
+          payload?: Json
+          resposta_falada?: string | null
+          tipo_acao: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          frase_gatilho?: string
+          id?: string
+          payload?: Json
+          resposta_falada?: string | null
+          tipo_acao?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       assistente_voz_config: {
         Row: {
           auth_user_id: string
           created_at: string
+          ferramentas_desativadas: string[]
           id: string
           responder_por_voz: boolean
           updated_at: string
@@ -1248,6 +1291,7 @@ export type Database = {
         Insert: {
           auth_user_id: string
           created_at?: string
+          ferramentas_desativadas?: string[]
           id?: string
           responder_por_voz?: boolean
           updated_at?: string
@@ -1258,6 +1302,7 @@ export type Database = {
         Update: {
           auth_user_id?: string
           created_at?: string
+          ferramentas_desativadas?: string[]
           id?: string
           responder_por_voz?: boolean
           updated_at?: string
