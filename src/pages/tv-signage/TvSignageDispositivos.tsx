@@ -314,7 +314,7 @@ export default function TvSignageDispositivos() {
                   <TableCell><code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{d.codigo}</code></TableCell>
                   <TableCell className="text-muted-foreground text-sm">{d.local || "—"}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">{d.grupo?.nome || "—"}</TableCell>
-                  <TableCell>{statusBadge(d.status)}</TableCell>
+                  <TableCell>{statusBadge(effectiveStatus(d))}</TableCell>
                   <TableCell className="text-sm">{d.playlist?.nome ? `▶ ${d.playlist.nome}` : d.dashboard?.nome || "—"}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {d.ultima_comunicacao ? formatDistanceToNow(new Date(d.ultima_comunicacao), { addSuffix: true, locale: ptBR }) : "Nunca"}
