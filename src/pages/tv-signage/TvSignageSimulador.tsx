@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { X, ChevronLeft, ChevronRight, Pause, Play, Monitor } from "lucide-react";
 import TvNotificationBar from "@/components/tv/TvNotificationBar";
+import { useFullscreen } from "@/hooks/useFullscreen";
 
 type Item = { url: string; nome: string; duracao: number; refresh: number };
 
