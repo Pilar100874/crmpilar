@@ -42,22 +42,49 @@ export default function TvSignageSimulador() {
   useEffect(() => {
     (async () => {
       setLoading(true);
+      // 1) Busca o dispositivo isoladamente para evitar que falhas em joins
+      //    (RLS de dashboards/playlists) façam parecer que o device não existe.
       const { data: dev, error } = await supabase
         .from("tv_devices")
-        .select("*, dashboard:tv_dashboards(*), playlist:tv_playlists(*, itens:tv_playlist_items(*, dashboard:tv_dashboards(*)))")
+        .select("*")
         .eq("id", deviceId)
         .maybeSingle();
-      if (error || !dev) { setErro("Dispositivo não encontrado"); setLoading(false); return; }
-      setDevice(dev);
+      if (error || !dev) {
+        console.error("[Simulador] device error", error);
+        setErro(error?.message ? `Dispositivo não encontrado: ${error.message}` : "Dispositivo não encontrado");
+        setLoading(false);
+        return;
+      }
+
+      // 2) Carrega dashboard/playlist em consultas separadas
+      let dashboard: any = null;
+      if (dev.dashboard_atual_id) {
+        const { data } = await supabase.from("tv_dashboards").select("*").eq("id", dev.dashboard_atual_id).maybeSingle();
+        dashboard = data;
+      }
+      let playlist: any = null;
+      if (dev.playlist_id) {
+        const { data: pl } = await supabase.from("tv_playlists").select("*").eq("id", dev.playlist_id).maybeSingle();
+        if (pl) {
+          const { data: its } = await supabase
+            .from("tv_playlist_items")
+            .select("*, dashboard:tv_dashboards(*)")
+            .eq("playlist_id", pl.id)
+            .order("ordem", { ascending: true });
+          playlist = { ...pl, itens: its || [] };
+        }
+      }
+      const devFull = { ...dev, dashboard, playlist };
+      setDevice(devFull);
+
       let list: Item[] = [];
-      if (dev.playlist_id && dev.playlist) {
-        const its = (dev.playlist.itens || []).sort((a: any, b: any) => a.ordem - b.ordem);
-        list = its.map((it: any) => {
+      if (playlist) {
+        list = (playlist.itens || []).map((it: any) => {
           const b = buildUrl(it.dashboard);
           return b ? { ...b, duracao: it.duracao_segundos || 10 } : null;
         }).filter(Boolean) as Item[];
-      } else if (dev.dashboard_atual_id && dev.dashboard) {
-        const b = buildUrl(dev.dashboard);
+      } else if (dashboard) {
+        const b = buildUrl(dashboard);
         if (b) list = [{ ...b, duracao: 0 }];
       }
       if (!list.length) setErro("Nenhum dashboard/playlist configurado neste dispositivo");
