@@ -142,9 +142,9 @@ export default function TvSignageDispositivos() {
 
   const stats = {
     total: devices.length,
-    online: devices.filter((d) => d.status === "online").length,
-    offline: devices.filter((d) => d.status === "offline").length,
-    problemas: devices.filter((d) => d.status === "erro" || d.status === "bloqueado").length,
+    online: devices.filter((d) => effectiveStatus(d) === "online").length,
+    offline: devices.filter((d) => effectiveStatus(d) === "offline").length,
+    problemas: devices.filter((d) => { const s = effectiveStatus(d); return s === "erro" || s === "bloqueado"; }).length,
   };
 
   const StatCard = ({ icon: Icon, label, value, tone }: any) => (
