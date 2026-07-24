@@ -247,6 +247,7 @@ import WatchLogisticaRota from "./pages/watch/WatchLogisticaRota";
 import WatchLogisticaHistorico from "./pages/watch/WatchLogisticaHistorico";
 import TvDashboardVendas from "./pages/TvDashboardVendas";
 import TvDashboardVeiculos from "./pages/TvDashboardVeiculos";
+import TvApresentacaoEmpresa from "./pages/TvApresentacaoEmpresa";
 import TvSignageLayout from "./pages/tv-signage/TvSignageLayout";
 import TvSignageDashboard from "./pages/tv-signage/TvSignageDashboard";
 import TvSignageDispositivos from "./pages/tv-signage/TvSignageDispositivos";
