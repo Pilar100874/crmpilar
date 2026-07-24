@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Pilar logo (black wordmark on white) centered in the adaptive safe zone -->
+    <!-- Pilar logo centered in the adaptive safe zone -->
     <item
         android:gravity="center"
-        android:width="70dp"
-        android:height="28dp">
+        android:width="150dp"
+        android:height="60dp">
         <bitmap
             android:src="@drawable/logo_pilar"
-            android:gravity="center"
-            android:tint="#000000" />
+            android:gravity="center" />
     </item>
     <!-- Blue TV badge in bottom-right corner -->
     <item android:drawable="@drawable/ic_launcher_tv_badge" />
