@@ -131,9 +131,22 @@ export default function TvApresentacaoEmpresa() {
     }
   }, [item]);
 
+  const CloseBtn = () => (
+    <Button
+      size="icon"
+      variant="ghost"
+      aria-label="Fechar prévia"
+      className="fixed top-3 right-3 z-[10000] h-10 w-10 rounded-full bg-black/60 text-white hover:bg-black/80"
+      onClick={closePreview}
+    >
+      <X className="w-5 h-5" />
+    </Button>
+  );
+
   if (erro) {
     return (
       <div className="w-screen h-screen bg-black text-white flex items-center justify-center flex-col gap-3">
+        <CloseBtn />
         <MonitorPlay className="w-12 h-12 opacity-50" />
         <p className="text-lg">{erro}</p>
       </div>
@@ -143,6 +156,7 @@ export default function TvApresentacaoEmpresa() {
   if (carregando || !apresentacao || !item) {
     return (
       <div className="w-screen h-screen bg-black text-white flex items-center justify-center flex-col gap-4">
+        <CloseBtn />
         <MonitorPlay className="w-12 h-12 opacity-60 animate-pulse" />
         <p className="text-lg">Carregando mídias… {progresso}%</p>
         <div className="w-64 h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -154,6 +168,7 @@ export default function TvApresentacaoEmpresa() {
 
   return (
     <div className="w-screen h-screen bg-black overflow-hidden flex items-center justify-center relative">
+      <CloseBtn />
       <div
         key={item.id + idx}
         className={`w-full h-full flex items-center justify-center transition-opacity duration-300 ${visible ? "opacity-100" : "opacity-0"}`}
