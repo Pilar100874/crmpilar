@@ -72,15 +72,16 @@ export default function TvSignageDashboards() {
     if (edit.tipo === "url_externa" && !edit.url?.trim()) return toast.error("Informe a URL externa");
     const estId = await getEstabelecimentoId();
     if (!estId) return toast.error("Estabelecimento não encontrado");
+    const ehApres = edit.tipo === "tela_interna" && isApresRoute(edit.rota_interna);
     const payload = {
       nome: edit.nome, tipo: edit.tipo || "url_externa",
       url: edit.tipo === "url_externa" ? edit.url : null,
       rota_interna: edit.tipo === "tela_interna" ? edit.rota_interna : null,
-      refresh_segundos: edit.refresh_segundos || 60,
+      refresh_segundos: ehApres ? 0 : (edit.refresh_segundos || 60),
       fullscreen: edit.fullscreen ?? true,
       cache_offline: edit.cache_offline ?? false,
       auto_update: edit.auto_update ?? true,
-      timeout_segundos: edit.timeout_segundos || 30,
+      timeout_segundos: ehApres ? 0 : (edit.timeout_segundos || 30),
       descricao: edit.descricao || null,
     };
     if (edit.id) {
@@ -260,10 +261,16 @@ export default function TvSignageDashboards() {
                 <div><Label>URL</Label><Input value={edit.url || ""} onChange={(e) => setEdit({ ...edit, url: e.target.value })} placeholder="https://..." /></div>
               )}
 
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Refresh (segundos)</Label><Input type="number" value={edit.refresh_segundos} onChange={(e) => setEdit({ ...edit, refresh_segundos: parseInt(e.target.value) || 60 })} /></div>
-                <div><Label>Timeout (segundos)</Label><Input type="number" value={edit.timeout_segundos} onChange={(e) => setEdit({ ...edit, timeout_segundos: parseInt(e.target.value) || 30 })} /></div>
-              </div>
+              {!(edit.tipo === "tela_interna" && isApresRoute(edit.rota_interna)) ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Refresh (segundos)</Label><Input type="number" value={edit.refresh_segundos} onChange={(e) => setEdit({ ...edit, refresh_segundos: parseInt(e.target.value) || 60 })} /></div>
+                  <div><Label>Timeout (segundos)</Label><Input type="number" value={edit.timeout_segundos} onChange={(e) => setEdit({ ...edit, timeout_segundos: parseInt(e.target.value) || 30 })} /></div>
+                </div>
+              ) : (
+                <p className="text-[11px] text-muted-foreground">
+                  Apresentação roda em loop contínuo — refresh e timeout não se aplicam.
+                </p>
+              )}
               <div className="flex flex-wrap gap-4 pt-2">
                 <label className="flex items-center gap-2 text-sm"><Switch checked={!!edit.fullscreen} onCheckedChange={(v) => setEdit({ ...edit, fullscreen: v })} />Fullscreen</label>
                 <label className="flex items-center gap-2 text-sm"><Switch checked={!!edit.cache_offline} onCheckedChange={(v) => setEdit({ ...edit, cache_offline: v })} />Cache offline</label>
