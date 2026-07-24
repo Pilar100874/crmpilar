@@ -22,7 +22,7 @@ Ajuste em `app/build.gradle.kts`:
 - `SUPABASE_ANON_KEY` → chave anon já preenchida
 - `applicationId` = `br.com.pilar.tvsignage`
 
-## Build
+## Build local
 
 ```bash
 cd android-tv-signage
@@ -37,6 +37,31 @@ adb install app/build/outputs/apk/release/app-release.apk
 ```
 
 Ou publique como APK sideload em qualquer Android TV (Fire TV, Chromecast com Google TV, TV Box).
+
+## Build automático via GitHub Actions
+
+O repositório possui um workflow em `.github/workflows/build-apk.yml` que compila e assina o APK automaticamente:
+
+- **Disparo automático**: a cada push para `main` ou `master` que altere arquivos dentro de `android-tv-signage/`.
+- **Disparo manual**: ação `workflow_dispatch` com campo opcional `release_tag`.
+- **Artefato**: o APK assinado fica disponível em **Actions → Build Android TV Signage APK → Artefatos** (`app-release-apk`).
+- **Release**: ao rodar manualmente e informar uma tag (ex: `v1.2.3`), o workflow cria uma GitHub Release anexando o APK.
+
+### Assinatura do APK
+
+Por padrão o workflow usa o **debug keystore** do Android. Para gerar um APK de produção assinado com sua própria chave, configure estes secrets no repositório GitHub (`Settings → Secrets and variables → Actions`):
+
+| Secret | Descrição |
+|--------|-----------|
+| `ANDROID_SIGNING_KEY` | Conte64 do arquivo `.jks` de assinatura |
+| `ANDROID_KEY_ALIAS` | alias da chave no keystore |
+| `ANDROID_KEY_STORE_PASSWORD` | senha do keystore |
+| `ANDROID_KEY_PASSWORD` | senha da chave |
+
+Para gerar a base64 do keystore:
+```bash
+base64 -w 0 minha-chave.jks
+```
 
 ## Requisitos
 
