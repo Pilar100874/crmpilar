@@ -336,9 +336,30 @@ class SignageActivity : AppCompatActivity() {
                     withContext(Dispatchers.Main) { loadConfig() }
                 }
                 "reiniciar_app" -> withContext(Dispatchers.Main) {
-                    val i = Intent(this@SignageActivity, SignageActivity::class.java)
-                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-                    startActivity(i); finish()
+                    // Reinicia com segurança sem fechar o kiosk: agenda relaunch e mata o processo.
+                    // Se o AlarmManager falhar, faz recreate() como fallback para não deixar a TV em preto.
+                    try {
+                        val pm = packageManager
+                        val launch = pm.getLaunchIntentForPackage(packageName)
+                        if (launch != null) {
+                            launch.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                            val pi = android.app.PendingIntent.getActivity(
+                                this@SignageActivity, 0, launch,
+                                android.app.PendingIntent.FLAG_CANCEL_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+                            )
+                            val am = getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
+                            am.set(android.app.AlarmManager.RTC, System.currentTimeMillis() + 800, pi)
+                            stopKioskMode()
+                            finishAffinity()
+                            android.os.Handler(Looper.getMainLooper()).postDelayed({
+                                android.os.Process.killProcess(android.os.Process.myPid())
+                            }, 200)
+                        } else {
+                            recreate()
+                        }
+                    } catch (_: Exception) {
+                        try { recreate() } catch (_: Exception) { b.webview.reload() }
+                    }
                 }
                 "limpar_cache" -> withContext(Dispatchers.Main) {
                     b.webview.clearCache(true); b.webview.clearHistory(); loadConfig()
