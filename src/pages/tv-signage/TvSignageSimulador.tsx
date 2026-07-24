@@ -39,7 +39,9 @@ export default function TvSignageSimulador() {
     } else if (dsh.tipo === "url_externa" && dsh.url) {
       url = dsh.url;
     } else return null;
-    return { url, nome: dsh.nome, duracao: 0, refresh: dsh.refresh_segundos || 0 };
+    // Apresentação (loop de mídias) ignora refresh — o próprio player faz o loop
+    const isApres = dsh.tipo === "tela_interna" && (dsh.rota_interna || "").split("?")[0] === "/tv/apresentacao";
+    return { url, nome: dsh.nome, duracao: 0, refresh: isApres ? 0 : (dsh.refresh_segundos || 0) };
   };
 
 
