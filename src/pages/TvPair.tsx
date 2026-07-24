@@ -57,8 +57,8 @@ export default function TvPair() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button size="lg" className="w-full gap-2" onClick={() => downloadApk(APK_URL, APK_FILENAME)}>
-                  <Download className="w-5 h-5" /> Baixar APK (27 MB)
+                <Button size="lg" className="w-full gap-2" disabled={!apkUrl} onClick={() => apkUrl && downloadApk(apkUrl, TV_SIGNAGE_APK_FILENAME)}>
+                  <Download className="w-5 h-5" /> Baixar APK (versão mais nova)
                 </Button>
                 {!isAndroid && (
                   <p className="text-xs text-muted-foreground">
