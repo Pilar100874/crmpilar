@@ -72,15 +72,16 @@ export default function TvSignageDashboards() {
     if (edit.tipo === "url_externa" && !edit.url?.trim()) return toast.error("Informe a URL externa");
     const estId = await getEstabelecimentoId();
     if (!estId) return toast.error("Estabelecimento não encontrado");
+    const ehApres = edit.tipo === "tela_interna" && isApresRoute(edit.rota_interna);
     const payload = {
       nome: edit.nome, tipo: edit.tipo || "url_externa",
       url: edit.tipo === "url_externa" ? edit.url : null,
       rota_interna: edit.tipo === "tela_interna" ? edit.rota_interna : null,
-      refresh_segundos: edit.refresh_segundos || 60,
+      refresh_segundos: ehApres ? 0 : (edit.refresh_segundos || 60),
       fullscreen: edit.fullscreen ?? true,
       cache_offline: edit.cache_offline ?? false,
       auto_update: edit.auto_update ?? true,
-      timeout_segundos: edit.timeout_segundos || 30,
+      timeout_segundos: ehApres ? 0 : (edit.timeout_segundos || 30),
       descricao: edit.descricao || null,
     };
     if (edit.id) {
