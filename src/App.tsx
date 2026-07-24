@@ -613,6 +613,7 @@ const App = () => (
             </Route>
             {/* Public routes (no layout) */}
             <Route path="/tv-signage/simular/:deviceId" element={<TvSignageSimulador />} />
+            <Route path="/tv-signage/simular" element={<TvSignageSimulador />} />
             <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
             <Route path="/rastreio" element={<RastreioPedido />} />
             <Route path="/rastreio/:token" element={<RastreioPedido />} />
