@@ -1,19 +1,22 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { QRCodeCanvas } from "qrcode.react";
 import { Download, Smartphone, QrCode as QrIcon, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { downloadApk } from "@/lib/downloadApk";
-
-const APK_URL = "/__l5e/assets-v1/22639f5c-8527-42b2-8fe0-01f9fee05946/pareamento-pilar-remotas-v1.1.3.apk";
-const APK_FILENAME = "pareamento-pilar-remotas.apk";
+import { getLatestTvSignageApkUrl, TV_SIGNAGE_APK_FILENAME } from "@/lib/tvSignageApkUrl";
 
 export default function TvPair() {
   const [params] = useSearchParams();
   const codigo = params.get("codigo") || "";
   const token = params.get("token") || "";
   const api_url = params.get("api") || window.location.origin;
+  const [apkUrl, setApkUrl] = useState<string>("");
+
+  useEffect(() => {
+    getLatestTvSignageApkUrl().then(setApkUrl);
+  }, []);
 
   const isAndroid = useMemo(() => /android/i.test(navigator.userAgent), []);
   const payload = useMemo(
@@ -54,8 +57,8 @@ export default function TvPair() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button size="lg" className="w-full gap-2" onClick={() => downloadApk(APK_URL, APK_FILENAME)}>
-                  <Download className="w-5 h-5" /> Baixar APK (27 MB)
+                <Button size="lg" className="w-full gap-2" disabled={!apkUrl} onClick={() => apkUrl && downloadApk(apkUrl, TV_SIGNAGE_APK_FILENAME)}>
+                  <Download className="w-5 h-5" /> Baixar APK (versão mais nova)
                 </Button>
                 {!isAndroid && (
                   <p className="text-xs text-muted-foreground">

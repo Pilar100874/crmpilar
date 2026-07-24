@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, ExternalLink, Download, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { downloadApk } from "@/lib/downloadApk";
+import { getLatestTvSignageApkUrl, TV_SIGNAGE_APK_FILENAME } from "@/lib/tvSignageApkUrl";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const BASE = `${SUPABASE_URL}/functions/v1`;
@@ -18,6 +20,8 @@ const endpoints = [
 
 export default function TvSignageApi() {
   const copy = (s: string) => { navigator.clipboard.writeText(s); toast.success("Copiado"); };
+  const [apkUrl, setApkUrl] = useState<string>("");
+  useEffect(() => { getLatestTvSignageApkUrl().then(setApkUrl); }, []);
 
   return (
     <div className="space-y-4">
@@ -34,21 +38,17 @@ export default function TvSignageApi() {
                 Aparelhos com câmera (Google TV, tablets, celulares Android) podem parear apenas
                 <b> lendo o QR Code</b> — sem digitar nada. Nas TVs sem câmera, digite o código + token exibidos.
               </p>
-              <p className="text-xs text-muted-foreground mt-1">Versão 1.1.3 · ~27 MB · Android 7.0+ (API 24) · com leitor de QR embutido</p>
+              <p className="text-xs text-muted-foreground mt-1">Sempre a versão mais recente · Android 7.0+ (API 24) · com leitor de QR embutido</p>
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
             <Button
               size="lg"
               className="gap-2"
-              onClick={() =>
-                downloadApk(
-                  "/__l5e/assets-v1/22639f5c-8527-42b2-8fe0-01f9fee05946/pareamento-pilar-remotas-v1.1.3.apk",
-                  "pareamento-pilar-remotas.apk",
-                )
-              }
+              disabled={!apkUrl}
+              onClick={() => apkUrl && downloadApk(apkUrl, TV_SIGNAGE_APK_FILENAME)}
             >
-              <Download className="w-4 h-4" /> Baixar APK
+              <Download className="w-4 h-4" /> Baixar APK (mais nova)
             </Button>
           </div>
 
