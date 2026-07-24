@@ -38,7 +38,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Remotas"
+            android:text="TV Signage"
             android:textColor="#93C5FD"
             android:textSize="18sp"
             android:letterSpacing="0.30"
