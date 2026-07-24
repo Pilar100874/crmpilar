@@ -125,7 +125,16 @@ export default function TvSignageSimulador() {
           const b = buildUrl(dashboard, previewDeviceId);
           if (b) list = [{ ...b, duracao: 0 }];
         }
-        if (!list.length) setErro("Nada para exibir na prévia");
+        if (!list.length) {
+          console.warn("[Simulador] prévia sem itens", { previewDashboardId, previewPlaylistId, previewRota, dashboard, playlist });
+          setErro(
+            previewPlaylistId
+              ? "A playlist selecionada está vazia ou seus dashboards não estão acessíveis."
+              : previewDashboardId
+              ? "O dashboard selecionado não foi encontrado ou está sem tipo/rota configurada."
+              : "Nada para exibir na prévia"
+          );
+        }
         setItems(list);
         setLoading(false);
         return;
