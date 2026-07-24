@@ -52,13 +52,11 @@
     </LinearLayout>
 
     <!-- Card with pairing form -->
-    <androidx.cardview.widget.CardView
+    <FrameLayout
         android:id="@+id/card"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="48dp"
-        app:cardBackgroundColor="@android:color/transparent"
-        app:cardElevation="0dp"
         app:layout_constraintStart_toEndOf="@id/brandPane"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
