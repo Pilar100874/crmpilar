@@ -1234,6 +1234,75 @@ export type Database = {
           },
         ]
       }
+      assistente_voz_config: {
+        Row: {
+          auth_user_id: string
+          created_at: string
+          id: string
+          responder_por_voz: boolean
+          updated_at: string
+          voz: string
+          wake_word: string
+          wake_word_ativo: boolean
+        }
+        Insert: {
+          auth_user_id: string
+          created_at?: string
+          id?: string
+          responder_por_voz?: boolean
+          updated_at?: string
+          voz?: string
+          wake_word?: string
+          wake_word_ativo?: boolean
+        }
+        Update: {
+          auth_user_id?: string
+          created_at?: string
+          id?: string
+          responder_por_voz?: boolean
+          updated_at?: string
+          voz?: string
+          wake_word?: string
+          wake_word_ativo?: boolean
+        }
+        Relationships: []
+      }
+      assistente_voz_log: {
+        Row: {
+          acao: Json | null
+          auth_user_id: string
+          created_at: string
+          erro: string | null
+          estabelecimento_id: string | null
+          id: string
+          resposta: string | null
+          sucesso: boolean
+          transcricao: string | null
+        }
+        Insert: {
+          acao?: Json | null
+          auth_user_id: string
+          created_at?: string
+          erro?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          resposta?: string | null
+          sucesso?: boolean
+          transcricao?: string | null
+        }
+        Update: {
+          acao?: Json | null
+          auth_user_id?: string
+          created_at?: string
+          erro?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          resposta?: string | null
+          sucesso?: boolean
+          transcricao?: string | null
+        }
+        Relationships: []
+      }
       atendente_carteiras: {
         Row: {
           atendente_id: string
