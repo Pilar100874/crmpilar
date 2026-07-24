@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmTrigger } from "@/components/tv-signage/DeleteConfirmTrigger";
-import { Plus, Pencil, Trash2, ExternalLink, MonitorPlay } from "lucide-react";
+import { Plus, Pencil, Trash2, ExternalLink, MonitorPlay, PlayCircle } from "lucide-react";
 import { toast } from "sonner";
 import { ROTAS_INTERNAS, getEstabelecimentoId } from "@/services/tvSignage/tvSignageService";
 
