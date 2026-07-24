@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import * as LucideIcons from "lucide-react";
+import { callTvDeviceFunction, getTvDeviceToken } from "@/lib/tvDeviceClient";
 
 type Execucao = {
   id: string;
@@ -17,48 +17,37 @@ interface Props {
 
 /**
  * Barra de notificação para as telas remotas.
- * Escuta a fila de execuções de workflows (tv_workflow_execucoes) via Realtime
- * e exibe as mensagens conforme a duração configurada.
+ * Consulta a fila de execuções via edge function autenticada por device token
+ * (não expõe a tabela publicamente).
  */
 export default function TvNotificationBar({ deviceId }: Props) {
   const [fila, setFila] = useState<Execucao[]>([]);
 
-  // Carrega execuções pendentes ao montar e escuta inserts em tempo real
   useEffect(() => {
     if (!deviceId) return;
+    const token = getTvDeviceToken();
+    if (!token) return;
     let cancelled = false;
 
     const carregar = async () => {
-      const { data } = await supabase
-        .from("tv_workflow_execucoes")
-        .select("id,mensagem_renderizada,estilo,duracao_segundos,expira_em,created_at")
-        .eq("device_id", deviceId)
-        .gt("expira_em", new Date().toISOString())
-        .order("created_at", { ascending: true })
-        .limit(20);
-      if (!cancelled && data) setFila(data as any);
+      try {
+        const res = await callTvDeviceFunction<{ fila: Execucao[] }>("tv-device-fila", token);
+        if (!cancelled && res?.fila) {
+          setFila((prev) => {
+            const ids = new Set(prev.map((e) => e.id));
+            const novos = res.fila.filter((e) => !ids.has(e.id));
+            return [...prev, ...novos];
+          });
+        }
+      } catch {
+        /* silencioso */
+      }
     };
     carregar();
-
-    const channel = supabase
-      .channel(`tv_wf_exec_${deviceId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "tv_workflow_execucoes",
-          filter: `device_id=eq.${deviceId}`,
-        },
-        (payload) => {
-          setFila((f) => [...f, payload.new as any]);
-        },
-      )
-      .subscribe();
-
+    const poll = setInterval(carregar, 3000);
     return () => {
       cancelled = true;
-      supabase.removeChannel(channel);
+      clearInterval(poll);
     };
   }, [deviceId]);
 
