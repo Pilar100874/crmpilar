@@ -41,6 +41,24 @@ export default function TvSignageDispositivos() {
     setDevices(d || []); setGrupos(g || []); setDashboards(dsh || []); setPlaylists(pls || []);
   };
 
+  // Considera offline se sem heartbeat há mais de 90s (app fechado, desinstalado, sem rede)
+  const OFFLINE_MS = 90_000;
+  const effectiveStatus = (d: any): string => {
+    if (d.bloqueado) return "bloqueado";
+    if (d.status === "erro") return "erro";
+    if (!d.ultima_comunicacao) return "offline";
+    const age = Date.now() - new Date(d.ultima_comunicacao).getTime();
+    if (age > OFFLINE_MS) return "offline";
+    return d.status || "offline";
+  };
+
+  // Re-renderiza periodicamente para atualizar status derivado do tempo
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const iv = setInterval(() => setTick((t) => t + 1), 15000);
+    return () => clearInterval(iv);
+  }, []);
+
   useEffect(() => {
     carregar();
     const ch = supabase.channel("tv-devices-list")
