@@ -91,6 +91,14 @@ export default function TvSignagePlaylists() {
                 <div className="text-xs text-muted-foreground">{p.items?.[0]?.count ?? 0} telas • {p.loop ? "loop" : "sem loop"}</div>
               </div>
               <div className="flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Prévia sem dispositivo"
+                  onClick={() => window.open(`/tv-signage/simular?playlist_id=${p.id}`, "_blank")}
+                >
+                  <PlayCircle className="w-4 h-4 text-primary" />
+                </Button>
                 <Button variant="ghost" size="icon" onClick={() => abrirEditor(p)}><Pencil className="w-4 h-4" /></Button>
                 <DeleteConfirmTrigger
                   onConfirm={async () => { await supabase.from("tv_playlists").delete().eq("id", p.id); carregar(); }}
