@@ -335,6 +335,15 @@ export default function TvSignageSimulador() {
           </div>
         </div>
       )}
+      <Button
+        size="icon"
+        variant="ghost"
+        aria-label="Fechar prévia"
+        className="fixed top-3 right-3 z-[10000] h-10 w-10 rounded-full bg-black/60 text-white hover:bg-black/80"
+        onClick={() => { try { window.close(); } catch {} navigate(-1); }}
+      >
+        <X className="w-5 h-5" />
+      </Button>
       <TvNotificationBar deviceId={deviceId} />
     </div>
   );
