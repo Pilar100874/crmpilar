@@ -143,15 +143,19 @@ export default function TvSignageSimulador() {
         return;
       }
 
-      // 2) Carrega dashboard/playlist em consultas separadas
+      // 2) Carrega dashboard/playlist — prioriza overrides da URL (modo prévia)
+      //    para que o botão "Simular" sempre reflita o que foi solicitado.
+      const targetDashboardId = previewDashboardId || dev.dashboard_atual_id;
+      const targetPlaylistId = previewPlaylistId || dev.playlist_id;
+
       let dashboard: any = null;
-      if (dev.dashboard_atual_id) {
-        const { data } = await supabase.from("tv_dashboards").select("*").eq("id", dev.dashboard_atual_id).maybeSingle();
+      if (targetDashboardId) {
+        const { data } = await supabase.from("tv_dashboards").select("*").eq("id", targetDashboardId).maybeSingle();
         dashboard = data;
       }
       let playlist: any = null;
-      if (dev.playlist_id) {
-        const { data: pl } = await supabase.from("tv_playlists").select("*").eq("id", dev.playlist_id).maybeSingle();
+      if (targetPlaylistId) {
+        const { data: pl } = await supabase.from("tv_playlists").select("*").eq("id", targetPlaylistId).maybeSingle();
         if (pl) {
           const { data: its } = await supabase
             .from("tv_playlist_items")
@@ -170,11 +174,22 @@ export default function TvSignageSimulador() {
           const b = buildUrl(it.dashboard, dev.id);
           return b ? { ...b, duracao: it.duracao_segundos || 10 } : null;
         }).filter(Boolean) as Item[];
-      } else if (dashboard) {
+      }
+      if (!list.length && dashboard) {
         const b = buildUrl(dashboard, dev.id);
         if (b) list = [{ ...b, duracao: 0 }];
       }
-      if (!list.length) setErro("Nenhum dashboard/playlist configurado neste dispositivo");
+      if (!list.length && previewRota) {
+        const b = buildUrl({ nome: "Prévia", tipo: "tela_interna", rota_interna: previewRota, refresh_segundos: 0 }, dev.id);
+        if (b) list = [{ ...b, duracao: 0 }];
+      }
+      if (!list.length) {
+        setErro(
+          targetDashboardId || targetPlaylistId
+            ? "Não foi possível carregar o conteúdo da prévia. Verifique se o dashboard/playlist ainda existe."
+            : "Nenhum dashboard/playlist configurado neste dispositivo"
+        );
+      }
       setItems(list);
       setLoading(false);
     })();
