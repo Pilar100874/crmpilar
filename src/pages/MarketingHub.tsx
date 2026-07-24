@@ -53,6 +53,7 @@ import { ConectoresRedesSociaisCRUD } from '@/components/config/ConectoresRedesS
 import { RedesSociaisCRUD } from '@/components/config/RedesSociaisCRUD';
 import AutoVideoWizardDialog from '@/components/marketing/ai-studio/AutoVideoWizardDialog';
 import MarketingMensagensGrupo from './MarketingMensagensGrupo';
+import MarketingApresentacoes from './MarketingApresentacoes';
 
 
 
