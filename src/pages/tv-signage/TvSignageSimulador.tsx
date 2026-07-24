@@ -11,6 +11,7 @@ type Item = { url: string; nome: string; duracao: number; refresh: number };
 export default function TvSignageSimulador() {
   const { deviceId } = useParams();
   const navigate = useNavigate();
+  useFullscreen(true);
   const [device, setDevice] = useState<any>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [idx, setIdx] = useState(0);
