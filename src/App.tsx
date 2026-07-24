@@ -80,6 +80,7 @@ import PontoAuditoria from "./pages/ponto/PontoAuditoria";
 import PontoColetorDownload from "./pages/ponto/PontoColetorDownload";
 import AdminApps from "./pages/AdminApps";
 import PoliticasInternas from "./pages/PoliticasInternas";
+import AssistenteVozConfig from "./pages/AssistenteVozConfig";
 import TelasCustomizadas from "./pages/TelasCustomizadas";
 import TelaCustomizadaView from "./pages/TelaCustomizadaView";
 import ConfigNotificacoesPush from "./pages/ConfigNotificacoesPush";
@@ -488,6 +489,7 @@ const App = () => (
               <Route path="/admin/apps" element={<AdminApps />} />
               <Route path="/admin/telas-customizadas" element={<TelasCustomizadas />} />
               <Route path="/politicas-internas" element={<PoliticasInternas />} />
+              <Route path="/admin/assistente-voz" element={<AssistenteVozConfig />} />
               <Route path="/tela-customizada/:id" element={<TelaCustomizadaView />} />
               <Route path="/config/push" element={<ConfigNotificacoesPush />} />
               <Route path="/meus-tickets" element={<MeusTickets />} />

@@ -131,6 +131,7 @@ export const menuStructure: MenuCategory[] = [
     subItems: [
       { id: "Admin Macros", title: "Macros", url: "/macros", icon: LucideIcons.Zap },
       { id: "Admin Support Tickets", title: "Tickets de Suporte", url: "/admin/support-tickets", icon: LucideIcons.LifeBuoy },
+      { id: "Admin Assistente Voz", title: "Assistente de Voz", url: "/admin/assistente-voz", icon: LucideIcons.Mic },
     ]
   },
   { 
