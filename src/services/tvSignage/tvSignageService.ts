@@ -58,5 +58,5 @@ export const ROTAS_INTERNAS = [
   { value: "/tv/vendas", label: "TV — Vendas" },
   { value: "/tv/veiculos", label: "TV — Veículos" },
   { value: "/tv/cameras", label: "TV — Câmeras (Mosaico)" },
-  { value: "/tv/apresentacao", label: "TV — Apresentação da Empresa" },
+  { value: "/tv/apresentacao", label: "TV — Apresentação" },
 ];

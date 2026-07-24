@@ -17,6 +17,7 @@ export default function TvSignageDashboards() {
   const [edit, setEdit] = useState<any | null>(null);
   const [grupos, setGrupos] = useState<any[]>([]);
   const [camerasList, setCamerasList] = useState<any[]>([]);
+  const [apresentacoes, setApresentacoes] = useState<any[]>([]);
 
   const carregar = async () => {
     const { data } = await supabase.from("tv_dashboards").select("*").order("created_at", { ascending: false });
@@ -26,6 +27,7 @@ export default function TvSignageDashboards() {
     carregar();
     supabase.from("cameras_grupos").select("id,nome,cor").eq("ativo", true).order("nome").then(({ data }) => setGrupos(data || []));
     supabase.from("cv_cameras").select("id,nome,grupo_id").eq("ativo", true).order("nome").then(({ data }) => setCamerasList(data || []));
+    supabase.from("apresentacoes_empresa").select("id,nome").eq("ativo", true).order("nome").then(({ data }) => setApresentacoes(data || []));
   }, []);
 
   // Deriva query params atuais quando a rota é /tv/cameras
@@ -49,7 +51,14 @@ export default function TvSignageDashboards() {
     return qs ? `/tv/cameras?${qs}` : "/tv/cameras";
   };
   const isCamsRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/cameras";
+  const isApresRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/apresentacao";
   const camsCfg = isCamsRoute(edit?.rota_interna) ? parseCamsCfg(edit.rota_interna) : { grupos: [], cameras: [], rotate: 0 };
+  const apresId = (() => {
+    const r = edit?.rota_interna || "";
+    const q = r.indexOf("?");
+    if (q < 0) return "";
+    return new URLSearchParams(r.slice(q + 1)).get("id") || "";
+  })();
   const updateCamsCfg = (patch: Partial<{ grupos: string[]; cameras: string[]; rotate: number }>) => {
     const merged = { ...camsCfg, ...patch };
     setEdit({ ...edit, rota_interna: buildCamsRoute(merged) });
@@ -219,6 +228,25 @@ export default function TvSignageDashboards() {
                       </div>
                     </div>
                   )}
+                  {isApresRoute(edit.rota_interna) && (
+                    <div className="space-y-2 rounded-md border p-3 bg-muted/30">
+                      <Label className="text-xs">Apresentação a exibir</Label>
+                      <Select
+                        value={apresId}
+                        onValueChange={(v) => setEdit({ ...edit, rota_interna: `/tv/apresentacao?id=${v}` })}
+                      >
+                        <SelectTrigger><SelectValue placeholder="Selecione uma apresentação ativa" /></SelectTrigger>
+                        <SelectContent>
+                          {apresentacoes.map((a) => <SelectItem key={a.id} value={a.id}>{a.nome}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      {apresentacoes.length === 0 && (
+                        <p className="text-[11px] text-muted-foreground">
+                          Nenhuma apresentação ativa. Cadastre em Marketing → Apresentação.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </>
               ) : (
                 <div><Label>URL</Label><Input value={edit.url || ""} onChange={(e) => setEdit({ ...edit, url: e.target.value })} placeholder="https://..." /></div>
@@ -237,7 +265,7 @@ export default function TvSignageDashboards() {
           )}
           <DialogFooter className="p-6 pt-2 border-t">
             <Button variant="outline" onClick={() => setEdit(null)}>Cancelar</Button>
-            <Button onClick={salvar} disabled={!edit?.nome?.trim() || !edit?.tipo || (edit?.tipo === "tela_interna" && !edit?.rota_interna) || (edit?.tipo === "url_externa" && !edit?.url?.trim())}>Salvar</Button>
+            <Button onClick={salvar} disabled={!edit?.nome?.trim() || !edit?.tipo || (edit?.tipo === "tela_interna" && (!edit?.rota_interna || (isApresRoute(edit?.rota_interna) && !apresId))) || (edit?.tipo === "url_externa" && !edit?.url?.trim())}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
