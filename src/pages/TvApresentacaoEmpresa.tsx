@@ -33,9 +33,39 @@ export default function TvApresentacaoEmpresa() {
   const [visible, setVisible] = useState(true);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
+  const [carregando, setCarregando] = useState(true);
+  const [progresso, setProgresso] = useState(0);
+
+  const preloadItem = (it: ApresentacaoItem): Promise<void> =>
+    new Promise((resolve) => {
+      if (!it?.url) return resolve();
+      if (it.tipo === "image") {
+        const img = new Image();
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+        img.src = it.url;
+      } else {
+        const v = document.createElement("video");
+        v.preload = "auto";
+        v.muted = true;
+        v.playsInline = true;
+        v.crossOrigin = "anonymous";
+        const done = () => resolve();
+        v.oncanplaythrough = done;
+        v.onloadeddata = done;
+        v.onerror = done;
+        v.src = it.url;
+        try { v.load(); } catch {}
+        // Fallback timeout: don't block forever on slow videos
+        setTimeout(done, 15000);
+      }
+    });
+
   useEffect(() => {
     if (!id) { setErro("Informe ?id=<apresentacao>"); return; }
     (async () => {
+      setCarregando(true);
+      setProgresso(0);
       const { data, error } = await supabase
         .from("apresentacoes_empresa")
         .select("id,nome,itens,duracao_padrao_imagem,transicao,ativo")
@@ -48,8 +78,21 @@ export default function TvApresentacaoEmpresa() {
       };
       if (!a.ativo) { setErro("Apresentação está inativa"); return; }
       if (a.itens.length === 0) { setErro("Sem mídias cadastradas"); return; }
+
+      // Pré-carrega todas as mídias antes de iniciar
+      let feitos = 0;
+      await Promise.all(
+        a.itens.map((it) =>
+          preloadItem(it).then(() => {
+            feitos += 1;
+            setProgresso(Math.round((feitos / a.itens.length) * 100));
+          })
+        )
+      );
+
       setApresentacao(a);
       setIdx(0);
+      setCarregando(false);
     })();
   }, [id]);
 
