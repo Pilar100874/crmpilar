@@ -179,6 +179,46 @@ Deno.serve(async (req) => {
     const messages = body.messages || [];
     const transcricao = body.transcricao || '';
 
+    // Ferramentas desativadas pelo usuário
+    const { data: cfg } = await sb.from('assistente_voz_config')
+      .select('ferramentas_desativadas').eq('auth_user_id', user.id).maybeSingle();
+    const desativadas: string[] = (cfg as any)?.ferramentas_desativadas || [];
+    const toolsFiltradas = TOOLS.filter((t: any) => !desativadas.includes(t.function.name));
+
+    // Comandos customizados do estabelecimento — match por frase exata/contains
+    const { data: cmds } = await sb.from('assistente_voz_comandos')
+      .select('*').eq('estabelecimento_id', estabId).eq('ativo', true);
+    const txtLower = transcricao.toLowerCase().trim();
+    const cmdMatch = (cmds || []).find((c: any) => {
+      const frase = String(c.frase_gatilho || '').toLowerCase().trim();
+      return frase && (txtLower === frase || txtLower.includes(frase));
+    });
+    if (cmdMatch) {
+      let acao: any = null;
+      let resposta = cmdMatch.resposta_falada || 'Ok.';
+      const p = cmdMatch.payload || {};
+      if (cmdMatch.tipo_acao === 'navegar' && p.path) {
+        acao = { tipo: 'navegar_para', path: p.path };
+        resposta = cmdMatch.resposta_falada || `Abrindo ${p.path}.`;
+      } else if (cmdMatch.tipo_acao === 'consultar_metrica' && p.metrica) {
+        resposta = await executarMetrica(sb, estabId, p.metrica);
+        acao = { tipo: 'metrica_consultada', metrica: p.metrica };
+      } else if (cmdMatch.tipo_acao === 'disparar_bot' && p.nome_automacao) {
+        acao = { tipo: 'confirmar_disparo_bot', nome_automacao: p.nome_automacao };
+        resposta = cmdMatch.resposta_falada || `Quer que eu dispare "${p.nome_automacao}"? Diga "confirmar".`;
+      } else if (cmdMatch.tipo_acao === 'comando_tv' && p.comando) {
+        acao = { tipo: 'confirmar_comando_tv', comando: p.comando };
+        resposta = cmdMatch.resposta_falada || `Confirma o comando "${p.comando}" nas TVs?`;
+      }
+      await sb.from('assistente_voz_log').insert({
+        auth_user_id: user.id, estabelecimento_id: estabId,
+        transcricao, resposta, acao, sucesso: true,
+      });
+      return new Response(JSON.stringify({ resposta, acao, comando_customizado: cmdMatch.id }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const rotasStr = Object.entries(ROTAS).map(([k, v]) => `- "${k}" → ${v.desc}`).join('\n');
     const system = `Você é o Pilar, assistente por voz do CRM Pilar. Fale em português BR, seja curto e direto (1-2 frases).
 Você pode navegar, consultar métricas e executar ações através de tools.
