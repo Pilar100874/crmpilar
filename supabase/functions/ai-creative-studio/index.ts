@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
+import { revisarPortugues } from "../_shared/revisar-pt.ts";
 
 function mapWavespeedLanguage(lang: unknown): string {
   const v = String(lang || "").trim().toLowerCase();
@@ -1984,6 +1985,12 @@ Deno.serve(async (req) => {
       }
 
       case "generate_image": {
+        // Revisão de português no prompt (ortografia + concordância verbal)
+        try {
+          if (typeof params.prompt === "string" && params.prompt.trim() && params.revisePt !== false) {
+            params.prompt = await revisarPortugues(params.prompt);
+          }
+        } catch (_e) { /* falha aberto */ }
         const model = validateModel(params.model || "google/gemini-2.5-flash-image", "image");
         const refImages = (params.imageUrls || []) as string[];
         const imageRoles = (params.imageRoles || []) as string[];
@@ -2569,6 +2576,12 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
       }
 
       case "generate_video": {
+        // Revisão de português no prompt (ortografia + concordância verbal)
+        try {
+          if (typeof params.prompt === "string" && params.prompt.trim() && params.revisePt !== false) {
+            params.prompt = await revisarPortugues(params.prompt);
+          }
+        } catch (_e) { /* falha aberto */ }
         console.log(`[generate_video] Starting video generation: model=${params.model}`);
         const videoResult = await handleVideoGeneration(params);
         return new Response(JSON.stringify({ result: videoResult }), {

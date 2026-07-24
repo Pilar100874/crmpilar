@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { revisarPortugues } from "../_shared/revisar-pt.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -111,10 +112,16 @@ serve(async (req) => {
               },
             });
             if (error) throw error;
-            const frase = (data as any)?.frase?.frase;
+            const fraseOriginal = (data as any)?.frase?.frase;
+            // Revisão de português antes de exibir/embutir em prompts de mídia
+            let frase = fraseOriginal;
+            if (frase && (cfg.apresentacao || "texto") === "midia") {
+              try { frase = await revisarPortugues(frase); } catch (_e) { /* falha aberto */ }
+            }
             if (frase) {
               ctx.last_mensagem_pre_definida = frase;
               if (cfg.outputVariable) ctx[cfg.outputVariable] = frase;
+
 
               if ((cfg.apresentacao || "texto") === "midia") {
                 try {

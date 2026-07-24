@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { revisarPortugues } from "../_shared/revisar-pt.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -112,9 +113,12 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const {
+    const body = await req.json();
+    let {
       prompt = "",
       basePrompt = "",
+    } = body;
+    const {
       variations = 4,
       styleSource = "visual_identity",
       preset = "",
@@ -124,7 +128,14 @@ serve(async (req) => {
       estabelecimentoId = "",
       aspectRatio = "1:1",
       contentTypeBadge = "",
-    } = await req.json();
+    } = body;
+
+    // Revisão de português no conteúdo textual do prompt (ortografia + concordância)
+    try {
+      if (prompt) prompt = await revisarPortugues(prompt);
+      if (basePrompt) basePrompt = await revisarPortugues(basePrompt);
+    } catch (_e) { /* falha aberto */ }
+
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY não configurada");
