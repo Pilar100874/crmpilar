@@ -1580,6 +1580,7 @@ export default function Layout({ children }: LayoutProps) {
       <FloatingMacroRecorder />
       <FloatingMacroQuickAccess />
       <SupportTicketFloatingButton />
+      <VoiceAssistant />
 
       {/* FAB Menu (aparece somente no estilo "buttons") */}
       <button
