@@ -119,6 +119,8 @@ const MarketingHub: React.FC = () => {
         return <EnvioMassaMarketing />;
       case 'mensagens-grupo':
         return <MarketingMensagensGrupo />;
+      case 'apresentacoes':
+        return <MarketingApresentacoes />;
 
 
       case 'recursos':
