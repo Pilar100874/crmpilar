@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useFullscreen } from "@/hooks/useFullscreen";
-import { MonitorPlay } from "lucide-react";
+import { MonitorPlay, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type ItemTipo = "image" | "video";
 interface ApresentacaoItem {
