@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
+import { revisarPortugues } from "../_shared/revisar-pt.ts";
 
 function mapWavespeedLanguage(lang: unknown): string {
   const v = String(lang || "").trim().toLowerCase();
