@@ -21,7 +21,7 @@ export default function TvSignageSimulador() {
   const [erro, setErro] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
-  const buildUrl = (dsh: any): Item | null => {
+  const buildUrl = (dsh: any, currentDeviceId?: string): Item | null => {
     if (!dsh) return null;
     let url = "";
     if (dsh.tipo === "tela_interna" && dsh.rota_interna) {
@@ -31,7 +31,7 @@ export default function TvSignageSimulador() {
         dsh.rota_interna +
         sep +
         "tv_simulacao=1" +
-        (device?.id ? `&device_id=${device.id}` : deviceId ? `&device_id=${deviceId}` : "");
+        (currentDeviceId ? `&device_id=${currentDeviceId}` : deviceId ? `&device_id=${deviceId}` : "");
     } else if (dsh.tipo === "url_externa" && dsh.url) {
       url = dsh.url;
     } else return null;
@@ -109,11 +109,11 @@ export default function TvSignageSimulador() {
       let list: Item[] = [];
       if (playlist) {
         list = (playlist.itens || []).map((it: any) => {
-          const b = buildUrl(it.dashboard);
+          const b = buildUrl(it.dashboard, dev.id);
           return b ? { ...b, duracao: it.duracao_segundos || 10 } : null;
         }).filter(Boolean) as Item[];
       } else if (dashboard) {
-        const b = buildUrl(dashboard);
+        const b = buildUrl(dashboard, dev.id);
         if (b) list = [{ ...b, duracao: 0 }];
       }
       if (!list.length) setErro("Nenhum dashboard/playlist configurado neste dispositivo");
