@@ -183,7 +183,14 @@ export default function TvApresentacaoEmpresa() {
             autoPlay
             muted
             playsInline
-            onEnded={next}
+            loop={apresentacao.itens.length === 1}
+            onEnded={() => {
+              if (apresentacao.itens.length === 1 && videoRef.current) {
+                try { videoRef.current.currentTime = 0; videoRef.current.play(); } catch {}
+                return;
+              }
+              next();
+            }}
             onError={next}
           />
         )}
