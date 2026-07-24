@@ -240,7 +240,8 @@ class SignageActivity : AppCompatActivity() {
         configJob = CoroutineScope(Dispatchers.IO).launch {
             try {
                 val (code, resp) = ApiClient.get("tv-device-config", token())
-                if (code == 401 || code == 403) {
+                // 401/403 = token inválido; 404 = dispositivo foi excluído no painel
+                if (code == 401 || code == 403 || code == 404) {
                     withContext(Dispatchers.Main) { handleUnauthorized() }
                     return@launch
                 }
