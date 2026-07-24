@@ -21,17 +21,21 @@ export default function TvSignageSimulador() {
   const [erro, setErro] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
+  const qs = new URLSearchParams(window.location.search);
+  const previewDeviceId = qs.get("preview_device_id") || qs.get("device_id") || "";
+
   const buildUrl = (dsh: any, currentDeviceId?: string): Item | null => {
     if (!dsh) return null;
     let url = "";
     if (dsh.tipo === "tela_interna" && dsh.rota_interna) {
       const sep = dsh.rota_interna.includes("?") ? "&" : "?";
+      const propagatedDeviceId = currentDeviceId || previewDeviceId || deviceId || "";
       url =
         window.location.origin +
         dsh.rota_interna +
         sep +
         "tv_simulacao=1" +
-        (currentDeviceId ? `&device_id=${currentDeviceId}` : deviceId ? `&device_id=${deviceId}` : "");
+        (propagatedDeviceId ? `&device_id=${encodeURIComponent(propagatedDeviceId)}` : "");
     } else if (dsh.tipo === "url_externa" && dsh.url) {
       url = dsh.url;
     } else return null;
@@ -43,11 +47,10 @@ export default function TvSignageSimulador() {
     (async () => {
       setLoading(true);
       setErro(null);
-      const rawDeviceParam = deviceId || deviceCode || "";
+      const rawDeviceParam = deviceId || deviceCode || qs.get("device_code") || qs.get("codigo") || qs.get("device_id") || "";
       const normalizedCode = rawDeviceParam.trim().toUpperCase();
 
       // Modo prévia sem dispositivo: aceita ?dashboard_id=, ?playlist_id= ou ?rota=
-      const qs = new URLSearchParams(window.location.search);
       const previewDashboardId = qs.get("dashboard_id");
       const previewPlaylistId = qs.get("playlist_id");
       const previewRota = qs.get("rota");
@@ -107,19 +110,19 @@ export default function TvSignageSimulador() {
           dashboard = { nome: "Prévia", tipo: "tela_interna", rota_interna: previewRota, refresh_segundos: 0 };
         }
 
-        const fake = { id: "preview", nome: "Prévia (sem dispositivo)", dashboard, playlist };
+        const fake = { id: previewDeviceId || "preview", nome: "Prévia", dashboard, playlist };
         setDevice(fake);
 
         let list: Item[] = [];
         if (playlist) {
           list = (playlist.itens || [])
             .map((it: any) => {
-              const b = buildUrl(it.dashboard);
+              const b = buildUrl(it.dashboard, previewDeviceId);
               return b ? { ...b, duracao: it.duracao_segundos || 10 } : null;
             })
             .filter(Boolean) as Item[];
         } else if (dashboard) {
-          const b = buildUrl(dashboard);
+          const b = buildUrl(dashboard, previewDeviceId);
           if (b) list = [{ ...b, duracao: 0 }];
         }
         if (!list.length) setErro("Nada para exibir na prévia");
