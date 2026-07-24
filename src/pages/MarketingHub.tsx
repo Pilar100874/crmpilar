@@ -74,6 +74,7 @@ const tabItems: TabItem[] = [
   { id: 'config-apis', label: 'Config APIs', icon: Key, description: 'Gerencie chaves de API dos serviços de IA pagos' },
   { id: 'envio-massa', label: 'Envio em Massa', icon: Send, description: 'Dispare mensagens para múltiplos contatos' },
   { id: 'mensagens-grupo', label: 'Mensagens pré definidas', icon: MessageSquareText, description: 'Frases prontas por tema e grupo de produtos, geradas com IA' },
+  { id: 'apresentacoes', label: 'Apresentação da Empresa', icon: MonitorPlay, description: 'Monte sequências de imagens e vídeos para exibir nas TVs' },
 
 
   { id: 'galeria', label: 'Galeria', icon: FolderOpen, description: 'Visualize o conteúdo criado' },
