@@ -630,6 +630,7 @@ const App = () => (
             <Route path="/tv/vendas" element={<TvDashboardVendas />} />
             <Route path="/tv/veiculos" element={<TvDashboardVeiculos />} />
             <Route path="/tv/cameras" element={<TvCameras />} />
+            <Route path="/tv/apresentacao" element={<TvApresentacaoEmpresa />} />
             <Route path="/tv-pair" element={<TvPair />} />
             <Route path="/p/:slug" element={<PublicPage />} />
             {/* E-commerce routes */}
