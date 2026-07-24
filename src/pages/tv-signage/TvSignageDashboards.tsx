@@ -51,7 +51,14 @@ export default function TvSignageDashboards() {
     return qs ? `/tv/cameras?${qs}` : "/tv/cameras";
   };
   const isCamsRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/cameras";
+  const isApresRoute = (r?: string | null) => !!r && r.split("?")[0] === "/tv/apresentacao";
   const camsCfg = isCamsRoute(edit?.rota_interna) ? parseCamsCfg(edit.rota_interna) : { grupos: [], cameras: [], rotate: 0 };
+  const apresId = (() => {
+    const r = edit?.rota_interna || "";
+    const q = r.indexOf("?");
+    if (q < 0) return "";
+    return new URLSearchParams(r.slice(q + 1)).get("id") || "";
+  })();
   const updateCamsCfg = (patch: Partial<{ grupos: string[]; cameras: string[]; rotate: number }>) => {
     const merged = { ...camsCfg, ...patch };
     setEdit({ ...edit, rota_interna: buildCamsRoute(merged) });
