@@ -10,6 +10,6 @@
             android:gravity="center"
             android:tint="#000000" />
     </item>
-    <!-- Blue TV badge in bottom-right corner -->
-    <item android:drawable="@drawable/ic_launcher_tv_badge" />
+    <!-- Blue "Remotas" badge in bottom-right corner -->
+    <item android:drawable="@drawable/ic_launcher_remotas_badge" />
 </layer-list>
