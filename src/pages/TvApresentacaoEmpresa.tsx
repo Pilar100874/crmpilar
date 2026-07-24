@@ -152,12 +152,12 @@ export default function TvApresentacaoEmpresa() {
         className={`w-full h-full flex items-center justify-center transition-opacity duration-300 ${visible ? "opacity-100" : "opacity-0"}`}
       >
         {item.tipo === "image" ? (
-          <img src={item.url} alt={item.nome || ""} className="w-full h-full object-contain" />
+          <img src={item.url} alt={item.nome || ""} className="w-full h-full object-cover" />
         ) : (
           <video
             ref={videoRef}
             src={item.url}
-            className="w-full h-full object-contain"
+            className="w-full h-full object-cover"
             autoPlay
             muted
             playsInline
