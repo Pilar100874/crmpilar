@@ -133,10 +133,14 @@ export default function TvApresentacaoEmpresa() {
     );
   }
 
-  if (!apresentacao || !item) {
+  if (carregando || !apresentacao || !item) {
     return (
-      <div className="w-screen h-screen bg-black text-white flex items-center justify-center">
-        <p>Carregando…</p>
+      <div className="w-screen h-screen bg-black text-white flex items-center justify-center flex-col gap-4">
+        <MonitorPlay className="w-12 h-12 opacity-60 animate-pulse" />
+        <p className="text-lg">Carregando mídias… {progresso}%</p>
+        <div className="w-64 h-1.5 bg-white/10 rounded-full overflow-hidden">
+          <div className="h-full bg-white transition-all" style={{ width: `${progresso}%` }} />
+        </div>
       </div>
     );
   }
