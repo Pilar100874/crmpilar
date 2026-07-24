@@ -126,12 +126,27 @@ export default function MarketingApresentacoes() {
     carregar();
   };
 
+  const [usoDashboards, setUsoDashboards] = useState<{ id: string; nome: string }[]>([]);
+
+  const abrirExcluir = async (a: Apresentacao) => {
+    setToDelete(a);
+    setUsoDashboards([]);
+    try {
+      const { data } = await supabase
+        .from("tv_dashboards")
+        .select("id, nome, rota_interna")
+        .ilike("rota_interna", `%/tv/apresentacao%${a.id}%`);
+      setUsoDashboards((data || []).map((d: any) => ({ id: d.id, nome: d.nome })));
+    } catch {}
+  };
+
   const excluir = async () => {
     if (!toDelete) return;
     const { error } = await supabase.from("apresentacoes_empresa").delete().eq("id", toDelete.id);
     if (error) return toast.error("Erro ao excluir");
-    toast.success("Excluída");
+    toast.success(usoDashboards.length ? "Excluída — dashboards vinculados irão parar de exibir" : "Excluída");
     setToDelete(null);
+    setUsoDashboards([]);
     carregar();
   };
 
