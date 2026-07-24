@@ -22,6 +22,7 @@ import {
   Globe,
   Share2,
   MessageSquareText,
+  MonitorPlay,
 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -53,6 +54,7 @@ import { ConectoresRedesSociaisCRUD } from '@/components/config/ConectoresRedesS
 import { RedesSociaisCRUD } from '@/components/config/RedesSociaisCRUD';
 import AutoVideoWizardDialog from '@/components/marketing/ai-studio/AutoVideoWizardDialog';
 import MarketingMensagensGrupo from './MarketingMensagensGrupo';
+import MarketingApresentacoes from './MarketingApresentacoes';
 
 
 
@@ -72,6 +74,7 @@ const tabItems: TabItem[] = [
   { id: 'config-apis', label: 'Config APIs', icon: Key, description: 'Gerencie chaves de API dos serviços de IA pagos' },
   { id: 'envio-massa', label: 'Envio em Massa', icon: Send, description: 'Dispare mensagens para múltiplos contatos' },
   { id: 'mensagens-grupo', label: 'Mensagens pré definidas', icon: MessageSquareText, description: 'Frases prontas por tema e grupo de produtos, geradas com IA' },
+  { id: 'apresentacoes', label: 'Apresentação da Empresa', icon: MonitorPlay, description: 'Monte sequências de imagens e vídeos para exibir nas TVs' },
 
 
   { id: 'galeria', label: 'Galeria', icon: FolderOpen, description: 'Visualize o conteúdo criado' },
@@ -116,6 +119,8 @@ const MarketingHub: React.FC = () => {
         return <EnvioMassaMarketing />;
       case 'mensagens-grupo':
         return <MarketingMensagensGrupo />;
+      case 'apresentacoes':
+        return <MarketingApresentacoes />;
 
 
       case 'recursos':
