@@ -506,6 +506,100 @@ async function executeBroadcast(
     if (invalid) invalidos++;
     if (ok) enviados++; else falhas++;
     detalhes.push({ nome: d.nome, phone: d.phone, kind: d.kind, ok, invalid });
+    if (d.gerente?.id) {
+      const key = d.gerente.id;
+      if (!resumoPorGerente.has(key)) resumoPorGerente.set(key, { gerente: d.gerente, itens: [] });
+      resumoPorGerente.get(key)!.itens.push({ nome: d.nome || d.phone, phone: d.phone, tipo: d.kind, ok, invalid });
+    }
+  }
+
+  // ===== Resumo ao(s) gerente(s) e números extras =====
+  try {
+    const numerosExtras: string[] = String(cfg.resumoNumerosExtras || "")
+      .split(/[\n,;]+/).map((n: string) => n.replace(/\D/g, "")).filter((n: string) => n.length >= 10);
+    const temResumoGerente = cfg.enviarResumoGerente !== false && resumoPorGerente.size > 0;
+    if (temResumoGerente || numerosExtras.length > 0) {
+      const agora = new Date();
+      const dataStr = agora.toLocaleDateString("pt-BR");
+      const horaStr = agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+      const maskVars = (s: string) => (s || "").replace(/\{\{[^}]+\}\}/g, "XXX");
+      const antesMask = maskVars(cfg.textoAntes || "").trim();
+      const depoisMask = maskVars(cfg.textoDepois || "").trim();
+      const msgMask = cfg.usarMensagemPreDefinida ? msg : maskVars(cfg.message || "");
+      const cabecalho = `📋 *Mensagem enviadas pelo sistema automatico de mensagem:* ${dataStr} ${horaStr}`;
+
+      const buildEstatisticas = (itens: ResumoItem[]) => {
+        const okItens = itens.filter((i) => i.ok && !i.invalid);
+        const inv = itens.filter((i) => i.invalid);
+        const fail = itens.filter((i) => !i.ok && !i.invalid);
+        const fmt = (arr: ResumoItem[]) => arr.map((it, i) => `${i + 1}. ${it.nome} — ${it.phone}`).join("\n") || "(nenhum)";
+        return `📊 *Estatísticas do envio*\n— *Entregues (${okItens.length})* —\n${fmt(okItens)}` +
+          (inv.length ? `\n\n⚠️ *WhatsApp inválido/inexistente (${inv.length})*:\n${fmt(inv)}` : "") +
+          (fail.length ? `\n\n❌ *Falhas de envio (${fail.length})*\n${fmt(fail)}` : "");
+      };
+
+      const enviarResumo = async (telefone: string, itens: ResumoItem[], origemResumo: string) => {
+        const parte1 = [cabecalho, antesMask, msgMask].filter(Boolean).join("\n\n") || cabecalho;
+        try {
+          await supabase.functions.invoke("send-agent-message", {
+            body: {
+              estabelecimento_id: estabelecimentoId, telefone,
+              text: mediaUrlPre ? undefined : parte1,
+              caption: mediaUrlPre ? parte1 : undefined,
+              fileUrl: mediaUrlPre || undefined,
+              contentType: mediaUrlPre ? (mediaType === "video" ? "video" : inferContentType(mediaUrlPre)) : undefined,
+              whatsappSessionId: cfg.whatsappSessionId || null,
+              whatsappSessionName: cfg.whatsappSessionName || null,
+              botFlowId: botFlowId || null,
+              origem: origemResumo,
+            },
+          });
+          if (depoisMask) {
+            await supabase.functions.invoke("send-agent-message", {
+              body: {
+                estabelecimento_id: estabelecimentoId, telefone, text: depoisMask,
+                whatsappSessionId: cfg.whatsappSessionId || null,
+                whatsappSessionName: cfg.whatsappSessionName || null,
+                botFlowId: botFlowId || null,
+                origem: `${origemResumo}_depois`,
+              },
+            });
+          }
+          await supabase.functions.invoke("send-agent-message", {
+            body: {
+              estabelecimento_id: estabelecimentoId, telefone, text: buildEstatisticas(itens),
+              whatsappSessionId: cfg.whatsappSessionId || null,
+              whatsappSessionName: cfg.whatsappSessionName || null,
+              botFlowId: botFlowId || null,
+              origem: `${origemResumo}_stats`,
+            },
+          });
+        } catch (err) {
+          console.warn("[executar-bot-flow] falha ao enviar resumo:", err);
+        }
+      };
+
+      if (temResumoGerente) {
+        for (const [, entry] of resumoPorGerente) {
+          const gPhone = String(entry.gerente.whatsapp || "").replace(/\D/g, "");
+          if (!gPhone) continue;
+          await enviarResumo(gPhone, entry.itens, "broadcast_vendedores_resumo");
+        }
+      }
+      if (numerosExtras.length > 0) {
+        const todos: ResumoItem[] = [];
+        for (const [, entry] of resumoPorGerente) todos.push(...entry.itens);
+        const jaTem = new Set(todos.map((i) => i.phone));
+        for (const d of destinatarios) {
+          if (!jaTem.has(d.phone)) todos.push({ nome: d.nome || d.phone, phone: d.phone, tipo: d.kind, ok: true });
+        }
+        for (const numero of numerosExtras) {
+          await enviarResumo(numero, todos, "broadcast_vendedores_resumo_extra");
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("[executar-bot-flow] erro no envio de resumo:", err);
   }
 
   return { total, enviados, falhas, invalidos, detalhes };
