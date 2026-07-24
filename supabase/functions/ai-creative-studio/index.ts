@@ -2576,6 +2576,12 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
       }
 
       case "generate_video": {
+        // Revisão de português no prompt (ortografia + concordância verbal)
+        try {
+          if (typeof params.prompt === "string" && params.prompt.trim() && params.revisePt !== false) {
+            params.prompt = await revisarPortugues(params.prompt);
+          }
+        } catch (_e) { /* falha aberto */ }
         console.log(`[generate_video] Starting video generation: model=${params.model}`);
         const videoResult = await handleVideoGeneration(params);
         return new Response(JSON.stringify({ result: videoResult }), {
