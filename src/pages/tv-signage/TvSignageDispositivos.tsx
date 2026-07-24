@@ -268,7 +268,7 @@ export default function TvSignageDispositivos() {
                 <h3 className="font-semibold truncate group-hover:text-primary transition-colors">{d.nome}</h3>
                 <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono text-muted-foreground">{d.codigo}</code>
               </div>
-              {statusBadge(d.status)}
+              {statusBadge(effectiveStatus(d))}
             </div>
             <div className="space-y-1.5 text-xs text-muted-foreground mb-3">
               {d.local && <div className="flex items-center gap-1.5"><MapPin className="w-3 h-3 shrink-0" /><span className="truncate">{d.local}</span></div>}
