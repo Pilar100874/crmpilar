@@ -372,3 +372,5 @@ verify_jwt = true
 [functions.policies-generate-draft]
 verify_jwt = true
 
+[functions.tv-device-fila]
+verify_jwt = false
