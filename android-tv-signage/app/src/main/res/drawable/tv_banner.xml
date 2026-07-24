@@ -3,13 +3,16 @@
     <item>
         <shape android:shape="rectangle">
             <size android:width="320dp" android:height="180dp" />
-            <solid android:color="#0B1E3F" />
+            <gradient
+                android:type="linear"
+                android:angle="135"
+                android:startColor="#1E3A8A"
+                android:endColor="#3B82F6" />
         </shape>
     </item>
-    <item android:gravity="center">
-        <shape android:shape="rectangle">
-            <size android:width="80dp" android:height="60dp" />
-            <solid android:color="#F59E0B" />
-        </shape>
-    </item>
+    <item
+        android:width="100dp"
+        android:height="100dp"
+        android:gravity="center"
+        android:drawable="@drawable/pilar_logo" />
 </layer-list>

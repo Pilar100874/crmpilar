@@ -1,17 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
+<vector xmlns:aapt="http://schemas.android.com/aapt"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"
     android:viewportWidth="108" android:viewportHeight="108">
-    <!-- Monitor / TV frame -->
+
+    <!-- Big "P" logo centered -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M30,36 h48 a4,4 0 0 1 4,4 v26 a4,4 0 0 1 -4,4 h-48 a4,4 0 0 1 -4,-4 v-26 a4,4 0 0 1 4,-4 z M30,40 v26 h48 v-26 z" />
-    <!-- Screen inner accent -->
+        android:pathData="M38,26 h26 a18,18 0 0 1 0,36 h-14 v20 h-12 z M50,38 v12 h14 a6,6 0 0 0 0,-12 z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="30" android:startY="26"
+                android:endX="80" android:endY="82">
+                <item android:offset="0" android:color="#FFFFFF" />
+                <item android:offset="1" android:color="#E0ECFF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Small TV badge in bottom-right corner -->
     <path
         android:fillColor="#F59E0B"
-        android:pathData="M34,44 h40 v18 h-40 z" />
-    <!-- Stand -->
+        android:pathData="M66,72 h22 a3,3 0 0 1 3,3 v14 a3,3 0 0 1 -3,3 h-22 a3,3 0 0 1 -3,-3 v-14 a3,3 0 0 1 3,-3 z" />
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M46,72 h16 v3 h-16 z M42,75 h24 v3 h-24 z" />
+        android:fillColor="#0B1E3F"
+        android:pathData="M69,75 h16 v10 h-16 z" />
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M72,94 h10 v2 h-10 z M70,96 h14 v2 h-14 z" />
 </vector>
