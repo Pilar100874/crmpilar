@@ -228,6 +228,25 @@ export default function TvSignageDashboards() {
                       </div>
                     </div>
                   )}
+                  {isApresRoute(edit.rota_interna) && (
+                    <div className="space-y-2 rounded-md border p-3 bg-muted/30">
+                      <Label className="text-xs">Apresentação a exibir</Label>
+                      <Select
+                        value={apresId}
+                        onValueChange={(v) => setEdit({ ...edit, rota_interna: `/tv/apresentacao?id=${v}` })}
+                      >
+                        <SelectTrigger><SelectValue placeholder="Selecione uma apresentação ativa" /></SelectTrigger>
+                        <SelectContent>
+                          {apresentacoes.map((a) => <SelectItem key={a.id} value={a.id}>{a.nome}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      {apresentacoes.length === 0 && (
+                        <p className="text-[11px] text-muted-foreground">
+                          Nenhuma apresentação ativa. Cadastre em Marketing → Apresentação.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </>
               ) : (
                 <div><Label>URL</Label><Input value={edit.url || ""} onChange={(e) => setEdit({ ...edit, url: e.target.value })} placeholder="https://..." /></div>
