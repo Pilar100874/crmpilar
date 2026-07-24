@@ -45,6 +45,13 @@ export default function TvSignageSimulador() {
       setErro(null);
       const rawDeviceParam = deviceId || deviceCode || "";
       const normalizedCode = rawDeviceParam.trim().toUpperCase();
+
+      // Modo prévia sem dispositivo: aceita ?dashboard_id=, ?playlist_id= ou ?rota=
+      const qs = new URLSearchParams(window.location.search);
+      const previewDashboardId = qs.get("dashboard_id");
+      const previewPlaylistId = qs.get("playlist_id");
+      const previewRota = qs.get("rota");
+
       // 1) Busca o dispositivo isoladamente para evitar que falhas em joins
       //    (RLS de dashboards/playlists) façam parecer que o device não existe.
       let dev: any = null;
@@ -78,9 +85,57 @@ export default function TvSignageSimulador() {
         }
       }
 
+      // Se não há dispositivo mas há parâmetros de prévia, roda em modo ad-hoc
+      if (!dev && (previewDashboardId || previewPlaylistId || previewRota)) {
+        let dashboard: any = null;
+        let playlist: any = null;
+
+        if (previewPlaylistId) {
+          const { data: pl } = await supabase.from("tv_playlists").select("*").eq("id", previewPlaylistId).maybeSingle();
+          if (pl) {
+            const { data: its } = await supabase
+              .from("tv_playlist_items")
+              .select("*, dashboard:tv_dashboards(*)")
+              .eq("playlist_id", pl.id)
+              .order("ordem", { ascending: true });
+            playlist = { ...pl, itens: its || [] };
+          }
+        } else if (previewDashboardId) {
+          const { data } = await supabase.from("tv_dashboards").select("*").eq("id", previewDashboardId).maybeSingle();
+          dashboard = data;
+        } else if (previewRota) {
+          dashboard = { nome: "Prévia", tipo: "tela_interna", rota_interna: previewRota, refresh_segundos: 0 };
+        }
+
+        const fake = { id: "preview", nome: "Prévia (sem dispositivo)", dashboard, playlist };
+        setDevice(fake);
+
+        let list: Item[] = [];
+        if (playlist) {
+          list = (playlist.itens || [])
+            .map((it: any) => {
+              const b = buildUrl(it.dashboard);
+              return b ? { ...b, duracao: it.duracao_segundos || 10 } : null;
+            })
+            .filter(Boolean) as Item[];
+        } else if (dashboard) {
+          const b = buildUrl(dashboard);
+          if (b) list = [{ ...b, duracao: 0 }];
+        }
+        if (!list.length) setErro("Nada para exibir na prévia");
+        setItems(list);
+        setLoading(false);
+        return;
+      }
+
       if (!dev) {
-        console.error("[Simulador] device not found", { rawDeviceParam, errorMessage });
-        setErro(errorMessage ? `Dispositivo não encontrado: ${errorMessage}` : "Dispositivo não encontrado");
+        // Sem device e sem parâmetros de prévia
+        if (!rawDeviceParam) {
+          setErro("Informe ?dashboard_id=, ?playlist_id= ou ?rota= para pré-visualizar sem dispositivo");
+        } else {
+          console.error("[Simulador] device not found", { rawDeviceParam, errorMessage });
+          setErro(errorMessage ? `Dispositivo não encontrado: ${errorMessage}` : "Dispositivo não encontrado");
+        }
         setLoading(false);
         return;
       }
