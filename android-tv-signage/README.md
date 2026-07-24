@@ -40,7 +40,7 @@ Ou publique como APK sideload em qualquer Android TV (Fire TV, Chromecast com Go
 
 ## Build automático via GitHub Actions
 
-O repositório possui um workflow em `.github/workflows/build-apk.yml` que compila e assina o APK automaticamente:
+O repositório possui um workflow em `.github/workflows/build-android-tv-signage.yml` (na raiz do repositório) que compila e assina o APK automaticamente:
 
 - **Disparo automático**: a cada push para `main` ou `master` que altere arquivos dentro de `android-tv-signage/`.
 - **Disparo manual**: ação `workflow_dispatch` com campo opcional `release_tag`.
