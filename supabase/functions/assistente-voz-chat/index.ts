@@ -240,7 +240,6 @@ Para ações destrutivas ou em massa (disparar bot que envia msg em massa, coman
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'google/gemini-3.6-flash',
-        model: 'google/gemini-3.6-flash',
         messages: fullMessages,
         tools: toolsFiltradas,
         tool_choice: 'auto',
