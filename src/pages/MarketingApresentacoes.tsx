@@ -355,10 +355,14 @@ export default function MarketingApresentacoes() {
 
       <DeleteConfirmDialog
         open={!!toDelete}
-        onOpenChange={(o) => !o && setToDelete(null)}
+        onOpenChange={(o) => { if (!o) { setToDelete(null); setUsoDashboards([]); } }}
         onConfirm={excluir}
-        title="Excluir apresentação?"
-        description={`Tem certeza que deseja excluir "${toDelete?.nome}" (v${toDelete?.versao})?`}
+        title={usoDashboards.length ? "⚠️ Apresentação em uso — excluir mesmo assim?" : "Excluir apresentação?"}
+        description={
+          usoDashboards.length
+            ? `"${toDelete?.nome}" (v${toDelete?.versao}) está sendo usada em ${usoDashboards.length} dashboard(s) do Gerenciador de Telas: ${usoDashboards.map(d => d.nome).join(", ")}. Ao excluir, essas telas deixarão de exibir esta apresentação. Confirma?`
+            : `Tem certeza que deseja excluir "${toDelete?.nome}" (v${toDelete?.versao})?`
+        }
       />
     </div>
   );
