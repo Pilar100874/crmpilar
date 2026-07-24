@@ -11,8 +11,8 @@
         </shape>
     </item>
     <item
-        android:width="100dp"
-        android:height="100dp"
+        android:width="140dp"
+        android:height="80dp"
         android:gravity="center"
-        android:drawable="@drawable/pilar_logo" />
+        android:drawable="@drawable/logo_pilar" />
 </layer-list>
