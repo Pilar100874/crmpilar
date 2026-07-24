@@ -416,6 +416,8 @@ async function executeBroadcast(
 
   let enviados = 0, falhas = 0, invalidos = 0;
   const detalhes: any[] = [];
+  type ResumoItem = { nome: string; phone: string; tipo: string; ok: boolean; invalid?: boolean };
+  const resumoPorGerente = new Map<string, { gerente: { id: string; nome: string; whatsapp?: string }; itens: ResumoItem[] }>();
 
   const stripVendedorPrefix = (n: string) => (n || "").replace(/^\s*vendedor(a)?\s+/i, "").trim() || (n || "");
   for (const d of destinatarios) {
