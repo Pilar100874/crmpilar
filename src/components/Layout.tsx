@@ -56,6 +56,7 @@ import logo from "@/assets/logo_branco_sidebar.png";
 import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
 import { UsuarioSelector } from "@/components/UsuarioSelector";
 import { FloatingMacroRecorder } from "@/components/macro/FloatingMacroRecorder";
+import VoiceAssistant from "@/components/voz/VoiceAssistant";
 import { FloatingMacroQuickAccess } from "@/components/macro/FloatingMacroQuickAccess";
 import { IncomingCallNotification } from "@/components/softphone/IncomingCallNotification";
 import { ChatAvisosFloatingButton } from "@/components/chat-interno/ChatAvisosFloatingButton";
@@ -1579,6 +1580,7 @@ export default function Layout({ children }: LayoutProps) {
       <FloatingMacroRecorder />
       <FloatingMacroQuickAccess />
       <SupportTicketFloatingButton />
+      <VoiceAssistant />
 
       {/* FAB Menu (aparece somente no estilo "buttons") */}
       <button
